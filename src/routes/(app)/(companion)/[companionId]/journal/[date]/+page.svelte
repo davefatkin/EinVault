@@ -43,6 +43,13 @@
 
 	let uploading = $state(false);
 	let uploadError = $state('');
+	let uploadErrorTimer: ReturnType<typeof setTimeout>;
+
+	function setUploadError(msg: string) {
+		uploadError = msg;
+		clearTimeout(uploadErrorTimer);
+		uploadErrorTimer = setTimeout(() => (uploadError = ''), 5000);
+	}
 
 	// Sync local state when data changes (navigation between dates)
 	$effect(() => {
@@ -105,10 +112,11 @@
 
 	async function uploadPhoto(file: File) {
 		if (photos.length >= 5) {
-			uploadError = 'Maximum 5 photos per day';
+			setUploadError('Maximum 5 photos per day');
 			return;
 		}
 		uploadError = '';
+		clearTimeout(uploadErrorTimer);
 		uploading = true;
 		try {
 			const fd = new FormData();
@@ -119,7 +127,7 @@
 			});
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({ message: 'Upload failed' }));
-				uploadError = err.message ?? 'Upload failed';
+				setUploadError(err.message ?? 'Upload failed');
 				return;
 			}
 			const { id, filename } = await res.json();
@@ -136,6 +144,8 @@
 					createdAt: new Date()
 				}
 			];
+		} catch {
+			setUploadError('Upload failed. Please try again.');
 		} finally {
 			uploading = false;
 		}
