@@ -33,7 +33,20 @@
 	let uploading = $state(false);
 	let imgError = $state(false);
 	let uploaded = $state(false);
+	let uploadError = $state<string | null>(null);
 	let fileInputEl = $state<HTMLInputElement | undefined>(undefined);
+	let buttonEl = $state<HTMLButtonElement | undefined>(undefined);
+	let errorTimer: ReturnType<typeof setTimeout>;
+	let tooltipTop = $state(0);
+	let tooltipLeft = $state(0);
+
+	$effect(() => {
+		if (uploadError && buttonEl) {
+			const rect = buttonEl.getBoundingClientRect();
+			tooltipTop = rect.top;
+			tooltipLeft = rect.left + rect.width / 2;
+		}
+	});
 
 	// Reset error when avatarPath changes
 	$effect(() => {
@@ -47,10 +60,18 @@
 			: null
 	);
 
+	function setError(msg: string) {
+		uploadError = msg;
+		clearTimeout(errorTimer);
+		errorTimer = setTimeout(() => (uploadError = null), 5000);
+	}
+
 	async function handleFile(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
 
+		uploadError = null;
+		clearTimeout(errorTimer);
 		uploading = true;
 		const fd = new FormData();
 		fd.set('avatar', file);
@@ -64,7 +85,12 @@
 				imgError = false;
 				uploaded = true;
 				bustAvatarCache(companionId);
+			} else {
+				const data = await res.json().catch(() => null);
+				setError(data?.message ?? 'Upload failed. Please try again.');
 			}
+		} catch {
+			setError('Upload failed. Please try again.');
 		} finally {
 			uploading = false;
 			if (fileInputEl) fileInputEl.value = '';
@@ -113,19 +139,35 @@
 	{/if}
 
 	{#if editable}
+		{#if uploadError}
+			<div
+				role="alert"
+				style="top: {tooltipTop}px; left: {tooltipLeft}px;"
+				class="fixed z-50 -translate-x-1/2 -translate-y-full -mt-2 w-max max-w-56 text-xs bg-red-600 text-white rounded px-2 py-1 shadow-lg text-center leading-snug pointer-events-none"
+			>
+				{uploadError}
+			</div>
+		{/if}
 		<button
+			bind:this={buttonEl}
 			type="button"
 			class="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-white text-bark-700 flex items-center justify-center
 				cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
-			title="Change photo"
-			aria-label="Change {name}'s photo"
+			title={uploadError ?? 'Change photo'}
+			aria-label={uploadError ? `Upload error: ${uploadError}` : `Change ${name}'s photo`}
 			onclick={(e) => {
 				e.stopPropagation();
 				fileInputEl?.click();
 			}}
 			disabled={uploading}
 		>
-			{uploading ? '⏳' : '📷'}
+			{#if uploading}
+				⏳
+			{:else if uploadError}
+				⚠️
+			{:else}
+				📷
+			{/if}
 		</button>
 		<input
 			bind:this={fileInputEl}

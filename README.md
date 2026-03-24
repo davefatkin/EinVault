@@ -160,8 +160,11 @@ Only `ORIGIN` is required. Everything else works out of the box.
 | `EINVAULT_DATA` | `./data` | Host path for the data directory (database and uploads). |
 | `EINVAULT_HOST` | `127.0.0.1` | Host interface to bind to (Option A only). |
 | `EINVAULT_PORT` | `3000` | Host port to expose (Option A only). |
-| `UPLOAD_MAX_MB` | `10` | Max file size in MB for avatar and journal photo uploads. |
+| `UPLOAD_MAX_MB` | `10` | Max file size in MB for avatar and journal photo uploads. If you raise this above 50, raise `BODY_SIZE_LIMIT` to match. |
+| `BODY_SIZE_LIMIT` | `50M` | SvelteKit's internal request body cap. Must be at least as large as `UPLOAD_MAX_MB`. See note below. |
 | `DATABASE_URL` | `/data/einvault.db` | Database path inside the container. Unlikely to need changing. |
+
+> **`BODY_SIZE_LIMIT` and `UPLOAD_MAX_MB`:** SvelteKit enforces its own body size limit before the upload handler runs, so it has to be set high enough to let requests through. `UPLOAD_MAX_MB` is the application-level gate (what users actually see); `BODY_SIZE_LIMIT` is the framework ceiling that just needs to stay out of the way. The default of `50M` covers `UPLOAD_MAX_MB` values up to 50. Accepts `K`, `M`, and `G` suffixes.
 
 ### Data and backup
 

@@ -26,6 +26,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: /data/einvault.db
       UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-50M}
       # Must match the URL you use to access the app — SvelteKit uses this to validate CSRF tokens
       ORIGIN: ${ORIGIN:-http://localhost:3000}
 
