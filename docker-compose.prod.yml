@@ -1,0 +1,71 @@
+# EinVault — Production
+# Pulls the pre-built image from the GitHub Container Registry.
+#
+# Quick start (ORIGIN is the only required variable):
+#   ORIGIN=https://einvault.yourdomain.com docker compose -f docker-compose.prod.yml up -d
+#
+# For a persistent config, copy .env.example to .env and set ORIGIN.
+# See the README for reverse proxy setup and all configuration options.
+
+services:
+  einvault:
+    image: ghcr.io/davefatkin/einvault:latest
+    container_name: einvault
+    restart: unless-stopped
+
+    # --- Networking: pick ONE option ---
+    #
+    # Option A (default) — host-level reverse proxy (Nginx / Caddy / Traefik on the host)
+    #   Binds to loopback only; your proxy forwards external traffic here.
+    ports:
+      - "${EINVAULT_HOST:-127.0.0.1}:${EINVAULT_PORT:-3000}:3000"
+
+    # Option B — Docker-network reverse proxy (Traefik / Caddy running in Docker)
+    #   Comment out `ports` above and uncomment the block below.
+    #   Then point your proxy at einvault:3000 inside the shared network.
+    # expose:
+    #   - "3000"
+    # networks:
+    #   - proxy   # must match your proxy container's external network name
+
+    volumes:
+      - ${EINVAULT_DATA:-./data}:/data
+
+    user: "${PUID:-1000}:${PGID:-1000}"
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: /data/einvault.db
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
+      # Required — set to the public URL of your instance (e.g. https://einvault.yourdomain.com)
+      # SvelteKit uses this to validate CSRF tokens on form submissions.
+      ORIGIN: ${ORIGIN}
+
+    # Container hardening
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          memory: 64M
+
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+# Uncomment if using Option B (Docker-network proxy)
+# networks:
+#   proxy:
+#     external: true

@@ -1,0 +1,108 @@
+import { error, fail } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
+import { db, schema } from '$lib/server/db';
+import { eq, and, ne, gte } from 'drizzle-orm';
+import { getShiftStatus } from '$lib/server/shifts';
+import { dismissReminder } from '$lib/server/reminders';
+
+export const load: PageServerLoad = async ({ params, parent, locals }) => {
+	const { companions } = await parent();
+	if (!companions.find((c) => c.id === params.companionId)) {
+		error(403, 'Not assigned to this companion');
+	}
+
+	const companion = await db.query.companions.findFirst({
+		where: eq(schema.companions.id, params.companionId)
+	});
+	if (!companion) error(404, 'Companion not found');
+
+	const medications = await db.query.healthEvents.findMany({
+		where: and(
+			eq(schema.healthEvents.companionId, params.companionId),
+			eq(schema.healthEvents.type, 'medication')
+		),
+		orderBy: (h, { desc }) => [desc(h.occurredAt)]
+	});
+
+	const todayStart = new Date();
+	todayStart.setHours(0, 0, 0, 0);
+
+	const todayActivity = await db.query.dailyEvents.findMany({
+		where: and(
+			eq(schema.dailyEvents.companionId, params.companionId),
+			gte(schema.dailyEvents.loggedAt, todayStart)
+		),
+		orderBy: (d, { asc }) => [asc(d.loggedAt)]
+	});
+
+	const latestWeight = await db.query.weightEntries.findFirst({
+		where: eq(schema.weightEntries.companionId, params.companionId),
+		orderBy: (w, { desc }) => [desc(w.recordedAt)]
+	});
+
+	const ownerUsers = await db.query.users.findMany({
+		where: and(eq(schema.users.isActive, true), ne(schema.users.role, 'caretaker')),
+		orderBy: (u, { asc }) => [asc(u.displayName)],
+		columns: { id: true, displayName: true, phone: true, email: true }
+	});
+
+	const owners = ownerUsers.map((u) => ({
+		id: u.id,
+		displayName: u.displayName,
+		phone: u.phone ?? null,
+		email: u.email ?? null
+	}));
+
+	const now = new Date();
+	if (!locals.user) error(401, 'Unauthorized');
+	const [allReminders, upcomingShifts] = await Promise.all([
+		db.query.reminders.findMany({
+			where: and(
+				eq(schema.reminders.companionId, params.companionId),
+				eq(schema.reminders.isDismissed, false)
+			),
+			orderBy: (r, { asc }) => [asc(r.dueAt)]
+		}),
+		db.query.caretakerShifts.findMany({
+			where: and(
+				eq(schema.caretakerShifts.userId, locals.user.id),
+				gte(schema.caretakerShifts.endAt, now)
+			),
+			orderBy: (s, { asc }) => [asc(s.startAt)]
+		})
+	]);
+
+	const upcomingReminders = allReminders
+		.filter((r) => upcomingShifts.some((s) => r.dueAt >= s.startAt && r.dueAt <= s.endAt))
+		.slice(0, 5);
+
+	return {
+		companion,
+		medications,
+		todayActivity,
+		latestWeight: latestWeight ?? null,
+		owners,
+		upcomingReminders
+	};
+};
+
+export const actions: Actions = {
+	dismiss: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+
+		const { isOnShift } = await getShiftStatus(locals.user.id);
+		if (!isOnShift) return fail(403, { error: 'You must be on shift to dismiss reminders.' });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: 'Reminder not found.' });
+
+		await dismissReminder(existing);
+
+		return { dismissSuccess: true };
+	}
+};

@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+.svelte-kit/
+
+# Dev/local files
+.env
+.env.*
+!.env.example
+*.local
+
+# Data
+*.db
+*.db-shm
+*.db-wal
+/data/
+
+# Git
+.git/
+.gitignore
+
+# Docs/meta
+README.md
+*.md
+LICENSE
+
+# Editor/OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+
+# Test/CI
+coverage/
+.nyc_output/

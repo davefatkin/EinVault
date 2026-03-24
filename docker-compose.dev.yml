@@ -1,0 +1,47 @@
+# EinVault — Development / local build
+# Builds the image from the local Dockerfile instead of pulling from GHCR.
+# Use this when working on EinVault itself or testing Docker image changes.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d --build
+
+services:
+  einvault:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: einvault:dev
+    container_name: einvault-dev
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${EINVAULT_PORT:-3000}:3000"
+
+    volumes:
+      - ${EINVAULT_DATA:-./data}:/data
+
+    user: "${PUID:-1000}:${PGID:-1000}"
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: /data/einvault.db
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
+      # Must match the URL you use to access the app — SvelteKit uses this to validate CSRF tokens
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+
+    # Same hardening as production — catches issues before they reach GHCR
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+

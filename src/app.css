@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+/* ============================================================
+   Dark mode: toggle the .dark class on <html>
+   ============================================================ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   Design tokens — replaces tailwind.config.ts `theme` block
+   ============================================================ */
+@theme {
+	/* Container */
+	--container-padding: 2rem;
+	--container-2xl: 1400px;
+
+	/* Font families */
+	--font-sans: 'Geist', system-ui, sans-serif;
+	--font-mono: 'Geist Mono', monospace;
+	--font-display: 'Fraunces', Georgia, serif;
+
+	/* Semantic colour tokens — wired to CSS variables so that
+	   light/dark overrides in :root / .dark still drive them.    */
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+
+	/* Bark palette */
+	--color-bark-50: #fdf8f0;
+	--color-bark-100: #f9edda;
+	--color-bark-200: #f2d9b0;
+	--color-bark-300: #e8bf7d;
+	--color-bark-400: #dc9f48;
+	--color-bark-500: #d08428;
+	--color-bark-600: #b8691e;
+	--color-bark-700: #98511b;
+	--color-bark-800: #7b411d;
+	--color-bark-900: #65371b;
+	--color-bark-950: #371b0b;
+
+	/* Moss palette */
+	--color-moss-50: #f3f7f0;
+	--color-moss-100: #e4ecdd;
+	--color-moss-200: #cad9be;
+	--color-moss-300: #a6bf96;
+	--color-moss-400: #7ea06d;
+	--color-moss-500: #5e834f;
+	--color-moss-600: #48673c;
+	--color-moss-700: #3a5231;
+	--color-moss-800: #30422a;
+	--color-moss-900: #293825;
+	--color-moss-950: #131d11;
+
+	/* Border radius */
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+
+	/* Animations */
+	--animate-fade-in: fadeIn 0.3s ease-in-out;
+	--animate-slide-up: slideUp 0.3s ease-out;
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes slideUp {
+		from {
+			transform: translateY(8px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	/* animate-in keyframes (previously from tailwindcss-animate) */
+	@keyframes fade-in {
+		from {
+			opacity: var(--tw-enter-opacity, 0);
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes zoom-in {
+		from {
+			transform: scale(var(--tw-enter-scale, 0.95));
+		}
+		to {
+			transform: scale(1);
+		}
+	}
+
+	@keyframes slide-in-from-bottom {
+		from {
+			transform: translateY(var(--tw-enter-translate-y, 1rem));
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes slide-in-from-bottom-sm {
+		from {
+			transform: translateY(var(--tw-enter-translate-y-sm, 0));
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+}
+
+/* ============================================================
+   Runtime CSS variable definitions (light & dark)
+   These are the actual values; the @theme tokens above
+   reference them via hsl(var(--x)).
+   ============================================================ */
+@layer base {
+	:root {
+		color-scheme: light;
+		--background: 45 20% 97%;
+		--foreground: 20 14% 4%;
+		--card: 0 0% 100%;
+		--card-foreground: 20 14% 4%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 20 14% 4%;
+		--primary: 29 91% 37%;
+		--primary-foreground: 0 0% 98%;
+		--secondary: 220 14% 96%;
+		--secondary-foreground: 20 14% 4%;
+		--muted: 220 14% 96%;
+		--muted-foreground: 30 5% 48%;
+		--accent: 220 14% 96%;
+		--accent-foreground: 20 14% 4%;
+		--destructive: 0 72% 51%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 220 13% 91%;
+		--input: 220 13% 91%;
+		--ring: 29 91% 37%;
+		--radius: 0.5rem;
+
+		/* Semantic extras used throughout the app */
+		--moss: 116 24% 38%;
+		--moss-foreground: 0 0% 98%;
+		--sky: 199 89% 42%;
+		--sky-foreground: 0 0% 98%;
+	}
+
+	.dark {
+		color-scheme: dark;
+		--background: 20 14% 4%;
+		--foreground: 60 9% 98%;
+		--card: 20 11% 10%;
+		--card-foreground: 60 9% 98%;
+		--popover: 20 11% 10%;
+		--popover-foreground: 60 9% 98%;
+		--primary: 45 96% 56%;
+		--primary-foreground: 20 14% 4%;
+		--secondary: 20 8% 16%;
+		--secondary-foreground: 60 9% 98%;
+		--muted: 20 8% 16%;
+		--muted-foreground: 30 6% 55%;
+		--accent: 20 8% 16%;
+		--accent-foreground: 60 9% 98%;
+		--destructive: 0 63% 31%;
+		--destructive-foreground: 60 9% 98%;
+		--border: 20 8% 23%;
+		--input: 20 8% 23%;
+		--ring: 45 96% 56%;
+
+		--moss: 142 71% 45%;
+		--moss-foreground: 142 71% 10%;
+		--sky: 199 89% 52%;
+		--sky-foreground: 0 0% 98%;
+	}
+
+	* {
+		border-color: hsl(var(--border));
+	}
+
+	button {
+		cursor: pointer;
+	}
+
+	button:disabled {
+		cursor: not-allowed;
+	}
+
+	html {
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
+	}
+
+	body {
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
+		font-family: var(--font-sans);
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		background: hsl(var(--border));
+		border-radius: 9999px;
+	}
+
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: hsl(var(--border)) transparent;
+	}
+}
+
+/* ============================================================
+   Custom animation utilities
+   ============================================================ */
+@layer utilities {
+	/* Named animations defined in @theme */
+	.animate-fade-in {
+		animation: fadeIn 0.3s ease-in-out;
+	}
+
+	.animate-slide-up {
+		animation: slideUp 0.3s ease-out;
+	}
+
+	/* Safe-area bottom padding for mobile */
+	.pb-safe {
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+	}
+
+	/* ring-offset-background: sets the ring offset colour to the page
+	   background. Used by shadcn-style UI components for focus rings. */
+	.ring-offset-background {
+		--tw-ring-offset-color: hsl(var(--background));
+	}
+
+	/* ---- animate-in (previously tailwindcss-animate) ---- */
+	.animate-in {
+		animation-name: fade-in, zoom-in, slide-in-from-bottom;
+		animation-duration: var(--tw-duration, 150ms);
+		animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+		animation-fill-mode: both;
+	}
+
+	.fade-in-0 {
+		--tw-enter-opacity: 0;
+	}
+
+	.zoom-in-95 {
+		--tw-enter-scale: 0.95;
+	}
+
+	.slide-in-from-bottom-4 {
+		--tw-enter-translate-y: 1rem;
+	}
+
+	/* sm:slide-in-from-bottom-0 — zero vertical translate at sm breakpoint */
+	@media (min-width: 640px) {
+		.sm\:slide-in-from-bottom-0 {
+			--tw-enter-translate-y: 0px;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-fade-in,
+	.animate-slide-up,
+	.animate-in {
+		animation: none;
+	}
+
+	html {
+		transition: none;
+	}
+}
+
+/* ============================================================
+   Prose / Markdown overrides
+   ============================================================ */
+@layer components {
+	.prose {
+		color: hsl(var(--foreground));
+	}
+	.prose h1,
+	.prose h2,
+	.prose h3,
+	.prose h4 {
+		color: hsl(var(--foreground));
+	}
+	.prose strong {
+		color: hsl(var(--foreground));
+	}
+	.prose a {
+		color: hsl(var(--primary));
+	}
+	.prose code {
+		background-color: hsl(var(--muted));
+		color: hsl(var(--foreground));
+		border-radius: var(--radius-sm, 0.125rem);
+		padding: 0.125rem 0.25rem;
+		font-size: var(--text-xs);
+	}
+	.prose pre {
+		background-color: hsl(var(--muted));
+		border: 1px solid hsl(var(--border));
+	}
+	.prose blockquote {
+		border-left-color: hsl(var(--border));
+		color: hsl(var(--muted-foreground));
+	}
+	.prose hr {
+		border-color: hsl(var(--border));
+	}
+}
