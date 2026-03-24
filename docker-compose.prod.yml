@@ -13,7 +13,7 @@ services:
 
     # Option A (default): host-level proxy (Nginx, Caddy, Traefik on the host)
     ports:
-      - "127.0.0.1:3000:3000"
+      - '127.0.0.1:3000:3000'
 
     # Option B: Docker-network proxy (Traefik, Caddy running in Docker)
     # Comment out ports above and uncomment below, then add your proxy labels/config.
@@ -25,7 +25,7 @@ services:
     volumes:
       - ./data:/data
 
-    user: "1000:1000"
+    user: '1000:1000'
 
     environment:
       # Your public URL — must match the address you access EinVault from.

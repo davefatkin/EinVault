@@ -15,12 +15,12 @@ services:
     restart: unless-stopped
 
     ports:
-      - "127.0.0.1:${EINVAULT_PORT:-3000}:3000"
+      - '127.0.0.1:${EINVAULT_PORT:-3000}:3000'
 
     volumes:
       - ${EINVAULT_DATA:-./data}:/data
 
-    user: "${PUID:-1000}:${PGID:-1000}"
+    user: '${PUID:-1000}:${PGID:-1000}'
 
     environment:
       # Your public URL — must match the address you access EinVault from.

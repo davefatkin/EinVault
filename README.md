@@ -36,15 +36,16 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 ## Screenshots
 
 ### Caretaker Dashboard
+
 ![Caretaker dashboard](docs/screenshots/caretaker_dashboard.gif)
 
 ### Member Dashboard
+
 ![Member dashboard](docs/screenshots/member_dashboard_hybrid.png)
 
-| Member Dashboard (mobile) | Caretaker Dashboard (mobile) |
-|---|---|
+| Member Dashboard (mobile)                                                       | Caretaker Dashboard (mobile)                                                          |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_readme.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_mobile_dashboard_readme.png) |
-
 
 [More screenshots](docs/SCREENSHOTS.md)
 
@@ -57,6 +58,7 @@ Requires Docker Engine 24+, Docker Compose v2, and a reverse proxy for TLS (Cadd
 Download [`docker-compose.prod.yml`](docker-compose.prod.yml) and set your domain before starting:
 
 **`ORIGIN`** — your public domain:
+
 ```yaml
 ORIGIN: https://einvault.yourdomain.com
 ```
@@ -106,7 +108,7 @@ server {
 http:
   routers:
     einvault:
-      rule: "Host(`einvault.yourdomain.com`)"
+      rule: 'Host(`einvault.yourdomain.com`)'
       entryPoints: [websecure]
       tls:
         certResolver: letsencrypt
@@ -115,18 +117,18 @@ http:
     einvault:
       loadBalancer:
         servers:
-          - url: "http://127.0.0.1:3000"
+          - url: 'http://127.0.0.1:3000'
 ```
 
 **Traefik Docker provider (Option B)** - add these labels to the `einvault` service in the compose file:
 
 ```yaml
 labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.einvault.rule=Host(`einvault.yourdomain.com`)"
-  - "traefik.http.routers.einvault.entrypoints=websecure"
-  - "traefik.http.routers.einvault.tls.certresolver=letsencrypt"
-  - "traefik.http.services.einvault.loadbalancer.server.port=3000"
+  - 'traefik.enable=true'
+  - 'traefik.http.routers.einvault.rule=Host(`einvault.yourdomain.com`)'
+  - 'traefik.http.routers.einvault.entrypoints=websecure'
+  - 'traefik.http.routers.einvault.tls.certresolver=letsencrypt'
+  - 'traefik.http.services.einvault.loadbalancer.server.port=3000'
 ```
 
 **Caddy Docker provider (Option B):**
@@ -141,13 +143,13 @@ einvault.yourdomain.com {
 
 Everything else in the compose file can be edited directly:
 
-| | Default | Description |
-|---|---|---|
-| `BODY_SIZE_LIMIT` | `10M` | SvelteKit's internal body cap. Without this, uploads are limited to 512KB. Raise together with `UPLOAD_MAX_MB` if you need larger files. |
-| `UPLOAD_MAX_MB` | `10` | App-level upload size limit in MB. Raise `BODY_SIZE_LIMIT` to match. |
-| `user` | `1000:1000` | UID:GID the container runs as. Change if your `./data` directory has different ownership. |
-| `./data` volume | `./data` | Where the database and uploads are stored on the host. |
-| `DATABASE_URL` | `/data/einvault.db` | Database path inside the container. Unlikely to need changing. |
+|                   | Default             | Description                                                                                                                              |
+| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `BODY_SIZE_LIMIT` | `10M`               | SvelteKit's internal body cap. Without this, uploads are limited to 512KB. Raise together with `UPLOAD_MAX_MB` if you need larger files. |
+| `UPLOAD_MAX_MB`   | `10`                | App-level upload size limit in MB. Raise `BODY_SIZE_LIMIT` to match.                                                                     |
+| `user`            | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                |
+| `./data` volume   | `./data`            | Where the database and uploads are stored on the host.                                                                                   |
+| `DATABASE_URL`    | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                           |
 
 ### Data and backup
 
@@ -162,22 +164,22 @@ docker exec einvault sqlite3 /data/einvault.db ".backup '/data/einvault.backup.d
 
 ### Container hardening
 
-| | |
-|---|---|
-| Runs as root | No (runs as `node`, UID 1000) |
-| `no-new-privileges` | Enabled |
-| Linux capabilities | All dropped |
-| Root filesystem | Read-only |
-| Writable `/tmp` | tmpfs, 64 MB |
-| CPU limit | 0.5 cores |
-| Memory limit | 256 MB |
+|                     |                               |
+| ------------------- | ----------------------------- |
+| Runs as root        | No (runs as `node`, UID 1000) |
+| `no-new-privileges` | Enabled                       |
+| Linux capabilities  | All dropped                   |
+| Root filesystem     | Read-only                     |
+| Writable `/tmp`     | tmpfs, 64 MB                  |
+| CPU limit           | 0.5 cores                     |
+| Memory limit        | 256 MB                        |
 
 ### Image tags
 
-| Tag | Description |
-|---|---|
+| Tag      | Description           |
+| -------- | --------------------- |
 | `latest` | Latest stable release |
-| `x.y.z` | Pinned release |
+| `x.y.z`  | Pinned release        |
 
 ---
 
