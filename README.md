@@ -4,6 +4,23 @@
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
+## Contents
+
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Production (Docker)](#production-docker)
+  - [Reverse proxy](#reverse-proxy)
+  - [Other options](#other-options)
+  - [Data and backup](#data-and-backup)
+  - [Container hardening](#container-hardening)
+  - [Image tags](#image-tags)
+- [Docker (local build)](#docker-local-build)
+- [Local development](#local-development)
+  - [Commands](#commands)
+- [User management](#user-management)
+- [Stack](#stack)
+- [License](#license)
+
 ## Features
 
 - **Companion profiles:** breed, bio, vet info, emergency contacts, and avatar photo
@@ -18,13 +35,16 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 
 ## Screenshots
 
+### Caretaker Dashboard
 ![Caretaker dashboard](docs/screenshots/caretaker_dashboard.gif)
 
+### Member Dashboard
 ![Member dashboard](docs/screenshots/member_dashboard_hybrid.png)
 
-![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_hybrid.png)
+| Member Dashboard (mobile) | Caretaker Dashboard (mobile) |
+|---|---|
+| ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_readme.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_mobile_dashboard_readme.png) |
 
-![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_hybrid.png)
 
 [More screenshots](docs/SCREENSHOTS.md)
 
@@ -34,34 +54,27 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 
 Requires Docker Engine 24+, Docker Compose v2, and a reverse proxy for TLS (Caddy, Nginx, Traefik, or similar).
 
-```bash
-# 1. Create the data directory
-mkdir -p ./data
+Download [`docker-compose.prod.yml`](docker-compose.prod.yml) and set your domain before starting:
 
-# 2. Start (replace with your actual domain)
-ORIGIN=https://einvault.yourdomain.com \
-  docker compose -f docker-compose.prod.yml up -d
+**`ORIGIN`** — your public domain:
+```yaml
+ORIGIN: https://einvault.yourdomain.com
 ```
 
-Open your domain in a browser and follow the `/setup` prompt to create your admin account.
-
-To avoid passing `ORIGIN` every time, drop a `.env` file next to the compose file:
+Then:
 
 ```bash
-cp .env.example .env
-# Edit .env and set ORIGIN
+mkdir -p ./data
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+Open your domain and follow the `/setup` prompt to create your admin account.
+
 ### Reverse proxy
 
-Two networking options are available depending on where your proxy runs.
+The compose file defaults to `127.0.0.1:3000` for a proxy running on the host (Option A). If your proxy runs as a Docker container, switch to Option B — the comments in the compose file cover both.
 
-#### Option A: host-level proxy (default)
-
-The container binds to `127.0.0.1:3000`. Your proxy on the host forwards traffic there.
-
-**Caddy:**
+**Caddy (Option A):**
 
 ```caddyfile
 einvault.yourdomain.com {
@@ -69,7 +82,7 @@ einvault.yourdomain.com {
 }
 ```
 
-**Nginx:**
+**Nginx (Option A):**
 
 ```nginx
 server {
@@ -86,7 +99,7 @@ server {
 }
 ```
 
-**Traefik (static file provider):**
+**Traefik static file provider (Option A):**
 
 ```yaml
 # /etc/traefik/conf.d/einvault.yml
@@ -105,33 +118,7 @@ http:
           - url: "http://127.0.0.1:3000"
 ```
 
-#### Option B: Docker-network proxy
-
-If your proxy runs as a Docker container (Traefik, Caddy, etc.), join EinVault to its network instead of binding a host port.
-
-In `docker-compose.prod.yml`, swap the `ports` block for `expose` and `networks`:
-
-```yaml
-# Comment out:
-# ports:
-#   - "${EINVAULT_HOST:-127.0.0.1}:${EINVAULT_PORT:-3000}:3000"
-
-# Uncomment:
-expose:
-  - "3000"
-networks:
-  - proxy   # must match your proxy container's network name
-```
-
-Also uncomment the `networks` block at the bottom of the file:
-
-```yaml
-networks:
-  proxy:
-    external: true
-```
-
-**Traefik (Docker provider)** - add these labels to the `einvault` service:
+**Traefik Docker provider (Option B)** - add these labels to the `einvault` service in the compose file:
 
 ```yaml
 labels:
@@ -142,7 +129,7 @@ labels:
   - "traefik.http.services.einvault.loadbalancer.server.port=3000"
 ```
 
-**Caddy (Docker provider):**
+**Caddy Docker provider (Option B):**
 
 ```caddyfile
 einvault.yourdomain.com {
@@ -150,45 +137,23 @@ einvault.yourdomain.com {
 }
 ```
 
-### Configuration
+### Other options
 
-Only `ORIGIN` is required. Everything else works out of the box.
+Everything else in the compose file can be edited directly:
 
-**Required:**
-
-| Variable | Description |
-|---|---|
-| `ORIGIN` | Public URL of your instance (e.g. `https://einvault.yourdomain.com`). Used by SvelteKit for CSRF validation on form submissions. |
-
-**Optional:**
-
-| Variable | Default | Description |
+| | Default | Description |
 |---|---|---|
-| `PUID` | `1000` | UID the container runs as. Match to your `./data` directory owner. |
-| `PGID` | `1000` | GID the container runs as. |
-| `EINVAULT_DATA` | `./data` | Host path for the data directory (database and uploads). |
-| `EINVAULT_HOST` | `127.0.0.1` | Host interface to bind to (Option A only). |
-| `EINVAULT_PORT` | `3000` | Host port to expose (Option A only). |
-| `UPLOAD_MAX_MB` | `10` | Max file size in MB for avatar and journal photo uploads. If you raise this above 50, raise `BODY_SIZE_LIMIT` to match. |
-| `BODY_SIZE_LIMIT` | `50M` | SvelteKit's internal request body cap. Must be at least as large as `UPLOAD_MAX_MB`. See note below. |
+| `BODY_SIZE_LIMIT` | `10M` | SvelteKit's internal body cap. Without this, uploads are limited to 512KB. Raise together with `UPLOAD_MAX_MB` if you need larger files. |
+| `UPLOAD_MAX_MB` | `10` | App-level upload size limit in MB. Raise `BODY_SIZE_LIMIT` to match. |
+| `user` | `1000:1000` | UID:GID the container runs as. Change if your `./data` directory has different ownership. |
+| `./data` volume | `./data` | Where the database and uploads are stored on the host. |
 | `DATABASE_URL` | `/data/einvault.db` | Database path inside the container. Unlikely to need changing. |
-
-> **`BODY_SIZE_LIMIT` and `UPLOAD_MAX_MB`:** SvelteKit enforces its own body size limit before the upload handler runs, so it has to be set high enough to let requests through. `UPLOAD_MAX_MB` is the application-level gate (what users actually see); `BODY_SIZE_LIMIT` is the framework ceiling that just needs to stay out of the way. The default of `50M` covers `UPLOAD_MAX_MB` values up to 50. Accepts `K`, `M`, and `G` suffixes.
 
 ### Data and backup
 
-Data lives in `./data` on the host (or `EINVAULT_DATA` if set). Create it before starting so you control the ownership:
+Data lives in `./data` next to the compose file. Back it up by copying the directory:
 
 ```bash
-mkdir -p ./data
-# If using a custom PUID/PGID:
-chown 1001:1001 ./data
-```
-
-**Backup:**
-
-```bash
-# Copy the directory (stop the container first for a clean snapshot)
 cp -r ./data ./data.bak
 
 # Or use SQLite's online backup while the container is running
