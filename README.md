@@ -26,6 +26,8 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 
 ![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_hybrid.png)
 
+[More screenshots](docs/SCREENSHOTS.md)
+
 ---
 
 ## Production (Docker)
