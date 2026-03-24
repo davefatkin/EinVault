@@ -21,6 +21,7 @@
 		KeyRound
 	} from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import { localDatetimes } from '$lib/actions/localDatetimes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -416,6 +417,7 @@
 										<form
 											method="POST"
 											action="?/updateShift"
+											use:localDatetimes
 											use:enhance={() =>
 												({ update }) => {
 													update();
@@ -518,6 +520,7 @@
 						<form
 							method="POST"
 							action="?/addShift"
+							use:localDatetimes
 							use:enhance
 							class="space-y-3 pt-3 border-t border-border"
 						>

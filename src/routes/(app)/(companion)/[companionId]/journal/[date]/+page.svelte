@@ -24,6 +24,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
+	import { localDatetimes } from '$lib/actions/localDatetimes';
 
 	let { data }: { data: PageData } = $props();
 
@@ -723,6 +724,7 @@
 				<form
 					method="POST"
 					action="?/addActivity"
+					use:localDatetimes
 					use:enhance={() =>
 						({ update }) => {
 							update();
@@ -817,6 +819,7 @@
 							<form
 								method="POST"
 								action="?/updateActivity"
+								use:localDatetimes
 								use:enhance={() =>
 									({ update }) => {
 										update();

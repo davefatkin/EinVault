@@ -16,6 +16,7 @@
 	import { renderMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { localDatetimes } from '$lib/actions/localDatetimes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let showHealthForm = $state(false);
@@ -341,6 +342,7 @@
 				<form
 					method="POST"
 					action="?/addHealth"
+					use:localDatetimes
 					use:enhance={() => {
 						submittingHealth = true;
 						return async ({ update }) => {
@@ -441,6 +443,7 @@
 				<form
 					method="POST"
 					action="?/addWeight"
+					use:localDatetimes
 					use:enhance={() => {
 						submittingWeight = true;
 						return async ({ update }) => {
@@ -519,6 +522,7 @@
 							<form
 								method="POST"
 								action="?/updateWeight"
+								use:localDatetimes
 								use:enhance={() =>
 									({ update }) => {
 										update();
@@ -646,6 +650,7 @@
 								<form
 									method="POST"
 									action="?/updateHealth"
+									use:localDatetimes
 									use:enhance={() =>
 										({ update }) => {
 											update();

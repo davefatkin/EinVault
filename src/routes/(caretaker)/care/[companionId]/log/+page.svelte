@@ -9,6 +9,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Trash2 } from '@lucide/svelte';
 	import { EVENT_TYPES, ACTIVITY_ICONS } from '$lib/constants/activities';
+	import { localDatetimes } from '$lib/actions/localDatetimes';
 
 	// isOnShift and nextShift come from the caretaker layout data
 
@@ -89,6 +90,7 @@
 				<form
 					method="POST"
 					action="?/add"
+					use:localDatetimes
 					use:enhance={() =>
 						async ({ result, update }) => {
 							await update({ reset: false });

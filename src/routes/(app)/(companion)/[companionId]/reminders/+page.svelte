@@ -16,6 +16,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { localDatetimes } from '$lib/actions/localDatetimes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let showForm = $state(false);
@@ -267,6 +268,7 @@
 				<form
 					method="POST"
 					action="?/add"
+					use:localDatetimes
 					use:enhance={() => {
 						submitting = true;
 						return async ({ update }) => {
@@ -366,6 +368,7 @@
 							<form
 								method="POST"
 								action="?/update"
+								use:localDatetimes
 								use:enhance={() =>
 									({ update }) => {
 										update();
@@ -546,6 +549,7 @@
 								<form
 									method="POST"
 									action="?/update"
+									use:localDatetimes
 									use:enhance={() =>
 										({ update }) => {
 											update();
