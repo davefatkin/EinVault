@@ -1,11 +1,9 @@
 # EinVault — Production
-# Pulls the pre-built image from the GitHub Container Registry.
+# https://github.com/davefatkin/einvault
 #
-# Quick start (ORIGIN is the only required variable):
-#   ORIGIN=https://einvault.yourdomain.com docker compose -f docker-compose.prod.yml up -d
-#
-# For a persistent config, copy .env.example to .env and set ORIGIN.
-# See the README for reverse proxy setup and all configuration options.
+# 1. Edit ORIGIN below to match your domain
+# 2. mkdir -p ./data
+# 3. docker compose -f docker-compose.prod.yml up -d
 
 services:
   einvault:
@@ -13,36 +11,32 @@ services:
     container_name: einvault
     restart: unless-stopped
 
-    # --- Networking: pick ONE option ---
-    #
-    # Option A (default) — host-level reverse proxy (Nginx / Caddy / Traefik on the host)
-    #   Binds to loopback only; your proxy forwards external traffic here.
+    # Option A (default): host-level proxy (Nginx, Caddy, Traefik on the host)
     ports:
-      - "${EINVAULT_HOST:-127.0.0.1}:${EINVAULT_PORT:-3000}:3000"
+      - "127.0.0.1:3000:3000"
 
-    # Option B — Docker-network reverse proxy (Traefik / Caddy running in Docker)
-    #   Comment out `ports` above and uncomment the block below.
-    #   Then point your proxy at einvault:3000 inside the shared network.
+    # Option B: Docker-network proxy (Traefik, Caddy running in Docker)
+    # Comment out ports above and uncomment below, then add your proxy labels/config.
     # expose:
     #   - "3000"
     # networks:
-    #   - proxy   # must match your proxy container's external network name
+    #   - proxy
 
     volumes:
-      - ${EINVAULT_DATA:-./data}:/data
+      - ./data:/data
 
-    user: "${PUID:-1000}:${PGID:-1000}"
+    user: "1000:1000"
 
     environment:
+      # Your public URL — must match the address you access EinVault from.
+      # Used for CSRF protection; the app will reject form submissions without it.
+      ORIGIN: https://einvault.yourdomain.com
+
       NODE_ENV: production
       DATABASE_URL: /data/einvault.db
-      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
-      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-50M}
-      # Required — set to the public URL of your instance (e.g. https://einvault.yourdomain.com)
-      # SvelteKit uses this to validate CSRF tokens on form submissions.
-      ORIGIN: ${ORIGIN}
+      BODY_SIZE_LIMIT: 10M
+      UPLOAD_MAX_MB: 10
 
-    # Container hardening
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -66,7 +60,7 @@ services:
       retries: 3
       start_period: 15s
 
-# Uncomment if using Option B (Docker-network proxy)
+# Uncomment if using Option B
 # networks:
 #   proxy:
 #     external: true

@@ -23,14 +23,15 @@ services:
     user: "${PUID:-1000}:${PGID:-1000}"
 
     environment:
-      NODE_ENV: production
-      DATABASE_URL: /data/einvault.db
-      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
-      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-50M}
-      # Must match the URL you use to access the app — SvelteKit uses this to validate CSRF tokens
+      # Your public URL — must match the address you access EinVault from.
+      # Used for CSRF protection; the app will reject form submissions without it.
       ORIGIN: ${ORIGIN:-http://localhost:3000}
 
-    # Same hardening as production — catches issues before they reach GHCR
+      NODE_ENV: production
+      DATABASE_URL: /data/einvault.db
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-10M}
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
+
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -45,4 +46,3 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-
