@@ -25,6 +25,7 @@ build/
 README.md
 *.md
 LICENSE
+docs/
 
 # Editor/OS
 .DS_Store

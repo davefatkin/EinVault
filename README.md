@@ -14,10 +14,19 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - **Caretaker shifts:** schedule work shifts and export to calendar via iCalendar (.ics)
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
+- **Responsive UI:** works on desktop and mobile, with dark and light mode support
 
 ## Screenshots
 
-Coming soon.
+![Caretaker dashboard](docs/screenshots/caretaker_dashboard.gif)
+
+![Member dashboard](docs/screenshots/member_dashboard_hybrid.png)
+
+![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_hybrid.png)
+
+![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_hybrid.png)
+
+[More screenshots](docs/SCREENSHOTS.md)
 
 ---
 
