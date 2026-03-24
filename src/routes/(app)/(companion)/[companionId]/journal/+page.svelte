@@ -369,7 +369,7 @@
 
 	<!-- Header -->
 	<div class="flex items-center justify-between">
-		<h1 class="font-display font-semibold text-xl text-foreground">Journal</h1>
+		<h1 class="font-display text-2xl font-bold text-foreground">Journal</h1>
 		{#if companion.isActive !== false}
 			<Button href="/{companion.id}/journal/{data.today}" size="sm">
 				Today's Entry <ArrowRight class="h-4 w-4 ml-1" />
