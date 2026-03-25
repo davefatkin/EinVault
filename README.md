@@ -145,6 +145,7 @@ Everything else in the compose file can be edited directly:
 
 |                   | Default             | Description                                                                                                                              |
 | ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `TZ`              | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.          |
 | `BODY_SIZE_LIMIT` | `10M`               | SvelteKit's internal body cap. Without this, uploads are limited to 512KB. Raise together with `UPLOAD_MAX_MB` if you need larger files. |
 | `UPLOAD_MAX_MB`   | `10`                | App-level upload size limit in MB. Raise `BODY_SIZE_LIMIT` to match.                                                                     |
 | `user`            | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                |
