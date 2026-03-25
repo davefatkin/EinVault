@@ -10,8 +10,11 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import { Pencil, Plus, RotateCcw } from '@lucide/svelte';
+	import { getContext } from 'svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	const serverTimezone = getContext<string | undefined>('serverTimezone');
 
 	let showPasswordFields = $state(false);
 
@@ -20,7 +23,8 @@
 		return new Date(d).toLocaleDateString(undefined, {
 			month: 'long',
 			day: 'numeric',
-			year: 'numeric'
+			year: 'numeric',
+			...(serverTimezone ? { timeZone: serverTimezone } : {})
 		});
 	}
 </script>

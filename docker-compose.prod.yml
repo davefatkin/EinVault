@@ -37,6 +37,10 @@ services:
       BODY_SIZE_LIMIT: 10M
       UPLOAD_MAX_MB: 10
 
+      # Set to your local timezone so dates and times display correctly.
+      # Defaults to UTC if omitted. Example: America/New_York, Europe/London
+      # TZ: America/New_York
+
     security_opt:
       - no-new-privileges:true
     cap_drop:

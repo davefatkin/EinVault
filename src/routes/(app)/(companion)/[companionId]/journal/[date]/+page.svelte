@@ -6,6 +6,9 @@
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { localDateISO } from '$lib/date';
+	import { getContext } from 'svelte';
+
+	const serverTimezone = getContext<string | undefined>('serverTimezone');
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import {
 		Trash2,
@@ -937,7 +940,8 @@
 								<span class="text-xs shrink-0 text-muted-foreground">
 									{new Date(event.loggedAt).toLocaleTimeString(undefined, {
 										hour: 'numeric',
-										minute: '2-digit'
+										minute: '2-digit',
+										...(serverTimezone ? { timeZone: serverTimezone } : {})
 									})}
 								</span>
 							</button>
