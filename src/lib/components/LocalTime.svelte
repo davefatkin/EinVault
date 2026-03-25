@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { getContext } from 'svelte';
 
 	interface Props {
 		date: Date | string | number | null | undefined;
@@ -8,6 +9,10 @@
 	}
 
 	let { date, format = 'date', fallback = '-' }: Props = $props();
+
+	// Use the server's timezone so all users see times in the household's timezone,
+	// regardless of where their browser is located.
+	const tz = getContext<string | undefined>('serverTimezone');
 
 	function parseDate(raw: Date | string | number | null | undefined): Date | null {
 		if (!raw) return null;
@@ -23,8 +28,9 @@
 	}
 
 	function fmt(d: Date): string {
+		const tzOpt = tz ? { timeZone: tz } : {};
 		if (format === 'time') {
-			return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+			return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', ...tzOpt });
 		}
 		if (format === 'datetime') {
 			return d.toLocaleString(undefined, {
@@ -32,7 +38,8 @@
 				day: 'numeric',
 				year: 'numeric',
 				hour: 'numeric',
-				minute: '2-digit'
+				minute: '2-digit',
+				...tzOpt
 			});
 		}
 		if (format === 'relative') {
@@ -44,9 +51,9 @@
 			if (mins < 60) return `${mins}m ago`;
 			if (hours < 24) return `${hours}h ago`;
 			if (days < 7) return `${days}d ago`;
-			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...tzOpt });
 		}
-		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', ...tzOpt });
 	}
 
 	// Plain derived values (not wrapped in arrow functions)

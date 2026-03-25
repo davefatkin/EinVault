@@ -29,6 +29,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	return {
-		user: locals.user
+		user: locals.user,
+		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
 	};
 };
