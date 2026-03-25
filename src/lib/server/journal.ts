@@ -34,8 +34,8 @@ export async function getEnrichedJournalEntries(
 		const newest = pageEntries[0].date;
 		const [oy, om, od] = oldest.split('-').map(Number);
 		const [ny, nm, nd] = newest.split('-').map(Number);
-		const rangeStart = new Date(oy, om - 1, od);       // local midnight (respects TZ)
-		const rangeEnd = new Date(ny, nm - 1, nd + 1);     // next local midnight after newest
+		const rangeStart = new Date(oy, om - 1, od); // local midnight (respects TZ)
+		const rangeEnd = new Date(ny, nm - 1, nd + 1); // next local midnight after newest
 
 		const [allPhotos, allEvents] = await Promise.all([
 			db.query.journalPhotos.findMany({

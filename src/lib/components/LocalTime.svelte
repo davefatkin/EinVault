@@ -53,7 +53,12 @@
 			if (days < 7) return `${days}d ago`;
 			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...tzOpt });
 		}
-		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', ...tzOpt });
+		return d.toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+			...tzOpt
+		});
 	}
 
 	// Plain derived values (not wrapped in arrow functions)

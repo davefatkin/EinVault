@@ -38,8 +38,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	});
 
 	const [y, m, d] = date.split('-').map(Number);
-	const dayStart = new Date(y, m - 1, d);       // local midnight (respects TZ)
-	const dayEnd = new Date(y, m - 1, d + 1);     // next local midnight
+	const dayStart = new Date(y, m - 1, d); // local midnight (respects TZ)
+	const dayEnd = new Date(y, m - 1, d + 1); // next local midnight
 
 	const dailyEvents = await db.query.dailyEvents.findMany({
 		where: and(
