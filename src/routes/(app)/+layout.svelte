@@ -17,6 +17,7 @@
 		ShieldCheck
 	} from '@lucide/svelte';
 	import { THEME_ICONS, THEMES, applyTheme, saveTheme, type Theme } from '$lib/theme';
+	import AppFooter from '$lib/components/AppFooter.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -198,6 +199,8 @@
 			{@render children()}
 		</main>
 	</div>
+
+	<AppFooter version={data.version} year={data.year} />
 
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}

@@ -1,6 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
+import { version } from '../../package.json';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
@@ -30,6 +31,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	return {
 		user: locals.user,
-		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+		version,
+		year: new Date().getFullYear()
 	};
 };
