@@ -26,8 +26,8 @@ RUN npm run db:generate
 ENV NODE_ENV=production
 RUN npm run build
 
-# Prune to production deps only
-RUN npm ci --omit=dev --ignore-scripts=false
+# Prune to production deps only (prune preserves compiled native modules)
+RUN npm prune --omit=dev
 
 
 # runner
