@@ -9,7 +9,7 @@
  * This action listens for the `formdata` event (fired when SvelteKit's enhance
  * calls `new FormData(form)`) and replaces each datetime-local value with a
  * proper UTC ISO string before the data reaches the server.
- * 
+ *
  * Note: I missed this while testing on local hardware.
  */
 export function localDatetimes(node: HTMLFormElement) {
