@@ -1,14 +1,15 @@
 <script lang="ts">
 	import '../app.css';
 	import { browser } from '$app/environment';
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { applyTheme } from '$lib/theme';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	setContext('serverTimezone', data.serverTimezone);
+	// untrack: serverTimezone is a server constant; capturing the initial value only.
+	setContext('serverTimezone', untrack(() => data.serverTimezone));
 
 	$effect(() => {
 		if (!browser) return;
