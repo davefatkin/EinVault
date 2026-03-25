@@ -212,8 +212,6 @@ npm run dev           # http://localhost:5173
 
 No `.env` needed. The database defaults to `./data/einvault.db` and migrations run on startup. Open `http://localhost:5173` and you'll land on `/setup` to create your admin account.
 
-`npm install` also installs a pre-commit hook via `simple-git-hooks` that runs `npm run lint` before every commit. To install it manually (e.g. after cloning without running install): `npx simple-git-hooks`.
-
 ### Commands
 
 ```bash

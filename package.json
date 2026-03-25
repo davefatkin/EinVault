@@ -12,11 +12,7 @@
 		"format": "prettier --write .",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio",
-		"prepare": "simple-git-hooks"
-	},
-	"simple-git-hooks": {
-		"pre-commit": "npm run lint"
+		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -31,7 +27,6 @@
 		"eslint-plugin-svelte": "^3.16.0",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.3.2",
-		"simple-git-hooks": "^2.13.1",
 		"svelte": "^5.55.0",
 		"svelte-check": "^4.4.5",
 		"tailwindcss": "^4.2.2",
