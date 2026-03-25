@@ -240,7 +240,7 @@ When you change `src/lib/server/db/schema.ts`, run `db:generate` then `db:migrat
 
 - **SvelteKit:** full-stack TypeScript framework with file-based routing
 - **SQLite + Drizzle ORM:** local-first, portable database
-- **Tailwind CSS + Bits UI:** utility-first styling with accessible UI primitives
+- **Tailwind CSS:** utility-first styling with custom components
 - **Session-based auth:** custom sessions signed with bcryptjs, no third-party auth library
 - **Docker:** multi-stage, hardened single-container deployment
 
