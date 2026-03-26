@@ -514,9 +514,9 @@
 					{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
 					{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
 					{#if companion.vetPhone}
-						<a href="tel:{companion.vetPhone}" class="hover:underline font-medium text-primary">
-							📞 {companion.vetPhone}
-						</a>
+						📞 <a href="tel:{companion.vetPhone}" class="hover:underline font-medium text-primary"
+							>{companion.vetPhone}</a
+						>
 					{/if}
 				</CardContent>
 			</Card>
@@ -533,12 +533,11 @@
 						<p class="font-medium">{companion.emergencyContactName}</p>
 					{/if}
 					{#if companion.emergencyContactPhone}
-						<a
+						📞 <a
 							href="tel:{companion.emergencyContactPhone}"
-							class="text-destructive hover:underline font-medium text-base"
+							class="text-red-600 dark:text-red-400 hover:underline font-medium text-base"
+							>{companion.emergencyContactPhone}</a
 						>
-							📞 {companion.emergencyContactPhone}
-						</a>
 					{/if}
 				</CardContent>
 			</Card>
