@@ -18,7 +18,8 @@
 		CalendarClock,
 		UserX,
 		UserCheck,
-		KeyRound
+		KeyRound,
+		EllipsisVertical
 	} from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -31,6 +32,7 @@
 	let assigningUserId = $state<string | null>(null);
 	let managingShiftsUserId = $state<string | null>(null);
 	let editingShiftId = $state<string | null>(null);
+	let openMenuUserId = $state<string | null>(null);
 
 	let confirmOpen = $state(false);
 	let deleteShiftId = $state('');
@@ -56,7 +58,17 @@
 		const p = (n: number) => String(n).padStart(2, '0');
 		return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
 	}
+
+	function handleWindowClick(e: MouseEvent) {
+		if (openMenuUserId === null) return;
+		const target = e.target as Element;
+		if (!target.closest('[data-user-menu]')) {
+			openMenuUserId = null;
+		}
+	}
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <svelte:head>
 	<title>User Admin | EinVault</title>
@@ -166,7 +178,7 @@
 	<Card class="divide-y divide-border">
 		{#each data.users as user (user.id)}
 			<div class="px-6 py-4 space-y-3">
-				<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+				<div class="flex items-start justify-between gap-2">
 					<div class="min-w-0">
 						<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 							<span class="font-medium text-foreground">{user.displayName}</span>
@@ -198,7 +210,8 @@
 						</p>
 					</div>
 
-					<div class="flex items-center gap-0.5 md:gap-1 shrink-0">
+					<!-- Actions: Edit (primary) + overflow menu -->
+					<div class="flex items-center gap-0.5 shrink-0">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -209,59 +222,94 @@
 							<span class="hidden md:inline">Edit</span>
 						</Button>
 
-						{#if user.role === 'caretaker'}
+						<div class="relative" data-user-menu>
 							<Button
 								variant="ghost"
 								size="sm"
-								class="h-8 w-8 p-0 md:w-auto md:px-2.5 md:gap-1.5 text-xs"
-								onclick={() => (assigningUserId = assigningUserId === user.id ? null : user.id)}
+								class="h-8 w-8 p-0"
+								onclick={(e) => {
+									e.stopPropagation();
+									openMenuUserId = openMenuUserId === user.id ? null : user.id;
+								}}
+								aria-label="More actions"
+								aria-expanded={openMenuUserId === user.id}
+								aria-haspopup="true"
 							>
-								<Users class="h-3.5 w-3.5 shrink-0" />
-								<span class="hidden md:inline">Companions</span>
+								<EllipsisVertical class="h-4 w-4" />
 							</Button>
-							<Button
-								variant="ghost"
-								size="sm"
-								class="h-8 w-8 p-0 md:w-auto md:px-2.5 md:gap-1.5 text-xs"
-								onclick={() =>
-									(managingShiftsUserId = managingShiftsUserId === user.id ? null : user.id)}
-							>
-								<CalendarClock class="h-3.5 w-3.5 shrink-0" />
-								<span class="hidden md:inline">Shifts</span>
-								{#if userShifts(user.id).length > 0}
-									<Badge variant="secondary" class="text-[10px] px-1.5 py-0"
-										>{userShifts(user.id).length}</Badge
+
+							{#if openMenuUserId === user.id}
+								<div
+									class="absolute right-0 top-full z-50 mt-1 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
+									role="menu"
+								>
+									{#if user.role === 'caretaker'}
+										<button
+											type="button"
+											role="menuitem"
+											class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-accent text-left"
+											onclick={() => {
+												assigningUserId = assigningUserId === user.id ? null : user.id;
+												openMenuUserId = null;
+											}}
+										>
+											<Users class="h-3.5 w-3.5 shrink-0" />
+											Companions
+										</button>
+										<button
+											type="button"
+											role="menuitem"
+											class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-accent text-left"
+											onclick={() => {
+												managingShiftsUserId = managingShiftsUserId === user.id ? null : user.id;
+												openMenuUserId = null;
+											}}
+										>
+											<CalendarClock class="h-3.5 w-3.5 shrink-0" />
+											Shifts
+											{#if userShifts(user.id).length > 0}
+												<Badge variant="secondary" class="ml-auto text-[10px] px-1.5 py-0">
+													{userShifts(user.id).length}
+												</Badge>
+											{/if}
+										</button>
+									{/if}
+
+									{#if user.id !== data.currentUserId}
+										<button
+											type="button"
+											role="menuitem"
+											class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-accent text-left text-red-600 dark:text-red-400 hover:text-red-600"
+											onclick={() => {
+												openMenuUserId = null;
+												toggleActiveForm(user.id);
+											}}
+										>
+											{#if user.isActive}
+												<UserX class="h-3.5 w-3.5 shrink-0" />
+												Deactivate
+											{:else}
+												<UserCheck class="h-3.5 w-3.5 shrink-0" />
+												Activate
+											{/if}
+										</button>
+									{/if}
+
+									<button
+										type="button"
+										role="menuitem"
+										class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-accent text-left"
+										onclick={() => {
+											resetingUserId = resetingUserId === user.id ? null : user.id;
+											openMenuUserId = null;
+										}}
 									>
-								{/if}
-							</Button>
-						{/if}
-
-						{#if user.id !== data.currentUserId}
-							<Button
-								variant="ghost"
-								size="sm"
-								class="h-8 w-8 p-0 md:w-auto md:px-2.5 md:gap-1.5 text-xs"
-								onclick={() => toggleActiveForm(user.id)}
-							>
-								{#if user.isActive}
-									<UserX class="h-3.5 w-3.5 shrink-0" />
-									<span class="hidden md:inline">Deactivate</span>
-								{:else}
-									<UserCheck class="h-3.5 w-3.5 shrink-0" />
-									<span class="hidden md:inline">Activate</span>
-								{/if}
-							</Button>
-						{/if}
-
-						<Button
-							variant="ghost"
-							size="sm"
-							class="h-8 w-8 p-0 md:w-auto md:px-2.5 md:gap-1.5 text-xs"
-							onclick={() => (resetingUserId = resetingUserId === user.id ? null : user.id)}
-						>
-							<KeyRound class="h-3.5 w-3.5 shrink-0" />
-							<span class="hidden md:inline">Reset Password</span>
-						</Button>
+										<KeyRound class="h-3.5 w-3.5 shrink-0" />
+										Reset Password
+									</button>
+								</div>
+							{/if}
+						</div>
 					</div>
 				</div>
 
