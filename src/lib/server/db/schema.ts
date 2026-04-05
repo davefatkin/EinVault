@@ -27,6 +27,9 @@ export const users = sqliteTable('users', {
 	theme: text('theme', { enum: ['light', 'dark', 'system'] })
 		.notNull()
 		.default('system'),
+	locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt'] })
+		.notNull()
+		.default('en'),
 	email: text('email'),
 	phone: text('phone')
 });

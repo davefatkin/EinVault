@@ -46,6 +46,7 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			role: user.role as 'admin' | 'member' | 'caretaker',
 			isActive: user.isActive,
 			theme: (user.theme ?? 'system') as 'light' | 'dark' | 'system',
+			locale: (user.locale ?? 'en') as 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt',
 			email: user.email ?? null,
 			phone: user.phone ?? null
 		}

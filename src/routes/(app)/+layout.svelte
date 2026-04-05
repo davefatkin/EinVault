@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import {
-		Home,
+		House,
 		NotebookPen,
 		HeartPulse,
 		Bell,
@@ -18,10 +18,13 @@
 	} from '@lucide/svelte';
 	import { THEME_ICONS, THEMES, applyTheme, saveTheme, type Theme } from '$lib/theme';
 	import AppFooter from '$lib/components/AppFooter.svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	let activeCompanionId = $derived($page.params.companionId ?? null);
+	const locale = getLocale();
+
+	let activeCompanionId = $derived(page.params.companionId ?? null);
 	let activeCompanion = $derived(
 		data.companions.find((c) => c.id === activeCompanionId) ??
 			data.archivedCompanions?.find((c) => c.id === activeCompanionId) ??
@@ -33,16 +36,28 @@
 	let navItems = $derived(
 		activeCompanion
 			? [
-					{ href: `/${activeCompanion.id}`, label: 'Dashboard', icon: Home },
-					{ href: `/${activeCompanion.id}/journal`, label: 'Journal', icon: NotebookPen },
-					{ href: `/${activeCompanion.id}/health`, label: 'Health', icon: HeartPulse },
-					{ href: `/${activeCompanion.id}/reminders`, label: 'Reminders', icon: Bell }
+					{ href: `/${activeCompanion.id}`, label: t(locale, 'nav.dashboard'), icon: House },
+					{
+						href: `/${activeCompanion.id}/journal`,
+						label: t(locale, 'nav.journal'),
+						icon: NotebookPen
+					},
+					{
+						href: `/${activeCompanion.id}/health`,
+						label: t(locale, 'nav.health'),
+						icon: HeartPulse
+					},
+					{
+						href: `/${activeCompanion.id}/reminders`,
+						label: t(locale, 'nav.reminders'),
+						icon: Bell
+					}
 				]
 			: []
 	);
 
 	function switchCompanion(id: string) {
-		const parts = $page.url.pathname.split('/');
+		const parts = page.url.pathname.split('/');
 		// Only carry the section forward on standard companion sub-routes: /{companionId}/{section}
 		// Other routes (e.g. /companions/{id}/edit, /settings) go to the companion dashboard
 		if (parts[1] === activeCompanionId) {
@@ -53,14 +68,14 @@
 		}
 	}
 
-	// ── Theme toggle ──────────────────────────────────────────────────────────
+	// Theme toggle
 	let themeOverride = $state<Theme | null>(null);
 	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
 
-	async function setTheme(t: Theme) {
-		themeOverride = t;
-		applyTheme(t);
-		await saveTheme(t);
+	async function setTheme(theme: Theme) {
+		themeOverride = theme;
+		applyTheme(theme);
+		await saveTheme(theme);
 	}
 </script>
 
@@ -92,10 +107,10 @@
 							archived={true}
 						/>
 						<span class="text-sm italic text-muted-foreground truncate">
-							{activeCompanion.name} <span class="text-xs">(archived)</span>
+							{activeCompanion.name} <span class="text-xs">{t(locale, 'layout.archived')}</span>
 						</span>
 						<Button href="/settings" variant="ghost" size="sm" class="shrink-0 text-xs">
-							Back
+							{t(locale, 'common.back')}
 						</Button>
 					{:else if data.companions.length > 0}
 						{#if activeCompanion}
@@ -113,7 +128,7 @@
 						{:else}
 							<Select
 								class="max-w-[160px]"
-								aria-label="Switch companion"
+								aria-label={t(locale, 'layout.switchCompanion')}
 								value={activeCompanionId ?? activeCompanion?.id}
 								onchange={(e) => switchCompanion(e.currentTarget.value)}
 							>
@@ -124,7 +139,9 @@
 						{/if}
 					{:else}
 						<Button href="/companions/new" size="sm">
-							{data.archivedCompanions?.length ? 'Add a Companion' : 'Add Your First Companion'}
+							{data.archivedCompanions?.length
+								? t(locale, 'layout.addCompanion')
+								: t(locale, 'layout.addFirstCompanion')}
 						</Button>
 					{/if}
 				</div>
@@ -133,15 +150,15 @@
 				<div class="flex items-center gap-1 shrink-0">
 					<!-- Theme toggle -->
 					<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
-						{#each THEMES as t (t)}
-							{@const Icon = THEME_ICONS[t]}
+						{#each THEMES as theme (theme)}
+							{@const Icon = THEME_ICONS[theme]}
 							<button
 								type="button"
-								onclick={() => setTheme(t)}
-								title="{t.charAt(0).toUpperCase() + t.slice(1)} mode"
-								aria-label="{t.charAt(0).toUpperCase() + t.slice(1)} mode"
-								aria-pressed={currentTheme === t}
-								class="rounded px-2 py-1 transition-all {currentTheme === t
+								onclick={() => setTheme(theme)}
+								title="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
+								aria-label="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
+								aria-pressed={currentTheme === theme}
+								class="rounded px-2 py-1 transition-all {currentTheme === theme
 									? 'bg-background text-foreground shadow-sm'
 									: 'text-muted-foreground hover:text-foreground'}"
 							>
@@ -153,17 +170,17 @@
 					{#if data.user?.role === 'admin'}
 						<Button href="/admin/users" variant="ghost" size="sm" class="gap-1.5">
 							<ShieldCheck class="h-3.5 w-3.5" />
-							<span class="hidden sm:inline">Admin</span>
+							<span class="hidden sm:inline">{t(locale, 'nav.admin')}</span>
 						</Button>
 					{/if}
 					<Button href="/settings" variant="ghost" size="sm" class="hidden md:inline-flex gap-1.5">
 						<Settings class="h-4 w-4" />
-						<span class="hidden sm:inline">Settings</span>
+						<span class="hidden sm:inline">{t(locale, 'nav.settings')}</span>
 					</Button>
 					<form method="POST" action="/auth/logout">
 						<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
 							<LogOut class="h-4 w-4" />
-							<span class="hidden sm:inline">Sign Out</span>
+							<span class="hidden sm:inline">{t(locale, 'nav.signOut')}</span>
 						</Button>
 					</form>
 				</div>
@@ -174,11 +191,14 @@
 	<div class="flex flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 gap-6">
 		<!-- Sidebar nav (desktop) -->
 		{#if navItems.length > 0}
-			<nav aria-label="Main navigation" class="hidden md:flex flex-col gap-1 w-48 shrink-0">
+			<nav
+				aria-label={t(locale, 'aria.mainNav')}
+				class="hidden md:flex flex-col gap-1 w-48 shrink-0"
+			>
 				{#each navItems as item (item.href)}
 					{@const isActive =
-						$page.url.pathname === item.href ||
-						($page.url.pathname.startsWith(item.href + '/') &&
+						page.url.pathname === item.href ||
+						(page.url.pathname.startsWith(item.href + '/') &&
 							item.href !== `/${activeCompanion?.id}`)}
 					{@const NavIcon = item.icon}
 					<a
@@ -205,14 +225,14 @@
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}
 		<nav
-			aria-label="Main navigation"
+			aria-label={t(locale, 'aria.mainNav')}
 			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe"
 		>
 			<div class="flex">
 				{#each navItems as item (item.href)}
 					{@const isActive =
-						$page.url.pathname === item.href ||
-						($page.url.pathname.startsWith(item.href + '/') &&
+						page.url.pathname === item.href ||
+						(page.url.pathname.startsWith(item.href + '/') &&
 							item.href !== `/${activeCompanion?.id}`)}
 					{@const NavIcon = item.icon}
 					<a
@@ -228,15 +248,15 @@
 				{/each}
 				<a
 					href="/settings"
-					aria-current={$page.url.pathname.startsWith('/settings') ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors {$page.url.pathname.startsWith(
+					aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
+					class="flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors {page.url.pathname.startsWith(
 						'/settings'
 					)
 						? 'text-primary'
 						: 'text-muted-foreground'}"
 				>
 					<Settings class="h-5 w-5" />
-					Settings
+					{t(locale, 'nav.settings')}
 				</a>
 			</div>
 		</nav>

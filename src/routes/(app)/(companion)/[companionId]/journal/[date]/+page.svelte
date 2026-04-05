@@ -28,8 +28,11 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
+	import { t, getLocale } from '$lib/i18n';
+	import { moodOptions, activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
 
 	let { data }: { data: PageData } = $props();
+	const locale = getLocale();
 
 	let photos = $state<typeof data.photos>([]);
 	let companion = $derived(data.companion);
@@ -65,13 +68,7 @@
 
 	let renderedMarkdown = $derived(renderMarkdown(body || '*Nothing written yet.*'));
 
-	const MOODS = [
-		{ value: 'great', label: '🤩', title: 'Great' },
-		{ value: 'good', label: '😊', title: 'Good' },
-		{ value: 'meh', label: '😐', title: 'Meh' },
-		{ value: 'off', label: '😕', title: 'Off' },
-		{ value: 'sick', label: '🤒', title: 'Sick' }
-	];
+	const MOODS = moodOptions(locale);
 
 	function prevDate(d: string) {
 		const dt = new SvelteDate(d + 'T00:00:00');
@@ -212,26 +209,9 @@
 		}
 	}
 
-	// ── Activity log ────────────────────────────────────────────────────────────
-	const EVENT_TYPES = [
-		{ value: 'walk', label: '🦮 Walk', hasDuration: true },
-		{ value: 'meal', label: '🍖 Meal', hasDuration: false },
-		{ value: 'bathroom', label: '💩 Bathroom', hasDuration: false },
-		{ value: 'treat', label: '🦴 Treat', hasDuration: false },
-		{ value: 'play', label: '🎾 Play', hasDuration: true },
-		{ value: 'grooming', label: '🛁 Grooming', hasDuration: true },
-		{ value: 'other', label: '📝 Other', hasDuration: false }
-	];
-
-	const EVENT_ICONS: Record<string, string> = {
-		walk: '🦮',
-		meal: '🍖',
-		bathroom: '💩',
-		treat: '🦴',
-		play: '🎾',
-		grooming: '🛁',
-		other: '📝'
-	};
+	// Activity log
+	const EVENT_TYPES = activityTypeOptions(locale);
+	const EVENT_ICONS = ACTIVITY_ICONS;
 
 	function localDatetimeISO(d = new Date()) {
 		const p = (n: number) => String(n).padStart(2, '0');
@@ -312,7 +292,7 @@
 </script>
 
 <svelte:head>
-	<title>Journal | {companion.name} | EinVault</title>
+	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -323,7 +303,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'aria.closeDialog')}
 			onclick={closeActivityDetail}
 		></button>
 		<div
@@ -342,7 +322,7 @@
 				</h2>
 				<button
 					onclick={closeActivityDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'aria.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -353,24 +333,32 @@
 
 			<div class="px-5 py-4 space-y-3 text-sm">
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.journal.day.detailType')}</span
+					>
 					<Badge variant="secondary" class="capitalize">{detailEvent.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Logged</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.journal.day.detailLogged')}</span
+					>
 					<span class="text-foreground"
 						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Duration</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.journal.day.detailDuration')}</span
+						>
 						<span class="text-foreground">{detailEvent.durationMinutes} min</span>
 					</div>
 				{/if}
 				{#if detailEvent.notes}
 					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.journal.day.detailNotes')}
+						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(detailEvent.notes)}
 						</div>
@@ -389,7 +377,8 @@
 					}}
 					class="inline-flex items-center gap-1.5 justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
 				>
-					<Pencil class="h-3.5 w-3.5" /> Edit
+					<Pencil class="h-3.5 w-3.5" />
+					{t(locale, 'common.edit')}
 				</button>
 			</div>
 		</div>
@@ -436,26 +425,33 @@
 				/>
 			</div>
 			{#if data.isToday}
-				<span class="text-xs font-medium px-2 py-1 text-primary">Today</span>
+				<span class="text-xs font-medium px-2 py-1 text-primary"
+					>{t(locale, 'page.journal.today')}</span
+				>
 			{:else}
 				<a
 					href="/{companion.id}/journal/{data.today}"
 					class="inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-					>Today <ChevronRight class="h-3.5 w-3.5" /></a
+					>{t(locale, 'page.journal.today')} <ChevronRight class="h-3.5 w-3.5" /></a
 				>
 			{/if}
 		</div>
 		<div class="flex items-center gap-2 text-sm">
 			{#if saveStatus === 'saving'}
-				<span class="animate-pulse text-muted-foreground">Saving…</span>
+				<span class="animate-pulse text-muted-foreground"
+					>{t(locale, 'page.journal.day.savingStatus')}</span
+				>
 			{:else if saveStatus === 'saved'}
-				<span class="text-green-600 dark:text-green-400">✓ Saved</span>
+				<span class="text-green-600 dark:text-green-400"
+					>{t(locale, 'page.journal.day.savedStatus')}</span
+				>
 			{:else if saveStatus === 'error'}
-				<span class="text-red-500">Save failed</span>
+				<span class="text-red-500">{t(locale, 'page.journal.day.saveFailedStatus')}</span>
 				<button
 					type="button"
 					onclick={saveNow}
-					class="text-xs text-red-500 underline hover:no-underline">Retry</button
+					class="text-xs text-red-500 underline hover:no-underline"
+					>{t(locale, 'page.journal.day.saveFailedRetry')}</button
 				>
 			{/if}
 		</div>
@@ -463,8 +459,14 @@
 
 	<!-- Mood -->
 	<div class="flex items-center gap-2">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Mood</span>
-		<div role="group" aria-label="How is {companion.name} feeling?" class="flex gap-1">
+		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+			>{t(locale, 'page.journal.day.mood')}</span
+		>
+		<div
+			role="group"
+			aria-label={t(locale, 'page.journal.day.moodQuestion', { name: companion.name })}
+			class="flex gap-1"
+		>
 			{#each MOODS as m (m.value)}
 				<button
 					type="button"
@@ -472,14 +474,14 @@
 						mood = mood === m.value ? '' : m.value;
 						triggerSave();
 					}}
-					title={m.title}
+					title={m.label}
 					aria-pressed={mood === m.value}
 					class="text-xl leading-none p-1.5 rounded-lg transition-all
 						{mood === m.value
 						? 'bg-bark-100 dark:bg-bark-900 ring-1 ring-bark-300 dark:ring-bark-700'
 						: 'opacity-40 hover:opacity-80'}"
 				>
-					{m.label}
+					{m.icon}
 				</button>
 			{/each}
 		</div>
@@ -499,7 +501,7 @@
 						? 'bg-accent text-foreground'
 						: 'text-muted-foreground hover:text-foreground'}"
 				>
-					Write
+					{t(locale, 'page.journal.day.write')}
 				</button>
 				<button
 					type="button"
@@ -508,11 +510,12 @@
 						? 'bg-accent text-foreground'
 						: 'text-muted-foreground hover:text-foreground'}"
 				>
-					Preview
+					{t(locale, 'page.journal.day.preview')}
 				</button>
 			</div>
 			<div class="hidden sm:flex items-center gap-3">
-				<span class="text-xs text-muted-foreground">⌘P to toggle</span>
+				<span class="text-xs text-muted-foreground">{t(locale, 'page.journal.day.toggleHint')}</span
+				>
 				<details class="group">
 					<summary
 						class="inline-flex cursor-pointer select-none list-none items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors [&::-webkit-details-marker]:hidden"
@@ -574,7 +577,7 @@
 				bind:this={textareaEl}
 				bind:value={body}
 				oninput={triggerSave}
-				placeholder="Write about {companion.name}'s day… Markdown is supported."
+				placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 				class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-card text-foreground placeholder:text-muted-foreground focus:outline-none"
 				spellcheck="true"
 			></textarea>
@@ -591,14 +594,18 @@
 	<div class="rounded-lg border border-border bg-card overflow-hidden">
 		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
 			<h2 class="font-semibold flex items-center gap-2 text-foreground">
-				<Camera class="h-4 w-4" /> Photos
+				<Camera class="h-4 w-4" />
+				{t(locale, 'page.journal.day.photosTitle')}
 				<span class="text-xs font-normal text-muted-foreground">{photos.length}/5</span>
 			</h2>
 			{#if photos.length < 5}
 				<label
 					class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
 				>
-					{#if uploading}Uploading…{:else}<Plus class="h-3.5 w-3.5" /> Add Photo{/if}
+					{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
+							class="h-3.5 w-3.5"
+						/>
+						{t(locale, 'page.journal.day.addPhoto')}{/if}
 					<input
 						bind:this={fileInputEl}
 						type="file"
@@ -627,8 +634,12 @@
 					class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
 				>
 					<ImageIcon class="h-8 w-8 mb-2 text-muted-foreground" />
-					<span class="text-sm text-muted-foreground">Drop photos here or click to upload</span>
-					<span class="text-xs mt-1 text-muted-foreground">JPEG, PNG, or WebP (max 10MB each)</span>
+					<span class="text-sm text-muted-foreground"
+						>{t(locale, 'page.journal.day.dropPhotos')}</span
+					>
+					<span class="text-xs mt-1 text-muted-foreground"
+						>{t(locale, 'page.journal.day.photoTypes', { max: data.uploadMaxMb })}</span
+					>
 					<input
 						type="file"
 						name="photos"
@@ -647,7 +658,7 @@
 							>
 								<img
 									src={photoUrl(photo)}
-									alt={photo.originalName ?? 'Journal photo'}
+									alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
 									class="w-full h-full object-cover"
 									loading="lazy"
 								/>
@@ -657,7 +668,7 @@
 									class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 										flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
 										hover:bg-red-600 transition-all"
-									aria-label="Delete photo"
+									aria-label={t(locale, 'aria.deletePhoto')}
 								>
 									<Trash2 class="h-3 w-3" />
 								</button>
@@ -667,7 +678,7 @@
 									<MarkdownTextarea
 										value={editingPhotoNotes}
 										oninput={(e) => (editingPhotoNotes = (e.target as HTMLTextAreaElement).value)}
-										placeholder="Add a caption…"
+										placeholder={t(locale, 'page.journal.day.addCaption')}
 										rows={3}
 										name="photo-notes"
 									/>
@@ -676,13 +687,13 @@
 											type="button"
 											onclick={() => savePhotoNotes(photo.id)}
 											class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-2 py-1 text-xs font-medium shadow hover:bg-primary/90 transition-colors"
-											>Save</button
+											>{t(locale, 'common.save')}</button
 										>
 										<button
 											type="button"
 											onclick={() => (editingPhotoId = null)}
 											class="inline-flex items-center justify-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-sm hover:bg-accent transition-colors"
-											>Cancel</button
+											>{t(locale, 'common.cancel')}</button
 										>
 									</div>
 								{:else}
@@ -691,13 +702,15 @@
 											{photo.notes.replace(/[#*_`~>[\]]/g, '').trim()}
 										</p>
 									{:else}
-										<p class="text-sm italic text-muted-foreground">No caption</p>
+										<p class="text-sm italic text-muted-foreground">
+											{t(locale, 'page.journal.day.noCaption')}
+										</p>
 									{/if}
 									<button
 										type="button"
 										onclick={() => startEditPhotoNotes(photo)}
 										class="inline-flex items-center justify-center rounded-md px-2 py-0.5 mt-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-										>Edit Caption</button
+										>{t(locale, 'page.journal.day.editCaption')}</button
 									>
 								{/if}
 							</div>
@@ -712,13 +725,15 @@
 	<div class="rounded-lg border border-border bg-card overflow-hidden">
 		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
 			<h2 class="font-semibold flex items-center gap-2 text-foreground">
-				<ClipboardList class="h-4 w-4" /> Activities
+				<ClipboardList class="h-4 w-4" />
+				{t(locale, 'page.journal.day.activitiesTitle')}
 			</h2>
 			<button
 				onclick={() => (showActivityForm = !showActivityForm)}
 				class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
 			>
-				{#if showActivityForm}Cancel{:else}<Plus class="h-3.5 w-3.5" /> Log Activity{/if}
+				{#if showActivityForm}{t(locale, 'common.cancel')}{:else}<Plus class="h-3.5 w-3.5" />
+					{t(locale, 'page.journal.day.logActivity')}{/if}
 			</button>
 		</div>
 
@@ -737,24 +752,27 @@
 					class="space-y-4"
 				>
 					<div class="space-y-1.5">
-						<span class="text-sm font-medium text-foreground">Type</span>
+						<span class="text-sm font-medium text-foreground"
+							>{t(locale, 'page.journal.day.activityType')}</span
+						>
 						<div class="flex flex-wrap gap-2">
-							{#each EVENT_TYPES as t (t.value)}
+							{#each EVENT_TYPES as evtType (evtType.value)}
 								<label class="cursor-pointer">
 									<input
 										type="radio"
 										name="type"
-										value={t.value}
+										value={evtType.value}
 										bind:group={selectedType}
 										class="sr-only"
 									/>
 									<span
 										class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {selectedType ===
-										t.value
+										evtType.value
 											? 'bg-primary/10 border-primary/30 text-primary'
 											: 'hover:text-foreground'}"
 									>
-										{t.label}
+										{evtType.icon}
+										{evtType.label}
 									</span>
 								</label>
 							{/each}
@@ -762,7 +780,9 @@
 					</div>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<label for="act-loggedAt" class="text-sm font-medium text-foreground">Time</label>
+							<label for="act-loggedAt" class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.journal.day.activityTime')}</label
+							>
 							<input
 								id="act-loggedAt"
 								name="loggedAt"
@@ -775,7 +795,7 @@
 						{#if hasDuration}
 							<div class="space-y-1.5">
 								<label for="act-duration" class="text-sm font-medium text-foreground"
-									>Duration (min)</label
+									>{t(locale, 'page.journal.day.activityDuration')}</label
 								>
 								<input
 									id="act-duration"
@@ -790,20 +810,27 @@
 						{/if}
 					</div>
 					<div class="space-y-1.5">
-						<label for="act-notes" class="text-sm font-medium text-foreground">Notes</label>
-						<MarkdownTextarea id="act-notes" name="notes" placeholder="Any notes…" rows={3} />
+						<label for="act-notes" class="text-sm font-medium text-foreground"
+							>{t(locale, 'page.journal.day.activityNotes')}</label
+						>
+						<MarkdownTextarea
+							id="act-notes"
+							name="notes"
+							placeholder={t(locale, 'page.journal.day.activityNotes')}
+							rows={3}
+						/>
 					</div>
 					<div class="flex gap-3">
 						<button
 							type="submit"
 							class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-							>Log it</button
+							>{t(locale, 'page.journal.day.logIt')}</button
 						>
 						<button
 							type="button"
 							onclick={() => (showActivityForm = false)}
 							class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
-							>Cancel</button
+							>{t(locale, 'common.cancel')}</button
 						>
 					</div>
 				</form>
@@ -812,7 +839,9 @@
 
 		{#if data.dailyEvents.length === 0 && !showActivityForm}
 			<div class="text-center py-8 px-6">
-				<p class="text-sm italic text-muted-foreground">No activities logged yet.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.journal.day.noActivities')}
+				</p>
 			</div>
 		{:else if data.dailyEvents.length > 0}
 			<div class="divide-y divide-border">
@@ -832,24 +861,27 @@
 							>
 								<input type="hidden" name="id" value={event.id} />
 								<div class="space-y-1.5">
-									<span class="text-sm font-medium text-foreground">Type</span>
+									<span class="text-sm font-medium text-foreground"
+										>{t(locale, 'page.journal.day.activityType')}</span
+									>
 									<div class="flex flex-wrap gap-2">
-										{#each EVENT_TYPES as t (t.value)}
+										{#each EVENT_TYPES as evtType (evtType.value)}
 											<label class="cursor-pointer">
 												<input
 													type="radio"
 													name="type"
-													value={t.value}
+													value={evtType.value}
 													bind:group={editActivityType}
 													class="sr-only"
 												/>
 												<span
 													class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {editActivityType ===
-													t.value
+													evtType.value
 														? 'bg-primary/10 border-primary/30 text-primary'
 														: 'hover:text-foreground'}"
 												>
-													{t.label}
+													{evtType.icon}
+													{evtType.label}
 												</span>
 											</label>
 										{/each}
@@ -859,7 +891,8 @@
 									<div class="space-y-1.5">
 										<label
 											for="edit-act-loggedAt-{event.id}"
-											class="text-sm font-medium text-foreground">Time</label
+											class="text-sm font-medium text-foreground"
+											>{t(locale, 'page.journal.day.activityTime')}</label
 										>
 										<input
 											id="edit-act-loggedAt-{event.id}"
@@ -874,7 +907,8 @@
 										<div class="space-y-1.5">
 											<label
 												for="edit-act-duration-{event.id}"
-												class="text-sm font-medium text-foreground">Duration (min)</label
+												class="text-sm font-medium text-foreground"
+												>{t(locale, 'page.journal.day.activityDuration')}</label
 											>
 											<input
 												id="edit-act-duration-{event.id}"
@@ -891,13 +925,13 @@
 								</div>
 								<div class="space-y-1.5">
 									<label for="edit-act-notes-{event.id}" class="text-sm font-medium text-foreground"
-										>Notes</label
+										>{t(locale, 'page.journal.day.activityNotes')}</label
 									>
 									<MarkdownTextarea
 										id="edit-act-notes-{event.id}"
 										name="notes"
 										value={event.notes ?? ''}
-										placeholder="Any notes…"
+										placeholder={t(locale, 'page.journal.day.activityNotes')}
 										rows={3}
 									/>
 								</div>
@@ -905,13 +939,13 @@
 									<button
 										type="submit"
 										class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-										>Save</button
+										>{t(locale, 'common.save')}</button
 									>
 									<button
 										type="button"
 										onclick={() => (editingActivityId = null)}
 										class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
-										>Cancel</button
+										>{t(locale, 'common.cancel')}</button
 									>
 								</div>
 							</form>
@@ -949,7 +983,9 @@
 								type="button"
 								onclick={() => startEditActivity(event)}
 								class="inline-flex items-center gap-1.5 justify-center rounded-md h-7 px-2 text-xs font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
-								><Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline">Edit</span></button
+								><Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+									>{t(locale, 'common.edit')}</span
+								></button
 							>
 							<button
 								type="button"
@@ -959,7 +995,9 @@
 									openConfirm(() => deleteActivityForm?.requestSubmit());
 								}}
 							>
-								<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline">Delete</span>
+								<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+									>{t(locale, 'common.delete')}</span
+								>
 							</button>
 						</div>
 					{/if}
@@ -972,7 +1010,9 @@
 	{#if data.recentEntries.length > 0}
 		<div class="rounded-lg border border-border bg-card">
 			<div class="px-5 py-3 border-b border-border">
-				<h2 class="text-sm font-medium text-muted-foreground">Recent entries</h2>
+				<h2 class="text-sm font-medium text-muted-foreground">
+					{t(locale, 'page.journal.day.recentEntries')}
+				</h2>
 			</div>
 			<div class="p-4">
 				<div class="flex flex-wrap gap-2">
@@ -1009,7 +1049,7 @@
 
 <ConfirmDialog
 	open={confirmOpen}
-	message="This can't be undone."
+	message={t(locale, 'component.confirmDialog.cantBeUndone')}
 	onconfirm={() => {
 		confirmOpen = false;
 		confirmAction?.();

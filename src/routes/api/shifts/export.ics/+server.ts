@@ -1,5 +1,6 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { t } from '$lib/i18n';
 import { getUpcomingShifts } from '$lib/server/shifts';
 
 function icsDate(d: Date): string {
@@ -15,7 +16,7 @@ function icsEscape(s: string): string {
 
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
-	if (locals.user.role !== 'caretaker') error(403, 'Forbidden');
+	if (locals.user.role !== 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
 
 	const shifts = await getUpcomingShifts(locals.user.id);
 
@@ -33,7 +34,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		lines.push(`DTSTAMP:${icsDate(new Date())}`);
 		lines.push(`DTSTART:${icsDate(shift.startAt)}`);
 		lines.push(`DTEND:${icsDate(shift.endAt)}`);
-		lines.push(`SUMMARY:${icsEscape('EinVault Shift')}`);
+		lines.push(`SUMMARY:${icsEscape(t(locals.locale, 'layout.caretaker.shiftCalendarEvent'))}`);
 		if (shift.notes) lines.push(`DESCRIPTION:${icsEscape(shift.notes)}`);
 		lines.push('END:VEVENT');
 	}

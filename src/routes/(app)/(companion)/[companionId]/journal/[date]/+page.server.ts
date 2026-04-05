@@ -1,17 +1,19 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, gte, lt } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseMood, parseDailyEventType, isValidDate } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const { companionId, date } = params;
 
-	if (!isValidDate(date)) error(400, 'Invalid date format');
+	if (!isValidDate(date)) error(400, t(locals.locale, 'error.invalidDate'));
 
 	const { companion } = await parent();
 
@@ -60,15 +62,16 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		dailyEvents,
 		date,
 		today,
-		isToday: date === today
+		isToday: date === today,
+		uploadMaxMb: env.UPLOAD_MAX_MB ?? '10'
 	};
 };
 
 export const actions: Actions = {
 	save: async ({ params, request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { companionId, date } = params;
-		if (!isValidDate(date)) return fail(400, { error: 'Invalid date' });
+		if (!isValidDate(date)) return fail(400, { error: t(locals.locale, 'error.invalidDate') });
 
 		const data = await request.formData();
 		const body = String(data.get('body') ?? '');
@@ -80,9 +83,9 @@ export const actions: Actions = {
 	},
 
 	addActivity: async ({ params, request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { companionId, date } = params;
-		if (!isValidDate(date)) return fail(400, { error: 'Invalid date' });
+		if (!isValidDate(date)) return fail(400, { error: t(locals.locale, 'error.invalidDate') });
 
 		const data = await request.formData();
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
@@ -91,7 +94,7 @@ export const actions: Actions = {
 		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
 		const loggedAt = data.get('loggedAt') ? new Date(String(data.get('loggedAt'))) : new Date();
 
-		if (!type) return fail(400, { error: 'Event type is required.' });
+		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
 
 		await db.insert(schema.dailyEvents).values({
 			id: generateId(15),
@@ -107,7 +110,7 @@ export const actions: Actions = {
 	},
 
 	updateActivity: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { companionId } = params;
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
@@ -117,14 +120,14 @@ export const actions: Actions = {
 		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
 		const loggedAt = new Date(String(data.get('loggedAt') ?? ''));
 
-		if (!id) return fail(400, { error: 'Missing id.' });
-		if (!type) return fail(400, { error: 'Event type is required.' });
+		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
+		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
 
 		const existing = await db.query.dailyEvents.findFirst({
 			where: and(eq(schema.dailyEvents.id, id), eq(schema.dailyEvents.companionId, companionId)),
 			columns: { id: true }
 		});
-		if (!existing) return fail(404, { error: 'Event not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.eventNotFound') });
 
 		await db
 			.update(schema.dailyEvents)
@@ -135,17 +138,17 @@ export const actions: Actions = {
 	},
 
 	deleteActivity: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { companionId } = params;
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
-		if (!id) return fail(400, { error: 'Missing id.' });
+		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 
 		const existing = await db.query.dailyEvents.findFirst({
 			where: and(eq(schema.dailyEvents.id, id), eq(schema.dailyEvents.companionId, companionId)),
 			columns: { id: true }
 		});
-		if (!existing) return fail(404, { error: 'Event not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.eventNotFound') });
 
 		await db.delete(schema.dailyEvents).where(eq(schema.dailyEvents.id, id));
 		return { deleteActivitySuccess: true };

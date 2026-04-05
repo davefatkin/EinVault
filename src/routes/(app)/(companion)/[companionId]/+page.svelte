@@ -19,6 +19,8 @@
 	} from '@lucide/svelte';
 	import { tick } from 'svelte';
 	import { renderMarkdown } from '$lib/markdown';
+	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { t, getLocale } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 	let {
@@ -30,6 +32,8 @@
 		todayJournal,
 		activeCaretakerShift
 	} = $derived(data);
+
+	const locale = getLocale();
 
 	function age(dob: string | null): string {
 		if (!dob) return 'Unknown age';
@@ -45,23 +49,8 @@
 
 	let today = localDateISO();
 
-	const MOOD_LABEL: Record<string, string> = {
-		great: '🤩',
-		good: '😊',
-		meh: '😐',
-		off: '😕',
-		sick: '🤒'
-	};
-
-	const ACTIVITY_ICON: Record<string, string> = {
-		walk: '🦮',
-		meal: '🍖',
-		bathroom: '💩',
-		treat: '🦴',
-		play: '🎾',
-		grooming: '🛁',
-		other: '📝'
-	};
+	const MOOD_LABEL = MOOD_ICONS;
+	const ACTIVITY_ICON = ACTIVITY_ICONS;
 
 	// Detail modal
 	type SelectedItem =
@@ -145,7 +134,7 @@
 	<div
 		role="dialog"
 		aria-modal="true"
-		aria-label="{companion.name}'s photo"
+		aria-label={t(locale, 'aria.viewPhoto', { name: companion.name })}
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85"
 		onclick={closeAvatarLightbox}
 		onkeydown={(e) => e.key === 'Escape' && closeAvatarLightbox()}
@@ -162,14 +151,14 @@
 					type="button"
 					onclick={closeAvatarLightbox}
 					class="text-white/70 hover:text-white p-1 rounded"
-					aria-label="Close"
+					aria-label={t(locale, 'page.dashboard.closePhoto')}
 				>
 					<X class="h-5 w-5" />
 				</button>
 			</div>
 			<img
 				src={avatarUrl}
-				alt="{companion.name}'s photo"
+				alt={t(locale, 'component.avatar.alt', { name: companion.name })}
 				class="w-full rounded-xl object-contain max-h-[80vh] shadow-2xl"
 			/>
 		</div>
@@ -182,7 +171,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'page.dashboard.closeDialog')}
 			onclick={closeDetail}
 		></button>
 		<div
@@ -199,7 +188,7 @@
 					{#if selected.kind === 'reminder'}
 						{selected.item.title}
 					{:else if selected.kind === 'weight'}
-						Weight entry
+						{t(locale, 'page.dashboard.modalWeightEntry')}
 					{:else if selected.kind === 'activity'}
 						{ACTIVITY_ICON[selected.item.type] ?? '📝'}
 						{selected.item.type.charAt(0).toUpperCase() + selected.item.type.slice(1)}
@@ -209,7 +198,7 @@
 				</h2>
 				<button
 					onclick={closeDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'common.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -222,24 +211,36 @@
 				{#if selected.kind === 'reminder'}
 					{@const r = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelType')}</span
+						>
 						<Badge variant="secondary" class="capitalize">{r.type}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Due</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelDue')}</span
+						>
 						<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
 					</div>
 					{#if r.isRecurring}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Repeats</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelRepeats')}</span
+							>
 							<span class="text-foreground"
-								>Every {r.recurringDays} day{r.recurringDays !== 1 ? 's' : ''}</span
+								>{r.recurringDays !== 1
+									? t(locale, 'page.dashboard.modalLabelEveryDaysPlural', {
+											count: r.recurringDays ?? 1
+										})
+									: t(locale, 'page.dashboard.modalLabelEveryDays')}</span
 							>
 						</div>
 					{/if}
 					{#if r.description}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(r.description)}
 							</div>
@@ -248,19 +249,25 @@
 				{:else if selected.kind === 'weight'}
 					{@const w = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Weight</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelWeight')}</span
+						>
 						<span class="text-xl font-bold text-foreground"
 							>{w.weight}
 							<span class="text-sm font-normal text-muted-foreground">{w.unit}</span></span
 						>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Recorded</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
+						>
 						<span class="text-foreground"><LocalTime date={w.recordedAt} format="datetime" /></span>
 					</div>
 					{#if w.notes}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(w.notes)}
 							</div>
@@ -269,22 +276,30 @@
 				{:else if selected.kind === 'activity'}
 					{@const e = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelType')}</span
+						>
 						<Badge variant="secondary" class="capitalize">{e.type}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Logged</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
+						>
 						<span class="text-foreground"><LocalTime date={e.loggedAt} format="datetime" /></span>
 					</div>
 					{#if e.durationMinutes}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Duration</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelDuration')}</span
+							>
 							<span class="text-foreground">{e.durationMinutes} min</span>
 						</div>
 					{/if}
 					{#if e.notes}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(e.notes)}
 							</div>
@@ -293,23 +308,31 @@
 				{:else if selected.kind === 'health'}
 					{@const h = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelType')}</span
+						>
 						<Badge variant="bark" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Date</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelDate')}</span
+						>
 						<span class="text-foreground"><LocalTime date={h.occurredAt} format="datetime" /></span>
 					</div>
 					{#if h.nextDueAt}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Next due</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelNextDue')}</span
+							>
 							<span class="text-foreground"><LocalTime date={h.nextDueAt} format="datetime" /></span
 							>
 						</div>
 					{/if}
 					{#if h.vetName || h.vetClinic}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Vet</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelVet')}</span
+							>
 							<span class="text-foreground"
 								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
 							>
@@ -317,7 +340,9 @@
 					{/if}
 					{#if h.notes}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(h.notes)}
 							</div>
@@ -338,7 +363,7 @@
 							onclick={closeDetail}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							Edit in Reminders
+							{t(locale, 'page.dashboard.modalEditReminders')}
 						</Button>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
@@ -348,7 +373,7 @@
 							onclick={closeDetail}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							Edit in Health
+							{t(locale, 'page.dashboard.modalEditHealth')}
 						</Button>
 					{:else if selected.kind === 'activity'}
 						<Button
@@ -357,7 +382,8 @@
 							size="sm"
 							onclick={closeDetail}
 						>
-							<NotebookPen class="h-3.5 w-3.5 mr-1.5" /> Open Journal
+							<NotebookPen class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.dashboard.modalOpenJournal')}
 						</Button>
 					{/if}
 				</div>
@@ -369,7 +395,7 @@
 <div class="space-y-6 pb-20 md:pb-0">
 	{#if !companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
-			{companion.name} is archived. Viewing in read-only mode.
+			{t(locale, 'page.dashboard.archivedBanner', { name: companion.name })}
 		</div>
 	{/if}
 
@@ -389,9 +415,9 @@
 					<div>
 						<h1 class="font-display text-2xl font-bold">{companion.name}</h1>
 						<p class="text-bark-100 text-sm">
-							{companion.breed ?? 'Mixed breed'} · {age(companion.dob)}{companion.sex
-								? ` · ${companion.sex}`
-								: ''}
+							{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
+								companion.dob
+							)}{companion.sex ? ` · ${companion.sex}` : ''}
 						</p>
 					</div>
 				</div>
@@ -403,7 +429,7 @@
 						class="border-white/20 text-white bg-white/10 hover:bg-white/20 hover:text-white"
 					>
 						<Pencil class="h-3.5 w-3.5 mr-1.5" />
-						Edit
+						{t(locale, 'common.edit')}
 					</Button>
 				{/if}
 			</div>
@@ -421,11 +447,12 @@
 							<p
 								class="text-xs font-semibold uppercase tracking-wide text-moss-600 dark:text-moss-400 mb-0.5"
 							>
-								Caretaker on shift
+								{t(locale, 'page.dashboard.caretakerOnShift')}
 							</p>
 							<p class="font-semibold text-foreground">{activeCaretakerShift.displayName}</p>
 							<p class="text-sm text-muted-foreground">
-								Shift ends <LocalTime date={activeCaretakerShift.endAt} />
+								{t(locale, 'page.dashboard.shiftEnds')}
+								<LocalTime date={activeCaretakerShift.endAt} />
 							</p>
 							{#if activeCaretakerShift.notes}
 								<p class="text-sm text-foreground mt-1">{activeCaretakerShift.notes}</p>
@@ -461,7 +488,8 @@
 			<CardHeader class="pb-3">
 				<div class="flex items-center justify-between">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<NotebookPen class="h-4 w-4" /> Today's Journal
+						<NotebookPen class="h-4 w-4" />
+						{t(locale, 'page.dashboard.cardJournal')}
 					</CardTitle>
 					{#if companion.isActive !== false}
 						<Button
@@ -470,7 +498,9 @@
 							size="sm"
 							class="h-7 text-xs text-primary px-2"
 						>
-							{todayJournal ? 'Edit Entry' : 'Write Entry'}
+							{todayJournal
+								? t(locale, 'page.dashboard.journalEditEntry')
+								: t(locale, 'page.dashboard.journalWriteEntry')}
 						</Button>
 					{/if}
 				</div>
@@ -484,7 +514,9 @@
 						<p class="mt-2 text-lg">{MOOD_LABEL[todayJournal.mood] ?? ''}</p>
 					{/if}
 				{:else}
-					<p class="text-sm italic text-muted-foreground">No entry yet today.</p>
+					<p class="text-sm italic text-muted-foreground">
+						{t(locale, 'page.dashboard.journalEmpty')}
+					</p>
 				{/if}
 			</CardContent>
 		</Card>
@@ -494,7 +526,8 @@
 			<CardHeader class="pb-3">
 				<div class="flex items-center justify-between">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<Bell class="h-4 w-4" /> Reminders
+						<Bell class="h-4 w-4" />
+						{t(locale, 'page.dashboard.cardReminders')}
 					</CardTitle>
 					<Button
 						href="/{companion.id}/reminders"
@@ -502,13 +535,15 @@
 						size="sm"
 						class="h-7 text-xs text-primary px-2"
 					>
-						View All
+						{t(locale, 'page.dashboard.remindersViewAll')}
 					</Button>
 				</div>
 			</CardHeader>
 			<CardContent class="pt-0 space-y-1">
 				{#if upcomingReminders.length === 0}
-					<p class="text-sm italic text-muted-foreground">No upcoming reminders.</p>
+					<p class="text-sm italic text-muted-foreground">
+						{t(locale, 'page.dashboard.remindersEmpty')}
+					</p>
 				{:else}
 					{#each upcomingReminders.slice(0, 3) as reminder (reminder.id)}
 						<button
@@ -532,7 +567,8 @@
 			<CardHeader class="pb-3">
 				<div class="flex items-center justify-between">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<Scale class="h-4 w-4" /> Weight
+						<Scale class="h-4 w-4" />
+						{t(locale, 'page.dashboard.cardWeight')}
 					</CardTitle>
 					{#if companion.isActive !== false}
 						<Button
@@ -541,7 +577,7 @@
 							size="sm"
 							class="h-7 text-xs text-primary px-2"
 						>
-							Log
+							{t(locale, 'page.dashboard.weightLog')}
 						</Button>
 					{/if}
 				</div>
@@ -560,7 +596,8 @@
 							>
 						</p>
 						<p class="text-xs mt-1 text-muted-foreground">
-							as of <LocalTime date={latest.recordedAt} />
+							{t(locale, 'page.dashboard.weightAsOf')}
+							<LocalTime date={latest.recordedAt} />
 						</p>
 					</button>
 					{#if recentWeights.length > 1}
@@ -581,7 +618,9 @@
 						</div>
 					{/if}
 				{:else}
-					<p class="text-sm italic text-muted-foreground">No weight recorded yet.</p>
+					<p class="text-sm italic text-muted-foreground">
+						{t(locale, 'page.dashboard.weightEmpty')}
+					</p>
 				{/if}
 			</CardContent>
 		</Card>
@@ -592,7 +631,8 @@
 		<CardHeader class="pb-3">
 			<div class="flex items-center justify-between">
 				<CardTitle class="text-sm font-semibold flex items-center gap-2">
-					<ClipboardList class="h-4 w-4" /> Recent Activity
+					<ClipboardList class="h-4 w-4" />
+					{t(locale, 'page.dashboard.cardActivity')}
 				</CardTitle>
 				{#if companion.isActive !== false}
 					<Button
@@ -601,14 +641,16 @@
 						size="sm"
 						class="h-7 text-xs text-primary px-2"
 					>
-						Log Activity
+						{t(locale, 'page.dashboard.activityLog')}
 					</Button>
 				{/if}
 			</div>
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if recentDaily.length === 0}
-				<p class="text-sm italic text-muted-foreground">No activity logged yet.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.dashboard.activityEmpty')}
+				</p>
 			{:else}
 				<div class="space-y-1">
 					{#each recentDaily as event (event.id)}
@@ -640,7 +682,8 @@
 		<CardHeader class="pb-3">
 			<div class="flex items-center justify-between">
 				<CardTitle class="text-sm font-semibold flex items-center gap-2">
-					<HeartPulse class="h-4 w-4" /> Recent Health Events
+					<HeartPulse class="h-4 w-4" />
+					{t(locale, 'page.dashboard.cardHealth')}
 				</CardTitle>
 				<Button
 					href="/{companion.id}/health"
@@ -648,13 +691,15 @@
 					size="sm"
 					class="h-7 text-xs text-primary px-2"
 				>
-					View all
+					{t(locale, 'page.dashboard.healthViewAll')}
 				</Button>
 			</div>
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if recentHealth.length === 0}
-				<p class="text-sm italic text-muted-foreground">No health events logged yet.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.dashboard.healthEmpty')}
+				</p>
 			{:else}
 				<div class="space-y-1">
 					{#each recentHealth as event (event.id)}

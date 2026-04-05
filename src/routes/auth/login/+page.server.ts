@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import {
 	generateSessionToken,
@@ -54,11 +55,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies, getClientAddress }) => {
+	default: async ({ request, cookies, getClientAddress, locals }) => {
 		const ip = getClientAddress();
+		const locale = locals.locale;
 
 		if (!checkRateLimit(ip)) {
-			return fail(429, { error: 'Too many login attempts. Please wait 15 minutes and try again.' });
+			return fail(429, { error: t(locale, 'error.tooManyLoginAttempts') });
 		}
 
 		const data = await request.formData();
@@ -68,7 +70,7 @@ export const actions: Actions = {
 		const password = String(data.get('password') ?? '');
 
 		if (!username || !password) {
-			return fail(400, { error: 'Username and password are required.' });
+			return fail(400, { error: t(locale, 'error.credentialsRequired') });
 		}
 
 		const user = await db.query.users.findFirst({
@@ -83,7 +85,7 @@ export const actions: Actions = {
 				);
 
 		if (!user || !isValid || !user.isActive) {
-			return fail(401, { error: 'Invalid username or password.' });
+			return fail(401, { error: t(locale, 'error.invalidCredentials') });
 		}
 
 		clearRateLimit(ip);

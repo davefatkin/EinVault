@@ -23,6 +23,9 @@
 	} from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
+	import { t, getLocale } from '$lib/i18n';
+
+	const locale = getLocale();
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -71,15 +74,19 @@
 <svelte:window onclick={handleWindowClick} />
 
 <svelte:head>
-	<title>User Admin | EinVault</title>
+	<title>{t(locale, 'page.admin.pageTitle')} | EinVault</title>
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="font-display text-2xl font-bold text-foreground">Users</h1>
+			<h1 class="font-display text-2xl font-bold text-foreground">
+				{t(locale, 'page.admin.usersTitle')}
+			</h1>
 			<p class="text-sm mt-1 text-muted-foreground">
-				{data.users.length} account{data.users.length !== 1 ? 's' : ''}
+				{data.users.length !== 1
+					? t(locale, 'page.admin.accountCountPlural', { count: data.users.length })
+					: t(locale, 'page.admin.accountCount', { count: data.users.length })}
 			</p>
 		</div>
 		<Button
@@ -88,7 +95,7 @@
 			size="sm"
 		>
 			{#if !showCreateForm}<Plus class="h-4 w-4 mr-1.5" />{/if}
-			{showCreateForm ? 'Cancel' : 'New User'}
+			{showCreateForm ? t(locale, 'common.cancel') : t(locale, 'page.admin.newUser')}
 		</Button>
 	</div>
 
@@ -108,14 +115,16 @@
 	{#if form?.createSuccess || form?.editSuccess}
 		<Alert variant="success">
 			<AlertDescription>
-				{form.createSuccess ? 'User created successfully.' : 'User updated successfully.'}
+				{form.createSuccess
+					? t(locale, 'page.admin.userCreated')
+					: t(locale, 'page.admin.userUpdated')}
 			</AlertDescription>
 		</Alert>
 	{/if}
 
 	{#if form?.assignSuccess}
 		<Alert variant="success">
-			<AlertDescription>Companion assignments updated.</AlertDescription>
+			<AlertDescription>{t(locale, 'page.admin.assignmentsUpdated')}</AlertDescription>
 		</Alert>
 	{/if}
 
@@ -123,7 +132,7 @@
 	{#if showCreateForm}
 		<Card class="animate-slide-up">
 			<CardHeader>
-				<CardTitle>Create user</CardTitle>
+				<CardTitle>{t(locale, 'page.admin.createUserTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<form
@@ -139,17 +148,17 @@
 				>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="displayName">Display name</Label>
+							<Label for="displayName">{t(locale, 'page.admin.labelDisplayName')}</Label>
 							<Input id="displayName" name="displayName" type="text" autocomplete="name" required />
 						</div>
 						<div class="space-y-1.5">
-							<Label for="username">Username</Label>
+							<Label for="username">{t(locale, 'page.admin.labelUsername')}</Label>
 							<Input id="username" name="username" type="text" autocomplete="username" required />
 						</div>
 					</div>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="password">Password</Label>
+							<Label for="password">{t(locale, 'page.admin.labelPassword')}</Label>
 							<Input
 								id="password"
 								name="password"
@@ -160,15 +169,15 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="role">Role</Label>
+							<Label for="role">{t(locale, 'page.admin.labelRole')}</Label>
 							<Select id="role" name="role">
-								<option value="member">Member</option>
-								<option value="admin">Admin</option>
-								<option value="caretaker">Caretaker</option>
+								<option value="member">{t(locale, 'enum.role.member')}</option>
+								<option value="admin">{t(locale, 'enum.role.admin')}</option>
+								<option value="caretaker">{t(locale, 'enum.role.caretaker')}</option>
 							</Select>
 						</div>
 					</div>
-					<Button type="submit">Create user</Button>
+					<Button type="submit">{t(locale, 'page.admin.createUserSubmit')}</Button>
 				</form>
 			</CardContent>
 		</Card>
@@ -184,14 +193,14 @@
 							<span class="font-medium text-foreground">{user.displayName}</span>
 							<Badge variant="secondary" class="font-mono">{user.username}</Badge>
 							{#if user.role === 'admin'}
-								<Badge variant="bark">Admin</Badge>
+								<Badge variant="bark">{t(locale, 'enum.role.admin')}</Badge>
 							{:else if user.role === 'caretaker'}
-								<Badge variant="moss">Caretaker</Badge>
+								<Badge variant="moss">{t(locale, 'enum.role.caretaker')}</Badge>
 							{:else}
-								<Badge variant="sky">Member</Badge>
+								<Badge variant="sky">{t(locale, 'enum.role.member')}</Badge>
 							{/if}
 							{#if !user.isActive}
-								<Badge variant="destructive">inactive</Badge>
+								<Badge variant="destructive">{t(locale, 'page.admin.inactiveBadge')}</Badge>
 							{/if}
 						</div>
 						{#if user.email || user.phone}
@@ -205,8 +214,10 @@
 							</p>
 						{/if}
 						<p class="text-xs mt-0.5 text-muted-foreground">
-							Joined <LocalTime date={user.createdAt} />
-							{#if user.lastLoginAt}&nbsp;· Last login <LocalTime date={user.lastLoginAt} />{/if}
+							{t(locale, 'page.admin.joined')}
+							<LocalTime date={user.createdAt} />
+							{#if user.lastLoginAt}&nbsp;· {t(locale, 'page.admin.lastLogin')}
+								<LocalTime date={user.lastLoginAt} />{/if}
 						</p>
 					</div>
 
@@ -231,7 +242,7 @@
 									e.stopPropagation();
 									openMenuUserId = openMenuUserId === user.id ? null : user.id;
 								}}
-								aria-label="More actions"
+								aria-label={t(locale, 'aria.moreActions')}
 								aria-expanded={openMenuUserId === user.id}
 								aria-haspopup="true"
 							>
@@ -254,7 +265,7 @@
 											}}
 										>
 											<Users class="h-3.5 w-3.5 shrink-0" />
-											Companions
+											{t(locale, 'page.admin.menuCompanions')}
 										</button>
 										<button
 											type="button"
@@ -266,7 +277,7 @@
 											}}
 										>
 											<CalendarClock class="h-3.5 w-3.5 shrink-0" />
-											Shifts
+											{t(locale, 'page.admin.menuShifts')}
 											{#if userShifts(user.id).length > 0}
 												<Badge variant="secondary" class="ml-auto text-[10px] px-1.5 py-0">
 													{userShifts(user.id).length}
@@ -287,10 +298,10 @@
 										>
 											{#if user.isActive}
 												<UserX class="h-3.5 w-3.5 shrink-0" />
-												Deactivate
+												{t(locale, 'page.admin.menuDeactivate')}
 											{:else}
 												<UserCheck class="h-3.5 w-3.5 shrink-0" />
-												Activate
+												{t(locale, 'page.admin.menuActivate')}
 											{/if}
 										</button>
 									{/if}
@@ -305,7 +316,7 @@
 										}}
 									>
 										<KeyRound class="h-3.5 w-3.5 shrink-0" />
-										Reset Password
+										{t(locale, 'page.admin.menuResetPassword')}
 									</button>
 								</div>
 							{/if}
@@ -326,10 +337,14 @@
 						class="space-y-4 animate-slide-up rounded-lg border border-border bg-muted/30 p-4"
 					>
 						<input type="hidden" name="userId" value={user.id} />
-						<p class="text-xs font-medium text-muted-foreground">Edit {user.displayName}</p>
+						<p class="text-xs font-medium text-muted-foreground">
+							{t(locale, 'page.admin.editUserLabel', { name: user.displayName })}
+						</p>
 						<div class="grid grid-cols-2 gap-3">
 							<div class="space-y-1.5">
-								<Label for="edit-displayName-{user.id}" class="text-xs">Display name</Label>
+								<Label for="edit-displayName-{user.id}" class="text-xs"
+									>{t(locale, 'page.admin.labelDisplayName')}</Label
+								>
 								<Input
 									id="edit-displayName-{user.id}"
 									name="displayName"
@@ -340,7 +355,9 @@
 								/>
 							</div>
 							<div class="space-y-1.5">
-								<Label for="edit-username-{user.id}" class="text-xs">Username</Label>
+								<Label for="edit-username-{user.id}" class="text-xs"
+									>{t(locale, 'page.admin.labelUsername')}</Label
+								>
 								<Input
 									id="edit-username-{user.id}"
 									name="username"
@@ -354,7 +371,10 @@
 						<div class="grid grid-cols-2 gap-3">
 							<div class="space-y-1.5">
 								<Label for="edit-email-{user.id}" class="text-xs"
-									>Email <span class="font-normal text-muted-foreground">(optional)</span></Label
+									>{t(locale, 'page.admin.labelEmail')}
+									<span class="font-normal text-muted-foreground"
+										>{t(locale, 'page.admin.labelOptional')}</span
+									></Label
 								>
 								<Input
 									id="edit-email-{user.id}"
@@ -368,7 +388,10 @@
 							</div>
 							<div class="space-y-1.5">
 								<Label for="edit-phone-{user.id}" class="text-xs"
-									>Phone <span class="font-normal text-muted-foreground">(optional)</span></Label
+									>{t(locale, 'page.admin.labelPhone')}
+									<span class="font-normal text-muted-foreground"
+										>{t(locale, 'page.admin.labelOptional')}</span
+									></Label
 								>
 								<Input
 									id="edit-phone-{user.id}"
@@ -382,20 +405,28 @@
 							</div>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="edit-role-{user.id}" class="text-xs">Role</Label>
+							<Label for="edit-role-{user.id}" class="text-xs"
+								>{t(locale, 'page.admin.labelRole')}</Label
+							>
 							<Select id="edit-role-{user.id}" name="role" class="h-8">
-								<option value="member" selected={user.role === 'member'}>Member</option>
-								<option value="admin" selected={user.role === 'admin'}>Admin</option>
-								<option value="caretaker" selected={user.role === 'caretaker'}>Caretaker</option>
+								<option value="member" selected={user.role === 'member'}
+									>{t(locale, 'enum.role.member')}</option
+								>
+								<option value="admin" selected={user.role === 'admin'}
+									>{t(locale, 'enum.role.admin')}</option
+								>
+								<option value="caretaker" selected={user.role === 'caretaker'}
+									>{t(locale, 'enum.role.caretaker')}</option
+								>
 							</Select>
 						</div>
 						<div class="flex gap-2">
-							<Button type="submit" size="sm">Save</Button>
+							<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 							<Button
 								type="button"
 								variant="secondary"
 								size="sm"
-								onclick={() => (editingUserId = null)}>Cancel</Button
+								onclick={() => (editingUserId = null)}>{t(locale, 'common.cancel')}</Button
 							>
 						</div>
 					</form>
@@ -415,10 +446,12 @@
 					>
 						<input type="hidden" name="userId" value={user.id} />
 						<p class="text-xs font-medium text-muted-foreground">
-							Assign companions to {user.displayName}
+							{t(locale, 'page.admin.assignCompanionsLabel', { name: user.displayName })}
 						</p>
 						{#if data.companions.length === 0}
-							<p class="text-xs text-muted-foreground">No active companions.</p>
+							<p class="text-xs text-muted-foreground">
+								{t(locale, 'page.admin.noActiveCompanions')}
+							</p>
 						{:else}
 							<div class="space-y-2">
 								{#each data.companions as companion (companion.id)}
@@ -440,12 +473,12 @@
 							</div>
 						{/if}
 						<div class="flex gap-2">
-							<Button type="submit" size="sm">Save</Button>
+							<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 							<Button
 								type="button"
 								variant="secondary"
 								size="sm"
-								onclick={() => (assigningUserId = null)}>Cancel</Button
+								onclick={() => (assigningUserId = null)}>{t(locale, 'common.cancel')}</Button
 							>
 						</div>
 					</form>
@@ -454,10 +487,14 @@
 				<!-- Shifts management panel -->
 				{#if managingShiftsUserId === user.id}
 					<div class="space-y-4 animate-slide-up rounded-lg border border-border bg-muted/30 p-4">
-						<p class="text-xs font-medium text-muted-foreground">Shifts for {user.displayName}</p>
+						<p class="text-xs font-medium text-muted-foreground">
+							{t(locale, 'page.admin.shiftsForUser', { name: user.displayName })}
+						</p>
 
 						{#if userShifts(user.id).length === 0}
-							<p class="text-xs text-muted-foreground">No shifts scheduled.</p>
+							<p class="text-xs text-muted-foreground">
+								{t(locale, 'page.admin.noShiftsScheduled')}
+							</p>
 						{:else}
 							<div class="space-y-2">
 								{#each userShifts(user.id) as shift (shift.id)}
@@ -476,7 +513,9 @@
 											<input type="hidden" name="shiftId" value={shift.id} />
 											<div class="grid grid-cols-2 gap-3">
 												<div class="space-y-1">
-													<Label for="edit-start-{shift.id}" class="text-xs">Start *</Label>
+													<Label for="edit-start-{shift.id}" class="text-xs"
+														>{t(locale, 'page.admin.shiftLabelStart')}</Label
+													>
 													<Input
 														id="edit-start-{shift.id}"
 														name="startAt"
@@ -488,7 +527,9 @@
 													/>
 												</div>
 												<div class="space-y-1">
-													<Label for="edit-end-{shift.id}" class="text-xs">End *</Label>
+													<Label for="edit-end-{shift.id}" class="text-xs"
+														>{t(locale, 'page.admin.shiftLabelEnd')}</Label
+													>
 													<Input
 														id="edit-end-{shift.id}"
 														name="endAt"
@@ -502,7 +543,9 @@
 											</div>
 											<div class="space-y-1">
 												<Label for="edit-notes-{shift.id}" class="text-xs"
-													>Label <span class="font-normal text-muted-foreground">(optional)</span
+													>{t(locale, 'page.admin.shiftLabelLabel')}
+													<span class="font-normal text-muted-foreground"
+														>{t(locale, 'page.admin.labelOptional')}</span
 													></Label
 												>
 												<Input
@@ -512,16 +555,17 @@
 													autocomplete="off"
 													class="h-8 text-sm"
 													value={shift.notes ?? ''}
-													placeholder="e.g. Morning shift"
+													placeholder={t(locale, 'page.admin.shiftPlaceholder')}
 												/>
 											</div>
 											<div class="flex gap-2">
-												<Button type="submit" size="sm">Save</Button>
+												<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 												<Button
 													type="button"
 													variant="secondary"
 													size="sm"
-													onclick={() => (editingShiftId = null)}>Cancel</Button
+													onclick={() => (editingShiftId = null)}
+													>{t(locale, 'common.cancel')}</Button
 												>
 											</div>
 										</form>
@@ -543,7 +587,8 @@
 													variant="ghost"
 													size="sm"
 													class="h-7 text-xs"
-													onclick={() => (editingShiftId = shift.id)}>Edit</Button
+													onclick={() => (editingShiftId = shift.id)}
+													>{t(locale, 'common.edit')}</Button
 												>
 												<Button
 													type="button"
@@ -556,7 +601,7 @@
 													}}
 												>
 													<Trash2 class="h-3.5 w-3.5" />
-													<span class="hidden sm:inline">Delete</span>
+													<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
 												</Button>
 											</div>
 										</div>
@@ -573,10 +618,14 @@
 							class="space-y-3 pt-3 border-t border-border"
 						>
 							<input type="hidden" name="userId" value={user.id} />
-							<p class="text-xs font-medium text-muted-foreground">Add Shift</p>
+							<p class="text-xs font-medium text-muted-foreground">
+								{t(locale, 'page.admin.addShiftLabel')}
+							</p>
 							<div class="grid grid-cols-2 gap-3">
 								<div class="space-y-1">
-									<Label for="shift-start-{user.id}" class="text-xs">Start *</Label>
+									<Label for="shift-start-{user.id}" class="text-xs"
+										>{t(locale, 'page.admin.shiftLabelStart')}</Label
+									>
 									<Input
 										id="shift-start-{user.id}"
 										name="startAt"
@@ -587,7 +636,9 @@
 									/>
 								</div>
 								<div class="space-y-1">
-									<Label for="shift-end-{user.id}" class="text-xs">End *</Label>
+									<Label for="shift-end-{user.id}" class="text-xs"
+										>{t(locale, 'page.admin.shiftLabelEnd')}</Label
+									>
 									<Input
 										id="shift-end-{user.id}"
 										name="endAt"
@@ -600,7 +651,10 @@
 							</div>
 							<div class="space-y-1">
 								<Label for="shift-notes-{user.id}" class="text-xs"
-									>Label <span class="font-normal text-muted-foreground">(optional)</span></Label
+									>{t(locale, 'page.admin.shiftLabelLabel')}
+									<span class="font-normal text-muted-foreground"
+										>{t(locale, 'page.admin.labelOptional')}</span
+									></Label
 								>
 								<Input
 									id="shift-notes-{user.id}"
@@ -608,16 +662,16 @@
 									type="text"
 									autocomplete="off"
 									class="h-8 text-sm"
-									placeholder="e.g. Morning shift"
+									placeholder={t(locale, 'page.admin.shiftPlaceholder')}
 								/>
 							</div>
 							<div class="flex gap-2">
-								<Button type="submit" size="sm">Add Shift</Button>
+								<Button type="submit" size="sm">{t(locale, 'page.admin.addShiftSubmit')}</Button>
 								<Button
 									type="button"
 									variant="secondary"
 									size="sm"
-									onclick={() => (managingShiftsUserId = null)}>Close</Button
+									onclick={() => (managingShiftsUserId = null)}>{t(locale, 'common.close')}</Button
 								>
 							</div>
 						</form>
@@ -643,16 +697,16 @@
 							type="password"
 							autocomplete="new-password"
 							class="max-w-[200px] h-9 text-sm"
-							placeholder="New password"
+							placeholder={t(locale, 'page.admin.newPasswordPlaceholder')}
 							minlength={8}
 							required
 						/>
-						<Button type="submit" size="sm">Set Password</Button>
+						<Button type="submit" size="sm">{t(locale, 'page.admin.setPassword')}</Button>
 						<Button
 							type="button"
 							variant="secondary"
 							size="sm"
-							onclick={() => (resetingUserId = null)}>Cancel</Button
+							onclick={() => (resetingUserId = null)}>{t(locale, 'common.cancel')}</Button
 						>
 					</form>
 				{/if}
@@ -677,7 +731,7 @@
 
 <ConfirmDialog
 	open={confirmOpen}
-	message="This can't be undone."
+	message={t(locale, 'component.confirmDialog.cantBeUndone')}
 	onconfirm={() => {
 		confirmOpen = false;
 		deleteShiftForm?.requestSubmit();

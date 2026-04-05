@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { avatarCacheBusts, bustAvatarCache } from '$lib/avatarCache.svelte';
+	import { t, getLocale } from '$lib/i18n';
+	const locale = getLocale();
 
 	interface Props {
 		companionId: string;
@@ -87,10 +89,10 @@
 				bustAvatarCache(companionId);
 			} else {
 				const data = await res.json().catch(() => null);
-				setError(data?.message ?? 'Upload failed. Please try again.');
+				setError(data?.message ?? t(locale, 'component.avatar.uploadFailed'));
 			}
 		} catch {
-			setError('Upload failed. Please try again.');
+			setError(t(locale, 'component.avatar.uploadFailed'));
 		} finally {
 			uploading = false;
 			if (fileInputEl) fileInputEl.value = '';
@@ -108,11 +110,11 @@
 			]} rounded-full overflow-hidden bg-bark-100 dark:bg-bark-900 flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-stone-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-white/70 {archived
 				? 'grayscale opacity-75'
 				: ''}"
-			aria-label="View {name}'s photo"
+			aria-label={t(locale, 'aria.viewPhoto', { name })}
 		>
 			<img
 				src={imgSrc}
-				alt="{name}'s avatar"
+				alt={t(locale, 'component.avatar.alt', { name })}
 				class="w-full h-full object-cover"
 				onerror={() => (imgError = true)}
 			/>
@@ -128,7 +130,7 @@
 			{#if imgSrc}
 				<img
 					src={imgSrc}
-					alt="{name}'s avatar"
+					alt={t(locale, 'component.avatar.alt', { name })}
 					class="w-full h-full object-cover"
 					onerror={() => (imgError = true)}
 				/>
@@ -153,8 +155,10 @@
 			type="button"
 			class="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-white text-bark-700 flex items-center justify-center
 				cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
-			title={uploadError ?? 'Change photo'}
-			aria-label={uploadError ? `Upload error: ${uploadError}` : `Change ${name}'s photo`}
+			title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
+			aria-label={uploadError
+				? t(locale, 'component.avatar.uploadError', { error: uploadError })
+				: t(locale, 'component.avatar.changePhotoFor', { name })}
 			onclick={(e) => {
 				e.stopPropagation();
 				fileInputEl?.click();

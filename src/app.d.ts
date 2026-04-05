@@ -1,3 +1,5 @@
+import type { Locale } from '$lib/i18n';
+
 declare global {
 	namespace App {
 		interface Locals {
@@ -8,6 +10,7 @@ declare global {
 				role: 'admin' | 'member' | 'caretaker';
 				isActive: boolean;
 				theme: 'light' | 'dark' | 'system';
+				locale: Locale;
 				email: string | null;
 				phone: string | null;
 			} | null;
@@ -17,6 +20,7 @@ declare global {
 				fresh: boolean;
 				expiresAt: Date;
 			} | null;
+			locale: Locale;
 		}
 		interface PageData {
 			user?: App.Locals['user'];

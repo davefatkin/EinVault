@@ -4,8 +4,11 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { untrack } from 'svelte';
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
+	import { t, getLocale } from '$lib/i18n';
+	import { moodOptions } from '$lib/i18n/labels';
 
 	let { data }: { data: PageData } = $props();
+	const locale = getLocale();
 
 	let body = $state(untrack(() => data.todayEntry?.body ?? ''));
 	let mood = $state(untrack(() => data.todayEntry?.mood ?? ''));
@@ -35,13 +38,7 @@
 		photos = data.photos ?? [];
 	});
 
-	const MOODS = [
-		{ value: 'great', label: '🤩', title: 'Great' },
-		{ value: 'good', label: '😊', title: 'Good' },
-		{ value: 'meh', label: '😐', title: 'Meh' },
-		{ value: 'off', label: '😕', title: 'Off' },
-		{ value: 'sick', label: '🤒', title: 'Sick' }
-	];
+	const MOODS = moodOptions(locale);
 
 	async function triggerSave() {
 		clearTimeout(saveTimer);
@@ -158,38 +155,46 @@
 </script>
 
 <svelte:head>
-	<title>Journal | {data.companion.name} | EinVault</title>
+	<title>{t(locale, 'page.journal.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
 
 <div class="space-y-5">
 	{#if !data.isOnShift}
 		<div>
-			<h1 class="font-display text-2xl font-bold">Journal</h1>
+			<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
 		</div>
 		<Card>
 			<CardContent class="text-center py-12">
 				<p class="text-4xl mb-3">🔒</p>
-				<p class="font-medium mb-1">No active shift</p>
+				<p class="font-medium mb-1">{t(locale, 'page.journal.caretaker.noActiveShift')}</p>
 				{#if data.nextShift}
 					<p class="text-sm text-muted-foreground">
-						Your next shift starts <LocalTime date={data.nextShift.startAt} format="datetime" />.
+						{t(locale, 'page.journal.caretaker.nextShiftStarts')}
+						<LocalTime date={data.nextShift.startAt} format="datetime" />.
 					</p>
 				{:else}
-					<p class="text-sm text-muted-foreground">No upcoming shifts are scheduled.</p>
+					<p class="text-sm text-muted-foreground">
+						{t(locale, 'page.journal.caretaker.noUpcomingShifts')}
+					</p>
 				{/if}
 			</CardContent>
 		</Card>
 	{:else}
 		<div class="flex items-center justify-between">
 			<div>
-				<h1 class="font-display text-2xl font-bold">Journal</h1>
+				<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
 				<p class="text-muted-foreground text-sm mt-0.5">{formatDate(data.today)}</p>
 			</div>
 			<span class="text-sm">
-				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse">Saving…</span
+				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse"
+						>{t(locale, 'page.journal.caretaker.savingStatus')}</span
 					>
-				{:else if saveStatus === 'saved'}<span class="text-[hsl(var(--moss))]">✓ Saved</span>
-				{:else if saveStatus === 'error'}<span class="text-red-500">Save failed</span>
+				{:else if saveStatus === 'saved'}<span class="text-[hsl(var(--moss))]"
+						>{t(locale, 'page.journal.caretaker.savedStatus')}</span
+					>
+				{:else if saveStatus === 'error'}<span class="text-red-500"
+						>{t(locale, 'page.journal.caretaker.saveFailedStatus')}</span
+					>
 				{/if}
 			</span>
 		</div>
@@ -197,9 +202,15 @@
 		<!-- Mood -->
 		<div class="flex items-center gap-2">
 			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-				How is {data.companion.name} doing?
+				{t(locale, 'page.journal.caretaker.howIsDoing', { name: data.companion.name })}
 			</span>
-			<div class="flex gap-1" role="group" aria-label="{data.companion.name}'s mood">
+			<div
+				class="flex gap-1"
+				role="group"
+				aria-label={t(locale, 'page.journal.caretaker.moodAriaLabel', {
+					name: data.companion.name
+				})}
+			>
 				{#each MOODS as m (m.value)}
 					<button
 						type="button"
@@ -207,14 +218,14 @@
 							mood = mood === m.value ? '' : m.value;
 							triggerSave();
 						}}
-						title={m.title}
+						title={m.label}
 						aria-pressed={mood === m.value}
 						class="text-2xl leading-none p-2 rounded-xl transition-all
 						{mood === m.value
 							? 'bg-moss-100 dark:bg-moss-900 ring-1 ring-moss-300 dark:ring-moss-700'
 							: 'opacity-40 hover:opacity-80'}"
 					>
-						{m.label}
+						{m.icon}
 					</button>
 				{/each}
 			</div>
@@ -223,15 +234,21 @@
 		<!-- Write area -->
 		<Card class="overflow-hidden">
 			<div class="border-b border-border/60 flex items-center justify-between px-4 py-2.5">
-				<span class="text-sm font-medium text-muted-foreground">Today's notes</span>
-				<span class="text-xs text-muted-foreground">Auto-saves as you type</span>
+				<span class="text-sm font-medium text-muted-foreground"
+					>{t(locale, 'page.journal.caretaker.todaysNotes')}</span
+				>
+				<span class="text-xs text-muted-foreground"
+					>{t(locale, 'page.journal.caretaker.autoSaves')}</span
+				>
 			</div>
 			<div class="p-4">
 				<MarkdownTextarea
 					name="body"
 					bind:value={body}
 					oninput={triggerSave}
-					placeholder="How did {data.companion.name}'s day go? Any notes for the owner…"
+					placeholder={t(locale, 'page.journal.caretaker.howIsDoing', {
+						name: data.companion.name
+					})}
 					rows={10}
 				/>
 			</div>
@@ -241,14 +258,15 @@
 		<Card class="overflow-hidden">
 			<CardHeader class="pb-3 flex flex-row items-center justify-between">
 				<h2 class="font-semibold flex items-center gap-2">
-					<span>📷</span> Photos
+					<span>📷</span>
+					{t(locale, 'page.journal.caretaker.photos')}
 					<span class="text-xs font-normal text-muted-foreground">{photos.length}/5</span>
 				</h2>
 				{#if photos.length < 5}
 					<label
 						class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
 					>
-						{uploading ? 'Uploading…' : '+ Add photo'}
+						{uploading ? t(locale, 'common.loading') : t(locale, 'page.journal.caretaker.addPhoto')}
 						<input
 							bind:this={fileInputEl}
 							type="file"
@@ -276,7 +294,9 @@
 					cursor-pointer hover:opacity-80 transition-colors"
 					>
 						<span class="text-3xl mb-2">🖼️</span>
-						<span class="text-sm text-muted-foreground">Drop photos here or click to upload</span>
+						<span class="text-sm text-muted-foreground"
+							>{t(locale, 'page.journal.caretaker.dropPhotos')}</span
+						>
 						<input
 							type="file"
 							name="photos"
@@ -295,13 +315,13 @@
 								>
 									<img
 										src={photoUrl(photo)}
-										alt={photo.originalName ?? 'Journal photo'}
+										alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
 										class="w-full h-full object-cover"
 										loading="lazy"
 									/>
 									<button
 										onclick={() => deletePhoto(photo.id)}
-										aria-label="Delete photo"
+										aria-label={t(locale, 'aria.deletePhoto')}
 										class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 										flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
 										hover:bg-red-600 transition-all"
@@ -314,7 +334,7 @@
 										<MarkdownTextarea
 											value={editingPhotoNotes}
 											oninput={(e) => (editingPhotoNotes = (e.target as HTMLTextAreaElement).value)}
-											placeholder="Add a caption…"
+											placeholder={t(locale, 'page.journal.caretaker.addCaption')}
 											rows={3}
 											name="photo-notes"
 										/>
@@ -324,14 +344,14 @@
 												onclick={() => savePhotoNotes(photo.id)}
 												class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-2 py-1 text-xs font-medium shadow hover:bg-primary/90 transition-colors"
 											>
-												Save
+												{t(locale, 'common.save')}
 											</button>
 											<button
 												type="button"
 												onclick={() => (editingPhotoId = null)}
 												class="inline-flex items-center justify-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-sm hover:bg-accent transition-colors"
 											>
-												Cancel
+												{t(locale, 'common.cancel')}
 											</button>
 										</div>
 									{:else}
@@ -340,14 +360,16 @@
 												{photo.notes.replace(/[#*_`~>[\]]/g, '').trim()}
 											</p>
 										{:else}
-											<p class="text-sm italic text-muted-foreground">No caption</p>
+											<p class="text-sm italic text-muted-foreground">
+												{t(locale, 'page.journal.caretaker.noCaption')}
+											</p>
 										{/if}
 										<button
 											type="button"
 											onclick={() => startEditPhotoNotes(photo)}
 											class="inline-flex items-center justify-center rounded-md px-2 py-0.5 mt-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
 										>
-											Edit Caption
+											{t(locale, 'page.journal.caretaker.editCaption')}
 										</button>
 									{/if}
 								</div>

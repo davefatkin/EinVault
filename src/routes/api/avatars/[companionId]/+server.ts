@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { createReadStream } from 'fs';
@@ -9,24 +10,24 @@ import { join, resolve } from 'path';
 import { DATA_DIR } from '$lib/server/paths';
 
 export const GET: RequestHandler = async ({ params, locals, request, url }) => {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
-	if (!companion?.avatarPath) error(404, 'No avatar');
+	if (!companion?.avatarPath) error(404, t(locals.locale, 'error.noAvatar'));
 
 	const fullPath = join(DATA_DIR, 'uploads', 'avatars', companion.avatarPath);
 
 	// Path traversal guard
 	const safeBase = resolve(join(DATA_DIR, 'uploads', 'avatars'));
-	if (!resolve(fullPath).startsWith(safeBase)) error(403, 'Forbidden');
+	if (!resolve(fullPath).startsWith(safeBase)) error(403, t(locals.locale, 'error.forbidden'));
 
 	let fileStat: Awaited<ReturnType<typeof stat>>;
 	try {
 		fileStat = await stat(fullPath);
 	} catch {
-		error(404, 'File not found');
+		error(404, t(locals.locale, 'error.fileNotFound'));
 	}
 
 	const etag = `"${fileStat.mtimeMs.toString(36)}-${fileStat.size.toString(36)}"`;

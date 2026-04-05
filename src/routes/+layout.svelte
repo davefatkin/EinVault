@@ -8,10 +8,14 @@
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	// untrack: serverTimezone is a server constant; capturing the initial value only.
+	// untrack: serverTimezone and locale are server constants; capturing initial values only.
 	setContext(
 		'serverTimezone',
 		untrack(() => data.serverTimezone)
+	);
+	setContext(
+		'locale',
+		untrack(() => data.locale)
 	);
 
 	$effect(() => {

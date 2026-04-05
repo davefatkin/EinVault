@@ -11,8 +11,15 @@ import {
 } from '$lib/server/auth/session';
 import { isSecureRequest } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
+import type { Locale } from '$lib/i18n';
 
-export async function handleAccountUpdate(userId: string, request: Request, cookies: Cookies) {
+export async function handleAccountUpdate(
+	userId: string,
+	request: Request,
+	cookies: Cookies,
+	locale: Locale
+) {
 	const data = await request.formData();
 	const displayName = String(data.get('displayName') ?? '').trim();
 	const username = String(data.get('username') ?? '')
@@ -25,11 +32,11 @@ export async function handleAccountUpdate(userId: string, request: Request, cook
 	const confirmPassword = String(data.get('confirmPassword') ?? '');
 
 	if (!displayName || !username) {
-		return fail(400, { accountError: 'Display name and username are required.' });
+		return fail(400, { accountError: t(locale, 'error.displayNameAndUsernameRequired') });
 	}
 	if (!/^[a-z0-9_-]+$/.test(username)) {
 		return fail(400, {
-			accountError: 'Username may only contain lowercase letters, numbers, hyphens and underscores.'
+			accountError: t(locale, 'error.invalidUsernameFormat')
 		});
 	}
 
@@ -37,7 +44,7 @@ export async function handleAccountUpdate(userId: string, request: Request, cook
 		where: eq(schema.users.username, username)
 	});
 	if (existing && existing.id !== userId) {
-		return fail(400, { accountError: 'That username is already taken.' });
+		return fail(400, { accountError: t(locale, 'error.usernameAlreadyTakenAccount') });
 	}
 
 	const updates: Partial<typeof schema.users.$inferInsert> = {
@@ -50,23 +57,23 @@ export async function handleAccountUpdate(userId: string, request: Request, cook
 	if (currentPassword) {
 		const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
 		if (!user?.passwordHash) {
-			return fail(400, { accountError: 'No password is set on this account.' });
+			return fail(400, { accountError: t(locale, 'error.noPasswordSet') });
 		}
 		const valid = await bcrypt.compare(currentPassword, user.passwordHash);
 		if (!valid) {
-			return fail(400, { accountError: 'Current password is incorrect.' });
+			return fail(400, { accountError: t(locale, 'error.currentPasswordIncorrect') });
 		}
 		if (!newPassword) {
-			return fail(400, { accountError: 'New password is required.' });
+			return fail(400, { accountError: t(locale, 'error.newPasswordRequired') });
 		}
 		if (newPassword.length < 8) {
-			return fail(400, { accountError: 'New password must be at least 8 characters.' });
+			return fail(400, { accountError: t(locale, 'error.newPasswordTooShort') });
 		}
 		if (newPassword.length > 128) {
-			return fail(400, { accountError: 'Password must be 128 characters or fewer.' });
+			return fail(400, { accountError: t(locale, 'error.passwordTooLong') });
 		}
 		if (newPassword !== confirmPassword) {
-			return fail(400, { accountError: 'Passwords do not match.' });
+			return fail(400, { accountError: t(locale, 'error.passwordsMismatch') });
 		}
 		updates.passwordHash = await bcrypt.hash(newPassword, 12);
 	}

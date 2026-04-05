@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, ne, gte } from 'drizzle-orm';
 import { getShiftStatus } from '$lib/server/shifts';
@@ -8,13 +9,13 @@ import { dismissReminder } from '$lib/server/reminders';
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions } = await parent();
 	if (!companions.find((c) => c.id === params.companionId)) {
-		error(403, 'Not assigned to this companion');
+		error(403, t(locals.locale, 'error.notAssignedToCompanion'));
 	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
-	if (!companion) error(404, 'Companion not found');
+	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	const medications = await db.query.healthEvents.findMany({
 		where: and(
@@ -54,7 +55,7 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	}));
 
 	const now = new Date();
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	const [allReminders, upcomingShifts] = await Promise.all([
 		db.query.reminders.findMany({
 			where: and(
@@ -88,10 +89,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 
 export const actions: Actions = {
 	dismiss: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 
 		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: 'You must be on shift to dismiss reminders.' });
+		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.mustBeOnShiftToDismiss') });
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
@@ -99,7 +100,7 @@ export const actions: Actions = {
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
 		});
-		if (!existing) return fail(404, { error: 'Reminder not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		await dismissReminder(existing);
 

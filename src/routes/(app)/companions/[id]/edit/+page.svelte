@@ -10,17 +10,19 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { ChevronLeft } from '@lucide/svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion } = $derived(data);
 	let loading = $state(false);
 	let activeTab = $state<'profile' | 'caretaker'>('profile');
+	const locale = getLocale();
 
 	let showArchivePanel = $state(false);
 </script>
 
 <svelte:head>
-	<title>Edit {companion.name} | EinVault</title>
+	<title>{t(locale, 'page.companion.edit.pageTitle', { name: companion.name })} | EinVault</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto space-y-6">
@@ -28,10 +30,12 @@
 		<div>
 			<Button href="/settings" variant="ghost" size="sm" class="gap-1.5 -ml-2">
 				<ChevronLeft class="h-4 w-4" />
-				<span class="hidden sm:inline">Back to Settings</span>
+				<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToSettings')}</span>
 			</Button>
 			<h1 class="font-display text-2xl font-bold text-foreground mt-2">Edit {companion.name}</h1>
-			<p class="text-sm mt-1 text-muted-foreground">Update {companion.name}'s details.</p>
+			<p class="text-sm mt-1 text-muted-foreground">
+				{t(locale, 'page.companion.edit.subheading', { name: companion.name })}
+			</p>
 		</div>
 	</div>
 
@@ -43,7 +47,7 @@
 
 	{#if form?.success}
 		<Alert variant="success">
-			<AlertDescription>Changes saved.</AlertDescription>
+			<AlertDescription>{t(locale, 'page.companion.edit.changesSaved')}</AlertDescription>
 		</Alert>
 	{/if}
 
@@ -55,7 +59,7 @@
 			variant={activeTab === 'profile' ? 'default' : 'ghost'}
 			class="flex-1 rounded-lg"
 		>
-			Profile
+			{t(locale, 'page.companion.edit.tabProfile')}
 		</Button>
 		<Button
 			type="button"
@@ -63,7 +67,7 @@
 			variant={activeTab === 'caretaker' ? 'default' : 'ghost'}
 			class="flex-1 rounded-lg"
 		>
-			Caretaker info
+			{t(locale, 'page.companion.edit.tabCaretaker')}
 		</Button>
 	</div>
 
@@ -82,11 +86,14 @@
 		<div class:hidden={activeTab !== 'profile'}>
 			<Card class="animate-fade-in">
 				<CardHeader>
-					<CardTitle>Profile</CardTitle>
+					<CardTitle>{t(locale, 'page.companion.edit.cardProfile')}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-5">
 					<div class="space-y-1.5">
-						<Label for="name">Name <span class="text-destructive">*</span></Label>
+						<Label for="name"
+							>{t(locale, 'page.companion.labelName')}
+							<span class="text-destructive">*</span></Label
+						>
 						<Input
 							id="name"
 							name="name"
@@ -99,7 +106,7 @@
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="breed">Breed</Label>
+							<Label for="breed">{t(locale, 'page.companion.labelBreed')}</Label>
 							<Input
 								id="breed"
 								name="breed"
@@ -109,18 +116,22 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="sex">Sex</Label>
+							<Label for="sex">{t(locale, 'page.companion.labelSex')}</Label>
 							<Select id="sex" name="sex">
-								<option value="">Unknown</option>
-								<option value="male" selected={companion.sex === 'male'}>Male</option>
-								<option value="female" selected={companion.sex === 'female'}>Female</option>
+								<option value="">{t(locale, 'page.companion.sexUnknown')}</option>
+								<option value="male" selected={companion.sex === 'male'}
+									>{t(locale, 'enum.sex.male')}</option
+								>
+								<option value="female" selected={companion.sex === 'female'}
+									>{t(locale, 'enum.sex.female')}</option
+								>
 							</Select>
 						</div>
 					</div>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="dob">Date of birth</Label>
+							<Label for="dob">{t(locale, 'page.companion.labelDob')}</Label>
 							<Input
 								id="dob"
 								name="dob"
@@ -130,7 +141,7 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="weightUnit">Weight unit</Label>
+							<Label for="weightUnit">{t(locale, 'page.companion.labelWeightUnit')}</Label>
 							<Select id="weightUnit" name="weightUnit">
 								<option value="lbs" selected={companion.weightUnit === 'lbs'}>lbs</option>
 								<option value="kg" selected={companion.weightUnit === 'kg'}>kg</option>
@@ -139,24 +150,24 @@
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="microchip">Microchip number</Label>
+						<Label for="microchip">{t(locale, 'page.companion.labelMicrochip')}</Label>
 						<Input
 							id="microchip"
 							name="microchip"
 							type="text"
 							autocomplete="off"
 							value={companion.microchip ?? ''}
-							placeholder="15-digit ID"
+							placeholder={t(locale, 'page.companion.edit.placeholderMicrochip')}
 						/>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="bio">Bio / notes</Label>
+						<Label for="bio">{t(locale, 'page.companion.labelBio')}</Label>
 						<MarkdownTextarea
 							id="bio"
 							name="bio"
 							value={companion.bio ?? ''}
-							placeholder="Anything worth remembering…"
+							placeholder={t(locale, 'page.companion.placeholderBio')}
 							rows={4}
 						/>
 					</div>
@@ -168,29 +179,31 @@
 		<div class:hidden={activeTab !== 'caretaker'} class="space-y-4 animate-fade-in">
 			<Card>
 				<CardHeader>
-					<CardTitle>Schedules</CardTitle>
+					<CardTitle>{t(locale, 'page.companion.edit.cardSchedules')}</CardTitle>
 					<p class="text-xs text-muted-foreground mt-1">
-						Shown to caretakers on their overview page.
+						{t(locale, 'page.companion.edit.schedulesHint')}
 					</p>
 				</CardHeader>
 				<CardContent class="space-y-4">
 					<div class="space-y-1.5">
-						<Label for="feedingSchedule">Feeding schedule</Label>
+						<Label for="feedingSchedule"
+							>{t(locale, 'page.companion.edit.labelFeedingSchedule')}</Label
+						>
 						<MarkdownTextarea
 							id="feedingSchedule"
 							name="feedingSchedule"
 							value={companion.feedingSchedule ?? ''}
-							placeholder="e.g. 7:00am: 1 cup kibble&#10;6:00pm: 1 cup kibble&#10;Treats OK after walks"
+							placeholder={t(locale, 'page.companion.edit.placeholderFeedingSchedule')}
 							rows={4}
 						/>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="walkSchedule">Walk schedule</Label>
+						<Label for="walkSchedule">{t(locale, 'page.companion.edit.labelWalkSchedule')}</Label>
 						<MarkdownTextarea
 							id="walkSchedule"
 							name="walkSchedule"
 							value={companion.walkSchedule ?? ''}
-							placeholder="e.g. Morning ~7am, 30 min&#10;Evening ~5:30pm, 20–30 min&#10;Avoid the dog park on weekdays"
+							placeholder={t(locale, 'page.companion.edit.placeholderWalkSchedule')}
 							rows={4}
 						/>
 					</div>
@@ -199,42 +212,42 @@
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Contacts</CardTitle>
+					<CardTitle>{t(locale, 'page.companion.edit.cardContacts')}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-4">
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="vetName">Vet name</Label>
+							<Label for="vetName">{t(locale, 'page.companion.edit.labelVetName')}</Label>
 							<Input
 								id="vetName"
 								name="vetName"
 								type="text"
 								autocomplete="off"
 								value={companion.vetName ?? ''}
-								placeholder="Dr. Bacchus"
+								placeholder={t(locale, 'page.companion.edit.placeholderVetName')}
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="vetPhone">Vet phone</Label>
+							<Label for="vetPhone">{t(locale, 'page.companion.edit.labelVetPhone')}</Label>
 							<Input
 								id="vetPhone"
 								name="vetPhone"
 								type="tel"
 								autocomplete="off"
 								value={companion.vetPhone ?? ''}
-								placeholder="(555) 000-0000"
+								placeholder={t(locale, 'common.placeholderPhone')}
 							/>
 						</div>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="vetClinic">Vet clinic</Label>
+						<Label for="vetClinic">{t(locale, 'page.companion.edit.labelVetClinic')}</Label>
 						<Input
 							id="vetClinic"
 							name="vetClinic"
 							type="text"
 							autocomplete="off"
 							value={companion.vetClinic ?? ''}
-							placeholder="Valentine Animal Hospital"
+							placeholder={t(locale, 'page.companion.edit.placeholderVetClinic')}
 						/>
 					</div>
 
@@ -242,25 +255,29 @@
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="emergencyContactName">Emergency contact</Label>
+							<Label for="emergencyContactName"
+								>{t(locale, 'page.companion.edit.labelEmergencyContact')}</Label
+							>
 							<Input
 								id="emergencyContactName"
 								name="emergencyContactName"
 								type="text"
 								autocomplete="off"
 								value={companion.emergencyContactName ?? ''}
-								placeholder="Faye (owner)"
+								placeholder={t(locale, 'page.companion.edit.placeholderEmergencyContact')}
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="emergencyContactPhone">Phone</Label>
+							<Label for="emergencyContactPhone"
+								>{t(locale, 'page.companion.edit.labelEmergencyPhone')}</Label
+							>
 							<Input
 								id="emergencyContactPhone"
 								name="emergencyContactPhone"
 								type="tel"
 								autocomplete="off"
 								value={companion.emergencyContactPhone ?? ''}
-								placeholder="(555) 000-0000"
+								placeholder={t(locale, 'common.placeholderPhone')}
 							/>
 						</div>
 					</div>
@@ -269,16 +286,18 @@
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Sitter notes</CardTitle>
+					<CardTitle>{t(locale, 'page.companion.edit.cardSitterNotes')}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-4">
 					<div class="space-y-1.5">
-						<Label for="notesForSitter">Notes for caretaker</Label>
+						<Label for="notesForSitter"
+							>{t(locale, 'page.companion.edit.labelNotesForSitter')}</Label
+						>
 						<MarkdownTextarea
 							id="notesForSitter"
 							name="notesForSitter"
 							value={companion.notesForSitter ?? ''}
-							placeholder="Anything a sitter or walker should know: quirks, fears, favorite spots…"
+							placeholder={t(locale, 'page.companion.edit.placeholderSitterNotes')}
 							rows={5}
 						/>
 					</div>
@@ -289,9 +308,11 @@
 		<!-- Actions: always visible -->
 		<div class="flex items-center justify-between pt-4">
 			<Button type="submit" disabled={loading}>
-				{loading ? 'Saving…' : 'Save Changes'}
+				{loading
+					? t(locale, 'page.companion.edit.saving')
+					: t(locale, 'page.companion.edit.saveChanges')}
 			</Button>
-			<Button href="/{companion.id}" variant="ghost">Cancel</Button>
+			<Button href="/{companion.id}" variant="ghost">{t(locale, 'common.cancel')}</Button>
 		</div>
 	</form>
 
@@ -299,19 +320,18 @@
 	{#if data.user?.role === 'admin'}
 		<Card>
 			<CardHeader>
-				<CardTitle>Archive Companion</CardTitle>
+				<CardTitle>{t(locale, 'page.companion.edit.cardArchive')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<p class="text-sm text-muted-foreground mb-4">
-					{companion.name} will be moved to your past companions. All journal entries, health records,
-					and photos will be preserved and remain viewable. You can restore {companion.name} at any time.
+					{t(locale, 'page.companion.edit.archiveDescription', { name: companion.name })}
 				</p>
 				<Button
 					variant="outline"
 					onclick={() => (showArchivePanel = true)}
 					disabled={showArchivePanel}
 				>
-					Archive {companion.name}
+					{t(locale, 'page.companion.edit.archiveButton', { name: companion.name })}
 				</Button>
 
 				{#if showArchivePanel}
@@ -329,7 +349,7 @@
 							class="space-y-4"
 						>
 							<div class="space-y-1.5">
-								<Label for="archivedAt">Date</Label>
+								<Label for="archivedAt">{t(locale, 'page.companion.edit.labelArchiveDate')}</Label>
 								<Input
 									id="archivedAt"
 									name="archivedAt"
@@ -339,21 +359,23 @@
 								/>
 							</div>
 							<div class="space-y-1.5">
-								<Label for="archiveNote">Note</Label>
+								<Label for="archiveNote">{t(locale, 'page.companion.edit.labelArchiveNote')}</Label>
 								<Input
 									id="archiveNote"
 									name="archiveNote"
 									type="text"
 									autocomplete="off"
-									placeholder="e.g. Crossed the rainbow bridge"
+									placeholder={t(locale, 'page.companion.edit.placeholderArchiveNote')}
 								/>
 							</div>
 							<div class="flex gap-2">
 								<Button type="submit" variant="secondary" disabled={loading}>
-									{loading ? 'Archiving…' : 'Archive'}
+									{loading
+										? t(locale, 'page.companion.edit.archiving')
+										: t(locale, 'page.companion.edit.archive')}
 								</Button>
 								<Button type="button" variant="ghost" onclick={() => (showArchivePanel = false)}>
-									Cancel
+									{t(locale, 'common.cancel')}
 								</Button>
 							</div>
 						</form>

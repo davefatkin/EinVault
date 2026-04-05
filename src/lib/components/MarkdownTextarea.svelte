@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { renderMarkdown } from '$lib/markdown';
+	import { t, getLocale } from '$lib/i18n';
 
 	interface Props {
 		name: string;
@@ -20,6 +21,7 @@
 		rows = 4,
 		oninput
 	}: Props = $props();
+	const locale = getLocale();
 
 	let mode = $state<'write' | 'preview'>('write');
 
@@ -39,7 +41,7 @@
 				? 'bg-primary/10 text-primary font-medium'
 				: 'text-muted-foreground hover:text-foreground'}"
 		>
-			Write
+			{t(locale, 'component.markdown.write')}
 		</button>
 		<button
 			type="button"
@@ -49,7 +51,7 @@
 				? 'bg-primary/10 text-primary font-medium'
 				: 'text-muted-foreground hover:text-foreground'}"
 		>
-			Preview
+			{t(locale, 'component.markdown.preview')}
 		</button>
 	</div>
 
@@ -74,7 +76,9 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html preview}
 			{:else}
-				<span class="italic text-muted-foreground">Nothing to preview</span>
+				<span class="italic text-muted-foreground"
+					>{t(locale, 'component.markdown.nothingToPreview')}</span
+				>
 			{/if}
 		</div>
 	{/if}
@@ -94,30 +98,35 @@
 				class="h-3 w-3 transition-transform group-open:rotate-90"
 				aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg
 			>
-			Markdown supported
+			{t(locale, 'component.markdown.markdownSupported')}
 		</summary>
 		<div class="mt-2 rounded-md bg-muted/60 px-3 py-2.5 text-xs space-y-1.5">
 			<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">**bold**</code>
-				<span><strong>bold</strong></span>
+				<span><strong>{t(locale, 'component.markdown.cheatsheet.bold')}</strong></span>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">_italic_</code>
-				<span><em>italic</em></span>
+				<span><em>{t(locale, 'component.markdown.cheatsheet.italic')}</em></span>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">## Heading</code>
-				<span class="font-semibold text-sm">Heading</span>
+				<span class="font-semibold text-sm"
+					>{t(locale, 'component.markdown.cheatsheet.heading')}</span
+				>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">- item</code>
-				<span>bullet list item</span>
+				<span>{t(locale, 'component.markdown.cheatsheet.bulletItem')}</span>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">1. item</code>
-				<span>numbered list item</span>
+				<span>{t(locale, 'component.markdown.cheatsheet.numberedItem')}</span>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">&gt; note</code>
-				<span class="border-l-2 border-border pl-2 text-muted-foreground">note</span>
+				<span class="border-l-2 border-border pl-2 text-muted-foreground"
+					>{t(locale, 'component.markdown.cheatsheet.blockquote')}</span
+				>
 
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">[text](url)</code>
-				<span class="text-primary underline">link text</span>
+				<span class="text-primary underline">{t(locale, 'component.markdown.cheatsheet.link')}</span
+				>
 			</div>
 		</div>
 	</details>

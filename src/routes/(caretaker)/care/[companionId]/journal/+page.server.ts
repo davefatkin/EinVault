@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { parseMood } from '$lib/server/validation';
@@ -7,16 +8,16 @@ import { getShiftStatus } from '$lib/server/shifts';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
 	if (!companions.find((c) => c.id === params.companionId)) {
-		error(403, 'Not assigned to this companion');
+		error(403, t(locals.locale, 'error.notAssignedToCompanion'));
 	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
-	if (!companion) error(404, 'Companion not found');
+	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	const today = localDateISO();
 
@@ -48,9 +49,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 export const actions: Actions = {
 	save: async ({ params, request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: 'No active shift.' });
+		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.noActiveShift') });
 
 		// Verify caretaker is assigned to this companion
 		const assigned = await db.query.companionCaretakers.findFirst({
@@ -59,7 +60,7 @@ export const actions: Actions = {
 				eq(schema.companionCaretakers.companionId, params.companionId)
 			)
 		});
-		if (!assigned) return fail(403, { error: 'Not assigned to this companion.' });
+		if (!assigned) return fail(403, { error: t(locals.locale, 'error.notAssignedToCompanion') });
 
 		const today = localDateISO();
 		const data = await request.formData();

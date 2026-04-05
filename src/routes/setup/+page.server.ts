@@ -11,12 +11,13 @@ import { isSecureRequest } from '$lib/server/auth';
 import { generateId } from '$lib/server/utils';
 import bcrypt from 'bcryptjs';
 import { count } from 'drizzle-orm';
+import { t, DEFAULT_LOCALE } from '$lib/i18n';
 
 export const load: PageServerLoad = async () => {
 	try {
 		await db.$count(schema.users);
 	} catch {
-		error(503, 'Database not ready. Run `npm run db:generate` then restart the dev server.');
+		error(503, t(DEFAULT_LOCALE, 'error.databaseNotReady'));
 	}
 	return {};
 };
@@ -32,21 +33,21 @@ export const actions: Actions = {
 		const confirmPassword = String(data.get('confirmPassword') ?? '');
 
 		if (!displayName || !username || !password || !confirmPassword) {
-			return fail(400, { error: 'All fields are required.' });
+			return fail(400, { error: t(DEFAULT_LOCALE, 'error.allFieldsRequired') });
 		}
 		if (!/^[a-z0-9_-]+$/.test(username)) {
 			return fail(400, {
-				error: 'Username may only contain lowercase letters, numbers, hyphens and underscores.'
+				error: t(DEFAULT_LOCALE, 'error.invalidUsernameFormat')
 			});
 		}
 		if (password.length < 8) {
-			return fail(400, { error: 'Password must be at least 8 characters.' });
+			return fail(400, { error: t(DEFAULT_LOCALE, 'error.passwordTooShort') });
 		}
 		if (password.length > 128) {
-			return fail(400, { error: 'Password must be 128 characters or fewer.' });
+			return fail(400, { error: t(DEFAULT_LOCALE, 'error.passwordTooLong') });
 		}
 		if (password !== confirmPassword) {
-			return fail(400, { error: 'Passwords do not match.' });
+			return fail(400, { error: t(DEFAULT_LOCALE, 'error.passwordsMismatch') });
 		}
 
 		const passwordHash = await bcrypt.hash(password, 12);
@@ -69,7 +70,7 @@ export const actions: Actions = {
 		});
 
 		if (!inserted) {
-			return fail(403, { error: 'Setup has already been completed.' });
+			return fail(403, { error: t(DEFAULT_LOCALE, 'error.setupAlreadyCompleted') });
 		}
 
 		const token = generateSessionToken();

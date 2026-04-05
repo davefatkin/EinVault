@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, lt } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 
 export const actions: Actions = {
 	add: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const title = String(data.get('title') ?? '').trim();
 		const description = String(data.get('description') ?? '').trim() || null;
@@ -29,8 +30,9 @@ export const actions: Actions = {
 		const isRecurring = data.get('isRecurring') === 'on';
 		const recurringDays = isRecurring ? parseInt(String(data.get('recurringDays') ?? '0')) : null;
 
-		if (!title) return fail(400, { error: 'Title is required.' });
-		if (isNaN(dueAt.getTime())) return fail(400, { error: 'Valid due date is required.' });
+		if (!title) return fail(400, { error: t(locals.locale, 'error.titleRequired') });
+		if (isNaN(dueAt.getTime()))
+			return fail(400, { error: t(locals.locale, 'error.validDueDateRequired') });
 
 		await db.insert(schema.reminders).values({
 			id: generateId(15),
@@ -47,7 +49,7 @@ export const actions: Actions = {
 	},
 
 	update: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const title = String(data.get('title') ?? '').trim();
@@ -57,15 +59,16 @@ export const actions: Actions = {
 		const isRecurring = data.get('isRecurring') === 'on';
 		const recurringDays = isRecurring ? parseInt(String(data.get('recurringDays') ?? '0')) : null;
 
-		if (!id) return fail(400, { error: 'Missing id.' });
-		if (!title) return fail(400, { error: 'Title is required.' });
-		if (isNaN(dueAt.getTime())) return fail(400, { error: 'Valid due date is required.' });
+		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
+		if (!title) return fail(400, { error: t(locals.locale, 'error.titleRequired') });
+		if (isNaN(dueAt.getTime()))
+			return fail(400, { error: t(locals.locale, 'error.validDueDateRequired') });
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
 			columns: { id: true }
 		});
-		if (!existing) return fail(404, { error: 'Reminder not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		await db
 			.update(schema.reminders)
@@ -83,14 +86,14 @@ export const actions: Actions = {
 	},
 
 	dismiss: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
 		});
-		if (!existing) return fail(404, { error: 'Reminder not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		await dismissReminder(existing);
 
@@ -112,16 +115,16 @@ export const actions: Actions = {
 	},
 
 	undismiss: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
-		if (!id) return fail(400, { error: 'Missing id.' });
+		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
 			columns: { id: true }
 		});
-		if (!existing) return fail(404, { error: 'Reminder not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		await db
 			.update(schema.reminders)
@@ -131,7 +134,7 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 
@@ -139,7 +142,7 @@ export const actions: Actions = {
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
 			columns: { id: true }
 		});
-		if (!existing) return fail(404, { error: 'Reminder not found.' });
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		await db.delete(schema.reminders).where(eq(schema.reminders.id, id));
 		return { deleteSuccess: true };
