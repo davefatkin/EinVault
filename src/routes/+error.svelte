@@ -2,23 +2,25 @@
 	import { page } from '$app/stores';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { t, getLocale } from '$lib/i18n';
+	import type { MessageKey } from '$lib/i18n';
 
-	const STATUS_MESSAGES: Record<number, { title: string; description: string }> = {
-		404: {
-			title: 'Page not found',
-			description: "The page you're looking for doesn't exist or has been moved."
-		},
-		403: { title: 'Access denied', description: "You don't have permission to view this page." },
-		401: { title: 'Not signed in', description: 'Please sign in to continue.' },
-		500: { title: 'Something went wrong', description: 'An unexpected error occurred on our end.' }
+	const locale = getLocale();
+
+	const STATUS_KEYS: Record<number, { title: MessageKey; description: MessageKey }> = {
+		404: { title: 'page.error.404.title', description: 'page.error.404.description' },
+		403: { title: 'page.error.403.title', description: 'page.error.403.description' },
+		401: { title: 'page.error.401.title', description: 'page.error.401.description' },
+		500: { title: 'page.error.500.title', description: 'page.error.500.description' }
 	};
 
 	let status = $derived($page.status);
-	let info = $derived(
-		STATUS_MESSAGES[status] ?? {
-			title: 'Unexpected error',
-			description: $page.error?.message ?? 'Something went wrong.'
-		}
+	let keys = $derived(STATUS_KEYS[status]);
+	let title = $derived(keys ? t(locale, keys.title) : t(locale, 'page.error.unexpected.title'));
+	let description = $derived(
+		keys
+			? t(locale, keys.description)
+			: ($page.error?.message ?? t(locale, 'page.error.unexpected.description'))
 	);
 </script>
 
@@ -43,18 +45,20 @@
 
 		<div class="space-y-2">
 			<p class="text-5xl font-display font-bold text-primary">{status}</p>
-			<h1 class="text-xl font-display font-semibold text-foreground">{info.title}</h1>
-			<p class="text-sm text-muted-foreground">{info.description}</p>
+			<h1 class="text-xl font-display font-semibold text-foreground">{title}</h1>
+			<p class="text-sm text-muted-foreground">{description}</p>
 		</div>
 
 		<Card>
 			<CardContent class="pt-6 space-y-3">
 				{#if status === 401}
-					<Button href="/auth/login" class="w-full">Sign in</Button>
+					<Button href="/auth/login" class="w-full">{t(locale, 'page.error.signIn')}</Button>
 				{:else}
-					<Button href="/" class="w-full">Go home</Button>
+					<Button href="/" class="w-full">{t(locale, 'page.error.goHome')}</Button>
 				{/if}
-				<Button variant="outline" class="w-full" onclick={() => history.back()}>Go back</Button>
+				<Button variant="outline" class="w-full" onclick={() => history.back()}
+					>{t(locale, 'page.error.goBack')}</Button
+				>
 			</CardContent>
 		</Card>
 	</div>

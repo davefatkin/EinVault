@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Select } from '$lib/components/ui/select/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
@@ -10,10 +11,13 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { Calendar } from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const locale = getLocale();
 	let showPasswordFields = $state(false);
+	let localeForm: HTMLFormElement;
 	let expandedShiftId = $state<string | null>(null);
 
 	const now = new SvelteDate();
@@ -44,11 +48,11 @@
 		return `${h}h ${m}m`;
 	}
 
-	const GROUP_LABELS: Record<string, string> = {
-		active: 'Active Now',
-		'this-week': 'This Week',
-		'next-week': 'Next Week',
-		later: 'Later'
+	const GROUP_LABEL_KEYS: Record<string, MessageKey> = {
+		active: 'page.settings.shiftGroupActive',
+		'this-week': 'page.settings.shiftGroupThisWeek',
+		'next-week': 'page.settings.shiftGroupNextWeek',
+		later: 'page.settings.shiftGroupLater'
 	};
 
 	const grouped = $derived(() => {
@@ -57,30 +61,32 @@
 			const key = shiftGroup(shift);
 			const existing = groups.find((g) => g.key === key);
 			if (existing) existing.shifts.push(shift);
-			else groups.push({ key, label: GROUP_LABELS[key], shifts: [shift] });
+			else groups.push({ key, label: t(locale, GROUP_LABEL_KEYS[key]), shifts: [shift] });
 		}
 		return groups;
 	});
 </script>
 
 <svelte:head>
-	<title>Settings | EinVault</title>
+	<title>{t(locale, 'page.settings.title')} | EinVault</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto space-y-6">
 	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">Settings</h1>
-		<p class="text-sm mt-1 text-muted-foreground">Manage your account.</p>
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.settings.title')}
+		</h1>
+		<p class="text-sm mt-1 text-muted-foreground">{t(locale, 'page.settings.subtitle')}</p>
 	</div>
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Account</CardTitle>
+			<CardTitle>{t(locale, 'page.settings.accountCard')}</CardTitle>
 		</CardHeader>
 		<CardContent>
 			{#if form?.accountSuccess}
 				<Alert variant="success" class="mb-4">
-					<AlertDescription>✓ Account updated.</AlertDescription>
+					<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
 				</Alert>
 			{/if}
 			{#if form?.accountError}
@@ -98,7 +104,7 @@
 				class="space-y-4"
 			>
 				<div class="space-y-1.5">
-					<Label for="displayName">Display name</Label>
+					<Label for="displayName">{t(locale, 'page.settings.labelDisplayName')}</Label>
 					<Input
 						id="displayName"
 						name="displayName"
@@ -110,7 +116,7 @@
 				</div>
 
 				<div class="space-y-1.5">
-					<Label for="username">Username</Label>
+					<Label for="username">{t(locale, 'page.settings.labelUsername')}</Label>
 					<Input
 						id="username"
 						name="username"
@@ -123,7 +129,10 @@
 
 				<div class="space-y-1.5">
 					<Label for="email">
-						Email <span class="text-muted-foreground font-normal">(optional)</span>
+						{t(locale, 'page.settings.labelEmail')}
+						<span class="text-muted-foreground font-normal"
+							>{t(locale, 'page.settings.optional')}</span
+						>
 					</Label>
 					<Input
 						id="email"
@@ -137,7 +146,10 @@
 
 				<div class="space-y-1.5">
 					<Label for="phone">
-						Phone <span class="text-muted-foreground font-normal">(optional)</span>
+						{t(locale, 'page.settings.labelPhone')}
+						<span class="text-muted-foreground font-normal"
+							>{t(locale, 'page.settings.optional')}</span
+						>
 					</Label>
 					<Input
 						id="phone"
@@ -145,7 +157,7 @@
 						type="tel"
 						value={data.user?.phone ?? ''}
 						autocomplete="tel"
-						placeholder="(555) 000-0000"
+						placeholder={t(locale, 'common.placeholderPhone')}
 					/>
 				</div>
 
@@ -155,7 +167,9 @@
 						onclick={() => (showPasswordFields = !showPasswordFields)}
 						class="text-sm text-primary hover:underline"
 					>
-						{showPasswordFields ? '↑ Cancel Password Change' : 'Change Password'}
+						{showPasswordFields
+							? t(locale, 'page.settings.cancelPasswordChange')
+							: t(locale, 'page.settings.changePassword')}
 					</button>
 				</div>
 
@@ -171,7 +185,7 @@
 					/>
 					<div class="space-y-4 animate-slide-up border-t border-border pt-4">
 						<div class="space-y-1.5">
-							<Label for="currentPassword">Current password</Label>
+							<Label for="currentPassword">{t(locale, 'page.settings.labelCurrentPassword')}</Label>
 							<Input
 								id="currentPassword"
 								name="currentPassword"
@@ -181,7 +195,7 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="newPassword">New password</Label>
+							<Label for="newPassword">{t(locale, 'page.settings.labelNewPassword')}</Label>
 							<Input
 								id="newPassword"
 								name="newPassword"
@@ -192,7 +206,7 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="confirmPassword">Confirm new password</Label>
+							<Label for="confirmPassword">{t(locale, 'page.settings.labelConfirmPassword')}</Label>
 							<Input
 								id="confirmPassword"
 								name="confirmPassword"
@@ -205,7 +219,41 @@
 					</div>
 				{/if}
 
-				<Button type="submit">Save Changes</Button>
+				<Button type="submit">{t(locale, 'page.settings.saveChanges')}</Button>
+			</form>
+		</CardContent>
+	</Card>
+
+	<!-- Language -->
+	<Card>
+		<CardHeader>
+			<CardTitle>{t(locale, 'page.settings.languageCard')}</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<p class="text-sm text-muted-foreground mb-3">
+				{t(locale, 'page.settings.languageDescription')}
+			</p>
+			<form
+				method="POST"
+				action="?/locale"
+				bind:this={localeForm}
+				use:enhance={() => {
+					return async () => {
+						window.location.reload();
+					};
+				}}
+			>
+				<div class="max-w-[200px]">
+					<Select
+						name="locale"
+						value={data.user?.locale ?? 'en'}
+						onchange={() => localeForm.requestSubmit()}
+					>
+						{#each SUPPORTED_LOCALES as loc (loc)}
+							<option value={loc}>{LOCALE_LABELS[loc]}</option>
+						{/each}
+					</Select>
+				</div>
 			</form>
 		</CardContent>
 	</Card>
@@ -214,7 +262,8 @@
 	<Card id="shifts">
 		<CardHeader class="pb-3">
 			<CardTitle class="font-semibold flex items-center gap-2">
-				<Calendar class="h-4 w-4" /> My Shifts
+				<Calendar class="h-4 w-4" />
+				{t(locale, 'page.settings.shiftsCard')}
 				{#if data.upcomingShifts.length > 0}
 					<Badge variant="secondary" class="ml-auto">{data.upcomingShifts.length}</Badge>
 				{/if}
@@ -222,7 +271,9 @@
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if data.upcomingShifts.length === 0}
-				<p class="text-sm italic text-muted-foreground">No upcoming shifts scheduled.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.settings.noUpcomingShifts')}
+				</p>
 			{:else}
 				<div class="space-y-4">
 					{#each grouped() as group (group.key)}
@@ -294,7 +345,7 @@
 				</div>
 				<div class="mt-4 pt-3 border-t border-border">
 					<a href="/api/shifts/export.ics" class="text-sm text-primary hover:underline">
-						Export to calendar
+						{t(locale, 'page.settings.exportCalendar')}
 					</a>
 				</div>
 			{/if}
@@ -304,8 +355,8 @@
 	<Card>
 		<CardContent class="pt-4">
 			<div class="flex items-center justify-between text-sm">
-				<span class="text-muted-foreground">Role</span>
-				<Badge variant="moss">Caretaker</Badge>
+				<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
+				<Badge variant="moss">{t(locale, 'enum.role.caretaker')}</Badge>
 			</div>
 		</CardContent>
 	</Card>

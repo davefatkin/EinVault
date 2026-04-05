@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { parseSex, parseWeightUnit } from '$lib/server/validation';
@@ -11,7 +12,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.id)
 	});
-	if (!companion) error(404, 'Companion not found');
+	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	return { companion, user: locals.user };
 };
@@ -24,12 +25,12 @@ export const actions: Actions = {
 		const companion = await db.query.companions.findFirst({
 			where: eq(schema.companions.id, params.id)
 		});
-		if (!companion) error(404, 'Companion not found');
+		if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 		const data = await request.formData();
 		const name = String(data.get('name') ?? '').trim();
 
-		if (!name) return fail(400, { error: 'Name is required.' });
+		if (!name) return fail(400, { error: t(locals.locale, 'error.nameRequired') });
 
 		await db
 			.update(schema.companions)
@@ -57,14 +58,15 @@ export const actions: Actions = {
 	},
 
 	archive: async ({ request, params, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const archivedAt = String(data.get('archivedAt') ?? '').trim();
 		const archiveNote = String(data.get('archiveNote') ?? '').trim();
 
 		const archivedAtDate = archivedAt ? new Date(archivedAt) : new Date();
-		if (isNaN(archivedAtDate.getTime())) return fail(400, { error: 'Invalid archive date.' });
+		if (isNaN(archivedAtDate.getTime()))
+			return fail(400, { error: t(locals.locale, 'error.invalidArchiveDate') });
 
 		await db
 			.update(schema.companions)

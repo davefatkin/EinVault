@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { createReadStream } from 'fs';
@@ -11,14 +12,14 @@ import { DATA_DIR } from '$lib/server/paths';
 const UPLOAD_DIR = join(DATA_DIR, 'uploads');
 
 export const GET: RequestHandler = async ({ params, locals, request }) => {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	// Path traversal guard: resolve and ensure it stays within UPLOAD_DIR
 	const requestedPath = normalize(params.path ?? '');
 	const fullPath = resolve(join(UPLOAD_DIR, requestedPath));
 
 	if (!fullPath.startsWith(resolve(UPLOAD_DIR))) {
-		error(403, 'Forbidden');
+		error(403, t(locals.locale, 'error.forbidden'));
 	}
 
 	// Verify the photo record exists in DB (don't serve arbitrary files)
@@ -26,7 +27,7 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 	const photo = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.filename, filename)
 	});
-	if (!photo) error(404, 'Not found');
+	if (!photo) error(404, t(locals.locale, 'error.notFound'));
 
 	// For caretakers, verify they are assigned to the companion that owns this photo
 	if (locals.user.role === 'caretaker') {
@@ -34,21 +35,21 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 			where: eq(schema.journalEntries.id, photo.entryId),
 			columns: { companionId: true }
 		});
-		if (!entry) error(404, 'Not found');
+		if (!entry) error(404, t(locals.locale, 'error.notFound'));
 		const assignment = await db.query.companionCaretakers.findFirst({
 			where: and(
 				eq(schema.companionCaretakers.companionId, entry.companionId),
 				eq(schema.companionCaretakers.userId, locals.user.id)
 			)
 		});
-		if (!assignment) error(403, 'Forbidden');
+		if (!assignment) error(403, t(locals.locale, 'error.forbidden'));
 	}
 
 	let fileStat: Awaited<ReturnType<typeof stat>>;
 	try {
 		fileStat = await stat(fullPath);
 	} catch {
-		error(404, 'File not found');
+		error(404, t(locals.locale, 'error.fileNotFound'));
 	}
 
 	const etag = `"${fileStat.mtimeMs.toString(36)}-${fileStat.size.toString(36)}"`;

@@ -2,6 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth } from '$server/auth';
 import { env } from '$env/dynamic/private';
+import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 
 const securityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
@@ -41,4 +42,30 @@ const authContext: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(securityHeaders, authContext);
+const localeDetect: Handle = async ({ event, resolve }) => {
+	// Priority: user preference > cookie > Accept-Language > default
+	const locale =
+		event.locals.user?.locale ??
+		resolveLocale(event.cookies.get('einvault_locale')) ??
+		parseAcceptLanguage(event.request.headers.get('accept-language'));
+
+	event.locals.locale = locale;
+
+	// Keep cookie in sync (skip for asset routes)
+	const isAsset = ASSET_PATHS.some((p) => event.url.pathname.startsWith(p));
+	if (!isAsset && event.cookies.get('einvault_locale') !== locale) {
+		event.cookies.set('einvault_locale', locale, {
+			path: '/',
+			httpOnly: false,
+			secure: event.request.headers.get('x-forwarded-proto') === 'https',
+			sameSite: 'strict',
+			maxAge: 60 * 60 * 24 * 365
+		});
+	}
+
+	return resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('lang="en"', `lang="${locale}"`)
+	});
+};
+
+export const handle = sequence(securityHeaders, authContext, localeDetect);

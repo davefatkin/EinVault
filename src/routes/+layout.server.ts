@@ -2,6 +2,7 @@ import { redirect, error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
 import { version } from '../../package.json';
+import { t } from '$lib/i18n';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
@@ -16,7 +17,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	} catch {
 		// Tables not created yet; db:generate hasn't been run
 		if (!isSetupRoute) {
-			error(503, 'Database not initialised. Run `npm run db:generate` then restart the server.');
+			error(503, t(locals.locale, 'error.databaseNotInitialized'));
 		}
 		return {};
 	}
@@ -31,6 +32,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	return {
 		user: locals.user,
+		locale: locals.locale,
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		version,
 		year: new Date().getFullYear()

@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
 import { parseSex, parseWeightUnit } from '$lib/server/validation';
@@ -24,7 +25,15 @@ export const actions: Actions = {
 		const bio = String(data.get('bio') ?? '').trim() || null;
 
 		if (!name) {
-			return fail(400, { error: 'Name is required.', name, breed, sex, dob, microchip, bio });
+			return fail(400, {
+				error: t(locals.locale, 'error.nameRequired'),
+				name,
+				breed,
+				sex,
+				dob,
+				microchip,
+				bio
+			});
 		}
 
 		const id = generateId(15);

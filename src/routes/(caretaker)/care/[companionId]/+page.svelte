@@ -8,12 +8,15 @@
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS } from '$lib/constants/activities';
+	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 	let { companion, medications, todayActivity, latestWeight, owners, upcomingReminders } =
 		$derived(data);
+
+	const locale = getLocale();
 
 	function age(dob: string | null): string {
 		if (!dob) return 'Unknown age';
@@ -161,14 +164,14 @@
 					type="button"
 					onclick={closeAvatarLightbox}
 					class="text-white/70 hover:text-white p-1 rounded"
-					aria-label="Close"
+					aria-label={t(locale, 'common.close')}
 				>
 					<X class="h-5 w-5" />
 				</button>
 			</div>
 			<img
 				src={avatarUrl}
-				alt="{companion.name}'s photo"
+				alt={t(locale, 'component.avatar.alt', { name: companion.name })}
 				class="w-full rounded-xl object-contain max-h-[80vh] shadow-2xl"
 			/>
 		</div>
@@ -181,7 +184,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'page.dashboard.caretaker.closeDialog')}
 			onclick={closeDetail}
 		></button>
 		<div
@@ -200,7 +203,7 @@
 				</h2>
 				<button
 					onclick={closeDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'common.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -211,24 +214,32 @@
 
 			<div class="px-5 py-4 space-y-3 text-sm">
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
+					>
 					<Badge variant="secondary" class="capitalize">{selected.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Logged</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
+					>
 					<span class="text-foreground"
 						><LocalTime date={selected.loggedAt} format="datetime" /></span
 					>
 				</div>
 				{#if selected.durationMinutes}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Duration</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.caretaker.modalLabelDuration')}</span
+						>
 						<span class="text-foreground">{selected.durationMinutes} min</span>
 					</div>
 				{/if}
 				{#if selected.notes}
 					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.dashboard.caretaker.modalLabelNotes')}
+						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(selected.notes)}
 						</div>
@@ -245,7 +256,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'page.dashboard.caretaker.closeDialog')}
 			onclick={closeReminderDetail}
 		></button>
 		<div
@@ -261,7 +272,7 @@
 				<h2 class="font-semibold text-base text-foreground">{selectedReminder.title}</h2>
 				<button
 					onclick={closeReminderDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'common.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -272,11 +283,15 @@
 
 			<div class="px-5 py-4 space-y-3 text-sm">
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
+					>
 					<Badge variant="secondary" class="capitalize">{selectedReminder.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Due</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.caretaker.modalLabelDue')}</span
+					>
 					<span
 						class={new Date(selectedReminder.dueAt) < new Date()
 							? 'text-destructive'
@@ -287,7 +302,9 @@
 				</div>
 				{#if selectedReminder.isRecurring}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Repeats</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.caretaker.modalLabelRepeats')}</span
+						>
 						<span class="text-foreground"
 							>Every {selectedReminder.recurringDays} day{selectedReminder.recurringDays !== 1
 								? 's'
@@ -297,7 +314,9 @@
 				{/if}
 				{#if selectedReminder.description}
 					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.dashboard.caretaker.modalLabelNotes')}
+						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(selectedReminder.description)}
 						</div>
@@ -321,10 +340,13 @@
 					<button
 						type="submit"
 						disabled={!data.isOnShift}
-						title={data.isOnShift ? undefined : 'Start your shift to mark reminders done'}
+						title={data.isOnShift
+							? undefined
+							: t(locale, 'page.dashboard.caretaker.modalShiftRequired')}
 						class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						<CheckCheck class="h-3.5 w-3.5" /> Done
+						<CheckCheck class="h-3.5 w-3.5" />
+						{t(locale, 'page.dashboard.caretaker.modalDone')}
 					</button>
 				</form>
 			</div>
@@ -347,12 +369,14 @@
 				<div>
 					<h1 class="font-display text-2xl font-bold">{companion.name}</h1>
 					<p class="text-moss-100 text-sm">
-						{companion.breed ?? 'Mixed breed'} · {age(companion.dob)}{companion.sex
-							? ` · ${companion.sex}`
-							: ''}
+						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
+							companion.dob
+						)}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					{#if companion.microchip}
-						<p class="text-moss-200 text-xs mt-1">Microchip: {companion.microchip}</p>
+						<p class="text-moss-200 text-xs mt-1">
+							{t(locale, 'page.dashboard.caretaker.microchip', { id: companion.microchip })}
+						</p>
 					{/if}
 				</div>
 			</div>
@@ -363,7 +387,7 @@
 	{#if latestWeight}
 		<div class="rounded-lg border border-border bg-card p-4">
 			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-				Weight
+				{t(locale, 'page.dashboard.caretaker.labelWeight')}
 			</h3>
 			<p class="text-2xl font-bold text-foreground">
 				{latestWeight.weight}<span class="text-sm font-normal ml-1 text-muted-foreground"
@@ -371,7 +395,8 @@
 				>
 			</p>
 			<p class="text-xs text-muted-foreground mt-1">
-				as of <LocalTime date={latestWeight.recordedAt} />
+				{t(locale, 'page.dashboard.caretaker.weightAsOf')}
+				<LocalTime date={latestWeight.recordedAt} />
 			</p>
 		</div>
 	{/if}
@@ -382,7 +407,8 @@
 			<Card>
 				<CardHeader class="pb-3">
 					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🍖</span> Feeding Schedule
+						<span>🍖</span>
+						{t(locale, 'page.dashboard.caretaker.cardFeeding')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -396,7 +422,8 @@
 			<Card>
 				<CardHeader class="pb-3">
 					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🦮</span> Walk Schedule
+						<span>🦮</span>
+						{t(locale, 'page.dashboard.caretaker.cardWalk')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -413,7 +440,8 @@
 		<Card>
 			<CardHeader class="pb-3">
 				<CardTitle class="font-semibold flex items-center gap-2">
-					<span>💊</span> Medications
+					<span>💊</span>
+					{t(locale, 'page.dashboard.caretaker.cardMedications')}
 				</CardTitle>
 			</CardHeader>
 			<CardContent class="space-y-3">
@@ -429,7 +457,8 @@
 						</div>
 						{#if med.nextDueAt}
 							<span class="text-xs shrink-0 text-primary">
-								Next: <LocalTime date={med.nextDueAt} />
+								{t(locale, 'page.dashboard.caretaker.medicationNext')}
+								<LocalTime date={med.nextDueAt} />
 							</span>
 						{/if}
 					</div>
@@ -442,7 +471,8 @@
 	<Card>
 		<CardHeader class="pb-3">
 			<CardTitle class="font-semibold flex items-center gap-2">
-				<Bell class="h-4 w-4" /> Upcoming Reminders
+				<Bell class="h-4 w-4" />
+				{t(locale, 'page.dashboard.caretaker.cardReminders')}
 				{#if upcomingReminders.length > 0}
 					<Badge variant="secondary" class="ml-auto">{upcomingReminders.length}</Badge>
 				{/if}
@@ -450,7 +480,9 @@
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if upcomingReminders.length === 0}
-				<p class="text-sm italic text-muted-foreground">No upcoming reminders.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.dashboard.caretaker.remindersEmpty')}
+				</p>
 			{:else}
 				<div class="space-y-1">
 					{#each upcomingReminders as reminder (reminder.id)}
@@ -463,7 +495,9 @@
 							>
 								<span class="truncate text-foreground">{reminder.title}</span>
 								{#if isOverdue}
-									<Badge variant="destructive" class="shrink-0 text-xs">Overdue</Badge>
+									<Badge variant="destructive" class="shrink-0 text-xs"
+										>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
+									>
 								{/if}
 								<span
 									class="ml-auto shrink-0 text-xs {isOverdue
@@ -486,12 +520,14 @@
 									type="submit"
 									disabled={!data.isOnShift}
 									title={data.isOnShift
-										? 'Mark as done'
-										: 'Start your shift to mark reminders done'}
+										? t(locale, 'page.dashboard.caretaker.reminderMarkDone')
+										: t(locale, 'page.dashboard.caretaker.reminderShiftRequired')}
 									class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
 								>
 									<CheckCheck class="h-3.5 w-3.5" />
-									<span class="hidden sm:inline">Done</span>
+									<span class="hidden sm:inline"
+										>{t(locale, 'page.dashboard.caretaker.reminderDone')}</span
+									>
 								</button>
 							</form>
 						</div>
@@ -507,7 +543,8 @@
 			<Card>
 				<CardHeader class="pb-3">
 					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🏥</span> Vet Info
+						<span>🏥</span>
+						{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-1 text-sm">
@@ -525,7 +562,8 @@
 			<Card class="border-destructive/30">
 				<CardHeader class="pb-3 bg-destructive/5 dark:bg-destructive/10 rounded-t-lg">
 					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🚨</span> Emergency Contact
+						<span>🚨</span>
+						{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-1 text-sm">
@@ -548,7 +586,9 @@
 	{#if visibleOwners.length > 0}
 		<div class="rounded-lg border border-border bg-card p-4 space-y-3">
 			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-				{visibleOwners.length === 1 ? 'Owner' : 'Household Contacts'}
+				{visibleOwners.length === 1
+					? t(locale, 'page.dashboard.caretaker.householdOwner')
+					: t(locale, 'page.dashboard.caretaker.householdContacts')}
 			</h3>
 			{#each visibleOwners as owner (owner.id)}
 				<div class="space-y-1">
@@ -579,7 +619,8 @@
 		<Card>
 			<CardHeader class="pb-3">
 				<CardTitle class="font-semibold flex items-center gap-2">
-					<span>📌</span> Notes for Sitter
+					<span>📌</span>
+					{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -594,7 +635,7 @@
 	{#if companion.bio?.trim()}
 		<div class="rounded-lg border border-border bg-card p-4">
 			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-				About {companion.name}
+				{t(locale, 'page.dashboard.caretaker.cardAbout', { name: companion.name })}
 			</h3>
 			<div class="prose prose-sm dark:prose-invert max-w-none">
 				{@html renderMarkdown(companion.bio)}
@@ -606,15 +647,18 @@
 	<Card>
 		<CardHeader class="pb-3 flex flex-row items-center justify-between">
 			<CardTitle class="font-semibold flex items-center gap-2">
-				<span>📋</span> Today's Activity
+				<span>📋</span>
+				{t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
 			</CardTitle>
 			<a href="/care/{companion.id}/log" class="text-primary text-xs hover:underline"
-				>+ Log activity</a
+				>{t(locale, 'page.dashboard.caretaker.logActivity')}</a
 			>
 		</CardHeader>
 		<CardContent>
 			{#if todayActivity.length === 0}
-				<p class="text-sm italic text-muted-foreground">Nothing logged yet today.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.dashboard.caretaker.activityEmpty')}
+				</p>
 			{:else}
 				<div class="space-y-1">
 					{#each todayActivity as event (event.id)}

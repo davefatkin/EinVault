@@ -20,8 +20,11 @@
 	} from '@lucide/svelte';
 	import { THEME_ICONS, THEMES, applyTheme, saveTheme, type Theme } from '$lib/theme';
 	import AppFooter from '$lib/components/AppFooter.svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	const locale = getLocale();
 
 	let activeCompanionId = $derived($page.params.companionId ?? null);
 	let activeCompanion = $derived(
@@ -31,16 +34,21 @@
 	let navItems = $derived(
 		activeCompanion
 			? [
-					{ href: `/care/${activeCompanion.id}`, label: 'Overview', icon: Home, restricted: false },
+					{
+						href: `/care/${activeCompanion.id}`,
+						label: t(locale, 'nav.caretaker.overview'),
+						icon: Home,
+						restricted: false
+					},
 					{
 						href: `/care/${activeCompanion.id}/log`,
-						label: 'Log activity',
+						label: t(locale, 'nav.caretaker.logActivity'),
 						icon: ClipboardList,
 						restricted: true
 					},
 					{
 						href: `/care/${activeCompanion.id}/journal`,
-						label: 'Journal',
+						label: t(locale, 'nav.journal'),
 						icon: NotebookPen,
 						restricted: true
 					}
@@ -48,14 +56,14 @@
 			: []
 	);
 
-	// ── Theme toggle ──────────────────────────────────────────────────────────
+	// Theme toggle
 	let themeOverride = $state<Theme | null>(null);
 	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
 
-	async function setTheme(t: Theme) {
-		themeOverride = t;
-		applyTheme(t);
-		await saveTheme(t);
+	async function setTheme(theme: Theme) {
+		themeOverride = theme;
+		applyTheme(theme);
+		await saveTheme(theme);
 	}
 </script>
 
@@ -74,7 +82,7 @@
 						class="logo-paw w-7 h-7 text-muted-foreground transition-[color,transform] duration-200"
 					/>
 					<span class="font-display font-bold text-lg text-primary">EinVault</span>
-					<Badge variant="moss" class="text-xs">Caretaker</Badge>
+					<Badge variant="moss" class="text-xs">{t(locale, 'enum.role.caretaker')}</Badge>
 				</a>
 
 				<!-- Companion name (if single) or switcher (if multiple) -->
@@ -82,7 +90,7 @@
 					<Select
 						id="companion-switcher"
 						name="companionId"
-						aria-label="Switch companion"
+						aria-label={t(locale, 'layout.switchCompanion')}
 						class="max-w-[160px]"
 						value={activeCompanionId ?? activeCompanion?.id}
 						onchange={(e) => goto(`/care/${e.currentTarget.value}`)}
@@ -106,14 +114,14 @@
 				<!-- Right: theme toggle + settings + sign out -->
 				<div class="flex items-center gap-1 shrink-0">
 					<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
-						{#each THEMES as t (t)}
-							{@const Icon = THEME_ICONS[t]}
+						{#each THEMES as theme (theme)}
+							{@const Icon = THEME_ICONS[theme]}
 							<button
 								type="button"
-								onclick={() => setTheme(t)}
-								aria-label="{t.charAt(0).toUpperCase() + t.slice(1)} mode"
-								aria-pressed={currentTheme === t}
-								class="rounded px-2 py-1 transition-all {currentTheme === t
+								onclick={() => setTheme(theme)}
+								aria-label="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
+								aria-pressed={currentTheme === theme}
+								class="rounded px-2 py-1 transition-all {currentTheme === theme
 									? 'bg-background text-foreground shadow-sm'
 									: 'text-muted-foreground hover:text-foreground'}"
 							>
@@ -128,12 +136,12 @@
 						class="hidden md:inline-flex gap-1.5"
 					>
 						<Settings class="h-4 w-4" />
-						<span class="hidden sm:inline">Settings</span>
+						<span class="hidden sm:inline">{t(locale, 'nav.settings')}</span>
 					</Button>
 					<form method="POST" action="/auth/logout">
 						<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
 							<LogOut class="h-4 w-4" />
-							<span class="hidden sm:inline">Sign Out</span>
+							<span class="hidden sm:inline">{t(locale, 'nav.signOut')}</span>
 						</Button>
 					</form>
 				</div>
@@ -152,7 +160,10 @@
 			>
 				<span class="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden="true"
 				></span>
-				<span>On shift, ends <LocalTime date={data.activeShift.endAt} format="datetime" /></span>
+				<span
+					>{t(locale, 'layout.caretaker.onShift')}
+					<LocalTime date={data.activeShift.endAt} format="datetime" /></span
+				>
 				{#if data.activeShift.notes}
 					<span class="text-xs opacity-70">· {data.activeShift.notes}</span>
 				{/if}
@@ -173,11 +184,12 @@
 				></span>
 				{#if data.nextShift}
 					<span
-						>Not on shift. Next shift: <LocalTime date={data.nextShift.startAt} format="datetime" />
+						>{t(locale, 'layout.caretaker.notOnShift')}
+						<LocalTime date={data.nextShift.startAt} format="datetime" />
 						{#if data.nextShift.notes}<span class="opacity-70"> · {data.nextShift.notes}</span>{/if}
 					</span>
 				{:else}
-					<span>Not on shift. No upcoming shifts scheduled.</span>
+					<span>{t(locale, 'layout.caretaker.noUpcomingShifts')}</span>
 				{/if}
 				<ChevronRight class="h-3.5 w-3.5 ml-auto shrink-0 opacity-50" />
 			</div>
@@ -188,7 +200,7 @@
 		{#if navItems.length > 0}
 			<nav
 				class="hidden md:flex gap-1 mb-6 rounded-xl border border-border bg-muted p-1"
-				aria-label="Caretaker navigation"
+				aria-label={t(locale, 'aria.caretakerNav')}
 			>
 				{#each navItems as item (item.href)}
 					{@const isActive =
@@ -199,7 +211,7 @@
 					{@const NavIcon = item.icon}
 					{#if isLocked}
 						<span
-							aria-label="{item.label} (requires active shift)"
+							aria-label="{item.label} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
 							class="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium opacity-40 cursor-not-allowed text-muted-foreground"
 						>
 							<NavIcon class="h-4 w-4 shrink-0" />
@@ -243,7 +255,7 @@
 					{@const NavIcon = item.icon}
 					{#if isLocked}
 						<span
-							aria-label="{item.label} (requires active shift)"
+							aria-label="{item.label} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
 							class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium opacity-40 cursor-not-allowed text-muted-foreground"
 						>
 							<NavIcon class="h-5 w-5" />
@@ -267,7 +279,7 @@
 						{$page.url.pathname.startsWith('/care/settings') ? 'text-primary' : 'text-muted-foreground'}"
 				>
 					<Settings class="h-5 w-5" />
-					Settings
+					{t(locale, 'nav.settings')}
 				</a>
 			</div>
 		</nav>

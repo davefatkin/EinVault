@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Select } from '$lib/components/ui/select/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
@@ -11,12 +12,15 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import { Pencil, Plus, RotateCcw } from '@lucide/svelte';
 	import { getContext } from 'svelte';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const locale = getLocale();
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
 
 	let showPasswordFields = $state(false);
+	let localeForm: HTMLFormElement;
 
 	function formatArchivedDate(d: Date | null | undefined): string {
 		if (!d) return '';
@@ -30,23 +34,25 @@
 </script>
 
 <svelte:head>
-	<title>Settings | EinVault</title>
+	<title>{t(locale, 'page.settings.title')} | EinVault</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto space-y-6">
 	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">Settings</h1>
-		<p class="text-sm mt-1 text-muted-foreground">Manage your account.</p>
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.settings.title')}
+		</h1>
+		<p class="text-sm mt-1 text-muted-foreground">{t(locale, 'page.settings.subtitle')}</p>
 	</div>
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Account</CardTitle>
+			<CardTitle>{t(locale, 'page.settings.accountCard')}</CardTitle>
 		</CardHeader>
 		<CardContent>
 			{#if form?.accountSuccess}
 				<Alert variant="success" class="mb-4">
-					<AlertDescription>✓ Account updated.</AlertDescription>
+					<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
 				</Alert>
 			{/if}
 			{#if form?.accountError}
@@ -64,7 +70,7 @@
 				class="space-y-4"
 			>
 				<div class="space-y-1.5">
-					<Label for="displayName">Display name</Label>
+					<Label for="displayName">{t(locale, 'page.settings.labelDisplayName')}</Label>
 					<Input
 						id="displayName"
 						name="displayName"
@@ -76,7 +82,7 @@
 				</div>
 
 				<div class="space-y-1.5">
-					<Label for="username">Username</Label>
+					<Label for="username">{t(locale, 'page.settings.labelUsername')}</Label>
 					<Input
 						id="username"
 						name="username"
@@ -89,7 +95,10 @@
 
 				<div class="space-y-1.5">
 					<Label for="email">
-						Email <span class="text-muted-foreground font-normal">(optional)</span>
+						{t(locale, 'page.settings.labelEmail')}
+						<span class="text-muted-foreground font-normal"
+							>{t(locale, 'page.settings.optional')}</span
+						>
 					</Label>
 					<Input
 						id="email"
@@ -103,7 +112,10 @@
 
 				<div class="space-y-1.5">
 					<Label for="phone">
-						Phone <span class="text-muted-foreground font-normal">(optional)</span>
+						{t(locale, 'page.settings.labelPhone')}
+						<span class="text-muted-foreground font-normal"
+							>{t(locale, 'page.settings.optional')}</span
+						>
 					</Label>
 					<Input
 						id="phone"
@@ -111,7 +123,7 @@
 						type="tel"
 						value={data.user?.phone ?? ''}
 						autocomplete="tel"
-						placeholder="(555) 000-0000"
+						placeholder={t(locale, 'common.placeholderPhone')}
 					/>
 				</div>
 
@@ -121,7 +133,9 @@
 						onclick={() => (showPasswordFields = !showPasswordFields)}
 						class="text-sm text-primary hover:underline"
 					>
-						{showPasswordFields ? '↑ Cancel Password Change' : 'Change Password'}
+						{showPasswordFields
+							? t(locale, 'page.settings.cancelPasswordChange')
+							: t(locale, 'page.settings.changePassword')}
 					</button>
 				</div>
 
@@ -137,7 +151,7 @@
 					/>
 					<div class="space-y-4 animate-slide-up border-t border-border pt-4">
 						<div class="space-y-1.5">
-							<Label for="currentPassword">Current password</Label>
+							<Label for="currentPassword">{t(locale, 'page.settings.labelCurrentPassword')}</Label>
 							<Input
 								id="currentPassword"
 								name="currentPassword"
@@ -147,7 +161,7 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="newPassword">New password</Label>
+							<Label for="newPassword">{t(locale, 'page.settings.labelNewPassword')}</Label>
 							<Input
 								id="newPassword"
 								name="newPassword"
@@ -158,7 +172,7 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="confirmPassword">Confirm new password</Label>
+							<Label for="confirmPassword">{t(locale, 'page.settings.labelConfirmPassword')}</Label>
 							<Input
 								id="confirmPassword"
 								name="confirmPassword"
@@ -171,7 +185,40 @@
 					</div>
 				{/if}
 
-				<Button type="submit">Save Changes</Button>
+				<Button type="submit">{t(locale, 'page.settings.saveChanges')}</Button>
+			</form>
+		</CardContent>
+	</Card>
+
+	<Card>
+		<CardHeader>
+			<CardTitle>{t(locale, 'page.settings.languageCard')}</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<p class="text-sm text-muted-foreground mb-3">
+				{t(locale, 'page.settings.languageDescription')}
+			</p>
+			<form
+				method="POST"
+				action="?/locale"
+				bind:this={localeForm}
+				use:enhance={() => {
+					return async () => {
+						window.location.reload();
+					};
+				}}
+			>
+				<div class="max-w-[200px]">
+					<Select
+						name="locale"
+						value={data.user?.locale ?? 'en'}
+						onchange={() => localeForm.requestSubmit()}
+					>
+						{#each SUPPORTED_LOCALES as loc (loc)}
+							<option value={loc}>{LOCALE_LABELS[loc]}</option>
+						{/each}
+					</Select>
+				</div>
 			</form>
 		</CardContent>
 	</Card>
@@ -180,15 +227,15 @@
 		<Card>
 			<CardHeader>
 				<div class="flex items-center justify-between">
-					<CardTitle>Companions</CardTitle>
+					<CardTitle>{t(locale, 'page.settings.companionsCard')}</CardTitle>
 					<Button href="/companions/new" size="sm" variant="outline" class="gap-1.5">
-						<Plus class="h-4 w-4" /><span>Add Companion</span>
+						<Plus class="h-4 w-4" /><span>{t(locale, 'page.settings.addCompanion')}</span>
 					</Button>
 				</div>
 			</CardHeader>
 			<CardContent>
 				{#if data.companions.length === 0}
-					<p class="text-sm text-muted-foreground">No companions yet.</p>
+					<p class="text-sm text-muted-foreground">{t(locale, 'page.settings.noCompanions')}</p>
 				{:else}
 					<ul class="space-y-2">
 						{#each data.companions as companion (companion.id)}
@@ -208,7 +255,9 @@
 									size="sm"
 									class="gap-1.5 shrink-0"
 								>
-									<Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline">Edit</span>
+									<Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+										>{t(locale, 'common.edit')}</span
+									>
 								</Button>
 							</li>
 						{/each}
@@ -221,12 +270,12 @@
 	{#if data.archivedCompanions && data.archivedCompanions.length > 0}
 		<Card>
 			<CardHeader>
-				<CardTitle>Past Companions</CardTitle>
+				<CardTitle>{t(locale, 'page.settings.pastCompanionsCard')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				{#if form?.restoreSuccess}
 					<Alert variant="success" class="mb-4">
-						<AlertDescription>Companion restored successfully.</AlertDescription>
+						<AlertDescription>{t(locale, 'page.settings.companionRestored')}</AlertDescription>
 					</Alert>
 				{/if}
 				<ul class="space-y-3">
@@ -246,7 +295,8 @@
 									>
 									{#if companion.archivedAt}
 										<span class="text-xs text-muted-foreground">
-											Archived {formatArchivedDate(companion.archivedAt)}
+											{t(locale, 'page.settings.archivedOn')}
+											{formatArchivedDate(companion.archivedAt)}
 										</span>
 									{/if}
 									{#if companion.archiveNote}
@@ -255,7 +305,9 @@
 								</div>
 							</div>
 							<div class="flex items-center gap-1 shrink-0">
-								<Button href="/{companion.id}" variant="ghost" size="sm">View</Button>
+								<Button href="/{companion.id}" variant="ghost" size="sm"
+									>{t(locale, 'page.settings.viewCompanion')}</Button
+								>
 								<form
 									method="POST"
 									action="?/restore"
@@ -267,7 +319,9 @@
 									<input type="hidden" name="companionId" value={companion.id} />
 									<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
 										<RotateCcw class="h-3.5 w-3.5" />
-										<span class="hidden sm:inline">Restore</span>
+										<span class="hidden sm:inline"
+											>{t(locale, 'page.settings.restoreCompanion')}</span
+										>
 									</Button>
 								</form>
 							</div>
@@ -281,13 +335,13 @@
 	<Card>
 		<CardContent class="pt-4">
 			<div class="flex items-center justify-between text-sm">
-				<span class="text-muted-foreground">Role</span>
+				<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
 				{#if data.user?.role === 'admin'}
-					<Badge variant="bark">Admin</Badge>
+					<Badge variant="bark">{t(locale, 'enum.role.admin')}</Badge>
 				{:else if data.user?.role === 'caretaker'}
-					<Badge variant="moss">Caretaker</Badge>
+					<Badge variant="moss">{t(locale, 'enum.role.caretaker')}</Badge>
 				{:else}
-					<Badge variant="sky">Member</Badge>
+					<Badge variant="sky">{t(locale, 'enum.role.member')}</Badge>
 				{/if}
 			</div>
 		</CardContent>

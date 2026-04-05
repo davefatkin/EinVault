@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, ne, lt, gt } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
@@ -9,7 +10,7 @@ import { parseRole } from '$lib/server/validation';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
-	if (locals.user.role !== 'admin') error(403, 'Forbidden');
+	if (locals.user.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 	const users = await db.query.users.findMany({
 		orderBy: (u, { asc }) => [asc(u.createdAt)],
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	create: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const displayName = String(data.get('displayName') ?? '').trim();
@@ -45,23 +46,23 @@ export const actions: Actions = {
 		const role = parseRole(String(data.get('role') ?? 'member')) ?? 'member';
 
 		if (!displayName || !username || !password) {
-			return fail(400, { createError: 'All fields are required.' });
+			return fail(400, { createError: t(locals.locale, 'error.allFieldsRequired') });
 		}
 		if (!/^[a-z0-9_-]+$/.test(username)) {
-			return fail(400, { createError: 'Invalid username format.' });
+			return fail(400, { createError: t(locals.locale, 'error.invalidUsernameFormat') });
 		}
 		if (password.length < 8) {
-			return fail(400, { createError: 'Password must be at least 8 characters.' });
+			return fail(400, { createError: t(locals.locale, 'error.passwordTooShort') });
 		}
 		if (password.length > 128) {
-			return fail(400, { createError: 'Password must be 128 characters or fewer.' });
+			return fail(400, { createError: t(locals.locale, 'error.passwordTooLong') });
 		}
 
 		const existing = await db.query.users.findFirst({
 			where: eq(schema.users.username, username)
 		});
 		if (existing) {
-			return fail(400, { createError: 'Username already taken.' });
+			return fail(400, { createError: t(locals.locale, 'error.usernameAlreadyTaken') });
 		}
 
 		const passwordHash = await bcrypt.hash(password, 12);
@@ -77,17 +78,17 @@ export const actions: Actions = {
 	},
 
 	toggleActive: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const userId = String(data.get('userId') ?? '');
 
 		if (userId === locals.user.id) {
-			return fail(400, { toggleError: 'You cannot deactivate your own account.' });
+			return fail(400, { toggleError: t(locals.locale, 'error.cannotDeactivateOwnAccount') });
 		}
 
 		const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-		if (!user) return fail(404, { toggleError: 'User not found.' });
+		if (!user) return fail(404, { toggleError: t(locals.locale, 'error.userNotFound') });
 
 		const newIsActive = !user.isActive;
 		await db.update(schema.users).set({ isActive: newIsActive }).where(eq(schema.users.id, userId));
@@ -100,22 +101,22 @@ export const actions: Actions = {
 	},
 
 	resetPassword: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const userId = String(data.get('userId') ?? '');
 		const newPassword = String(data.get('newPassword') ?? '');
 
-		if (!userId) return fail(400, { resetError: 'Missing user ID.' });
+		if (!userId) return fail(400, { resetError: t(locals.locale, 'error.missingUserId') });
 		if (newPassword.length < 8) {
-			return fail(400, { resetError: 'Password must be at least 8 characters.' });
+			return fail(400, { resetError: t(locals.locale, 'error.passwordTooShort') });
 		}
 		if (newPassword.length > 128) {
-			return fail(400, { resetError: 'Password must be 128 characters or fewer.' });
+			return fail(400, { resetError: t(locals.locale, 'error.passwordTooLong') });
 		}
 
 		const target = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-		if (!target) return fail(404, { resetError: 'User not found.' });
+		if (!target) return fail(404, { resetError: t(locals.locale, 'error.userNotFound') });
 
 		const passwordHash = await bcrypt.hash(newPassword, 12);
 		await db.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, userId));
@@ -126,7 +127,7 @@ export const actions: Actions = {
 	},
 
 	addShift: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const userId = String(data.get('userId') ?? '');
@@ -134,14 +135,17 @@ export const actions: Actions = {
 		const endAt = new Date(String(data.get('endAt') ?? ''));
 		const notes = String(data.get('notes') ?? '').trim() || null;
 
-		if (!userId) return fail(400, { shiftError: 'Missing user ID.' });
-		if (isNaN(startAt.getTime())) return fail(400, { shiftError: 'Valid start time is required.' });
-		if (isNaN(endAt.getTime())) return fail(400, { shiftError: 'Valid end time is required.' });
-		if (endAt <= startAt) return fail(400, { shiftError: 'End time must be after start time.' });
+		if (!userId) return fail(400, { shiftError: t(locals.locale, 'error.missingUserId') });
+		if (isNaN(startAt.getTime()))
+			return fail(400, { shiftError: t(locals.locale, 'error.validStartTimeRequired') });
+		if (isNaN(endAt.getTime()))
+			return fail(400, { shiftError: t(locals.locale, 'error.validEndTimeRequired') });
+		if (endAt <= startAt)
+			return fail(400, { shiftError: t(locals.locale, 'error.endTimeAfterStartTime') });
 
 		const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
 		if (!user || user.role !== 'caretaker') {
-			return fail(400, { shiftError: 'User is not a caretaker.' });
+			return fail(400, { shiftError: t(locals.locale, 'error.userNotCaretaker') });
 		}
 
 		const overlapping = await db.query.caretakerShifts.findFirst({
@@ -154,7 +158,7 @@ export const actions: Actions = {
 		});
 		if (overlapping)
 			return fail(400, {
-				shiftError: 'This shift overlaps with an existing shift for this caretaker.'
+				shiftError: t(locals.locale, 'error.shiftOverlap')
 			});
 
 		await db.insert(schema.caretakerShifts).values({
@@ -169,7 +173,7 @@ export const actions: Actions = {
 	},
 
 	updateShift: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const shiftId = String(data.get('shiftId') ?? '');
@@ -177,15 +181,18 @@ export const actions: Actions = {
 		const endAt = new Date(String(data.get('endAt') ?? ''));
 		const notes = String(data.get('notes') ?? '').trim() || null;
 
-		if (!shiftId) return fail(400, { shiftError: 'Missing shift ID.' });
-		if (isNaN(startAt.getTime())) return fail(400, { shiftError: 'Valid start time is required.' });
-		if (isNaN(endAt.getTime())) return fail(400, { shiftError: 'Valid end time is required.' });
-		if (endAt <= startAt) return fail(400, { shiftError: 'End time must be after start time.' });
+		if (!shiftId) return fail(400, { shiftError: t(locals.locale, 'error.missingShiftId') });
+		if (isNaN(startAt.getTime()))
+			return fail(400, { shiftError: t(locals.locale, 'error.validStartTimeRequired') });
+		if (isNaN(endAt.getTime()))
+			return fail(400, { shiftError: t(locals.locale, 'error.validEndTimeRequired') });
+		if (endAt <= startAt)
+			return fail(400, { shiftError: t(locals.locale, 'error.endTimeAfterStartTime') });
 
 		const existingShift = await db.query.caretakerShifts.findFirst({
 			where: eq(schema.caretakerShifts.id, shiftId)
 		});
-		if (!existingShift) return fail(404, { shiftError: 'Shift not found.' });
+		if (!existingShift) return fail(404, { shiftError: t(locals.locale, 'error.shiftNotFound') });
 
 		const overlapping = await db.query.caretakerShifts.findFirst({
 			where: and(
@@ -198,7 +205,7 @@ export const actions: Actions = {
 		});
 		if (overlapping)
 			return fail(400, {
-				shiftError: 'This shift overlaps with an existing shift for this caretaker.'
+				shiftError: t(locals.locale, 'error.shiftOverlap')
 			});
 
 		await db
@@ -210,18 +217,18 @@ export const actions: Actions = {
 	},
 
 	deleteShift: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const shiftId = String(data.get('shiftId') ?? '');
-		if (!shiftId) return fail(400, { shiftError: 'Missing shift ID.' });
+		if (!shiftId) return fail(400, { shiftError: t(locals.locale, 'error.missingShiftId') });
 
 		await db.delete(schema.caretakerShifts).where(eq(schema.caretakerShifts.id, shiftId));
 		return { shiftDeleteSuccess: true };
 	},
 
 	editUser: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const userId = String(data.get('userId') ?? '');
@@ -233,17 +240,18 @@ export const actions: Actions = {
 		const phone = String(data.get('phone') ?? '').trim() || null;
 		const role = parseRole(String(data.get('role') ?? ''));
 
-		if (!userId) return fail(400, { editError: 'Missing user ID.' });
-		if (!displayName) return fail(400, { editError: 'Display name is required.' });
-		if (!username) return fail(400, { editError: 'Username is required.' });
+		if (!userId) return fail(400, { editError: t(locals.locale, 'error.missingUserId') });
+		if (!displayName)
+			return fail(400, { editError: t(locals.locale, 'error.displayNameRequired') });
+		if (!username) return fail(400, { editError: t(locals.locale, 'error.usernameRequired') });
 		if (!/^[a-z0-9_-]+$/.test(username))
-			return fail(400, { editError: 'Invalid username format.' });
-		if (!role) return fail(400, { editError: 'Invalid role.' });
+			return fail(400, { editError: t(locals.locale, 'error.invalidUsernameFormat') });
+		if (!role) return fail(400, { editError: t(locals.locale, 'error.invalidRole') });
 
 		const conflict = await db.query.users.findFirst({
 			where: and(eq(schema.users.username, username), ne(schema.users.id, userId))
 		});
-		if (conflict) return fail(400, { editError: 'Username already taken.' });
+		if (conflict) return fail(400, { editError: t(locals.locale, 'error.usernameAlreadyTaken') });
 
 		await db
 			.update(schema.users)
@@ -254,17 +262,17 @@ export const actions: Actions = {
 	},
 
 	assignCompanions: async ({ request, locals }) => {
-		if (locals.user?.role !== 'admin') error(403, 'Forbidden');
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
 		const data = await request.formData();
 		const userId = String(data.get('userId') ?? '');
 		const companionIds = data.getAll('companionId').map(String);
 
-		if (!userId) return fail(400, { assignError: 'Missing user ID.' });
+		if (!userId) return fail(400, { assignError: t(locals.locale, 'error.missingUserId') });
 
 		const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
 		if (!user || user.role !== 'caretaker') {
-			return fail(400, { assignError: 'User is not a caretaker.' });
+			return fail(400, { assignError: t(locals.locale, 'error.userNotCaretaker') });
 		}
 
 		if (companionIds.length > 0) {
@@ -274,7 +282,8 @@ export const actions: Actions = {
 			});
 			const validIds = new Set(validCompanions.map((c) => c.id));
 			const allValid = companionIds.every((id) => validIds.has(id));
-			if (!allValid) return fail(400, { assignError: 'One or more companion IDs are invalid.' });
+			if (!allValid)
+				return fail(400, { assignError: t(locals.locale, 'error.invalidCompanionIds') });
 		}
 
 		db.transaction((tx) => {

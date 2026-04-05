@@ -5,13 +5,22 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
+	import { Select } from '$lib/components/ui/select/index.js';
 
 	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);
+	const locale = getLocale();
+
+	function changeLocale(e: Event) {
+		const value = (e.currentTarget as HTMLSelectElement).value;
+		document.cookie = `einvault_locale=${value};path=/;max-age=31536000;SameSite=Lax`;
+		window.location.reload();
+	}
 </script>
 
 <svelte:head>
-	<title>Sign in | EinVault</title>
+	<title>{t(locale, 'page.login.title')} | EinVault</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -30,7 +39,7 @@
 				</svg>
 				<span class="font-display text-3xl font-bold text-primary">EinVault</span>
 			</a>
-			<p class="text-sm text-muted-foreground">Your private companion care log</p>
+			<p class="text-sm text-muted-foreground">{t(locale, 'page.login.tagline')}</p>
 		</div>
 
 		<Card class="animate-slide-up">
@@ -43,19 +52,19 @@
 					{/if}
 
 					<div class="space-y-1.5">
-						<Label for="username">Username</Label>
+						<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
 						<Input
 							id="username"
 							name="username"
 							type="text"
-							placeholder="username"
+							placeholder={t(locale, 'page.login.usernamePlaceholder')}
 							required
 							autocomplete="username"
 						/>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="password">Password</Label>
+						<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
 						<Input
 							id="password"
 							name="password"
@@ -67,10 +76,20 @@
 					</div>
 
 					<Button type="submit" class="w-full" disabled={loading}>
-						{loading ? 'Signing in…' : 'Sign in'}
+						{loading ? t(locale, 'page.login.signingIn') : t(locale, 'page.login.signIn')}
 					</Button>
 				</form>
 			</CardContent>
 		</Card>
+
+		<div class="flex justify-center mt-4">
+			<div class="max-w-[200px]">
+				<Select value={locale} onchange={changeLocale}>
+					{#each SUPPORTED_LOCALES as loc (loc)}
+						<option value={loc}>{LOCALE_LABELS[loc]}</option>
+					{/each}
+				</Select>
+			</div>
+		</div>
 	</div>
 </div>

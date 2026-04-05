@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { tick } from 'svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	interface Props {
 		open: boolean;
@@ -10,7 +11,8 @@
 		oncancel: () => void;
 	}
 
-	let { open, message, confirmLabel = 'Delete', onconfirm, oncancel }: Props = $props();
+	let { open, message, confirmLabel, onconfirm, oncancel }: Props = $props();
+	const locale = getLocale();
 
 	let dialogEl = $state<HTMLElement | null>(null);
 	let triggerEl = $state<HTMLElement | null>(null);
@@ -79,8 +81,12 @@
 		>
 			<p id={messageId} class="text-sm text-foreground">{message}</p>
 			<div class="flex justify-end gap-2 mt-5">
-				<Button variant="outline" size="sm" onclick={oncancel}>Cancel</Button>
-				<Button variant="destructive" size="sm" onclick={onconfirm}>{confirmLabel}</Button>
+				<Button variant="outline" size="sm" onclick={oncancel}
+					>{t(locale, 'component.confirmDialog.cancel')}</Button
+				>
+				<Button variant="destructive" size="sm" onclick={onconfirm}
+					>{confirmLabel ?? t(locale, 'component.confirmDialog.delete')}</Button
+				>
 			</div>
 		</div>
 	</div>

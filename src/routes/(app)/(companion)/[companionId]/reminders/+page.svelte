@@ -17,19 +17,16 @@
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
+	import { t, getLocale } from '$lib/i18n';
+	import { reminderTypeOptions } from '$lib/i18n/labels';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	const locale = getLocale();
 	let showForm = $state(false);
 	let isRecurring = $state(false);
 	let submitting = $state(false);
 
-	const REMINDER_TYPES = [
-		{ value: 'vet', label: '🏥 Vet' },
-		{ value: 'medication', label: '💊 Medication' },
-		{ value: 'vaccination', label: '💉 Vaccination' },
-		{ value: 'grooming', label: '✂️ Grooming' },
-		{ value: 'other', label: '📌 Other' }
-	];
+	const REMINDER_TYPES = reminderTypeOptions(locale);
 
 	let active = $derived(data.reminders.filter((r) => !r.isDismissed));
 	let dismissed = $derived(data.reminders.filter((r) => r.isDismissed));
@@ -61,13 +58,10 @@
 		editIsRecurring = reminder.isRecurring;
 	}
 
-	const TYPE_ICONS: Record<string, string> = {
-		vet: '🏥',
-		medication: '💊',
-		vaccination: '💉',
-		grooming: '✂️',
-		other: '📌'
-	};
+	const TYPE_ICONS = REMINDER_TYPES.reduce(
+		(acc, t) => ({ ...acc, [t.value]: t.icon }),
+		{} as Record<string, string>
+	);
 
 	let confirmOpen = $state(false);
 	let deleteReminderId = $state('');
@@ -116,7 +110,7 @@
 </script>
 
 <svelte:head>
-	<title>Reminders | {data.companion.name} | EinVault</title>
+	<title>{t(locale, 'page.reminders.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
 
 <!-- Detail modal -->
@@ -127,7 +121,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'aria.closeDialog')}
 			onclick={closeDetail}
 		></button>
 		<div
@@ -143,7 +137,7 @@
 				<h2 class="font-semibold text-base text-foreground">{r.title}</h2>
 				<button
 					onclick={closeDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'aria.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -154,27 +148,39 @@
 
 			<div class="px-5 py-4 space-y-3 text-sm">
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.reminders.detailType')}</span
+					>
 					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Due</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.reminders.detailDue')}</span
+					>
 					<span class={overdue ? 'text-destructive' : 'text-foreground'}>
 						<LocalTime date={r.dueAt} format="datetime" />
 					</span>
-					{#if overdue}<Badge variant="destructive" class="ml-1">Overdue</Badge>{/if}
+					{#if overdue}<Badge variant="destructive" class="ml-1"
+							>{t(locale, 'page.reminders.overdue')}</Badge
+						>{/if}
 				</div>
 				{#if r.isRecurring && r.recurringDays}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Repeats</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.reminders.detailRepeats')}</span
+						>
 						<span class="text-foreground"
-							>Every {r.recurringDays} day{r.recurringDays !== 1 ? 's' : ''}</span
+							>{r.recurringDays !== 1
+								? t(locale, 'page.reminders.detailEveryDaysPlural', { count: r.recurringDays })
+								: t(locale, 'page.reminders.detailEveryDays', { count: r.recurringDays })}</span
 						>
 					</div>
 				{/if}
 				{#if r.description}
 					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.reminders.detailNotes')}
+						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(r.description)}
 						</div>
@@ -198,7 +204,7 @@
 						}}
 					>
 						<Pencil class="h-3.5 w-3.5 mr-1.5" />
-						Edit
+						{t(locale, 'common.edit')}
 					</Button>
 					<Button
 						variant="outline"
@@ -209,7 +215,7 @@
 						}}
 					>
 						<BellOff class="h-3.5 w-3.5 mr-1.5" />
-						Dismiss
+						{t(locale, 'page.reminders.dismiss')}
 					</Button>
 					<Button
 						variant="destructive"
@@ -222,7 +228,7 @@
 						}}
 					>
 						<Trash2 class="h-3.5 w-3.5 mr-1.5" />
-						Delete
+						{t(locale, 'common.delete')}
 					</Button>
 				</div>
 			{/if}
@@ -237,19 +243,21 @@
 <div class="space-y-6 pb-20 md:pb-0">
 	{#if !data.companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
-			{data.companion.name} is archived. Viewing in read-only mode.
+			{t(locale, 'page.reminders.archivedNotice', { name: data.companion.name })}
 		</div>
 	{/if}
 
 	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">Reminders</h1>
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.reminders.title')}
+		</h1>
 		{#if data.companion.isActive !== false}
 			<Button size="sm" onclick={() => (showForm = !showForm)}>
 				{#if showForm}
-					Cancel
+					{t(locale, 'common.cancel')}
 				{:else}
 					<Plus class="h-4 w-4 mr-1.5" />
-					Add Reminder
+					{t(locale, 'page.reminders.addReminder')}
 				{/if}
 			</Button>
 		{/if}
@@ -264,7 +272,9 @@
 	{#if showForm}
 		<Card class="animate-slide-up">
 			<CardContent class="pt-6">
-				<h2 class="font-semibold text-foreground mb-4">New reminder</h2>
+				<h2 class="font-semibold text-foreground mb-4">
+					{t(locale, 'page.reminders.newReminderTitle')}
+				</h2>
 				<form
 					method="POST"
 					action="?/add"
@@ -281,35 +291,35 @@
 				>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-1.5 col-span-2 sm:col-span-1">
-							<Label for="title">Title *</Label>
+							<Label for="title">{t(locale, 'page.reminders.labelTitle')}</Label>
 							<Input
 								id="title"
 								name="title"
 								type="text"
-								placeholder="e.g. Annual booster"
+								placeholder={t(locale, 'page.reminders.placeholderTitle')}
 								required
 								autocomplete="off"
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="type">Type</Label>
+							<Label for="type">{t(locale, 'page.reminders.labelType')}</Label>
 							<Select id="type" name="type">
-								{#each REMINDER_TYPES as t (t.value)}
-									<option value={t.value}>{t.label}</option>
+								{#each REMINDER_TYPES as rt (rt.value)}
+									<option value={rt.value}>{rt.icon} {rt.label}</option>
 								{/each}
 							</Select>
 						</div>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="dueAt">Due date *</Label>
+						<Label for="dueAt">{t(locale, 'page.reminders.labelDueDate')}</Label>
 						<Input id="dueAt" name="dueAt" type="datetime-local" required autocomplete="off" />
 					</div>
 					<div class="space-y-1.5">
-						<Label for="description">Notes</Label>
+						<Label for="description">{t(locale, 'page.reminders.labelNotes')}</Label>
 						<MarkdownTextarea
 							id="description"
 							name="description"
-							placeholder="Any additional details…"
+							placeholder={t(locale, 'page.reminders.placeholderNotes')}
 							rows={3}
 						/>
 					</div>
@@ -321,11 +331,12 @@
 							bind:checked={isRecurring}
 							class="rounded border-input"
 						/>
-						<span class="text-sm text-foreground">Recurring reminder</span>
+						<span class="text-sm text-foreground">{t(locale, 'page.reminders.labelRecurring')}</span
+						>
 					</label>
 					{#if isRecurring}
 						<div class="space-y-1.5 animate-slide-up">
-							<Label for="recurringDays">Repeat every (days)</Label>
+							<Label for="recurringDays">{t(locale, 'page.reminders.labelRepeatEvery')}</Label>
 							<Input
 								id="recurringDays"
 								name="recurringDays"
@@ -340,10 +351,12 @@
 					{/if}
 					<div class="flex gap-3">
 						<Button type="submit" disabled={submitting}>
-							{submitting ? 'Saving...' : 'Save Reminder'}
+							{submitting
+								? t(locale, 'page.reminders.savingReminder')
+								: t(locale, 'page.reminders.saveReminder')}
 						</Button>
 						<Button type="button" variant="outline" onclick={() => (showForm = false)}
-							>Cancel</Button
+							>{t(locale, 'common.cancel')}</Button
 						>
 					</div>
 				</form>
@@ -355,7 +368,7 @@
 		<Card>
 			<CardContent class="text-center py-12">
 				<p class="text-4xl mb-3">🔔</p>
-				<p class="text-sm italic text-muted-foreground">No upcoming reminders.</p>
+				<p class="text-sm italic text-muted-foreground">{t(locale, 'page.reminders.noUpcoming')}</p>
 			</CardContent>
 		</Card>
 	{:else}
@@ -379,7 +392,9 @@
 								<input type="hidden" name="id" value={reminder.id} />
 								<div class="grid grid-cols-2 gap-4">
 									<div class="space-y-1.5 col-span-2 sm:col-span-1">
-										<Label for="edit-title-{reminder.id}">Title *</Label>
+										<Label for="edit-title-{reminder.id}"
+											>{t(locale, 'page.reminders.labelTitle')}</Label
+										>
 										<Input
 											id="edit-title-{reminder.id}"
 											name="title"
@@ -390,18 +405,22 @@
 										/>
 									</div>
 									<div class="space-y-1.5">
-										<Label for="edit-type-{reminder.id}">Type</Label>
+										<Label for="edit-type-{reminder.id}"
+											>{t(locale, 'page.reminders.labelType')}</Label
+										>
 										<Select id="edit-type-{reminder.id}" name="type">
-											{#each REMINDER_TYPES as t (t.value)}
-												<option value={t.value} selected={reminder.type === t.value}
-													>{t.label}</option
+											{#each REMINDER_TYPES as rt (rt.value)}
+												<option value={rt.value} selected={reminder.type === rt.value}
+													>{rt.icon} {rt.label}</option
 												>
 											{/each}
 										</Select>
 									</div>
 								</div>
 								<div class="space-y-1.5">
-									<Label for="edit-dueAt-{reminder.id}">Due date *</Label>
+									<Label for="edit-dueAt-{reminder.id}"
+										>{t(locale, 'page.reminders.labelDueDate')}</Label
+									>
 									<Input
 										id="edit-dueAt-{reminder.id}"
 										name="dueAt"
@@ -412,12 +431,14 @@
 									/>
 								</div>
 								<div class="space-y-1.5">
-									<Label for="edit-description-{reminder.id}">Notes</Label>
+									<Label for="edit-description-{reminder.id}"
+										>{t(locale, 'page.reminders.labelNotes')}</Label
+									>
 									<MarkdownTextarea
 										id="edit-description-{reminder.id}"
 										name="description"
 										value={reminder.description ?? ''}
-										placeholder="Any additional details…"
+										placeholder={t(locale, 'page.reminders.placeholderNotes')}
 										rows={3}
 									/>
 								</div>
@@ -429,11 +450,15 @@
 										bind:checked={editIsRecurring}
 										class="rounded border-input"
 									/>
-									<span class="text-sm text-foreground">Recurring reminder</span>
+									<span class="text-sm text-foreground"
+										>{t(locale, 'page.reminders.labelRecurring')}</span
+									>
 								</label>
 								{#if editIsRecurring}
 									<div class="space-y-1.5">
-										<Label for="edit-recurringDays-{reminder.id}">Repeat every (days)</Label>
+										<Label for="edit-recurringDays-{reminder.id}"
+											>{t(locale, 'page.reminders.labelRepeatEvery')}</Label
+										>
 										<Input
 											id="edit-recurringDays-{reminder.id}"
 											name="recurringDays"
@@ -448,12 +473,12 @@
 									</div>
 								{/if}
 								<div class="flex gap-3">
-									<Button type="submit" size="sm">Save</Button>
+									<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 									<Button
 										type="button"
 										variant="outline"
 										size="sm"
-										onclick={() => (editingId = null)}>Cancel</Button
+										onclick={() => (editingId = null)}>{t(locale, 'common.cancel')}</Button
 									>
 								</div>
 							</form>
@@ -470,7 +495,9 @@
 									<div class="min-w-0">
 										<div class="flex items-center gap-2 flex-wrap">
 											<span class="font-medium text-foreground">{reminder.title}</span>
-											{#if overdue}<Badge variant="destructive">Overdue</Badge>{/if}
+											{#if overdue}<Badge variant="destructive"
+													>{t(locale, 'page.reminders.overdue')}</Badge
+												>{/if}
 											{#if reminder.isRecurring && reminder.recurringDays}
 												<Badge variant="secondary">Every {reminder.recurringDays}d</Badge>
 											{/if}
@@ -499,7 +526,7 @@
 											class="h-7 gap-1.5 px-2 text-xs"
 										>
 											<Pencil class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Edit</span>
+											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
 										<form method="POST" action="?/dismiss" use:enhance>
 											<input type="hidden" name="id" value={reminder.id} />
@@ -510,7 +537,7 @@
 												class="h-7 gap-1.5 px-2 text-xs"
 											>
 												<BellOff class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">Dismiss</span>
+												<span class="hidden sm:inline">{t(locale, 'page.reminders.dismiss')}</span>
 											</Button>
 										</form>
 										<Button
@@ -524,7 +551,7 @@
 											}}
 										>
 											<Trash2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Delete</span>
+											<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
 										</Button>
 									</div>
 								{/if}
@@ -539,7 +566,9 @@
 	{#if dismissed.length > 0}
 		<details>
 			<summary class="cursor-pointer text-sm select-none hover:opacity-80 text-muted-foreground">
-				{dismissed.length} dismissed reminder{dismissed.length !== 1 ? 's' : ''}
+				{dismissed.length !== 1
+					? t(locale, 'page.reminders.dismissedCountPlural', { count: dismissed.length })
+					: t(locale, 'page.reminders.dismissedCount', { count: dismissed.length })}
 			</summary>
 			<div class="mt-3 space-y-2">
 				{#each dismissed as reminder (reminder.id)}
@@ -560,7 +589,9 @@
 									<input type="hidden" name="id" value={reminder.id} />
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5 col-span-2 sm:col-span-1">
-											<Label for="edit-title-{reminder.id}">Title *</Label>
+											<Label for="edit-title-{reminder.id}"
+												>{t(locale, 'page.reminders.labelTitle')}</Label
+											>
 											<Input
 												id="edit-title-{reminder.id}"
 												name="title"
@@ -571,18 +602,22 @@
 											/>
 										</div>
 										<div class="space-y-1.5">
-											<Label for="edit-type-{reminder.id}">Type</Label>
+											<Label for="edit-type-{reminder.id}"
+												>{t(locale, 'page.reminders.labelType')}</Label
+											>
 											<Select id="edit-type-{reminder.id}" name="type">
-												{#each REMINDER_TYPES as t (t.value)}
-													<option value={t.value} selected={reminder.type === t.value}
-														>{t.label}</option
+												{#each REMINDER_TYPES as rt (rt.value)}
+													<option value={rt.value} selected={reminder.type === rt.value}
+														>{rt.icon} {rt.label}</option
 													>
 												{/each}
 											</Select>
 										</div>
 									</div>
 									<div class="space-y-1.5">
-										<Label for="edit-dueAt-{reminder.id}">Due date *</Label>
+										<Label for="edit-dueAt-{reminder.id}"
+											>{t(locale, 'page.reminders.labelDueDate')}</Label
+										>
 										<Input
 											id="edit-dueAt-{reminder.id}"
 											name="dueAt"
@@ -593,12 +628,14 @@
 										/>
 									</div>
 									<div class="space-y-1.5">
-										<Label for="edit-description-{reminder.id}">Notes</Label>
+										<Label for="edit-description-{reminder.id}"
+											>{t(locale, 'page.reminders.labelNotes')}</Label
+										>
 										<MarkdownTextarea
 											id="edit-description-{reminder.id}"
 											name="description"
 											value={reminder.description ?? ''}
-											placeholder="Any additional details…"
+											placeholder={t(locale, 'page.reminders.placeholderNotes')}
 											rows={3}
 										/>
 									</div>
@@ -610,11 +647,15 @@
 											bind:checked={editIsRecurring}
 											class="rounded border-input"
 										/>
-										<span class="text-sm text-foreground">Recurring reminder</span>
+										<span class="text-sm text-foreground"
+											>{t(locale, 'page.reminders.labelRecurring')}</span
+										>
 									</label>
 									{#if editIsRecurring}
 										<div class="space-y-1.5">
-											<Label for="edit-recurringDays-{reminder.id}">Repeat every (days)</Label>
+											<Label for="edit-recurringDays-{reminder.id}"
+												>{t(locale, 'page.reminders.labelRepeatEvery')}</Label
+											>
 											<Input
 												id="edit-recurringDays-{reminder.id}"
 												name="recurringDays"
@@ -629,12 +670,12 @@
 										</div>
 									{/if}
 									<div class="flex gap-3">
-										<Button type="submit" size="sm">Save</Button>
+										<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 										<Button
 											type="button"
 											variant="outline"
 											size="sm"
-											onclick={() => (editingId = null)}>Cancel</Button
+											onclick={() => (editingId = null)}>{t(locale, 'common.cancel')}</Button
 										>
 									</div>
 								</form>
@@ -658,7 +699,7 @@
 											class="h-7 gap-1.5 px-2 text-xs"
 										>
 											<Pencil class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Edit</span>
+											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
 										<form method="POST" action="?/undismiss" use:enhance>
 											<input type="hidden" name="id" value={reminder.id} />
@@ -669,7 +710,7 @@
 												class="h-7 gap-1.5 px-2 text-xs"
 											>
 												<RotateCcw class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">Restore</span>
+												<span class="hidden sm:inline">{t(locale, 'page.reminders.restore')}</span>
 											</Button>
 										</form>
 										<Button
@@ -683,7 +724,7 @@
 											}}
 										>
 											<Trash2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Delete</span>
+											<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
 										</Button>
 									</div>
 								</div>
@@ -702,7 +743,7 @@
 
 <ConfirmDialog
 	open={confirmOpen}
-	message="This can't be undone."
+	message={t(locale, 'component.confirmDialog.cantBeUndone')}
 	onconfirm={() => {
 		confirmOpen = false;
 		deleteReminderForm?.requestSubmit();

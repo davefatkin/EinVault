@@ -17,21 +17,17 @@
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
+	import { t, getLocale } from '$lib/i18n';
+	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	const locale = getLocale();
 	let showHealthForm = $state(false);
 	let showWeightForm = $state(false);
 	let submittingHealth = $state(false);
 	let submittingWeight = $state(false);
 
-	const HEALTH_TYPES = [
-		{ value: 'vet_visit', label: 'Vet visit' },
-		{ value: 'vaccination', label: 'Vaccination' },
-		{ value: 'medication', label: 'Medication' },
-		{ value: 'weight', label: 'Weight check' },
-		{ value: 'procedure', label: 'Procedure' },
-		{ value: 'other', label: 'Other' }
-	];
+	const HEALTH_TYPES = healthTypeOptions(locale);
 
 	function localDatetimeISO(d: Date | string = new Date()) {
 		const dt = new Date(d);
@@ -122,7 +118,7 @@
 </script>
 
 <svelte:head>
-	<title>Health | {data.companion.name} | EinVault</title>
+	<title>{t(locale, 'page.health.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
 
 <!-- Detail modal -->
@@ -131,7 +127,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'aria.closeDialog')}
 			onclick={closeDetail}
 		></button>
 		<div
@@ -146,14 +142,14 @@
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
 					{#if selected.kind === 'weight'}
-						Weight entry
+						{t(locale, 'page.health.detailWeightEntry')}
 					{:else if selected.kind === 'health'}
 						{selected.item.title}
 					{/if}
 				</h2>
 				<button
 					onclick={closeDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'aria.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -166,19 +162,25 @@
 				{#if selected.kind === 'weight'}
 					{@const w = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Weight</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.health.detailWeight')}</span
+						>
 						<span class="text-xl font-bold text-foreground"
 							>{w.weight}
 							<span class="text-sm font-normal text-muted-foreground">{w.unit}</span></span
 						>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Recorded</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.health.detailRecorded')}</span
+						>
 						<span class="text-foreground"><LocalTime date={w.recordedAt} format="datetime" /></span>
 					</div>
 					{#if w.notes}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.health.detailNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(w.notes)}
 							</div>
@@ -187,23 +189,31 @@
 				{:else if selected.kind === 'health'}
 					{@const h = selected.item}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
-						<Badge variant="bark" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.health.detailType')}</span
+						>
+						<Badge variant="bark" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Date</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.health.detailDate')}</span
+						>
 						<span class="text-foreground"><LocalTime date={h.occurredAt} format="datetime" /></span>
 					</div>
 					{#if h.nextDueAt}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Next due</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.health.detailNextDue')}</span
+							>
 							<span class="text-foreground"><LocalTime date={h.nextDueAt} format="datetime" /></span
 							>
 						</div>
 					{/if}
 					{#if h.vetName || h.vetClinic}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Vet</span>
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.health.detailVet')}</span
+							>
 							<span class="text-foreground"
 								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
 							>
@@ -211,7 +221,9 @@
 					{/if}
 					{#if h.notes}
 						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.health.detailNotes')}
+							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(h.notes)}
 							</div>
@@ -237,7 +249,7 @@
 							}}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							Edit
+							{t(locale, 'common.edit')}
 						</Button>
 						<Button
 							variant="destructive"
@@ -252,7 +264,7 @@
 							}}
 						>
 							<Trash2 class="h-3.5 w-3.5 mr-1.5" />
-							Delete
+							{t(locale, 'common.delete')}
 						</Button>
 					{:else if selected.kind === 'health'}
 						<Button
@@ -267,7 +279,7 @@
 							}}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							Edit
+							{t(locale, 'common.edit')}
 						</Button>
 						<Button
 							variant="destructive"
@@ -282,7 +294,7 @@
 							}}
 						>
 							<Trash2 class="h-3.5 w-3.5 mr-1.5" />
-							Delete
+							{t(locale, 'common.delete')}
 						</Button>
 					{/if}
 				</div>
@@ -294,12 +306,14 @@
 <div class="space-y-6 pb-20 md:pb-0">
 	{#if !data.companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
-			{data.companion.name} is archived. Viewing in read-only mode.
+			{t(locale, 'page.health.archivedNotice', { name: data.companion.name })}
 		</div>
 	{/if}
 
 	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">Health Log</h1>
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.health.title')}
+		</h1>
 		{#if data.companion.isActive !== false}
 			<div class="flex gap-2">
 				<Button
@@ -311,7 +325,7 @@
 					}}
 				>
 					<Scale class="h-4 w-4 mr-1.5" />
-					Log Weight
+					{t(locale, 'page.health.logWeight')}
 				</Button>
 				<Button
 					size="sm"
@@ -321,7 +335,7 @@
 					}}
 				>
 					<Plus class="h-4 w-4 mr-1.5" />
-					Add Event
+					{t(locale, 'page.health.addEvent')}
 				</Button>
 			</div>
 		{/if}
@@ -336,7 +350,7 @@
 	{#if showHealthForm}
 		<Card class="animate-slide-up">
 			<CardHeader>
-				<CardTitle>New health event</CardTitle>
+				<CardTitle>{t(locale, 'page.health.newHealthEventTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<form
@@ -355,28 +369,28 @@
 				>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="title">Title *</Label>
+							<Label for="title">{t(locale, 'page.health.labelTitle')}</Label>
 							<Input
 								id="title"
 								name="title"
 								type="text"
 								autocomplete="off"
-								placeholder="e.g. Annual checkup"
+								placeholder={t(locale, 'page.health.placeholderTitle')}
 								required
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="type">Type *</Label>
+							<Label for="type">{t(locale, 'page.health.labelType')}</Label>
 							<Select id="type" name="type" required>
-								{#each HEALTH_TYPES as t (t.value)}
-									<option value={t.value}>{t.label}</option>
+								{#each HEALTH_TYPES as ht (ht.value)}
+									<option value={ht.value}>{ht.label}</option>
 								{/each}
 							</Select>
 						</div>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="occurredAt">Date</Label>
+							<Label for="occurredAt">{t(locale, 'page.health.labelDate')}</Label>
 							<Input
 								id="occurredAt"
 								name="occurredAt"
@@ -386,47 +400,49 @@
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="nextDueAt">Next due</Label>
+							<Label for="nextDueAt">{t(locale, 'page.health.labelNextDue')}</Label>
 							<Input id="nextDueAt" name="nextDueAt" type="datetime-local" autocomplete="off" />
 						</div>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
-							<Label for="vetName">Vet name</Label>
+							<Label for="vetName">{t(locale, 'page.health.labelVetName')}</Label>
 							<Input
 								id="vetName"
 								name="vetName"
 								type="text"
 								autocomplete="off"
-								placeholder="Dr. Londes"
+								placeholder={t(locale, 'page.health.placeholderVetName')}
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="vetClinic">Clinic</Label>
+							<Label for="vetClinic">{t(locale, 'page.health.labelClinic')}</Label>
 							<Input
 								id="vetClinic"
 								name="vetClinic"
 								type="text"
 								autocomplete="off"
-								placeholder="Animal Treasure Care Center"
+								placeholder={t(locale, 'page.health.placeholderClinic')}
 							/>
 						</div>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="notes">Notes</Label>
+						<Label for="notes">{t(locale, 'page.health.labelNotes')}</Label>
 						<MarkdownTextarea
 							id="notes"
 							name="notes"
-							placeholder="Any additional details…"
+							placeholder={t(locale, 'page.health.placeholderNotes')}
 							rows={4}
 						/>
 					</div>
 					<div class="flex gap-3">
 						<Button type="submit" disabled={submittingHealth}>
-							{submittingHealth ? 'Saving...' : 'Save Event'}
+							{submittingHealth
+								? t(locale, 'page.health.savingEvent')
+								: t(locale, 'page.health.saveEvent')}
 						</Button>
 						<Button type="button" variant="outline" onclick={() => (showHealthForm = false)}
-							>Cancel</Button
+							>{t(locale, 'common.cancel')}</Button
 						>
 					</div>
 				</form>
@@ -437,7 +453,7 @@
 	{#if showWeightForm}
 		<Card class="animate-slide-up">
 			<CardHeader>
-				<CardTitle>Log Weight</CardTitle>
+				<CardTitle>{t(locale, 'page.health.logWeightTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<form
@@ -456,7 +472,7 @@
 				>
 					<div class="grid grid-cols-3 gap-4">
 						<div class="space-y-1.5 col-span-2">
-							<Label for="weight">Weight *</Label>
+							<Label for="weight">{t(locale, 'page.health.labelWeight')}</Label>
 							<Input
 								id="weight"
 								name="weight"
@@ -464,12 +480,12 @@
 								step="0.1"
 								min="0"
 								autocomplete="off"
-								placeholder="e.g. 24.5"
+								placeholder={t(locale, 'page.health.placeholderWeight')}
 								required
 							/>
 						</div>
 						<div class="space-y-1.5">
-							<Label for="unit">Unit</Label>
+							<Label for="unit">{t(locale, 'page.health.labelUnit')}</Label>
 							<Select id="unit" name="unit">
 								<option value={data.companion.weightUnit}>{data.companion.weightUnit}</option>
 								<option value={data.companion.weightUnit === 'lbs' ? 'kg' : 'lbs'}>
@@ -479,7 +495,7 @@
 						</div>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="recordedAt">Date</Label>
+						<Label for="recordedAt">{t(locale, 'page.health.labelRecordedAt')}</Label>
 						<Input
 							id="recordedAt"
 							name="recordedAt"
@@ -489,20 +505,22 @@
 						/>
 					</div>
 					<div class="space-y-1.5">
-						<Label for="weightNotes">Notes</Label>
+						<Label for="weightNotes">{t(locale, 'page.health.labelNotes')}</Label>
 						<MarkdownTextarea
 							id="weightNotes"
 							name="notes"
-							placeholder="e.g. After morning walk"
+							placeholder={t(locale, 'page.health.placeholderWeightNotes')}
 							rows={3}
 						/>
 					</div>
 					<div class="flex gap-3">
 						<Button type="submit" disabled={submittingWeight}>
-							{submittingWeight ? 'Saving...' : 'Log Weight'}
+							{submittingWeight
+								? t(locale, 'page.health.savingWeight')
+								: t(locale, 'page.health.logWeightSubmit')}
 						</Button>
 						<Button type="button" variant="outline" onclick={() => (showWeightForm = false)}
-							>Cancel</Button
+							>{t(locale, 'common.cancel')}</Button
 						>
 					</div>
 				</form>
@@ -513,7 +531,7 @@
 	{#if data.weightEntries.length > 0}
 		<Card>
 			<CardHeader>
-				<CardTitle>Weight history</CardTitle>
+				<CardTitle>{t(locale, 'page.health.weightHistoryTitle')}</CardTitle>
 			</CardHeader>
 			<div class="divide-y divide-border">
 				{#each data.weightEntries as entry (entry.id)}
@@ -533,7 +551,9 @@
 								<input type="hidden" name="id" value={entry.id} />
 								<div class="grid grid-cols-3 gap-4">
 									<div class="space-y-1.5 col-span-2">
-										<Label for="edit-weight-{entry.id}">Weight *</Label>
+										<Label for="edit-weight-{entry.id}"
+											>{t(locale, 'page.health.labelWeight')}</Label
+										>
 										<Input
 											id="edit-weight-{entry.id}"
 											name="weight"
@@ -546,7 +566,7 @@
 										/>
 									</div>
 									<div class="space-y-1.5">
-										<Label for="edit-unit-{entry.id}">Unit</Label>
+										<Label for="edit-unit-{entry.id}">{t(locale, 'page.health.labelUnit')}</Label>
 										<Select id="edit-unit-{entry.id}" name="unit">
 											<option value="lbs" selected={entry.unit === 'lbs'}>lbs</option>
 											<option value="kg" selected={entry.unit === 'kg'}>kg</option>
@@ -554,7 +574,9 @@
 									</div>
 								</div>
 								<div class="space-y-1.5">
-									<Label for="edit-recordedAt-{entry.id}">Date</Label>
+									<Label for="edit-recordedAt-{entry.id}"
+										>{t(locale, 'page.health.labelRecordedAt')}</Label
+									>
 									<Input
 										id="edit-recordedAt-{entry.id}"
 										name="recordedAt"
@@ -564,22 +586,24 @@
 									/>
 								</div>
 								<div class="space-y-1.5">
-									<Label for="edit-weightNotes-{entry.id}">Notes</Label>
+									<Label for="edit-weightNotes-{entry.id}"
+										>{t(locale, 'page.health.labelNotes')}</Label
+									>
 									<MarkdownTextarea
 										id="edit-weightNotes-{entry.id}"
 										name="notes"
 										value={entry.notes ?? ''}
-										placeholder="e.g. After morning walk"
+										placeholder={t(locale, 'page.health.placeholderWeightNotes')}
 										rows={3}
 									/>
 								</div>
 								<div class="flex gap-3">
-									<Button type="submit" size="sm">Save</Button>
+									<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 									<Button
 										type="button"
 										variant="outline"
 										size="sm"
-										onclick={() => (editingWeightId = null)}>Cancel</Button
+										onclick={() => (editingWeightId = null)}>{t(locale, 'common.cancel')}</Button
 									>
 								</div>
 							</form>
@@ -611,7 +635,7 @@
 										class="h-7 gap-1.5 px-2 text-xs"
 									>
 										<Pencil class="h-3.5 w-3.5" />
-										<span class="hidden sm:inline">Edit</span>
+										<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 									</Button>
 									<Button
 										type="button"
@@ -624,7 +648,7 @@
 										}}
 									>
 										<Trash2 class="h-3.5 w-3.5" />
-										<span class="hidden sm:inline">Delete</span>
+										<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
 									</Button>
 								</div>
 							{/if}
@@ -637,11 +661,13 @@
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Health events</CardTitle>
+			<CardTitle>{t(locale, 'page.health.healthEventsTitle')}</CardTitle>
 		</CardHeader>
 		<CardContent>
 			{#if data.healthEvents.length === 0}
-				<p class="text-sm italic text-muted-foreground">No health events logged yet.</p>
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.health.noHealthEvents')}
+				</p>
 			{:else}
 				<div class="space-y-3">
 					{#each data.healthEvents as event (event.id)}
@@ -661,7 +687,9 @@
 									<input type="hidden" name="id" value={event.id} />
 									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 										<div class="space-y-1.5">
-											<Label for="edit-title-{event.id}">Title *</Label>
+											<Label for="edit-title-{event.id}"
+												>{t(locale, 'page.health.labelTitle')}</Label
+											>
 											<Input
 												id="edit-title-{event.id}"
 												name="title"
@@ -672,11 +700,11 @@
 											/>
 										</div>
 										<div class="space-y-1.5">
-											<Label for="edit-type-{event.id}">Type *</Label>
+											<Label for="edit-type-{event.id}">{t(locale, 'page.health.labelType')}</Label>
 											<Select id="edit-type-{event.id}" name="type" required>
-												{#each HEALTH_TYPES as t (t.value)}
-													<option value={t.value} selected={event.type === t.value}
-														>{t.label}</option
+												{#each HEALTH_TYPES as ht (ht.value)}
+													<option value={ht.value} selected={event.type === ht.value}
+														>{ht.label}</option
 													>
 												{/each}
 											</Select>
@@ -684,7 +712,9 @@
 									</div>
 									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 										<div class="space-y-1.5">
-											<Label for="edit-occurredAt-{event.id}">Date</Label>
+											<Label for="edit-occurredAt-{event.id}"
+												>{t(locale, 'page.health.labelDate')}</Label
+											>
 											<Input
 												id="edit-occurredAt-{event.id}"
 												name="occurredAt"
@@ -694,7 +724,9 @@
 											/>
 										</div>
 										<div class="space-y-1.5">
-											<Label for="edit-nextDueAt-{event.id}">Next due</Label>
+											<Label for="edit-nextDueAt-{event.id}"
+												>{t(locale, 'page.health.labelNextDue')}</Label
+											>
 											<Input
 												id="edit-nextDueAt-{event.id}"
 												name="nextDueAt"
@@ -706,45 +738,49 @@
 									</div>
 									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 										<div class="space-y-1.5">
-											<Label for="edit-vetName-{event.id}">Vet name</Label>
+											<Label for="edit-vetName-{event.id}"
+												>{t(locale, 'page.health.labelVetName')}</Label
+											>
 											<Input
 												id="edit-vetName-{event.id}"
 												name="vetName"
 												type="text"
 												autocomplete="off"
 												value={event.vetName ?? ''}
-												placeholder="Dr. Londes"
+												placeholder={t(locale, 'page.health.placeholderVetName')}
 											/>
 										</div>
 										<div class="space-y-1.5">
-											<Label for="edit-vetClinic-{event.id}">Clinic</Label>
+											<Label for="edit-vetClinic-{event.id}"
+												>{t(locale, 'page.health.labelClinic')}</Label
+											>
 											<Input
 												id="edit-vetClinic-{event.id}"
 												name="vetClinic"
 												type="text"
 												autocomplete="off"
 												value={event.vetClinic ?? ''}
-												placeholder="Animal Treasure Care Center"
+												placeholder={t(locale, 'page.health.placeholderClinic')}
 											/>
 										</div>
 									</div>
 									<div class="space-y-1.5">
-										<Label for="edit-notes-{event.id}">Notes</Label>
+										<Label for="edit-notes-{event.id}">{t(locale, 'page.health.labelNotes')}</Label>
 										<MarkdownTextarea
 											id="edit-notes-{event.id}"
 											name="notes"
 											value={event.notes ?? ''}
-											placeholder="Any additional details…"
+											placeholder={t(locale, 'page.health.placeholderNotes')}
 											rows={4}
 										/>
 									</div>
 									<div class="flex gap-3">
-										<Button type="submit" size="sm">Save</Button>
+										<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 										<Button
 											type="button"
 											variant="outline"
 											size="sm"
-											onclick={() => (editingHealthId = null)}>Cancel</Button
+											onclick={() => (editingHealthId = null)}>{t(locale, 'common.cancel')}</Button
 										>
 									</div>
 								</form>
@@ -763,7 +799,8 @@
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge
+											<Badge variant="bark" class="capitalize"
+												>{healthTypeLabel(locale, event.type)}</Badge
 											>
 											<span class="font-medium text-sm text-foreground">{event.title}</span>
 										</div>
@@ -779,7 +816,8 @@
 										{/if}
 										{#if event.nextDueAt}
 											<p class="text-xs mt-1 text-primary">
-												📅 Next due: <LocalTime date={event.nextDueAt} />
+												📅 {t(locale, 'page.health.nextDueLabel')}
+												<LocalTime date={event.nextDueAt} />
 											</p>
 										{/if}
 									</div>
@@ -794,7 +832,7 @@
 											class="h-7 gap-1.5 px-2 text-xs"
 										>
 											<Pencil class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Edit</span>
+											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
 										<Button
 											type="button"
@@ -807,7 +845,7 @@
 											}}
 										>
 											<Trash2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">Delete</span>
+											<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
 										</Button>
 									</div>
 								{/if}
@@ -829,7 +867,7 @@
 
 <ConfirmDialog
 	open={confirmOpen}
-	message="This can't be undone."
+	message={t(locale, 'component.confirmDialog.cantBeUndone')}
 	onconfirm={() => {
 		confirmOpen = false;
 		confirmAction?.();

@@ -11,27 +11,36 @@
 		CardContent
 	} from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
+	import { Select } from '$lib/components/ui/select/index.js';
 
 	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);
+	const locale = getLocale();
+
+	function changeLocale(e: Event) {
+		const value = (e.currentTarget as HTMLSelectElement).value;
+		document.cookie = `einvault_locale=${value};path=/;max-age=31536000;SameSite=Lax`;
+		window.location.reload();
+	}
 </script>
 
 <svelte:head>
-	<title>Setup | EinVault</title>
+	<title>{t(locale, 'page.setup.title')} | EinVault</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-4 bg-background">
 	<div class="w-full max-w-md">
 		<div class="text-center mb-8">
 			<h1 class="font-display text-4xl font-bold tracking-tight text-foreground">EinVault</h1>
-			<p class="mt-2 text-sm text-muted-foreground">First-run setup: create your admin account</p>
+			<p class="mt-2 text-sm text-muted-foreground">{t(locale, 'page.setup.tagline')}</p>
 		</div>
 
 		<Card class="animate-slide-up">
 			<CardHeader>
-				<CardTitle>Create Admin Account</CardTitle>
+				<CardTitle>{t(locale, 'page.setup.cardTitle')}</CardTitle>
 				<CardDescription>
-					This account will have full access to manage users and companions.
+					{t(locale, 'page.setup.cardDescription')}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -43,31 +52,31 @@
 					{/if}
 
 					<div class="space-y-1.5">
-						<Label for="displayName">Display name</Label>
+						<Label for="displayName">{t(locale, 'page.setup.displayNameLabel')}</Label>
 						<Input
 							id="displayName"
 							name="displayName"
 							type="text"
-							placeholder="Your name"
+							placeholder={t(locale, 'page.setup.displayNamePlaceholder')}
 							required
 							autocomplete="name"
 						/>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="username">Username</Label>
+						<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
 						<Input
 							id="username"
 							name="username"
 							type="text"
-							placeholder="admin"
+							placeholder={t(locale, 'page.setup.usernamePlaceholder')}
 							required
 							autocomplete="username"
 						/>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="password">Password</Label>
+						<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
 						<Input
 							id="password"
 							name="password"
@@ -80,7 +89,7 @@
 					</div>
 
 					<div class="space-y-1.5">
-						<Label for="confirmPassword">Confirm password</Label>
+						<Label for="confirmPassword">{t(locale, 'page.setup.confirmPasswordLabel')}</Label>
 						<Input
 							id="confirmPassword"
 							name="confirmPassword"
@@ -93,14 +102,26 @@
 					</div>
 
 					<Button type="submit" class="w-full mt-2" disabled={loading}>
-						{loading ? 'Creating Account…' : 'Create Admin Account'}
+						{loading
+							? t(locale, 'page.setup.creatingAccount')
+							: t(locale, 'page.setup.createAccount')}
 					</Button>
 				</form>
 			</CardContent>
 		</Card>
 
 		<p class="text-center text-xs mt-6 text-muted-foreground">
-			This page is only available on first run.
+			{t(locale, 'page.setup.firstRunNote')}
 		</p>
+
+		<div class="flex justify-center mt-4">
+			<div class="max-w-[200px]">
+				<Select value={locale} onchange={changeLocale}>
+					{#each SUPPORTED_LOCALES as loc (loc)}
+						<option value={loc}>{LOCALE_LABELS[loc]}</option>
+					{/each}
+				</Select>
+			</div>
+		</div>
 	</div>
 </div>

@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
@@ -15,16 +16,16 @@ const MAX_FILE_SIZE = parseInt(env.UPLOAD_MAX_MB ?? '10') * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const { companionId, date } = params;
-	if (!isValidDate(date)) error(400, 'Invalid date');
+	if (!isValidDate(date)) error(400, t(locals.locale, 'error.invalidDate'));
 
 	// Verify companion exists
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, companionId)
 	});
-	if (!companion) error(404, 'Companion not found');
+	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	let entry = await db.query.journalEntries.findFirst({
 		where: and(
@@ -54,15 +55,16 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		.where(eq(schema.journalPhotos.entryId, entry.id));
 
 	if (photoCount >= MAX_PHOTOS_PER_DAY) {
-		error(400, `Maximum ${MAX_PHOTOS_PER_DAY} photos per day`);
+		error(400, t(locals.locale, 'error.maxPhotosExceeded', { max: String(MAX_PHOTOS_PER_DAY) }));
 	}
 
 	const formData = await request.formData();
 	const file = formData.get('photo') as File | null;
 
-	if (!file || file.size === 0) error(400, 'No file provided');
-	if (file.size > MAX_FILE_SIZE) error(400, `File too large (max ${env.UPLOAD_MAX_MB ?? '10'}MB)`);
-	if (!ALLOWED_TYPES.includes(file.type)) error(400, 'Invalid file type');
+	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
+	if (file.size > MAX_FILE_SIZE)
+		error(400, t(locals.locale, 'error.fileTooLarge', { max: env.UPLOAD_MAX_MB ?? '10' }));
+	if (!ALLOWED_TYPES.includes(file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
 
 	const raw = Buffer.from(await file.arrayBuffer());
 	const photoId = generateId(15);
@@ -74,7 +76,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		// Validate GIF magic bytes before passing through
 		const sig = raw.slice(0, 6).toString('ascii');
 		if (sig !== 'GIF87a' && sig !== 'GIF89a') {
-			error(400, 'Invalid GIF file');
+			error(400, t(locals.locale, 'error.invalidGifFile'));
 		}
 		// Truncate at the GIF terminator byte (0x3B) to strip trailing data
 		const termIdx = raw.lastIndexOf(0x3b);
@@ -112,24 +114,25 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 };
 
 export const PATCH: RequestHandler = async ({ url, request, params, locals }) => {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const photoId = url.searchParams.get('photoId');
-	if (!photoId) error(400, 'Missing photoId');
+	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
 	const photo = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, photoId)
 	});
-	if (!photo) error(404, 'Photo not found');
+	if (!photo) error(404, t(locals.locale, 'error.photoNotFound'));
 
 	const entry = await db.query.journalEntries.findFirst({
 		where: eq(schema.journalEntries.id, photo.entryId),
 		columns: { companionId: true }
 	});
-	if (!entry || entry.companionId !== params.companionId) error(403, 'Forbidden');
+	if (!entry || entry.companionId !== params.companionId)
+		error(403, t(locals.locale, 'error.forbidden'));
 
 	const contentLength = parseInt(request.headers.get('content-length') ?? '0');
-	if (contentLength > 10_000) error(400, 'Request body too large');
+	if (contentLength > 10_000) error(400, t(locals.locale, 'error.requestBodyTooLarge'));
 	const { notes } = await request.json();
 
 	await db
@@ -141,21 +144,22 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 };
 
 export const DELETE: RequestHandler = async ({ url, params, locals }) => {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const photoId = url.searchParams.get('photoId');
-	if (!photoId) error(400, 'Missing photoId');
+	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
 	const photo = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, photoId)
 	});
-	if (!photo) error(404, 'Photo not found');
+	if (!photo) error(404, t(locals.locale, 'error.photoNotFound'));
 
 	const entry = await db.query.journalEntries.findFirst({
 		where: eq(schema.journalEntries.id, photo.entryId),
 		columns: { companionId: true }
 	});
-	if (!entry || entry.companionId !== params.companionId) error(403, 'Forbidden');
+	if (!entry || entry.companionId !== params.companionId)
+		error(403, t(locals.locale, 'error.forbidden'));
 
 	const { unlink } = await import('fs/promises');
 	const filePath = join(

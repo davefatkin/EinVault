@@ -1,21 +1,22 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, gte } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseDailyEventType } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
 	if (!companions.find((c) => c.id === params.companionId)) {
-		error(403, 'Not assigned to this companion');
+		error(403, t(locals.locale, 'error.notAssignedToCompanion'));
 	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
-	if (!companion) error(404, 'Companion not found');
+	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	if (!isOnShift) {
 		return { companion, todayEvents: [] };
@@ -37,9 +38,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 export const actions: Actions = {
 	add: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: 'No active shift.' });
+		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.noActiveShift') });
 
 		// Verify caretaker is assigned to this companion
 		const assigned = await db.query.companionCaretakers.findFirst({
@@ -48,7 +49,7 @@ export const actions: Actions = {
 				eq(schema.companionCaretakers.companionId, params.companionId)
 			)
 		});
-		if (!assigned) return fail(403, { error: 'Not assigned to this companion.' });
+		if (!assigned) return fail(403, { error: t(locals.locale, 'error.notAssignedToCompanion') });
 
 		const data = await request.formData();
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
@@ -57,7 +58,7 @@ export const actions: Actions = {
 		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
 		const loggedAt = data.get('loggedAt') ? new Date(String(data.get('loggedAt'))) : new Date();
 
-		if (!type) return fail(400, { error: 'Type is required.' });
+		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
 		await db.insert(schema.dailyEvents).values({
 			id: generateId(15),
@@ -73,13 +74,13 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized.' });
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: 'No active shift.' });
+		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.noActiveShift') });
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '').trim();
-		if (!id) return fail(400, { error: 'Missing entry ID.' });
+		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 
 		// Verify the entry belongs to this companion and was logged by this caretaker
 		const entry = await db.query.dailyEvents.findFirst({
@@ -89,9 +90,9 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!entry) return fail(404, { error: 'Entry not found.' });
+		if (!entry) return fail(404, { error: t(locals.locale, 'error.entryNotFound') });
 		if (entry.loggedBy !== locals.user.id)
-			return fail(403, { error: 'You can only delete your own entries.' });
+			return fail(403, { error: t(locals.locale, 'error.canOnlyDeleteOwnEntries') });
 
 		await db.delete(schema.dailyEvents).where(eq(schema.dailyEvents.id, id));
 

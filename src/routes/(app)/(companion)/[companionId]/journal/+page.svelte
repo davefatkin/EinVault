@@ -8,6 +8,10 @@
 	import { ChevronLeft, ChevronRight, X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { tick } from 'svelte';
+	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { t, getLocale } from '$lib/i18n';
+
+	const locale = getLocale();
 
 	let { data }: { data: PageData } = $props();
 
@@ -43,23 +47,7 @@
 		}
 	}
 
-	const MOOD_ICONS: Record<string, string> = {
-		great: '🤩',
-		good: '😊',
-		meh: '😐',
-		off: '😕',
-		sick: '🤒'
-	};
-
-	const EVENT_ICONS: Record<string, string> = {
-		walk: '🦮',
-		meal: '🍖',
-		bathroom: '💩',
-		treat: '🦴',
-		play: '🎾',
-		grooming: '🛁',
-		other: '📝'
-	};
+	const EVENT_ICONS = ACTIVITY_ICONS;
 
 	function formatDate(d: string) {
 		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
@@ -195,7 +183,7 @@
 </script>
 
 <svelte:head>
-	<title>Journal | {companion.name} | EinVault</title>
+	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleLightboxKey} />
@@ -206,7 +194,7 @@
 		bind:this={lightboxEl}
 		role="dialog"
 		aria-modal="true"
-		aria-label="Photo lightbox"
+		aria-label={t(locale, 'page.journal.photoLightboxLabel')}
 		tabindex="-1"
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 focus:outline-none"
 		onclick={closeLightbox}
@@ -231,7 +219,7 @@
 					type="button"
 					onclick={closeLightbox}
 					class="text-white/70 hover:text-white p-1 rounded"
-					aria-label="Close"
+					aria-label={t(locale, 'aria.close')}
 				>
 					<X class="h-5 w-5" />
 				</button>
@@ -252,7 +240,7 @@
 						0
 							? 'opacity-20 cursor-default'
 							: 'opacity-70 hover:opacity-100'}"
-						aria-label="Previous photo"
+						aria-label={t(locale, 'aria.previousPhoto')}
 					>
 						<ChevronLeft class="h-5 w-5" />
 					</button>
@@ -264,7 +252,7 @@
 						lightboxPhotos.length - 1
 							? 'opacity-20 cursor-default'
 							: 'opacity-70 hover:opacity-100'}"
-						aria-label="Next photo"
+						aria-label={t(locale, 'aria.nextPhoto')}
 					>
 						<ChevronRight class="h-5 w-5" />
 					</button>
@@ -286,7 +274,7 @@
 		<button
 			tabindex="-1"
 			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label="Close dialog"
+			aria-label={t(locale, 'aria.closeDialog')}
 			onclick={closeDetail}
 		></button>
 		<div
@@ -305,7 +293,7 @@
 				</h2>
 				<button
 					onclick={closeDetail}
-					aria-label="Close"
+					aria-label={t(locale, 'aria.close')}
 					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
 				>
 					<X class="h-4 w-4" />
@@ -316,24 +304,32 @@
 
 			<div class="px-5 py-4 space-y-3 text-sm">
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Type</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.journal.activityDetailType')}</span
+					>
 					<Badge variant="secondary" class="capitalize">{detailEvent.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Logged</span>
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.journal.activityDetailLogged')}</span
+					>
 					<span class="text-foreground"
 						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
 					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground">Duration</span>
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.journal.activityDetailDuration')}</span
+						>
 						<span class="text-foreground">{detailEvent.durationMinutes} min</span>
 					</div>
 				{/if}
 				{#if detailEvent.notes}
 					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.journal.activityDetailNotes')}
+						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(detailEvent.notes)}
 						</div>
@@ -352,7 +348,8 @@
 						size="sm"
 						onclick={closeDetail}
 					>
-						<Pencil class="h-3.5 w-3.5 mr-1.5" /> Open in Journal
+						<Pencil class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'page.journal.activityDetailOpenInJournal')}
 					</Button>
 				</div>
 			{/if}
@@ -363,16 +360,19 @@
 <div class="space-y-6 pb-24 md:pb-0">
 	{#if !companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
-			{companion.name} is archived. Viewing in read-only mode.
+			{t(locale, 'page.journal.archivedNotice', { name: companion.name })}
 		</div>
 	{/if}
 
 	<!-- Header -->
 	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">Journal</h1>
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.journal.title')}
+		</h1>
 		{#if companion.isActive !== false}
 			<Button href="/{companion.id}/journal/{data.today}" size="sm">
-				Today's Entry <ArrowRight class="h-4 w-4 ml-1" />
+				{t(locale, 'page.journal.todayEntry')}
+				<ArrowRight class="h-4 w-4 ml-1" />
 			</Button>
 		{/if}
 	</div>
@@ -381,12 +381,14 @@
 		<Card>
 			<CardContent class="text-center py-12">
 				<NotebookPen class="h-10 w-10 mb-3 mx-auto text-muted-foreground" />
-				<p class="font-medium mb-1 text-foreground">No journal entries yet</p>
+				<p class="font-medium mb-1 text-foreground">{t(locale, 'page.journal.emptyTitle')}</p>
 				<p class="text-sm mb-4 text-muted-foreground">
-					Start writing about {companion.name}'s days.
+					{t(locale, 'page.journal.emptyBody', { name: companion.name })}
 				</p>
 				{#if companion.isActive !== false}
-					<Button href="/{companion.id}/journal/{data.today}">Write First Entry</Button>
+					<Button href="/{companion.id}/journal/{data.today}"
+						>{t(locale, 'page.journal.writeFirstEntry')}</Button
+					>
 				{/if}
 			</CardContent>
 		</Card>
@@ -422,7 +424,9 @@
 										{formatDate(entry.date)}
 									</h2>
 									{#if entry.date === data.today}
-										<span class="text-xs font-medium text-primary">Today</span>
+										<span class="text-xs font-medium text-primary"
+											>{t(locale, 'page.journal.today')}</span
+										>
 									{/if}
 								</div>
 							</div>
@@ -433,7 +437,8 @@
 									size="sm"
 									class="h-7 text-xs shrink-0 gap-1"
 								>
-									<Pencil class="h-3 w-3" /> Edit
+									<Pencil class="h-3 w-3" />
+									{t(locale, 'page.journal.edit')}
 								</Button>
 							{/if}
 						</div>
@@ -477,7 +482,9 @@
 						</CardContent>
 					{:else if !entry.photos.length && !entry.events.length}
 						<CardContent class="py-4">
-							<p class="text-sm italic text-muted-foreground">No notes written.</p>
+							<p class="text-sm italic text-muted-foreground">
+								{t(locale, 'page.journal.noNotes')}
+							</p>
 						</CardContent>
 					{/if}
 
@@ -506,7 +513,7 @@
 		{#if hasMore}
 			<div class="flex justify-center pt-2">
 				<Button variant="secondary" onclick={loadMore} disabled={loadingMore}>
-					{loadingMore ? 'Loading…' : 'Load older entries'}
+					{loadingMore ? t(locale, 'common.loading') : t(locale, 'page.journal.loadOlderEntries')}
 				</Button>
 			</div>
 		{/if}

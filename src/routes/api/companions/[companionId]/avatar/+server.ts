@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { writeFile, mkdir, unlink } from 'fs/promises';
@@ -16,7 +17,7 @@ async function assertCanEditAvatar(
 	locals: import('@sveltejs/kit').RequestEvent['locals'],
 	companionId: string
 ): Promise<void> {
-	if (!locals.user) error(401, 'Unauthorized');
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	if (locals.user.role === 'caretaker') {
 		const assigned = await db.query.companionCaretakers.findFirst({
 			where: and(
@@ -24,7 +25,7 @@ async function assertCanEditAvatar(
 				eq(schema.companionCaretakers.companionId, companionId)
 			)
 		});
-		if (!assigned) error(403, 'Forbidden');
+		if (!assigned) error(403, t(locals.locale, 'error.forbidden'));
 	}
 }
 
@@ -34,15 +35,16 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
-	if (!companion) error(404, 'Not found');
+	if (!companion) error(404, t(locals.locale, 'error.notFound'));
 
 	const formData = await request.formData();
 	const file = formData.get('avatar') as File | null;
 
-	if (!file || file.size === 0) error(400, 'No file provided');
-	if (file.size > MAX_SIZE) error(400, `File too large (max ${env.UPLOAD_MAX_MB ?? '10'}MB)`);
+	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
+	if (file.size > MAX_SIZE)
+		error(400, t(locals.locale, 'error.fileTooLarge', { max: env.UPLOAD_MAX_MB ?? '10' }));
 	if (!ALLOWED_TYPES.includes(file.type))
-		error(400, 'Invalid file type. Must be JPEG, PNG, or WebP.');
+		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 
 	const avatarDir = join(DATA_DIR, 'uploads', 'avatars');
 	await mkdir(avatarDir, { recursive: true });

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { getContext } from 'svelte';
+	import { t, getLocale } from '$lib/i18n';
 
 	interface Props {
 		date: Date | string | number | null | undefined;
@@ -9,6 +10,7 @@
 	}
 
 	let { date, format = 'date', fallback = '-' }: Props = $props();
+	const locale = getLocale();
 
 	// Use the server's timezone so all users see times in the household's timezone,
 	// regardless of where their browser is located.
@@ -47,10 +49,10 @@
 			const mins = Math.floor(diff / 60000);
 			const hours = Math.floor(diff / 3600000);
 			const days = Math.floor(diff / 86400000);
-			if (mins < 1) return 'just now';
-			if (mins < 60) return `${mins}m ago`;
-			if (hours < 24) return `${hours}h ago`;
-			if (days < 7) return `${days}d ago`;
+			if (mins < 1) return t(locale, 'time.justNow');
+			if (mins < 60) return t(locale, 'time.minutesAgo', { count: mins });
+			if (hours < 24) return t(locale, 'time.hoursAgo', { count: hours });
+			if (days < 7) return t(locale, 'time.daysAgo', { count: days });
 			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...tzOpt });
 		}
 		return d.toLocaleDateString(undefined, {
