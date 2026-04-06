@@ -179,13 +179,13 @@ docker exec einvault sqlite3 /data/einvault.db ".backup '/data/einvault.backup.d
 
 ### Image tags
 
-| Tag           | Description                                          |
-| ------------- | ---------------------------------------------------- |
-| `latest`      | Latest stable release (published on version tags)    |
-| `x.y.z`       | Pinned release                                       |
-| `x.y`         | Latest patch of a minor release                      |
-| `main`        | Latest commit on `main` — unstable, for testing only |
-| `sha-<commit>` | Specific commit build, useful for rollback          |
+| Tag            | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| `latest`       | Latest stable release (published on version tags)    |
+| `x.y.z`        | Pinned release                                       |
+| `x.y`          | Latest patch of a minor release                      |
+| `main`         | Latest commit on `main` — unstable, for testing only |
+| `sha-<commit>` | Specific commit build, useful for rollback           |
 
 ---
 
