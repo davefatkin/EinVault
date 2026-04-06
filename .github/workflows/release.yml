@@ -47,9 +47,9 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/einvault
           tags: |
             type=ref,event=branch
+            type=sha,prefix=sha-
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v7
