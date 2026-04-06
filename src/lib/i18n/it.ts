@@ -484,7 +484,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.nextShiftStarts': 'Il tuo prossimo turno inizia',
 	'page.journal.caretaker.savedStatus': '✓ Salvato',
 	'page.journal.caretaker.savingStatus': 'Salvataggio…',
-	'page.journal.caretaker.saveFailedStatus': 'Salvataggio fallito',
+	'page.journal.caretaker.saveFailedStatus': 'Salvataggio non riuscito',
 	'page.journal.caretaker.photos': 'Foto',
 	'page.journal.caretaker.addPhoto': '+ Aggiungi foto',
 	'page.journal.caretaker.dropPhotos': 'Trascina le foto qui o clicca per caricare',
