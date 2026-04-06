@@ -18,6 +18,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - [Local development](#local-development)
   - [Commands](#commands)
 - [User management](#user-management)
+- [Adding a new locale](#adding-a-new-locale)
 - [Stack](#stack)
 - [License](#license)
 
@@ -178,10 +179,13 @@ docker exec einvault sqlite3 /data/einvault.db ".backup '/data/einvault.backup.d
 
 ### Image tags
 
-| Tag      | Description           |
-| -------- | --------------------- |
-| `latest` | Latest stable release |
-| `x.y.z`  | Pinned release        |
+| Tag            | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| `latest`       | Latest stable release (published on version tags)    |
+| `x.y.z`        | Pinned release                                       |
+| `x.y`          | Latest patch of a minor release                      |
+| `main`         | Latest commit on `main` — unstable, for testing only |
+| `sha-<commit>` | Specific commit build, useful for rollback           |
 
 ---
 
