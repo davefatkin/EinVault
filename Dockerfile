@@ -54,8 +54,10 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV DATABASE_URL=/data/einvault.db
+ENV UPLOAD_MAX_MB=10
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
-CMD ["node", "build"]
+# BODY_SIZE_LIMIT is derived from UPLOAD_MAX_MB so users only set one value.
+CMD ["sh", "-c", "BODY_SIZE_LIMIT=${UPLOAD_MAX_MB}M exec node build"]
