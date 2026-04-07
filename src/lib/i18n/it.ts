@@ -249,7 +249,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Component: CompanionAvatar
 	'component.avatar.alt': 'Avatar di {name}',
-	'component.avatar.uploadFailed': 'Caricamento fallito. Riprova.',
+	'component.avatar.uploadFailed': 'Caricamento non riuscito. Riprova.',
 	'component.avatar.changePhoto': 'Cambia foto',
 	'component.avatar.changePhotoFor': 'Cambia la foto di {name}',
 	'component.avatar.uploadError': 'Errore caricamento: {error}',
@@ -450,7 +450,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.writePlaceholder': 'Scrivi della giornata di {name}… Il Markdown è supportato.',
 	'page.journal.day.savedStatus': '✓ Salvato',
 	'page.journal.day.savingStatus': 'Salvataggio…',
-	'page.journal.day.saveFailedStatus': 'Salvataggio fallito',
+	'page.journal.day.saveFailedStatus': 'Salvataggio non riuscito',
 	'page.journal.day.saveFailedRetry': 'Riprova',
 	'page.journal.day.photosTitle': 'Foto',
 	'page.journal.day.addPhoto': 'Aggiungi foto',
