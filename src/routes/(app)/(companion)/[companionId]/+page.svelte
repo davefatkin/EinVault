@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { localDateISO } from '$lib/date';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -246,11 +247,7 @@
 							</div>
 						</div>
 					{/if}
-					{#if r.logger}
-						<p class="text-xs text-muted-foreground opacity-60 mt-2">
-							{t(locale, 'common.loggedBy', { name: r.logger.displayName })}
-						</p>
-					{/if}
+					<LoggedBy logger={r.logger} />
 				{:else if selected.kind === 'weight'}
 					{@const w = selected.item}
 					<div class="flex items-center gap-3">
@@ -267,10 +264,10 @@
 							>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={w.recordedAt} format="datetime" />{#if w.logger}<span
-									class="text-muted-foreground text-xs ml-1"
-									>{t(locale, 'common.loggedBy', { name: w.logger.displayName })}</span
-								>{/if}</span
+							><LocalTime date={w.recordedAt} format="datetime" /><LoggedBy
+								logger={w.logger}
+								variant="inline"
+							/></span
 						>
 					</div>
 					{#if w.notes}
@@ -296,10 +293,10 @@
 							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={e.loggedAt} format="datetime" />{#if e.logger}<span
-									class="text-muted-foreground text-xs ml-1"
-									>{t(locale, 'common.loggedBy', { name: e.logger.displayName })}</span
-								>{/if}</span
+							><LocalTime date={e.loggedAt} format="datetime" /><LoggedBy
+								logger={e.logger}
+								variant="inline"
+							/></span
 						>
 					</div>
 					{#if e.durationMinutes}
@@ -333,10 +330,10 @@
 							>{t(locale, 'page.dashboard.modalLabelDate')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" />{#if h.logger}<span
-									class="text-muted-foreground text-xs ml-1"
-									>{t(locale, 'common.loggedBy', { name: h.logger.displayName })}</span
-								>{/if}</span
+							><LocalTime date={h.occurredAt} format="datetime" /><LoggedBy
+								logger={h.logger}
+								variant="inline"
+							/></span
 						>
 					</div>
 					{#if h.nextDueAt}
@@ -692,11 +689,7 @@
 									</span>
 								{/if}
 							</div>
-							{#if event.logger}
-								<p class="text-xs text-muted-foreground opacity-60 pl-[7.5rem]">
-									{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-								</p>
-							{/if}
+							<LoggedBy logger={event.logger} class="pl-[7.5rem]" />
 						</button>
 					{/each}
 				</div>
@@ -743,11 +736,7 @@
 								<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge>
 								<span class="truncate text-foreground">{event.title}</span>
 							</div>
-							{#if event.logger}
-								<p class="text-xs text-muted-foreground opacity-60 pl-[7.5rem]">
-									{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-								</p>
-							{/if}
+							<LoggedBy logger={event.logger} class="pl-[7.5rem]" />
 						</button>
 					{/each}
 				</div>

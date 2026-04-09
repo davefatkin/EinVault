@@ -26,6 +26,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -343,12 +344,10 @@
 						>{t(locale, 'page.journal.day.detailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime
-							date={detailEvent.loggedAt}
-							format="datetime"
-						/>{#if detailEvent.logger}<span class="text-muted-foreground text-xs ml-1"
-								>{t(locale, 'common.loggedBy', { name: detailEvent.logger.displayName })}</span
-							>{/if}</span
+						><LocalTime date={detailEvent.loggedAt} format="datetime" /><LoggedBy
+							logger={detailEvent.logger}
+							variant="inline"
+						/></span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
@@ -460,11 +459,7 @@
 				>
 			{/if}
 		</div>
-		{#if data.entry?.logger}
-			<span class="text-xs text-muted-foreground"
-				>{t(locale, 'common.loggedBy', { name: data.entry.logger.displayName })}</span
-			>
-		{/if}
+		<LoggedBy logger={data.entry?.logger} variant="inline" class="ml-0" />
 	</div>
 
 	<!-- Mood -->
@@ -989,11 +984,7 @@
 											...(serverTimezone ? { timeZone: serverTimezone } : {})
 										})}</span
 									>
-									{#if event.logger}
-										<p class="opacity-60">
-											{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-										</p>
-									{/if}
+									<LoggedBy logger={event.logger} />
 								</div>
 							</button>
 							<button

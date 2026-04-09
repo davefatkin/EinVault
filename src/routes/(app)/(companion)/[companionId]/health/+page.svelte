@@ -3,6 +3,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -175,10 +176,10 @@
 							>{t(locale, 'page.health.detailRecorded')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={w.recordedAt} format="datetime" />{#if w.logger}<span
-									class="text-muted-foreground text-xs ml-1"
-									>{t(locale, 'common.loggedBy', { name: w.logger.displayName })}</span
-								>{/if}</span
+							><LocalTime date={w.recordedAt} format="datetime" /><LoggedBy
+								logger={w.logger}
+								variant="inline"
+							/></span
 						>
 					</div>
 					{#if w.notes}
@@ -204,10 +205,10 @@
 							>{t(locale, 'page.health.detailDate')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" />{#if h.logger}<span
-									class="text-muted-foreground text-xs ml-1"
-									>{t(locale, 'common.loggedBy', { name: h.logger.displayName })}</span
-								>{/if}</span
+							><LocalTime date={h.occurredAt} format="datetime" /><LoggedBy
+								logger={h.logger}
+								variant="inline"
+							/></span
 						>
 					</div>
 					{#if h.nextDueAt}
@@ -631,16 +632,12 @@
 								<span class="w-20 shrink-0 font-semibold text-foreground"
 									>{entry.weight} {entry.unit}</span
 								>
-								<span class="flex-1 min-w-0 text-xs text-muted-foreground">
+								<div class="flex-1 min-w-0 text-xs text-muted-foreground">
 									<span class="truncate block"
 										>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
 									>
-									{#if entry.logger}
-										<span class="block opacity-60"
-											>{t(locale, 'common.loggedBy', { name: entry.logger.displayName })}</span
-										>
-									{/if}
-								</span>
+									<LoggedBy logger={entry.logger} />
+								</div>
 							</button>
 							{#if data.companion.isActive !== false}
 								<div class="flex gap-1 shrink-0">
@@ -837,11 +834,7 @@
 												<LocalTime date={event.nextDueAt} />
 											</p>
 										{/if}
-										{#if event.logger}
-											<p class="text-xs mt-0.5 text-muted-foreground opacity-60">
-												{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-											</p>
-										{/if}
+										<LoggedBy logger={event.logger} class="mt-0.5" />
 									</div>
 								</button>
 								{#if data.companion.isActive !== false}

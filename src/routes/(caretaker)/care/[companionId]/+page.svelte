@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { Card, CardHeader, CardContent, CardTitle } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
@@ -224,10 +225,10 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={selected.loggedAt} format="datetime" />{#if selected.logger}<span
-								class="text-muted-foreground text-xs ml-1"
-								>{t(locale, 'common.loggedBy', { name: selected.logger.displayName })}</span
-							>{/if}</span
+						><LocalTime date={selected.loggedAt} format="datetime" /><LoggedBy
+							logger={selected.logger}
+							variant="inline"
+						/></span
 					>
 				</div>
 				{#if selected.durationMinutes}
@@ -325,11 +326,7 @@
 						</div>
 					</div>
 				{/if}
-				{#if selectedReminder.logger}
-					<p class="text-xs text-muted-foreground opacity-60 mt-2">
-						{t(locale, 'common.loggedBy', { name: selectedReminder.logger.displayName })}
-					</p>
-				{/if}
+				<LoggedBy logger={selectedReminder.logger} />
 			</div>
 
 			<Separator />
@@ -692,11 +689,7 @@
 									<LocalTime date={event.loggedAt} format="time" />
 								</span>
 							</div>
-							{#if event.logger}
-								<p class="text-xs text-muted-foreground opacity-60 pl-8">
-									{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-								</p>
-							{/if}
+							<LoggedBy logger={event.logger} class="pl-8" />
 						</button>
 					{/each}
 				</div>

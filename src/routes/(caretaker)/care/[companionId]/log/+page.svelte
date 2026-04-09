@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -220,11 +221,7 @@
 								</div>
 								<div class="text-xs shrink-0 text-muted-foreground text-right">
 									<LocalTime date={event.loggedAt} format="time" />
-									{#if event.logger}
-										<p class="opacity-60">
-											{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
-										</p>
-									{/if}
+									<LoggedBy logger={event.logger} />
 								</div>
 								{#if event.loggedBy === data.user?.id}
 									<form
