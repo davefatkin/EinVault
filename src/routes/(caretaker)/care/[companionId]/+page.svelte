@@ -224,7 +224,10 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={selected.loggedAt} format="datetime" /></span
+						><LocalTime date={selected.loggedAt} format="datetime" />{#if selected.logger}<span
+								class="text-muted-foreground text-xs ml-1"
+								>{t(locale, 'common.loggedBy', { name: selected.logger.displayName })}</span
+							>{/if}</span
 					>
 				</div>
 				{#if selected.durationMinutes}
@@ -321,6 +324,11 @@
 							{@html renderMarkdown(selectedReminder.description)}
 						</div>
 					</div>
+				{/if}
+				{#if selectedReminder.logger}
+					<p class="text-xs text-muted-foreground opacity-60 mt-2">
+						{t(locale, 'common.loggedBy', { name: selectedReminder.logger.displayName })}
+					</p>
 				{/if}
 			</div>
 
@@ -665,23 +673,30 @@
 						<button
 							type="button"
 							onclick={() => openDetail(event)}
-							class="w-full flex items-center gap-3 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
+							class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
 						>
-							<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
-							<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
-							{#if event.durationMinutes}
-								<span class="text-xs text-muted-foreground shrink-0"
-									>{event.durationMinutes} min</span
-								>
+							<div class="flex items-center gap-3 text-sm">
+								<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
+								<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
+								{#if event.durationMinutes}
+									<span class="text-xs text-muted-foreground shrink-0"
+										>{event.durationMinutes} min</span
+									>
+								{/if}
+								{#if event.notes}
+									<span class="truncate text-muted-foreground text-xs"
+										>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
+									>
+								{/if}
+								<span class="ml-auto text-xs shrink-0 text-muted-foreground">
+									<LocalTime date={event.loggedAt} format="time" />
+								</span>
+							</div>
+							{#if event.logger}
+								<p class="text-xs text-muted-foreground opacity-60 pl-8">
+									{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
+								</p>
 							{/if}
-							{#if event.notes}
-								<span class="truncate text-muted-foreground text-xs"
-									>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
-								>
-							{/if}
-							<span class="ml-auto text-xs shrink-0 text-muted-foreground">
-								<LocalTime date={event.loggedAt} format="time" />
-							</span>
 						</button>
 					{/each}
 				</div>

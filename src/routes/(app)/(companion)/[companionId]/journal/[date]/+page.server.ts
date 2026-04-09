@@ -21,7 +21,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		where: and(
 			eq(schema.journalEntries.companionId, companionId),
 			eq(schema.journalEntries.date, date)
-		)
+		),
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	// Load photos for this date
@@ -49,7 +50,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			gte(schema.dailyEvents.loggedAt, dayStart),
 			lt(schema.dailyEvents.loggedAt, dayEnd)
 		),
-		orderBy: (d, { asc }) => [asc(d.loggedAt)]
+		orderBy: (d, { asc }) => [asc(d.loggedAt)],
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	const today = localDateISO();

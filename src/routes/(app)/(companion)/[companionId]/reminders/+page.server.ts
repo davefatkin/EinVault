@@ -13,7 +13,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 
 	const reminders = await db.query.reminders.findMany({
 		where: eq(schema.reminders.companionId, params.companionId),
-		orderBy: (r, { asc }) => [asc(r.dueAt)]
+		orderBy: (r, { asc }) => [asc(r.dueAt)],
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	return { companion, reminders };
@@ -42,7 +43,8 @@ export const actions: Actions = {
 			type,
 			dueAt,
 			isRecurring,
-			recurringDays: recurringDays && recurringDays > 0 ? recurringDays : null
+			recurringDays: recurringDays && recurringDays > 0 ? recurringDays : null,
+			loggedBy: locals.user.id
 		});
 
 		return { success: true };

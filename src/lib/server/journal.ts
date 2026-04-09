@@ -19,14 +19,18 @@ export async function getEnrichedJournalEntries(
 			before ? lt(schema.journalEntries.date, before) : undefined
 		),
 		orderBy: (j, { desc }) => [desc(j.date)],
-		limit: pageSize + 1
+		limit: pageSize + 1,
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	const hasMore = entries.length > pageSize;
 	const pageEntries = entries.slice(0, pageSize);
 
+	type EventWithLogger = typeof schema.dailyEvents.$inferSelect & {
+		logger: { displayName: string } | null;
+	};
 	let photosByEntry = new Map<string, (typeof schema.journalPhotos.$inferSelect)[]>();
-	let eventsByDate = new Map<string, (typeof schema.dailyEvents.$inferSelect)[]>();
+	let eventsByDate = new Map<string, EventWithLogger[]>();
 
 	if (pageEntries.length > 0) {
 		const entryIds = pageEntries.map((e) => e.id);
@@ -48,7 +52,8 @@ export async function getEnrichedJournalEntries(
 					gte(schema.dailyEvents.loggedAt, rangeStart),
 					lt(schema.dailyEvents.loggedAt, rangeEnd)
 				),
-				orderBy: (d, { asc }) => [asc(d.loggedAt)]
+				orderBy: (d, { asc }) => [asc(d.loggedAt)],
+				with: { logger: { columns: { displayName: true } } }
 			})
 		]);
 

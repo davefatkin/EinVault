@@ -30,7 +30,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 			eq(schema.dailyEvents.companionId, params.companionId),
 			gte(schema.dailyEvents.loggedAt, todayStart)
 		),
-		orderBy: (d, { desc }) => [desc(d.loggedAt)]
+		orderBy: (d, { desc }) => [desc(d.loggedAt)],
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	return { companion, todayEvents };

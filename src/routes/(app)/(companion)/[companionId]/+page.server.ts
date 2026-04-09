@@ -21,12 +21,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
 			orderBy: (h, { desc }) => [desc(h.occurredAt)],
-			limit: 5
+			limit: 5,
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.dailyEvents.findMany({
 			where: eq(schema.dailyEvents.companionId, params.companionId),
 			orderBy: (d, { desc }) => [desc(d.loggedAt)],
-			limit: 10
+			limit: 10,
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.reminders.findMany({
 			where: and(
@@ -34,18 +36,21 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 				eq(schema.reminders.isDismissed, false)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
-			limit: 5
+			limit: 5,
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.weightEntries.findMany({
 			where: eq(schema.weightEntries.companionId, params.companionId),
 			orderBy: (w, { desc }) => [desc(w.recordedAt)],
-			limit: 10
+			limit: 10,
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.journalEntries.findFirst({
 			where: and(
 				eq(schema.journalEntries.companionId, params.companionId),
 				eq(schema.journalEntries.date, localDateISO(now))
-			)
+			),
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db
 			.select({

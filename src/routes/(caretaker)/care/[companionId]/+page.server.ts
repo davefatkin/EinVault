@@ -22,7 +22,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 			eq(schema.healthEvents.companionId, params.companionId),
 			eq(schema.healthEvents.type, 'medication')
 		),
-		orderBy: (h, { desc }) => [desc(h.occurredAt)]
+		orderBy: (h, { desc }) => [desc(h.occurredAt)],
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	const todayStart = new Date();
@@ -33,7 +34,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 			eq(schema.dailyEvents.companionId, params.companionId),
 			gte(schema.dailyEvents.loggedAt, todayStart)
 		),
-		orderBy: (d, { asc }) => [asc(d.loggedAt)]
+		orderBy: (d, { asc }) => [asc(d.loggedAt)],
+		with: { logger: { columns: { displayName: true } } }
 	});
 
 	const latestWeight = await db.query.weightEntries.findFirst({
@@ -62,7 +64,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 				eq(schema.reminders.companionId, params.companionId),
 				eq(schema.reminders.isDismissed, false)
 			),
-			orderBy: (r, { asc }) => [asc(r.dueAt)]
+			orderBy: (r, { asc }) => [asc(r.dueAt)],
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.caretakerShifts.findMany({
 			where: and(

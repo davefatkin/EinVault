@@ -186,6 +186,11 @@
 						</div>
 					</div>
 				{/if}
+				{#if r.logger}
+					<p class="text-xs text-muted-foreground opacity-60 mt-2">
+						{t(locale, 'common.loggedBy', { name: r.logger.displayName })}
+					</p>
+				{/if}
 			</div>
 
 			<Separator />
@@ -512,7 +517,14 @@
 										<p
 											class="text-xs mt-1 {overdue ? 'text-destructive' : 'text-muted-foreground'}"
 										>
-											Due <LocalTime date={reminder.dueAt} format="datetime" />
+											Due <LocalTime
+												date={reminder.dueAt}
+												format="datetime"
+											/>{#if reminder.logger}<span class="text-muted-foreground ml-1">
+													· {t(locale, 'common.loggedBy', {
+														name: reminder.logger.displayName
+													})}</span
+												>{/if}
 										</p>
 									</div>
 								</button>

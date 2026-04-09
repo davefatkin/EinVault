@@ -13,11 +13,13 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const [healthEvents, weightEntries] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
-			orderBy: (h, { desc }) => [desc(h.occurredAt)]
+			orderBy: (h, { desc }) => [desc(h.occurredAt)],
+			with: { logger: { columns: { displayName: true } } }
 		}),
 		db.query.weightEntries.findMany({
 			where: eq(schema.weightEntries.companionId, params.companionId),
-			orderBy: (w, { desc }) => [desc(w.recordedAt)]
+			orderBy: (w, { desc }) => [desc(w.recordedAt)],
+			with: { logger: { columns: { displayName: true } } }
 		})
 	]);
 
@@ -51,7 +53,8 @@ export const actions: Actions = {
 			occurredAt,
 			nextDueAt,
 			vetName,
-			vetClinic
+			vetClinic,
+			loggedBy: locals.user.id
 		});
 
 		return { healthSuccess: true };
@@ -76,7 +79,8 @@ export const actions: Actions = {
 			weight,
 			unit,
 			notes,
-			recordedAt
+			recordedAt,
+			loggedBy: locals.user.id
 		});
 
 		return { weightSuccess: true };

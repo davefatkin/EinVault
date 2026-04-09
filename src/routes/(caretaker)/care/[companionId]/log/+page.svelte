@@ -218,9 +218,14 @@
 										<p class="text-sm truncate text-muted-foreground mt-0.5">{event.notes}</p>
 									{/if}
 								</div>
-								<span class="text-xs shrink-0 text-muted-foreground"
-									><LocalTime date={event.loggedAt} format="time" /></span
-								>
+								<div class="text-xs shrink-0 text-muted-foreground text-right">
+									<LocalTime date={event.loggedAt} format="time" />
+									{#if event.logger}
+										<p class="opacity-60">
+											{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
+										</p>
+									{/if}
+								</div>
 								{#if event.loggedBy === data.user?.id}
 									<form
 										method="POST"

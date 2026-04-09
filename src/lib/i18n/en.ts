@@ -17,6 +17,7 @@ const messages = {
 	'common.no': 'No',
 	'common.or': 'or',
 	'common.optional': 'optional',
+	'common.loggedBy': 'by {name}',
 
 	// Enum: Moods
 	'enum.mood.great': 'Great',

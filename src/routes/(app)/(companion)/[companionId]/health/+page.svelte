@@ -174,7 +174,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailRecorded')}</span
 						>
-						<span class="text-foreground"><LocalTime date={w.recordedAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={w.recordedAt} format="datetime" />{#if w.logger}<span
+									class="text-muted-foreground text-xs ml-1"
+									>{t(locale, 'common.loggedBy', { name: w.logger.displayName })}</span
+								>{/if}</span
+						>
 					</div>
 					{#if w.notes}
 						<div class="pt-1">
@@ -198,7 +203,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailDate')}</span
 						>
-						<span class="text-foreground"><LocalTime date={h.occurredAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={h.occurredAt} format="datetime" />{#if h.logger}<span
+									class="text-muted-foreground text-xs ml-1"
+									>{t(locale, 'common.loggedBy', { name: h.logger.displayName })}</span
+								>{/if}</span
+						>
 					</div>
 					{#if h.nextDueAt}
 						<div class="flex items-center gap-3">
@@ -621,9 +631,16 @@
 								<span class="w-20 shrink-0 font-semibold text-foreground"
 									>{entry.weight} {entry.unit}</span
 								>
-								<span class="flex-1 text-xs truncate text-muted-foreground"
-									>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
-								>
+								<span class="flex-1 min-w-0 text-xs text-muted-foreground">
+									<span class="truncate block"
+										>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
+									>
+									{#if entry.logger}
+										<span class="block opacity-60"
+											>{t(locale, 'common.loggedBy', { name: entry.logger.displayName })}</span
+										>
+									{/if}
+								</span>
 							</button>
 							{#if data.companion.isActive !== false}
 								<div class="flex gap-1 shrink-0">
@@ -818,6 +835,11 @@
 											<p class="text-xs mt-1 text-primary">
 												📅 {t(locale, 'page.health.nextDueLabel')}
 												<LocalTime date={event.nextDueAt} />
+											</p>
+										{/if}
+										{#if event.logger}
+											<p class="text-xs mt-0.5 text-muted-foreground opacity-60">
+												{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
 											</p>
 										{/if}
 									</div>

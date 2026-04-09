@@ -343,7 +343,12 @@
 						>{t(locale, 'page.journal.day.detailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
+						><LocalTime
+							date={detailEvent.loggedAt}
+							format="datetime"
+						/>{#if detailEvent.logger}<span class="text-muted-foreground text-xs ml-1"
+								>{t(locale, 'common.loggedBy', { name: detailEvent.logger.displayName })}</span
+							>{/if}</span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
@@ -455,6 +460,11 @@
 				>
 			{/if}
 		</div>
+		{#if data.entry?.logger}
+			<span class="text-xs text-muted-foreground"
+				>{t(locale, 'common.loggedBy', { name: data.entry.logger.displayName })}</span
+			>
+		{/if}
 	</div>
 
 	<!-- Mood -->
@@ -971,13 +981,20 @@
 										</p>
 									{/if}
 								</div>
-								<span class="text-xs shrink-0 text-muted-foreground">
-									{new Date(event.loggedAt).toLocaleTimeString(undefined, {
-										hour: 'numeric',
-										minute: '2-digit',
-										...(serverTimezone ? { timeZone: serverTimezone } : {})
-									})}
-								</span>
+								<div class="text-xs shrink-0 text-muted-foreground text-right">
+									<span
+										>{new Date(event.loggedAt).toLocaleTimeString(undefined, {
+											hour: 'numeric',
+											minute: '2-digit',
+											...(serverTimezone ? { timeZone: serverTimezone } : {})
+										})}</span
+									>
+									{#if event.logger}
+										<p class="opacity-60">
+											{t(locale, 'common.loggedBy', { name: event.logger.displayName })}
+										</p>
+									{/if}
+								</div>
 							</button>
 							<button
 								type="button"

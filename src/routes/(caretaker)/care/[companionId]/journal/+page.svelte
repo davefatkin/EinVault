@@ -197,6 +197,11 @@
 					>
 				{/if}
 			</span>
+			{#if data.todayEntry?.logger}
+				<span class="text-xs text-muted-foreground"
+					>{t(locale, 'common.loggedBy', { name: data.todayEntry.logger.displayName })}</span
+				>
+			{/if}
 		</div>
 
 		<!-- Mood -->

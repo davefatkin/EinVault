@@ -19,6 +19,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.no': 'No',
 	'common.or': 'o',
 	'common.optional': 'facoltativo',
+	'common.loggedBy': 'di {name}',
 
 	// Enum: Moods
 	'enum.mood.great': 'Ottimo',

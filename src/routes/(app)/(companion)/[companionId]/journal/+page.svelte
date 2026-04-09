@@ -314,7 +314,12 @@
 						>{t(locale, 'page.journal.activityDetailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
+						><LocalTime
+							date={detailEvent.loggedAt}
+							format="datetime"
+						/>{#if detailEvent.logger}<span class="text-muted-foreground text-xs ml-1"
+								>{t(locale, 'common.loggedBy', { name: detailEvent.logger.displayName })}</span
+							>{/if}</span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
@@ -426,6 +431,11 @@
 									{#if entry.date === data.today}
 										<span class="text-xs font-medium text-primary"
 											>{t(locale, 'page.journal.today')}</span
+										>
+									{/if}
+									{#if entry.logger}
+										<span class="text-xs text-muted-foreground"
+											>{t(locale, 'common.loggedBy', { name: entry.logger.displayName })}</span
 										>
 									{/if}
 								</div>
