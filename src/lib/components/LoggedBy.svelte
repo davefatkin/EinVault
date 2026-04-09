@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
-
-	type Logger = { displayName: string } | null | undefined;
+	import type { Logger } from '$lib/types';
 
 	let {
 		logger,
 		variant = 'block',
 		class: className = ''
-	}: { logger: Logger; variant?: 'inline' | 'block'; class?: string } = $props();
+	}: { logger: Logger | undefined; variant?: 'inline' | 'block'; class?: string } = $props();
 	const locale = getLocale();
 </script>
 

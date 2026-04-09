@@ -689,7 +689,12 @@
 									</span>
 								{/if}
 							</div>
-							<LoggedBy logger={event.logger} class="pl-[7.5rem]" />
+							{#if event.logger}
+								<div class="flex items-center gap-3 text-sm">
+									<span class="w-24 shrink-0"></span>
+									<LoggedBy logger={event.logger} />
+								</div>
+							{/if}
 						</button>
 					{/each}
 				</div>
@@ -736,7 +741,12 @@
 								<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge>
 								<span class="truncate text-foreground">{event.title}</span>
 							</div>
-							<LoggedBy logger={event.logger} class="pl-[7.5rem]" />
+							{#if event.logger}
+								<div class="flex items-center gap-3 text-sm">
+									<span class="w-24 shrink-0"></span>
+									<LoggedBy logger={event.logger} />
+								</div>
+							{/if}
 						</button>
 					{/each}
 				</div>

@@ -3,6 +3,7 @@ import { eq, lt, gte, and, inArray } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
 import type { Mood } from '$lib/server/validation';
+import type { Logger } from '$lib/types';
 
 const PAGE_SIZE = 20;
 
@@ -27,7 +28,7 @@ export async function getEnrichedJournalEntries(
 	const pageEntries = entries.slice(0, pageSize);
 
 	type EventWithLogger = typeof schema.dailyEvents.$inferSelect & {
-		logger: { displayName: string } | null;
+		logger: Logger;
 	};
 	let photosByEntry = new Map<string, (typeof schema.journalPhotos.$inferSelect)[]>();
 	let eventsByDate = new Map<string, EventWithLogger[]>();

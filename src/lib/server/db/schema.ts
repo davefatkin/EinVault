@@ -298,7 +298,12 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
 	companionCaretakers: many(companionCaretakers),
-	shifts: many(caretakerShifts)
+	shifts: many(caretakerShifts),
+	loggedJournalEntries: many(journalEntries),
+	loggedDailyEvents: many(dailyEvents),
+	loggedHealthEvents: many(healthEvents),
+	loggedWeightEntries: many(weightEntries),
+	loggedReminders: many(reminders)
 }));
 
 export const companionCaretakersRelations = relations(companionCaretakers, ({ one }) => ({
