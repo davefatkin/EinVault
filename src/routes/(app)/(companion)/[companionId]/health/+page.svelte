@@ -3,6 +3,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -174,7 +175,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailRecorded')}</span
 						>
-						<span class="text-foreground"><LocalTime date={w.recordedAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={w.recordedAt} format="datetime" /><LoggedBy
+								logger={w.logger}
+								variant="inline"
+							/></span
+						>
 					</div>
 					{#if w.notes}
 						<div class="pt-1">
@@ -198,7 +204,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailDate')}</span
 						>
-						<span class="text-foreground"><LocalTime date={h.occurredAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={h.occurredAt} format="datetime" /><LoggedBy
+								logger={h.logger}
+								variant="inline"
+							/></span
+						>
 					</div>
 					{#if h.nextDueAt}
 						<div class="flex items-center gap-3">
@@ -621,9 +632,12 @@
 								<span class="w-20 shrink-0 font-semibold text-foreground"
 									>{entry.weight} {entry.unit}</span
 								>
-								<span class="flex-1 text-xs truncate text-muted-foreground"
-									>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
-								>
+								<div class="flex-1 min-w-0 text-xs text-muted-foreground">
+									<span class="truncate block"
+										>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
+									>
+									<LoggedBy logger={entry.logger} />
+								</div>
 							</button>
 							{#if data.companion.isActive !== false}
 								<div class="flex gap-1 shrink-0">
@@ -820,6 +834,7 @@
 												<LocalTime date={event.nextDueAt} />
 											</p>
 										{/if}
+										<LoggedBy logger={event.logger} class="mt-0.5" />
 									</div>
 								</button>
 								{#if data.companion.isActive !== false}

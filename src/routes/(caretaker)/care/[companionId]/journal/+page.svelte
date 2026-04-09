@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { untrack } from 'svelte';
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale } from '$lib/i18n';
@@ -197,6 +198,7 @@
 					>
 				{/if}
 			</span>
+			<LoggedBy logger={data.todayEntry?.logger} variant="inline" />
 		</div>
 
 		<!-- Mood -->

@@ -7,6 +7,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { ChevronLeft, ChevronRight, X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { tick } from 'svelte';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
@@ -314,7 +315,10 @@
 						>{t(locale, 'page.journal.activityDetailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
+						><LocalTime date={detailEvent.loggedAt} format="datetime" /><LoggedBy
+							logger={detailEvent.logger}
+							variant="inline"
+						/></span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
@@ -428,6 +432,7 @@
 											>{t(locale, 'page.journal.today')}</span
 										>
 									{/if}
+									<LoggedBy logger={entry.logger} variant="inline" class="ml-0" />
 								</div>
 							</div>
 							{#if companion.isActive !== false}

@@ -26,6 +26,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -343,7 +344,10 @@
 						>{t(locale, 'page.journal.day.detailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /></span
+						><LocalTime date={detailEvent.loggedAt} format="datetime" /><LoggedBy
+							logger={detailEvent.logger}
+							variant="inline"
+						/></span
 					>
 				</div>
 				{#if detailEvent.durationMinutes}
@@ -455,6 +459,7 @@
 				>
 			{/if}
 		</div>
+		<LoggedBy logger={data.entry?.logger} variant="inline" class="ml-0" />
 	</div>
 
 	<!-- Mood -->
@@ -971,13 +976,16 @@
 										</p>
 									{/if}
 								</div>
-								<span class="text-xs shrink-0 text-muted-foreground">
-									{new Date(event.loggedAt).toLocaleTimeString(undefined, {
-										hour: 'numeric',
-										minute: '2-digit',
-										...(serverTimezone ? { timeZone: serverTimezone } : {})
-									})}
-								</span>
+								<div class="text-xs shrink-0 text-muted-foreground text-right">
+									<span
+										>{new Date(event.loggedAt).toLocaleTimeString(undefined, {
+											hour: 'numeric',
+											minute: '2-digit',
+											...(serverTimezone ? { timeZone: serverTimezone } : {})
+										})}</span
+									>
+									<LoggedBy logger={event.logger} />
+								</div>
 							</button>
 							<button
 								type="button"

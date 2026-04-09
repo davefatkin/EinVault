@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { localDateISO } from '$lib/date';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -246,6 +247,7 @@
 							</div>
 						</div>
 					{/if}
+					<LoggedBy logger={r.logger} />
 				{:else if selected.kind === 'weight'}
 					{@const w = selected.item}
 					<div class="flex items-center gap-3">
@@ -261,7 +263,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
 						>
-						<span class="text-foreground"><LocalTime date={w.recordedAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={w.recordedAt} format="datetime" /><LoggedBy
+								logger={w.logger}
+								variant="inline"
+							/></span
+						>
 					</div>
 					{#if w.notes}
 						<div class="pt-1">
@@ -285,7 +292,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
 						>
-						<span class="text-foreground"><LocalTime date={e.loggedAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={e.loggedAt} format="datetime" /><LoggedBy
+								logger={e.logger}
+								variant="inline"
+							/></span
+						>
 					</div>
 					{#if e.durationMinutes}
 						<div class="flex items-center gap-3">
@@ -317,7 +329,12 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelDate')}</span
 						>
-						<span class="text-foreground"><LocalTime date={h.occurredAt} format="datetime" /></span>
+						<span class="text-foreground"
+							><LocalTime date={h.occurredAt} format="datetime" /><LoggedBy
+								logger={h.logger}
+								variant="inline"
+							/></span
+						>
 					</div>
 					{#if h.nextDueAt}
 						<div class="flex items-center gap-3">
@@ -657,18 +674,26 @@
 						<button
 							type="button"
 							onclick={() => openDetail({ kind: 'activity', item: event })}
-							class="w-full flex items-center gap-3 text-sm rounded-md px-2 py-1.5 -mx-2
+							class="w-full rounded-md px-2 py-1.5 -mx-2
 								hover:bg-accent transition-colors text-left"
 						>
-							<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-								<LocalTime date={event.loggedAt} format="date" />
-							</span>
-							<span class="text-base shrink-0">{ACTIVITY_ICON[event.type] ?? '📝'}</span>
-							<Badge variant="secondary" class="capitalize">{event.type}</Badge>
-							{#if event.notes}
-								<span class="truncate text-muted-foreground">
-									{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+							<div class="flex items-center gap-3 text-sm">
+								<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
+									<LocalTime date={event.loggedAt} format="date" />
 								</span>
+								<span class="text-base shrink-0">{ACTIVITY_ICON[event.type] ?? '📝'}</span>
+								<Badge variant="secondary" class="capitalize">{event.type}</Badge>
+								{#if event.notes}
+									<span class="truncate text-muted-foreground">
+										{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+									</span>
+								{/if}
+							</div>
+							{#if event.logger}
+								<div class="flex items-center gap-3 text-sm">
+									<span class="w-24 shrink-0"></span>
+									<LoggedBy logger={event.logger} />
+								</div>
 							{/if}
 						</button>
 					{/each}
@@ -706,14 +731,22 @@
 						<button
 							type="button"
 							onclick={() => openDetail({ kind: 'health', item: event })}
-							class="w-full flex items-center gap-3 text-sm rounded-md px-2 py-1.5 -mx-2
+							class="w-full rounded-md px-2 py-1.5 -mx-2
 								hover:bg-accent transition-colors text-left"
 						>
-							<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-								<LocalTime date={event.occurredAt} />
-							</span>
-							<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge>
-							<span class="truncate text-foreground">{event.title}</span>
+							<div class="flex items-center gap-3 text-sm">
+								<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
+									<LocalTime date={event.occurredAt} />
+								</span>
+								<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge>
+								<span class="truncate text-foreground">{event.title}</span>
+							</div>
+							{#if event.logger}
+								<div class="flex items-center gap-3 text-sm">
+									<span class="w-24 shrink-0"></span>
+									<LoggedBy logger={event.logger} />
+								</div>
+							{/if}
 						</button>
 					{/each}
 				</div>

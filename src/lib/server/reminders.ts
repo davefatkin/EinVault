@@ -21,7 +21,8 @@ export async function dismissReminder(
 			type: reminder.type,
 			dueAt: nextDueAt,
 			isRecurring: true,
-			recurringDays: reminder.recurringDays
+			recurringDays: reminder.recurringDays,
+			loggedBy: reminder.loggedBy
 		});
 	}
 }

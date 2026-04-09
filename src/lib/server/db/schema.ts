@@ -152,7 +152,8 @@ export const healthEvents = sqliteTable(
 		vetClinic: text('vet_clinic'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`)
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
 		companionIdx: index('health_companion_idx').on(t.companionId),
@@ -173,7 +174,8 @@ export const weightEntries = sqliteTable(
 		notes: text('notes'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`)
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
 		companionIdx: index('weight_companion_idx').on(t.companionId)
@@ -226,7 +228,8 @@ export const reminders = sqliteTable(
 		isDismissed: integer('is_dismissed', { mode: 'boolean' }).notNull().default(false),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`)
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
 		companionIdx: index('reminder_companion_idx').on(t.companionId),
@@ -295,7 +298,12 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
 	companionCaretakers: many(companionCaretakers),
-	shifts: many(caretakerShifts)
+	shifts: many(caretakerShifts),
+	loggedJournalEntries: many(journalEntries),
+	loggedDailyEvents: many(dailyEvents),
+	loggedHealthEvents: many(healthEvents),
+	loggedWeightEntries: many(weightEntries),
+	loggedReminders: many(reminders)
 }));
 
 export const companionCaretakersRelations = relations(companionCaretakers, ({ one }) => ({
@@ -308,4 +316,24 @@ export const companionCaretakersRelations = relations(companionCaretakers, ({ on
 
 export const caretakerShiftsRelations = relations(caretakerShifts, ({ one }) => ({
 	user: one(users, { fields: [caretakerShifts.userId], references: [users.id] })
+}));
+
+export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
+	logger: one(users, { fields: [journalEntries.loggedBy], references: [users.id] })
+}));
+
+export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
+	logger: one(users, { fields: [dailyEvents.loggedBy], references: [users.id] })
+}));
+
+export const healthEventsRelations = relations(healthEvents, ({ one }) => ({
+	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] })
+}));
+
+export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
+	logger: one(users, { fields: [weightEntries.loggedBy], references: [users.id] })
+}));
+
+export const remindersRelations = relations(reminders, ({ one }) => ({
+	logger: one(users, { fields: [reminders.loggedBy], references: [users.id] })
 }));

@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -218,9 +219,10 @@
 										<p class="text-sm truncate text-muted-foreground mt-0.5">{event.notes}</p>
 									{/if}
 								</div>
-								<span class="text-xs shrink-0 text-muted-foreground"
-									><LocalTime date={event.loggedAt} format="time" /></span
-								>
+								<div class="text-xs shrink-0 text-muted-foreground text-right">
+									<LocalTime date={event.loggedAt} format="time" />
+									<LoggedBy logger={event.logger} />
+								</div>
 								{#if event.loggedBy === data.user?.id}
 									<form
 										method="POST"

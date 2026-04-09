@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { renderMarkdown } from '$lib/markdown';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
@@ -186,6 +187,7 @@
 						</div>
 					</div>
 				{/if}
+				<LoggedBy logger={r.logger} />
 			</div>
 
 			<Separator />
@@ -512,7 +514,10 @@
 										<p
 											class="text-xs mt-1 {overdue ? 'text-destructive' : 'text-muted-foreground'}"
 										>
-											Due <LocalTime date={reminder.dueAt} format="datetime" />
+											Due <LocalTime date={reminder.dueAt} format="datetime" /><LoggedBy
+												logger={reminder.logger}
+												variant="inline"
+											/>
 										</p>
 									</div>
 								</button>

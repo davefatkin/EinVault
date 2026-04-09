@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { Card, CardHeader, CardContent, CardTitle } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
@@ -224,7 +225,10 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={selected.loggedAt} format="datetime" /></span
+						><LocalTime date={selected.loggedAt} format="datetime" /><LoggedBy
+							logger={selected.logger}
+							variant="inline"
+						/></span
 					>
 				</div>
 				{#if selected.durationMinutes}
@@ -322,6 +326,7 @@
 						</div>
 					</div>
 				{/if}
+				<LoggedBy logger={selectedReminder.logger} />
 			</div>
 
 			<Separator />
@@ -665,23 +670,26 @@
 						<button
 							type="button"
 							onclick={() => openDetail(event)}
-							class="w-full flex items-center gap-3 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
+							class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
 						>
-							<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
-							<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
-							{#if event.durationMinutes}
-								<span class="text-xs text-muted-foreground shrink-0"
-									>{event.durationMinutes} min</span
-								>
-							{/if}
-							{#if event.notes}
-								<span class="truncate text-muted-foreground text-xs"
-									>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
-								>
-							{/if}
-							<span class="ml-auto text-xs shrink-0 text-muted-foreground">
-								<LocalTime date={event.loggedAt} format="time" />
-							</span>
+							<div class="flex items-center gap-3 text-sm">
+								<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
+								<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
+								{#if event.durationMinutes}
+									<span class="text-xs text-muted-foreground shrink-0"
+										>{event.durationMinutes} min</span
+									>
+								{/if}
+								{#if event.notes}
+									<span class="truncate text-muted-foreground text-xs"
+										>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
+									>
+								{/if}
+								<span class="ml-auto text-xs shrink-0 text-muted-foreground">
+									<LocalTime date={event.loggedAt} format="time" />
+								</span>
+							</div>
+							<LoggedBy logger={event.logger} class="pl-8" />
 						</button>
 					{/each}
 				</div>
