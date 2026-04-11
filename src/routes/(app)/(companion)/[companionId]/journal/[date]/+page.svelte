@@ -113,8 +113,8 @@
 	}
 
 	async function uploadPhoto(file: File) {
-		if (photos.length >= 5) {
-			setUploadError('Maximum 5 photos per day');
+		if (photos.length >= data.maxDailyPhotos) {
+			setUploadError(t(locale, 'error.maxPhotosExceeded', { max: String(data.maxDailyPhotos) }));
 			return;
 		}
 		uploadError = '';
@@ -190,7 +190,7 @@
 		const files = (e.target as HTMLInputElement).files;
 		if (!files?.length) return;
 		for (const file of Array.from(files)) {
-			if (photos.length < 5) uploadPhoto(file);
+			if (photos.length < data.maxDailyPhotos) uploadPhoto(file);
 		}
 		if (fileInputEl) fileInputEl.value = '';
 	}
@@ -601,9 +601,11 @@
 			<h2 class="font-semibold flex items-center gap-2 text-foreground">
 				<Camera class="h-4 w-4" />
 				{t(locale, 'page.journal.day.photosTitle')}
-				<span class="text-xs font-normal text-muted-foreground">{photos.length}/5</span>
+				<span class="text-xs font-normal text-muted-foreground"
+					>{photos.length}/{data.maxDailyPhotos}</span
+				>
 			</h2>
-			{#if photos.length < 5}
+			{#if photos.length < data.maxDailyPhotos}
 				<label
 					class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
 				>

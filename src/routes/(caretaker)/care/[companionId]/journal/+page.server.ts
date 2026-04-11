@@ -7,6 +7,7 @@ import { parseMood } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -20,9 +21,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	const today = localDateISO();
+	const maxDailyPhotos = Math.max(1, parseInt(env.MAX_DAILY_PHOTOS ?? '5') || 5);
 
 	if (!isOnShift) {
-		return { companion, todayEntry: null, photos: [], today };
+		return { companion, todayEntry: null, photos: [], today, maxDailyPhotos };
 	}
 
 	const todayEntry = await db.query.journalEntries.findFirst({
@@ -44,7 +46,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		companion,
 		todayEntry: todayEntry ?? null,
 		photos,
-		today
+		today,
+		maxDailyPhotos
 	};
 };
 

@@ -65,7 +65,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		date,
 		today,
 		isToday: date === today,
-		uploadMaxMb: env.UPLOAD_MAX_MB ?? '10'
+		uploadMaxMb: env.UPLOAD_MAX_MB ?? '10',
+		maxDailyPhotos: Math.max(1, parseInt(env.MAX_DAILY_PHOTOS ?? '5') || 5)
 	};
 };
 

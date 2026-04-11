@@ -11,7 +11,7 @@ import sharp from 'sharp';
 import { DATA_DIR } from '$lib/server/paths';
 import { isValidDate } from '$lib/server/validation';
 
-const MAX_PHOTOS_PER_DAY = 5;
+const MAX_PHOTOS_PER_DAY = Math.max(1, parseInt(env.MAX_DAILY_PHOTOS ?? '5') || 5);
 const MAX_FILE_SIZE = parseInt(env.UPLOAD_MAX_MB ?? '10') * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
