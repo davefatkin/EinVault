@@ -6,11 +6,11 @@ import { eq, and } from 'drizzle-orm';
 import { writeFile, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { env } from '$env/dynamic/private';
 import sharp from 'sharp';
 import { DATA_DIR } from '$lib/server/paths';
+import { UPLOAD_MAX_MB } from '$lib/server/env';
 
-const MAX_SIZE = parseInt(env.UPLOAD_MAX_MB ?? '10') * 1024 * 1024;
+const MAX_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 async function assertCanEditAvatar(
@@ -42,7 +42,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
 	if (file.size > MAX_SIZE)
-		error(400, t(locals.locale, 'error.fileTooLarge', { max: env.UPLOAD_MAX_MB ?? '10' }));
+		error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
 	if (!ALLOWED_TYPES.includes(file.type))
 		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 

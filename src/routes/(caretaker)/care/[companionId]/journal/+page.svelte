@@ -63,8 +63,8 @@
 	}
 
 	async function uploadPhoto(file: File) {
-		if (photos.length >= 5) {
-			setUploadError('Maximum 5 photos per day');
+		if (photos.length >= data.maxDailyPhotos) {
+			setUploadError(t(locale, 'error.maxPhotosExceeded', { max: data.maxDailyPhotos }));
 			return;
 		}
 		uploadError = '';
@@ -137,7 +137,7 @@
 		const files = (e.target as HTMLInputElement).files;
 		if (!files?.length) return;
 		for (const file of Array.from(files)) {
-			if (photos.length < 5) uploadPhoto(file);
+			if (photos.length < data.maxDailyPhotos) uploadPhoto(file);
 		}
 		fileInputEl.value = '';
 	}
@@ -262,9 +262,11 @@
 				<h2 class="font-semibold flex items-center gap-2">
 					<span>📷</span>
 					{t(locale, 'page.journal.caretaker.photos')}
-					<span class="text-xs font-normal text-muted-foreground">{photos.length}/5</span>
+					<span class="text-xs font-normal text-muted-foreground"
+						>{photos.length}/{data.maxDailyPhotos}</span
+					>
 				</h2>
-				{#if photos.length < 5}
+				{#if photos.length < data.maxDailyPhotos}
 					<label
 						class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
 					>
@@ -377,7 +379,7 @@
 								</div>
 							</div>
 						{/each}
-						{#if photos.length < 5}
+						{#if photos.length < data.maxDailyPhotos}
 							<label
 								class="aspect-square w-24 rounded-lg border-2 border-dashed flex flex-col items-center
 							justify-center cursor-pointer hover:opacity-80 transition-colors"

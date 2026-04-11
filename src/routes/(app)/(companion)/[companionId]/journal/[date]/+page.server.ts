@@ -7,7 +7,7 @@ import { generateId } from '$lib/server/utils';
 import { parseMood, parseDailyEventType, isValidDate } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
-import { env } from '$env/dynamic/private';
+import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -65,7 +65,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		date,
 		today,
 		isToday: date === today,
-		uploadMaxMb: env.UPLOAD_MAX_MB ?? '10'
+		uploadMaxMb: UPLOAD_MAX_MB,
+		maxDailyPhotos: MAX_DAILY_PHOTOS
 	};
 };
 

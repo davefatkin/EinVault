@@ -25,7 +25,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 ## Features
 
 - **Companion profiles:** breed, bio, vet info, emergency contacts, and avatar photo
-- **Daily journal:** per-companion entries with mood tracking and up to 5 photos per day
+- **Daily journal:** per-companion entries with mood tracking and configurable daily photo limit (default 5)
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
 - **Activity logging:** walks, meals, bathroom trips, treats, play sessions, and grooming
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
@@ -145,13 +145,14 @@ einvault.yourdomain.com {
 
 Everything else in the compose file can be edited directly:
 
-|                 | Default             | Description                                                                                                                     |
-| --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `TZ`            | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly. |
-| `UPLOAD_MAX_MB` | `10`                | Maximum upload size in MB. SvelteKit's internal `BODY_SIZE_LIMIT` is derived from this automatically at container start.        |
-| `user`          | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                       |
-| `./data` volume | `./data`            | Where the database and uploads are stored on the host.                                                                          |
-| `DATABASE_URL`  | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                  |
+|                    | Default             | Description                                                                                                                     |
+| ------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `TZ`               | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly. |
+| `UPLOAD_MAX_MB`    | `10`                | Maximum upload size in MB. SvelteKit's internal `BODY_SIZE_LIMIT` is derived from this automatically at container start.        |
+| `MAX_DAILY_PHOTOS` | `5`                 | Maximum number of journal photos per companion per day.                                                                         |
+| `user`             | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                       |
+| `./data` volume    | `./data`            | Where the database and uploads are stored on the host.                                                                          |
+| `DATABASE_URL`     | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                  |
 
 ### Data and backup
 

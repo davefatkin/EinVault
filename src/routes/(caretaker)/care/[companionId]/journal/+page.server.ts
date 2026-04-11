@@ -7,6 +7,7 @@ import { parseMood } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { MAX_DAILY_PHOTOS } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const today = localDateISO();
 
 	if (!isOnShift) {
-		return { companion, todayEntry: null, photos: [], today };
+		return { companion, todayEntry: null, photos: [], today, maxDailyPhotos: MAX_DAILY_PHOTOS };
 	}
 
 	const todayEntry = await db.query.journalEntries.findFirst({
@@ -44,7 +45,8 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		companion,
 		todayEntry: todayEntry ?? null,
 		photos,
-		today
+		today,
+		maxDailyPhotos: MAX_DAILY_PHOTOS
 	};
 };
 

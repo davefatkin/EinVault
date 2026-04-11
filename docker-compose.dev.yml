@@ -31,6 +31,8 @@ services:
       DATABASE_URL: /data/einvault.db
       # Maximum upload size in MB. BODY_SIZE_LIMIT is derived automatically.
       UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
+      # Maximum journal photos per companion per day.
+      MAX_DAILY_PHOTOS: ${MAX_DAILY_PHOTOS:-5}
 
       # Set to your local timezone so dates and times display correctly.
       # Defaults to UTC if omitted. Example: America/New_York, Europe/London
