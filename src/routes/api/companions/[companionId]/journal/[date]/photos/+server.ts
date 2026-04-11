@@ -107,12 +107,14 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		loggedBy: locals.user.id
 	});
 
+	const created = await db.query.journalPhotos.findFirst({
+		where: eq(schema.journalPhotos.id, photoId),
+		with: { logger: { columns: { displayName: true } } }
+	});
+
 	return json({
-		id: photoId,
-		filename,
-		url: `/api/photos/journal/${companionId}/${date}/${filename}`,
-		loggedBy: locals.user.id,
-		logger: { displayName: locals.user.displayName }
+		...created,
+		url: `/api/photos/journal/${companionId}/${date}/${filename}`
 	});
 };
 
