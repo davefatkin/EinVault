@@ -9,6 +9,7 @@ import { join } from 'path';
 import sharp from 'sharp';
 import { DATA_DIR } from '$lib/server/paths';
 import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
+import { canDeletePhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
 const MAX_FILE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
@@ -102,13 +103,16 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		filename,
 		originalName: file.name,
 		mimeType,
-		sizeBytes: processed.length
+		sizeBytes: processed.length,
+		loggedBy: locals.user.id
 	});
 
 	return json({
 		id: photoId,
 		filename,
-		url: `/api/photos/journal/${companionId}/${date}/${filename}`
+		url: `/api/photos/journal/${companionId}/${date}/${filename}`,
+		loggedBy: locals.user.id,
+		logger: { displayName: locals.user.displayName }
 	});
 };
 
@@ -159,6 +163,8 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	});
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
+
+	if (!canDeletePhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
 	const { unlink } = await import('fs/promises');
 	const filePath = join(

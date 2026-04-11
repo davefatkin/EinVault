@@ -265,6 +265,11 @@
 					{@html renderMarkdown(lightboxPhoto.notes)}
 				</div>
 			{/if}
+			{#if lightboxPhoto.logger}
+				<div class="mt-2 flex justify-center">
+					<LoggedBy logger={lightboxPhoto.logger} variant="inline" class="!text-white/60 !ml-0" />
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
