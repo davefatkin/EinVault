@@ -350,6 +350,8 @@ const messages = {
 	'page.dashboard.cardReminders': 'Reminders',
 	'page.dashboard.remindersViewAll': 'View All',
 	'page.dashboard.remindersEmpty': 'No upcoming reminders.',
+	'page.dashboard.reminderDone': 'Done',
+	'page.dashboard.reminderMarkDone': 'Mark as done',
 	'page.dashboard.cardWeight': 'Weight',
 	'page.dashboard.weightLog': 'Log',
 	'page.dashboard.weightAsOf': 'as of',

@@ -352,6 +352,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Promemoria',
 	'page.dashboard.remindersViewAll': 'Vedi tutti',
 	'page.dashboard.remindersEmpty': 'Nessun promemoria in arrivo.',
+	'page.dashboard.reminderDone': 'Fatto',
+	'page.dashboard.reminderMarkDone': 'Segna come fatto',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registra',
 	'page.dashboard.weightAsOf': 'al',
