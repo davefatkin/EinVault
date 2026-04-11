@@ -9,7 +9,7 @@ import { join } from 'path';
 import sharp from 'sharp';
 import { DATA_DIR } from '$lib/server/paths';
 import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
-import { canDeletePhoto } from '$lib/permissions';
+import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
 const MAX_FILE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
@@ -134,6 +134,8 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
+	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+
 	const contentLength = parseInt(request.headers.get('content-length') ?? '0');
 	if (contentLength > 10_000) error(400, t(locals.locale, 'error.requestBodyTooLarge'));
 	const { notes } = await request.json();
@@ -164,7 +166,7 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
-	if (!canDeletePhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
 	const { unlink } = await import('fs/promises');
 	const filePath = join(

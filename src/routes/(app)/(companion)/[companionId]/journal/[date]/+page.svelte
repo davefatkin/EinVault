@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import { canDeletePhoto } from '$lib/permissions';
+	import { canModifyPhoto } from '$lib/permissions';
 	import { localDateISO } from '$lib/date';
 	import { getContext } from 'svelte';
 
@@ -672,7 +672,7 @@
 									class="w-full h-full object-cover"
 									loading="lazy"
 								/>
-								{#if canDeletePhoto(data.user, photo)}
+								{#if canModifyPhoto(data.user, photo)}
 									<button
 										type="button"
 										onclick={() => openConfirm(() => deletePhoto(photo.id))}
@@ -719,12 +719,14 @@
 										</p>
 									{/if}
 									<div class="flex items-center gap-2 mt-1">
-										<button
-											type="button"
-											onclick={() => startEditPhotoNotes(photo)}
-											class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-											>{t(locale, 'page.journal.day.editCaption')}</button
-										>
+										{#if canModifyPhoto(data.user, photo)}
+											<button
+												type="button"
+												onclick={() => startEditPhotoNotes(photo)}
+												class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+												>{t(locale, 'page.journal.day.editCaption')}</button
+											>
+										{/if}
 										<LoggedBy logger={photo.logger} variant="inline" />
 									</div>
 								{/if}
