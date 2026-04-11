@@ -626,6 +626,7 @@ const messages = {
 	'aria.moreActions': 'More actions',
 	'aria.deleteEntry': 'Delete entry',
 	'aria.deletePhoto': 'Delete photo',
+	'aria.downloadPhoto': 'Download photo',
 	'aria.closeDialog': 'Close dialog',
 	'aria.close': 'Close',
 	'aria.previousPhoto': 'Previous photo',

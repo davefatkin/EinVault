@@ -29,7 +29,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const photos = entry
 		? await db.query.journalPhotos.findMany({
 				where: eq(schema.journalPhotos.entryId, entry.id),
-				orderBy: (p, { asc }) => [asc(p.createdAt)]
+				orderBy: (p, { asc }) => [asc(p.createdAt)],
+				with: { logger: { columns: { displayName: true } } }
 			})
 		: [];
 

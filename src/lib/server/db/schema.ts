@@ -125,7 +125,8 @@ export const journalPhotos = sqliteTable(
 		notes: text('notes'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`)
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
 		entryIdx: index('photo_entry_idx').on(t.entryId)
@@ -300,6 +301,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 	companionCaretakers: many(companionCaretakers),
 	shifts: many(caretakerShifts),
 	loggedJournalEntries: many(journalEntries),
+	loggedJournalPhotos: many(journalPhotos),
 	loggedDailyEvents: many(dailyEvents),
 	loggedHealthEvents: many(healthEvents),
 	loggedWeightEntries: many(weightEntries),
@@ -318,8 +320,17 @@ export const caretakerShiftsRelations = relations(caretakerShifts, ({ one }) => 
 	user: one(users, { fields: [caretakerShifts.userId], references: [users.id] })
 }));
 
-export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
-	logger: one(users, { fields: [journalEntries.loggedBy], references: [users.id] })
+export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({
+	logger: one(users, { fields: [journalEntries.loggedBy], references: [users.id] }),
+	photos: many(journalPhotos)
+}));
+
+export const journalPhotosRelations = relations(journalPhotos, ({ one }) => ({
+	entry: one(journalEntries, {
+		fields: [journalPhotos.entryId],
+		references: [journalEntries.id]
+	}),
+	logger: one(users, { fields: [journalPhotos.loggedBy], references: [users.id] })
 }));
 
 export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({

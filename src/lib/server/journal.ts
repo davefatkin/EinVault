@@ -30,7 +30,10 @@ export async function getEnrichedJournalEntries(
 	type EventWithLogger = typeof schema.dailyEvents.$inferSelect & {
 		logger: Logger;
 	};
-	let photosByEntry = new Map<string, (typeof schema.journalPhotos.$inferSelect)[]>();
+	type PhotoWithLogger = typeof schema.journalPhotos.$inferSelect & {
+		logger: Logger;
+	};
+	let photosByEntry = new Map<string, PhotoWithLogger[]>();
 	let eventsByDate = new Map<string, EventWithLogger[]>();
 
 	if (pageEntries.length > 0) {
@@ -45,7 +48,8 @@ export async function getEnrichedJournalEntries(
 		const [allPhotos, allEvents] = await Promise.all([
 			db.query.journalPhotos.findMany({
 				where: inArray(schema.journalPhotos.entryId, entryIds),
-				orderBy: (p, { asc }) => [asc(p.createdAt)]
+				orderBy: (p, { asc }) => [asc(p.createdAt)],
+				with: { logger: { columns: { displayName: true } } }
 			}),
 			db.query.dailyEvents.findMany({
 				where: and(

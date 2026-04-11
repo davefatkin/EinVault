@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import { canModifyPhoto } from '$lib/permissions';
 	import { localDateISO } from '$lib/date';
 	import { getContext } from 'svelte';
 
@@ -132,7 +133,7 @@
 				setUploadError(err.message ?? 'Upload failed');
 				return;
 			}
-			const { id, filename } = await res.json();
+			const { id, filename, loggedBy, logger } = await res.json();
 			photos = [
 				...photos,
 				{
@@ -143,7 +144,9 @@
 					mimeType: file.type,
 					sizeBytes: file.size,
 					notes: null,
-					createdAt: new Date()
+					createdAt: new Date(),
+					loggedBy,
+					logger
 				}
 			];
 		} catch {
@@ -669,16 +672,18 @@
 									class="w-full h-full object-cover"
 									loading="lazy"
 								/>
-								<button
-									type="button"
-									onclick={() => openConfirm(() => deletePhoto(photo.id))}
-									class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
+								{#if canModifyPhoto(data.user, photo)}
+									<button
+										type="button"
+										onclick={() => openConfirm(() => deletePhoto(photo.id))}
+										class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 										flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
 										hover:bg-red-600 transition-all"
-									aria-label={t(locale, 'aria.deletePhoto')}
-								>
-									<Trash2 class="h-3 w-3" />
-								</button>
+										aria-label={t(locale, 'aria.deletePhoto')}
+									>
+										<Trash2 class="h-3 w-3" />
+									</button>
+								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
 								{#if editingPhotoId === photo.id}
@@ -713,12 +718,17 @@
 											{t(locale, 'page.journal.day.noCaption')}
 										</p>
 									{/if}
-									<button
-										type="button"
-										onclick={() => startEditPhotoNotes(photo)}
-										class="inline-flex items-center justify-center rounded-md px-2 py-0.5 mt-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-										>{t(locale, 'page.journal.day.editCaption')}</button
-									>
+									<div class="flex items-center gap-2 mt-1">
+										{#if canModifyPhoto(data.user, photo)}
+											<button
+												type="button"
+												onclick={() => startEditPhotoNotes(photo)}
+												class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+												>{t(locale, 'page.journal.day.editCaption')}</button
+											>
+										{/if}
+										<LoggedBy logger={photo.logger} variant="inline" />
+									</div>
 								{/if}
 							</div>
 						</div>

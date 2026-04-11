@@ -5,7 +5,15 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { ChevronLeft, ChevronRight, X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
+	import {
+		ChevronLeft,
+		ChevronRight,
+		X,
+		Pencil,
+		NotebookPen,
+		ArrowRight,
+		Download
+	} from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import LoggedBy from '$lib/components/LoggedBy.svelte';
 	import { tick } from 'svelte';
@@ -216,14 +224,24 @@
 				{:else}
 					<span></span>
 				{/if}
-				<button
-					type="button"
-					onclick={closeLightbox}
-					class="text-white/70 hover:text-white p-1 rounded"
-					aria-label={t(locale, 'aria.close')}
-				>
-					<X class="h-5 w-5" />
-				</button>
+				<div class="flex items-center gap-1">
+					<a
+						href={photoUrl(lightboxPhoto, lightboxDate)}
+						download={lightboxPhoto.originalName ?? lightboxPhoto.filename}
+						class="text-white/70 hover:text-white p-1 rounded"
+						aria-label={t(locale, 'aria.downloadPhoto')}
+					>
+						<Download class="h-5 w-5" />
+					</a>
+					<button
+						type="button"
+						onclick={closeLightbox}
+						class="text-white/70 hover:text-white p-1 rounded"
+						aria-label={t(locale, 'aria.close')}
+					>
+						<X class="h-5 w-5" />
+					</button>
+				</div>
 			</div>
 
 			<div class="relative">
@@ -263,6 +281,11 @@
 			{#if lightboxPhoto.notes}
 				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm">
 					{@html renderMarkdown(lightboxPhoto.notes)}
+				</div>
+			{/if}
+			{#if lightboxPhoto.logger}
+				<div class="mt-2 flex justify-center">
+					<LoggedBy logger={lightboxPhoto.logger} variant="inline" class="!text-white/60 !ml-0" />
 				</div>
 			{/if}
 		</div>

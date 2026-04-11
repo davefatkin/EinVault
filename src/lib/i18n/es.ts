@@ -630,6 +630,7 @@ const messages: Record<keyof Messages, string> = {
 	'aria.moreActions': 'Más acciones',
 	'aria.deleteEntry': 'Eliminar entrada',
 	'aria.deletePhoto': 'Eliminar foto',
+	'aria.downloadPhoto': 'Descargar foto',
 	'aria.closeDialog': 'Cerrar diálogo',
 	'aria.close': 'Cerrar',
 	'aria.previousPhoto': 'Foto anterior',
