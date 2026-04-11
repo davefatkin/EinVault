@@ -114,7 +114,7 @@
 
 	async function uploadPhoto(file: File) {
 		if (photos.length >= data.maxDailyPhotos) {
-			setUploadError(t(locale, 'error.maxPhotosExceeded', { max: String(data.maxDailyPhotos) }));
+			setUploadError(t(locale, 'error.maxPhotosExceeded', { max: data.maxDailyPhotos }));
 			return;
 		}
 		uploadError = '';

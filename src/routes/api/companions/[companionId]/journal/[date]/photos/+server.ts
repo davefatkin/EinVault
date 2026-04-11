@@ -6,13 +6,12 @@ import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { env } from '$env/dynamic/private';
 import sharp from 'sharp';
 import { DATA_DIR } from '$lib/server/paths';
+import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
 import { isValidDate } from '$lib/server/validation';
 
-const MAX_PHOTOS_PER_DAY = Math.max(1, parseInt(env.MAX_DAILY_PHOTOS ?? '5') || 5);
-const MAX_FILE_SIZE = parseInt(env.UPLOAD_MAX_MB ?? '10') * 1024 * 1024;
+const MAX_FILE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
@@ -54,8 +53,8 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		.from(schema.journalPhotos)
 		.where(eq(schema.journalPhotos.entryId, entry.id));
 
-	if (photoCount >= MAX_PHOTOS_PER_DAY) {
-		error(400, t(locals.locale, 'error.maxPhotosExceeded', { max: String(MAX_PHOTOS_PER_DAY) }));
+	if (photoCount >= MAX_DAILY_PHOTOS) {
+		error(400, t(locals.locale, 'error.maxPhotosExceeded', { max: MAX_DAILY_PHOTOS }));
 	}
 
 	const formData = await request.formData();
@@ -63,7 +62,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
 	if (file.size > MAX_FILE_SIZE)
-		error(400, t(locals.locale, 'error.fileTooLarge', { max: env.UPLOAD_MAX_MB ?? '10' }));
+		error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
 	if (!ALLOWED_TYPES.includes(file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
 
 	const raw = Buffer.from(await file.arrayBuffer());
