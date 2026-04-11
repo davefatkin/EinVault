@@ -354,6 +354,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Erinnerungen',
 	'page.dashboard.remindersViewAll': 'Alle anzeigen',
 	'page.dashboard.remindersEmpty': 'Keine anstehenden Erinnerungen.',
+	'page.dashboard.reminderDone': 'Erledigt',
+	'page.dashboard.reminderMarkDone': 'Als erledigt markieren',
 	'page.dashboard.cardWeight': 'Gewicht',
 	'page.dashboard.weightLog': 'Erfassen',
 	'page.dashboard.weightAsOf': 'Stand',

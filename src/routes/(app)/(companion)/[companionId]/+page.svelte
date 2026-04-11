@@ -16,8 +16,10 @@
 		Pencil,
 		UserCheck,
 		NotebookPen,
-		X
+		X,
+		CheckCheck
 	} from '@lucide/svelte';
+	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown } from '$lib/markdown';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
@@ -382,6 +384,24 @@
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'page.dashboard.modalEditReminders')}
 						</Button>
+						<form
+							method="POST"
+							action="?/dismiss"
+							use:enhance={() =>
+								async ({ update }) => {
+									closeDetail();
+									await update();
+								}}
+						>
+							<input type="hidden" name="id" value={selected.item.id} />
+							<button
+								type="submit"
+								class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
+							>
+								<CheckCheck class="h-3.5 w-3.5" />
+								{t(locale, 'page.dashboard.reminderDone')}
+							</button>
+						</form>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
 							href="/{companion.id}/health?edit={selected.item.id}"
@@ -563,17 +583,37 @@
 					</p>
 				{:else}
 					{#each upcomingReminders.slice(0, 3) as reminder (reminder.id)}
-						<button
-							type="button"
-							onclick={() => openDetail({ kind: 'reminder', item: reminder })}
-							class="w-full flex items-center justify-between text-sm rounded-md px-2 py-1.5 -mx-2
-								hover:bg-accent transition-colors text-left"
-						>
-							<span class="truncate text-foreground">{reminder.title}</span>
-							<span class="shrink-0 ml-2 text-xs text-muted-foreground">
-								<LocalTime date={reminder.dueAt} />
-							</span>
-						</button>
+						<div class="flex items-center gap-1 -mx-2">
+							<button
+								type="button"
+								onclick={() => openDetail({ kind: 'reminder', item: reminder })}
+								class="flex-1 flex items-center justify-between text-sm rounded-md px-2 py-1.5
+									hover:bg-accent transition-colors text-left min-w-0"
+							>
+								<span class="truncate text-foreground">{reminder.title}</span>
+								<span class="shrink-0 ml-2 text-xs text-muted-foreground">
+									<LocalTime date={reminder.dueAt} />
+								</span>
+							</button>
+							<form
+								method="POST"
+								action="?/dismiss"
+								use:enhance={() =>
+									async ({ update }) => {
+										await update();
+									}}
+							>
+								<input type="hidden" name="id" value={reminder.id} />
+								<button
+									type="submit"
+									title={t(locale, 'page.dashboard.reminderMarkDone')}
+									aria-label={t(locale, 'page.dashboard.reminderMarkDone')}
+									class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
+								>
+									<CheckCheck class="h-3.5 w-3.5" />
+								</button>
+							</form>
+						</div>
 					{/each}
 				{/if}
 			</CardContent>

@@ -1,8 +1,10 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
+import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, gte, and, lte } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
+import { dismissReminder } from '$lib/server/reminders';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -85,4 +87,22 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		todayJournal,
 		activeCaretakerShift
 	};
+};
+
+export const actions: Actions = {
+	dismiss: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		await dismissReminder(existing);
+
+		return { dismissSuccess: true };
+	}
 };
