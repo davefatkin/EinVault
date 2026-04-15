@@ -101,7 +101,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await completeReminder(existing, locals.user.id);
+		completeReminder(existing, locals.user.id);
 
 		return { completeSuccess: true };
 	}

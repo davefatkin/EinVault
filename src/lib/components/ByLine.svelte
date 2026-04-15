@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
-	import type { Logger } from '$lib/types';
+	import type { UserRef } from '$lib/types';
 
 	let {
 		user,
 		variant = 'block',
 		class: className = ''
-	}: { user: Logger | undefined; variant?: 'inline' | 'block'; class?: string } = $props();
+	}: { user: UserRef | undefined; variant?: 'inline' | 'block'; class?: string } = $props();
 	const locale = getLocale();
 </script>
 

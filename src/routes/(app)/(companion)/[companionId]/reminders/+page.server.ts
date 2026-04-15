@@ -102,7 +102,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await completeReminder(existing, locals.user.id);
+		completeReminder(existing, locals.user.id);
 
 		// Prune completed non-recurring reminders older than 30 days
 		const thirtyDaysAgo = new Date();
@@ -132,22 +132,24 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await db
-			.update(schema.reminders)
-			.set({ completedAt: null, completedBy: null })
-			.where(eq(schema.reminders.id, id));
+		db.transaction((tx) => {
+			tx.update(schema.reminders)
+				.set({ completedAt: null, completedBy: null })
+				.where(eq(schema.reminders.id, id))
+				.run();
 
-		// If recurring, delete all future instances in this series
-		if (existing.isRecurring && existing.seriesId) {
-			await db
-				.delete(schema.reminders)
-				.where(
-					and(
-						eq(schema.reminders.seriesId, existing.seriesId),
-						gt(schema.reminders.dueAt, existing.dueAt)
+			// If recurring, delete all future instances in this series
+			if (existing.isRecurring && existing.seriesId) {
+				tx.delete(schema.reminders)
+					.where(
+						and(
+							eq(schema.reminders.seriesId, existing.seriesId),
+							gt(schema.reminders.dueAt, existing.dueAt)
+						)
 					)
-				);
-		}
+					.run();
+			}
+		});
 
 		return { restoreSuccess: true };
 	},

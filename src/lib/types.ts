@@ -1,2 +1,2 @@
-/** Lightweight author info attached to loggable entities via Drizzle's `with: { logger }` relation. */
-export type Logger = { displayName: string } | null;
+/** Lightweight user info attached to entities via Drizzle relations (logger, completer, etc.). */
+export type UserRef = { displayName: string } | null;
