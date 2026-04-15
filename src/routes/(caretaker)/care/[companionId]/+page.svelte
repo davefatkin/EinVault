@@ -648,52 +648,54 @@
 		</div>
 	{/if}
 
-	<!-- Today's activity -->
-	<Card>
-		<CardHeader class="pb-3 flex flex-row items-center justify-between">
-			<CardTitle class="font-semibold flex items-center gap-2">
-				<span>📋</span>
-				{t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
-			</CardTitle>
-			<a href="/care/{companion.id}/log" class="text-primary text-xs hover:underline"
-				>{t(locale, 'page.dashboard.caretaker.logActivity')}</a
-			>
-		</CardHeader>
-		<CardContent>
-			{#if todayActivity.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.caretaker.activityEmpty')}
-				</p>
-			{:else}
-				<div class="space-y-1">
-					{#each todayActivity as event (event.id)}
-						<button
-							type="button"
-							onclick={() => openDetail(event)}
-							class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
-						>
-							<div class="flex items-center gap-3 text-sm">
-								<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
-								<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
-								{#if event.durationMinutes}
-									<span class="text-xs text-muted-foreground shrink-0"
-										>{event.durationMinutes} min</span
-									>
-								{/if}
-								{#if event.notes}
-									<span class="truncate text-muted-foreground text-xs"
-										>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
-									>
-								{/if}
-								<span class="ml-auto text-xs shrink-0 text-muted-foreground">
-									<LocalTime date={event.loggedAt} format="time" />
-								</span>
-							</div>
-							<ByLine user={event.logger} class="pl-8" />
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</CardContent>
-	</Card>
+	<!-- Today's activity (only visible when on shift) -->
+	{#if data.isOnShift}
+		<Card>
+			<CardHeader class="pb-3 flex flex-row items-center justify-between">
+				<CardTitle class="font-semibold flex items-center gap-2">
+					<span>📋</span>
+					{t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
+				</CardTitle>
+				<a href="/care/{companion.id}/log" class="text-primary text-xs hover:underline"
+					>{t(locale, 'page.dashboard.caretaker.logActivity')}</a
+				>
+			</CardHeader>
+			<CardContent>
+				{#if todayActivity.length === 0}
+					<p class="text-sm italic text-muted-foreground">
+						{t(locale, 'page.dashboard.caretaker.activityEmpty')}
+					</p>
+				{:else}
+					<div class="space-y-1">
+						{#each todayActivity as event (event.id)}
+							<button
+								type="button"
+								onclick={() => openDetail(event)}
+								class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
+							>
+								<div class="flex items-center gap-3 text-sm">
+									<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
+									<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
+									{#if event.durationMinutes}
+										<span class="text-xs text-muted-foreground shrink-0"
+											>{event.durationMinutes} min</span
+										>
+									{/if}
+									{#if event.notes}
+										<span class="truncate text-muted-foreground text-xs"
+											>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
+										>
+									{/if}
+									<span class="ml-auto text-xs shrink-0 text-muted-foreground">
+										<LocalTime date={event.loggedAt} format="time" />
+									</span>
+								</div>
+								<ByLine user={event.logger} class="pl-8" />
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</Card>
+	{/if}
 </div>

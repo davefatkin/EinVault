@@ -7,7 +7,7 @@ import { getShiftStatus } from '$lib/server/shifts';
 import { completeReminder } from '$lib/server/reminders';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
-	const { companions } = await parent();
+	const { companions, isOnShift } = await parent();
 	if (!companions.find((c) => c.id === params.companionId)) {
 		error(403, t(locals.locale, 'error.notAssignedToCompanion'));
 	}
@@ -28,15 +28,16 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
-
-	const todayActivity = await db.query.dailyEvents.findMany({
-		where: and(
-			eq(schema.dailyEvents.companionId, params.companionId),
-			gte(schema.dailyEvents.loggedAt, todayStart)
-		),
-		orderBy: (d, { asc }) => [asc(d.loggedAt)],
-		with: { logger: { columns: { displayName: true } } }
-	});
+	const todayActivity = isOnShift
+		? await db.query.dailyEvents.findMany({
+				where: and(
+					eq(schema.dailyEvents.companionId, params.companionId),
+					gte(schema.dailyEvents.loggedAt, todayStart)
+				),
+				orderBy: (d, { asc }) => [asc(d.loggedAt)],
+				with: { logger: { columns: { displayName: true } } }
+			})
+		: [];
 
 	const latestWeight = await db.query.weightEntries.findFirst({
 		where: eq(schema.weightEntries.companionId, params.companionId),
