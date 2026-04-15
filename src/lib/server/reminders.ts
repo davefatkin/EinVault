@@ -2,12 +2,13 @@ import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 
-export async function dismissReminder(
-	reminder: typeof schema.reminders.$inferSelect
+export async function completeReminder(
+	reminder: typeof schema.reminders.$inferSelect,
+	userId: string
 ): Promise<void> {
 	await db
 		.update(schema.reminders)
-		.set({ isDismissed: true })
+		.set({ completedAt: new Date(), completedBy: userId })
 		.where(eq(schema.reminders.id, reminder.id));
 
 	if (reminder.isRecurring && reminder.recurringDays && reminder.recurringDays > 0) {
@@ -22,6 +23,7 @@ export async function dismissReminder(
 			dueAt: nextDueAt,
 			isRecurring: true,
 			recurringDays: reminder.recurringDays,
+			seriesId: reminder.seriesId ?? reminder.id,
 			loggedBy: reminder.loggedBy
 		});
 	}

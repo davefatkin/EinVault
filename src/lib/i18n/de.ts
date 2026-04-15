@@ -127,7 +127,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noActiveShift': 'Keine aktive Schicht.',
 	'error.notAssignedToCompanion': 'Diesem Begleiter nicht zugewiesen.',
 	'error.canOnlyDeleteOwnEntries': 'Du kannst nur deine eigenen Einträge löschen.',
-	'error.mustBeOnShiftToDismiss': 'Du musst in einer Schicht sein, um Erinnerungen zu schließen.',
+	'error.mustBeOnShiftToComplete': 'Du musst in einer Schicht sein, um Erinnerungen abzuschließen.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Anzeigename und Benutzername sind erforderlich.',
@@ -561,10 +561,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Alle {count} Tag',
 	'page.reminders.detailEveryDaysPlural': 'Alle {count} Tage',
 	'page.reminders.detailNotes': 'Notizen',
-	'page.reminders.dismiss': 'Schließen',
+	'page.reminders.complete': 'Erledigen',
 	'page.reminders.restore': 'Wiederherstellen',
-	'page.reminders.dismissedCount': '{count} geschlossene Erinnerung',
-	'page.reminders.dismissedCountPlural': '{count} geschlossene Erinnerungen',
+	'page.reminders.completedCount': '{count} erledigte Erinnerung',
+	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Benutzer',

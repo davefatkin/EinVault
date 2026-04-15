@@ -123,7 +123,7 @@ const messages = {
 	'error.noActiveShift': 'No active shift.',
 	'error.notAssignedToCompanion': 'Not assigned to this companion.',
 	'error.canOnlyDeleteOwnEntries': 'You can only delete your own entries.',
-	'error.mustBeOnShiftToDismiss': 'You must be on shift to dismiss reminders.',
+	'error.mustBeOnShiftToComplete': 'You must be on shift to complete reminders.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Display name and username are required.',
@@ -555,10 +555,10 @@ const messages = {
 	'page.reminders.detailEveryDays': 'Every {count} day',
 	'page.reminders.detailEveryDaysPlural': 'Every {count} days',
 	'page.reminders.detailNotes': 'Notes',
-	'page.reminders.dismiss': 'Dismiss',
+	'page.reminders.complete': 'Complete',
 	'page.reminders.restore': 'Restore',
-	'page.reminders.dismissedCount': '{count} dismissed reminder',
-	'page.reminders.dismissedCountPlural': '{count} dismissed reminders',
+	'page.reminders.completedCount': '{count} completed reminder',
+	'page.reminders.completedCountPlural': '{count} completed reminders',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Users',

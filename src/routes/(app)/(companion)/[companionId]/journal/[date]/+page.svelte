@@ -27,7 +27,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -347,8 +347,8 @@
 						>{t(locale, 'page.journal.day.detailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /><LoggedBy
-							logger={detailEvent.logger}
+						><LocalTime date={detailEvent.loggedAt} format="datetime" /><ByLine
+							user={detailEvent.logger}
 							variant="inline"
 						/></span
 					>
@@ -462,7 +462,7 @@
 				>
 			{/if}
 		</div>
-		<LoggedBy logger={data.entry?.logger} variant="inline" class="ml-0" />
+		<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
 	</div>
 
 	<!-- Mood -->
@@ -727,7 +727,7 @@
 												>{t(locale, 'page.journal.day.editCaption')}</button
 											>
 										{/if}
-										<LoggedBy logger={photo.logger} variant="inline" />
+										<ByLine user={photo.logger} variant="inline" />
 									</div>
 								{/if}
 							</div>
@@ -996,7 +996,7 @@
 											...(serverTimezone ? { timeZone: serverTimezone } : {})
 										})}</span
 									>
-									<LoggedBy logger={event.logger} />
+									<ByLine user={event.logger} />
 								</div>
 							</button>
 							<button

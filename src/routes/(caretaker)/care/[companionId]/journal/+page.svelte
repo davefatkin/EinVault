@@ -4,7 +4,7 @@
 	import { canModifyPhoto } from '$lib/permissions';
 	import { Trash2 } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import { untrack } from 'svelte';
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale } from '$lib/i18n';
@@ -202,7 +202,7 @@
 					>
 				{/if}
 			</span>
-			<LoggedBy logger={data.todayEntry?.logger} variant="inline" />
+			<ByLine user={data.todayEntry?.logger} variant="inline" />
 		</div>
 
 		<!-- Mood -->
@@ -384,7 +384,7 @@
 													{t(locale, 'page.journal.caretaker.editCaption')}
 												</button>
 											{/if}
-											<LoggedBy logger={photo.logger} variant="inline" />
+											<ByLine user={photo.logger} variant="inline" />
 										</div>
 									{/if}
 								</div>

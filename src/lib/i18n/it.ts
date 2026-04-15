@@ -125,7 +125,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noActiveShift': 'Nessun turno attivo.',
 	'error.notAssignedToCompanion': 'Non assegnato a questo compagno.',
 	'error.canOnlyDeleteOwnEntries': 'Puoi eliminare solo le tue voci.',
-	'error.mustBeOnShiftToDismiss': 'Devi essere in turno per chiudere i promemoria.',
+	'error.mustBeOnShiftToComplete': 'Devi essere in turno per completare i promemoria.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Nome visualizzato e nome utente sono obbligatori.',
@@ -558,10 +558,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Ogni {count} giorno',
 	'page.reminders.detailEveryDaysPlural': 'Ogni {count} giorni',
 	'page.reminders.detailNotes': 'Note',
-	'page.reminders.dismiss': 'Chiudi',
+	'page.reminders.complete': 'Completa',
 	'page.reminders.restore': 'Ripristina',
-	'page.reminders.dismissedCount': '{count} promemoria chiuso',
-	'page.reminders.dismissedCountPlural': '{count} promemoria chiusi',
+	'page.reminders.completedCount': '{count} promemoria completato',
+	'page.reminders.completedCountPlural': '{count} promemoria completati',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utenti',

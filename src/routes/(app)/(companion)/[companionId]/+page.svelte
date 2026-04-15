@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import { localDateISO } from '$lib/date';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -249,7 +249,7 @@
 							</div>
 						</div>
 					{/if}
-					<LoggedBy logger={r.logger} />
+					<ByLine user={r.logger} />
 				{:else if selected.kind === 'weight'}
 					{@const w = selected.item}
 					<div class="flex items-center gap-3">
@@ -266,8 +266,8 @@
 							>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={w.recordedAt} format="datetime" /><LoggedBy
-								logger={w.logger}
+							><LocalTime date={w.recordedAt} format="datetime" /><ByLine
+								user={w.logger}
 								variant="inline"
 							/></span
 						>
@@ -295,8 +295,8 @@
 							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={e.loggedAt} format="datetime" /><LoggedBy
-								logger={e.logger}
+							><LocalTime date={e.loggedAt} format="datetime" /><ByLine
+								user={e.logger}
 								variant="inline"
 							/></span
 						>
@@ -332,8 +332,8 @@
 							>{t(locale, 'page.dashboard.modalLabelDate')}</span
 						>
 						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" /><LoggedBy
-								logger={h.logger}
+							><LocalTime date={h.occurredAt} format="datetime" /><ByLine
+								user={h.logger}
 								variant="inline"
 							/></span
 						>
@@ -386,7 +386,7 @@
 						</Button>
 						<form
 							method="POST"
-							action="?/dismiss"
+							action="?/complete"
 							use:enhance={() =>
 								async ({ update }) => {
 									closeDetail();
@@ -597,7 +597,7 @@
 							</button>
 							<form
 								method="POST"
-								action="?/dismiss"
+								action="?/complete"
 								use:enhance={() =>
 									async ({ update }) => {
 										await update();
@@ -732,7 +732,7 @@
 							{#if event.logger}
 								<div class="flex items-center gap-3 text-sm">
 									<span class="w-24 shrink-0"></span>
-									<LoggedBy logger={event.logger} />
+									<ByLine user={event.logger} />
 								</div>
 							{/if}
 						</button>
@@ -784,7 +784,7 @@
 							{#if event.logger}
 								<div class="flex items-center gap-3 text-sm">
 									<span class="w-24 shrink-0"></span>
-									<LoggedBy logger={event.logger} />
+									<ByLine user={event.logger} />
 								</div>
 							{/if}
 						</button>

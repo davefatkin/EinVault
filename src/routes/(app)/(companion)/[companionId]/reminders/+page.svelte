@@ -2,7 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { renderMarkdown } from '$lib/markdown';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
@@ -13,7 +13,7 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Plus, Pencil, Trash2, BellOff, RotateCcw, X } from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, Check, RotateCcw, X } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
@@ -29,8 +29,8 @@
 
 	const REMINDER_TYPES = reminderTypeOptions(locale);
 
-	let active = $derived(data.reminders.filter((r) => !r.isDismissed));
-	let dismissed = $derived(data.reminders.filter((r) => r.isDismissed));
+	let active = $derived(data.reminders.filter((r) => !r.completedAt));
+	let completed = $derived(data.reminders.filter((r) => r.completedAt));
 
 	function isOverdue(dueAt: Date | string) {
 		return new Date(dueAt) < new Date();
@@ -71,7 +71,7 @@
 	// Detail modal
 	let selected = $state<(typeof data.reminders)[0] | null>(null);
 	let dialogEl = $state<HTMLElement | null>(null);
-	let modalDismissForm = $state<HTMLFormElement | null>(null);
+	let modalCompleteForm = $state<HTMLFormElement | null>(null);
 
 	async function openDetail(reminder: (typeof data.reminders)[0]) {
 		selected = reminder;
@@ -187,7 +187,7 @@
 						</div>
 					</div>
 				{/if}
-				<LoggedBy logger={r.logger} />
+				<ByLine user={r.logger} />
 			</div>
 
 			<Separator />
@@ -213,11 +213,11 @@
 						size="sm"
 						onclick={() => {
 							closeDetail();
-							modalDismissForm?.requestSubmit();
+							modalCompleteForm?.requestSubmit();
 						}}
 					>
-						<BellOff class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.reminders.dismiss')}
+						<Check class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'page.reminders.complete')}
 					</Button>
 					<Button
 						variant="destructive"
@@ -236,8 +236,8 @@
 			{/if}
 		</div>
 	</div>
-	<!-- Hidden dismiss form for modal action -->
-	<form bind:this={modalDismissForm} method="POST" action="?/dismiss" use:enhance class="hidden">
+	<!-- Hidden complete form for modal action -->
+	<form bind:this={modalCompleteForm} method="POST" action="?/complete" use:enhance class="hidden">
 		<input type="hidden" name="id" value={r.id} />
 	</form>
 {/if}
@@ -514,8 +514,8 @@
 										<p
 											class="text-xs mt-1 {overdue ? 'text-destructive' : 'text-muted-foreground'}"
 										>
-											Due <LocalTime date={reminder.dueAt} format="datetime" /><LoggedBy
-												logger={reminder.logger}
+											Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
+												user={reminder.logger}
 												variant="inline"
 											/>
 										</p>
@@ -533,7 +533,7 @@
 											<Pencil class="h-3.5 w-3.5" />
 											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
-										<form method="POST" action="?/dismiss" use:enhance>
+										<form method="POST" action="?/complete" use:enhance>
 											<input type="hidden" name="id" value={reminder.id} />
 											<Button
 												type="submit"
@@ -541,8 +541,8 @@
 												size="sm"
 												class="h-7 gap-1.5 px-2 text-xs"
 											>
-												<BellOff class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">{t(locale, 'page.reminders.dismiss')}</span>
+												<Check class="h-3.5 w-3.5" />
+												<span class="hidden sm:inline">{t(locale, 'page.reminders.complete')}</span>
 											</Button>
 										</form>
 										<Button
@@ -568,15 +568,15 @@
 		</div>
 	{/if}
 
-	{#if dismissed.length > 0}
+	{#if completed.length > 0}
 		<details>
 			<summary class="cursor-pointer text-sm select-none hover:opacity-80 text-muted-foreground">
-				{dismissed.length !== 1
-					? t(locale, 'page.reminders.dismissedCountPlural', { count: dismissed.length })
-					: t(locale, 'page.reminders.dismissedCount', { count: dismissed.length })}
+				{completed.length !== 1
+					? t(locale, 'page.reminders.completedCountPlural', { count: completed.length })
+					: t(locale, 'page.reminders.completedCount', { count: completed.length })}
 			</summary>
 			<div class="mt-3 space-y-2">
-				{#each dismissed as reminder (reminder.id)}
+				{#each completed as reminder (reminder.id)}
 					<Card class={editingId !== reminder.id ? 'opacity-60' : ''}>
 						{#if editingId === reminder.id}
 							<CardContent class="pt-6">
@@ -694,6 +694,9 @@
 										<span class="text-xs text-muted-foreground"
 											><LocalTime date={reminder.dueAt} /></span
 										>
+										{#if reminder.completer}
+											<ByLine user={reminder.completer} variant="inline" />
+										{/if}
 									</div>
 									<div class="flex gap-1 shrink-0">
 										<Button
@@ -706,7 +709,7 @@
 											<Pencil class="h-3.5 w-3.5" />
 											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
-										<form method="POST" action="?/undismiss" use:enhance>
+										<form method="POST" action="?/restore" use:enhance>
 											<input type="hidden" name="id" value={reminder.id} />
 											<Button
 												type="submit"
