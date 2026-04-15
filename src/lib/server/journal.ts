@@ -3,7 +3,7 @@ import { eq, lt, gte, and, inArray } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
 import type { Mood } from '$lib/server/validation';
-import type { Logger } from '$lib/types';
+import type { UserRef } from '$lib/types';
 
 const PAGE_SIZE = 20;
 
@@ -27,14 +27,14 @@ export async function getEnrichedJournalEntries(
 	const hasMore = entries.length > pageSize;
 	const pageEntries = entries.slice(0, pageSize);
 
-	type EventWithLogger = typeof schema.dailyEvents.$inferSelect & {
-		logger: Logger;
+	type EventWithUserRef = typeof schema.dailyEvents.$inferSelect & {
+		logger: UserRef;
 	};
-	type PhotoWithLogger = typeof schema.journalPhotos.$inferSelect & {
-		logger: Logger;
+	type PhotoWithUserRef = typeof schema.journalPhotos.$inferSelect & {
+		logger: UserRef;
 	};
-	let photosByEntry = new Map<string, PhotoWithLogger[]>();
-	let eventsByDate = new Map<string, EventWithLogger[]>();
+	let photosByEntry = new Map<string, PhotoWithUserRef[]>();
+	let eventsByDate = new Map<string, EventWithUserRef[]>();
 
 	if (pageEntries.length > 0) {
 		const entryIds = pageEntries.map((e) => e.id);

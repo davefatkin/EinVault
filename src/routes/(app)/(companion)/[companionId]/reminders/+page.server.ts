@@ -2,10 +2,10 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, lt } from 'drizzle-orm';
+import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseReminderType } from '$lib/server/validation';
-import { dismissReminder } from '$lib/server/reminders';
+import { completeReminder } from '$lib/server/reminders';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -14,7 +14,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const reminders = await db.query.reminders.findMany({
 		where: eq(schema.reminders.companionId, params.companionId),
 		orderBy: (r, { asc }) => [asc(r.dueAt)],
-		with: { logger: { columns: { displayName: true } } }
+		with: {
+			logger: { columns: { displayName: true } },
+			completer: { columns: { displayName: true } }
+		}
 	});
 
 	return { companion, reminders };
@@ -35,8 +38,9 @@ export const actions: Actions = {
 		if (isNaN(dueAt.getTime()))
 			return fail(400, { error: t(locals.locale, 'error.validDueDateRequired') });
 
+		const id = generateId(15);
 		await db.insert(schema.reminders).values({
-			id: generateId(15),
+			id,
 			companionId: params.companionId,
 			title,
 			description,
@@ -44,6 +48,7 @@ export const actions: Actions = {
 			dueAt,
 			isRecurring,
 			recurringDays: recurringDays && recurringDays > 0 ? recurringDays : null,
+			seriesId: isRecurring ? id : null,
 			loggedBy: locals.user.id
 		});
 
@@ -87,7 +92,7 @@ export const actions: Actions = {
 		return { updateSuccess: true };
 	},
 
-	dismiss: async ({ request, params, locals }) => {
+	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
@@ -97,9 +102,9 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await dismissReminder(existing);
+		completeReminder(existing, locals.user.id);
 
-		// Prune dismissed non-recurring reminders older than 30 days
+		// Prune completed non-recurring reminders older than 30 days
 		const thirtyDaysAgo = new Date();
 		thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 		await db
@@ -107,32 +112,46 @@ export const actions: Actions = {
 			.where(
 				and(
 					eq(schema.reminders.companionId, params.companionId),
-					eq(schema.reminders.isDismissed, true),
+					isNotNull(schema.reminders.completedAt),
 					eq(schema.reminders.isRecurring, false),
 					lt(schema.reminders.createdAt, thirtyDaysAgo)
 				)
 			);
 
-		return { dismissSuccess: true };
+		return { completeSuccess: true };
 	},
 
-	undismiss: async ({ request, params, locals }) => {
+	restore: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 
 		const existing = await db.query.reminders.findFirst({
-			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
-			columns: { id: true }
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await db
-			.update(schema.reminders)
-			.set({ isDismissed: false })
-			.where(eq(schema.reminders.id, id));
-		return { undismissSuccess: true };
+		db.transaction((tx) => {
+			tx.update(schema.reminders)
+				.set({ completedAt: null, completedBy: null })
+				.where(eq(schema.reminders.id, id))
+				.run();
+
+			// If recurring, delete all future instances in this series
+			if (existing.isRecurring && existing.seriesId) {
+				tx.delete(schema.reminders)
+					.where(
+						and(
+							eq(schema.reminders.seriesId, existing.seriesId),
+							gt(schema.reminders.dueAt, existing.dueAt)
+						)
+					)
+					.run();
+			}
+		});
+
+		return { restoreSuccess: true };
 	},
 
 	delete: async ({ request, params, locals }) => {

@@ -126,7 +126,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noActiveShift': 'Sem turno ativo.',
 	'error.notAssignedToCompanion': 'Não atribuído a este companheiro.',
 	'error.canOnlyDeleteOwnEntries': 'Só pode eliminar as suas próprias entradas.',
-	'error.mustBeOnShiftToDismiss': 'Deve estar em turno para dispensar lembretes.',
+	'error.mustBeOnShiftToComplete': 'Deve estar em turno para completar lembretes.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired':
@@ -559,10 +559,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'A cada {count} dia',
 	'page.reminders.detailEveryDaysPlural': 'A cada {count} dias',
 	'page.reminders.detailNotes': 'Notas',
-	'page.reminders.dismiss': 'Dispensar',
+	'page.reminders.complete': 'Completar',
 	'page.reminders.restore': 'Restaurar',
-	'page.reminders.dismissedCount': '{count} lembrete dispensado',
-	'page.reminders.dismissedCountPlural': '{count} lembretes dispensados',
+	'page.reminders.completedCount': '{count} lembrete completado',
+	'page.reminders.completedCountPlural': '{count} lembretes completados',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilizadores',

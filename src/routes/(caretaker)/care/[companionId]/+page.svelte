@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import { Card, CardHeader, CardContent, CardTitle } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
@@ -225,8 +225,8 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={selected.loggedAt} format="datetime" /><LoggedBy
-							logger={selected.logger}
+						><LocalTime date={selected.loggedAt} format="datetime" /><ByLine
+							user={selected.logger}
 							variant="inline"
 						/></span
 					>
@@ -326,7 +326,7 @@
 						</div>
 					</div>
 				{/if}
-				<LoggedBy logger={selectedReminder.logger} />
+				<ByLine user={selectedReminder.logger} />
 			</div>
 
 			<Separator />
@@ -334,7 +334,7 @@
 			<div class="flex gap-2 px-5 py-4">
 				<form
 					method="POST"
-					action="?/dismiss"
+					action="?/complete"
 					use:enhance={() =>
 						async ({ update }) => {
 							closeReminderDetail();
@@ -514,7 +514,7 @@
 							</button>
 							<form
 								method="POST"
-								action="?/dismiss"
+								action="?/complete"
 								use:enhance={() =>
 									async ({ update }) => {
 										await update();
@@ -689,7 +689,7 @@
 									<LocalTime date={event.loggedAt} format="time" />
 								</span>
 							</div>
-							<LoggedBy logger={event.logger} class="pl-8" />
+							<ByLine user={event.logger} class="pl-8" />
 						</button>
 					{/each}
 				</div>

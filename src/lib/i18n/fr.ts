@@ -126,7 +126,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noActiveShift': 'Aucune garde active.',
 	'error.notAssignedToCompanion': 'Non assigné à ce compagnon.',
 	'error.canOnlyDeleteOwnEntries': 'Vous ne pouvez supprimer que vos propres entrées.',
-	'error.mustBeOnShiftToDismiss': 'Vous devez être de garde pour fermer les rappels.',
+	'error.mustBeOnShiftToComplete': 'Vous devez être de garde pour compléter les rappels.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': "Le nom d'affichage et le nom d'utilisateur sont requis.",
@@ -561,10 +561,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Tous les {count} jour',
 	'page.reminders.detailEveryDaysPlural': 'Tous les {count} jours',
 	'page.reminders.detailNotes': 'Notes',
-	'page.reminders.dismiss': 'Fermer',
+	'page.reminders.complete': 'Terminer',
 	'page.reminders.restore': 'Restaurer',
-	'page.reminders.dismissedCount': '{count} rappel fermé',
-	'page.reminders.dismissedCountPlural': '{count} rappels fermés',
+	'page.reminders.completedCount': '{count} rappel terminé',
+	'page.reminders.completedCountPlural': '{count} rappels terminés',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilisateurs',

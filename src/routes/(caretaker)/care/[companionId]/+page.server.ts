@@ -2,9 +2,9 @@ import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, ne, gte } from 'drizzle-orm';
+import { eq, and, ne, gte, isNull } from 'drizzle-orm';
 import { getShiftStatus } from '$lib/server/shifts';
-import { dismissReminder } from '$lib/server/reminders';
+import { completeReminder } from '$lib/server/reminders';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions } = await parent();
@@ -62,7 +62,7 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		db.query.reminders.findMany({
 			where: and(
 				eq(schema.reminders.companionId, params.companionId),
-				eq(schema.reminders.isDismissed, false)
+				isNull(schema.reminders.completedAt)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
 			with: { logger: { columns: { displayName: true } } }
@@ -91,11 +91,11 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 };
 
 export const actions: Actions = {
-	dismiss: async ({ request, params, locals }) => {
+	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 
 		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.mustBeOnShiftToDismiss') });
+		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.mustBeOnShiftToComplete') });
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
@@ -105,8 +105,8 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		await dismissReminder(existing);
+		completeReminder(existing, locals.user.id);
 
-		return { dismissSuccess: true };
+		return { completeSuccess: true };
 	}
 };

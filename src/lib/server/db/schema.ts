@@ -226,7 +226,9 @@ export const reminders = sqliteTable(
 		dueAt: integer('due_at', { mode: 'timestamp' }).notNull(),
 		isRecurring: integer('is_recurring', { mode: 'boolean' }).notNull().default(false),
 		recurringDays: integer('recurring_days'),
-		isDismissed: integer('is_dismissed', { mode: 'boolean' }).notNull().default(false),
+		seriesId: text('series_id'),
+		completedAt: integer('completed_at', { mode: 'timestamp' }),
+		completedBy: text('completed_by').references(() => users.id, { onDelete: 'set null' }),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
@@ -234,7 +236,8 @@ export const reminders = sqliteTable(
 	},
 	(t) => ({
 		companionIdx: index('reminder_companion_idx').on(t.companionId),
-		dueIdx: index('reminder_due_idx').on(t.dueAt)
+		dueIdx: index('reminder_due_idx').on(t.dueAt),
+		seriesDueIdx: index('reminder_series_due_idx').on(t.seriesId, t.dueAt)
 	})
 );
 
@@ -305,7 +308,8 @@ export const usersRelations = relations(users, ({ many }) => ({
 	loggedDailyEvents: many(dailyEvents),
 	loggedHealthEvents: many(healthEvents),
 	loggedWeightEntries: many(weightEntries),
-	loggedReminders: many(reminders)
+	loggedReminders: many(reminders, { relationName: 'reminderLogger' }),
+	completedReminders: many(reminders, { relationName: 'reminderCompleter' })
 }));
 
 export const companionCaretakersRelations = relations(companionCaretakers, ({ one }) => ({
@@ -346,5 +350,14 @@ export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
 }));
 
 export const remindersRelations = relations(reminders, ({ one }) => ({
-	logger: one(users, { fields: [reminders.loggedBy], references: [users.id] })
+	logger: one(users, {
+		fields: [reminders.loggedBy],
+		references: [users.id],
+		relationName: 'reminderLogger'
+	}),
+	completer: one(users, {
+		fields: [reminders.completedBy],
+		references: [users.id],
+		relationName: 'reminderCompleter'
+	})
 }));

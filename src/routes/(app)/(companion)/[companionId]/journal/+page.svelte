@@ -15,7 +15,7 @@
 		Download
 	} from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import LoggedBy from '$lib/components/LoggedBy.svelte';
+	import ByLine from '$lib/components/ByLine.svelte';
 	import { tick } from 'svelte';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
@@ -285,7 +285,7 @@
 			{/if}
 			{#if lightboxPhoto.logger}
 				<div class="mt-2 flex justify-center">
-					<LoggedBy logger={lightboxPhoto.logger} variant="inline" class="!text-white/60 !ml-0" />
+					<ByLine user={lightboxPhoto.logger} variant="inline" class="!text-white/60 !ml-0" />
 				</div>
 			{/if}
 		</div>
@@ -338,8 +338,8 @@
 						>{t(locale, 'page.journal.activityDetailLogged')}</span
 					>
 					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /><LoggedBy
-							logger={detailEvent.logger}
+						><LocalTime date={detailEvent.loggedAt} format="datetime" /><ByLine
+							user={detailEvent.logger}
 							variant="inline"
 						/></span
 					>
@@ -455,7 +455,7 @@
 											>{t(locale, 'page.journal.today')}</span
 										>
 									{/if}
-									<LoggedBy logger={entry.logger} variant="inline" class="ml-0" />
+									<ByLine user={entry.logger} variant="inline" class="ml-0" />
 								</div>
 							</div>
 							{#if companion.isActive !== false}
