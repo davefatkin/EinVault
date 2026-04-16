@@ -45,7 +45,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.2",
-		"isomorphic-dompurify": "^3.6.0",
+		"isomorphic-dompurify": "^3.9.0",
 		"marked": "^17.0.5",
 		"sharp": "^0.34.5",
 		"tailwind-merge": "^3.5.0"
