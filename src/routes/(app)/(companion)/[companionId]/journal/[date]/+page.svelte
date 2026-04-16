@@ -443,7 +443,44 @@
 				>
 			{/if}
 		</div>
-		<div class="flex items-center gap-2 text-sm">
+		<ByLine user={data.entry?.logger} variant="inline" class="ml-0 hidden sm:flex" />
+	</div>
+	<div class="sm:hidden">
+		<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
+	</div>
+
+	<!-- Mood -->
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-2">
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+				>{t(locale, 'page.journal.day.mood')}</span
+			>
+			<div
+				role="group"
+				aria-label={t(locale, 'page.journal.day.moodQuestion', { name: companion.name })}
+				class="flex gap-1"
+			>
+				{#each MOODS as m (m.value)}
+					<button
+						type="button"
+						onclick={() => {
+							mood = mood === m.value ? '' : m.value;
+							triggerSave();
+						}}
+						title={m.label}
+						aria-pressed={mood === m.value}
+						class="text-xl leading-none p-1.5 rounded-lg transition-all
+						{mood === m.value
+							? 'bg-bark-100 dark:bg-bark-900 ring-1 ring-bark-300 dark:ring-bark-700'
+							: 'opacity-40 hover:opacity-80'}"
+					>
+						{m.icon}
+					</button>
+				{/each}
+			</div>
+		</div>
+		<!-- Save status -->
+		<div class="flex items-center gap-2 text-sm shrink-0">
 			{#if saveStatus === 'saving'}
 				<span class="animate-pulse text-muted-foreground"
 					>{t(locale, 'page.journal.day.savingStatus')}</span
@@ -461,37 +498,6 @@
 					>{t(locale, 'page.journal.day.saveFailedRetry')}</button
 				>
 			{/if}
-		</div>
-		<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
-	</div>
-
-	<!-- Mood -->
-	<div class="flex items-center gap-2">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-			>{t(locale, 'page.journal.day.mood')}</span
-		>
-		<div
-			role="group"
-			aria-label={t(locale, 'page.journal.day.moodQuestion', { name: companion.name })}
-			class="flex gap-1"
-		>
-			{#each MOODS as m (m.value)}
-				<button
-					type="button"
-					onclick={() => {
-						mood = mood === m.value ? '' : m.value;
-						triggerSave();
-					}}
-					title={m.label}
-					aria-pressed={mood === m.value}
-					class="text-xl leading-none p-1.5 rounded-lg transition-all
-						{mood === m.value
-						? 'bg-bark-100 dark:bg-bark-900 ring-1 ring-bark-300 dark:ring-bark-700'
-						: 'opacity-40 hover:opacity-80'}"
-				>
-					{m.icon}
-				</button>
-			{/each}
 		</div>
 	</div>
 
