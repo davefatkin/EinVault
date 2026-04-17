@@ -19,6 +19,12 @@ const messages = {
 	'common.optional': 'optional',
 	'common.loggedBy': 'by {name}',
 
+	// Common: Reminder actions (shared across companion dashboard, reminders list, caretaker)
+	'common.reminder.undo': 'Undo',
+	'common.reminder.done': 'Done',
+	'common.reminder.dismissedAnnounce': '{title} dismissed. Activate Undo to restore.',
+	'common.reminder.restoredAnnounce': '{title} restored.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Great',
 	'enum.mood.good': 'Good',
@@ -350,7 +356,6 @@ const messages = {
 	'page.dashboard.cardReminders': 'Reminders',
 	'page.dashboard.remindersViewAll': 'View All',
 	'page.dashboard.remindersEmpty': 'No upcoming reminders.',
-	'page.dashboard.reminderDone': 'Done',
 	'page.dashboard.reminderMarkDone': 'Mark as done',
 	'page.dashboard.cardWeight': 'Weight',
 	'page.dashboard.weightLog': 'Log',
@@ -394,7 +399,6 @@ const messages = {
 	'page.dashboard.caretaker.cardReminders': 'Upcoming Reminders',
 	'page.dashboard.caretaker.remindersEmpty': 'No upcoming reminders.',
 	'page.dashboard.caretaker.reminderOverdue': 'Overdue',
-	'page.dashboard.caretaker.reminderDone': 'Done',
 	'page.dashboard.caretaker.reminderMarkDone': 'Mark as done',
 	'page.dashboard.caretaker.reminderShiftRequired': 'Start your shift to mark reminders done',
 	'page.dashboard.caretaker.cardVetInfo': 'Vet Info',
@@ -412,7 +416,6 @@ const messages = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notes',
 	'page.dashboard.caretaker.modalLabelDue': 'Due',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repeats',
-	'page.dashboard.caretaker.modalDone': 'Done',
 	'page.dashboard.caretaker.modalShiftRequired': 'Start your shift to mark reminders done',
 	'page.dashboard.caretaker.closeDialog': 'Close dialog',
 
@@ -555,7 +558,6 @@ const messages = {
 	'page.reminders.detailEveryDays': 'Every {count} day',
 	'page.reminders.detailEveryDaysPlural': 'Every {count} days',
 	'page.reminders.detailNotes': 'Notes',
-	'page.reminders.complete': 'Complete',
 	'page.reminders.restore': 'Restore',
 	'page.reminders.completedCount': '{count} completed reminder',
 	'page.reminders.completedCountPlural': '{count} completed reminders',

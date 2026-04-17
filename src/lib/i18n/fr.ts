@@ -21,6 +21,12 @@ const messages: Record<keyof Messages, string> = {
 	'common.optional': 'facultatif',
 	'common.loggedBy': 'par {name}',
 
+	// Common: Reminder actions
+	'common.reminder.undo': 'Annuler',
+	'common.reminder.done': 'Fait',
+	'common.reminder.dismissedAnnounce': '{title} rejeté. Activez Annuler pour restaurer.',
+	'common.reminder.restoredAnnounce': '{title} restauré.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Super',
 	'enum.mood.good': 'Bien',
@@ -354,7 +360,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Rappels',
 	'page.dashboard.remindersViewAll': 'Tout voir',
 	'page.dashboard.remindersEmpty': 'Aucun rappel à venir.',
-	'page.dashboard.reminderDone': 'Fait',
 	'page.dashboard.reminderMarkDone': 'Marquer comme fait',
 	'page.dashboard.cardWeight': 'Poids',
 	'page.dashboard.weightLog': 'Enregistrer',
@@ -398,7 +403,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Rappels à venir',
 	'page.dashboard.caretaker.remindersEmpty': 'Aucun rappel à venir.',
 	'page.dashboard.caretaker.reminderOverdue': 'En retard',
-	'page.dashboard.caretaker.reminderDone': 'Fait',
 	'page.dashboard.caretaker.reminderMarkDone': 'Marquer comme fait',
 	'page.dashboard.caretaker.reminderShiftRequired':
 		'Commencez votre garde pour valider les rappels',
@@ -417,7 +421,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notes',
 	'page.dashboard.caretaker.modalLabelDue': 'Échéance',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se répète',
-	'page.dashboard.caretaker.modalDone': 'Fait',
 	'page.dashboard.caretaker.modalShiftRequired': 'Commencez votre garde pour valider les rappels',
 	'page.dashboard.caretaker.closeDialog': 'Fermer la boîte de dialogue',
 
@@ -561,7 +564,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Tous les {count} jour',
 	'page.reminders.detailEveryDaysPlural': 'Tous les {count} jours',
 	'page.reminders.detailNotes': 'Notes',
-	'page.reminders.complete': 'Terminer',
 	'page.reminders.restore': 'Restaurer',
 	'page.reminders.completedCount': '{count} rappel terminé',
 	'page.reminders.completedCountPlural': '{count} rappels terminés',

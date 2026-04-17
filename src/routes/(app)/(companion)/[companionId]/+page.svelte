@@ -17,13 +17,16 @@
 		UserCheck,
 		NotebookPen,
 		X,
-		CheckCheck
+		CheckCheck,
+		Undo2
 	} from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown } from '$lib/markdown';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
+	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data }: { data: PageData } = $props();
 	let {
@@ -74,6 +77,12 @@
 		(document.activeElement as HTMLElement)?.blur();
 	}
 
+	// Pending reminder dismissals
+	const pendingDismiss = createPendingDismissals(getLocale);
+	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+
+	$effect(() => () => pendingDismiss.cleanup());
+
 	function handleWindowKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			if (avatarLightboxOpen) {
@@ -82,6 +91,10 @@
 			}
 			if (selected) {
 				closeDetail();
+				return;
+			}
+			if (pendingDismiss.undoLast((id) => upcomingReminders.find((x) => x.id === id)?.title)) {
+				return;
 			}
 		}
 	}
@@ -384,24 +397,21 @@
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'page.dashboard.modalEditReminders')}
 						</Button>
-						<form
-							method="POST"
-							action="?/complete"
-							use:enhance={() =>
-								async ({ update }) => {
-									closeDetail();
-									await update();
-								}}
+						<button
+							type="button"
+							onclick={() => {
+								if (selected?.kind !== 'reminder') return;
+								const item = selected.item;
+								const form = dismissFormRegistry.get(item.id);
+								if (!form) return;
+								closeDetail();
+								pendingDismiss.queue(item.id, form, item.title);
+							}}
+							class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
 						>
-							<input type="hidden" name="id" value={selected.item.id} />
-							<button
-								type="submit"
-								class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-							>
-								<CheckCheck class="h-3.5 w-3.5" />
-								{t(locale, 'page.dashboard.reminderDone')}
-							</button>
-						</form>
+							<CheckCheck class="h-3.5 w-3.5" />
+							{t(locale, 'common.reminder.done')}
+						</button>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
 							href="/{companion.id}/health?edit={selected.item.id}"
@@ -583,14 +593,27 @@
 					</p>
 				{:else}
 					{#each upcomingReminders.slice(0, 3) as reminder (reminder.id)}
-						<div class="flex items-center gap-1 -mx-2">
+						{@const isPending = pendingDismiss.isPending(reminder.id)}
+						<div
+							class="relative flex items-center gap-1 -mx-2 overflow-hidden rounded-md transition-colors {isPending
+								? 'bg-muted/40'
+								: ''}"
+						>
 							<button
 								type="button"
-								onclick={() => openDetail({ kind: 'reminder', item: reminder })}
+								onclick={() => !isPending && openDetail({ kind: 'reminder', item: reminder })}
+								disabled={isPending}
+								aria-disabled={isPending}
 								class="flex-1 flex items-center justify-between text-sm rounded-md px-2 py-1.5
-									hover:bg-accent transition-colors text-left min-w-0"
+									hover:bg-accent transition-colors text-left min-w-0 disabled:hover:bg-transparent"
 							>
-								<span class="truncate text-foreground">{reminder.title}</span>
+								<span
+									class="truncate {isPending
+										? 'line-through text-muted-foreground'
+										: 'text-foreground'}"
+								>
+									{reminder.title}
+								</span>
 								<span class="shrink-0 ml-2 text-xs text-muted-foreground">
 									<LocalTime date={reminder.dueAt} />
 								</span>
@@ -602,17 +625,46 @@
 									async ({ update }) => {
 										await update();
 									}}
+								use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
 							>
 								<input type="hidden" name="id" value={reminder.id} />
-								<button
-									type="submit"
-									title={t(locale, 'page.dashboard.reminderMarkDone')}
-									aria-label={t(locale, 'page.dashboard.reminderMarkDone')}
-									class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
-								>
-									<CheckCheck class="h-3.5 w-3.5" />
-								</button>
+								{#if isPending}
+									<button
+										type="button"
+										onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
+										title={t(locale, 'common.reminder.undo')}
+										aria-label={t(locale, 'common.reminder.undo')}
+										class="inline-flex items-center justify-center gap-1 rounded-md h-8 px-2 text-xs font-medium text-primary hover:bg-accent transition-colors shrink-0"
+										onmouseenter={() => pendingDismiss.pause(reminder.id)}
+										onmouseleave={() => pendingDismiss.resume(reminder.id)}
+										onfocusin={() => pendingDismiss.pause(reminder.id)}
+										onfocusout={() => pendingDismiss.resume(reminder.id)}
+									>
+										<Undo2 class="h-3.5 w-3.5" />
+										<span>{t(locale, 'common.reminder.undo')}</span>
+									</button>
+								{:else}
+									<button
+										type="button"
+										onclick={() => {
+											const form = dismissFormRegistry.get(reminder.id);
+											if (form) pendingDismiss.queue(reminder.id, form, reminder.title);
+										}}
+										title={t(locale, 'page.dashboard.reminderMarkDone')}
+										aria-label={t(locale, 'page.dashboard.reminderMarkDone')}
+										class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
+									>
+										<CheckCheck class="h-3.5 w-3.5" />
+									</button>
+								{/if}
 							</form>
+							{#if isPending}
+								<span
+									class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
+									style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
+									aria-hidden="true"
+								></span>
+							{/if}
 						</div>
 					{/each}
 				{/if}
@@ -794,3 +846,6 @@
 		</CardContent>
 	</Card>
 </div>
+
+<!-- aria-live announcements for reminder dismissals -->
+<div class="sr-only" role="status" aria-live="polite">{pendingDismiss.announcement}</div>

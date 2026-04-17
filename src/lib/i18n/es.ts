@@ -21,6 +21,12 @@ const messages: Record<keyof Messages, string> = {
 	'common.optional': 'opcional',
 	'common.loggedBy': 'por {name}',
 
+	// Common: Reminder actions
+	'common.reminder.undo': 'Deshacer',
+	'common.reminder.done': 'Hecho',
+	'common.reminder.dismissedAnnounce': '{title} descartado. Activa Deshacer para restaurar.',
+	'common.reminder.restoredAnnounce': '{title} restaurado.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Genial',
 	'enum.mood.good': 'Bien',
@@ -354,7 +360,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Recordatorios',
 	'page.dashboard.remindersViewAll': 'Ver todos',
 	'page.dashboard.remindersEmpty': 'No hay recordatorios próximos.',
-	'page.dashboard.reminderDone': 'Hecho',
 	'page.dashboard.reminderMarkDone': 'Marcar como hecho',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registrar',
@@ -398,7 +403,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Recordatorios próximos',
 	'page.dashboard.caretaker.remindersEmpty': 'No hay recordatorios próximos.',
 	'page.dashboard.caretaker.reminderOverdue': 'Vencido',
-	'page.dashboard.caretaker.reminderDone': 'Hecho',
 	'page.dashboard.caretaker.reminderMarkDone': 'Marcar como hecho',
 	'page.dashboard.caretaker.reminderShiftRequired': 'Inicia tu turno para completar recordatorios',
 	'page.dashboard.caretaker.cardVetInfo': 'Info del veterinario',
@@ -416,7 +420,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notas',
 	'page.dashboard.caretaker.modalLabelDue': 'Vencimiento',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se repite',
-	'page.dashboard.caretaker.modalDone': 'Hecho',
 	'page.dashboard.caretaker.modalShiftRequired': 'Inicia tu turno para completar recordatorios',
 	'page.dashboard.caretaker.closeDialog': 'Cerrar diálogo',
 
@@ -559,7 +562,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Cada {count} día',
 	'page.reminders.detailEveryDaysPlural': 'Cada {count} días',
 	'page.reminders.detailNotes': 'Notas',
-	'page.reminders.complete': 'Completar',
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} recordatorio completado',
 	'page.reminders.completedCountPlural': '{count} recordatorios completados',

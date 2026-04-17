@@ -13,13 +13,15 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Plus, Pencil, Trash2, Check, RotateCcw, X } from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, Undo2 } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { reminderTypeOptions } from '$lib/i18n/labels';
+	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -68,10 +70,21 @@
 	let deleteReminderId = $state('');
 	let deleteReminderForm = $state<HTMLFormElement | null>(null);
 
+	// Pending reminder dismissals
+	const pendingDismiss = createPendingDismissals(getLocale);
+	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+
+	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleWindowKey(e: KeyboardEvent) {
+		if (e.key === 'Escape' && !selected) {
+			pendingDismiss.undoLast((id) => data.reminders.find((r) => r.id === id)?.title);
+		}
+	}
+
 	// Detail modal
 	let selected = $state<(typeof data.reminders)[0] | null>(null);
 	let dialogEl = $state<HTMLElement | null>(null);
-	let modalCompleteForm = $state<HTMLFormElement | null>(null);
 
 	async function openDetail(reminder: (typeof data.reminders)[0]) {
 		selected = reminder;
@@ -113,6 +126,8 @@
 <svelte:head>
 	<title>{t(locale, 'page.reminders.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
+
+<svelte:window onkeydown={handleWindowKey} />
 
 <!-- Detail modal -->
 {#if selected}
@@ -212,12 +227,15 @@
 						variant="outline"
 						size="sm"
 						onclick={() => {
+							const item = r;
+							const form = dismissFormRegistry.get(item.id);
+							if (!form) return;
 							closeDetail();
-							modalCompleteForm?.requestSubmit();
+							pendingDismiss.queue(item.id, form, item.title);
 						}}
 					>
-						<Check class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.reminders.complete')}
+						<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'common.reminder.done')}
 					</Button>
 					<Button
 						variant="destructive"
@@ -236,10 +254,6 @@
 			{/if}
 		</div>
 	</div>
-	<!-- Hidden complete form for modal action -->
-	<form bind:this={modalCompleteForm} method="POST" action="?/complete" use:enhance class="hidden">
-		<input type="hidden" name="id" value={r.id} />
-	</form>
 {/if}
 
 <div class="space-y-6 pb-20 md:pb-0">
@@ -377,7 +391,12 @@
 		<div class="space-y-3">
 			{#each active as reminder (reminder.id)}
 				{@const overdue = isOverdue(reminder.dueAt)}
-				<Card class={overdue ? 'border-red-300 dark:border-red-800' : ''}>
+				{@const isPending = pendingDismiss.isPending(reminder.id)}
+				<Card
+					class="relative overflow-hidden {overdue
+						? 'border-red-300 dark:border-red-800'
+						: ''} {isPending ? 'bg-muted/40' : ''}"
+				>
 					{#if editingId === reminder.id}
 						<CardContent class="pt-6">
 							<form
@@ -490,13 +509,19 @@
 							<div class="flex items-start justify-between gap-4">
 								<button
 									type="button"
-									onclick={() => openDetail(reminder)}
-									class="flex-1 flex items-start gap-3 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
+									onclick={() => !isPending && openDetail(reminder)}
+									disabled={isPending}
+									aria-disabled={isPending}
+									class="flex-1 flex items-start gap-3 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0 disabled:hover:bg-transparent"
 								>
 									<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
 									<div class="min-w-0">
 										<div class="flex items-center gap-2 flex-wrap">
-											<span class="font-medium text-foreground">{reminder.title}</span>
+											<span
+												class="font-medium {isPending
+													? 'line-through text-muted-foreground'
+													: 'text-foreground'}">{reminder.title}</span
+											>
 											{#if overdue}<Badge variant="destructive"
 													>{t(locale, 'page.reminders.overdue')}</Badge
 												>{/if}
@@ -533,17 +558,50 @@
 											<Pencil class="h-3.5 w-3.5" />
 											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
-										<form method="POST" action="?/complete" use:enhance>
+										<form
+											method="POST"
+											action="?/complete"
+											use:enhance
+											use:registerDismissForm={{
+												id: reminder.id,
+												registry: dismissFormRegistry
+											}}
+										>
 											<input type="hidden" name="id" value={reminder.id} />
-											<Button
-												type="submit"
-												variant="ghost"
-												size="sm"
-												class="h-7 gap-1.5 px-2 text-xs"
-											>
-												<Check class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">{t(locale, 'page.reminders.complete')}</span>
-											</Button>
+											{#if isPending}
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													class="h-7 gap-1.5 px-2 text-xs text-primary"
+													onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
+													title={t(locale, 'common.reminder.undo')}
+													aria-label={t(locale, 'common.reminder.undo')}
+													onmouseenter={() => pendingDismiss.pause(reminder.id)}
+													onmouseleave={() => pendingDismiss.resume(reminder.id)}
+													onfocusin={() => pendingDismiss.pause(reminder.id)}
+													onfocusout={() => pendingDismiss.resume(reminder.id)}
+												>
+													<Undo2 class="h-3.5 w-3.5" />
+													<span class="hidden sm:inline">{t(locale, 'common.reminder.undo')}</span>
+												</Button>
+											{:else}
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													class="h-7 gap-1.5 px-2 text-xs"
+													onclick={(e: MouseEvent) => {
+														const btn = e.currentTarget as HTMLButtonElement;
+														if (btn.form) {
+															pendingDismiss.queue(reminder.id, btn.form, reminder.title);
+														}
+													}}
+												>
+													<CheckCheck class="h-3.5 w-3.5" />
+													<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
+												</Button>
+											{/if}
 										</form>
 										<Button
 											type="button"
@@ -562,6 +620,13 @@
 								{/if}
 							</div>
 						</CardContent>
+					{/if}
+					{#if isPending}
+						<span
+							class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
+							style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
+							aria-hidden="true"
+						></span>
 					{/if}
 				</Card>
 			{/each}
@@ -758,3 +823,6 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+<!-- aria-live announcements for reminder dismissals -->
+<div class="sr-only" role="status" aria-live="polite">{pendingDismiss.announcement}</div>

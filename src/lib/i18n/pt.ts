@@ -21,6 +21,12 @@ const messages: Record<keyof Messages, string> = {
 	'common.optional': 'opcional',
 	'common.loggedBy': 'por {name}',
 
+	// Common: Reminder actions
+	'common.reminder.undo': 'Desfazer',
+	'common.reminder.done': 'Feito',
+	'common.reminder.dismissedAnnounce': '{title} dispensado. Ative Desfazer para restaurar.',
+	'common.reminder.restoredAnnounce': '{title} restaurado.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Ótimo',
 	'enum.mood.good': 'Bem',
@@ -354,7 +360,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Lembretes',
 	'page.dashboard.remindersViewAll': 'Ver todos',
 	'page.dashboard.remindersEmpty': 'Sem lembretes próximos.',
-	'page.dashboard.reminderDone': 'Feito',
 	'page.dashboard.reminderMarkDone': 'Marcar como feito',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registar',
@@ -398,7 +403,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Lembretes próximos',
 	'page.dashboard.caretaker.remindersEmpty': 'Sem lembretes próximos.',
 	'page.dashboard.caretaker.reminderOverdue': 'Atrasado',
-	'page.dashboard.caretaker.reminderDone': 'Feito',
 	'page.dashboard.caretaker.reminderMarkDone': 'Marcar como feito',
 	'page.dashboard.caretaker.reminderShiftRequired': 'Inicie o seu turno para concluir lembretes',
 	'page.dashboard.caretaker.cardVetInfo': 'Info do veterinário',
@@ -416,7 +420,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notas',
 	'page.dashboard.caretaker.modalLabelDue': 'Vencimento',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repete-se',
-	'page.dashboard.caretaker.modalDone': 'Feito',
 	'page.dashboard.caretaker.modalShiftRequired': 'Inicie o seu turno para concluir lembretes',
 	'page.dashboard.caretaker.closeDialog': 'Fechar diálogo',
 
@@ -559,7 +562,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'A cada {count} dia',
 	'page.reminders.detailEveryDaysPlural': 'A cada {count} dias',
 	'page.reminders.detailNotes': 'Notas',
-	'page.reminders.complete': 'Completar',
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} lembrete completado',
 	'page.reminders.completedCountPlural': '{count} lembretes completados',
