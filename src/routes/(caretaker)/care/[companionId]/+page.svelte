@@ -5,13 +5,14 @@
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { Card, CardHeader, CardContent, CardTitle } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
+	import { Phone, Mail, X, Bell, CheckCheck, Undo2 } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '$lib/markdown';
 	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { createPendingDismissals, registerDismissForm } from '$lib/pendingDismiss.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let { companion, medications, todayActivity, latestWeight, owners, upcomingReminders } =
@@ -130,11 +131,17 @@
 			}
 			if (selected) {
 				closeDetail();
+				return;
 			}
+			pendingDismiss.undoLast((id) => upcomingReminders.find((r) => r.id === id)?.title);
 		}
 	}
 
 	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
+
+	// Pending reminder dismissals
+	const pendingDismiss = createPendingDismissals(locale);
+	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 </script>
 
 <svelte:window onkeydown={handleWindowKey} />
@@ -332,28 +339,25 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
-				<form
-					method="POST"
-					action="?/complete"
-					use:enhance={() =>
-						async ({ update }) => {
-							closeReminderDetail();
-							await update();
-						}}
+				<button
+					type="button"
+					disabled={!data.isOnShift}
+					title={data.isOnShift
+						? undefined
+						: t(locale, 'page.dashboard.caretaker.modalShiftRequired')}
+					onclick={() => {
+						if (!selectedReminder) return;
+						const item = selectedReminder;
+						const form = dismissFormRegistry.get(item.id);
+						if (!form) return;
+						closeReminderDetail();
+						pendingDismiss.queue(item.id, form, item.title);
+					}}
+					class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					<input type="hidden" name="id" value={selectedReminder.id} />
-					<button
-						type="submit"
-						disabled={!data.isOnShift}
-						title={data.isOnShift
-							? undefined
-							: t(locale, 'page.dashboard.caretaker.modalShiftRequired')}
-						class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						<CheckCheck class="h-3.5 w-3.5" />
-						{t(locale, 'page.dashboard.caretaker.modalDone')}
-					</button>
-				</form>
+					<CheckCheck class="h-3.5 w-3.5" />
+					{t(locale, 'page.dashboard.caretaker.modalDone')}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -492,20 +496,31 @@
 				<div class="space-y-1">
 					{#each upcomingReminders as reminder (reminder.id)}
 						{@const isOverdue = new Date(reminder.dueAt) < new Date()}
-						<div class="flex items-center gap-2">
+						{@const isPending = pendingDismiss.isPending(reminder.id)}
+						<div
+							class="relative flex items-center gap-2 overflow-hidden rounded-lg {isPending
+								? 'bg-muted/40'
+								: ''}"
+						>
 							<button
 								type="button"
-								onclick={() => openReminderDetail(reminder)}
-								class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0"
+								onclick={() => !isPending && openReminderDetail(reminder)}
+								disabled={isPending}
+								aria-disabled={isPending}
+								class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0 disabled:hover:bg-transparent"
 							>
-								<span class="truncate text-foreground">{reminder.title}</span>
-								{#if isOverdue}
+								<span
+									class="truncate {isPending
+										? 'line-through text-muted-foreground'
+										: 'text-foreground'}">{reminder.title}</span
+								>
+								{#if isOverdue && !isPending}
 									<Badge variant="destructive" class="shrink-0 text-xs"
 										>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
 									>
 								{/if}
 								<span
-									class="ml-auto shrink-0 text-xs {isOverdue
+									class="ml-auto shrink-0 text-xs {isOverdue && !isPending
 										? 'text-destructive'
 										: 'text-muted-foreground'}"
 								>
@@ -515,26 +530,52 @@
 							<form
 								method="POST"
 								action="?/complete"
-								use:enhance={() =>
-									async ({ update }) => {
-										await update();
-									}}
+								use:enhance
+								use:registerDismissForm={{
+									id: reminder.id,
+									registry: dismissFormRegistry
+								}}
 							>
 								<input type="hidden" name="id" value={reminder.id} />
-								<button
-									type="submit"
-									disabled={!data.isOnShift}
-									title={data.isOnShift
-										? t(locale, 'page.dashboard.caretaker.reminderMarkDone')
-										: t(locale, 'page.dashboard.caretaker.reminderShiftRequired')}
-									class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-								>
-									<CheckCheck class="h-3.5 w-3.5" />
-									<span class="hidden sm:inline"
-										>{t(locale, 'page.dashboard.caretaker.reminderDone')}</span
+								{#if isPending}
+									<button
+										type="button"
+										onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
+										title={t(locale, 'page.dashboard.reminderUndo')}
+										aria-label={t(locale, 'page.dashboard.reminderUndo')}
+										class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent shrink-0 text-primary"
 									>
-								</button>
+										<Undo2 class="h-3.5 w-3.5" />
+										<span class="hidden sm:inline">{t(locale, 'page.dashboard.reminderUndo')}</span>
+									</button>
+								{:else}
+									<button
+										type="button"
+										disabled={!data.isOnShift}
+										title={data.isOnShift
+											? t(locale, 'page.dashboard.caretaker.reminderMarkDone')
+											: t(locale, 'page.dashboard.caretaker.reminderShiftRequired')}
+										onclick={(e: MouseEvent) => {
+											const btn = e.currentTarget as HTMLButtonElement;
+											if (btn.form) {
+												pendingDismiss.queue(reminder.id, btn.form, reminder.title);
+											}
+										}}
+										class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+									>
+										<CheckCheck class="h-3.5 w-3.5" />
+										<span class="hidden sm:inline"
+											>{t(locale, 'page.dashboard.caretaker.reminderDone')}</span
+										>
+									</button>
+								{/if}
 							</form>
+							{#if isPending}
+								<span
+									class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
+									aria-hidden="true"
+								></span>
+							{/if}
 						</div>
 					{/each}
 				</div>
@@ -647,6 +688,9 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- aria-live announcements for reminder dismissals -->
+	<div class="sr-only" role="status" aria-live="polite">{pendingDismiss.announcement}</div>
 
 	<!-- Today's activity (only visible when on shift) -->
 	{#if data.isOnShift}

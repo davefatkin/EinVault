@@ -354,6 +354,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.remindersEmpty': 'Nessun promemoria in arrivo.',
 	'page.dashboard.reminderDone': 'Fatto',
 	'page.dashboard.reminderMarkDone': 'Segna come fatto',
+	'page.dashboard.reminderUndo': 'Annulla',
+	'page.dashboard.reminderDismissedAnnounce':
+		'{title} ignorato. Premi Annulla o Esc per ripristinare.',
+	'page.dashboard.reminderRestoredAnnounce': '{title} ripristinato.',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registra',
 	'page.dashboard.weightAsOf': 'al',

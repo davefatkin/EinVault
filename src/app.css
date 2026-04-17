@@ -356,3 +356,25 @@
 		border-color: hsl(var(--border));
 	}
 }
+
+/* ============================================================
+   Pending-dismiss countdown bar
+   ============================================================ */
+.dismiss-countdown {
+	width: 100%;
+	animation: dismiss-countdown 5000ms linear forwards;
+}
+@keyframes dismiss-countdown {
+	from {
+		width: 100%;
+	}
+	to {
+		width: 0%;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.dismiss-countdown {
+		animation: none;
+		width: 100%;
+	}
+}

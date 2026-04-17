@@ -356,6 +356,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.reminderDone': 'Erledigt',
 	'page.dashboard.reminderMarkDone': 'Als erledigt markieren',
+	'page.dashboard.reminderUndo': 'Rückgängig',
+	'page.dashboard.reminderDismissedAnnounce':
+		'{title} verworfen. Rückgängig oder Escape drücken, um wiederherzustellen.',
+	'page.dashboard.reminderRestoredAnnounce': '{title} wiederhergestellt.',
 	'page.dashboard.cardWeight': 'Gewicht',
 	'page.dashboard.weightLog': 'Erfassen',
 	'page.dashboard.weightAsOf': 'Stand',

@@ -356,6 +356,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.remindersEmpty': 'Sem lembretes próximos.',
 	'page.dashboard.reminderDone': 'Feito',
 	'page.dashboard.reminderMarkDone': 'Marcar como feito',
+	'page.dashboard.reminderUndo': 'Desfazer',
+	'page.dashboard.reminderDismissedAnnounce':
+		'{title} dispensado. Pressione Desfazer ou Esc para restaurar.',
+	'page.dashboard.reminderRestoredAnnounce': '{title} restaurado.',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registar',
 	'page.dashboard.weightAsOf': 'em',

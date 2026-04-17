@@ -356,6 +356,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.remindersEmpty': 'Aucun rappel à venir.',
 	'page.dashboard.reminderDone': 'Fait',
 	'page.dashboard.reminderMarkDone': 'Marquer comme fait',
+	'page.dashboard.reminderUndo': 'Annuler',
+	'page.dashboard.reminderDismissedAnnounce':
+		'{title} rejeté. Appuyez sur Annuler ou Échap pour restaurer.',
+	'page.dashboard.reminderRestoredAnnounce': '{title} restauré.',
 	'page.dashboard.cardWeight': 'Poids',
 	'page.dashboard.weightLog': 'Enregistrer',
 	'page.dashboard.weightAsOf': 'au',
