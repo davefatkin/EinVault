@@ -21,6 +21,12 @@ const messages: Record<keyof Messages, string> = {
 	'common.optional': 'facoltativo',
 	'common.loggedBy': 'da {name}',
 
+	// Common: Reminder actions
+	'common.reminder.undo': 'Annulla',
+	'common.reminder.done': 'Fatto',
+	'common.reminder.dismissedAnnounce': '{title} ignorato. Attiva Annulla per ripristinare.',
+	'common.reminder.restoredAnnounce': '{title} ripristinato.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Ottimo',
 	'enum.mood.good': 'Bene',
@@ -352,12 +358,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Promemoria',
 	'page.dashboard.remindersViewAll': 'Vedi tutti',
 	'page.dashboard.remindersEmpty': 'Nessun promemoria in arrivo.',
-	'page.dashboard.reminderDone': 'Fatto',
 	'page.dashboard.reminderMarkDone': 'Segna come fatto',
-	'page.dashboard.reminderUndo': 'Annulla',
-	'page.dashboard.reminderDismissedAnnounce':
-		'{title} ignorato. Premi Annulla o Esc per ripristinare.',
-	'page.dashboard.reminderRestoredAnnounce': '{title} ripristinato.',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightLog': 'Registra',
 	'page.dashboard.weightAsOf': 'al',
@@ -400,7 +401,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Promemoria in arrivo',
 	'page.dashboard.caretaker.remindersEmpty': 'Nessun promemoria in arrivo.',
 	'page.dashboard.caretaker.reminderOverdue': 'Scaduto',
-	'page.dashboard.caretaker.reminderDone': 'Fatto',
 	'page.dashboard.caretaker.reminderMarkDone': 'Segna come fatto',
 	'page.dashboard.caretaker.reminderShiftRequired':
 		'Inizia il tuo turno per completare i promemoria',
@@ -419,7 +419,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Note',
 	'page.dashboard.caretaker.modalLabelDue': 'Scadenza',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Si ripete',
-	'page.dashboard.caretaker.modalDone': 'Fatto',
 	'page.dashboard.caretaker.modalShiftRequired': 'Inizia il tuo turno per completare i promemoria',
 	'page.dashboard.caretaker.closeDialog': 'Chiudi finestra',
 
@@ -562,7 +561,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Ogni {count} giorno',
 	'page.reminders.detailEveryDaysPlural': 'Ogni {count} giorni',
 	'page.reminders.detailNotes': 'Note',
-	'page.reminders.complete': 'Completa',
 	'page.reminders.restore': 'Ripristina',
 	'page.reminders.completedCount': '{count} promemoria completato',
 	'page.reminders.completedCountPlural': '{count} promemoria completati',

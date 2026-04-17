@@ -13,14 +13,15 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Plus, Pencil, Trash2, Check, RotateCcw, X, Undo2 } from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, Undo2 } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { reminderTypeOptions } from '$lib/i18n/labels';
-	import { createPendingDismissals, registerDismissForm } from '$lib/pendingDismiss.svelte';
+	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -70,8 +71,10 @@
 	let deleteReminderForm = $state<HTMLFormElement | null>(null);
 
 	// Pending reminder dismissals
-	const pendingDismiss = createPendingDismissals(locale);
+	const pendingDismiss = createPendingDismissals(getLocale);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+
+	$effect(() => () => pendingDismiss.cleanup());
 
 	function handleWindowKey(e: KeyboardEvent) {
 		if (e.key === 'Escape' && !selected) {
@@ -231,8 +234,8 @@
 							pendingDismiss.queue(item.id, form, item.title);
 						}}
 					>
-						<Check class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.reminders.complete')}
+						<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'common.reminder.done')}
 					</Button>
 					<Button
 						variant="destructive"
@@ -572,13 +575,15 @@
 													size="sm"
 													class="h-7 gap-1.5 px-2 text-xs text-primary"
 													onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
-													title={t(locale, 'page.dashboard.reminderUndo')}
-													aria-label={t(locale, 'page.dashboard.reminderUndo')}
+													title={t(locale, 'common.reminder.undo')}
+													aria-label={t(locale, 'common.reminder.undo')}
+													onmouseenter={() => pendingDismiss.pause(reminder.id)}
+													onmouseleave={() => pendingDismiss.resume(reminder.id)}
+													onfocusin={() => pendingDismiss.pause(reminder.id)}
+													onfocusout={() => pendingDismiss.resume(reminder.id)}
 												>
 													<Undo2 class="h-3.5 w-3.5" />
-													<span class="hidden sm:inline"
-														>{t(locale, 'page.dashboard.reminderUndo')}</span
-													>
+													<span class="hidden sm:inline">{t(locale, 'common.reminder.undo')}</span>
 												</Button>
 											{:else}
 												<Button
@@ -593,10 +598,8 @@
 														}
 													}}
 												>
-													<Check class="h-3.5 w-3.5" />
-													<span class="hidden sm:inline"
-														>{t(locale, 'page.reminders.complete')}</span
-													>
+													<CheckCheck class="h-3.5 w-3.5" />
+													<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
 												</Button>
 											{/if}
 										</form>
@@ -621,6 +624,7 @@
 					{#if isPending}
 						<span
 							class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
+							style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
 							aria-hidden="true"
 						></span>
 					{/if}

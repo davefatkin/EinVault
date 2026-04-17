@@ -21,6 +21,13 @@ const messages: Record<keyof Messages, string> = {
 	'common.optional': 'optional',
 	'common.loggedBy': 'von {name}',
 
+	// Common: Reminder actions
+	'common.reminder.undo': 'Rückgängig',
+	'common.reminder.done': 'Erledigt',
+	'common.reminder.dismissedAnnounce':
+		'{title} verworfen. Rückgängig aktivieren, um wiederherzustellen.',
+	'common.reminder.restoredAnnounce': '{title} wiederhergestellt.',
+
 	// Enum: Moods
 	'enum.mood.great': 'Super',
 	'enum.mood.good': 'Gut',
@@ -354,12 +361,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.cardReminders': 'Erinnerungen',
 	'page.dashboard.remindersViewAll': 'Alle anzeigen',
 	'page.dashboard.remindersEmpty': 'Keine anstehenden Erinnerungen.',
-	'page.dashboard.reminderDone': 'Erledigt',
 	'page.dashboard.reminderMarkDone': 'Als erledigt markieren',
-	'page.dashboard.reminderUndo': 'Rückgängig',
-	'page.dashboard.reminderDismissedAnnounce':
-		'{title} verworfen. Rückgängig oder Escape drücken, um wiederherzustellen.',
-	'page.dashboard.reminderRestoredAnnounce': '{title} wiederhergestellt.',
 	'page.dashboard.cardWeight': 'Gewicht',
 	'page.dashboard.weightLog': 'Erfassen',
 	'page.dashboard.weightAsOf': 'Stand',
@@ -402,7 +404,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Anstehende Erinnerungen',
 	'page.dashboard.caretaker.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.caretaker.reminderOverdue': 'Überfällig',
-	'page.dashboard.caretaker.reminderDone': 'Erledigt',
 	'page.dashboard.caretaker.reminderMarkDone': 'Als erledigt markieren',
 	'page.dashboard.caretaker.reminderShiftRequired':
 		'Starte deine Schicht, um Erinnerungen zu erledigen',
@@ -421,7 +422,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notizen',
 	'page.dashboard.caretaker.modalLabelDue': 'Fällig',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Wiederholt sich',
-	'page.dashboard.caretaker.modalDone': 'Erledigt',
 	'page.dashboard.caretaker.modalShiftRequired':
 		'Starte deine Schicht, um Erinnerungen zu erledigen',
 	'page.dashboard.caretaker.closeDialog': 'Dialog schließen',
@@ -565,7 +565,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailEveryDays': 'Alle {count} Tag',
 	'page.reminders.detailEveryDaysPlural': 'Alle {count} Tage',
 	'page.reminders.detailNotes': 'Notizen',
-	'page.reminders.complete': 'Erledigen',
 	'page.reminders.restore': 'Wiederherstellen',
 	'page.reminders.completedCount': '{count} erledigte Erinnerung',
 	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',

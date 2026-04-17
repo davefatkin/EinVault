@@ -362,7 +362,7 @@
    ============================================================ */
 .dismiss-countdown {
 	width: 100%;
-	animation: dismiss-countdown 5000ms linear forwards;
+	animation: dismiss-countdown var(--dismiss-ms, 7000ms) linear forwards;
 }
 @keyframes dismiss-countdown {
 	from {
