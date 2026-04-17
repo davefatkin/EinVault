@@ -504,7 +504,7 @@
 					<!-- Markdown body -->
 					{#if entry.body?.trim()}
 						<CardContent class="py-4">
-							<div class="prose prose-sm max-w-none leading-relaxed">
+							<div class="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
 								{@html renderMarkdown(entry.body)}
 							</div>
 						</CardContent>
