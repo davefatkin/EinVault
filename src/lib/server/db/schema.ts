@@ -11,28 +11,34 @@ import {
 
 // users
 
-export const users = sqliteTable('users', {
-	id: text('id').primaryKey(),
-	username: text('username').notNull().unique(),
-	displayName: text('display_name').notNull(),
-	passwordHash: text('password_hash'),
-	role: text('role', { enum: ['admin', 'member', 'caretaker'] })
-		.notNull()
-		.default('member'),
-	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`),
-	lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
-	theme: text('theme', { enum: ['light', 'dark', 'system'] })
-		.notNull()
-		.default('system'),
-	locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt'] })
-		.notNull()
-		.default('en'),
-	email: text('email'),
-	phone: text('phone')
-});
+export const users = sqliteTable(
+	'users',
+	{
+		id: text('id').primaryKey(),
+		username: text('username').notNull().unique(),
+		displayName: text('display_name').notNull(),
+		passwordHash: text('password_hash'),
+		role: text('role', { enum: ['admin', 'member', 'caretaker'] })
+			.notNull()
+			.default('member'),
+		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+		theme: text('theme', { enum: ['light', 'dark', 'system'] })
+			.notNull()
+			.default('system'),
+		locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt'] })
+			.notNull()
+			.default('en'),
+		email: text('email'),
+		phone: text('phone'),
+		oidcSubject: text('oidc_subject'),
+		oidcIssuer: text('oidc_issuer')
+	},
+	(t) => [uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject)]
+);
 
 export const sessions = sqliteTable(
 	'sessions',
@@ -44,7 +50,8 @@ export const sessions = sqliteTable(
 		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`)
+			.default(sql`(unixepoch())`),
+		oidcIdTokenHint: text('oidc_id_token_hint')
 	},
 	(t) => [index('session_user_idx').on(t.userId)]
 );

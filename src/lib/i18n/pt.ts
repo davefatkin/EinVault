@@ -114,6 +114,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.missingShiftId': 'ID de turno em falta.',
 	'error.missingPhotoId': 'ID de foto em falta',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned': 'A sua conta não foi configurada. Contacte um administrador.',
+	'error.oidc.invalidState': 'A sessão de início de sessão expirou ou é inválida. Tente novamente.',
+	'error.oidc.exchangeFailed': 'O início de sessão falhou. Tente novamente.',
+	'error.oidc.accountDisabled': 'A sua conta está desativada. Contacte um administrador.',
+
 	// Errors: Not found
 	'error.userNotFound': 'Utilizador não encontrado.',
 	'error.companionNotFound': 'Companheiro não encontrado',
@@ -216,6 +222,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',
 	'page.login.tagline': 'O seu diário privado de cuidados para companheiros',
+	'page.login.signInWith': 'Iniciar sessão com {provider}',
 	'page.login.usernameLabel': 'Nome de utilizador',
 	'page.login.usernamePlaceholder': 'nome de utilizador',
 	'page.login.passwordLabel': 'Palavra-passe',

@@ -113,6 +113,13 @@ const messages: Record<keyof Messages, string> = {
 	'error.missingShiftId': 'ID turno mancante.',
 	'error.missingPhotoId': 'ID foto mancante',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned':
+		'Il tuo account non è stato configurato. Contatta un amministratore.',
+	'error.oidc.invalidState': 'La sessione di accesso è scaduta o non è valida. Riprova.',
+	'error.oidc.exchangeFailed': 'Accesso non riuscito. Riprova.',
+	'error.oidc.accountDisabled': 'Il tuo account è disabilitato. Contatta un amministratore.',
+
 	// Errors: Not found
 	'error.userNotFound': 'Utente non trovato.',
 	'error.companionNotFound': 'Compagno non trovato',
@@ -214,6 +221,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: Login
 	'page.login.title': 'Accedi',
 	'page.login.tagline': 'Il tuo diario privato per la cura dei compagni',
+	'page.login.signInWith': 'Accedi con {provider}',
 	'page.login.usernameLabel': 'Nome utente',
 	'page.login.usernamePlaceholder': 'nome utente',
 	'page.login.passwordLabel': 'Password',

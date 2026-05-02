@@ -18,6 +18,13 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - [Local development](#local-development)
   - [Commands](#commands)
 - [User management](#user-management)
+- [OIDC / SSO (optional)](#oidc--sso-optional)
+  - [Required variables](#required-variables)
+  - [Optional variables](#optional-variables)
+  - [Account linking](#account-linking)
+  - [Admin role mapping](#admin-role-mapping)
+  - [Logout](#logout)
+  - [Provider notes](#provider-notes)
 - [Adding a new locale](#adding-a-new-locale)
 - [Stack](#stack)
 - [License](#license)
@@ -242,6 +249,71 @@ When you change `src/lib/server/db/schema.ts`, run `db:generate` then `db:migrat
 
 ---
 
+## OIDC / SSO (optional)
+
+EinVault supports OpenID Connect for SSO with providers like Authelia, Authentik, Keycloak, and PocketID. OIDC runs alongside password login; existing users keep their passwords. A "Sign in with {provider}" button appears on the login page when OIDC is configured.
+
+OIDC is **disabled** unless all required variables are set. Add them to your `.env` (local) or compose file (production), then restart.
+
+Register `https://<your-domain>/auth/oidc/callback` as an allowed redirect URI with your IdP first.
+
+### Required variables
+
+| Variable             | Description                                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `OIDC_ISSUER_URL`    | IdP base URL. Discovery happens at `<issuer>/.well-known/openid-configuration`. e.g. `https://auth.example.com` |
+| `OIDC_CLIENT_ID`     | Client ID registered with your IdP.                                                                             |
+| `OIDC_CLIENT_SECRET` | Client secret. Omit for public clients (PKCE-only).                                                             |
+| `OIDC_REDIRECT_URI`  | Must match what's registered with the IdP. e.g. `https://einvault.yourdomain.com/auth/oidc/callback`            |
+
+### Optional variables
+
+| Variable                        | Default                | Description                                                                                                |
+| ------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `OIDC_SCOPES`                   | `openid profile email` | Space-separated scopes requested from the IdP.                                                             |
+| `OIDC_PROVIDER_NAME`            | `SSO`                  | Display label on the login button.                                                                         |
+| `OIDC_ALLOW_SIGNUP`             | `false`                | If `true`, auto-creates accounts for users who authenticate but have no matching record. See below.        |
+| `OIDC_DEFAULT_ROLE`             | `member`               | Role assigned to auto-created users. Allowed: `member`, `caretaker`. Admin can only be granted via groups. |
+| `OIDC_ADMIN_GROUPS`             | _(unset)_              | Comma-separated. Users whose `groups` claim contains any value here are promoted to admin on every login.  |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | _(unset)_              | If set and the IdP advertises `end_session_endpoint`, logout triggers RP-initiated logout at the IdP.      |
+| `OIDC_STATE_SECRET`             | _(random)_             | Pin a long random string. Without it, in-flight logins break across server restarts.                       |
+
+### Account linking
+
+The callback decides which account to use in this order:
+
+1. **Match by OIDC subject.** If the user has logged in via OIDC before, link by stored `(issuer, subject)`.
+2. **Match by verified email.** If `email_verified` is `true` and the email matches an existing user, link the OIDC subject to that account.
+3. **Auto-create.** Only if `OIDC_ALLOW_SIGNUP=true`. Username taken from `preferred_username` claim (sanitised, with numeric suffix on collision), or email local-part as fallback.
+4. **Reject.** Otherwise, the user is returned to the login page with an "account not provisioned" message. An admin must create the account first.
+
+By default (`OIDC_ALLOW_SIGNUP=false`), users must already exist in EinVault, or share an email with an existing account, to log in.
+
+### Admin role mapping
+
+If `OIDC_ADMIN_GROUPS` is set, the user's `groups` claim is checked on **every** login. Membership in any listed group sets the user's role to `admin`; absence demotes them to the default role. Revoking admin at the IdP takes effect on next login.
+
+If `OIDC_ADMIN_GROUPS` is unset, OIDC does not touch user roles. Roles set in EinVault's admin UI are preserved across SSO logins.
+
+`OIDC_DEFAULT_ROLE` cannot grant admin; allowed values are `member` and `caretaker`.
+
+Group membership is read from the top-level `groups` claim in the ID token, as an array of strings (a single string also works). Other claim names (`roles`, Keycloak's `realm_access.roles`) and nested claims aren't read. Configure your IdP to emit `groups` directly. See provider notes below.
+
+### Logout
+
+By default, logout destroys the local EinVault session and returns the user to `/auth/login`. Set `OIDC_POST_LOGOUT_REDIRECT_URI` (and register it with your IdP) to also end the IdP session via [RP-initiated logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+
+### Provider notes
+
+| Provider      | Notes                                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Authelia**  | Register the redirect URI under the OIDC client config. Set `client_secret_basic` (default) or `none` for public clients.                                                                           |
+| **Authentik** | Create an OAuth2/OIDC provider; scope mapping for `groups` is built-in. `OIDC_ADMIN_GROUPS` matches the `groups` claim directly.                                                                    |
+| **Keycloak**  | Add a "Group Membership" mapper to the client with token claim name `groups` and "Full group path" off. EinVault does not read `realm_access.roles`. Add the redirect URI to "Valid Redirect URIs". |
+| **PocketID**  | Public-client first; omit `OIDC_CLIENT_SECRET`. Register the redirect URI in the client settings.                                                                                                   |
+
+---
+
 ## Adding a new locale
 
 1. Copy `src/lib/i18n/en.ts` to `src/lib/i18n/{code}.ts` (e.g. `ja.ts`) and translate every value. The file must `export default { ... } satisfies Record<keyof Messages, string>` — the compiler will catch any missing keys.
@@ -259,7 +331,7 @@ No migration is needed — SQLite text columns don't enforce enums at the databa
 - **SvelteKit:** full-stack TypeScript framework with file-based routing
 - **SQLite + Drizzle ORM:** local-first, portable database
 - **Tailwind CSS:** utility-first styling with custom components
-- **Session-based auth:** custom sessions signed with bcryptjs, no third-party auth library
+- **Session-based auth:** custom sessions with bcryptjs password hashing; optional OIDC SSO via [`openid-client`](https://github.com/panva/openid-client)
 - **Docker:** multi-stage, hardened single-container deployment
 
 ---

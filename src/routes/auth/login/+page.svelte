@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -8,7 +8,7 @@
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 	import { Select } from '$lib/components/ui/select/index.js';
 
-	let { form }: { form: ActionData } = $props();
+	let { form, data }: { form: ActionData; data: PageData } = $props();
 	let loading = $state(false);
 	const locale = getLocale();
 
@@ -41,6 +41,30 @@
 			</a>
 			<p class="text-sm text-muted-foreground">{t(locale, 'page.login.tagline')}</p>
 		</div>
+
+		{#if data.oidcError}
+			<Alert variant="destructive" class="mb-4 animate-slide-up">
+				<AlertDescription>{data.oidcError}</AlertDescription>
+			</Alert>
+		{/if}
+
+		{#if data.oidcEnabled}
+			<Card class="animate-slide-up mb-4">
+				<CardContent class="pt-6">
+					<a href="/auth/oidc/login" class="w-full">
+						<Button variant="outline" class="w-full" type="button">
+							{t(locale, 'page.login.signInWith', { provider: data.oidcProviderName })}
+						</Button>
+					</a>
+				</CardContent>
+			</Card>
+
+			<div class="relative flex items-center gap-3 mb-4">
+				<div class="flex-1 border-t border-border"></div>
+				<span class="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
+				<div class="flex-1 border-t border-border"></div>
+			</div>
+		{/if}
 
 		<Card class="animate-slide-up">
 			<CardContent class="pt-6">

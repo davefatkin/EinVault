@@ -47,6 +47,7 @@
 		"drizzle-orm": "^0.45.2",
 		"isomorphic-dompurify": "^3.9.0",
 		"marked": "^17.0.5",
+		"openid-client": "^6.8.4",
 		"sharp": "^0.34.5",
 		"tailwind-merge": "^3.5.0"
 	},

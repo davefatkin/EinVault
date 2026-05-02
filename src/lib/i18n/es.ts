@@ -114,6 +114,15 @@ const messages: Record<keyof Messages, string> = {
 	'error.missingShiftId': 'ID de turno faltante.',
 	'error.missingPhotoId': 'ID de foto faltante',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned':
+		'Tu cuenta no ha sido habilitada. Ponte en contacto con un administrador.',
+	'error.oidc.invalidState':
+		'La sesión de inicio de sesión ha expirado o no es válida. Inténtalo de nuevo.',
+	'error.oidc.exchangeFailed': 'El inicio de sesión ha fallado. Inténtalo de nuevo.',
+	'error.oidc.accountDisabled':
+		'Tu cuenta está desactivada. Ponte en contacto con un administrador.',
+
 	// Errors: Not found
 	'error.userNotFound': 'Usuario no encontrado.',
 	'error.companionNotFound': 'Compañero no encontrado',
@@ -216,6 +225,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: Login
 	'page.login.title': 'Iniciar sesión',
 	'page.login.tagline': 'Tu diario privado de cuidado de compañeros',
+	'page.login.signInWith': 'Iniciar sesión con {provider}',
 	'page.login.usernameLabel': 'Nombre de usuario',
 	'page.login.usernamePlaceholder': 'nombre de usuario',
 	'page.login.passwordLabel': 'Contraseña',
