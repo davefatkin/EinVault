@@ -20,6 +20,8 @@
 		"@sveltejs/kit": "^2.55.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.2",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/node": "^24.12.2",
 		"@typescript-eslint/parser": "^8.57.2",
 		"drizzle-kit": "^0.31.10",
 		"eslint": "^10.1.0",
