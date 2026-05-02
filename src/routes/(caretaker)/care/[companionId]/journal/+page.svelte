@@ -143,7 +143,7 @@
 		for (const file of Array.from(files)) {
 			if (photos.length < data.maxDailyPhotos) uploadPhoto(file);
 		}
-		fileInputEl.value = '';
+		if (fileInputEl) fileInputEl.value = '';
 	}
 
 	function photoUrl(photo: (typeof photos)[0]) {

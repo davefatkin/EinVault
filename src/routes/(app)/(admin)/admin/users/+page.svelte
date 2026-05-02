@@ -238,7 +238,7 @@
 								variant="ghost"
 								size="sm"
 								class="h-8 w-8 p-0"
-								onclick={(e) => {
+								onclick={(e: MouseEvent) => {
 									e.stopPropagation();
 									openMenuUserId = openMenuUserId === user.id ? null : user.id;
 								}}
