@@ -9,6 +9,8 @@ export interface OidcConfig {
 	scopes: string;
 }
 
+const REQUIRED_OIDC_VARS = ['OIDC_ISSUER_URL', 'OIDC_CLIENT_ID', 'OIDC_REDIRECT_URI'] as const;
+
 export function getOidcConfig(): OidcConfig | null {
 	const issuerUrl = env.OIDC_ISSUER_URL;
 	const clientId = env.OIDC_CLIENT_ID;
@@ -31,6 +33,19 @@ export function getOidcProviderName(): string {
 
 export function isOidcEnabled(): boolean {
 	return getOidcConfig() !== null;
+}
+
+export function logOidcBootStatus(): void {
+	const missing = REQUIRED_OIDC_VARS.filter((name) => !env[name]);
+
+	if (missing.length === 0) {
+		console.info(`[oidc] enabled provider=${getOidcProviderName()} issuer=${env.OIDC_ISSUER_URL}`);
+		return;
+	}
+
+	console.warn(
+		`[oidc] disabled. Required vars: ${REQUIRED_OIDC_VARS.join(', ')}. Missing: ${missing.join(', ')}`
+	);
 }
 
 const DISCOVERY_TTL_MS = 60 * 60 * 1000;
