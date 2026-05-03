@@ -1,4 +1,11 @@
 import { env } from '$env/dynamic/private';
+import { REMINDER_UNDO_MAX_SECONDS } from '$lib/reminderUndo';
+
+export {
+	REMINDER_UNDO_MAX_SECONDS,
+	REMINDER_UNDO_PRESETS,
+	REMINDER_UNDO_DEFAULT_SENTINEL
+} from '$lib/reminderUndo';
 
 /**
  * Parse an env var as a positive integer (n > 0). Falls back to
@@ -23,27 +30,11 @@ function envNonNegativeInt(value: string | undefined, defaultValue: number): num
 export const UPLOAD_MAX_MB = envInt(env.UPLOAD_MAX_MB, 10);
 export const MAX_DAILY_PHOTOS = envInt(env.MAX_DAILY_PHOTOS, 5);
 
-/**
- * Upper bound for the reminder undo window, in seconds. Values above this
- * are clamped, both at env-resolution time and when reading user prefs that
- * may have been stored before validation tightening.
- */
-export const REMINDER_UNDO_MAX_SECONDS = 60;
-
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(
 	envNonNegativeInt(env.REMINDER_UNDO_SECONDS, 7),
 	REMINDER_UNDO_MAX_SECONDS
 );
-
-export const REMINDER_UNDO_PRESETS: readonly number[] = [0, 3, 7, 15];
-
-/**
- * Sentinel value used by the settings form to signal "use the site default
- * (env-resolved) value" rather than overriding it. Shared between the server
- * validator and the client form so the contract has one source of truth.
- */
-export const REMINDER_UNDO_DEFAULT_SENTINEL = 'default';
 
 export function resolveReminderUndoSeconds(userPref: number | null | undefined): number {
 	if (typeof userPref === 'number' && Number.isInteger(userPref) && userPref >= 0) {

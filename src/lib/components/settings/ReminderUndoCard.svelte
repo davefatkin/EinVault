@@ -5,7 +5,7 @@
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { t, getLocale } from '$lib/i18n';
-	import { REMINDER_UNDO_DEFAULT_SENTINEL } from '$lib/server/env';
+	import { REMINDER_UNDO_DEFAULT_SENTINEL } from '$lib/reminderUndo';
 
 	let {
 		currentValue,

@@ -144,7 +144,6 @@ export function createPendingDismissals(
 		queue,
 		undo,
 		undoLast,
-		/** Commit the pending dismissal immediately (skip remaining undo window). */
 		commit,
 		pause,
 		resume,
