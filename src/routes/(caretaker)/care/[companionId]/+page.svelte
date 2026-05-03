@@ -120,6 +120,15 @@
 		}
 	}
 
+	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
+
+	// Pending reminder dismissals
+	const undoDelayMs = $derived(data.reminderUndoSeconds! * 1000);
+	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
+	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+
+	$effect(() => () => pendingDismiss.cleanup());
+
 	function handleWindowKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			if (avatarLightboxOpen) {
@@ -137,15 +146,6 @@
 			pendingDismiss.undoLast((id) => upcomingReminders.find((r) => r.id === id)?.title);
 		}
 	}
-
-	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
-
-	// Pending reminder dismissals
-	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 7) * 1000);
-	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
-	const dismissFormRegistry = new Map<string, HTMLFormElement>();
-
-	$effect(() => () => pendingDismiss.cleanup());
 </script>
 
 <svelte:window onkeydown={handleWindowKey} />

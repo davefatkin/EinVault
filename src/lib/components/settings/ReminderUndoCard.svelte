@@ -5,18 +5,16 @@
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { t, getLocale } from '$lib/i18n';
-	import { REMINDER_UNDO_DEFAULT_SENTINEL } from '$lib/reminderUndo';
+	import { REMINDER_UNDO_DEFAULT_SENTINEL, REMINDER_UNDO_PRESETS } from '$lib/reminderUndo';
 
 	let {
 		currentValue,
 		defaultSeconds,
-		presets,
 		successMessage,
 		errorMessage
 	}: {
 		currentValue: number | null;
 		defaultSeconds: number;
-		presets: readonly number[];
 		successMessage: string | undefined;
 		errorMessage: string | undefined;
 	} = $props();
@@ -24,7 +22,9 @@
 	const locale = getLocale();
 	let formEl: HTMLFormElement;
 
-	const options = $derived(Array.from(new Set([...presets, defaultSeconds])).sort((a, b) => a - b));
+	const options = $derived(
+		Array.from(new Set([...REMINDER_UNDO_PRESETS, defaultSeconds])).sort((a, b) => a - b)
+	);
 
 	const selectValue = $derived(
 		currentValue == null ? REMINDER_UNDO_DEFAULT_SENTINEL : String(currentValue)

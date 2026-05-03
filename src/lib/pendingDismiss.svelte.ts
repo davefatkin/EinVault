@@ -28,6 +28,7 @@ export function createPendingDismissals(
 	let pending = $state<Record<string, PendingEntry>>({});
 	let order: string[] = [];
 	let announcement = $state('');
+	let announcementCounter = 0;
 
 	function scheduleSubmit(id: string, ms: number) {
 		return setTimeout(() => {
@@ -43,12 +44,13 @@ export function createPendingDismissals(
 	}
 
 	function setAnnouncement(msg: string) {
-		// Force screen-reader re-announcement even when message is identical
-		// by clearing synchronously and setting in a microtask.
-		announcement = '';
-		queueMicrotask(() => {
-			announcement = msg;
-		});
+		// Toggle a zero-width space suffix on each call so identical strings
+		// still produce a value change, forcing aria-live to re-announce.
+		// Avoids the prior microtask race where rapid sequential calls in the
+		// same tick could overwrite an unread message.
+		announcementCounter++;
+		const token = announcementCounter % 2 === 0 ? '​' : '';
+		announcement = msg + token;
 	}
 
 	function queue(id: string, form: HTMLFormElement, title: string) {
@@ -134,6 +136,7 @@ export function createPendingDismissals(
 		pending = {};
 		order = [];
 		announcement = '';
+		announcementCounter = 0;
 	}
 
 	return {

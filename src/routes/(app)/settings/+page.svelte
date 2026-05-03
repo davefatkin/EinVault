@@ -227,7 +227,6 @@
 	<ReminderUndoCard
 		currentValue={data.user?.reminderUndoSeconds ?? null}
 		defaultSeconds={data.reminderUndoDefault}
-		presets={data.reminderUndoPresets}
 		successMessage={form?.reminderUndoSuccess
 			? t(locale, 'page.settings.reminderUndoUpdated')
 			: undefined}

@@ -13,7 +13,11 @@ import { isSecureRequest } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
-import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_DEFAULT_SENTINEL } from '$lib/server/env';
+import {
+	REMINDER_UNDO_PRESETS,
+	REMINDER_UNDO_DEFAULT_SENTINEL,
+	REMINDER_UNDO_SECONDS_DEFAULT
+} from '$lib/server/env';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -104,7 +108,11 @@ export async function handleReminderUndoUpdate(userId: string, request: Request,
 		value = null;
 	} else {
 		const n = Number(raw);
-		if (!Number.isInteger(n) || !REMINDER_UNDO_PRESETS.includes(n)) {
+		// Accept any preset OR the env-resolved site default. The dropdown
+		// merges the env default into the list, so a non-preset env value
+		// must round-trip through this validator.
+		const allowed = REMINDER_UNDO_PRESETS.includes(n) || n === REMINDER_UNDO_SECONDS_DEFAULT;
+		if (!Number.isInteger(n) || !allowed) {
 			return fail(400, { reminderUndoError: t(locale, 'error.invalidReminderUndo') });
 		}
 		value = n;

@@ -7,7 +7,7 @@ import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
-import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
+import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -15,8 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user,
 		upcomingShifts,
-		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
-		reminderUndoPresets: REMINDER_UNDO_PRESETS
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT
 	};
 };
 

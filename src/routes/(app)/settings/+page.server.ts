@@ -6,7 +6,7 @@ import { handleAccountUpdate, handleReminderUndoUpdate } from '$lib/server/accou
 import { isSecureRequest } from '$lib/server/auth';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
-import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
+import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -31,8 +31,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		user: locals.user,
 		companions,
 		archivedCompanions,
-		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
-		reminderUndoPresets: REMINDER_UNDO_PRESETS
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT
 	};
 };
 
