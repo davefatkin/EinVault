@@ -115,6 +115,15 @@ const messages: Record<keyof Messages, string> = {
 	'error.missingShiftId': 'Fehlende Schicht-ID.',
 	'error.missingPhotoId': 'Fehlende Foto-ID',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned':
+		'Dein Konto wurde nicht eingerichtet. Bitte wende dich an einen Administrator.',
+	'error.oidc.invalidState':
+		'Die Anmeldesitzung ist abgelaufen oder ungültig. Bitte versuche es erneut.',
+	'error.oidc.exchangeFailed': 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.',
+	'error.oidc.accountDisabled':
+		'Dein Konto ist deaktiviert. Bitte wende dich an einen Administrator.',
+
 	// Errors: Not found
 	'error.userNotFound': 'Benutzer nicht gefunden.',
 	'error.companionNotFound': 'Begleiter nicht gefunden',
@@ -217,6 +226,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: Login
 	'page.login.title': 'Anmelden',
 	'page.login.tagline': 'Dein privates Begleiter-Pflegetagebuch',
+	'page.login.signInWith': 'Mit {provider} anmelden',
 	'page.login.usernameLabel': 'Benutzername',
 	'page.login.usernamePlaceholder': 'Benutzername',
 	'page.login.passwordLabel': 'Passwort',

@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
+import { isOidcEnabled, getOidcProviderName } from '$lib/server/auth/oidc';
 import { db, schema } from '$lib/server/db';
 import {
 	generateSessionToken,
@@ -46,12 +47,30 @@ function clearRateLimit(ip: string) {
 	loginAttempts.delete(ip);
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+const OIDC_ERROR_KEYS = {
+	oidc_not_provisioned: 'error.oidc.notProvisioned',
+	oidc_invalid_state: 'error.oidc.invalidState',
+	oidc_exchange_failed: 'error.oidc.exchangeFailed',
+	oidc_account_disabled: 'error.oidc.accountDisabled'
+} as const;
+
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.user) {
 		if (locals.user.role === 'caretaker') redirect(302, '/care');
 		redirect(302, '/');
 	}
-	return {};
+
+	const errorCode = url.searchParams.get('error');
+	const oidcErrorKey = errorCode
+		? OIDC_ERROR_KEYS[errorCode as keyof typeof OIDC_ERROR_KEYS]
+		: null;
+	const oidcError = oidcErrorKey ? t(locals.locale, oidcErrorKey) : null;
+
+	return {
+		oidcEnabled: isOidcEnabled(),
+		oidcProviderName: getOidcProviderName(),
+		oidcError
+	};
 };
 
 export const actions: Actions = {

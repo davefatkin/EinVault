@@ -209,8 +209,16 @@ const messages = {
 	'page.settings.languageCard': 'Language',
 	'page.settings.languageDescription': 'Choose your preferred language.',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned':
+		'Your account has not been provisioned. Please contact an administrator.',
+	'error.oidc.invalidState': 'Login session expired or invalid. Please try again.',
+	'error.oidc.exchangeFailed': 'Sign-in failed. Please try again.',
+	'error.oidc.accountDisabled': 'Your account is disabled. Please contact an administrator.',
+
 	// Page: Login
 	'page.login.title': 'Sign in',
+	'page.login.signInWith': 'Sign in with {provider}',
 	'page.login.tagline': 'Your private companion care log',
 	'page.login.usernameLabel': 'Username',
 	'page.login.usernamePlaceholder': 'username',

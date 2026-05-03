@@ -114,6 +114,14 @@ const messages: Record<keyof Messages, string> = {
 	'error.missingShiftId': 'Identifiant de garde manquant.',
 	'error.missingPhotoId': 'Identifiant photo manquant',
 
+	// Errors: OIDC
+	'error.oidc.notProvisioned':
+		"Votre compte n'a pas été configuré. Veuillez contacter un administrateur.",
+	'error.oidc.invalidState':
+		'La session de connexion a expiré ou est invalide. Veuillez réessayer.',
+	'error.oidc.exchangeFailed': 'La connexion a échoué. Veuillez réessayer.',
+	'error.oidc.accountDisabled': 'Votre compte est désactivé. Veuillez contacter un administrateur.',
+
 	// Errors: Not found
 	'error.userNotFound': 'Utilisateur introuvable.',
 	'error.companionNotFound': 'Compagnon introuvable',
@@ -215,6 +223,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: Login
 	'page.login.title': 'Se connecter',
 	'page.login.tagline': 'Votre journal privé de soins pour compagnons',
+	'page.login.signInWith': 'Se connecter avec {provider}',
 	'page.login.usernameLabel': "Nom d'utilisateur",
 	'page.login.usernamePlaceholder': "nom d'utilisateur",
 	'page.login.passwordLabel': 'Mot de passe',

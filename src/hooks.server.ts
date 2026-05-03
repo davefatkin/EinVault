@@ -3,6 +3,9 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
+import { logOidcBootStatus } from '$lib/server/auth/oidc';
+
+logOidcBootStatus();
 
 const securityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);

@@ -16,10 +16,16 @@ function tokenToSessionId(token: string): string {
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 const REFRESH_THRESHOLD_MS = 15 * 24 * 60 * 60 * 1000;
 
-export async function createSession(token: string, userId: string) {
+export async function createSession(
+	token: string,
+	userId: string,
+	opts?: { oidcIdTokenHint?: string }
+) {
 	const sessionId = tokenToSessionId(token);
 	const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-	await db.insert(schema.sessions).values({ id: sessionId, userId, expiresAt });
+	await db
+		.insert(schema.sessions)
+		.values({ id: sessionId, userId, expiresAt, oidcIdTokenHint: opts?.oidcIdTokenHint });
 	return { id: sessionId, userId, expiresAt };
 }
 
