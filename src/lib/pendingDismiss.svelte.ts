@@ -20,6 +20,12 @@ type PendingEntry = {
  *
  * `getDelayMs()` returns the current undo window in milliseconds. A
  * value of 0 means no undo window. `queue()` submits immediately in that case.
+ *
+ * IMPORTANT: `getLocale` is invoked from event handlers (click, focus, etc.)
+ * AFTER component setup. Do not pass the raw `getLocale` from `$lib/i18n`,
+ * which calls `getContext` and throws `lifecycle_outside_component` when run
+ * outside setup. Cache the locale in your component (`const locale =
+ * getLocale();`) and pass `() => locale` instead.
  */
 export function createPendingDismissals(
 	getLocale: () => Locale,

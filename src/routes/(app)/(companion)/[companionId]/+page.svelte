@@ -79,7 +79,10 @@
 
 	// Pending reminder dismissals
 	const undoDelayMs = $derived(data.reminderUndoSeconds! * 1000);
-	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
+	const pendingDismiss = createPendingDismissals(
+		() => locale,
+		() => undoDelayMs
+	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
