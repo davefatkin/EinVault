@@ -33,6 +33,8 @@ services:
       UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-10}
       # Maximum journal photos per companion per day.
       MAX_DAILY_PHOTOS: ${MAX_DAILY_PHOTOS:-5}
+      # Default undo window (seconds) for dismissing a Reminder. 0 disables it.
+      REMINDER_UNDO_SECONDS: ${REMINDER_UNDO_SECONDS:-7}
 
       # Set to your local timezone so dates and times display correctly.
       # Defaults to UTC if omitted. Example: America/New_York, Europe/London

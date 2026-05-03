@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `reminder_undo_seconds` integer;

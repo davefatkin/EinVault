@@ -12,7 +12,7 @@
 	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data }: { data: PageData } = $props();
@@ -120,6 +120,15 @@
 		}
 	}
 
+	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
+
+	// Pending reminder dismissals
+	const undoDelayMs = $derived(data.reminderUndoSeconds! * 1000);
+	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
+	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+
+	$effect(() => () => pendingDismiss.cleanup());
+
 	function handleWindowKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			if (avatarLightboxOpen) {
@@ -137,14 +146,6 @@
 			pendingDismiss.undoLast((id) => upcomingReminders.find((r) => r.id === id)?.title);
 		}
 	}
-
-	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
-
-	// Pending reminder dismissals
-	const pendingDismiss = createPendingDismissals(getLocale);
-	const dismissFormRegistry = new Map<string, HTMLFormElement>();
-
-	$effect(() => () => pendingDismiss.cleanup());
 </script>
 
 <svelte:window onkeydown={handleWindowKey} />
@@ -540,20 +541,34 @@
 								>
 									<input type="hidden" name="id" value={reminder.id} />
 									{#if isPending}
-										<button
-											type="button"
-											onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
-											title={t(locale, 'common.reminder.undo')}
-											aria-label={t(locale, 'common.reminder.undo')}
-											class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent shrink-0 text-primary"
-											onmouseenter={() => pendingDismiss.pause(reminder.id)}
-											onmouseleave={() => pendingDismiss.resume(reminder.id)}
-											onfocusin={() => pendingDismiss.pause(reminder.id)}
-											onfocusout={() => pendingDismiss.resume(reminder.id)}
-										>
-											<Undo2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">{t(locale, 'common.reminder.undo')}</span>
-										</button>
+										<div class="flex items-center gap-1 shrink-0">
+											<button
+												type="button"
+												onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
+												title={t(locale, 'common.reminder.undo')}
+												aria-label={t(locale, 'common.reminder.undo')}
+												class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent text-primary"
+												onmouseenter={() => pendingDismiss.pause(reminder.id)}
+												onmouseleave={() => pendingDismiss.resume(reminder.id)}
+												onfocusin={() => pendingDismiss.pause(reminder.id)}
+												onfocusout={() => pendingDismiss.resume(reminder.id)}
+											>
+												<Undo2 class="h-3.5 w-3.5" />
+												<span class="hidden sm:inline">{t(locale, 'common.reminder.undo')}</span>
+											</button>
+											<button
+												type="button"
+												onclick={() => pendingDismiss.commit(reminder.id, reminder.title)}
+												title={t(locale, 'common.reminder.dismissNow')}
+												aria-label={t(locale, 'common.reminder.dismissNow')}
+												class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent"
+											>
+												<CheckCheck class="h-3.5 w-3.5" />
+												<span class="hidden sm:inline"
+													>{t(locale, 'common.reminder.dismissNow')}</span
+												>
+											</button>
+										</div>
 									{:else}
 										<button
 											type="button"
@@ -573,7 +588,7 @@
 								{#if isPending}
 									<span
 										class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
-										style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
+										style="--dismiss-ms: {undoDelayMs}ms"
 										aria-hidden="true"
 									></span>
 								{/if}

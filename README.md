@@ -152,14 +152,15 @@ einvault.yourdomain.com {
 
 Everything else in the compose file can be edited directly:
 
-|                    | Default             | Description                                                                                                                     |
-| ------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `TZ`               | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly. |
-| `UPLOAD_MAX_MB`    | `10`                | Maximum upload size in MB. SvelteKit's internal `BODY_SIZE_LIMIT` is derived from this automatically at container start.        |
-| `MAX_DAILY_PHOTOS` | `5`                 | Maximum number of journal photos per companion per day.                                                                         |
-| `user`             | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                       |
-| `./data` volume    | `./data`            | Where the database and uploads are stored on the host.                                                                          |
-| `DATABASE_URL`     | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                  |
+|                         | Default             | Description                                                                                                                       |
+| ----------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `TZ`                    | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.   |
+| `UPLOAD_MAX_MB`         | `10`                | Maximum upload size in MB. SvelteKit's internal `BODY_SIZE_LIMIT` is derived from this automatically at container start.          |
+| `MAX_DAILY_PHOTOS`      | `5`                 | Maximum number of journal photos per companion per day.                                                                           |
+| `REMINDER_UNDO_SECONDS` | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings. |
+| `user`                  | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                         |
+| `./data` volume         | `./data`            | Where the database and uploads are stored on the host.                                                                            |
+| `DATABASE_URL`          | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                    |
 
 ### Data and backup
 

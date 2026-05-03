@@ -10,6 +10,7 @@
 
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import { Pencil, Plus, RotateCcw } from '@lucide/svelte';
 	import { getContext } from 'svelte';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
@@ -222,6 +223,15 @@
 			</form>
 		</CardContent>
 	</Card>
+
+	<ReminderUndoCard
+		currentValue={data.user?.reminderUndoSeconds ?? null}
+		defaultSeconds={data.reminderUndoDefault}
+		successMessage={form?.reminderUndoSuccess
+			? t(locale, 'page.settings.reminderUndoUpdated')
+			: undefined}
+		errorMessage={form?.reminderUndoError}
+	/>
 
 	{#if data.companions.length > 0 || data.user?.role !== 'caretaker'}
 		<Card>

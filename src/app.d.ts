@@ -13,6 +13,7 @@ declare global {
 				locale: Locale;
 				email: string | null;
 				phone: string | null;
+				reminderUndoSeconds: number | null;
 			} | null;
 			session: {
 				id: string;

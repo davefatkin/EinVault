@@ -9,6 +9,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import { Calendar } from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
@@ -257,6 +258,15 @@
 			</form>
 		</CardContent>
 	</Card>
+
+	<ReminderUndoCard
+		currentValue={data.user?.reminderUndoSeconds ?? null}
+		defaultSeconds={data.reminderUndoDefault}
+		successMessage={form?.reminderUndoSuccess
+			? t(locale, 'page.settings.reminderUndoUpdated')
+			: undefined}
+		errorMessage={form?.reminderUndoError}
+	/>
 
 	<!-- My Shifts -->
 	<Card id="shifts">

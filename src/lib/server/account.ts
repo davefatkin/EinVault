@@ -13,6 +13,11 @@ import { isSecureRequest } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
+import {
+	REMINDER_UNDO_PRESETS,
+	REMINDER_UNDO_DEFAULT_SENTINEL,
+	REMINDER_UNDO_SECONDS_DEFAULT
+} from '$lib/server/env';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -92,4 +97,31 @@ export async function handleAccountUpdate(
 	}
 
 	return { accountSuccess: true };
+}
+
+export async function handleReminderUndoUpdate(userId: string, request: Request, locale: Locale) {
+	const data = await request.formData();
+	const raw = String(data.get('reminderUndoSeconds') ?? '');
+
+	let value: number | null;
+	if (raw === '' || raw === REMINDER_UNDO_DEFAULT_SENTINEL) {
+		value = null;
+	} else {
+		const n = Number(raw);
+		// Accept any preset OR the env-resolved site default. The dropdown
+		// merges the env default into the list, so a non-preset env value
+		// must round-trip through this validator.
+		const allowed = REMINDER_UNDO_PRESETS.includes(n) || n === REMINDER_UNDO_SECONDS_DEFAULT;
+		if (!Number.isInteger(n) || !allowed) {
+			return fail(400, { reminderUndoError: t(locale, 'error.invalidReminderUndo') });
+		}
+		value = n;
+	}
+
+	await db
+		.update(schema.users)
+		.set({ reminderUndoSeconds: value })
+		.where(eq(schema.users.id, userId));
+
+	return { reminderUndoSuccess: true };
 }

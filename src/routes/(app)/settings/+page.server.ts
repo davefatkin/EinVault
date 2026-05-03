@@ -2,10 +2,11 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { handleAccountUpdate } from '$lib/server/account';
+import { handleAccountUpdate, handleReminderUndoUpdate } from '$lib/server/account';
 import { isSecureRequest } from '$lib/server/auth';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
+import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -26,7 +27,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				})
 			: [];
 
-	return { user: locals.user, companions, archivedCompanions };
+	return {
+		user: locals.user,
+		companions,
+		archivedCompanions,
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT
+	};
 };
 
 export const actions: Actions = {
@@ -83,6 +89,11 @@ export const actions: Actions = {
 	account: async ({ request, locals, cookies }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleAccountUpdate(locals.user.id, request, cookies, locals.locale);
+	},
+
+	reminderUndo: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleReminderUndoUpdate(locals.user.id, request, locals.locale);
 	},
 
 	restore: async ({ request, locals }) => {

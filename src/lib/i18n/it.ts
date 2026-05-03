@@ -24,8 +24,10 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Annulla',
 	'common.reminder.done': 'Fatto',
+	'common.reminder.dismissNow': 'Conferma ora',
 	'common.reminder.dismissedAnnounce': '{title} ignorato. Attiva Annulla per ripristinare.',
 	'common.reminder.restoredAnnounce': '{title} ripristinato.',
+	'common.reminder.untitled': 'Promemoria senza titolo',
 
 	// Enum: Moods
 	'enum.mood.great': 'Ottimo',
@@ -97,6 +99,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.usernameAlreadyTaken': 'Nome utente già in uso.',
 	'error.invalidTheme': 'Tema non valido.',
 	'error.invalidLocale': 'Lingua non valida.',
+	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',
 	'error.invalidRole': 'Ruolo non valido.',
 	'error.invalidDate': 'Data non valida',
 	'error.invalidArchiveDate': 'Data di archiviazione non valida.',
@@ -217,6 +220,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupLater': 'Più avanti',
 	'page.settings.languageCard': 'Lingua',
 	'page.settings.languageDescription': 'Scegli la tua lingua preferita.',
+	'page.settings.reminderUndoCard': 'Finestra annulla promemoria',
+	'page.settings.reminderUndoDescription':
+		'Quanto attendere prima che un Promemoria scartato venga confermato. Disattiva per confermare subito.',
+	'page.settings.reminderUndoLabel': 'Finestra annulla',
+	'page.settings.reminderUndoDefault': 'Usa predefinito ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Disattivata (conferma subito)',
+	'page.settings.reminderUndoSeconds': '{seconds} secondi',
+	'page.settings.reminderUndoUpdated': '✓ Finestra annulla aggiornata.',
 
 	// Page: Login
 	'page.login.title': 'Accedi',

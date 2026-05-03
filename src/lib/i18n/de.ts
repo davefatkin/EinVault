@@ -24,9 +24,11 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Rückgängig',
 	'common.reminder.done': 'Erledigt',
+	'common.reminder.dismissNow': 'Jetzt erledigen',
 	'common.reminder.dismissedAnnounce':
 		'{title} verworfen. Rückgängig aktivieren, um wiederherzustellen.',
 	'common.reminder.restoredAnnounce': '{title} wiederhergestellt.',
+	'common.reminder.untitled': 'Unbenannte Erinnerung',
 
 	// Enum: Moods
 	'enum.mood.great': 'Super',
@@ -99,6 +101,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.usernameAlreadyTaken': 'Benutzername bereits vergeben.',
 	'error.invalidTheme': 'Ungültiges Design.',
 	'error.invalidLocale': 'Ungültige Sprache.',
+	'error.invalidReminderUndo': 'Ungültiger Wert für Rückgängig-Fenster.',
 	'error.invalidRole': 'Ungültige Rolle.',
 	'error.invalidDate': 'Ungültiges Datum',
 	'error.invalidArchiveDate': 'Ungültiges Archivierungsdatum.',
@@ -222,6 +225,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupLater': 'Später',
 	'page.settings.languageCard': 'Sprache',
 	'page.settings.languageDescription': 'Wähle deine bevorzugte Sprache.',
+	'page.settings.reminderUndoCard': 'Erinnerung-Rückgängig-Fenster',
+	'page.settings.reminderUndoDescription':
+		'Wie lange gewartet wird, bevor eine abgewiesene Erinnerung übernommen wird. Aus = sofort übernehmen.',
+	'page.settings.reminderUndoLabel': 'Rückgängig-Fenster',
+	'page.settings.reminderUndoDefault': 'Standard verwenden ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Aus (sofort übernehmen)',
+	'page.settings.reminderUndoSeconds': '{seconds} Sekunden',
+	'page.settings.reminderUndoUpdated': '✓ Rückgängig-Fenster aktualisiert.',
 
 	// Page: Login
 	'page.login.title': 'Anmelden',
