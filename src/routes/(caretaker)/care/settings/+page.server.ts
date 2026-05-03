@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { getUpcomingShifts } from '$lib/server/shifts';
-import { handleAccountUpdate } from '$lib/server/account';
+import { handleAccountUpdate, handleReminderUndoUpdate } from '$lib/server/account';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
@@ -53,26 +53,6 @@ export const actions: Actions = {
 
 	reminderUndo: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
-
-		const data = await request.formData();
-		const raw = String(data.get('reminderUndoSeconds') ?? '');
-
-		let value: number | null;
-		if (raw === '' || raw === 'default') {
-			value = null;
-		} else {
-			const n = Number(raw);
-			if (!Number.isInteger(n) || !REMINDER_UNDO_PRESETS.includes(n)) {
-				return fail(400, { reminderUndoError: t(locals.locale, 'error.invalidReminderUndo') });
-			}
-			value = n;
-		}
-
-		await db
-			.update(schema.users)
-			.set({ reminderUndoSeconds: value })
-			.where(eq(schema.users.id, locals.user.id));
-
-		return { reminderUndoSuccess: true };
+		return handleReminderUndoUpdate(locals.user.id, request, locals.locale);
 	}
 };

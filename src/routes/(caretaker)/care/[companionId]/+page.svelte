@@ -558,7 +558,7 @@
 											</button>
 											<button
 												type="button"
-												onclick={() => pendingDismiss.commitNow(reminder.id)}
+												onclick={() => pendingDismiss.commit(reminder.id, reminder.title)}
 												title={t(locale, 'common.reminder.dismissNow')}
 												aria-label={t(locale, 'common.reminder.dismissNow')}
 												class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium border border-input bg-background transition-colors hover:bg-accent"

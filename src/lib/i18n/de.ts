@@ -24,10 +24,11 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Rückgängig',
 	'common.reminder.done': 'Erledigt',
-	'common.reminder.dismissNow': 'Jetzt schließen',
+	'common.reminder.dismissNow': 'Jetzt erledigen',
 	'common.reminder.dismissedAnnounce':
 		'{title} verworfen. Rückgängig aktivieren, um wiederherzustellen.',
 	'common.reminder.restoredAnnounce': '{title} wiederhergestellt.',
+	'common.reminder.untitled': 'Unbenannte Erinnerung',
 
 	// Enum: Moods
 	'enum.mood.great': 'Super',

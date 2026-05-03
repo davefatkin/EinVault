@@ -27,6 +27,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.dismissNow': 'Dispensar agora',
 	'common.reminder.dismissedAnnounce': '{title} dispensado. Ative Desfazer para restaurar.',
 	'common.reminder.restoredAnnounce': '{title} restaurado.',
+	'common.reminder.untitled': 'Lembrete sem título',
 
 	// Enum: Moods
 	'enum.mood.great': 'Ótimo',

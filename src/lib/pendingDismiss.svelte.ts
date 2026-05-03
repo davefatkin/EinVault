@@ -31,11 +31,14 @@ export function createPendingDismissals(
 
 	function scheduleSubmit(id: string, ms: number) {
 		return setTimeout(() => {
+			// Re-read inside the timer: commit/undo may have already cleared
+			// the entry, in which case we must NOT submit again (would double-POST).
 			const entry = pending[id];
+			if (!entry) return;
 			delete pending[id];
 			order = order.filter((x) => x !== id);
-			if (entry && !entry.form.isConnected) return;
-			entry?.form.requestSubmit();
+			if (!entry.form.isConnected) return;
+			entry.form.requestSubmit();
 		}, ms);
 	}
 
@@ -51,6 +54,7 @@ export function createPendingDismissals(
 	function queue(id: string, form: HTMLFormElement, title: string) {
 		const delayMs = getDelayMs();
 		if (delayMs <= 0) {
+			setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
 			form.requestSubmit();
 			return;
 		}
@@ -68,12 +72,13 @@ export function createPendingDismissals(
 		setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
 	}
 
-	function commitNow(id: string) {
+	function commit(id: string, title: string) {
 		const entry = pending[id];
 		if (!entry) return;
 		clearTimeout(entry.timer);
 		delete pending[id];
 		order = order.filter((x) => x !== id);
+		setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
 		if (entry.form.isConnected) entry.form.requestSubmit();
 	}
 
@@ -93,12 +98,14 @@ export function createPendingDismissals(
 	/**
 	 * Undo the most-recently queued dismissal. Returns true if one was undone.
 	 * Caller provides a title lookup since reminders may live anywhere.
+	 * Falls back to a generic localized "Untitled reminder" string when the
+	 * lookup returns undefined (e.g. the reminder list reactivity briefly drops
+	 * the entry).
 	 */
 	function undoLast(titleForId: (id: string) => string | undefined): boolean {
 		if (order.length === 0) return false;
 		const id = order[order.length - 1];
-		const title = titleForId(id);
-		if (title === undefined) return false;
+		const title = titleForId(id) ?? t(getLocale(), 'common.reminder.untitled');
 		undo(id, title);
 		return true;
 	}
@@ -137,7 +144,8 @@ export function createPendingDismissals(
 		queue,
 		undo,
 		undoLast,
-		commitNow,
+		/** Commit the pending dismissal immediately (skip remaining undo window). */
+		commit,
 		pause,
 		resume,
 		cleanup

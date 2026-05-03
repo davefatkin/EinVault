@@ -37,6 +37,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		version,
 		year: new Date().getFullYear(),
-		reminderUndoSeconds: resolveReminderUndoSeconds(locals.user?.reminderUndoSeconds)
+		reminderUndoSeconds: locals.user
+			? resolveReminderUndoSeconds(locals.user.reminderUndoSeconds)
+			: undefined
 	};
 };

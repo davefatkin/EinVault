@@ -27,6 +27,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.dismissNow': 'Confirmer maintenant',
 	'common.reminder.dismissedAnnounce': '{title} rejeté. Activez Annuler pour restaurer.',
 	'common.reminder.restoredAnnounce': '{title} restauré.',
+	'common.reminder.untitled': 'Rappel sans titre',
 
 	// Enum: Moods
 	'enum.mood.great': 'Super',

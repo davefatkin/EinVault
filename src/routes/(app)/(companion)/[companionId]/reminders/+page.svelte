@@ -591,7 +591,7 @@
 													variant="ghost"
 													size="sm"
 													class="h-7 gap-1.5 px-2 text-xs"
-													onclick={() => pendingDismiss.commitNow(reminder.id)}
+													onclick={() => pendingDismiss.commit(reminder.id, reminder.title)}
 													title={t(locale, 'common.reminder.dismissNow')}
 													aria-label={t(locale, 'common.reminder.dismissNow')}
 												>

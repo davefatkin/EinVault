@@ -25,6 +25,7 @@ const messages = {
 	'common.reminder.dismissNow': 'Dismiss now',
 	'common.reminder.dismissedAnnounce': '{title} dismissed. Activate Undo to restore.',
 	'common.reminder.restoredAnnounce': '{title} restored.',
+	'common.reminder.untitled': 'Untitled reminder',
 
 	// Enum: Moods
 	'enum.mood.great': 'Great',

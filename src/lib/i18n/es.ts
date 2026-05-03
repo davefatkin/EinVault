@@ -27,6 +27,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.dismissNow': 'Descartar ahora',
 	'common.reminder.dismissedAnnounce': '{title} descartado. Activa Deshacer para restaurar.',
 	'common.reminder.restoredAnnounce': '{title} restaurado.',
+	'common.reminder.untitled': 'Recordatorio sin título',
 
 	// Enum: Moods
 	'enum.mood.great': 'Genial',

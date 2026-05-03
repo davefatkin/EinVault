@@ -9,6 +9,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import { Calendar } from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
@@ -18,7 +19,6 @@
 	const locale = getLocale();
 	let showPasswordFields = $state(false);
 	let localeForm: HTMLFormElement;
-	let reminderUndoForm: HTMLFormElement;
 	let expandedShiftId = $state<string | null>(null);
 
 	const now = new SvelteDate();
@@ -259,54 +259,15 @@
 		</CardContent>
 	</Card>
 
-	<Card>
-		<CardHeader>
-			<CardTitle>{t(locale, 'page.settings.reminderUndoCard')}</CardTitle>
-		</CardHeader>
-		<CardContent>
-			<p class="text-sm text-muted-foreground mb-3">
-				{t(locale, 'page.settings.reminderUndoDescription')}
-			</p>
-			{#if form?.reminderUndoSuccess}
-				<Alert class="mb-3">
-					<AlertDescription>{t(locale, 'page.settings.reminderUndoUpdated')}</AlertDescription>
-				</Alert>
-			{/if}
-			{#if form?.reminderUndoError}
-				<Alert variant="destructive" class="mb-3">
-					<AlertDescription>{form.reminderUndoError}</AlertDescription>
-				</Alert>
-			{/if}
-			<form method="POST" action="?/reminderUndo" bind:this={reminderUndoForm} use:enhance>
-				<div class="max-w-[280px]">
-					<Label for="reminderUndoSeconds" class="sr-only"
-						>{t(locale, 'page.settings.reminderUndoLabel')}</Label
-					>
-					<Select
-						name="reminderUndoSeconds"
-						id="reminderUndoSeconds"
-						value={data.user?.reminderUndoSeconds == null
-							? 'default'
-							: String(data.user.reminderUndoSeconds)}
-						onchange={() => reminderUndoForm.requestSubmit()}
-					>
-						<option value="default"
-							>{t(locale, 'page.settings.reminderUndoDefault', {
-								seconds: data.reminderUndoDefault
-							})}</option
-						>
-						{#each data.reminderUndoPresets as preset (preset)}
-							<option value={String(preset)}>
-								{preset === 0
-									? t(locale, 'page.settings.reminderUndoOff')
-									: t(locale, 'page.settings.reminderUndoSeconds', { seconds: preset })}
-							</option>
-						{/each}
-					</Select>
-				</div>
-			</form>
-		</CardContent>
-	</Card>
+	<ReminderUndoCard
+		currentValue={data.user?.reminderUndoSeconds ?? null}
+		defaultSeconds={data.reminderUndoDefault}
+		presets={data.reminderUndoPresets}
+		successMessage={form?.reminderUndoSuccess
+			? t(locale, 'page.settings.reminderUndoUpdated')
+			: undefined}
+		errorMessage={form?.reminderUndoError}
+	/>
 
 	<!-- My Shifts -->
 	<Card id="shifts">

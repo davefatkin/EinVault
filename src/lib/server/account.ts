@@ -13,6 +13,7 @@ import { isSecureRequest } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
+import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_DEFAULT_SENTINEL } from '$lib/server/env';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -92,4 +93,27 @@ export async function handleAccountUpdate(
 	}
 
 	return { accountSuccess: true };
+}
+
+export async function handleReminderUndoUpdate(userId: string, request: Request, locale: Locale) {
+	const data = await request.formData();
+	const raw = String(data.get('reminderUndoSeconds') ?? '');
+
+	let value: number | null;
+	if (raw === '' || raw === REMINDER_UNDO_DEFAULT_SENTINEL) {
+		value = null;
+	} else {
+		const n = Number(raw);
+		if (!Number.isInteger(n) || !REMINDER_UNDO_PRESETS.includes(n)) {
+			return fail(400, { reminderUndoError: t(locale, 'error.invalidReminderUndo') });
+		}
+		value = n;
+	}
+
+	await db
+		.update(schema.users)
+		.set({ reminderUndoSeconds: value })
+		.where(eq(schema.users.id, userId));
+
+	return { reminderUndoSuccess: true };
 }
