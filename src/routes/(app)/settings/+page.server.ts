@@ -6,6 +6,7 @@ import { handleAccountUpdate } from '$lib/server/account';
 import { isSecureRequest } from '$lib/server/auth';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
+import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -26,7 +27,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 				})
 			: [];
 
-	return { user: locals.user, companions, archivedCompanions };
+	return {
+		user: locals.user,
+		companions,
+		archivedCompanions,
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
+		reminderUndoPresets: REMINDER_UNDO_PRESETS
+	};
 };
 
 export const actions: Actions = {
@@ -83,6 +90,31 @@ export const actions: Actions = {
 	account: async ({ request, locals, cookies }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleAccountUpdate(locals.user.id, request, cookies, locals.locale);
+	},
+
+	reminderUndo: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+
+		const data = await request.formData();
+		const raw = String(data.get('reminderUndoSeconds') ?? '');
+
+		let value: number | null;
+		if (raw === '' || raw === 'default') {
+			value = null;
+		} else {
+			const n = Number(raw);
+			if (!Number.isInteger(n) || !REMINDER_UNDO_PRESETS.includes(n)) {
+				return fail(400, { reminderUndoError: t(locals.locale, 'error.invalidReminderUndo') });
+			}
+			value = n;
+		}
+
+		await db
+			.update(schema.users)
+			.set({ reminderUndoSeconds: value })
+			.where(eq(schema.users.id, locals.user.id));
+
+		return { reminderUndoSuccess: true };
 	},
 
 	restore: async ({ request, locals }) => {

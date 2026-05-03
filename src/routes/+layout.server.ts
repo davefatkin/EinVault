@@ -3,6 +3,7 @@ import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
 import { version } from '../../package.json';
 import { t } from '$lib/i18n';
+import { resolveReminderUndoSeconds } from '$lib/server/env';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
@@ -35,6 +36,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		locale: locals.locale,
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		version,
-		year: new Date().getFullYear()
+		year: new Date().getFullYear(),
+		reminderUndoSeconds: resolveReminderUndoSeconds(locals.user?.reminderUndoSeconds)
 	};
 };

@@ -24,6 +24,7 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Deshacer',
 	'common.reminder.done': 'Hecho',
+	'common.reminder.dismissNow': 'Descartar ahora',
 	'common.reminder.dismissedAnnounce': '{title} descartado. Activa Deshacer para restaurar.',
 	'common.reminder.restoredAnnounce': '{title} restaurado.',
 
@@ -98,6 +99,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.usernameAlreadyTaken': 'Nombre de usuario ya en uso.',
 	'error.invalidTheme': 'Tema no válido.',
 	'error.invalidLocale': 'Idioma no válido.',
+	'error.invalidReminderUndo': 'Valor de ventana de deshacer no válido.',
 	'error.invalidRole': 'Rol no válido.',
 	'error.invalidDate': 'Fecha no válida',
 	'error.invalidArchiveDate': 'Fecha de archivo no válida.',
@@ -221,6 +223,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupLater': 'Más adelante',
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Elige tu idioma preferido.',
+	'page.settings.reminderUndoCard': 'Ventana para deshacer Recordatorio',
+	'page.settings.reminderUndoDescription':
+		'Cuánto esperar antes de confirmar un Recordatorio descartado. Usa Apagado para confirmar al instante.',
+	'page.settings.reminderUndoLabel': 'Ventana de deshacer',
+	'page.settings.reminderUndoDefault': 'Usar predeterminado ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Apagado (confirmar al instante)',
+	'page.settings.reminderUndoSeconds': '{seconds} segundos',
+	'page.settings.reminderUndoUpdated': '✓ Ventana de deshacer actualizada.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sesión',

@@ -48,7 +48,8 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			theme: (user.theme ?? 'system') as 'light' | 'dark' | 'system',
 			locale: (user.locale ?? 'en') as 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt',
 			email: user.email ?? null,
-			phone: user.phone ?? null
+			phone: user.phone ?? null,
+			reminderUndoSeconds: user.reminderUndoSeconds ?? null
 		}
 	};
 }

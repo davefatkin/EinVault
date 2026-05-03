@@ -20,7 +20,7 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { reminderTypeOptions } from '$lib/i18n/labels';
-	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -71,7 +71,8 @@
 	let deleteReminderForm = $state<HTMLFormElement | null>(null);
 
 	// Pending reminder dismissals
-	const pendingDismiss = createPendingDismissals(getLocale);
+	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 7) * 1000);
+	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
@@ -585,6 +586,20 @@
 													<Undo2 class="h-3.5 w-3.5" />
 													<span class="hidden sm:inline">{t(locale, 'common.reminder.undo')}</span>
 												</Button>
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													class="h-7 gap-1.5 px-2 text-xs"
+													onclick={() => pendingDismiss.commitNow(reminder.id)}
+													title={t(locale, 'common.reminder.dismissNow')}
+													aria-label={t(locale, 'common.reminder.dismissNow')}
+												>
+													<CheckCheck class="h-3.5 w-3.5" />
+													<span class="hidden sm:inline"
+														>{t(locale, 'common.reminder.dismissNow')}</span
+													>
+												</Button>
 											{:else}
 												<Button
 													type="button"
@@ -624,7 +639,7 @@
 					{#if isPending}
 						<span
 							class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
-							style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
+							style="--dismiss-ms: {undoDelayMs}ms"
 							aria-hidden="true"
 						></span>
 					{/if}

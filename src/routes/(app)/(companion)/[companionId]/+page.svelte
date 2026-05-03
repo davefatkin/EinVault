@@ -25,7 +25,7 @@
 	import { renderMarkdown } from '$lib/markdown';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
-	import { createPendingDismissals, DISMISS_DELAY_MS } from '$lib/pendingDismiss.svelte';
+	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 
 	let { data }: { data: PageData } = $props();
@@ -78,7 +78,8 @@
 	}
 
 	// Pending reminder dismissals
-	const pendingDismiss = createPendingDismissals(getLocale);
+	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 7) * 1000);
+	const pendingDismiss = createPendingDismissals(getLocale, () => undoDelayMs);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
@@ -629,20 +630,31 @@
 							>
 								<input type="hidden" name="id" value={reminder.id} />
 								{#if isPending}
-									<button
-										type="button"
-										onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
-										title={t(locale, 'common.reminder.undo')}
-										aria-label={t(locale, 'common.reminder.undo')}
-										class="inline-flex items-center justify-center gap-1 rounded-md h-8 px-2 text-xs font-medium text-primary hover:bg-accent transition-colors shrink-0"
-										onmouseenter={() => pendingDismiss.pause(reminder.id)}
-										onmouseleave={() => pendingDismiss.resume(reminder.id)}
-										onfocusin={() => pendingDismiss.pause(reminder.id)}
-										onfocusout={() => pendingDismiss.resume(reminder.id)}
-									>
-										<Undo2 class="h-3.5 w-3.5" />
-										<span>{t(locale, 'common.reminder.undo')}</span>
-									</button>
+									<div class="flex items-center gap-1 shrink-0">
+										<button
+											type="button"
+											onclick={() => pendingDismiss.undo(reminder.id, reminder.title)}
+											title={t(locale, 'common.reminder.undo')}
+											aria-label={t(locale, 'common.reminder.undo')}
+											class="inline-flex items-center justify-center gap-1 rounded-md h-8 px-2 text-xs font-medium text-primary hover:bg-accent transition-colors"
+											onmouseenter={() => pendingDismiss.pause(reminder.id)}
+											onmouseleave={() => pendingDismiss.resume(reminder.id)}
+											onfocusin={() => pendingDismiss.pause(reminder.id)}
+											onfocusout={() => pendingDismiss.resume(reminder.id)}
+										>
+											<Undo2 class="h-3.5 w-3.5" />
+											<span>{t(locale, 'common.reminder.undo')}</span>
+										</button>
+										<button
+											type="button"
+											onclick={() => pendingDismiss.commitNow(reminder.id)}
+											title={t(locale, 'common.reminder.dismissNow')}
+											aria-label={t(locale, 'common.reminder.dismissNow')}
+											class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+										>
+											<CheckCheck class="h-3.5 w-3.5" />
+										</button>
+									</div>
 								{:else}
 									<button
 										type="button"
@@ -661,7 +673,7 @@
 							{#if isPending}
 								<span
 									class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
-									style="--dismiss-ms: {DISMISS_DELAY_MS}ms"
+									style="--dismiss-ms: {undoDelayMs}ms"
 									aria-hidden="true"
 								></span>
 							{/if}

@@ -22,6 +22,7 @@ const messages = {
 	// Common: Reminder actions (shared across companion dashboard, reminders list, caretaker)
 	'common.reminder.undo': 'Undo',
 	'common.reminder.done': 'Done',
+	'common.reminder.dismissNow': 'Dismiss now',
 	'common.reminder.dismissedAnnounce': '{title} dismissed. Activate Undo to restore.',
 	'common.reminder.restoredAnnounce': '{title} restored.',
 
@@ -95,6 +96,7 @@ const messages = {
 	'error.usernameAlreadyTaken': 'Username already taken.',
 	'error.invalidTheme': 'Invalid theme.',
 	'error.invalidLocale': 'Invalid locale.',
+	'error.invalidReminderUndo': 'Invalid undo window value.',
 	'error.invalidRole': 'Invalid role.',
 	'error.invalidDate': 'Invalid date',
 	'error.invalidArchiveDate': 'Invalid archive date.',
@@ -208,6 +210,14 @@ const messages = {
 	'page.settings.shiftGroupLater': 'Later',
 	'page.settings.languageCard': 'Language',
 	'page.settings.languageDescription': 'Choose your preferred language.',
+	'page.settings.reminderUndoCard': 'Reminder undo window',
+	'page.settings.reminderUndoDescription':
+		'How long to wait before a dismissed Reminder is committed. Use Off to commit immediately.',
+	'page.settings.reminderUndoLabel': 'Undo window',
+	'page.settings.reminderUndoDefault': 'Use site default ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Off (commit immediately)',
+	'page.settings.reminderUndoSeconds': '{seconds} seconds',
+	'page.settings.reminderUndoUpdated': '✓ Undo window updated.',
 
 	// Errors: OIDC
 	'error.oidc.notProvisioned':

@@ -14,11 +14,17 @@ type PendingEntry = {
  * Per-component reactive store for the "pending dismiss" UX
  * (see GitHub issue #32). Each call creates an isolated state scope.
  *
- * Pattern: clicking dismiss delays the server submit by DISMISS_DELAY_MS
+ * Pattern: clicking dismiss delays the server submit by `delayMs`
  * and shows an in-row Undo button. Undo cancels the timer. No server
  * call ever happens.
+ *
+ * `getDelayMs()` returns the current undo window in milliseconds. A
+ * value of 0 means no undo window. `queue()` submits immediately in that case.
  */
-export function createPendingDismissals(getLocale: () => Locale) {
+export function createPendingDismissals(
+	getLocale: () => Locale,
+	getDelayMs: () => number = () => DISMISS_DELAY_MS
+) {
 	let pending = $state<Record<string, PendingEntry>>({});
 	let order: string[] = [];
 	let announcement = $state('');
@@ -43,18 +49,32 @@ export function createPendingDismissals(getLocale: () => Locale) {
 	}
 
 	function queue(id: string, form: HTMLFormElement, title: string) {
+		const delayMs = getDelayMs();
+		if (delayMs <= 0) {
+			form.requestSubmit();
+			return;
+		}
 		const existing = pending[id];
 		if (existing) clearTimeout(existing.timer);
-		const timer = scheduleSubmit(id, DISMISS_DELAY_MS);
+		const timer = scheduleSubmit(id, delayMs);
 		pending[id] = {
 			timer,
 			form,
 			startedAt: performance.now(),
-			remainingMs: DISMISS_DELAY_MS,
+			remainingMs: delayMs,
 			paused: false
 		};
 		order = [...order.filter((x) => x !== id), id];
 		setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
+	}
+
+	function commitNow(id: string) {
+		const entry = pending[id];
+		if (!entry) return;
+		clearTimeout(entry.timer);
+		delete pending[id];
+		order = order.filter((x) => x !== id);
+		if (entry.form.isConnected) entry.form.requestSubmit();
 	}
 
 	function undo(id: string, title: string) {
@@ -117,6 +137,7 @@ export function createPendingDismissals(getLocale: () => Locale) {
 		queue,
 		undo,
 		undoLast,
+		commitNow,
 		pause,
 		resume,
 		cleanup

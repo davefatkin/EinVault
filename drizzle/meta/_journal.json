@@ -50,6 +50,13 @@
       "when": 1777720933399,
       "tag": "0006_absurd_trauma",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1777820851991,
+      "tag": "0007_dear_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

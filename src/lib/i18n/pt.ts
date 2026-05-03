@@ -24,6 +24,7 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Desfazer',
 	'common.reminder.done': 'Feito',
+	'common.reminder.dismissNow': 'Dispensar agora',
 	'common.reminder.dismissedAnnounce': '{title} dispensado. Ative Desfazer para restaurar.',
 	'common.reminder.restoredAnnounce': '{title} restaurado.',
 
@@ -98,6 +99,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.usernameAlreadyTaken': 'Nome de utilizador já em uso.',
 	'error.invalidTheme': 'Tema inválido.',
 	'error.invalidLocale': 'Idioma inválido.',
+	'error.invalidReminderUndo': 'Valor de janela para desfazer inválido.',
 	'error.invalidRole': 'Função inválida.',
 	'error.invalidDate': 'Data inválida',
 	'error.invalidArchiveDate': 'Data de arquivo inválida.',
@@ -218,6 +220,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupLater': 'Mais tarde',
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Escolha o seu idioma preferido.',
+	'page.settings.reminderUndoCard': 'Janela para desfazer Lembrete',
+	'page.settings.reminderUndoDescription':
+		'Quanto tempo esperar antes de confirmar um Lembrete dispensado. Use Desligado para confirmar imediatamente.',
+	'page.settings.reminderUndoLabel': 'Janela para desfazer',
+	'page.settings.reminderUndoDefault': 'Usar padrão ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Desligado (confirmar imediatamente)',
+	'page.settings.reminderUndoSeconds': '{seconds} segundos',
+	'page.settings.reminderUndoUpdated': '✓ Janela para desfazer atualizada.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',

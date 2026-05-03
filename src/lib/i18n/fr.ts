@@ -24,6 +24,7 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Annuler',
 	'common.reminder.done': 'Fait',
+	'common.reminder.dismissNow': 'Confirmer maintenant',
 	'common.reminder.dismissedAnnounce': '{title} rejeté. Activez Annuler pour restaurer.',
 	'common.reminder.restoredAnnounce': '{title} restauré.',
 
@@ -98,6 +99,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.usernameAlreadyTaken': "Nom d'utilisateur déjà pris.",
 	'error.invalidTheme': 'Thème invalide.',
 	'error.invalidLocale': 'Langue invalide.',
+	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
 	'error.invalidRole': 'Rôle invalide.',
 	'error.invalidDate': 'Date invalide',
 	'error.invalidArchiveDate': "Date d'archivage invalide.",
@@ -219,6 +221,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupLater': 'Plus tard',
 	'page.settings.languageCard': 'Langue',
 	'page.settings.languageDescription': 'Choisissez votre langue préférée.',
+	'page.settings.reminderUndoCard': "Fenêtre d'annulation des Rappels",
+	'page.settings.reminderUndoDescription':
+		"Délai avant qu'un Rappel rejeté soit confirmé. Utilisez Désactivé pour confirmer immédiatement.",
+	'page.settings.reminderUndoLabel': "Fenêtre d'annulation",
+	'page.settings.reminderUndoDefault': 'Valeur par défaut ({seconds}s)',
+	'page.settings.reminderUndoOff': 'Désactivé (confirmer immédiatement)',
+	'page.settings.reminderUndoSeconds': '{seconds} secondes',
+	'page.settings.reminderUndoUpdated': "✓ Fenêtre d'annulation mise à jour.",
 
 	// Page: Login
 	'page.login.title': 'Se connecter',

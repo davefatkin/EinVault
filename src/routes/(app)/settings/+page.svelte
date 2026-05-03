@@ -21,6 +21,7 @@
 
 	let showPasswordFields = $state(false);
 	let localeForm: HTMLFormElement;
+	let reminderUndoForm: HTMLFormElement;
 
 	function formatArchivedDate(d: Date | null | undefined): string {
 		if (!d) return '';
@@ -216,6 +217,55 @@
 					>
 						{#each SUPPORTED_LOCALES as loc (loc)}
 							<option value={loc}>{LOCALE_LABELS[loc]}</option>
+						{/each}
+					</Select>
+				</div>
+			</form>
+		</CardContent>
+	</Card>
+
+	<Card>
+		<CardHeader>
+			<CardTitle>{t(locale, 'page.settings.reminderUndoCard')}</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<p class="text-sm text-muted-foreground mb-3">
+				{t(locale, 'page.settings.reminderUndoDescription')}
+			</p>
+			{#if form?.reminderUndoSuccess}
+				<Alert class="mb-3">
+					<AlertDescription>{t(locale, 'page.settings.reminderUndoUpdated')}</AlertDescription>
+				</Alert>
+			{/if}
+			{#if form?.reminderUndoError}
+				<Alert variant="destructive" class="mb-3">
+					<AlertDescription>{form.reminderUndoError}</AlertDescription>
+				</Alert>
+			{/if}
+			<form method="POST" action="?/reminderUndo" bind:this={reminderUndoForm} use:enhance>
+				<div class="max-w-[280px]">
+					<Label for="reminderUndoSeconds" class="sr-only"
+						>{t(locale, 'page.settings.reminderUndoLabel')}</Label
+					>
+					<Select
+						name="reminderUndoSeconds"
+						id="reminderUndoSeconds"
+						value={data.user?.reminderUndoSeconds == null
+							? 'default'
+							: String(data.user.reminderUndoSeconds)}
+						onchange={() => reminderUndoForm.requestSubmit()}
+					>
+						<option value="default"
+							>{t(locale, 'page.settings.reminderUndoDefault', {
+								seconds: data.reminderUndoDefault
+							})}</option
+						>
+						{#each data.reminderUndoPresets as preset (preset)}
+							<option value={String(preset)}>
+								{preset === 0
+									? t(locale, 'page.settings.reminderUndoOff')
+									: t(locale, 'page.settings.reminderUndoSeconds', { seconds: preset })}
+							</option>
 						{/each}
 					</Select>
 				</div>

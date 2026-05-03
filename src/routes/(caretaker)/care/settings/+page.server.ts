@@ -7,11 +7,17 @@ import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
+import { REMINDER_UNDO_PRESETS, REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const upcomingShifts = await getUpcomingShifts(locals.user.id);
-	return { user: locals.user, upcomingShifts };
+	return {
+		user: locals.user,
+		upcomingShifts,
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
+		reminderUndoPresets: REMINDER_UNDO_PRESETS
+	};
 };
 
 export const actions: Actions = {
@@ -43,5 +49,30 @@ export const actions: Actions = {
 	account: async ({ request, locals, cookies }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleAccountUpdate(locals.user.id, request, cookies, locals.locale);
+	},
+
+	reminderUndo: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+
+		const data = await request.formData();
+		const raw = String(data.get('reminderUndoSeconds') ?? '');
+
+		let value: number | null;
+		if (raw === '' || raw === 'default') {
+			value = null;
+		} else {
+			const n = Number(raw);
+			if (!Number.isInteger(n) || !REMINDER_UNDO_PRESETS.includes(n)) {
+				return fail(400, { reminderUndoError: t(locals.locale, 'error.invalidReminderUndo') });
+			}
+			value = n;
+		}
+
+		await db
+			.update(schema.users)
+			.set({ reminderUndoSeconds: value })
+			.where(eq(schema.users.id, locals.user.id));
+
+		return { reminderUndoSuccess: true };
 	}
 };

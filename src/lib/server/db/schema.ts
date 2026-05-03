@@ -35,7 +35,8 @@ export const users = sqliteTable(
 		email: text('email'),
 		phone: text('phone'),
 		oidcSubject: text('oidc_subject'),
-		oidcIssuer: text('oidc_issuer')
+		oidcIssuer: text('oidc_issuer'),
+		reminderUndoSeconds: integer('reminder_undo_seconds')
 	},
 	(t) => [uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject)]
 );
