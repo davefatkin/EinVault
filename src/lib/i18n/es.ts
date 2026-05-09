@@ -166,6 +166,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Navigation
 	'nav.dashboard': 'Panel',
+	'nav.overview': 'Resumen',
 	'nav.journal': 'Diario',
 	'nav.health': 'Salud',
 	'nav.reminders': 'Recordatorios',
@@ -368,6 +369,20 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.archive': 'Archivar',
 	'page.companion.edit.labelArchiveDate': 'Fecha',
 	'page.companion.edit.labelArchiveNote': 'Nota',
+
+	// Page: overview (multi-companion landing)
+	'overview.title': 'Resumen',
+	'overview.heading.reminders': 'Recordatorios próximos (próximos 7 días)',
+	'overview.heading.todayJournal': 'Diario de hoy',
+	'overview.heading.recentActivity': 'Actividad reciente (últimos 7 días)',
+	'overview.empty.reminders': 'Nada pendiente en los próximos 7 días.',
+	'overview.empty.recent': 'Sin actividad registrada en los últimos 7 días.',
+	'overview.empty.journal': 'Aún no hay entrada hoy.',
+	'overview.journal.addToday': 'Añadir entrada de hoy',
+	'overview.journal.editToday': 'Editar entrada',
+	'overview.markDone': 'Marcar como hecho',
+	'overview.day.today': 'Hoy',
+	'overview.day.tomorrow': 'Mañana',
 
 	// Page: dashboard
 	'page.dashboard.archivedBanner': '{name} está archivado. Modo de solo lectura.',

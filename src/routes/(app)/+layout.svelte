@@ -24,12 +24,16 @@
 
 	const locale = getLocale();
 
+	const OVERVIEW_VALUE = '__overview__';
+
 	let activeCompanionId = $derived(page.params.companionId ?? null);
 	let activeCompanion = $derived(
 		data.companions.find((c) => c.id === activeCompanionId) ??
 			data.archivedCompanions?.find((c) => c.id === activeCompanionId) ??
-			data.companions[0] ??
 			null
+	);
+	let isOverview = $derived(
+		activeCompanionId === null && page.url.pathname === '/' && data.companions.length > 1
 	);
 	let isViewingArchived = $derived(activeCompanion != null && !activeCompanion.isActive);
 
@@ -57,6 +61,10 @@
 	);
 
 	function switchCompanion(id: string) {
+		if (id === OVERVIEW_VALUE) {
+			goto('/');
+			return;
+		}
 		const parts = page.url.pathname.split('/');
 		// Only carry the section forward on standard companion sub-routes: /{companionId}/{section}
 		// Other routes (e.g. /companions/{id}/edit, /settings) go to the companion dashboard
@@ -127,11 +135,12 @@
 							>
 						{:else}
 							<Select
-								class="max-w-[160px]"
+								class="max-w-[180px]"
 								aria-label={t(locale, 'layout.switchCompanion')}
-								value={activeCompanionId ?? activeCompanion?.id}
+								value={isOverview ? OVERVIEW_VALUE : (activeCompanionId ?? OVERVIEW_VALUE)}
 								onchange={(e) => switchCompanion(e.currentTarget.value)}
 							>
+								<option value={OVERVIEW_VALUE}>{t(locale, 'nav.overview')}</option>
 								{#each data.companions as c (c.id)}
 									<option value={c.id}>{c.name}</option>
 								{/each}

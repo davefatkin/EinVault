@@ -153,6 +153,7 @@ const messages = {
 
 	// Navigation
 	'nav.dashboard': 'Dashboard',
+	'nav.overview': 'Overview',
 	'nav.journal': 'Journal',
 	'nav.health': 'Health',
 	'nav.reminders': 'Reminders',
@@ -362,6 +363,20 @@ const messages = {
 	'page.companion.edit.archive': 'Archive',
 	'page.companion.edit.labelArchiveDate': 'Date',
 	'page.companion.edit.labelArchiveNote': 'Note',
+
+	// Page: overview (multi-companion landing)
+	'overview.title': 'Overview',
+	'overview.heading.reminders': 'Upcoming Reminders (Next 7 Days)',
+	'overview.heading.todayJournal': "Today's Journal",
+	'overview.heading.recentActivity': 'Recent Activity (Last 7 Days)',
+	'overview.empty.reminders': 'Nothing due in the next 7 days.',
+	'overview.empty.recent': 'No activity logged in the last 7 days.',
+	'overview.empty.journal': 'No entry yet today.',
+	'overview.journal.addToday': "Add today's entry",
+	'overview.journal.editToday': 'Edit entry',
+	'overview.markDone': 'Mark as done',
+	'overview.day.today': 'Today',
+	'overview.day.tomorrow': 'Tomorrow',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} is archived. Viewing in read-only mode.',

@@ -162,6 +162,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Navigation
 	'nav.dashboard': 'Bacheca',
+	'nav.overview': 'Panoramica',
 	'nav.journal': 'Diario',
 	'nav.health': 'Salute',
 	'nav.reminders': 'Promemoria',
@@ -364,6 +365,20 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.archive': 'Archivia',
 	'page.companion.edit.labelArchiveDate': 'Data',
 	'page.companion.edit.labelArchiveNote': 'Nota',
+
+	// Page: overview (multi-companion landing)
+	'overview.title': 'Panoramica',
+	'overview.heading.reminders': 'Promemoria in arrivo (prossimi 7 giorni)',
+	'overview.heading.todayJournal': 'Diario di oggi',
+	'overview.heading.recentActivity': 'Attività recente (ultimi 7 giorni)',
+	'overview.empty.reminders': 'Niente in scadenza nei prossimi 7 giorni.',
+	'overview.empty.recent': 'Nessuna attività registrata negli ultimi 7 giorni.',
+	'overview.empty.journal': 'Ancora nessun appunto per oggi.',
+	'overview.journal.addToday': 'Aggiungi appunto di oggi',
+	'overview.journal.editToday': 'Modifica appunto',
+	'overview.markDone': 'Segna come fatto',
+	'overview.day.today': 'Oggi',
+	'overview.day.tomorrow': 'Domani',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} è archiviato. Visualizzazione in sola lettura.',
