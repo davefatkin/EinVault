@@ -52,14 +52,12 @@ export function computeNextDueAt(reminder: Reminder): Date | null {
 		return next;
 	}
 
-	// unit === 'year'
+	// unit === 'year': for both 'interval' (anchored to series origin) and
+	// 'day_of_year' (explicit MMDD) the anchor value packs month + day the same
+	// way, so unpacking is identical.
 	let desiredMonth = next.getMonth();
 	let desiredDay = next.getDate();
-	if (anchor === 'day_of_year' && anchorValue) {
-		const unpacked = unpackMonthDay(anchorValue);
-		desiredMonth = unpacked.monthIdx;
-		desiredDay = unpacked.day;
-	} else if (anchor === 'interval' && anchorValue) {
+	if (anchorValue && (anchor === 'day_of_year' || anchor === 'interval')) {
 		const unpacked = unpackMonthDay(anchorValue);
 		desiredMonth = unpacked.monthIdx;
 		desiredDay = unpacked.day;

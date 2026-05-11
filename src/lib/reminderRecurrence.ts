@@ -65,8 +65,15 @@ export function formatRecurrence(
 	const interval = r.recurrenceInterval;
 
 	if (variant === 'short') {
-		const suffix = unit === 'day' ? 'd' : unit === 'week' ? 'w' : unit === 'month' ? 'mo' : 'y';
-		return t(locale, 'page.reminders.badgeEvery', { n: interval, unit: suffix });
+		const key =
+			unit === 'day'
+				? 'page.reminders.badgeEveryDays'
+				: unit === 'week'
+					? 'page.reminders.badgeEveryWeeks'
+					: unit === 'month'
+						? 'page.reminders.badgeEveryMonths'
+						: 'page.reminders.badgeEveryYears';
+		return t(locale, key, { count: interval });
 	}
 
 	// Full variant — branch on unit + anchor.
