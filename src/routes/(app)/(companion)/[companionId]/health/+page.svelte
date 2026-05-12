@@ -20,6 +20,7 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
+	import { reminderPrefillUrl } from '$lib/health';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -211,15 +212,6 @@
 							/></span
 						>
 					</div>
-					{#if h.nextDueAt}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.health.detailNextDue')}</span
-							>
-							<span class="text-foreground"><LocalTime date={h.nextDueAt} format="datetime" /></span
-							>
-						</div>
-					{/if}
 					{#if h.vetName || h.vetClinic}
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -291,6 +283,19 @@
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'common.edit')}
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							href={reminderPrefillUrl(
+								data.companion.id,
+								selected.item.type,
+								selected.item.title,
+								selected.item.notes
+							)}
+						>
+							<Plus class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.reminders.addReminder')}
 						</Button>
 						<Button
 							variant="destructive"
@@ -399,21 +404,15 @@
 							</Select>
 						</div>
 					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<div class="space-y-1.5">
-							<Label for="occurredAt">{t(locale, 'page.health.labelDate')}</Label>
-							<Input
-								id="occurredAt"
-								name="occurredAt"
-								type="datetime-local"
-								autocomplete="off"
-								value={todayISO}
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="nextDueAt">{t(locale, 'page.health.labelNextDue')}</Label>
-							<Input id="nextDueAt" name="nextDueAt" type="datetime-local" autocomplete="off" />
-						</div>
+					<div class="space-y-1.5">
+						<Label for="occurredAt">{t(locale, 'page.health.labelDate')}</Label>
+						<Input
+							id="occurredAt"
+							name="occurredAt"
+							type="datetime-local"
+							autocomplete="off"
+							value={todayISO}
+						/>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1.5">
@@ -446,11 +445,21 @@
 							rows={4}
 						/>
 					</div>
-					<div class="flex gap-3">
+					<div class="flex flex-wrap gap-3">
 						<Button type="submit" disabled={submittingHealth}>
 							{submittingHealth
 								? t(locale, 'page.health.savingEvent')
 								: t(locale, 'page.health.saveEvent')}
+						</Button>
+						<Button
+							type="submit"
+							name="andReminder"
+							value="1"
+							variant="outline"
+							disabled={submittingHealth}
+						>
+							<Plus class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.health.saveAndAddReminder')}
 						</Button>
 						<Button type="button" variant="outline" onclick={() => (showHealthForm = false)}
 							>{t(locale, 'common.cancel')}</Button
@@ -724,31 +733,17 @@
 											</Select>
 										</div>
 									</div>
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-										<div class="space-y-1.5">
-											<Label for="edit-occurredAt-{event.id}"
-												>{t(locale, 'page.health.labelDate')}</Label
-											>
-											<Input
-												id="edit-occurredAt-{event.id}"
-												name="occurredAt"
-												type="datetime-local"
-												autocomplete="off"
-												value={localDatetimeISO(event.occurredAt)}
-											/>
-										</div>
-										<div class="space-y-1.5">
-											<Label for="edit-nextDueAt-{event.id}"
-												>{t(locale, 'page.health.labelNextDue')}</Label
-											>
-											<Input
-												id="edit-nextDueAt-{event.id}"
-												name="nextDueAt"
-												type="datetime-local"
-												autocomplete="off"
-												value={event.nextDueAt ? localDatetimeISO(event.nextDueAt) : ''}
-											/>
-										</div>
+									<div class="space-y-1.5">
+										<Label for="edit-occurredAt-{event.id}"
+											>{t(locale, 'page.health.labelDate')}</Label
+										>
+										<Input
+											id="edit-occurredAt-{event.id}"
+											name="occurredAt"
+											type="datetime-local"
+											autocomplete="off"
+											value={localDatetimeISO(event.occurredAt)}
+										/>
 									</div>
 									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 										<div class="space-y-1.5">
@@ -826,12 +821,6 @@
 										{#if event.notes}
 											<p class="text-sm mt-1 text-muted-foreground">
 												{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
-											</p>
-										{/if}
-										{#if event.nextDueAt}
-											<p class="text-xs mt-1 text-primary">
-												📅 {t(locale, 'page.health.nextDueLabel')}
-												<LocalTime date={event.nextDueAt} />
 											</p>
 										{/if}
 										<ByLine user={event.logger} class="mt-0.5" />

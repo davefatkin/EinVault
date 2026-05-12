@@ -31,6 +31,25 @@
 	let submitting = $state(false);
 
 	const REMINDER_TYPES = reminderTypeOptions(locale);
+	const REMINDER_TYPE_VALUES = REMINDER_TYPES.map((t) => t.value);
+
+	// Add-form prefill, populated when the page is opened with ?new=1 and
+	// optional title/type/description params (used by the "+ Add Reminder"
+	// CTA on the health events page). Empty strings mean "no prefill". The
+	// Select falls back to the browser's first-option default.
+	let prefillTitle = $state('');
+	let prefillType = $state('');
+	let prefillDescription = $state('');
+	// One-shot guard: prevents the ?new=1 effect from re-firing when the form
+	// closes. `history.replaceState` strips the URL for reload semantics but
+	// doesn't update SvelteKit's reactive page store.
+	let prefillApplied = $state(false);
+
+	function resetPrefill() {
+		prefillTitle = '';
+		prefillType = '';
+		prefillDescription = '';
+	}
 
 	let active = $derived(data.reminders.filter((r) => !r.completedAt));
 	let completed = $derived(data.reminders.filter((r) => r.completedAt));
@@ -54,6 +73,28 @@
 		if (match) {
 			tick().then(() => startEdit(match));
 		}
+	});
+
+	$effect(() => {
+		if (prefillApplied) return;
+		const params = page.url.searchParams;
+		if (params.get('new') !== '1') return;
+		// `edit` takes priority if somehow both are set.
+		if (params.get('edit')) return;
+
+		prefillTitle = (params.get('title') ?? '').slice(0, 200);
+		const rawType = params.get('type') ?? '';
+		prefillType = (REMINDER_TYPE_VALUES as string[]).includes(rawType) ? rawType : '';
+		prefillDescription = (params.get('description') ?? '').slice(0, 2000);
+
+		showForm = true;
+		prefillApplied = true;
+		// Strip the query so a reload doesn't re-open the form with stale values.
+		tick().then(() => {
+			const url = new URL(page.url);
+			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
 	});
 
 	function startEdit(reminder: (typeof data.reminders)[0]) {
@@ -267,7 +308,13 @@
 			{t(locale, 'page.reminders.title')}
 		</h1>
 		{#if data.companion.isActive !== false}
-			<Button size="sm" onclick={() => (showForm = !showForm)}>
+			<Button
+				size="sm"
+				onclick={() => {
+					showForm = !showForm;
+					if (!showForm) resetPrefill();
+				}}
+			>
 				{#if showForm}
 					{t(locale, 'common.cancel')}
 				{:else}
@@ -300,6 +347,7 @@
 							await update();
 							submitting = false;
 							showForm = false;
+							resetPrefill();
 						};
 					}}
 					class="space-y-4"
@@ -312,6 +360,7 @@
 								name="title"
 								type="text"
 								placeholder={t(locale, 'page.reminders.placeholderTitle')}
+								value={prefillTitle}
 								required
 								autocomplete="off"
 							/>
@@ -320,7 +369,9 @@
 							<Label for="type">{t(locale, 'page.reminders.labelType')}</Label>
 							<Select id="type" name="type">
 								{#each REMINDER_TYPES as rt (rt.value)}
-									<option value={rt.value}>{rt.icon} {rt.label}</option>
+									<option value={rt.value} selected={rt.value === prefillType}
+										>{rt.icon} {rt.label}</option
+									>
 								{/each}
 							</Select>
 						</div>
@@ -334,6 +385,7 @@
 						<MarkdownTextarea
 							id="description"
 							name="description"
+							value={prefillDescription}
 							placeholder={t(locale, 'page.reminders.placeholderNotes')}
 							rows={3}
 						/>
@@ -346,8 +398,13 @@
 								? t(locale, 'page.reminders.savingReminder')
 								: t(locale, 'page.reminders.saveReminder')}
 						</Button>
-						<Button type="button" variant="outline" onclick={() => (showForm = false)}
-							>{t(locale, 'common.cancel')}</Button
+						<Button
+							type="button"
+							variant="outline"
+							onclick={() => {
+								showForm = false;
+								resetPrefill();
+							}}>{t(locale, 'common.cancel')}</Button
 						>
 					</div>
 				</form>

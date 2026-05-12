@@ -350,15 +350,6 @@
 							/></span
 						>
 					</div>
-					{#if h.nextDueAt}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelNextDue')}</span
-							>
-							<span class="text-foreground"><LocalTime date={h.nextDueAt} format="datetime" /></span
-							>
-						</div>
-					{/if}
 					{#if h.vetName || h.vetClinic}
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"

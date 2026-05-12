@@ -465,12 +465,6 @@
 									{@html renderMarkdown(med.notes)}
 								</div>{/if}
 						</div>
-						{#if med.nextDueAt}
-							<span class="text-xs shrink-0 text-primary">
-								{t(locale, 'page.dashboard.caretaker.medicationNext')}
-								<LocalTime date={med.nextDueAt} />
-							</span>
-						{/if}
 					</div>
 				{/each}
 			</CardContent>

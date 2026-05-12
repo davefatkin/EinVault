@@ -31,18 +31,11 @@ export function parseDailyEventType(value: string): DailyEventType | null {
 
 // Health event type
 
-export type HealthEventType =
-	| 'vet_visit'
-	| 'vaccination'
-	| 'medication'
-	| 'weight'
-	| 'procedure'
-	| 'other';
+export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';
 const HEALTH_EVENT_TYPES = [
 	'vet_visit',
 	'vaccination',
 	'medication',
-	'weight',
 	'procedure',
 	'other'
 ] as const satisfies readonly HealthEventType[];

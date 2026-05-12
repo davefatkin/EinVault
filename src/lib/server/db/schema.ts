@@ -154,12 +154,11 @@ export const healthEvents = sqliteTable(
 			.notNull()
 			.references(() => companions.id, { onDelete: 'cascade' }),
 		type: text('type', {
-			enum: ['vet_visit', 'vaccination', 'medication', 'weight', 'procedure', 'other']
+			enum: ['vet_visit', 'vaccination', 'medication', 'procedure', 'other']
 		}).notNull(),
 		title: text('title').notNull(),
 		notes: text('notes'),
 		occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
-		nextDueAt: integer('next_due_at', { mode: 'timestamp' }),
 		vetName: text('vet_name'),
 		vetClinic: text('vet_clinic'),
 		createdAt: integer('created_at', { mode: 'timestamp' })

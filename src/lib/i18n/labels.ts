@@ -76,12 +76,10 @@ export function moodOptions(locale: Locale) {
 }
 
 export function healthTypeOptions(locale: Locale) {
-	return (['vet_visit', 'vaccination', 'medication', 'weight', 'procedure', 'other'] as const).map(
-		(v) => ({
-			value: v,
-			label: healthTypeLabel(locale, v)
-		})
-	);
+	return (['vet_visit', 'vaccination', 'medication', 'procedure', 'other'] as const).map((v) => ({
+		value: v,
+		label: healthTypeLabel(locale, v)
+	}));
 }
 
 export function activityTypeOptions(locale: Locale) {

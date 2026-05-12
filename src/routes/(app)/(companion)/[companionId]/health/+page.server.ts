@@ -5,6 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseHealthEventType, parseWeightUnit } from '$lib/server/validation';
+import { reminderPrefillUrl } from '$lib/health';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -38,8 +39,7 @@ export const actions: Actions = {
 			: new Date();
 		const vetName = String(data.get('vetName') ?? '').trim() || null;
 		const vetClinic = String(data.get('vetClinic') ?? '').trim() || null;
-		const nextDueAtRaw = data.get('nextDueAt');
-		const nextDueAt = nextDueAtRaw ? new Date(String(nextDueAtRaw)) : null;
+		const andReminder = data.get('andReminder') === '1';
 
 		if (!title || !type)
 			return fail(400, { healthError: t(locals.locale, 'error.titleAndTypeRequired') });
@@ -51,11 +51,12 @@ export const actions: Actions = {
 			title,
 			notes,
 			occurredAt,
-			nextDueAt,
 			vetName,
 			vetClinic,
 			loggedBy: locals.user.id
 		});
+
+		if (andReminder) redirect(303, reminderPrefillUrl(params.companionId, type, title, notes));
 
 		return { healthSuccess: true };
 	},
@@ -98,8 +99,6 @@ export const actions: Actions = {
 			: new Date();
 		const vetName = String(data.get('vetName') ?? '').trim() || null;
 		const vetClinic = String(data.get('vetClinic') ?? '').trim() || null;
-		const nextDueAtRaw = data.get('nextDueAt');
-		const nextDueAt = nextDueAtRaw ? new Date(String(nextDueAtRaw)) : null;
 
 		if (!id) return fail(400, { healthError: t(locals.locale, 'error.missingId') });
 		if (!title || !type)
@@ -116,7 +115,7 @@ export const actions: Actions = {
 
 		await db
 			.update(schema.healthEvents)
-			.set({ type, title, notes, occurredAt, nextDueAt, vetName, vetClinic })
+			.set({ type, title, notes, occurredAt, vetName, vetClinic })
 			.where(eq(schema.healthEvents.id, id));
 
 		return { updateHealthSuccess: true };
