@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1.7
 
+ARG NODE_IMAGE=node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+
 # deps
-FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS deps
+FROM ${NODE_IMAGE} AS deps
 
 WORKDIR /build
 
@@ -15,7 +17,7 @@ RUN npm ci --ignore-scripts \
 
 
 # builder
-FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS builder
+FROM ${NODE_IMAGE} AS builder
 
 WORKDIR /build
 
@@ -26,11 +28,11 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Prune to production deps only (prune preserves compiled native modules)
-RUN npm prune --omit=dev --ignore-scripts
+RUN npm prune --omit=dev
 
 
 # runner
-FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS runner
+FROM ${NODE_IMAGE} AS runner
 
 WORKDIR /app
 

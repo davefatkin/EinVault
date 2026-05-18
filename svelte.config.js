@@ -7,6 +7,12 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 // also present, so production gets a strict nonce-only policy.
 const dev = process.env.NODE_ENV !== 'production';
 
+if (process.env.npm_lifecycle_event === 'build' && dev) {
+	throw new Error(
+		`svelte.config.js: NODE_ENV must be "production" during build, got: ${JSON.stringify(process.env.NODE_ENV)}`
+	);
+}
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess(),

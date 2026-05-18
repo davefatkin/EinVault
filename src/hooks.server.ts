@@ -15,9 +15,17 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-	// CSP is emitted by SvelteKit (see svelte.config.js `kit.csp`) so that the
-	// per-render nonce flows through `%sveltekit.nonce%` and we can drop
-	// `unsafe-inline` from script-src.
+	// CSP is normally emitted by SvelteKit (see svelte.config.js `kit.csp`) so
+	// the per-render nonce flows through `%sveltekit.nonce%`. If a `+server.ts`
+	// returns HTML without going through SvelteKit's renderer, fall back to a
+	// strict no-inline baseline so it doesn't ship without any CSP at all.
+	const contentType = response.headers.get('content-type') ?? '';
+	if (contentType.startsWith('text/html') && !response.headers.has('content-security-policy')) {
+		response.headers.set(
+			'Content-Security-Policy',
+			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		);
+	}
 
 	if (env.NODE_ENV === 'production') {
 		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
