@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # deps
-FROM node:24-alpine AS deps
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS deps
 
 WORKDIR /build
 
@@ -9,29 +9,28 @@ WORKDIR /build
 RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts=false
+# Default-deny install scripts; rebuild only the two native modules that need them.
+RUN npm ci --ignore-scripts \
+    && npm rebuild better-sqlite3 sharp
 
 
 # builder
-FROM node:24-alpine AS builder
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS builder
 
 WORKDIR /build
 
 COPY --from=deps /build/node_modules ./node_modules
 COPY . .
 
-# Generate Drizzle migrations before build
-RUN npm run db:generate
-
 ENV NODE_ENV=production
 RUN npm run build
 
 # Prune to production deps only (prune preserves compiled native modules)
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --ignore-scripts
 
 
 # runner
-FROM node:24-alpine AS runner
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS runner
 
 WORKDIR /app
 
