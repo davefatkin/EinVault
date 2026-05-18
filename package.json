@@ -37,6 +37,9 @@
 		"vite": "^8.0.5"
 	},
 	"dependencies": {
+		"@fontsource-variable/fraunces": "5.2.9",
+		"@fontsource-variable/geist": "5.2.9",
+		"@fontsource-variable/geist-mono": "5.2.8",
 		"@lucide/svelte": "^1.0.1",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",

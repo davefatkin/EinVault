@@ -1,5 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/fraunces/wght-italic.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
@@ -18,9 +20,9 @@
 	--container-2xl: 1400px;
 
 	/* Font families */
-	--font-sans: 'Geist', system-ui, sans-serif;
-	--font-mono: 'Geist Mono', monospace;
-	--font-display: 'Fraunces', Georgia, serif;
+	--font-sans: 'Geist Variable', system-ui, sans-serif;
+	--font-mono: 'Geist Mono Variable', monospace;
+	--font-display: 'Fraunces Variable', Georgia, serif;
 
 	/* Semantic colour tokens — wired to CSS variables so that
 	   light/dark overrides in :root / .dark still drive them.    */
