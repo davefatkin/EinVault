@@ -6,6 +6,8 @@ EinVault is a small homelab project. The goal is to keep it simple, self-contain
 
 Open an issue. Include what you were doing, what you expected, what actually happened, and steps to reproduce. Attach relevant logs (`docker logs einvault` or dev server output). The more specific, the better.
 
+For suspected security vulnerabilities, do not open a public issue. See [SECURITY.md](SECURITY.md) for the private disclosure path.
+
 ## Feature requests
 
 Before opening one, ask yourself: does this work without any external service? Can it run air-gapped? Does it fit a companion health/care tracker? Features that phone home, require third-party accounts, or pull in heavy new runtimes are unlikely to land.

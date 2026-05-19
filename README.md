@@ -118,13 +118,23 @@ docker compose -f docker-compose.prod.yml start einvault
 
 ### Image tags
 
-| Tag            | Description                                          |
-| -------------- | ---------------------------------------------------- |
-| `latest`       | Latest stable release (published on version tags)    |
-| `x.y.z`        | Pinned release                                       |
-| `x.y`          | Latest patch of a minor release                      |
-| `main`         | Latest commit on `main` — unstable, for testing only |
-| `sha-<commit>` | Specific commit build, useful for rollback           |
+| Tag            | Description                                         |
+| -------------- | --------------------------------------------------- |
+| `latest`       | Latest stable release (published on version tags)   |
+| `x.y.z`        | Pinned release                                      |
+| `x.y`          | Latest patch of a minor release                     |
+| `main`         | Latest commit on `main`, unstable, for testing only |
+| `sha-<commit>` | Specific commit build, useful for rollback          |
+
+### Verifying releases
+
+Each release image carries a Sigstore-signed SLSA provenance attestation and a SPDX SBOM, and only ships after Trivy clears the OS and library packages on both `linux/amd64` and `linux/arm64`. See [SECURITY.md](SECURITY.md#verifying-releases) for the verification commands.
+
+For tag selection:
+
+- **`:latest`** is the lowest-friction default and what `docker-compose.prod.yml` uses. A `docker compose pull` will follow new releases automatically, so a hypothetical poisoned release would auto-deploy. Acceptable for casual homelab use, especially when paired with manual `gh attestation verify` before the pull.
+- **`:vX.Y.Z`** pins to a specific release. Auto-updaters like Watchtower will not move past it. Recommended for production deployments.
+- **`@sha256:<digest>`** pins to the exact bytes you verified. Immune to registry retags or future republishing. Recommended for hardened deployments.
 
 ---
 
