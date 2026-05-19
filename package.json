@@ -4,7 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "svelte-kit sync && vite dev",
-		"build": "NODE_ENV=production svelte-kit sync && vite build",
+		"build": "NODE_ENV=production npm run -s _build",
+		"_build": "svelte-kit sync && vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
