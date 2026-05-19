@@ -79,27 +79,36 @@ jobs:
           provenance: mode=max
           sbom: true
 
-      - name: Scan image with Trivy (linux/amd64)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      - name: Set up Trivy
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/einvault@${{ steps.build.outputs.digest }}
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: '1'
-          vuln-type: 'os,library'
+          cache: true
+
+      - name: Scan image with Trivy (linux/amd64)
         env:
-          TRIVY_PLATFORM: linux/amd64
+          IMAGE: ghcr.io/${{ github.repository_owner }}/einvault@${{ steps.build.outputs.digest }}
+        run: |
+          trivy image \
+            --platform linux/amd64 \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --vuln-type os,library \
+            --skip-db-update \
+            "$IMAGE"
 
       - name: Scan image with Trivy (linux/arm64)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/einvault@${{ steps.build.outputs.digest }}
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: '1'
-          vuln-type: 'os,library'
         env:
-          TRIVY_PLATFORM: linux/arm64
+          IMAGE: ghcr.io/${{ github.repository_owner }}/einvault@${{ steps.build.outputs.digest }}
+        run: |
+          trivy image \
+            --platform linux/arm64 \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --vuln-type os,library \
+            --skip-db-update \
+            "$IMAGE"
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
@@ -114,8 +123,7 @@ jobs:
           SOURCE: ghcr.io/${{ github.repository_owner }}/einvault@${{ steps.build.outputs.digest }}
           TAGS: ${{ steps.meta-release.outputs.tags }}
         run: |
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            echo "promoting $tag"
-            docker buildx imagetools create -t "$tag" "$SOURCE"
-          done <<< "$TAGS"
+          set -euo pipefail
+          printf '%s\n' "$TAGS" \
+            | grep -v '^$' \
+            | xargs -r -P4 -I{} sh -c 'echo "promoting $1"; docker buildx imagetools create -t "$1" "$2"' _ {} "$SOURCE"
