@@ -26,6 +26,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
+	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 
 	let { data }: { data: PageData } = $props();
@@ -617,10 +618,7 @@
 							<form
 								method="POST"
 								action="?/complete"
-								use:enhance={() =>
-									async ({ update }) => {
-										await update();
-									}}
+								use:enhance={clearSubmittingFlag}
 								use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
 								class="flex items-center gap-1 shrink-0"
 							>

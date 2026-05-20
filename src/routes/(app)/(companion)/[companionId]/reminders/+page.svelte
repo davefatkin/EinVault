@@ -22,6 +22,7 @@
 	import { reminderTypeOptions } from '$lib/i18n/labels';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
+	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import RecurrenceEditor from '$lib/components/reminders/RecurrenceEditor.svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 
@@ -581,7 +582,7 @@
 										<form
 											method="POST"
 											action="?/complete"
-											use:enhance
+											use:enhance={clearSubmittingFlag}
 											use:registerDismissForm={{
 												id: reminder.id,
 												registry: dismissFormRegistry

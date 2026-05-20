@@ -135,6 +135,11 @@ export function createPendingDismissals(
 		if (typeof requestAnimationFrame !== 'undefined') {
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
+					// Only steal focus when nothing meaningful is focused. A user who
+					// has already Tab'd to another control or typed into an input
+					// keeps their place; the toast is still reachable via Tab.
+					const active = document.activeElement;
+					if (active && active !== document.body && active.tagName !== 'HTML') return;
 					const btn = document.querySelector<HTMLButtonElement>(
 						`[data-toast-id="${toastId}"] button[data-toast-action="undo"]`
 					);
