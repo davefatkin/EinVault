@@ -24,10 +24,13 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Deshacer',
 	'common.reminder.done': 'Hecho',
-	'common.reminder.dismissNow': 'Descartar ahora',
-	'common.reminder.dismissedAnnounce': '{title} descartado. Activa Deshacer para restaurar.',
-	'common.reminder.restoredAnnounce': '{title} restaurado.',
+	'common.reminder.dismissedAnnounce': '{title} descartado',
 	'common.reminder.untitled': 'Recordatorio sin título',
+	'common.reminder.logEvent': 'Hecho y registrar evento',
+	'common.reminder.logEventAria': 'Marcar como hecho y registrar un evento de salud',
+	'common.reminder.toastUndoLabel': 'Deshacer',
+	'common.reminder.toastDismiss': 'Cerrar',
+	'common.reminder.toastAriaRegion': 'Actividad de recordatorios',
 
 	// Enum: Moods
 	'enum.mood.great': 'Genial',

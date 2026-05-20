@@ -1,25 +1,24 @@
 import { t, type Locale } from '$lib/i18n';
+import { addToast, removeToast } from '$lib/components/ui/toast';
 
 export const DISMISS_DELAY_MS = 7000;
 
+const IMMEDIATE_CONFIRM_MS = 2500;
+
 type PendingEntry = {
-	timer: ReturnType<typeof setTimeout>;
 	form: HTMLFormElement;
-	startedAt: number;
-	remainingMs: number;
-	paused: boolean;
+	toastId: string;
 };
 
 /**
- * Per-component reactive store for the "pending dismiss" UX
- * (see GitHub issue #32). Each call creates an isolated state scope.
+ * Per-component reactive store for the "pending dismiss" UX. Each call creates
+ * an isolated state scope. Clicking dismiss delays the server submit by
+ * `delayMs` and shows a toast with Undo at the bottom of the viewport. Undo
+ * cancels the timer; no server call ever happens.
  *
- * Pattern: clicking dismiss delays the server submit by `delayMs`
- * and shows an in-row Undo button. Undo cancels the timer. No server
- * call ever happens.
- *
- * `getDelayMs()` returns the current undo window in milliseconds. A
- * value of 0 means no undo window. `queue()` submits immediately in that case.
+ * `getDelayMs()` returns the current undo window in milliseconds. A value of 0
+ * means no undo window: `queue()` submits immediately and shows a brief
+ * confirmation toast.
  *
  * IMPORTANT: `getLocale` is invoked from event handlers (click, focus, etc.)
  * AFTER component setup. Do not pass the raw `getLocale` from `$lib/i18n`,
@@ -31,131 +30,138 @@ export function createPendingDismissals(
 	getLocale: () => Locale,
 	getDelayMs: () => number = () => DISMISS_DELAY_MS
 ) {
-	let pending = $state<Record<string, PendingEntry>>({});
-	let order: string[] = [];
-	let announcement = $state('');
-	let announcementCounter = 0;
+	const pending: Record<string, PendingEntry> = {};
 
-	function scheduleSubmit(id: string, ms: number) {
-		return setTimeout(() => {
-			// Re-read inside the timer: commit/undo may have already cleared
-			// the entry, in which case we must NOT submit again (would double-POST).
-			const entry = pending[id];
-			if (!entry) return;
-			delete pending[id];
-			order = order.filter((x) => x !== id);
-			if (!entry.form.isConnected) return;
-			entry.form.requestSubmit();
-		}, ms);
-	}
-
-	function setAnnouncement(msg: string) {
-		// Toggle a zero-width space suffix on each call so identical strings
-		// still produce a value change, forcing aria-live to re-announce.
-		// Avoids the prior microtask race where rapid sequential calls in the
-		// same tick could overwrite an unread message.
-		announcementCounter++;
-		const token = announcementCounter % 2 === 0 ? '​' : '';
-		announcement = msg + token;
-	}
-
-	function queue(id: string, form: HTMLFormElement, title: string) {
-		const delayMs = getDelayMs();
-		if (delayMs <= 0) {
-			setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
-			form.requestSubmit();
-			return;
-		}
-		const existing = pending[id];
-		if (existing) clearTimeout(existing.timer);
-		const timer = scheduleSubmit(id, delayMs);
-		pending[id] = {
-			timer,
-			form,
-			startedAt: performance.now(),
-			remainingMs: delayMs,
-			paused: false
-		};
-		order = [...order.filter((x) => x !== id), id];
-		setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
-	}
-
-	function commit(id: string, title: string) {
-		const entry = pending[id];
-		if (!entry) return;
-		clearTimeout(entry.timer);
-		delete pending[id];
-		order = order.filter((x) => x !== id);
-		setAnnouncement(t(getLocale(), 'common.reminder.dismissedAnnounce', { title }));
-		if (entry.form.isConnected) entry.form.requestSubmit();
-	}
-
-	function undo(id: string, title: string) {
-		const entry = pending[id];
-		if (!entry) return;
-		clearTimeout(entry.timer);
-		delete pending[id];
-		order = order.filter((x) => x !== id);
-		setAnnouncement(t(getLocale(), 'common.reminder.restoredAnnounce', { title }));
-	}
-
-	function isPending(id: string): boolean {
-		return !!pending[id];
-	}
-
-	/**
-	 * Undo the most-recently queued dismissal. Returns true if one was undone.
-	 * Caller provides a title lookup since reminders may live anywhere.
-	 * Falls back to a generic localized "Untitled reminder" string when the
-	 * lookup returns undefined (e.g. the reminder list reactivity briefly drops
-	 * the entry).
-	 */
-	function undoLast(titleForId: (id: string) => string | undefined): boolean {
-		if (order.length === 0) return false;
-		const id = order[order.length - 1];
-		const title = titleForId(id) ?? t(getLocale(), 'common.reminder.untitled');
-		undo(id, title);
+	// Idempotency guard for form submission. `dataset.submitting` is set to '1'
+	// on the first call and never cleared: the form node is unmounted by the
+	// redirect that follows the submission, so the flag is naturally GC'd with
+	// the DOM. Multiple paths can race to submit the same form (e.g. the toast
+	// onExpire firing in the same tick as a user click); the second call is a
+	// no-op.
+	function safeSubmit(form: HTMLFormElement) {
+		if (form.dataset.submitting === '1') return false;
+		form.dataset.submitting = '1';
+		form.requestSubmit();
 		return true;
 	}
 
-	function pause(id: string) {
-		const entry = pending[id];
-		if (!entry || entry.paused) return;
-		clearTimeout(entry.timer);
-		const elapsed = performance.now() - entry.startedAt;
-		entry.remainingMs = Math.max(0, entry.remainingMs - elapsed);
-		entry.paused = true;
-	}
-
-	function resume(id: string) {
+	function submitNow(id: string) {
 		const entry = pending[id];
 		if (!entry) return;
-		entry.paused = false;
-		entry.startedAt = performance.now();
-		entry.timer = scheduleSubmit(id, entry.remainingMs);
+		delete pending[id];
+		if (!entry.form.isConnected) return;
+		safeSubmit(entry.form);
+	}
+
+	// `requestSubmit()` dispatches the submit event synchronously, so SvelteKit's
+	// `use:enhance` captures the FormData before this function returns. The
+	// hidden `andEvent` input is freshly created on every call and removed right
+	// after submission so the DOM stays clean and a possible re-submit of the
+	// same form cannot silently carry `andEvent=1` a second time.
+	function submitFormWithEvent(form: HTMLFormElement) {
+		if (!form.isConnected) return;
+		const flag = document.createElement('input');
+		flag.type = 'hidden';
+		flag.name = 'andEvent';
+		flag.value = '1';
+		form.appendChild(flag);
+		if (!safeSubmit(form)) {
+			flag.remove();
+			return;
+		}
+		flag.remove();
+	}
+
+	function submitWithEvent(id: string) {
+		const entry = pending[id];
+		if (!entry) return;
+		delete pending[id];
+		submitFormWithEvent(entry.form);
+	}
+
+	function commitWithEvent(id: string, form: HTMLFormElement) {
+		const entry = pending[id];
+		if (entry) {
+			removeToast(entry.toastId);
+			delete pending[id];
+		}
+		submitFormWithEvent(form);
+	}
+
+	function queue(
+		id: string,
+		form: HTMLFormElement,
+		title: string,
+		opts?: { allowLogEvent?: boolean }
+	) {
+		const delayMs = getDelayMs();
+		const locale = getLocale();
+		const announcement = t(locale, 'common.reminder.dismissedAnnounce', { title });
+
+		if (delayMs <= 0) {
+			safeSubmit(form);
+			addToast({
+				title: announcement,
+				durationMs: IMMEDIATE_CONFIRM_MS,
+				dismissLabel: t(locale, 'common.reminder.toastDismiss')
+			});
+			return;
+		}
+
+		const existing = pending[id];
+		if (existing) {
+			removeToast(existing.toastId);
+		}
+
+		const toastId = addToast({
+			title: announcement,
+			durationMs: delayMs,
+			undoLabel: t(locale, 'common.reminder.toastUndoLabel'),
+			commitLabel: t(locale, 'common.reminder.done'),
+			logEventLabel: t(locale, 'common.reminder.logEvent'),
+			dismissLabel: t(locale, 'common.reminder.toastDismiss'),
+			onUndo: () => undo(id),
+			onExpire: () => submitNow(id),
+			onCommit: () => submitNow(id),
+			onLogEvent: opts?.allowLogEvent ? () => submitWithEvent(id) : undefined
+		});
+		pending[id] = { form, toastId };
+
+		// Focus the Undo button so keyboard users can reach it before the timer
+		// expires. Without this, dashboard pages place focus far from the toast
+		// region and the undo window can lapse before tab-navigation arrives.
+		// Stealing focus is the lesser evil. Two rAFs: one to let the toast store
+		// commit, the next to wait for the Toast component to mount in the DOM.
+		if (typeof requestAnimationFrame !== 'undefined') {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const btn = document.querySelector<HTMLButtonElement>(
+						`[data-toast-id="${toastId}"] button[data-toast-action="undo"]`
+					);
+					btn?.focus();
+				});
+			});
+		}
+	}
+
+	function undo(id: string) {
+		const entry = pending[id];
+		if (!entry) return;
+		removeToast(entry.toastId);
+		delete pending[id];
 	}
 
 	function cleanup() {
 		for (const id of Object.keys(pending)) {
-			clearTimeout(pending[id].timer);
+			removeToast(pending[id].toastId);
 		}
-		pending = {};
-		order = [];
-		announcement = '';
-		announcementCounter = 0;
+		for (const k of Object.keys(pending)) delete pending[k];
 	}
 
 	return {
-		get announcement() {
-			return announcement;
-		},
-		isPending,
 		queue,
+		commitWithEvent,
 		undo,
-		undoLast,
-		commit,
-		pause,
-		resume,
 		cleanup
 	};
 }

@@ -362,11 +362,15 @@
 /* ============================================================
    Pending-dismiss countdown bar
    ============================================================ */
-.dismiss-countdown {
+.toast-dismiss-countdown {
 	width: 100%;
-	animation: dismiss-countdown var(--dismiss-ms, 7000ms) linear forwards;
+	animation: toast-dismiss-countdown var(--dismiss-ms, 7000ms) linear forwards;
 }
-@keyframes dismiss-countdown {
+.toast-item:hover .toast-dismiss-countdown,
+.toast-item:focus-within .toast-dismiss-countdown {
+	animation-play-state: paused;
+}
+@keyframes toast-dismiss-countdown {
 	from {
 		width: 100%;
 	}
@@ -375,7 +379,7 @@
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.dismiss-countdown {
+	.toast-dismiss-countdown {
 		animation: none;
 		width: 100%;
 	}

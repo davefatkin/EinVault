@@ -24,10 +24,13 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Annuler',
 	'common.reminder.done': 'Fait',
-	'common.reminder.dismissNow': 'Confirmer maintenant',
-	'common.reminder.dismissedAnnounce': '{title} rejeté. Activez Annuler pour restaurer.',
-	'common.reminder.restoredAnnounce': '{title} restauré.',
+	'common.reminder.dismissedAnnounce': '{title} rejeté',
 	'common.reminder.untitled': 'Rappel sans titre',
+	'common.reminder.logEvent': 'Fait et consigner un événement',
+	'common.reminder.logEventAria': 'Marquer comme fait et consigner un événement de santé',
+	'common.reminder.toastUndoLabel': 'Annuler',
+	'common.reminder.toastDismiss': 'Fermer',
+	'common.reminder.toastAriaRegion': 'Activité des rappels',
 
 	// Enum: Moods
 	'enum.mood.great': 'Super',

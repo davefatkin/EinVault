@@ -24,11 +24,13 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Rückgängig',
 	'common.reminder.done': 'Erledigt',
-	'common.reminder.dismissNow': 'Jetzt erledigen',
-	'common.reminder.dismissedAnnounce':
-		'{title} verworfen. Rückgängig aktivieren, um wiederherzustellen.',
-	'common.reminder.restoredAnnounce': '{title} wiederhergestellt.',
+	'common.reminder.dismissedAnnounce': '{title} verworfen',
 	'common.reminder.untitled': 'Unbenannte Erinnerung',
+	'common.reminder.logEvent': 'Erledigt & Ereignis erfassen',
+	'common.reminder.logEventAria': 'Als erledigt markieren und Gesundheitsereignis erfassen',
+	'common.reminder.toastUndoLabel': 'Rückgängig',
+	'common.reminder.toastDismiss': 'Schließen',
+	'common.reminder.toastAriaRegion': 'Erinnerungsaktivität',
 
 	// Enum: Moods
 	'enum.mood.great': 'Super',

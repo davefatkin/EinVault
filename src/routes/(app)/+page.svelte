@@ -6,10 +6,13 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { CheckCheck, Pencil, Plus, Undo2 } from '@lucide/svelte';
+	import { CheckCheck, Pencil, Plus, X, HeartPulse } from '@lucide/svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import { renderMarkdown } from '$lib/markdown';
+	import { tick } from 'svelte';
+	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import {
 		ACTIVITY_ICONS,
 		MOOD_ICONS,
@@ -68,10 +71,52 @@
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
 
-	function handleWindowKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			pendingDismiss.undoLast((id) => data.upcomingReminders.find((r) => r.id === id)?.title);
+	let selectedReminder = $state<Reminder | null>(null);
+	let reminderDialogEl = $state<HTMLElement | null>(null);
+
+	async function openReminderDetail(r: Reminder) {
+		selectedReminder = r;
+		await tick();
+		reminderDialogEl?.focus();
+	}
+
+	function closeReminderDetail() {
+		selectedReminder = null;
+	}
+
+	function trapReminderFocus(e: KeyboardEvent) {
+		if (!reminderDialogEl) return;
+		const focusable = Array.from(
+			reminderDialogEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			)
+		).filter((el) => !el.hasAttribute('disabled'));
+		if (!focusable.length) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.key === 'Tab') {
+			if (e.shiftKey) {
+				if (document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				}
+			} else {
+				if (document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
 		}
+		if (e.key === 'Escape') closeReminderDetail();
+	}
+
+	function submitWithAndEvent(reminderId: string) {
+		const form = dismissFormRegistry.get(reminderId);
+		if (!form) {
+			console.warn('Reminder dismiss form not found for', reminderId);
+			return;
+		}
+		pendingDismiss.commitWithEvent(reminderId, form);
 	}
 
 	function formatDayHeading(iso: string): string {
@@ -92,7 +137,117 @@
 	<title>{t(locale, 'overview.title')} | EinVault</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleWindowKey} />
+<!-- Reminder detail modal -->
+{#if selectedReminder}
+	{@const r = selectedReminder}
+	{@const companion = companionsById[r.companionId]}
+	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+		<button
+			tabindex="-1"
+			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+			aria-label={t(locale, 'aria.closeDialog')}
+			onclick={closeReminderDetail}
+		></button>
+		<div
+			bind:this={reminderDialogEl}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onkeydown={trapReminderFocus}
+			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
+				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
+		>
+			<div class="flex items-center justify-between px-5 pt-5 pb-3">
+				<h2 class="font-semibold text-base text-foreground">{r.title}</h2>
+				<button
+					onclick={closeReminderDetail}
+					aria-label={t(locale, 'aria.close')}
+					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+				>
+					<X class="h-4 w-4" />
+				</button>
+			</div>
+
+			<Separator />
+
+			<div class="px-5 py-4 space-y-3 text-sm">
+				<div class="flex items-center gap-3">
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.modalLabelType')}</span
+					>
+					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
+				</div>
+				<div class="flex items-center gap-3">
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.dashboard.modalLabelDue')}</span
+					>
+					<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
+				</div>
+				{#if r.isRecurring}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelRepeats')}</span
+						>
+						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
+					</div>
+				{/if}
+				{#if r.description}
+					<div class="pt-1">
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.dashboard.modalLabelNotes')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(r.description)}
+						</div>
+					</div>
+				{/if}
+				<ByLine user={r.logger} />
+			</div>
+
+			<Separator />
+
+			<div class="flex flex-wrap gap-2 px-5 py-4">
+				{#if companion}
+					<Button
+						href="/{companion.id}/reminders?edit={r.id}"
+						variant="outline"
+						size="sm"
+						onclick={closeReminderDetail}
+					>
+						<Pencil class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'page.dashboard.modalEditReminders')}
+					</Button>
+				{/if}
+				<Button
+					size="sm"
+					onclick={() => {
+						const item = r;
+						const form = dismissFormRegistry.get(item.id);
+						if (!form) return;
+						closeReminderDetail();
+						pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+					}}
+				>
+					<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
+					{t(locale, 'common.reminder.done')}
+				</Button>
+				<Button
+					variant="outline"
+					size="sm"
+					aria-label={t(locale, 'common.reminder.logEventAria')}
+					onclick={() => {
+						const item = r;
+						closeReminderDetail();
+						submitWithAndEvent(item.id);
+					}}
+				>
+					<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
+					{t(locale, 'common.reminder.logEvent')}
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <div class="space-y-8 pb-20 md:pb-0">
 	<h1 class="sr-only">{t(locale, 'overview.title')}</h1>
@@ -121,8 +276,7 @@
 						<div class="space-y-2">
 							{#each remindersByDay[day] as r (r.id)}
 								{@const companion = companionsById[r.companionId]}
-								{@const isPending = pendingDismiss.isPending(r.id)}
-								<Card class="relative overflow-hidden {isPending ? 'bg-muted/40' : ''}">
+								<Card class="overflow-hidden">
 									<CardContent class="py-3">
 										<div class="flex items-start gap-3">
 											{#if companion}
@@ -135,24 +289,22 @@
 													/>
 												</a>
 											{/if}
-											<div class="flex-1 min-w-0">
+											<button
+												type="button"
+												onclick={() => openReminderDetail(r)}
+												class="flex-1 min-w-0 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
+											>
 												<div class="flex items-center gap-2 flex-wrap">
 													<span class="text-base" aria-hidden="true"
 														>{REMINDER_ICONS[r.type] ?? '📌'}</span
 													>
-													<span
-														class="font-medium {isPending
-															? 'line-through text-muted-foreground'
-															: 'text-foreground'}"
-													>
-														{r.title}
-													</span>
+													<span class="font-medium text-foreground">{r.title}</span>
 												</div>
 												<p class="text-xs mt-0.5 text-muted-foreground">
 													{companion?.name ?? ''} ·
 													<LocalTime date={r.dueAt} format="time" />
 												</p>
-											</div>
+											</button>
 											<form
 												method="POST"
 												action="?/complete"
@@ -161,71 +313,28 @@
 													id: r.id,
 													registry: dismissFormRegistry
 												}}
-												class="shrink-0"
+												class="shrink-0 flex items-center gap-1"
 											>
 												<input type="hidden" name="id" value={r.id} />
-												{#if isPending}
-													<div class="flex items-center gap-1">
-														<Button
-															type="button"
-															variant="ghost"
-															size="sm"
-															class="h-7 gap-1.5 px-2 text-xs text-primary"
-															onclick={() => pendingDismiss.undo(r.id, r.title)}
-															title={t(locale, 'common.reminder.undo')}
-															aria-label={t(locale, 'common.reminder.undo')}
-															onmouseenter={() => pendingDismiss.pause(r.id)}
-															onmouseleave={() => pendingDismiss.resume(r.id)}
-															onfocusin={() => pendingDismiss.pause(r.id)}
-															onfocusout={() => pendingDismiss.resume(r.id)}
-														>
-															<Undo2 class="h-3.5 w-3.5" />
-															<span class="hidden sm:inline"
-																>{t(locale, 'common.reminder.undo')}</span
-															>
-														</Button>
-														<Button
-															type="button"
-															variant="ghost"
-															size="sm"
-															class="h-7 gap-1.5 px-2 text-xs"
-															onclick={() => pendingDismiss.commit(r.id, r.title)}
-															title={t(locale, 'common.reminder.dismissNow')}
-															aria-label={t(locale, 'common.reminder.dismissNow')}
-														>
-															<CheckCheck class="h-3.5 w-3.5" />
-															<span class="hidden sm:inline"
-																>{t(locale, 'common.reminder.dismissNow')}</span
-															>
-														</Button>
-													</div>
-												{:else}
-													<Button
-														type="button"
-														variant="ghost"
-														size="sm"
-														class="h-7 gap-1.5 px-2 text-xs"
-														aria-label={t(locale, 'overview.markDone')}
-														onclick={() => {
-															const form = dismissFormRegistry.get(r.id);
-															if (form) pendingDismiss.queue(r.id, form, r.title);
-														}}
-													>
-														<CheckCheck class="h-3.5 w-3.5" />
-														<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span
-														>
-													</Button>
-												{/if}
+												<Button
+													type="button"
+													size="sm"
+													class="h-8 gap-1.5 px-3 text-xs"
+													aria-label={t(locale, 'overview.markDone')}
+													onclick={(e: MouseEvent) => {
+														const btn = e.currentTarget as HTMLButtonElement;
+														if (btn.form)
+															pendingDismiss.queue(r.id, btn.form, r.title, {
+																allowLogEvent: true
+															});
+													}}
+												>
+													<CheckCheck class="h-3.5 w-3.5" />
+													<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
+												</Button>
 											</form>
 										</div>
 									</CardContent>
-									{#if isPending}
-										<span
-											class="dismiss-countdown absolute bottom-0 left-0 h-0.5 bg-primary/70"
-											style="--dismiss-ms: {undoDelayMs}ms"
-											aria-hidden="true"
-										></span>
-									{/if}
 								</Card>
 							{/each}
 						</div>
@@ -369,19 +478,3 @@
 		{/if}
 	</section>
 </div>
-
-<div class="sr-only" role="status" aria-live="polite">{pendingDismiss.announcement}</div>
-
-<style>
-	.dismiss-countdown {
-		animation: dismiss-shrink var(--dismiss-ms) linear forwards;
-	}
-	@keyframes dismiss-shrink {
-		from {
-			width: 100%;
-		}
-		to {
-			width: 0;
-		}
-	}
-</style>

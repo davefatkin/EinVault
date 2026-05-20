@@ -20,6 +20,7 @@
 	} from '@lucide/svelte';
 	import { THEME_ICONS, THEMES, applyTheme, saveTheme, type Theme } from '$lib/theme';
 	import AppFooter from '$lib/components/AppFooter.svelte';
+	import { ToastRegion } from '$lib/components/ui/toast';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -241,6 +242,8 @@
 	</div>
 
 	<AppFooter version={data.version} year={data.year} />
+
+	<ToastRegion ariaLabel={t(locale, 'common.reminder.toastAriaRegion')} />
 
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}

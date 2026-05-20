@@ -6,6 +6,7 @@ import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseReminderType, parseRecurrence } from '$lib/server/validation';
 import { completeReminder } from '$lib/server/reminders';
+import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -112,6 +113,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
+		const andEvent = data.get('andEvent') === '1';
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
@@ -133,6 +135,18 @@ export const actions: Actions = {
 					lt(schema.reminders.createdAt, thirtyDaysAgo)
 				)
 			);
+
+		if (andEvent) {
+			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
+			redirect(
+				303,
+				healthEventPrefillUrl(params.companionId, {
+					title: existing.title,
+					description: existing.description,
+					type: mapped ?? undefined
+				})
+			);
+		}
 
 		return { completeSuccess: true };
 	},

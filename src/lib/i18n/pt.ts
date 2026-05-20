@@ -24,10 +24,13 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Desfazer',
 	'common.reminder.done': 'Feito',
-	'common.reminder.dismissNow': 'Dispensar agora',
-	'common.reminder.dismissedAnnounce': '{title} dispensado. Ative Desfazer para restaurar.',
-	'common.reminder.restoredAnnounce': '{title} restaurado.',
+	'common.reminder.dismissedAnnounce': '{title} dispensado',
 	'common.reminder.untitled': 'Lembrete sem título',
+	'common.reminder.logEvent': 'Feito e registar evento',
+	'common.reminder.logEventAria': 'Marcar como feito e registar um evento de saúde',
+	'common.reminder.toastUndoLabel': 'Desfazer',
+	'common.reminder.toastDismiss': 'Fechar',
+	'common.reminder.toastAriaRegion': 'Atividade dos lembretes',
 
 	// Enum: Moods
 	'enum.mood.great': 'Ótimo',

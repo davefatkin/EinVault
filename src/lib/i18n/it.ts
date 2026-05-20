@@ -24,10 +24,13 @@ const messages: Record<keyof Messages, string> = {
 	// Common: Reminder actions
 	'common.reminder.undo': 'Annulla',
 	'common.reminder.done': 'Fatto',
-	'common.reminder.dismissNow': 'Conferma ora',
-	'common.reminder.dismissedAnnounce': '{title} ignorato. Attiva Annulla per ripristinare.',
-	'common.reminder.restoredAnnounce': '{title} ripristinato.',
+	'common.reminder.dismissedAnnounce': '{title} ignorato',
 	'common.reminder.untitled': 'Promemoria senza titolo',
+	'common.reminder.logEvent': 'Fatto e registra evento',
+	'common.reminder.logEventAria': 'Segna come fatto e registra un evento sanitario',
+	'common.reminder.toastUndoLabel': 'Annulla',
+	'common.reminder.toastDismiss': 'Chiudi',
+	'common.reminder.toastAriaRegion': 'Attività dei promemoria',
 
 	// Enum: Moods
 	'enum.mood.great': 'Ottimo',

@@ -5,6 +5,7 @@ import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { completeReminder } from '$lib/server/reminders';
 import { t } from '$lib/i18n';
+import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
@@ -79,6 +80,7 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
+		const andEvent = data.get('andEvent') === '1';
 
 		const reminder = await db.query.reminders.findFirst({
 			where: eq(schema.reminders.id, id)
@@ -94,6 +96,18 @@ export const actions: Actions = {
 		if (!companion) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
 		completeReminder(reminder, locals.user.id);
+
+		if (andEvent) {
+			const mapped = REMINDER_TO_HEALTH_TYPE[reminder.type];
+			redirect(
+				303,
+				healthEventPrefillUrl(reminder.companionId, {
+					title: reminder.title,
+					description: reminder.description,
+					type: mapped ?? undefined
+				})
+			);
+		}
 
 		return { completeSuccess: true };
 	}

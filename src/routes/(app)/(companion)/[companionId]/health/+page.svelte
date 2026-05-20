@@ -20,7 +20,7 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
-	import { reminderPrefillUrl } from '$lib/health';
+	import { reminderPrefillUrl, type HealthEventType } from '$lib/health';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -30,6 +30,20 @@
 	let submittingWeight = $state(false);
 
 	const HEALTH_TYPES = healthTypeOptions(locale);
+	const HEALTH_TYPE_VALUES = HEALTH_TYPES.map((ht) => ht.value);
+
+	// Prefill state for the "Log event" flow from the reminders pages.
+	// Empty strings mean "no prefill" and the form falls back to defaults.
+	let prefillTitle = $state('');
+	let prefillType = $state<HealthEventType | ''>('');
+	let prefillDescription = $state('');
+	let prefillApplied = $state(false);
+
+	function resetHealthPrefill() {
+		prefillTitle = '';
+		prefillType = '';
+		prefillDescription = '';
+	}
 
 	function localDatetimeISO(d: Date | string = new Date()) {
 		const dt = new Date(d);
@@ -72,6 +86,29 @@
 		if (healthMatch) {
 			editingHealthId = editId;
 		}
+	});
+
+	$effect(() => {
+		if (prefillApplied) return;
+		const params = page.url.searchParams;
+		if (params.get('new') !== '1') return;
+		if (params.get('edit')) return;
+
+		prefillTitle = (params.get('title') ?? '').slice(0, 200);
+		const rawType = params.get('type') ?? '';
+		prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
+			? (rawType as HealthEventType)
+			: '';
+		prefillDescription = (params.get('description') ?? '').slice(0, 2000);
+
+		showHealthForm = true;
+		showWeightForm = false;
+		prefillApplied = true;
+		tick().then(() => {
+			const url = new URL(page.url);
+			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
 	});
 
 	// Detail modal
@@ -348,6 +385,7 @@
 					onclick={() => {
 						showHealthForm = !showHealthForm;
 						showWeightForm = false;
+						if (!showHealthForm) resetHealthPrefill();
 					}}
 				>
 					<Plus class="h-4 w-4 mr-1.5" />
@@ -379,6 +417,7 @@
 							await update();
 							submittingHealth = false;
 							showHealthForm = false;
+							resetHealthPrefill();
 						};
 					}}
 					class="space-y-4"
@@ -392,6 +431,7 @@
 								type="text"
 								autocomplete="off"
 								placeholder={t(locale, 'page.health.placeholderTitle')}
+								value={prefillTitle}
 								required
 							/>
 						</div>
@@ -399,7 +439,7 @@
 							<Label for="type">{t(locale, 'page.health.labelType')}</Label>
 							<Select id="type" name="type" required>
 								{#each HEALTH_TYPES as ht (ht.value)}
-									<option value={ht.value}>{ht.label}</option>
+									<option value={ht.value} selected={ht.value === prefillType}>{ht.label}</option>
 								{/each}
 							</Select>
 						</div>
@@ -441,6 +481,7 @@
 						<MarkdownTextarea
 							id="notes"
 							name="notes"
+							value={prefillDescription}
 							placeholder={t(locale, 'page.health.placeholderNotes')}
 							rows={4}
 						/>
@@ -461,8 +502,13 @@
 							<Plus class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'page.health.saveAndAddReminder')}
 						</Button>
-						<Button type="button" variant="outline" onclick={() => (showHealthForm = false)}
-							>{t(locale, 'common.cancel')}</Button
+						<Button
+							type="button"
+							variant="outline"
+							onclick={() => {
+								showHealthForm = false;
+								resetHealthPrefill();
+							}}>{t(locale, 'common.cancel')}</Button
 						>
 					</div>
 				</form>
