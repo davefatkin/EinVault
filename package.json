@@ -1,6 +1,6 @@
 {
 	"name": "einvault",
-	"version": "0.8.1",
+	"version": "0.9.0",
 	"private": true,
 	"scripts": {
 		"dev": "svelte-kit sync && vite dev",
@@ -45,7 +45,6 @@
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
 		"@tailwindcss/typography": "^0.5.0-alpha.3",
-		"@types/dompurify": "^3.0.5",
 		"bcryptjs": "^3.0.3",
 		"better-sqlite3": "^12.8.0",
 		"class-variance-authority": "^0.7.1",
