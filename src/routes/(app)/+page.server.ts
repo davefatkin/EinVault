@@ -29,7 +29,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 			where: and(
 				inArray(schema.reminders.companionId, ids),
 				isNull(schema.reminders.completedAt),
-				gte(schema.reminders.dueAt, now),
 				lte(schema.reminders.dueAt, in7d)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
