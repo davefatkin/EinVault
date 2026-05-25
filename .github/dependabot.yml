@@ -7,6 +7,11 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 5
     groups:
       svelte:
         patterns:
@@ -41,6 +46,8 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns:
@@ -52,3 +59,5 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
