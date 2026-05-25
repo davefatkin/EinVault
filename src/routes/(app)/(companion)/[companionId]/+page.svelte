@@ -3,6 +3,7 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import { bustAvatarCache } from '$lib/avatarCache.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { localDateISO } from '$lib/date';
@@ -107,11 +108,15 @@
 			}
 			bustAvatarCache(companion.id);
 			immichAvatarPickerOpen = false;
-			window.location.reload();
+			// Refresh the loader so the new avatar metadata flows in without a
+			// full page reload (which would drop any unsaved form state).
+			await invalidateAll();
 		} catch {
 			setImmichAvatarError(t(locale, 'immich.picker.pickFailed'));
 		}
 	}
+
+	$effect(() => () => clearTimeout(immichAvatarErrorTimer));
 
 	// Pending reminder dismissals
 	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 0) * 1000);

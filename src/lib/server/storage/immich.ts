@@ -2,6 +2,17 @@ import type { ImmichConfig } from '$lib/server/env';
 import type { GetResult, StorageBackend } from './types';
 
 const KEY_PREFIX = 'immich:';
+// Immich asset ids are UUIDs. Pin the format so a stored row referencing
+// `../../etc/passwd` can never sneak through parseKey.
+export const ASSET_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Default timeout for any single Immich HTTP call. Homelab Immich on LAN
+// should reply in well under a second; a hung Immich must not stall workers.
+const DEFAULT_TIMEOUT_MS = 8_000;
+
+// Soft cap for album-mode listAssets. Immich's /albums/{id} returns every
+// asset in one shot, so a very large album would blow up memory.
+const ALBUM_ASSET_CAP = 5_000;
 
 export function immichKey(assetId: string): string {
 	return `${KEY_PREFIX}${assetId}`;
@@ -9,13 +20,26 @@ export function immichKey(assetId: string): string {
 
 function parseKey(key: string): string {
 	if (!key.startsWith(KEY_PREFIX)) {
-		throw new Error(`Immich storage key must start with '${KEY_PREFIX}': ${key}`);
+		throw new Error(`Immich storage key must start with '${KEY_PREFIX}'`);
 	}
 	const id = key.slice(KEY_PREFIX.length);
-	if (!/^[a-zA-Z0-9-]+$/.test(id)) {
-		throw new Error(`Invalid Immich asset id in key: ${key}`);
+	if (!ASSET_ID_RE.test(id)) {
+		throw new Error('Invalid Immich asset id in key');
 	}
 	return id;
+}
+
+function timeoutSignal(ms = DEFAULT_TIMEOUT_MS): AbortSignal {
+	return AbortSignal.timeout(ms);
+}
+
+// Log full upstream context server-side; return a short generic message so
+// callers (and any error.message that bubbles into a response) cannot leak
+// API keys, request ids, or bucket names.
+async function logAndSanitize(label: string, res: Response, hint: string): Promise<Error> {
+	const body = await res.text().catch(() => '');
+	console.error(`[immich] ${label} status=${res.status} body=${body.slice(0, 500)}`);
+	return new Error(`${hint} (${res.status})`);
 }
 
 export function createImmichBackend(config: ImmichConfig): StorageBackend {
@@ -27,13 +51,13 @@ export function createImmichBackend(config: ImmichConfig): StorageBackend {
 			size === 'original'
 				? `/api/assets/${assetId}/original`
 				: `/api/assets/${assetId}/thumbnail?size=${size}`;
-		const res = await fetch(`${config.url}${path}`, {
+		return fetch(`${config.url}${path}`, {
 			headers: {
 				'x-api-key': config.apiKey,
 				Accept: 'image/*'
-			}
+			},
+			signal: timeoutSignal()
 		});
-		return res;
 	}
 
 	return {
@@ -54,8 +78,7 @@ export function createImmichBackend(config: ImmichConfig): StorageBackend {
 			const res = await fetchAsset(assetId, 'preview');
 			if (res.status === 404) return null;
 			if (!res.ok || !res.body) {
-				const text = await res.text().catch(() => '');
-				throw new Error(`Immich asset ${assetId} fetch failed: ${res.status} ${text}`);
+				throw await logAndSanitize(`get asset=${assetId}`, res, 'Immich asset fetch failed');
 			}
 			const length = Number(res.headers.get('content-length') ?? 0);
 			const etag = res.headers.get('etag') ?? `"immich-${assetId}"`;
@@ -140,14 +163,27 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 		async listAssets({ page, pageSize, albumId }) {
 			// Album mode: fetch the album once, then page client-side. Immich's
 			// /albums/{id} endpoint returns all assets in one response, which is
-			// fine for typical homelab album sizes.
+			// fine for typical homelab album sizes but capped here as a guard
+			// against giant albums.
 			if (albumId) {
-				const res = await fetch(`${config.url}/api/albums/${albumId}`, { headers: headers() });
+				const res = await fetch(`${config.url}/api/albums/${albumId}`, {
+					headers: headers(),
+					signal: timeoutSignal()
+				});
 				if (!res.ok) {
-					throw new Error(`Immich album ${albumId} fetch failed: ${res.status}`);
+					throw await logAndSanitize(`album=${albumId}`, res, 'Immich album fetch failed');
 				}
 				const body = (await res.json()) as ImmichAlbumResponse;
-				const all = (body.assets ?? []).filter((a) => a.type !== 'VIDEO').map(summarize);
+				const raw = body.assets ?? [];
+				if (raw.length > ALBUM_ASSET_CAP) {
+					console.warn(
+						`[immich] album ${albumId} has ${raw.length} assets; capping picker to first ${ALBUM_ASSET_CAP}`
+					);
+				}
+				const all = raw
+					.slice(0, ALBUM_ASSET_CAP)
+					.filter((a) => a.type !== 'VIDEO')
+					.map(summarize);
 				const start = (page - 1) * pageSize;
 				const items = all.slice(start, start + pageSize);
 				return { items, hasNextPage: start + pageSize < all.length };
@@ -163,10 +199,11 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 					size: pageSize,
 					type: 'IMAGE',
 					order: 'desc'
-				})
+				}),
+				signal: timeoutSignal()
 			});
 			if (!res.ok) {
-				throw new Error(`Immich search failed: ${res.status}`);
+				throw await logAndSanitize('search', res, 'Immich search failed');
 			}
 			const body = (await res.json()) as ImmichSearchResponse;
 			const items = (body.assets?.items ?? []).map(summarize);
@@ -175,10 +212,13 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 		},
 
 		async getAsset(assetId: string) {
-			const res = await fetch(`${config.url}/api/assets/${assetId}`, { headers: headers() });
+			const res = await fetch(`${config.url}/api/assets/${assetId}`, {
+				headers: headers(),
+				signal: timeoutSignal()
+			});
 			if (res.status === 404) return null;
 			if (!res.ok) {
-				throw new Error(`Immich asset ${assetId} fetch failed: ${res.status}`);
+				throw await logAndSanitize(`getAsset=${assetId}`, res, 'Immich asset fetch failed');
 			}
 			const body = (await res.json()) as ImmichAssetResponse;
 			return summarize(body);
@@ -186,7 +226,8 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 
 		async fetchThumbnail(assetId: string, size: 'preview' | 'thumbnail') {
 			return fetch(`${config.url}/api/assets/${assetId}/thumbnail?size=${size}`, {
-				headers: { 'x-api-key': config.apiKey, Accept: 'image/*' }
+				headers: { 'x-api-key': config.apiKey, Accept: 'image/*' },
+				signal: timeoutSignal()
 			});
 		}
 	};

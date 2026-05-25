@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { getImmichClient, getStorage, immichKey } from '$lib/server/storage';
+import { getImmichClient, getStorage, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
 import {
 	AVATAR_LEGACY_EXTS,
 	avatarLegacyKey,
@@ -11,8 +11,6 @@ import {
 } from '$lib/server/storage/avatarKeys';
 import { isAllowedAvatarMime, safeExtFromMime } from '$lib/server/storage/mime';
 import { assertCanEditCompanion } from '$lib/server/permissions';
-
-const ASSET_ID_RE = /^[a-zA-Z0-9-]+$/;
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	await assertCanEditCompanion(locals, params.companionId);
@@ -22,7 +20,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const body = (await request.json().catch(() => null)) as { assetId?: string } | null;
 	const assetId = body?.assetId?.trim();
-	if (!assetId || !ASSET_ID_RE.test(assetId)) {
+	if (!assetId || !IMMICH_ASSET_ID_RE.test(assetId)) {
 		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 	}
 

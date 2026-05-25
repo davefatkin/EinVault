@@ -1,9 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
-import { getImmichClient } from '$lib/server/storage';
-
-const ASSET_ID_RE = /^[a-zA-Z0-9-]+$/;
+import { getImmichClient, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -13,7 +11,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!client) error(404, t(locals.locale, 'error.notFound'));
 
 	const assetId = params.assetId;
-	if (!ASSET_ID_RE.test(assetId)) error(400, 'Invalid asset id');
+	if (!IMMICH_ASSET_ID_RE.test(assetId)) error(400, t(locals.locale, 'error.invalidFileType'));
 
 	const sizeParam = url.searchParams.get('size');
 	const size: 'preview' | 'thumbnail' = sizeParam === 'preview' ? 'preview' : 'thumbnail';
@@ -21,11 +19,8 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const res = await client.fetchThumbnail(assetId, size);
 	if (res.status === 404) error(404, t(locals.locale, 'error.notFound'));
 	if (!res.ok || !res.body) {
-		const bodyText = await res.text().catch(() => '');
-		console.error(
-			`[immich-thumbnail] upstream ${res.status} for asset ${assetId} size=${size}: ${bodyText.slice(0, 500)}`
-		);
-		error(502, `Immich upstream error (${res.status})`);
+		console.error(`[immich-thumbnail] upstream status=${res.status} asset=${assetId} size=${size}`);
+		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
 
 	const contentType = res.headers.get('content-type') ?? 'image/jpeg';

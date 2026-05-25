@@ -13,7 +13,7 @@ export type {
 	StorageProvider
 } from './types';
 
-export { immichKey } from './immich';
+export { immichKey, ASSET_ID_RE as IMMICH_ASSET_ID_RE } from './immich';
 export type { ImmichAssetSummary, ImmichClient } from './immich';
 
 const backends: Partial<Record<StorageProvider, StorageBackend>> = {

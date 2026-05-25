@@ -4,12 +4,10 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
-import { getImmichClient, immichKey } from '$lib/server/storage';
+import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
 import { isAllowedPhotoMime, safeExtFromMime } from '$lib/server/storage/mime';
 import { MAX_DAILY_PHOTOS } from '$lib/server/env';
 import { isValidDate } from '$lib/server/validation';
-
-const ASSET_ID_RE = /^[a-zA-Z0-9-]+$/;
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -23,7 +21,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const body = (await request.json().catch(() => null)) as { assetId?: string } | null;
 	const assetId = body?.assetId?.trim();
-	if (!assetId || !ASSET_ID_RE.test(assetId)) error(400, t(locals.locale, 'error.invalidFileType'));
+	if (!assetId || !IMMICH_ASSET_ID_RE.test(assetId)) {
+		error(400, t(locals.locale, 'error.invalidFileType'));
+	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, companionId)

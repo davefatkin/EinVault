@@ -68,6 +68,9 @@
 		}
 	}
 
+	// Opening the picker always starts from page 1: simpler than persisting
+	// scroll/state across opens, and homelab Immich responds fast enough that
+	// re-fetching the first page is unnoticeable.
 	$effect(() => {
 		if (open) {
 			triggerEl = document.activeElement as HTMLElement | null;

@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { REMINDER_UNDO_MAX_SECONDS } from '$lib/reminderUndo';
+import type { StorageProvider } from '$lib/server/storage/types';
 
 export {
 	REMINDER_UNDO_MAX_SECONDS,
@@ -34,11 +35,20 @@ export const MAX_DAILY_PHOTOS = envInt(env.MAX_DAILY_PHOTOS, 5);
 // S3-compatible bucket (AWS, Garage, MinIO, Backblaze B2, R2, ...). Reads
 // always honor the per-row provider column, so switching here only affects
 // new writes — existing 'local' rows keep streaming from disk.
+//
+// Immich is intentionally excluded from this set: it's a read-only reference
+// layer, never a write destination. The type derives from StorageProvider so
+// adding a provider to the union forces an update here.
+export type StorageBackendName = Exclude<StorageProvider, 'immich'>;
+const ALLOWED_BACKENDS: readonly StorageBackendName[] = ['local', 's3'];
+
 const rawStorageBackend = (env.STORAGE_BACKEND ?? 'local').toLowerCase();
-if (rawStorageBackend !== 'local' && rawStorageBackend !== 's3') {
-	throw new Error(`Invalid STORAGE_BACKEND '${env.STORAGE_BACKEND}'. Allowed: local, s3.`);
+if (!(ALLOWED_BACKENDS as readonly string[]).includes(rawStorageBackend)) {
+	throw new Error(
+		`Invalid STORAGE_BACKEND '${env.STORAGE_BACKEND}'. Allowed: ${ALLOWED_BACKENDS.join(', ')}.`
+	);
 }
-export const STORAGE_BACKEND: 'local' | 's3' = rawStorageBackend;
+export const STORAGE_BACKEND: StorageBackendName = rawStorageBackend as StorageBackendName;
 
 export interface S3Config {
 	endpoint: string;

@@ -49,7 +49,8 @@ export function createS3Backend(config: S3Config): StorageBackend {
 			});
 			if (!res.ok) {
 				const text = await res.text().catch(() => '');
-				throw new Error(`S3 PUT ${key} failed: ${res.status} ${text}`);
+				console.error(`[s3] PUT key=${key} status=${res.status} body=${text.slice(0, 500)}`);
+				throw new Error(`S3 PUT failed (${res.status})`);
 			}
 			return { key };
 		},
@@ -73,7 +74,8 @@ export function createS3Backend(config: S3Config): StorageBackend {
 			const res = await aws.fetch(objectUrl(key), { method: 'DELETE' });
 			if (!res.ok && res.status !== 404) {
 				const text = await res.text().catch(() => '');
-				throw new Error(`S3 DELETE ${key} failed: ${res.status} ${text}`);
+				console.error(`[s3] DELETE key=${key} status=${res.status} body=${text.slice(0, 500)}`);
+				throw new Error(`S3 DELETE failed (${res.status})`);
 			}
 		}
 	};
