@@ -64,33 +64,39 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const loggedBy = locals.user.id;
 
 	// Wrap count + insert in a transaction so two concurrent picks cannot
-	// both observe a count under the cap and then both insert. The local
-	// upload path has the same TOCTOU pre-existing; not addressed here.
-	const result = db.transaction((tx) => {
-		const rows = tx
-			.select({ value: count() })
-			.from(schema.journalPhotos)
-			.where(eq(schema.journalPhotos.entryId, entryId))
-			.all();
-		const photoCount = rows[0]?.value ?? 0;
-		if (photoCount >= MAX_DAILY_PHOTOS) {
-			return { ok: false as const };
-		}
-		tx.insert(schema.journalPhotos)
-			.values({
-				id: photoId,
-				entryId,
-				filename,
-				provider: 'immich',
-				storageKey: immichKey(assetId),
-				originalName: asset.originalFileName || null,
-				mimeType: asset.originalMimeType,
-				sizeBytes: asset.fileSizeInByte ?? 0,
-				loggedBy
-			})
-			.run();
-		return { ok: true as const };
-	});
+	// both observe a count under the cap and then both insert. `immediate`
+	// takes the write lock at BEGIN so concurrent transactions serialize
+	// cleanly under WAL instead of one hitting SQLITE_BUSY_SNAPSHOT and
+	// surfacing as a 500. The local upload path has the same TOCTOU
+	// pre-existing; not addressed here.
+	const result = db.transaction(
+		(tx) => {
+			const rows = tx
+				.select({ value: count() })
+				.from(schema.journalPhotos)
+				.where(eq(schema.journalPhotos.entryId, entryId))
+				.all();
+			const photoCount = rows[0]?.value ?? 0;
+			if (photoCount >= MAX_DAILY_PHOTOS) {
+				return { ok: false as const };
+			}
+			tx.insert(schema.journalPhotos)
+				.values({
+					id: photoId,
+					entryId,
+					filename,
+					provider: 'immich',
+					storageKey: immichKey(assetId),
+					originalName: asset.originalFileName || null,
+					mimeType: asset.originalMimeType,
+					sizeBytes: asset.fileSizeInByte ?? 0,
+					loggedBy
+				})
+				.run();
+			return { ok: true as const };
+		},
+		{ behavior: 'immediate' }
+	);
 
 	if (!result.ok) {
 		error(400, t(locals.locale, 'error.maxPhotosExceeded', { max: MAX_DAILY_PHOTOS }));

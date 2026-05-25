@@ -96,11 +96,16 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const filename = `${photoId}.${ext}`;
 	const key = journalKey(companionId, date, filename);
-	await getStorage().put({
-		key,
-		body: processed,
-		contentType: mimeType
-	});
+	try {
+		await getStorage().put({
+			key,
+			body: processed,
+			contentType: mimeType
+		});
+	} catch (err) {
+		console.error('[journal-photo] storage put failed:', err);
+		error(502, t(locals.locale, 'error.fileNotFound'));
+	}
 
 	await db.insert(schema.journalPhotos).values({
 		id: photoId,

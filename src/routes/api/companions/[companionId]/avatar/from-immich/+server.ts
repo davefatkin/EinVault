@@ -10,10 +10,11 @@ import {
 	resolveExistingAvatarKey
 } from '$lib/server/storage/avatarKeys';
 import { isAllowedAvatarMime, safeExtFromMime } from '$lib/server/storage/mime';
-import { assertCanEditCompanion } from '$lib/server/permissions';
-
 export const POST: RequestHandler = async ({ request, params, locals }) => {
-	await assertCanEditCompanion(locals, params.companionId);
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
+	// Caretakers cannot browse Immich; matches photos/from-immich and keeps
+	// the integration scoped to family members/admins only.
+	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
 
 	const client = getImmichClient();
 	if (!client) error(404, t(locals.locale, 'error.notFound'));

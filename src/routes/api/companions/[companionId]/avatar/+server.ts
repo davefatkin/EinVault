@@ -51,11 +51,16 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	);
 	const previousProvider = companion.avatarProvider;
 
-	await getStorage().put({
-		key,
-		body: processed,
-		contentType: 'image/jpeg'
-	});
+	try {
+		await getStorage().put({
+			key,
+			body: processed,
+			contentType: 'image/jpeg'
+		});
+	} catch (err) {
+		console.error('[avatar] storage put failed:', err);
+		error(502, t(locals.locale, 'error.fileNotFound'));
+	}
 
 	await db
 		.update(schema.companions)
