@@ -1,6 +1,6 @@
 import { createReadStream } from 'fs';
 import { mkdir, stat, unlink, writeFile } from 'fs/promises';
-import { dirname, join, normalize, resolve } from 'path';
+import { dirname, join, normalize, resolve, sep } from 'path';
 import { Readable } from 'stream';
 import { DATA_DIR } from '$lib/server/paths';
 import type { BlobStat, GetOptions, GetResult, PutInput, StorageBackend } from './types';
@@ -10,7 +10,7 @@ const SAFE_BASE = resolve(ROOT);
 
 function resolveKey(key: string): string {
 	const full = resolve(join(ROOT, normalize(key)));
-	if (!full.startsWith(SAFE_BASE + '/') && full !== SAFE_BASE) {
+	if (full !== SAFE_BASE && !full.startsWith(SAFE_BASE + sep)) {
 		throw new Error('storage: key escapes upload root');
 	}
 	return full;

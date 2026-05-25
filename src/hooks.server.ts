@@ -25,9 +25,11 @@ const S3_IMG_ORIGIN: string | null = (() => {
 })();
 
 function injectImgSrcOrigin(csp: string, origin: string): string {
-	// Append the origin inside the existing img-src directive.
+	// Append the origin inside every img-src directive. Callback form so
+	// arbitrary characters in `origin` are not interpreted as $1 backrefs.
+	// `gi` so multiple directives all pick up the origin.
 	if (/(^|;)\s*img-src\b/i.test(csp)) {
-		return csp.replace(/(img-src\b[^;]*)/i, `$1 ${origin}`);
+		return csp.replace(/(img-src\b[^;]*)/gi, (_m, captured) => `${captured} ${origin}`);
 	}
 	// No img-src directive present; add one.
 	return `${csp.replace(/;?\s*$/, '')}; img-src 'self' data: blob: ${origin}`;

@@ -15,7 +15,7 @@
 
 	interface Props {
 		open: boolean;
-		onpick: (assetId: string) => void;
+		onpick: (assetId: string) => void | Promise<void>;
 		onclose: () => void;
 	}
 
@@ -97,9 +97,17 @@
 		}
 	}
 
-	function pick(assetId: string) {
+	async function pick(assetId: string) {
+		if (selecting) return;
 		selecting = assetId;
-		onpick(assetId);
+		try {
+			await onpick(assetId);
+		} finally {
+			// If parent closed the picker, $effect on `open` already resets
+			// `selecting` on next open. If parent kept the picker open (e.g.
+			// after a failed pick), clear here so the user can try another.
+			selecting = null;
+		}
 	}
 </script>
 
@@ -170,7 +178,7 @@
 								type="button"
 								class="relative aspect-square overflow-hidden rounded-md bg-stone-100 dark:bg-stone-800 transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait"
 								onclick={() => pick(asset.id)}
-								disabled={selecting !== null}
+								disabled={selecting === asset.id}
 								title={asset.originalFileName}
 							>
 								<img

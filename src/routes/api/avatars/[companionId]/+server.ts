@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { getStorage } from '$lib/server/storage';
+import { getStorage, type GetResult } from '$lib/server/storage';
 
 export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -16,11 +16,15 @@ export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	const key = companion.avatarStorageKey ?? `avatars/${companion.avatarPath}`;
 	const ifNoneMatch = request.headers.get('if-none-match');
 
-	let res: Awaited<ReturnType<ReturnType<typeof getStorage>['get']>>;
+	let res: GetResult | null;
 	try {
 		res = await getStorage(companion.avatarProvider).get(key, { ifNoneMatch });
-	} catch {
-		error(403, t(locals.locale, 'error.forbidden'));
+	} catch (err) {
+		if (err instanceof Error && err.message.includes('escapes upload root')) {
+			error(403, t(locals.locale, 'error.forbidden'));
+		}
+		console.error(`[avatars] storage error provider=${companion.avatarProvider} key=${key}:`, err);
+		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
 	if (!res) error(404, t(locals.locale, 'error.fileNotFound'));
 
@@ -43,9 +47,14 @@ export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 
 	const hasCacheBuster = url.searchParams.has('t');
-	const cacheControl = hasCacheBuster
-		? 'private, max-age=31536000, immutable'
-		: 'private, no-cache';
+	// Immich-backed avatars can regenerate previews server-side, so we don't
+	// mark them immutable even with a cache buster — fall back to revalidate.
+	const cacheControl =
+		companion.avatarProvider === 'immich'
+			? 'private, max-age=300'
+			: hasCacheBuster
+				? 'private, max-age=31536000, immutable'
+				: 'private, no-cache';
 
 	return new Response(res.stream, {
 		headers: {

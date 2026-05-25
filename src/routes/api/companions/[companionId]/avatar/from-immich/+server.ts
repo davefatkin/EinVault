@@ -2,46 +2,29 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getImmichClient, getStorage, immichKey } from '$lib/server/storage';
-import type { StorageProvider } from '$lib/server/storage';
+import {
+	AVATAR_LEGACY_EXTS,
+	avatarLegacyKey,
+	resolveExistingAvatarKey
+} from '$lib/server/storage/avatarKeys';
+import { isAllowedAvatarMime, safeExtFromMime } from '$lib/server/storage/mime';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
-const ALLOWED_MIME_PREFIXES = ['image/'];
 const ASSET_ID_RE = /^[a-zA-Z0-9-]+$/;
-const LEGACY_EXTS = ['jpg', 'png', 'webp'];
-
-function avatarLegacyKey(companionId: string, ext: string): string {
-	return `avatars/${companionId}.${ext}`;
-}
-
-function resolveExistingKey(
-	provider: StorageProvider,
-	storedKey: string | null,
-	avatarPath: string | null
-): string | null {
-	if (storedKey) return storedKey;
-	if (provider === 'local' && avatarPath) return `avatars/${avatarPath}`;
-	return null;
-}
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
-	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
-	if (locals.user.role === 'caretaker') {
-		const assigned = await db.query.companionCaretakers.findFirst({
-			where: and(
-				eq(schema.companionCaretakers.userId, locals.user.id),
-				eq(schema.companionCaretakers.companionId, params.companionId)
-			)
-		});
-		if (!assigned) error(403, t(locals.locale, 'error.forbidden'));
-	}
+	await assertCanEditCompanion(locals, params.companionId);
 
 	const client = getImmichClient();
 	if (!client) error(404, t(locals.locale, 'error.notFound'));
 
 	const body = (await request.json().catch(() => null)) as { assetId?: string } | null;
 	const assetId = body?.assetId?.trim();
-	if (!assetId || !ASSET_ID_RE.test(assetId)) error(400, 'Invalid asset id');
+	if (!assetId || !ASSET_ID_RE.test(assetId)) {
+		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
+	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
@@ -50,30 +33,23 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const asset = await client.getAsset(assetId);
 	if (!asset) error(404, t(locals.locale, 'error.notFound'));
-	if (!ALLOWED_MIME_PREFIXES.some((p) => asset.originalMimeType.startsWith(p))) {
+	if (!isAllowedAvatarMime(asset.originalMimeType)) {
 		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 	}
 
-	// Remove the previous avatar from wherever it lives. Skip if previous was
-	// also Immich-referenced — we never delete from Immich.
-	const existingKey = resolveExistingKey(
+	const ext = safeExtFromMime(asset.originalMimeType, asset.originalFileName);
+	const filename = `${assetId}.${ext}`;
+	const key = immichKey(assetId);
+
+	// Snapshot the previous avatar BEFORE updating the DB so that on success we
+	// can clean it up. If we deleted first and the DB update failed, the user
+	// would be left with no avatar but a dangling row.
+	const previousKey = resolveExistingAvatarKey(
 		companion.avatarProvider,
 		companion.avatarStorageKey,
 		companion.avatarPath
 	);
-	if (existingKey && companion.avatarProvider !== 'immich') {
-		await getStorage(companion.avatarProvider).delete(existingKey);
-	}
-	if (companion.avatarProvider === 'local') {
-		const local = getStorage('local');
-		for (const ext of LEGACY_EXTS) {
-			await local.delete(avatarLegacyKey(params.companionId, ext));
-		}
-	}
-
-	const ext = asset.originalFileName.split('.').pop()?.toLowerCase() || 'jpg';
-	const filename = `${assetId}.${ext}`;
-	const key = immichKey(assetId);
+	const previousProvider = companion.avatarProvider;
 
 	await db
 		.update(schema.companions)
@@ -83,6 +59,26 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 			avatarStorageKey: key
 		})
 		.where(eq(schema.companions.id, params.companionId));
+
+	// Clean up the prior avatar after the DB now points at the new one. Best
+	// effort: never throw if cleanup fails — the new avatar is already live.
+	if (previousKey && previousProvider !== 'immich') {
+		try {
+			await getStorage(previousProvider).delete(previousKey);
+		} catch (err) {
+			console.warn('[avatar/from-immich] failed to delete previous avatar:', err);
+		}
+	}
+	if (previousProvider === 'local') {
+		const local = getStorage('local');
+		for (const legacyExt of AVATAR_LEGACY_EXTS) {
+			try {
+				await local.delete(avatarLegacyKey(params.companionId, legacyExt));
+			} catch {
+				// ignore — best effort sweep
+			}
+		}
+	}
 
 	return json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
 };
