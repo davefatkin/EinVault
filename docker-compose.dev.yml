@@ -52,6 +52,12 @@ services:
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       S3_PRESIGN_TTL_SECONDS: ${S3_PRESIGN_TTL_SECONDS:-300}
 
+      # Optional: Immich integration (reference mode). Both URL and API key
+      # must be set together for the picker to activate.
+      IMMICH_URL: ${IMMICH_URL:-}
+      IMMICH_API_KEY: ${IMMICH_API_KEY:-}
+      IMMICH_ALBUM_ID: ${IMMICH_ALBUM_ID:-}
+
     security_opt:
       - no-new-privileges:true
     cap_drop:

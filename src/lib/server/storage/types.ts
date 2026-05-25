@@ -1,4 +1,4 @@
-export type StorageProvider = 'local' | 's3';
+export type StorageProvider = 'local' | 's3' | 'immich';
 
 export interface PutInput {
 	key: string;

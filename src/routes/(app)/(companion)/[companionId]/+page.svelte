@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
+	import { bustAvatarCache } from '$lib/avatarCache.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { localDateISO } from '$lib/date';
@@ -76,6 +78,39 @@
 	function closeAvatarLightbox() {
 		avatarLightboxOpen = false;
 		(document.activeElement as HTMLElement)?.blur();
+	}
+
+	// Immich avatar picker
+	let immichAvatarPickerOpen = $state(false);
+	let immichAvatarError = $state('');
+	let immichAvatarErrorTimer: ReturnType<typeof setTimeout>;
+
+	function setImmichAvatarError(msg: string) {
+		immichAvatarError = msg;
+		clearTimeout(immichAvatarErrorTimer);
+		immichAvatarErrorTimer = setTimeout(() => (immichAvatarError = ''), 5000);
+	}
+
+	async function pickAvatarFromImmich(assetId: string) {
+		try {
+			const res = await fetch(`/api/companions/${companion.id}/avatar/from-immich`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ assetId })
+			});
+			if (!res.ok) {
+				const err = await res
+					.json()
+					.catch(() => ({ message: t(locale, 'immich.picker.pickFailed') }));
+				setImmichAvatarError(err.message ?? t(locale, 'immich.picker.pickFailed'));
+				return;
+			}
+			bustAvatarCache(companion.id);
+			immichAvatarPickerOpen = false;
+			window.location.reload();
+		} catch {
+			setImmichAvatarError(t(locale, 'immich.picker.pickFailed'));
+		}
 	}
 
 	// Pending reminder dismissals
@@ -468,6 +503,8 @@
 						size="lg"
 						editable={companion.isActive}
 						onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
+						immichEnabled={data.immichEnabled}
+						onpickImmich={() => (immichAvatarPickerOpen = true)}
 					/>
 					<div>
 						<h1 class="font-display text-2xl font-bold">{companion.name}</h1>
@@ -820,3 +857,20 @@
 		</CardContent>
 	</Card>
 </div>
+
+{#if data.immichEnabled}
+	<ImmichPicker
+		open={immichAvatarPickerOpen}
+		onpick={pickAvatarFromImmich}
+		onclose={() => (immichAvatarPickerOpen = false)}
+	/>
+{/if}
+
+{#if immichAvatarError}
+	<div
+		role="alert"
+		class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-destructive text-destructive-foreground px-4 py-2 text-sm shadow-lg"
+	>
+		{immichAvatarError}
+	</div>
+{/if}

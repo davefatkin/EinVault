@@ -78,7 +78,7 @@ export const companions = sqliteTable(
 			.default('lbs'),
 		microchip: text('microchip'),
 		avatarPath: text('avatar_path'),
-		avatarProvider: text('avatar_provider', { enum: ['local', 's3'] })
+		avatarProvider: text('avatar_provider', { enum: ['local', 's3', 'immich'] })
 			.notNull()
 			.default('local'),
 		avatarStorageKey: text('avatar_storage_key'),
@@ -134,7 +134,7 @@ export const journalPhotos = sqliteTable(
 			.notNull()
 			.references(() => journalEntries.id, { onDelete: 'cascade' }),
 		filename: text('filename').notNull(),
-		provider: text('provider', { enum: ['local', 's3'] })
+		provider: text('provider', { enum: ['local', 's3', 'immich'] })
 			.notNull()
 			.default('local'),
 		storageKey: text('storage_key'),

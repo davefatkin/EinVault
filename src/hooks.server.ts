@@ -4,9 +4,11 @@ import { validateAuth } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
-import { S3_CONFIG } from '$lib/server/env';
+import { S3_CONFIG, logImmichBootStatus, logStorageBootStatus } from '$lib/server/env';
 
 logOidcBootStatus();
+logStorageBootStatus();
+logImmichBootStatus();
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
 // host. CSP is enforced on the final navigation target after redirects, so

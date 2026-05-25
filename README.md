@@ -111,6 +111,16 @@ By default, avatars and journal photos are written to `./data/uploads`. You can 
 
 Downloads use short-lived presigned URLs (the app issues a 302 redirect). Access control is checked before the URL is issued; once issued, the URL stays valid for the full TTL even if permissions later change. Keep the TTL short.
 
+### Immich integration (optional)
+
+When `IMMICH_URL` and `IMMICH_API_KEY` are set, members and admins get a "Pick from Immich" option on the journal photo and companion avatar flows. The chosen asset stays in Immich; EinVault stores only a reference and proxies reads through the server using the API key. EinVault never uploads to Immich and never deletes assets from it. Caretakers cannot use the picker.
+
+|                   | Default | Description                                                                                                                                                                                  |
+| ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMMICH_URL`      | —       | Base URL of your Immich server, e.g. `http://immich.local:2283`. No trailing slash. Required if `IMMICH_API_KEY` is set.                                                                     |
+| `IMMICH_API_KEY`  | —       | API key. Required permissions: `asset.read`, `asset.view`, plus `album.read` if `IMMICH_ALBUM_ID` is set. Generate in Immich → Account Settings → API Keys. Required if `IMMICH_URL` is set. |
+| `IMMICH_ALBUM_ID` | —       | If set, the picker only shows assets in this album. If unset, the picker shows the user's most recent assets across the whole library.                                                       |
+
 ### Data and backup
 
 Data lives in `./data` next to the compose file. Stop the container first so SQLite isn't mid-write, then copy the directory:

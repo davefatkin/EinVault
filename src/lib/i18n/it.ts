@@ -716,6 +716,16 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextPhoto': 'Foto successiva',
 	'aria.viewPhoto': 'Vedi la foto di {name}',
 
+	// Immich picker
+	'immich.picker.title': 'Scegli da Immich',
+	'immich.picker.albumScoped': "Mostrando elementi dall'album configurato.",
+	'immich.picker.empty': 'Nessun elemento trovato in Immich.',
+	'immich.picker.cancel': 'Annulla',
+	'immich.picker.close': 'Chiudi selettore',
+	'immich.picker.loadError': 'Impossibile caricare la libreria Immich.',
+	'immich.picker.button': 'Scegli da Immich',
+	'immich.picker.pickFailed': "Impossibile allegare l'elemento Immich.",
+
 	// Meta
 	'meta.description': 'EinVault: diario privato per la salute e la cura del cane'
 } satisfies Record<keyof Messages, string>;

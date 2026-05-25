@@ -12,6 +12,8 @@
 		archived?: boolean;
 		class?: string;
 		onlightbox?: () => void;
+		immichEnabled?: boolean;
+		onpickImmich?: () => void;
 	}
 
 	let {
@@ -22,7 +24,9 @@
 		editable = false,
 		archived = false,
 		class: className = '',
-		onlightbox
+		onlightbox,
+		immichEnabled = false,
+		onpickImmich
 	}: Props = $props();
 
 	const sizes = {
@@ -100,7 +104,7 @@
 	}
 </script>
 
-<div class="relative inline-block {className}">
+<div class="relative inline-flex items-center gap-1.5 {className}">
 	{#if onlightbox && imgSrc}
 		<button
 			type="button"
@@ -150,29 +154,47 @@
 				{uploadError}
 			</div>
 		{/if}
-		<button
-			bind:this={buttonEl}
-			type="button"
-			class="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-white text-bark-700 flex items-center justify-center
-				cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
-			title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
-			aria-label={uploadError
-				? t(locale, 'component.avatar.uploadError', { error: uploadError })
-				: t(locale, 'component.avatar.changePhotoFor', { name })}
-			onclick={(e) => {
-				e.stopPropagation();
-				fileInputEl?.click();
-			}}
-			disabled={uploading}
-		>
-			{#if uploading}
-				⏳
-			{:else if uploadError}
-				⚠️
-			{:else}
-				📷
+		<div class="flex flex-col gap-1">
+			<button
+				bind:this={buttonEl}
+				type="button"
+				class="h-7 w-7 rounded-full bg-white text-bark-700 flex items-center justify-center
+					cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
+				title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
+				aria-label={uploadError
+					? t(locale, 'component.avatar.uploadError', { error: uploadError })
+					: t(locale, 'component.avatar.changePhotoFor', { name })}
+				onclick={(e) => {
+					e.stopPropagation();
+					fileInputEl?.click();
+				}}
+				disabled={uploading}
+			>
+				{#if uploading}
+					⏳
+				{:else if uploadError}
+					⚠️
+				{:else}
+					📷
+				{/if}
+			</button>
+			{#if immichEnabled && onpickImmich}
+				<button
+					type="button"
+					class="h-7 w-7 rounded-full bg-white text-bark-700 flex items-center justify-center
+						cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
+					title={t(locale, 'immich.picker.button')}
+					aria-label={t(locale, 'immich.picker.button')}
+					onclick={(e) => {
+						e.stopPropagation();
+						onpickImmich();
+					}}
+					disabled={uploading}
+				>
+					🖼️
+				</button>
 			{/if}
-		</button>
+		</div>
 		<input
 			bind:this={fileInputEl}
 			type="file"

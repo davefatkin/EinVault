@@ -50,41 +50,100 @@ export interface S3Config {
 	presignTtlSeconds: number;
 }
 
-function readS3Config(): S3Config | null {
-	const fields: Array<[keyof S3Config, string | undefined]> = [
-		['endpoint', env.S3_ENDPOINT],
-		['bucket', env.S3_BUCKET],
-		['accessKeyId', env.S3_ACCESS_KEY_ID],
-		['secretAccessKey', env.S3_SECRET_ACCESS_KEY]
-	];
-	const envNames: Record<string, string> = {
-		endpoint: 'S3_ENDPOINT',
-		bucket: 'S3_BUCKET',
-		accessKeyId: 'S3_ACCESS_KEY_ID',
-		secretAccessKey: 'S3_SECRET_ACCESS_KEY'
-	};
-	const missing = fields.filter(([, v]) => !v).map(([k]) => envNames[k as string]);
-	if (missing.length === fields.length) return null;
-	if (missing.length > 0) {
-		throw new Error(`S3 config incomplete. Missing: ${missing.join(', ')}.`);
-	}
+const S3_REQUIRED_VARS = [
+	'S3_ENDPOINT',
+	'S3_BUCKET',
+	'S3_ACCESS_KEY_ID',
+	'S3_SECRET_ACCESS_KEY'
+] as const;
+
+function readS3Config(): { config: S3Config | null; missing: string[] } {
+	const missing = S3_REQUIRED_VARS.filter((name) => !env[name]);
+	if (missing.length === S3_REQUIRED_VARS.length) return { config: null, missing };
+	if (missing.length > 0) return { config: null, missing };
 	return {
-		endpoint: env.S3_ENDPOINT!.replace(/\/$/, ''),
-		bucket: env.S3_BUCKET!,
-		region: env.S3_REGION ?? 'auto',
-		accessKeyId: env.S3_ACCESS_KEY_ID!,
-		secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
-		forcePathStyle: env.S3_FORCE_PATH_STYLE === 'true',
-		presignTtlSeconds: envInt(env.S3_PRESIGN_TTL_SECONDS, 300)
+		config: {
+			endpoint: env.S3_ENDPOINT!.replace(/\/$/, ''),
+			bucket: env.S3_BUCKET!,
+			region: env.S3_REGION ?? 'auto',
+			accessKeyId: env.S3_ACCESS_KEY_ID!,
+			secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
+			forcePathStyle: env.S3_FORCE_PATH_STYLE === 'true',
+			presignTtlSeconds: envInt(env.S3_PRESIGN_TTL_SECONDS, 300)
+		},
+		missing: []
 	};
 }
 
-export const S3_CONFIG = readS3Config();
+const s3Result = readS3Config();
+export const S3_CONFIG = s3Result.config;
 
-if (STORAGE_BACKEND === 's3' && !S3_CONFIG) {
-	throw new Error(
-		'STORAGE_BACKEND=s3 but S3 config missing. Set S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY.'
-	);
+export function logStorageBootStatus(): void {
+	if (STORAGE_BACKEND === 's3' && !S3_CONFIG) {
+		// This will be caught at first use; surface it clearly at boot too.
+		console.error(
+			`[storage] STORAGE_BACKEND=s3 but S3 config incomplete. Missing: ${s3Result.missing.join(', ')}. The app will fail when a write is attempted.`
+		);
+	} else if (s3Result.missing.length > 0 && s3Result.missing.length < S3_REQUIRED_VARS.length) {
+		console.warn(
+			`[storage] Partial S3 config detected (missing: ${s3Result.missing.join(', ')}). S3 backend disabled. Set STORAGE_BACKEND=s3 and complete the config to enable.`
+		);
+	} else if (S3_CONFIG) {
+		console.info(
+			`[storage] S3 backend ${STORAGE_BACKEND === 's3' ? 'active' : 'available'} endpoint=${S3_CONFIG.endpoint} bucket=${S3_CONFIG.bucket}`
+		);
+	}
+}
+
+// Immich integration is a read-only reference layer, NOT a write destination.
+// When configured, users can pick existing assets from their Immich library to
+// attach to journal entries or as a companion avatar. EinVault stores a
+// reference (provider='immich', storage_key='immich:{assetId}') and proxies
+// reads through the server using the API key. EinVault never uploads to
+// Immich and never deletes Immich assets.
+export interface ImmichConfig {
+	url: string;
+	apiKey: string;
+	albumId: string | null;
+}
+
+const IMMICH_REQUIRED_VARS = ['IMMICH_URL', 'IMMICH_API_KEY'] as const;
+
+function readImmichConfig(): { config: ImmichConfig | null; missing: string[] } {
+	const url = env.IMMICH_URL?.trim();
+	const apiKey = env.IMMICH_API_KEY?.trim();
+	const albumId = env.IMMICH_ALBUM_ID?.trim() || null;
+	const missing = IMMICH_REQUIRED_VARS.filter((name) => !env[name]?.trim());
+	if (missing.length === IMMICH_REQUIRED_VARS.length) return { config: null, missing };
+	if (missing.length > 0) return { config: null, missing };
+	return {
+		config: {
+			url: url!.replace(/\/$/, ''),
+			apiKey: apiKey!,
+			albumId
+		},
+		missing: []
+	};
+}
+
+const immichResult = readImmichConfig();
+export const IMMICH_CONFIG = immichResult.config;
+
+export function logImmichBootStatus(): void {
+	if (
+		immichResult.missing.length > 0 &&
+		immichResult.missing.length < IMMICH_REQUIRED_VARS.length
+	) {
+		console.warn(
+			`[immich] Partial config detected (missing: ${immichResult.missing.join(', ')}). Integration disabled. Set both IMMICH_URL and IMMICH_API_KEY to enable.`
+		);
+		return;
+	}
+	if (IMMICH_CONFIG) {
+		console.info(
+			`[immich] enabled url=${IMMICH_CONFIG.url}${IMMICH_CONFIG.albumId ? ` album=${IMMICH_CONFIG.albumId}` : ''}`
+		);
+	}
 }
 
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.

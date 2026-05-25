@@ -55,6 +55,15 @@ services:
       # Lifetime of a presigned download URL. Lower = stricter access.
       # S3_PRESIGN_TTL_SECONDS: 300
 
+      # Optional: Immich integration (reference mode)
+      # When set, users can attach existing Immich assets to journal entries
+      # and avatars. EinVault stores a reference and proxies reads through
+      # the API key; it never uploads or deletes from Immich.
+      # IMMICH_URL: http://immich.local:2283
+      # IMMICH_API_KEY:
+      # Optional: restrict picker to a single Immich album.
+      # IMMICH_ALBUM_ID:
+
     security_opt:
       - no-new-privileges:true
     cap_drop:

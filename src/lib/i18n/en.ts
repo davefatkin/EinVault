@@ -712,6 +712,16 @@ const messages = {
 	'aria.nextPhoto': 'Next photo',
 	'aria.viewPhoto': "View {name}'s photo",
 
+	// Immich picker
+	'immich.picker.title': 'Pick from Immich',
+	'immich.picker.albumScoped': 'Showing assets from the configured album.',
+	'immich.picker.empty': 'No assets found in Immich.',
+	'immich.picker.cancel': 'Cancel',
+	'immich.picker.close': 'Close picker',
+	'immich.picker.loadError': 'Could not load Immich library.',
+	'immich.picker.button': 'Pick from Immich',
+	'immich.picker.pickFailed': 'Could not attach Immich asset.',
+
 	// Meta
 	'meta.description': 'EinVault: private dog health & care tracker'
 } as const;

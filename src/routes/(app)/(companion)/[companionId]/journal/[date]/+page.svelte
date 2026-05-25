@@ -11,6 +11,7 @@
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import {
 		Trash2,
 		ChevronLeft,
@@ -198,6 +199,33 @@
 			if (photos.length < data.maxDailyPhotos) uploadPhoto(file);
 		}
 		if (fileInputEl) fileInputEl.value = '';
+	}
+
+	let immichPickerOpen = $state(false);
+
+	async function pickFromImmich(assetId: string) {
+		try {
+			const res = await fetch(
+				`/api/companions/${data.companion.id}/journal/${data.date}/photos/from-immich`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ assetId })
+				}
+			);
+			if (!res.ok) {
+				const err = await res
+					.json()
+					.catch(() => ({ message: t(locale, 'immich.picker.pickFailed') }));
+				setUploadError(err.message ?? t(locale, 'immich.picker.pickFailed'));
+				return;
+			}
+			const photo = await res.json();
+			photos = [...photos, photo];
+			immichPickerOpen = false;
+		} catch {
+			setUploadError(t(locale, 'immich.picker.pickFailed'));
+		}
 	}
 
 	function photoUrl(photo: (typeof photos)[0]) {
@@ -621,24 +649,36 @@
 				>
 			</h2>
 			{#if photos.length < data.maxDailyPhotos}
-				<label
-					class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
-				>
-					{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
-							class="h-3.5 w-3.5"
+				<div class="flex items-center gap-2">
+					{#if data.immichEnabled}
+						<button
+							type="button"
+							class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+							onclick={() => (immichPickerOpen = true)}
+						>
+							<ImageIcon class="h-3.5 w-3.5" />
+							{t(locale, 'immich.picker.button')}
+						</button>
+					{/if}
+					<label
+						class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
+					>
+						{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
+								class="h-3.5 w-3.5"
+							/>
+							{t(locale, 'page.journal.day.addPhoto')}{/if}
+						<input
+							bind:this={fileInputEl}
+							type="file"
+							name="photos"
+							accept="image/jpeg,image/png,image/webp,image/gif"
+							multiple
+							class="sr-only"
+							onchange={handleFileInput}
+							disabled={uploading}
 						/>
-						{t(locale, 'page.journal.day.addPhoto')}{/if}
-					<input
-						bind:this={fileInputEl}
-						type="file"
-						name="photos"
-						accept="image/jpeg,image/png,image/webp,image/gif"
-						multiple
-						class="sr-only"
-						onchange={handleFileInput}
-						disabled={uploading}
-					/>
-				</label>
+					</label>
+				</div>
 			{/if}
 		</div>
 
@@ -1120,3 +1160,11 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+{#if data.immichEnabled}
+	<ImmichPicker
+		open={immichPickerOpen}
+		onpick={pickFromImmich}
+		onclose={() => (immichPickerOpen = false)}
+	/>
+{/if}

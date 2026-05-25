@@ -722,6 +722,16 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextPhoto': 'Nächstes Foto',
 	'aria.viewPhoto': '{name}s Foto anzeigen',
 
+	// Immich picker
+	'immich.picker.title': 'Aus Immich auswählen',
+	'immich.picker.albumScoped': 'Es werden Inhalte aus dem konfigurierten Album angezeigt.',
+	'immich.picker.empty': 'Keine Inhalte in Immich gefunden.',
+	'immich.picker.cancel': 'Abbrechen',
+	'immich.picker.close': 'Auswahl schließen',
+	'immich.picker.loadError': 'Immich-Bibliothek konnte nicht geladen werden.',
+	'immich.picker.button': 'Aus Immich auswählen',
+	'immich.picker.pickFailed': 'Immich-Inhalt konnte nicht angehängt werden.',
+
 	// Meta
 	'meta.description': 'EinVault: privates Gesundheits- und Pflegetagebuch für Hunde'
 } satisfies Record<keyof Messages, string>;
