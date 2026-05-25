@@ -4,8 +4,32 @@ import { validateAuth } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
+import { S3_CONFIG } from '$lib/server/env';
 
 logOidcBootStatus();
+
+// When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
+// host. CSP is enforced on the final navigation target after redirects, so
+// the S3 origin has to appear in img-src or the browser blocks the load.
+// Computed once at boot from runtime env so swapping S3_ENDPOINT only needs a
+// container restart, not a rebuild.
+const S3_IMG_ORIGIN: string | null = (() => {
+	if (!S3_CONFIG) return null;
+	try {
+		return new URL(S3_CONFIG.endpoint).origin;
+	} catch {
+		return null;
+	}
+})();
+
+function injectImgSrcOrigin(csp: string, origin: string): string {
+	// Append the origin inside the existing img-src directive.
+	if (/(^|;)\s*img-src\b/i.test(csp)) {
+		return csp.replace(/(img-src\b[^;]*)/i, `$1 ${origin}`);
+	}
+	// No img-src directive present; add one.
+	return `${csp.replace(/;?\s*$/, '')}; img-src 'self' data: blob: ${origin}`;
+}
 
 const securityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
@@ -25,6 +49,13 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 			'Content-Security-Policy',
 			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		);
+	}
+
+	if (S3_IMG_ORIGIN) {
+		const csp = response.headers.get('content-security-policy');
+		if (csp) {
+			response.headers.set('content-security-policy', injectImgSrcOrigin(csp, S3_IMG_ORIGIN));
+		}
 	}
 
 	if (env.NODE_ENV === 'production') {

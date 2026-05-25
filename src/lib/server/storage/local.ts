@@ -3,7 +3,7 @@ import { mkdir, stat, unlink, writeFile } from 'fs/promises';
 import { dirname, join, normalize, resolve } from 'path';
 import { Readable } from 'stream';
 import { DATA_DIR } from '$lib/server/paths';
-import type { BlobStat, GetResult, PutInput, StorageBackend } from './types';
+import type { BlobStat, GetOptions, GetResult, PutInput, StorageBackend } from './types';
 
 const ROOT = join(DATA_DIR, 'uploads');
 const SAFE_BASE = resolve(ROOT);
@@ -34,7 +34,7 @@ export const LocalBackend: StorageBackend = {
 		return { key };
 	},
 
-	async get(key: string): Promise<GetResult | null> {
+	async get(key: string, opts?: GetOptions): Promise<GetResult | null> {
 		const full = resolveKey(key);
 		let s: Awaited<ReturnType<typeof stat>>;
 		try {
@@ -42,20 +42,15 @@ export const LocalBackend: StorageBackend = {
 		} catch {
 			return null;
 		}
-		return {
-			stream: Readable.toWeb(createReadStream(full)) as ReadableStream,
-			stat: makeStat(s.size, s.mtimeMs, s.mtime)
-		};
-	},
-
-	async stat(key: string): Promise<BlobStat | null> {
-		const full = resolveKey(key);
-		try {
-			const s = await stat(full);
-			return makeStat(s.size, s.mtimeMs, s.mtime);
-		} catch {
-			return null;
+		const blobStat = makeStat(s.size, s.mtimeMs, s.mtime);
+		if (opts?.ifNoneMatch && opts.ifNoneMatch === blobStat.etag) {
+			return { kind: 'notModified', etag: blobStat.etag };
 		}
+		return {
+			kind: 'stream',
+			stream: Readable.toWeb(createReadStream(full)) as ReadableStream,
+			stat: blobStat
+		};
 	},
 
 	async delete(key: string): Promise<void> {

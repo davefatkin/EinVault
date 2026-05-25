@@ -8,10 +8,10 @@ import { getStorage } from '$lib/server/storage';
 export const GET: RequestHandler = async ({ params, locals, request }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
-	const key = params.path ?? '';
+	const requestedPath = params.path ?? '';
 
 	// Verify the photo record exists in DB (don't serve arbitrary files)
-	const filename = key.split('/').pop() ?? '';
+	const filename = requestedPath.split('/').pop() ?? '';
 	const photo = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.filename, filename)
 	});
@@ -33,34 +33,40 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 		if (!assignment) error(403, t(locals.locale, 'error.forbidden'));
 	}
 
-	const storage = getStorage();
+	// For local rows the URL path IS the storage key. For S3 rows we ignore
+	// the URL prefix and use the row's storage_key column instead.
+	const key = photo.storageKey ?? requestedPath;
+	const ifNoneMatch = request.headers.get('if-none-match');
 
-	let stat: Awaited<ReturnType<typeof storage.stat>>;
+	let res: Awaited<ReturnType<ReturnType<typeof getStorage>['get']>>;
 	try {
-		stat = await storage.stat(key);
+		res = await getStorage(photo.provider).get(key, { ifNoneMatch });
 	} catch {
 		error(403, t(locals.locale, 'error.forbidden'));
 	}
-	if (!stat) error(404, t(locals.locale, 'error.fileNotFound'));
+	if (!res) error(404, t(locals.locale, 'error.fileNotFound'));
 
-	if (request.headers.get('if-none-match') === stat.etag) {
-		return new Response(null, { status: 304 });
+	if (res.kind === 'notModified') {
+		return new Response(null, { status: 304, headers: { ETag: res.etag } });
 	}
 
-	let result: Awaited<ReturnType<typeof storage.get>>;
-	try {
-		result = await storage.get(key);
-	} catch {
-		error(403, t(locals.locale, 'error.forbidden'));
+	if (res.kind === 'redirect') {
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: res.url,
+				'Cache-Control': `private, max-age=${res.cacheSeconds}`,
+				'Referrer-Policy': 'no-referrer'
+			}
+		});
 	}
-	if (!result) error(404, t(locals.locale, 'error.fileNotFound'));
 
-	return new Response(result.stream, {
+	return new Response(res.stream, {
 		headers: {
 			'Content-Type': photo.mimeType,
-			'Content-Length': String(result.stat.size),
+			'Content-Length': String(res.stat.size),
 			'Cache-Control': 'private, max-age=31536000, immutable',
-			ETag: result.stat.etag,
+			ETag: res.stat.etag,
 			'X-Content-Type-Options': 'nosniff'
 		}
 	});

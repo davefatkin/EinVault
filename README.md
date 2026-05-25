@@ -94,6 +94,23 @@ Everything else in the compose file can be edited directly:
 | `./data` volume         | `./data`            | Where the database and uploads are stored on the host.                                                                            |
 | `DATABASE_URL`          | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                    |
 
+### External image storage (optional)
+
+By default, avatars and journal photos are written to `./data/uploads`. You can instead route new uploads to an S3-compatible bucket (AWS S3, Garage, MinIO, Backblaze B2, Cloudflare R2). Existing photos remain on disk; only new writes go to S3.
+
+|                          | Default | Description                                                                                                                                                               |
+| ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STORAGE_BACKEND`        | `local` | `local` writes to `./data/uploads`. `s3` writes new uploads to the configured bucket. Reads always honor the per-row provider, so switching does not invalidate old rows. |
+| `S3_ENDPOINT`            | —       | Full endpoint URL, e.g. `https://s3.garage.example.com` or `https://s3.us-east-1.amazonaws.com`.                                                                          |
+| `S3_BUCKET`              | —       | Bucket name. Must already exist and should be private.                                                                                                                    |
+| `S3_REGION`              | `auto`  | Region. For non-AWS providers, `auto` usually works.                                                                                                                      |
+| `S3_ACCESS_KEY_ID`       | —       | Access key. Scope it to this bucket only.                                                                                                                                 |
+| `S3_SECRET_ACCESS_KEY`   | —       | Secret key.                                                                                                                                                               |
+| `S3_FORCE_PATH_STYLE`    | `false` | Set to `true` for Garage, MinIO, and older S3 deployments. Leave `false` for AWS and R2.                                                                                  |
+| `S3_PRESIGN_TTL_SECONDS` | `300`   | Lifetime of presigned download URLs. Shorter is stricter, longer improves browser cache reuse on reload.                                                                  |
+
+Downloads use short-lived presigned URLs (the app issues a 302 redirect). Access control is checked before the URL is issued; once issued, the URL stays valid for the full TTL even if permissions later change. Keep the TTL short.
+
 ### Data and backup
 
 Data lives in `./data` next to the compose file. Stop the container first so SQLite isn't mid-write, then copy the directory:

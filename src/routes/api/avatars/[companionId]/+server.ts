@@ -13,14 +13,30 @@ export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	});
 	if (!companion?.avatarPath) error(404, t(locals.locale, 'error.noAvatar'));
 
-	const key = `avatars/${companion.avatarPath}`;
-	const storage = getStorage();
+	const key = companion.avatarStorageKey ?? `avatars/${companion.avatarPath}`;
+	const ifNoneMatch = request.headers.get('if-none-match');
 
-	const stat = await storage.stat(key);
-	if (!stat) error(404, t(locals.locale, 'error.fileNotFound'));
+	let res: Awaited<ReturnType<ReturnType<typeof getStorage>['get']>>;
+	try {
+		res = await getStorage(companion.avatarProvider).get(key, { ifNoneMatch });
+	} catch {
+		error(403, t(locals.locale, 'error.forbidden'));
+	}
+	if (!res) error(404, t(locals.locale, 'error.fileNotFound'));
 
-	if (request.headers.get('if-none-match') === stat.etag) {
-		return new Response(null, { status: 304 });
+	if (res.kind === 'notModified') {
+		return new Response(null, { status: 304, headers: { ETag: res.etag } });
+	}
+
+	if (res.kind === 'redirect') {
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: res.url,
+				'Cache-Control': `private, max-age=${res.cacheSeconds}`,
+				'Referrer-Policy': 'no-referrer'
+			}
+		});
 	}
 
 	const ext = companion.avatarPath.split('.').pop() ?? 'jpg';
@@ -31,16 +47,13 @@ export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 		? 'private, max-age=31536000, immutable'
 		: 'private, no-cache';
 
-	const result = await storage.get(key);
-	if (!result) error(404, t(locals.locale, 'error.fileNotFound'));
-
-	return new Response(result.stream, {
+	return new Response(res.stream, {
 		headers: {
 			'Content-Type': mimeType,
-			'Content-Length': String(result.stat.size),
+			'Content-Length': String(res.stat.size),
 			'Cache-Control': cacheControl,
-			ETag: result.stat.etag,
-			'Last-Modified': result.stat.mtime.toUTCString(),
+			ETag: res.stat.etag,
+			'Last-Modified': res.stat.mtime.toUTCString(),
 			'X-Content-Type-Options': 'nosniff'
 		}
 	});

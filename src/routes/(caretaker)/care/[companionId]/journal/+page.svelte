@@ -84,12 +84,14 @@
 				setUploadError(err.message ?? 'Upload failed');
 				return;
 			}
-			const { id, filename, loggedBy, logger } = await res.json();
+			const { id, filename, provider, storageKey, loggedBy, logger } = await res.json();
 			photos = [
 				...photos,
 				{
 					id,
 					filename,
+					provider,
+					storageKey,
 					entryId: data.todayEntry?.id ?? '',
 					originalName: file.name,
 					mimeType: file.type,

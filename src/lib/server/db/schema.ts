@@ -78,6 +78,10 @@ export const companions = sqliteTable(
 			.default('lbs'),
 		microchip: text('microchip'),
 		avatarPath: text('avatar_path'),
+		avatarProvider: text('avatar_provider', { enum: ['local', 's3'] })
+			.notNull()
+			.default('local'),
+		avatarStorageKey: text('avatar_storage_key'),
 		bio: text('bio'),
 		feedingSchedule: text('feeding_schedule'),
 		walkSchedule: text('walk_schedule'),
@@ -130,6 +134,10 @@ export const journalPhotos = sqliteTable(
 			.notNull()
 			.references(() => journalEntries.id, { onDelete: 'cascade' }),
 		filename: text('filename').notNull(),
+		provider: text('provider', { enum: ['local', 's3'] })
+			.notNull()
+			.default('local'),
+		storageKey: text('storage_key'),
 		originalName: text('original_name'),
 		mimeType: text('mime_type').notNull(),
 		sizeBytes: integer('size_bytes').notNull(),

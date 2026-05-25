@@ -4,7 +4,8 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import sharp from 'sharp';
-import { getStorage } from '$lib/server/storage';
+import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
+import type { StorageProvider } from '$lib/server/storage';
 import { UPLOAD_MAX_MB } from '$lib/server/env';
 
 const MAX_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
@@ -13,6 +14,18 @@ const LEGACY_EXTS = ['jpg', 'png', 'webp'];
 
 function avatarKey(companionId: string, ext: string): string {
 	return `avatars/${companionId}.${ext}`;
+}
+
+function resolveExistingKey(
+	companionId: string,
+	provider: StorageProvider,
+	storedKey: string | null,
+	avatarPath: string | null
+): string | null {
+	if (storedKey) return storedKey;
+	// Legacy local row: derive key from avatarPath (filename).
+	if (provider === 'local' && avatarPath) return `avatars/${avatarPath}`;
+	return null;
 }
 
 async function assertCanEditAvatar(
@@ -48,11 +61,23 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!ALLOWED_TYPES.includes(file.type))
 		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 
-	const storage = getStorage();
-
-	// Remove any prior avatar regardless of legacy extension
-	for (const ext of LEGACY_EXTS) {
-		await storage.delete(avatarKey(params.companionId, ext));
+	// Remove previous avatar from wherever it currently lives.
+	const existingKey = resolveExistingKey(
+		params.companionId,
+		companion.avatarProvider,
+		companion.avatarStorageKey,
+		companion.avatarPath
+	);
+	if (existingKey) {
+		await getStorage(companion.avatarProvider).delete(existingKey);
+	}
+	// Local-only legacy cleanup: wipe sibling .png/.webp from disk in case
+	// they survived a prior failed delete.
+	if (companion.avatarProvider === 'local') {
+		const local = getStorage('local');
+		for (const ext of LEGACY_EXTS) {
+			await local.delete(avatarKey(params.companionId, ext));
+		}
 	}
 
 	const raw = Buffer.from(await file.arrayBuffer());
@@ -62,15 +87,20 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		.toBuffer();
 
 	const filename = `${params.companionId}.jpg`;
-	await storage.put({
-		key: avatarKey(params.companionId, 'jpg'),
+	const key = avatarKey(params.companionId, 'jpg');
+	await getStorage().put({
+		key,
 		body: processed,
 		contentType: 'image/jpeg'
 	});
 
 	await db
 		.update(schema.companions)
-		.set({ avatarPath: filename })
+		.set({
+			avatarPath: filename,
+			avatarProvider: STORAGE_BACKEND,
+			avatarStorageKey: key
+		})
 		.where(eq(schema.companions.id, params.companionId));
 
 	return json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
@@ -79,14 +109,30 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	await assertCanEditAvatar(locals, params.companionId);
 
-	const storage = getStorage();
-	for (const ext of LEGACY_EXTS) {
-		await storage.delete(avatarKey(params.companionId, ext));
+	const companion = await db.query.companions.findFirst({
+		where: eq(schema.companions.id, params.companionId)
+	});
+	if (!companion) error(404, t(locals.locale, 'error.notFound'));
+
+	const existingKey = resolveExistingKey(
+		params.companionId,
+		companion.avatarProvider,
+		companion.avatarStorageKey,
+		companion.avatarPath
+	);
+	if (existingKey) {
+		await getStorage(companion.avatarProvider).delete(existingKey);
+	}
+	if (companion.avatarProvider === 'local') {
+		const local = getStorage('local');
+		for (const ext of LEGACY_EXTS) {
+			await local.delete(avatarKey(params.companionId, ext));
+		}
 	}
 
 	await db
 		.update(schema.companions)
-		.set({ avatarPath: null })
+		.set({ avatarPath: null, avatarStorageKey: null, avatarProvider: 'local' })
 		.where(eq(schema.companions.id, params.companionId));
 
 	return json({ success: true });

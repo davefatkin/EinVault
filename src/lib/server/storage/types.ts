@@ -1,4 +1,4 @@
-export type StorageProvider = 'local';
+export type StorageProvider = 'local' | 's3';
 
 export interface PutInput {
 	key: string;
@@ -12,15 +12,18 @@ export interface BlobStat {
 	mtime: Date;
 }
 
-export interface GetResult {
-	stream: ReadableStream;
-	stat: BlobStat;
+export type GetResult =
+	| { kind: 'stream'; stream: ReadableStream; stat: BlobStat }
+	| { kind: 'redirect'; url: string; cacheSeconds: number }
+	| { kind: 'notModified'; etag: string };
+
+export interface GetOptions {
+	ifNoneMatch?: string | null;
 }
 
 export interface StorageBackend {
 	readonly provider: StorageProvider;
 	put(input: PutInput): Promise<{ key: string }>;
-	get(key: string): Promise<GetResult | null>;
-	stat(key: string): Promise<BlobStat | null>;
+	get(key: string, opts?: GetOptions): Promise<GetResult | null>;
 	delete(key: string): Promise<void>;
 }

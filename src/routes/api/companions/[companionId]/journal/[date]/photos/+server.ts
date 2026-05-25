@@ -5,7 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
-import { getStorage } from '$lib/server/storage';
+import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
 import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
 import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
@@ -95,8 +95,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	const filename = `${photoId}.${ext}`;
+	const key = journalKey(companionId, date, filename);
 	await getStorage().put({
-		key: journalKey(companionId, date, filename),
+		key,
 		body: processed,
 		contentType: mimeType
 	});
@@ -105,6 +106,8 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		id: photoId,
 		entryId: entry.id,
 		filename,
+		provider: STORAGE_BACKEND,
+		storageKey: key,
 		originalName: file.name,
 		mimeType,
 		sizeBytes: processed.length,
@@ -174,7 +177,8 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 
 	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
-	await getStorage().delete(journalKey(params.companionId, params.date, photo.filename));
+	const key = photo.storageKey ?? journalKey(params.companionId, params.date, photo.filename);
+	await getStorage(photo.provider).delete(key);
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 
