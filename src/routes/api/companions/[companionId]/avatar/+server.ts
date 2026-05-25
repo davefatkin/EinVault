@@ -3,15 +3,17 @@ import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import sharp from 'sharp';
-import { DATA_DIR } from '$lib/server/paths';
+import { getStorage } from '$lib/server/storage';
 import { UPLOAD_MAX_MB } from '$lib/server/env';
 
 const MAX_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const LEGACY_EXTS = ['jpg', 'png', 'webp'];
+
+function avatarKey(companionId: string, ext: string): string {
+	return `avatars/${companionId}.${ext}`;
+}
 
 async function assertCanEditAvatar(
 	locals: import('@sveltejs/kit').RequestEvent['locals'],
@@ -46,13 +48,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!ALLOWED_TYPES.includes(file.type))
 		error(400, t(locals.locale, 'error.invalidFileTypeAvatar'));
 
-	const avatarDir = join(DATA_DIR, 'uploads', 'avatars');
-	await mkdir(avatarDir, { recursive: true });
+	const storage = getStorage();
 
-	// Remove old avatar regardless of extension
-	for (const oldExt of ['jpg', 'png', 'webp']) {
-		const old = join(avatarDir, `${params.companionId}.${oldExt}`);
-		if (existsSync(old)) await unlink(old).catch(() => {});
+	// Remove any prior avatar regardless of legacy extension
+	for (const ext of LEGACY_EXTS) {
+		await storage.delete(avatarKey(params.companionId, ext));
 	}
 
 	const raw = Buffer.from(await file.arrayBuffer());
@@ -62,7 +62,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		.toBuffer();
 
 	const filename = `${params.companionId}.jpg`;
-	await writeFile(join(avatarDir, filename), processed);
+	await storage.put({
+		key: avatarKey(params.companionId, 'jpg'),
+		body: processed,
+		contentType: 'image/jpeg'
+	});
 
 	await db
 		.update(schema.companions)
@@ -75,10 +79,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	await assertCanEditAvatar(locals, params.companionId);
 
-	const avatarDir = join(DATA_DIR, 'uploads', 'avatars');
-	for (const ext of ['jpg', 'png', 'webp']) {
-		const p = join(avatarDir, `${params.companionId}.${ext}`);
-		if (existsSync(p)) await unlink(p).catch(() => {});
+	const storage = getStorage();
+	for (const ext of LEGACY_EXTS) {
+		await storage.delete(avatarKey(params.companionId, ext));
 	}
 
 	await db

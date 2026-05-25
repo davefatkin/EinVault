@@ -3,27 +3,15 @@ import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
-import { createReadStream } from 'fs';
-import { Readable } from 'stream';
-import { stat } from 'fs/promises';
-import { join, normalize, resolve } from 'path';
-import { DATA_DIR } from '$lib/server/paths';
-
-const UPLOAD_DIR = join(DATA_DIR, 'uploads');
+import { getStorage } from '$lib/server/storage';
 
 export const GET: RequestHandler = async ({ params, locals, request }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
-	// Path traversal guard: resolve and ensure it stays within UPLOAD_DIR
-	const requestedPath = normalize(params.path ?? '');
-	const fullPath = resolve(join(UPLOAD_DIR, requestedPath));
-
-	if (!fullPath.startsWith(resolve(UPLOAD_DIR))) {
-		error(403, t(locals.locale, 'error.forbidden'));
-	}
+	const key = params.path ?? '';
 
 	// Verify the photo record exists in DB (don't serve arbitrary files)
-	const filename = requestedPath.split('/').pop() ?? '';
+	const filename = key.split('/').pop() ?? '';
 	const photo = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.filename, filename)
 	});
@@ -45,25 +33,34 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 		if (!assignment) error(403, t(locals.locale, 'error.forbidden'));
 	}
 
-	let fileStat: Awaited<ReturnType<typeof stat>>;
+	const storage = getStorage();
+
+	let stat: Awaited<ReturnType<typeof storage.stat>>;
 	try {
-		fileStat = await stat(fullPath);
+		stat = await storage.stat(key);
 	} catch {
-		error(404, t(locals.locale, 'error.fileNotFound'));
+		error(403, t(locals.locale, 'error.forbidden'));
 	}
+	if (!stat) error(404, t(locals.locale, 'error.fileNotFound'));
 
-	const etag = `"${fileStat.mtimeMs.toString(36)}-${fileStat.size.toString(36)}"`;
-
-	if (request.headers.get('if-none-match') === etag) {
+	if (request.headers.get('if-none-match') === stat.etag) {
 		return new Response(null, { status: 304 });
 	}
 
-	return new Response(Readable.toWeb(createReadStream(fullPath)) as ReadableStream, {
+	let result: Awaited<ReturnType<typeof storage.get>>;
+	try {
+		result = await storage.get(key);
+	} catch {
+		error(403, t(locals.locale, 'error.forbidden'));
+	}
+	if (!result) error(404, t(locals.locale, 'error.fileNotFound'));
+
+	return new Response(result.stream, {
 		headers: {
 			'Content-Type': photo.mimeType,
-			'Content-Length': String(fileStat.size),
+			'Content-Length': String(result.stat.size),
 			'Cache-Control': 'private, max-age=31536000, immutable',
-			ETag: etag,
+			ETag: result.stat.etag,
 			'X-Content-Type-Options': 'nosniff'
 		}
 	});

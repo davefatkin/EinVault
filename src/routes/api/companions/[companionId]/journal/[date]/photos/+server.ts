@@ -4,16 +4,18 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import sharp from 'sharp';
-import { DATA_DIR } from '$lib/server/paths';
+import { getStorage } from '$lib/server/storage';
 import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
 import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
 const MAX_FILE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+function journalKey(companionId: string, date: string, filename: string): string {
+	return `journal/${companionId}/${date}/${filename}`;
+}
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -93,9 +95,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	const filename = `${photoId}.${ext}`;
-	const uploadDir = join(DATA_DIR, 'uploads', 'journal', companionId, date);
-	await mkdir(uploadDir, { recursive: true });
-	await writeFile(join(uploadDir, filename), processed);
+	await getStorage().put({
+		key: journalKey(companionId, date, filename),
+		body: processed,
+		contentType: mimeType
+	});
 
 	await db.insert(schema.journalPhotos).values({
 		id: photoId,
@@ -170,20 +174,7 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 
 	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
-	const { unlink } = await import('fs/promises');
-	const filePath = join(
-		DATA_DIR,
-		'uploads',
-		'journal',
-		params.companionId,
-		params.date,
-		photo.filename
-	);
-	try {
-		await unlink(filePath);
-	} catch {
-		// File already gone; still delete the DB record
-	}
+	await getStorage().delete(journalKey(params.companionId, params.date, photo.filename));
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 
