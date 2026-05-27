@@ -6,11 +6,11 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { CheckCheck, Pencil, Plus, X, HeartPulse } from '@lucide/svelte';
+	import { CheckCheck, Pencil, Plus, X, HeartPulse, NotebookPen } from '@lucide/svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
-	import { renderMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import {
@@ -75,6 +75,9 @@
 	let selectedReminder = $state<Reminder | null>(null);
 	let reminderDialogEl = $state<HTMLElement | null>(null);
 
+	let selectedEvent = $state<MergedEvent | null>(null);
+	let eventDialogEl = $state<HTMLElement | null>(null);
+
 	async function openReminderDetail(r: Reminder) {
 		selectedReminder = r;
 		await tick();
@@ -85,10 +88,20 @@
 		selectedReminder = null;
 	}
 
-	function trapReminderFocus(e: KeyboardEvent) {
-		if (!reminderDialogEl) return;
+	async function openEventDetail(e: MergedEvent) {
+		selectedEvent = e;
+		await tick();
+		eventDialogEl?.focus();
+	}
+
+	function closeEventDetail() {
+		selectedEvent = null;
+	}
+
+	function trapFocus(e: KeyboardEvent, dialogEl: HTMLElement | null, onClose: () => void) {
+		if (!dialogEl) return;
 		const focusable = Array.from(
-			reminderDialogEl.querySelectorAll<HTMLElement>(
+			dialogEl.querySelectorAll<HTMLElement>(
 				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 			)
 		).filter((el) => !el.hasAttribute('disabled'));
@@ -108,7 +121,7 @@
 				}
 			}
 		}
-		if (e.key === 'Escape') closeReminderDetail();
+		if (e.key === 'Escape') onClose();
 	}
 
 	function submitWithAndEvent(reminderId: string) {
@@ -154,7 +167,7 @@
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
-			onkeydown={trapReminderFocus}
+			onkeydown={(e) => trapFocus(e, reminderDialogEl, closeReminderDetail)}
 			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
 				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
 		>
@@ -250,6 +263,157 @@
 	</div>
 {/if}
 
+<!-- Recent activity detail modal -->
+{#if selectedEvent}
+	{@const ev = selectedEvent}
+	{@const companion = companionsById[ev.row.companionId]}
+	{@const journalDay = localDateISO(ev.at)}
+	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+		<button
+			tabindex="-1"
+			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+			aria-label={t(locale, 'aria.closeDialog')}
+			onclick={closeEventDetail}
+		></button>
+		<div
+			bind:this={eventDialogEl}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onkeydown={(e) => trapFocus(e, eventDialogEl, closeEventDetail)}
+			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
+				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
+		>
+			<div class="flex items-center justify-between px-5 pt-5 pb-3">
+				<h2 class="font-semibold text-base text-foreground flex items-center gap-2">
+					{#if ev.kind === 'daily'}
+						<span aria-hidden="true">{ACTIVITY_ICONS[ev.row.type] ?? '📝'}</span>
+						{activityLabel(locale, ev.row.type)}
+					{:else}
+						<span aria-hidden="true">🏥</span>
+						{ev.row.title}
+					{/if}
+				</h2>
+				<button
+					onclick={closeEventDetail}
+					aria-label={t(locale, 'aria.close')}
+					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+				>
+					<X class="h-4 w-4" />
+				</button>
+			</div>
+
+			<Separator />
+
+			<div class="px-5 py-4 space-y-3 text-sm">
+				{#if ev.kind === 'daily'}
+					{@const e = ev.row}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelType')}</span
+						>
+						<Badge variant="secondary" class="capitalize">{activityLabel(locale, e.type)}</Badge>
+					</div>
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
+						>
+						<span class="text-foreground"
+							><LocalTime date={e.loggedAt} format="datetime" /><ByLine
+								user={e.logger}
+								variant="inline"
+							/></span
+						>
+					</div>
+					{#if e.durationMinutes}
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelDuration')}</span
+							>
+							<span class="text-foreground">{e.durationMinutes} min</span>
+						</div>
+					{/if}
+					{#if e.notes}
+						<div class="pt-1">
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
+							<div class="prose prose-sm dark:prose-invert max-w-none">
+								{@html renderMarkdown(e.notes)}
+							</div>
+						</div>
+					{/if}
+				{:else}
+					{@const h = ev.row}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelType')}</span
+						>
+						<Badge variant="bark" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
+					</div>
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.dashboard.modalLabelDate')}</span
+						>
+						<span class="text-foreground"
+							><LocalTime date={h.occurredAt} format="datetime" /><ByLine
+								user={h.logger}
+								variant="inline"
+							/></span
+						>
+					</div>
+					{#if h.vetName || h.vetClinic}
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelVet')}</span
+							>
+							<span class="text-foreground"
+								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
+							>
+						</div>
+					{/if}
+					{#if h.notes}
+						<div class="pt-1">
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'page.dashboard.modalLabelNotes')}
+							</p>
+							<div class="prose prose-sm dark:prose-invert max-w-none">
+								{@html renderMarkdown(h.notes)}
+							</div>
+						</div>
+					{/if}
+				{/if}
+			</div>
+
+			{#if companion}
+				<Separator />
+				<div class="flex flex-wrap gap-2 px-5 py-4">
+					{#if ev.kind === 'health'}
+						<Button
+							href="/{companion.id}/health?edit={ev.row.id}"
+							variant="outline"
+							size="sm"
+							onclick={closeEventDetail}
+						>
+							<Pencil class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.dashboard.modalEditHealth')}
+						</Button>
+					{/if}
+					<Button
+						href="/{companion.id}/journal/{journalDay}"
+						variant="outline"
+						size="sm"
+						onclick={closeEventDetail}
+					>
+						<NotebookPen class="h-3.5 w-3.5 mr-1.5" />
+						{t(locale, 'page.dashboard.modalOpenJournal')}
+					</Button>
+				</div>
+			{/if}
+		</div>
+	</div>
+{/if}
+
 <div class="space-y-8 pb-20 md:pb-0">
 	<h1 class="sr-only">{t(locale, 'overview.title')}</h1>
 
@@ -281,7 +445,11 @@
 									<CardContent class="py-3">
 										<div class="flex items-start gap-3">
 											{#if companion}
-												<a href="/{companion.id}" aria-label={companion.name} class="shrink-0">
+												<a
+													href="/{companion.id}/reminders"
+													aria-label={companion.name}
+													class="shrink-0"
+												>
 													<CompanionAvatar
 														companionId={companion.id}
 														avatarPath={companion.avatarPath}
@@ -354,24 +522,31 @@
 		<div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
 			{#each data.companions as companion (companion.id)}
 				{@const entry = data.todayJournalByCompanion[companion.id]}
+				{@const journalHref = `/${companion.id}/journal/${entry?.date ?? localDateISO(new Date())}`}
 				<Card>
 					<CardContent class="py-4">
 						<div class="flex items-center gap-2 mb-2">
-							<CompanionAvatar
-								companionId={companion.id}
-								avatarPath={companion.avatarPath}
-								name={companion.name}
-								size="sm"
-							/>
-							<span class="font-medium text-sm text-foreground truncate">{companion.name}</span>
+							<a
+								href={journalHref}
+								aria-label={companion.name}
+								class="flex min-w-0 items-center gap-2 -mx-2 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+							>
+								<CompanionAvatar
+									companionId={companion.id}
+									avatarPath={companion.avatarPath}
+									name={companion.name}
+									size="sm"
+								/>
+								<span class="font-medium text-sm text-foreground truncate">{companion.name}</span>
+							</a>
 							{#if entry?.mood}
 								<span class="text-base ml-auto" aria-hidden="true">{MOOD_ICONS[entry.mood]}</span>
 							{/if}
 						</div>
 						{#if entry}
 							{#if entry.body}
-								<p class="text-sm text-muted-foreground line-clamp-3 mb-2 whitespace-pre-line">
-									{entry.body}
+								<p class="text-sm text-muted-foreground line-clamp-3 mb-2">
+									{stripMarkdown(entry.body)}
 								</p>
 							{:else}
 								<p class="text-xs italic text-muted-foreground mb-2">
@@ -429,7 +604,11 @@
 						<CardContent class="py-3">
 							<div class="flex items-start gap-3">
 								{#if companion}
-									<a href="/{companion.id}" aria-label={companion.name} class="shrink-0">
+									<a
+										href="/{companion.id}/journal/{localDateISO(event.at)}"
+										aria-label={companion.name}
+										class="shrink-0"
+									>
 										<CompanionAvatar
 											companionId={companion.id}
 											avatarPath={companion.avatarPath}
@@ -438,7 +617,11 @@
 										/>
 									</a>
 								{/if}
-								<div class="flex-1 min-w-0">
+								<button
+									type="button"
+									onclick={() => openEventDetail(event)}
+									class="flex-1 min-w-0 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
+								>
 									<div class="flex items-center gap-2 flex-wrap">
 										{#if event.kind === 'daily'}
 											<span class="text-base" aria-hidden="true"
@@ -460,7 +643,7 @@
 									</div>
 									{#if event.kind === 'daily' && event.row.notes}
 										<p class="text-xs mt-0.5 text-muted-foreground line-clamp-2">
-											{event.row.notes}
+											{stripMarkdown(event.row.notes)}
 										</p>
 									{/if}
 									<p class="text-xs mt-0.5 text-muted-foreground">
@@ -470,7 +653,7 @@
 											variant="inline"
 										/>
 									</p>
-								</div>
+								</button>
 							</div>
 						</CardContent>
 					</Card>

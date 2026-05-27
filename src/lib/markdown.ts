@@ -33,6 +33,11 @@ const ALLOWED_TAGS = [
 	'a'
 ];
 
+// Strip markdown syntax characters for compact, single-line previews.
+export function stripMarkdown(text: string): string {
+	return text.replace(/[#*_`~>[\]]/g, '').trim();
+}
+
 export function renderMarkdown(text: string): string {
 	const raw = marked.parse(text, { async: false }) as string;
 	return DOMPurify.sanitize(raw, {

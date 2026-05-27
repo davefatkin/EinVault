@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { renderMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
@@ -763,7 +763,7 @@
 								{:else}
 									{#if photo.notes}
 										<p class="text-sm text-muted-foreground">
-											{photo.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+											{stripMarkdown(photo.notes)}
 										</p>
 									{:else}
 										<p class="text-sm italic text-muted-foreground">
@@ -1068,7 +1068,7 @@
 									</div>
 									{#if event.notes}
 										<p class="text-sm mt-0.5 text-muted-foreground">
-											{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+											{stripMarkdown(event.notes)}
 										</p>
 									{/if}
 								</div>

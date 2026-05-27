@@ -24,7 +24,7 @@
 	} from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
-	import { renderMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -607,7 +607,7 @@
 			<CardContent class="pt-0">
 				{#if todayJournal?.body}
 					<p class="text-sm line-clamp-3 text-muted-foreground">
-						{todayJournal.body.replace(/[#*_`~>[\]]/g, '').trim()}
+						{stripMarkdown(todayJournal.body)}
 					</p>
 					{#if todayJournal.mood}
 						<p class="mt-2 text-lg">{MOOD_LABEL[todayJournal.mood] ?? ''}</p>
@@ -793,7 +793,7 @@
 								<Badge variant="secondary" class="capitalize">{event.type}</Badge>
 								{#if event.notes}
 									<span class="truncate text-muted-foreground">
-										{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+										{stripMarkdown(event.notes)}
 									</span>
 								{/if}
 							</div>

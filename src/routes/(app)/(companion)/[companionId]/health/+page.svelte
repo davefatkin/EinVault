@@ -14,7 +14,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Scale, Plus, Pencil, Trash2, X } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { renderMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -688,8 +688,7 @@
 									>{entry.weight} {entry.unit}</span
 								>
 								<div class="flex-1 min-w-0 text-xs text-muted-foreground">
-									<span class="truncate block"
-										>{entry.notes ? entry.notes.replace(/[#*_`~>[\]]/g, '').trim() : ''}</span
+									<span class="truncate block">{entry.notes ? stripMarkdown(entry.notes) : ''}</span
 									>
 									<ByLine user={entry.logger} />
 								</div>
@@ -866,7 +865,7 @@
 										{/if}
 										{#if event.notes}
 											<p class="text-sm mt-1 text-muted-foreground">
-												{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+												{stripMarkdown(event.notes)}
 											</p>
 										{/if}
 										<ByLine user={event.logger} class="mt-0.5" />

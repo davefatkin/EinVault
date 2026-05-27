@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import { stripMarkdown } from '$lib/markdown';
 	import { canModifyPhoto } from '$lib/permissions';
 	import { Trash2 } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
@@ -369,7 +370,7 @@
 									{:else}
 										{#if photo.notes}
 											<p class="text-sm text-muted-foreground">
-												{photo.notes.replace(/[#*_`~>[\]]/g, '').trim()}
+												{stripMarkdown(photo.notes)}
 											</p>
 										{:else}
 											<p class="text-sm italic text-muted-foreground">

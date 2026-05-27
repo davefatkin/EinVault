@@ -8,7 +8,7 @@
 	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { renderMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -686,7 +686,7 @@
 									{/if}
 									{#if event.notes}
 										<span class="truncate text-muted-foreground text-xs"
-											>{event.notes.replace(/[#*_`~>[\]]/g, '').trim()}</span
+											>{stripMarkdown(event.notes)}</span
 										>
 									{/if}
 									<span class="ml-auto text-xs shrink-0 text-muted-foreground">
