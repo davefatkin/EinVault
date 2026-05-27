@@ -384,6 +384,8 @@ const messages = {
 	'overview.empty.journal': 'No entry yet today.',
 	'overview.journal.addToday': "Add today's entry",
 	'overview.journal.editToday': 'Edit entry',
+	'overview.journal.openFor': "Open {name}'s journal",
+	'overview.reminders.openFor': "Open {name}'s reminders",
 	'overview.markDone': 'Mark as done',
 	'overview.day.today': 'Today',
 	'overview.day.tomorrow': 'Tomorrow',

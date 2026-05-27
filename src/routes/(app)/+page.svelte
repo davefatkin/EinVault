@@ -447,8 +447,10 @@
 											{#if companion}
 												<a
 													href="/{companion.id}/reminders"
-													aria-label={companion.name}
-													class="shrink-0"
+													aria-label={t(locale, 'overview.reminders.openFor', {
+														name: companion.name
+													})}
+													class="shrink-0 -m-1 rounded-full p-1 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 												>
 													<CompanionAvatar
 														companionId={companion.id}
@@ -606,8 +608,8 @@
 								{#if companion}
 									<a
 										href="/{companion.id}/journal/{localDateISO(event.at)}"
-										aria-label={companion.name}
-										class="shrink-0"
+										aria-label={t(locale, 'overview.journal.openFor', { name: companion.name })}
+										class="shrink-0 -m-1 rounded-full p-1 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									>
 										<CompanionAvatar
 											companionId={companion.id}
@@ -627,7 +629,7 @@
 											<span class="text-base" aria-hidden="true"
 												>{ACTIVITY_ICONS[event.row.type] ?? '📝'}</span
 											>
-											<span class="font-medium text-sm text-foreground"
+											<span class="font-medium text-sm text-foreground truncate"
 												>{activityLabel(locale, event.row.type)}</span
 											>
 											{#if event.row.durationMinutes}

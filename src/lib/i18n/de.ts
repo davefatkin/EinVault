@@ -389,6 +389,8 @@ const messages: Record<keyof Messages, string> = {
 	'overview.empty.recent': 'In den letzten 7 Tagen keine Aktivität erfasst.',
 	'overview.empty.journal': 'Noch kein Eintrag für heute.',
 	'overview.journal.addToday': 'Heutigen Eintrag hinzufügen',
+	'overview.journal.openFor': '{name}s Tagebuch öffnen',
+	'overview.reminders.openFor': '{name}s Erinnerungen öffnen',
 	'overview.journal.editToday': 'Eintrag bearbeiten',
 	'overview.markDone': 'Als erledigt markieren',
 	'overview.day.today': 'Heute',
