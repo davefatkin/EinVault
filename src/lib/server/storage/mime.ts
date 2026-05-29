@@ -24,6 +24,28 @@ export function isAllowedVideoMime(mime: string | null | undefined): boolean {
 	return !!mime && (ALLOWED_VIDEO_MIME as readonly string[]).includes(mime);
 }
 
+// Lightweight container sniff confirming an accepted video mime actually looks
+// like that container, mirroring the GIF magic-byte check on the image path.
+// Not a full parse: it just rejects obviously-mislabeled uploads (e.g. an HTML
+// document sent as video/mp4) as defense in depth.
+export function looksLikeVideo(bytes: Uint8Array, mime: string): boolean {
+	if (mime === 'video/webm') {
+		// Matroska/WebM EBML header: 1A 45 DF A3
+		return (
+			bytes.length >= 4 &&
+			bytes[0] === 0x1a &&
+			bytes[1] === 0x45 &&
+			bytes[2] === 0xdf &&
+			bytes[3] === 0xa3
+		);
+	}
+	// mp4 / quicktime use the ISO base media format: bytes 4..8 hold the first
+	// box type, almost always 'ftyp'. Allow the other common leading boxes too.
+	if (bytes.length < 12) return false;
+	const box = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
+	return ['ftyp', 'moov', 'mdat', 'free', 'skip', 'wide'].includes(box);
+}
+
 // Safe lowercase file extension for an accepted video mime type.
 export function videoExtFromMime(mime: string): string {
 	if (mime === 'video/mp4') return 'mp4';

@@ -76,7 +76,8 @@
 
 		{#if form?.error}
 			<div
-				class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-300"
+				role="alert"
+				class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
 			>
 				{form.error}
 			</div>

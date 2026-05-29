@@ -7,7 +7,7 @@ import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
 import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
-import { isAllowedVideoMime, videoExtFromMime } from '$lib/server/storage/mime';
+import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/server/storage/mime';
 import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
@@ -86,6 +86,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const mediaType: 'photo' | 'video' = isVideo ? 'video' : 'photo';
 
 	if (isVideo) {
+		// Confirm the bytes match the declared container before trusting the
+		// client mime type (we store videos as-is, with no re-encode to sanitize).
+		if (!looksLikeVideo(raw, file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
 		// Videos are stored as-is: no server-side transcode or resize.
 		processed = raw;
 		ext = videoExtFromMime(file.type);

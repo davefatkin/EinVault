@@ -15,7 +15,6 @@
 		Download,
 		Play
 	} from '@lucide/svelte';
-	import { isVideoMime } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
@@ -248,7 +247,7 @@
 			</div>
 
 			<div class="relative">
-				{#if isVideoMime(lightboxPhoto.mimeType)}
+				{#if lightboxPhoto.mediaType === 'video'}
 					<JournalVideo
 						src={photoUrl(lightboxPhoto, lightboxDate)}
 						downloadName={lightboxPhoto.originalName}
@@ -501,9 +500,15 @@
 									class="relative block overflow-hidden {entry.photos.length === 1
 										? 'aspect-video'
 										: 'aspect-square'} hover:opacity-95 transition-opacity"
-									title={photo.originalName ?? 'Journal photo'}
+									title={photo.originalName ??
+										t(
+											locale,
+											photo.mediaType === 'video'
+												? 'page.journal.videoAlt'
+												: 'page.journal.photoAlt'
+										)}
 								>
-									{#if isVideoMime(photo.mimeType)}
+									{#if photo.mediaType === 'video'}
 										<video
 											src={photoUrl(photo, entry.date)}
 											preload="metadata"

@@ -687,7 +687,8 @@
 
 		{#if uploadError}
 			<div
-				class="mx-4 my-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-300"
+				role="alert"
+				class="mx-4 my-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
 			>
 				{uploadError}
 			</div>
@@ -722,16 +723,17 @@
 					{#each photos as photo (photo.id)}
 						<div class="flex gap-3 items-start">
 							<div
-								class="group relative shrink-0 {isVideoMime(photo.mimeType)
+								class="group relative shrink-0 {photo.mediaType === 'video'
 									? 'w-40'
 									: 'w-24'} h-24 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
 							>
-								{#if isVideoMime(photo.mimeType)}
+								{#if photo.mediaType === 'video'}
 									<JournalVideo
 										src={photoUrl(photo)}
 										downloadName={photo.originalName}
 										label={photo.originalName ?? undefined}
 										class="w-full h-full object-cover"
+										compact
 									/>
 								{:else}
 									<img

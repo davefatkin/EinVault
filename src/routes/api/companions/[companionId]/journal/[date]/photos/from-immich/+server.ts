@@ -88,6 +88,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 					provider: 'immich',
 					storageKey: immichKey(assetId),
 					originalName: asset.originalFileName || null,
+					// Immich picker only surfaces images (videos are filtered out), so
+					// these are always photos.
+					mediaType: 'photo',
 					mimeType: asset.originalMimeType,
 					sizeBytes: asset.fileSizeInByte ?? 0,
 					loggedBy

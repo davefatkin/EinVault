@@ -59,6 +59,9 @@ export function createS3Backend(config: S3Config): StorageBackend {
 			// Issue a presigned GET URL. Caller redirects browser to it.
 			// We do not HEAD first — if the object is missing the eventual fetch
 			// will 404, which is acceptable for a homelab.
+			// Range requests are intentionally not handled here: the browser follows
+			// the 302 and re-issues its Range header directly to S3, which serves the
+			// 206 itself. So <video> seeking works without us proxying bytes.
 			const url = `${objectUrl(key)}?X-Amz-Expires=${config.presignTtlSeconds}`;
 			const signed = await aws.sign(new Request(url, { method: 'GET' }), {
 				aws: { signQuery: true }
