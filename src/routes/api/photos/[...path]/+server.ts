@@ -46,10 +46,11 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 	// use the row's storage_key column instead.
 	const key = photo.storageKey ?? requestedPath;
 	const ifNoneMatch = request.headers.get('if-none-match');
+	const range = request.headers.get('range');
 
 	let res: GetResult | null;
 	try {
-		res = await getStorage(photo.provider).get(key, { ifNoneMatch });
+		res = await getStorage(photo.provider).get(key, { ifNoneMatch, range });
 	} catch (err) {
 		if (err instanceof Error && err.message.includes('escapes upload root')) {
 			error(403, t(locals.locale, 'error.forbidden'));
@@ -80,13 +81,22 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 	const cacheControl =
 		photo.provider === 'immich' ? 'private, max-age=300' : 'private, max-age=31536000, immutable';
 
-	return new Response(res.stream, {
-		headers: {
-			'Content-Type': photo.mimeType,
-			'Content-Length': String(res.stat.size),
-			'Cache-Control': cacheControl,
-			ETag: res.stat.etag,
-			'X-Content-Type-Options': 'nosniff'
-		}
-	});
+	const headers: Record<string, string> = {
+		'Content-Type': photo.mimeType,
+		'Cache-Control': cacheControl,
+		ETag: res.stat.etag,
+		'X-Content-Type-Options': 'nosniff',
+		// Advertise range support so browsers will seek (needed for <video>).
+		'Accept-Ranges': 'bytes'
+	};
+
+	// Partial content: the backend satisfied a byte-range request.
+	if (res.range) {
+		headers['Content-Range'] = `bytes ${res.range.start}-${res.range.end}/${res.range.total}`;
+		headers['Content-Length'] = String(res.range.end - res.range.start + 1);
+		return new Response(res.stream, { status: 206, headers });
+	}
+
+	headers['Content-Length'] = String(res.stat.size);
+	return new Response(res.stream, { headers });
 };

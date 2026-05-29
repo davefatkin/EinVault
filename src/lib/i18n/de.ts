@@ -8,24 +8,15 @@ const messages: Record<keyof Messages, string> = {
 	'common.delete': 'Löschen',
 	'common.edit': 'Bearbeiten',
 	'common.close': 'Schließen',
-	'common.confirm': 'Bestätigen',
 	'common.loading': 'Laden…',
-	'common.noResults': 'Keine Ergebnisse',
 	'common.back': 'Zurück',
 	'common.placeholderPhone': '+49 30 123456',
-	'common.add': 'Hinzufügen',
-	'common.remove': 'Entfernen',
-	'common.yes': 'Ja',
-	'common.no': 'Nein',
 	'common.or': 'oder',
-	'common.optional': 'optional',
 	'common.loggedBy': 'von {name}',
 
 	// Common: Reminder actions
-	'common.reminder.undo': 'Rückgängig',
 	'common.reminder.done': 'Erledigt',
 	'common.reminder.dismissedAnnounce': '{title} verworfen',
-	'common.reminder.untitled': 'Unbenannte Erinnerung',
 	'common.reminder.logEvent': 'Erledigt & Ereignis erfassen',
 	'common.reminder.logEventAria': 'Als erledigt markieren und Gesundheitsereignis erfassen',
 	'common.reminder.toastUndoLabel': 'Rückgängig',
@@ -165,7 +156,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidFileTypeAvatar': 'Ungültiger Dateityp. Muss JPEG, PNG oder WebP sein.',
 	'error.invalidFileType': 'Ungültiger Dateityp',
 	'error.invalidGifFile': 'Ungültige GIF-Datei',
-	'error.maxPhotosExceeded': 'Maximal {max} Fotos pro Tag',
+	'error.maxMediaExceeded': 'Maximal {max} Fotos oder Videos pro Tag',
 	'error.requestBodyTooLarge': 'Anfrage zu groß',
 
 	// Navigation
@@ -430,7 +421,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalLabelDuration': 'Dauer',
 	'page.dashboard.modalLabelDate': 'Datum',
 	'page.dashboard.modalLabelVet': 'Tierarzt',
-	'page.dashboard.modalDurationMin': '{count} Min.',
 	'page.dashboard.modalEditReminders': 'In Erinnerungen bearbeiten',
 	'page.dashboard.modalEditHealth': 'In Gesundheit bearbeiten',
 	'page.dashboard.modalOpenJournal': 'Tagebuch öffnen',
@@ -447,9 +437,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Anstehende Erinnerungen',
 	'page.dashboard.caretaker.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.caretaker.reminderOverdue': 'Überfällig',
-	'page.dashboard.caretaker.reminderMarkDone': 'Als erledigt markieren',
-	'page.dashboard.caretaker.reminderShiftRequired':
-		'Starte deine Schicht, um Erinnerungen zu erledigen',
 	'page.dashboard.caretaker.cardVetInfo': 'Tierarztinfo',
 	'page.dashboard.caretaker.cardEmergencyContact': 'Notfallkontakt',
 	'page.dashboard.caretaker.householdOwner': 'Besitzer',
@@ -465,8 +452,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notizen',
 	'page.dashboard.caretaker.modalLabelDue': 'Fällig',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Wiederholt sich',
-	'page.dashboard.caretaker.modalShiftRequired':
-		'Starte deine Schicht, um Erinnerungen zu erledigen',
 	'page.dashboard.caretaker.closeDialog': 'Dialog schließen',
 
 	// Page: caretaker home
@@ -491,10 +476,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.activityDetailNotes': 'Notizen',
 	'page.journal.activityDetailOpenInJournal': 'Im Tagebuch öffnen',
 	'page.journal.photoAlt': 'Tagebuchfoto',
-	'page.journal.photoLightboxLabel': 'Fotoanzeige',
+	'page.journal.videoAlt': 'Tagebuchvideo',
+	'page.journal.videoUnsupported': 'Dieses Video kann in deinem Browser nicht abgespielt werden.',
+	'page.journal.mediaLightboxLabel': 'Medienanzeige',
 
 	// Page: Journal day (app)
-	'page.journal.day.title': 'Tagebuch',
 	'page.journal.day.mood': 'Stimmung',
 	'page.journal.day.moodQuestion': 'Wie geht es {name}?',
 	'page.journal.day.write': 'Schreiben',
@@ -505,11 +491,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Speichern…',
 	'page.journal.day.saveFailedStatus': 'Speichern fehlgeschlagen',
 	'page.journal.day.saveFailedRetry': 'Erneut versuchen',
-	'page.journal.day.photosTitle': 'Fotos',
-	'page.journal.day.addPhoto': 'Foto hinzufügen',
+	'page.journal.day.mediaTitle': 'Fotos & Videos',
+	'page.journal.day.addMedia': 'Medien hinzufügen',
 	'page.journal.day.uploading': 'Hochladen…',
-	'page.journal.day.dropPhotos': 'Fotos hierher ziehen oder klicken zum Hochladen',
-	'page.journal.day.photoTypes': 'JPEG, PNG oder WebP (max. {max}MB pro Bild)',
+	'page.journal.day.dropMedia': 'Fotos oder Videos hierher ziehen oder klicken zum Hochladen',
+	'page.journal.day.mediaTypes': 'Bilder (max. {imgMax}MB) oder Videos (max. {vidMax}MB)',
 	'page.journal.day.noCaption': 'Keine Bildunterschrift',
 	'page.journal.day.addCaption': 'Bildunterschrift hinzufügen…',
 	'page.journal.day.editCaption': 'Bildunterschrift bearbeiten',
@@ -541,9 +527,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Gespeichert',
 	'page.journal.caretaker.savingStatus': 'Speichern…',
 	'page.journal.caretaker.saveFailedStatus': 'Speichern fehlgeschlagen',
-	'page.journal.caretaker.photos': 'Fotos',
-	'page.journal.caretaker.addPhoto': '+ Foto hinzufügen',
-	'page.journal.caretaker.dropPhotos': 'Fotos hierher ziehen oder klicken zum Hochladen',
+	'page.journal.caretaker.media': 'Fotos & Videos',
+	'page.journal.caretaker.addMedia': '+ Medien hinzufügen',
+	'page.journal.caretaker.dropMedia': 'Fotos oder Videos hierher ziehen oder klicken zum Hochladen',
 	'page.journal.caretaker.noCaption': 'Keine Bildunterschrift',
 	'page.journal.caretaker.addCaption': 'Bildunterschrift hinzufügen…',
 	'page.journal.caretaker.editCaption': 'Bildunterschrift bearbeiten',
@@ -607,7 +593,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.anchorMonthFromDueDate': 'Gleiches Datum wie Fälligkeitsdatum',
 	'page.reminders.anchorMonthSpecificDay': 'Bestimmter Tag',
 	'page.reminders.anchorMonthClampWarning': 'Monate ohne diesen Tag verwenden den letzten Tag.',
-	'page.reminders.anchorYearLabel': 'Am Datum',
 	'page.reminders.anchorYearMonth': 'Monat',
 	'page.reminders.anchorYearDay': 'Tag',
 	'page.reminders.anchorYearFromDueDate': 'Gleiches Datum wie Fälligkeitsdatum',
@@ -716,12 +701,12 @@ const messages: Record<keyof Messages, string> = {
 	'aria.mainNav': 'Hauptnavigation',
 	'aria.moreActions': 'Weitere Aktionen',
 	'aria.deleteEntry': 'Eintrag löschen',
-	'aria.deletePhoto': 'Foto löschen',
-	'aria.downloadPhoto': 'Foto herunterladen',
+	'aria.deleteMedia': 'Medien löschen',
+	'aria.downloadMedia': 'Medien herunterladen',
 	'aria.closeDialog': 'Dialog schließen',
 	'aria.close': 'Schließen',
-	'aria.previousPhoto': 'Vorheriges Foto',
-	'aria.nextPhoto': 'Nächstes Foto',
+	'aria.previousMedia': 'Vorheriges Medium',
+	'aria.nextMedia': 'Nächstes Medium',
 	'aria.viewPhoto': '{name}s Foto anzeigen',
 
 	// Immich picker
@@ -732,10 +717,9 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.close': 'Auswahl schließen',
 	'immich.picker.loadError': 'Immich-Bibliothek konnte nicht geladen werden.',
 	'immich.picker.button': 'Aus Immich auswählen',
-	'immich.picker.pickFailed': 'Immich-Inhalt konnte nicht angehängt werden.',
+	'immich.picker.pickFailed': 'Immich-Inhalt konnte nicht angehängt werden.'
 
 	// Meta
-	'meta.description': 'EinVault: privates Gesundheits- und Pflegetagebuch für Hunde'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

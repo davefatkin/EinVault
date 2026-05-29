@@ -6,6 +6,8 @@
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { canModifyPhoto } from '$lib/permissions';
+	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
+	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import { localDateISO } from '$lib/date';
 	import { getContext } from 'svelte';
 
@@ -115,8 +117,8 @@
 	}
 
 	async function uploadPhoto(file: File) {
-		if (photos.length >= data.maxDailyPhotos) {
-			setUploadError(t(locale, 'error.maxPhotosExceeded', { max: data.maxDailyPhotos }));
+		if (photos.length >= data.maxDailyMedia) {
+			setUploadError(t(locale, 'error.maxMediaExceeded', { max: data.maxDailyMedia }));
 			return;
 		}
 		uploadError = '';
@@ -144,6 +146,7 @@
 					storageKey,
 					entryId: data.entry?.id ?? '',
 					originalName: file.name,
+					mediaType: isVideoMime(file.type) ? 'video' : 'photo',
 					mimeType: file.type,
 					sizeBytes: file.size,
 					notes: null,
@@ -196,7 +199,7 @@
 		const files = (e.target as HTMLInputElement).files;
 		if (!files?.length) return;
 		for (const file of Array.from(files)) {
-			if (photos.length < data.maxDailyPhotos) uploadPhoto(file);
+			if (photos.length < data.maxDailyMedia) uploadPhoto(file);
 		}
 		if (fileInputEl) fileInputEl.value = '';
 	}
@@ -643,12 +646,12 @@
 		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
 			<h2 class="font-semibold flex items-center gap-2 text-foreground">
 				<Camera class="h-4 w-4" />
-				{t(locale, 'page.journal.day.photosTitle')}
+				{t(locale, 'page.journal.day.mediaTitle')}
 				<span class="text-xs font-normal text-muted-foreground"
-					>{photos.length}/{data.maxDailyPhotos}</span
+					>{photos.length}/{data.maxDailyMedia}</span
 				>
 			</h2>
-			{#if photos.length < data.maxDailyPhotos}
+			{#if photos.length < data.maxDailyMedia}
 				<div class="flex items-center gap-2">
 					{#if data.immichEnabled}
 						<button
@@ -666,12 +669,12 @@
 						{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
 								class="h-3.5 w-3.5"
 							/>
-							{t(locale, 'page.journal.day.addPhoto')}{/if}
+							{t(locale, 'page.journal.day.addMedia')}{/if}
 						<input
 							bind:this={fileInputEl}
 							type="file"
 							name="photos"
-							accept="image/jpeg,image/png,image/webp,image/gif"
+							accept={MEDIA_ACCEPT}
 							multiple
 							class="sr-only"
 							onchange={handleFileInput}
@@ -684,7 +687,7 @@
 
 		{#if uploadError}
 			<div
-				class="mx-4 mb-3 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive"
+				class="mx-4 my-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-300"
 			>
 				{uploadError}
 			</div>
@@ -697,15 +700,18 @@
 				>
 					<ImageIcon class="h-8 w-8 mb-2 text-muted-foreground" />
 					<span class="text-sm text-muted-foreground"
-						>{t(locale, 'page.journal.day.dropPhotos')}</span
+						>{t(locale, 'page.journal.day.dropMedia')}</span
 					>
 					<span class="text-xs mt-1 text-muted-foreground"
-						>{t(locale, 'page.journal.day.photoTypes', { max: data.uploadMaxMb })}</span
+						>{t(locale, 'page.journal.day.mediaTypes', {
+							imgMax: data.uploadMaxMb,
+							vidMax: data.videoMaxMb
+						})}</span
 					>
 					<input
 						type="file"
 						name="photos"
-						accept="image/jpeg,image/png,image/webp,image/gif"
+						accept={MEDIA_ACCEPT}
 						multiple
 						class="sr-only"
 						onchange={handleFileInput}
@@ -716,14 +722,25 @@
 					{#each photos as photo (photo.id)}
 						<div class="flex gap-3 items-start">
 							<div
-								class="group relative shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
+								class="group relative shrink-0 {isVideoMime(photo.mimeType)
+									? 'w-40'
+									: 'w-24'} h-24 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
 							>
-								<img
-									src={photoUrl(photo)}
-									alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
-									class="w-full h-full object-cover"
-									loading="lazy"
-								/>
+								{#if isVideoMime(photo.mimeType)}
+									<JournalVideo
+										src={photoUrl(photo)}
+										downloadName={photo.originalName}
+										label={photo.originalName ?? undefined}
+										class="w-full h-full object-cover"
+									/>
+								{:else}
+									<img
+										src={photoUrl(photo)}
+										alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
+										class="w-full h-full object-cover"
+										loading="lazy"
+									/>
+								{/if}
 								{#if canModifyPhoto(data.user, photo)}
 									<button
 										type="button"
@@ -731,7 +748,7 @@
 										class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 										flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
 										hover:bg-red-600 transition-all"
-										aria-label={t(locale, 'aria.deletePhoto')}
+										aria-label={t(locale, 'aria.deleteMedia')}
 									>
 										<Trash2 class="h-3 w-3" />
 									</button>

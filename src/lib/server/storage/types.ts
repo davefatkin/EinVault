@@ -13,12 +13,22 @@ export interface BlobStat {
 }
 
 export type GetResult =
-	| { kind: 'stream'; stream: ReadableStream; stat: BlobStat }
+	| {
+			kind: 'stream';
+			stream: ReadableStream;
+			stat: BlobStat;
+			// Present when the response satisfies a byte-range request (HTTP 206).
+			// `total` is the full object size; `start`/`end` are inclusive offsets.
+			range?: { start: number; end: number; total: number };
+	  }
 	| { kind: 'redirect'; url: string; cacheSeconds: number }
 	| { kind: 'notModified'; etag: string };
 
 export interface GetOptions {
 	ifNoneMatch?: string | null;
+	// Raw value of the request's `Range` header, if any. Backends that can serve
+	// partial content (local files) honor it; others ignore it.
+	range?: string | null;
 }
 
 export interface StorageBackend {

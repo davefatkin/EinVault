@@ -8,24 +8,15 @@ const messages: Record<keyof Messages, string> = {
 	'common.delete': 'Supprimer',
 	'common.edit': 'Modifier',
 	'common.close': 'Fermer',
-	'common.confirm': 'Confirmer',
 	'common.loading': 'Chargement…',
-	'common.noResults': 'Aucun résultat',
 	'common.back': 'Retour',
 	'common.placeholderPhone': '+33 1 23 45 67 89',
-	'common.add': 'Ajouter',
-	'common.remove': 'Retirer',
-	'common.yes': 'Oui',
-	'common.no': 'Non',
 	'common.or': 'ou',
-	'common.optional': 'facultatif',
 	'common.loggedBy': 'par {name}',
 
 	// Common: Reminder actions
-	'common.reminder.undo': 'Annuler',
 	'common.reminder.done': 'Fait',
 	'common.reminder.dismissedAnnounce': '{title} rejeté',
-	'common.reminder.untitled': 'Rappel sans titre',
 	'common.reminder.logEvent': 'Fait et consigner un événement',
 	'common.reminder.logEventAria': 'Marquer comme fait et consigner un événement de santé',
 	'common.reminder.toastUndoLabel': 'Annuler',
@@ -163,7 +154,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidFileTypeAvatar': 'Type de fichier invalide. Doit être JPEG, PNG ou WebP.',
 	'error.invalidFileType': 'Type de fichier invalide',
 	'error.invalidGifFile': 'Fichier GIF invalide',
-	'error.maxPhotosExceeded': 'Maximum {max} photos par jour',
+	'error.maxMediaExceeded': 'Maximum {max} photos ou vidéos par jour',
 	'error.requestBodyTooLarge': 'Requête trop volumineuse',
 
 	// Navigation
@@ -429,7 +420,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalLabelDuration': 'Durée',
 	'page.dashboard.modalLabelDate': 'Date',
 	'page.dashboard.modalLabelVet': 'Vétérinaire',
-	'page.dashboard.modalDurationMin': '{count} min',
 	'page.dashboard.modalEditReminders': 'Modifier dans Rappels',
 	'page.dashboard.modalEditHealth': 'Modifier dans Santé',
 	'page.dashboard.modalOpenJournal': 'Ouvrir le journal',
@@ -446,9 +436,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardReminders': 'Rappels à venir',
 	'page.dashboard.caretaker.remindersEmpty': 'Aucun rappel à venir.',
 	'page.dashboard.caretaker.reminderOverdue': 'En retard',
-	'page.dashboard.caretaker.reminderMarkDone': 'Marquer comme fait',
-	'page.dashboard.caretaker.reminderShiftRequired':
-		'Commencez votre garde pour valider les rappels',
 	'page.dashboard.caretaker.cardVetInfo': 'Info vétérinaire',
 	'page.dashboard.caretaker.cardEmergencyContact': "Contact d'urgence",
 	'page.dashboard.caretaker.householdOwner': 'Propriétaire',
@@ -464,7 +451,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notes',
 	'page.dashboard.caretaker.modalLabelDue': 'Échéance',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se répète',
-	'page.dashboard.caretaker.modalShiftRequired': 'Commencez votre garde pour valider les rappels',
 	'page.dashboard.caretaker.closeDialog': 'Fermer la boîte de dialogue',
 
 	// Page: caretaker home
@@ -489,10 +475,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.activityDetailNotes': 'Notes',
 	'page.journal.activityDetailOpenInJournal': 'Ouvrir dans le journal',
 	'page.journal.photoAlt': 'Photo du journal',
-	'page.journal.photoLightboxLabel': 'Visionneuse de photos',
+	'page.journal.videoAlt': 'Vidéo du journal',
+	'page.journal.videoUnsupported': 'Cette vidéo ne peut pas être lue dans votre navigateur.',
+	'page.journal.mediaLightboxLabel': 'Visionneuse de médias',
 
 	// Page: Journal day (app)
-	'page.journal.day.title': 'Journal',
 	'page.journal.day.mood': 'Humeur',
 	'page.journal.day.moodQuestion': 'Comment va {name} ?',
 	'page.journal.day.write': 'Écrire',
@@ -504,11 +491,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Enregistrement…',
 	'page.journal.day.saveFailedStatus': "Échec de l'enregistrement",
 	'page.journal.day.saveFailedRetry': 'Réessayer',
-	'page.journal.day.photosTitle': 'Photos',
-	'page.journal.day.addPhoto': 'Ajouter une photo',
+	'page.journal.day.mediaTitle': 'Photos et vidéos',
+	'page.journal.day.addMedia': 'Ajouter un média',
 	'page.journal.day.uploading': 'Envoi…',
-	'page.journal.day.dropPhotos': 'Glissez des photos ici ou cliquez pour envoyer',
-	'page.journal.day.photoTypes': 'JPEG, PNG ou WebP (max {max}Mo chacun)',
+	'page.journal.day.dropMedia': 'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
+	'page.journal.day.mediaTypes': 'Images (max {imgMax}Mo) ou vidéos (max {vidMax}Mo)',
 	'page.journal.day.noCaption': 'Pas de légende',
 	'page.journal.day.addCaption': 'Ajouter une légende…',
 	'page.journal.day.editCaption': 'Modifier la légende',
@@ -540,9 +527,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Enregistré',
 	'page.journal.caretaker.savingStatus': 'Enregistrement…',
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
-	'page.journal.caretaker.photos': 'Photos',
-	'page.journal.caretaker.addPhoto': '+ Ajouter une photo',
-	'page.journal.caretaker.dropPhotos': 'Glissez des photos ici ou cliquez pour envoyer',
+	'page.journal.caretaker.media': 'Photos et vidéos',
+	'page.journal.caretaker.addMedia': '+ Ajouter un média',
+	'page.journal.caretaker.dropMedia':
+		'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
 	'page.journal.caretaker.noCaption': 'Pas de légende',
 	'page.journal.caretaker.addCaption': 'Ajouter une légende…',
 	'page.journal.caretaker.editCaption': 'Modifier la légende',
@@ -606,7 +594,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.anchorMonthFromDueDate': "Même date que l'échéance",
 	'page.reminders.anchorMonthSpecificDay': 'Jour spécifique',
 	'page.reminders.anchorMonthClampWarning': 'Les mois sans ce jour utilisent le dernier jour.',
-	'page.reminders.anchorYearLabel': 'À la date',
 	'page.reminders.anchorYearMonth': 'Mois',
 	'page.reminders.anchorYearDay': 'Jour',
 	'page.reminders.anchorYearFromDueDate': "Même date que l'échéance",
@@ -715,12 +702,12 @@ const messages: Record<keyof Messages, string> = {
 	'aria.mainNav': 'Navigation principale',
 	'aria.moreActions': "Plus d'actions",
 	'aria.deleteEntry': "Supprimer l'entrée",
-	'aria.deletePhoto': 'Supprimer la photo',
-	'aria.downloadPhoto': 'Télécharger la photo',
+	'aria.deleteMedia': 'Supprimer le média',
+	'aria.downloadMedia': 'Télécharger le média',
 	'aria.closeDialog': 'Fermer la boîte de dialogue',
 	'aria.close': 'Fermer',
-	'aria.previousPhoto': 'Photo précédente',
-	'aria.nextPhoto': 'Photo suivante',
+	'aria.previousMedia': 'Média précédent',
+	'aria.nextMedia': 'Média suivant',
 	'aria.viewPhoto': 'Voir la photo de {name}',
 
 	// Immich picker
@@ -731,10 +718,9 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.close': 'Fermer le sélecteur',
 	'immich.picker.loadError': 'Impossible de charger la bibliothèque Immich.',
 	'immich.picker.button': 'Choisir depuis Immich',
-	'immich.picker.pickFailed': "Impossible d'attacher l'élément Immich.",
+	'immich.picker.pickFailed': "Impossible d'attacher l'élément Immich."
 
 	// Meta
-	'meta.description': 'EinVault : journal privé de santé et soins canins'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

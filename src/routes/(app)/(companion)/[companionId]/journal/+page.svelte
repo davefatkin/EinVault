@@ -12,8 +12,11 @@
 		Pencil,
 		NotebookPen,
 		ArrowRight,
-		Download
+		Download,
+		Play
 	} from '@lucide/svelte';
+	import { isVideoMime } from '$lib/media';
+	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { tick } from 'svelte';
@@ -203,7 +206,7 @@
 		bind:this={lightboxEl}
 		role="dialog"
 		aria-modal="true"
-		aria-label={t(locale, 'page.journal.photoLightboxLabel')}
+		aria-label={t(locale, 'page.journal.mediaLightboxLabel')}
 		tabindex="-1"
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 focus:outline-none"
 		onclick={closeLightbox}
@@ -229,7 +232,7 @@
 						href={photoUrl(lightboxPhoto, lightboxDate)}
 						download={lightboxPhoto.originalName ?? lightboxPhoto.filename}
 						class="text-white/70 hover:text-white p-1 rounded"
-						aria-label={t(locale, 'aria.downloadPhoto')}
+						aria-label={t(locale, 'aria.downloadMedia')}
 					>
 						<Download class="h-5 w-5" />
 					</a>
@@ -245,11 +248,21 @@
 			</div>
 
 			<div class="relative">
-				<img
-					src={photoUrl(lightboxPhoto, lightboxDate)}
-					alt={lightboxPhoto.originalName ?? ''}
-					class="max-h-[78vh] w-full object-contain rounded-lg"
-				/>
+				{#if isVideoMime(lightboxPhoto.mimeType)}
+					<JournalVideo
+						src={photoUrl(lightboxPhoto, lightboxDate)}
+						downloadName={lightboxPhoto.originalName}
+						label={lightboxPhoto.originalName ?? undefined}
+						autoplay
+						class="max-h-[78vh] w-full object-contain rounded-lg bg-black"
+					/>
+				{:else}
+					<img
+						src={photoUrl(lightboxPhoto, lightboxDate)}
+						alt={lightboxPhoto.originalName ?? ''}
+						class="max-h-[78vh] w-full object-contain rounded-lg"
+					/>
+				{/if}
 				{#if lightboxPhotos.length > 1}
 					<button
 						type="button"
@@ -259,7 +272,7 @@
 						0
 							? 'opacity-20 cursor-default'
 							: 'opacity-70 hover:opacity-100'}"
-						aria-label={t(locale, 'aria.previousPhoto')}
+						aria-label={t(locale, 'aria.previousMedia')}
 					>
 						<ChevronLeft class="h-5 w-5" />
 					</button>
@@ -271,7 +284,7 @@
 						lightboxPhotos.length - 1
 							? 'opacity-20 cursor-default'
 							: 'opacity-70 hover:opacity-100'}"
-						aria-label={t(locale, 'aria.nextPhoto')}
+						aria-label={t(locale, 'aria.nextMedia')}
 					>
 						<ChevronRight class="h-5 w-5" />
 					</button>
@@ -485,17 +498,35 @@
 								<button
 									type="button"
 									onclick={() => openLightbox(entry.photos, entry.date, i)}
-									class="block overflow-hidden {entry.photos.length === 1
+									class="relative block overflow-hidden {entry.photos.length === 1
 										? 'aspect-video'
 										: 'aspect-square'} hover:opacity-95 transition-opacity"
 									title={photo.originalName ?? 'Journal photo'}
 								>
-									<img
-										src={photoUrl(photo, entry.date)}
-										alt={photo.originalName ?? ''}
-										class="w-full h-full object-cover"
-										loading="lazy"
-									/>
+									{#if isVideoMime(photo.mimeType)}
+										<video
+											src={photoUrl(photo, entry.date)}
+											preload="metadata"
+											muted
+											playsinline
+											class="w-full h-full object-cover pointer-events-none"
+										></video>
+										<span
+											class="absolute inset-0 flex items-center justify-center bg-black/20"
+											aria-hidden="true"
+										>
+											<span class="rounded-full bg-black/55 p-2">
+												<Play class="h-5 w-5 text-white" />
+											</span>
+										</span>
+									{:else}
+										<img
+											src={photoUrl(photo, entry.date)}
+											alt={photo.originalName ?? ''}
+											class="w-full h-full object-cover"
+											loading="lazy"
+										/>
+									{/if}
 								</button>
 							{/each}
 						</div>

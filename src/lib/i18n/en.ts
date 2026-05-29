@@ -6,24 +6,15 @@ const messages = {
 	'common.delete': 'Delete',
 	'common.edit': 'Edit',
 	'common.close': 'Close',
-	'common.confirm': 'Confirm',
 	'common.loading': 'Loading…',
-	'common.noResults': 'No results',
 	'common.back': 'Back',
 	'common.placeholderPhone': '(555) 000-0000',
-	'common.add': 'Add',
-	'common.remove': 'Remove',
-	'common.yes': 'Yes',
-	'common.no': 'No',
 	'common.or': 'or',
-	'common.optional': 'optional',
 	'common.loggedBy': 'by {name}',
 
 	// Common: Reminder actions (shared across companion dashboard, reminders list, caretaker)
-	'common.reminder.undo': 'Undo',
 	'common.reminder.done': 'Done',
 	'common.reminder.dismissedAnnounce': '{title} dismissed',
-	'common.reminder.untitled': 'Untitled reminder',
 	'common.reminder.logEvent': 'Done & Log Event',
 	'common.reminder.logEventAria': 'Mark done and log a Health Event',
 	'common.reminder.toastUndoLabel': 'Undo',
@@ -152,7 +143,7 @@ const messages = {
 	'error.invalidFileTypeAvatar': 'Invalid file type. Must be JPEG, PNG, or WebP.',
 	'error.invalidFileType': 'Invalid file type',
 	'error.invalidGifFile': 'Invalid GIF file',
-	'error.maxPhotosExceeded': 'Maximum {max} photos per day',
+	'error.maxMediaExceeded': 'Maximum {max} photos or videos per day',
 	'error.requestBodyTooLarge': 'Request body too large',
 
 	// Navigation
@@ -424,7 +415,6 @@ const messages = {
 	'page.dashboard.modalLabelDuration': 'Duration',
 	'page.dashboard.modalLabelDate': 'Date',
 	'page.dashboard.modalLabelVet': 'Vet',
-	'page.dashboard.modalDurationMin': '{count} min',
 	'page.dashboard.modalEditReminders': 'Edit in Reminders',
 	'page.dashboard.modalEditHealth': 'Edit in Health',
 	'page.dashboard.modalOpenJournal': 'Open Journal',
@@ -441,8 +431,6 @@ const messages = {
 	'page.dashboard.caretaker.cardReminders': 'Upcoming Reminders',
 	'page.dashboard.caretaker.remindersEmpty': 'No upcoming reminders.',
 	'page.dashboard.caretaker.reminderOverdue': 'Overdue',
-	'page.dashboard.caretaker.reminderMarkDone': 'Mark as done',
-	'page.dashboard.caretaker.reminderShiftRequired': 'Start your shift to mark reminders done',
 	'page.dashboard.caretaker.cardVetInfo': 'Vet Info',
 	'page.dashboard.caretaker.cardEmergencyContact': 'Emergency Contact',
 	'page.dashboard.caretaker.householdOwner': 'Owner',
@@ -458,7 +446,6 @@ const messages = {
 	'page.dashboard.caretaker.modalLabelNotes': 'Notes',
 	'page.dashboard.caretaker.modalLabelDue': 'Due',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repeats',
-	'page.dashboard.caretaker.modalShiftRequired': 'Start your shift to mark reminders done',
 	'page.dashboard.caretaker.closeDialog': 'Close dialog',
 
 	// Page: caretaker home
@@ -483,10 +470,11 @@ const messages = {
 	'page.journal.activityDetailNotes': 'Notes',
 	'page.journal.activityDetailOpenInJournal': 'Open in Journal',
 	'page.journal.photoAlt': 'Journal photo',
-	'page.journal.photoLightboxLabel': 'Photo viewer',
+	'page.journal.videoAlt': 'Journal video',
+	'page.journal.videoUnsupported': "This video can't be played in your browser.",
+	'page.journal.mediaLightboxLabel': 'Media viewer',
 
 	// Page: Journal day (app)
-	'page.journal.day.title': 'Journal',
 	'page.journal.day.mood': 'Mood',
 	'page.journal.day.moodQuestion': 'How is {name} feeling?',
 	'page.journal.day.write': 'Write',
@@ -497,11 +485,11 @@ const messages = {
 	'page.journal.day.savingStatus': 'Saving…',
 	'page.journal.day.saveFailedStatus': 'Save failed',
 	'page.journal.day.saveFailedRetry': 'Retry',
-	'page.journal.day.photosTitle': 'Photos',
-	'page.journal.day.addPhoto': 'Add Photo',
+	'page.journal.day.mediaTitle': 'Photos & Videos',
+	'page.journal.day.addMedia': 'Add Media',
 	'page.journal.day.uploading': 'Uploading…',
-	'page.journal.day.dropPhotos': 'Drop photos here or click to upload',
-	'page.journal.day.photoTypes': 'JPEG, PNG, or WebP (max {max}MB each)',
+	'page.journal.day.dropMedia': 'Drop photos or videos here or click to upload',
+	'page.journal.day.mediaTypes': 'Images (max {imgMax}MB) or videos (max {vidMax}MB)',
 	'page.journal.day.noCaption': 'No caption',
 	'page.journal.day.addCaption': 'Add a caption…',
 	'page.journal.day.editCaption': 'Edit Caption',
@@ -532,9 +520,9 @@ const messages = {
 	'page.journal.caretaker.savedStatus': '✓ Saved',
 	'page.journal.caretaker.savingStatus': 'Saving…',
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
-	'page.journal.caretaker.photos': 'Photos',
-	'page.journal.caretaker.addPhoto': '+ Add photo',
-	'page.journal.caretaker.dropPhotos': 'Drop photos here or click to upload',
+	'page.journal.caretaker.media': 'Photos & Videos',
+	'page.journal.caretaker.addMedia': '+ Add media',
+	'page.journal.caretaker.dropMedia': 'Drop photos or videos here or click to upload',
 	'page.journal.caretaker.noCaption': 'No caption',
 	'page.journal.caretaker.addCaption': 'Add a caption…',
 	'page.journal.caretaker.editCaption': 'Edit Caption',
@@ -598,7 +586,6 @@ const messages = {
 	'page.reminders.anchorMonthFromDueDate': 'Same date as due date',
 	'page.reminders.anchorMonthSpecificDay': 'Specific day',
 	'page.reminders.anchorMonthClampWarning': 'Months without this day use the last day.',
-	'page.reminders.anchorYearLabel': 'On date',
 	'page.reminders.anchorYearMonth': 'Month',
 	'page.reminders.anchorYearDay': 'Day',
 	'page.reminders.anchorYearFromDueDate': 'Same date as due date',
@@ -706,12 +693,12 @@ const messages = {
 	'aria.mainNav': 'Main navigation',
 	'aria.moreActions': 'More actions',
 	'aria.deleteEntry': 'Delete entry',
-	'aria.deletePhoto': 'Delete photo',
-	'aria.downloadPhoto': 'Download photo',
+	'aria.deleteMedia': 'Delete media',
+	'aria.downloadMedia': 'Download media',
 	'aria.closeDialog': 'Close dialog',
 	'aria.close': 'Close',
-	'aria.previousPhoto': 'Previous photo',
-	'aria.nextPhoto': 'Next photo',
+	'aria.previousMedia': 'Previous media',
+	'aria.nextMedia': 'Next media',
 	'aria.viewPhoto': "View {name}'s photo",
 
 	// Immich picker
@@ -722,10 +709,9 @@ const messages = {
 	'immich.picker.close': 'Close picker',
 	'immich.picker.loadError': 'Could not load Immich library.',
 	'immich.picker.button': 'Pick from Immich',
-	'immich.picker.pickFailed': 'Could not attach Immich asset.',
+	'immich.picker.pickFailed': 'Could not attach Immich asset.'
 
 	// Meta
-	'meta.description': 'EinVault: private dog health & care tracker'
 } as const;
 
 export type Messages = typeof messages;

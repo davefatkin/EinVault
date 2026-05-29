@@ -6,12 +6,14 @@ import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { MAX_DAILY_PHOTOS, UPLOAD_MAX_MB } from '$lib/server/env';
+import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
+import { isAllowedVideoMime, videoExtFromMime } from '$lib/server/storage/mime';
 import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
-const MAX_FILE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
+const MAX_VIDEO_SIZE = VIDEO_MAX_MB * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function journalKey(companionId: string, date: string, filename: string): string {
 	return `journal/${companionId}/${date}/${filename}`;
@@ -56,25 +58,39 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		.from(schema.journalPhotos)
 		.where(eq(schema.journalPhotos.entryId, entry.id));
 
-	if (photoCount >= MAX_DAILY_PHOTOS) {
-		error(400, t(locals.locale, 'error.maxPhotosExceeded', { max: MAX_DAILY_PHOTOS }));
+	if (photoCount >= MAX_DAILY_MEDIA) {
+		error(400, t(locals.locale, 'error.maxMediaExceeded', { max: MAX_DAILY_MEDIA }));
 	}
 
 	const formData = await request.formData();
 	const file = formData.get('photo') as File | null;
 
 	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
-	if (file.size > MAX_FILE_SIZE)
+
+	const isVideo = isAllowedVideoMime(file.type);
+	if (!isVideo && !ALLOWED_IMAGE_TYPES.includes(file.type))
+		error(400, t(locals.locale, 'error.invalidFileType'));
+
+	if (isVideo) {
+		if (file.size > MAX_VIDEO_SIZE)
+			error(400, t(locals.locale, 'error.fileTooLarge', { max: VIDEO_MAX_MB }));
+	} else if (file.size > MAX_IMAGE_SIZE) {
 		error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
-	if (!ALLOWED_TYPES.includes(file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
+	}
 
 	const raw = Buffer.from(await file.arrayBuffer());
 	const photoId = generateId(15);
 	let processed: Buffer;
 	let ext: string;
 	let mimeType: string;
+	const mediaType: 'photo' | 'video' = isVideo ? 'video' : 'photo';
 
-	if (file.type === 'image/gif') {
+	if (isVideo) {
+		// Videos are stored as-is: no server-side transcode or resize.
+		processed = raw;
+		ext = videoExtFromMime(file.type);
+		mimeType = file.type;
+	} else if (file.type === 'image/gif') {
 		// Validate GIF magic bytes before passing through
 		const sig = raw.slice(0, 6).toString('ascii');
 		if (sig !== 'GIF87a' && sig !== 'GIF89a') {
@@ -114,6 +130,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		provider: STORAGE_BACKEND,
 		storageKey: key,
 		originalName: file.name,
+		mediaType,
 		mimeType,
 		sizeBytes: processed.length,
 		loggedBy: locals.user.id

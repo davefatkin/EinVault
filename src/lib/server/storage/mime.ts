@@ -11,8 +11,25 @@ export const ALLOWED_PHOTO_MIME = [
 
 export const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
+// Video formats accepted for journal media. quicktime covers .mov files from
+// iPhones. Videos are stored as-is (no transcode), so we keep to the widely
+// browser-playable container/codec combinations.
+export const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
+
 export function isAllowedPhotoMime(mime: string | null | undefined): boolean {
 	return !!mime && (ALLOWED_PHOTO_MIME as readonly string[]).includes(mime);
+}
+
+export function isAllowedVideoMime(mime: string | null | undefined): boolean {
+	return !!mime && (ALLOWED_VIDEO_MIME as readonly string[]).includes(mime);
+}
+
+// Safe lowercase file extension for an accepted video mime type.
+export function videoExtFromMime(mime: string): string {
+	if (mime === 'video/mp4') return 'mp4';
+	if (mime === 'video/webm') return 'webm';
+	if (mime === 'video/quicktime') return 'mov';
+	return 'mp4';
 }
 
 export function isAllowedAvatarMime(mime: string | null | undefined): boolean {

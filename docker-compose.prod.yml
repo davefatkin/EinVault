@@ -26,10 +26,12 @@ services:
 
       NODE_ENV: production
       DATABASE_URL: /data/einvault.db
-      # Maximum upload size in MB. BODY_SIZE_LIMIT is derived automatically.
+      # Maximum image upload size in MB. BODY_SIZE_LIMIT is derived automatically.
       UPLOAD_MAX_MB: 10
-      # Maximum journal photos per companion per day.
-      MAX_DAILY_PHOTOS: 5
+      # Maximum journal video upload size in MB (stored as-is, no transcoding).
+      VIDEO_MAX_MB: 100
+      # Maximum journal photos and videos (combined) per companion per day.
+      MAX_DAILY_MEDIA: 5
       # Default undo window (seconds) for dismissing a Reminder. 0 disables it.
       # Each user can override in their settings.
       REMINDER_UNDO_SECONDS: 7

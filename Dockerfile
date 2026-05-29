@@ -69,10 +69,12 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV DATABASE_URL=/data/einvault.db
 ENV UPLOAD_MAX_MB=10
-ENV MAX_DAILY_PHOTOS=5
+ENV VIDEO_MAX_MB=100
+ENV MAX_DAILY_MEDIA=5
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
-# BODY_SIZE_LIMIT is derived from UPLOAD_MAX_MB so users only set one value.
-CMD ["sh", "-c", "BODY_SIZE_LIMIT=${UPLOAD_MAX_MB}M exec node build"]
+# BODY_SIZE_LIMIT is derived from the larger of UPLOAD_MAX_MB and VIDEO_MAX_MB
+# so a single request body can carry either an image or a (larger) video.
+CMD ["sh", "-c", "if [ \"${VIDEO_MAX_MB:-0}\" -gt \"${UPLOAD_MAX_MB:-0}\" ]; then LIMIT=$VIDEO_MAX_MB; else LIMIT=$UPLOAD_MAX_MB; fi; BODY_SIZE_LIMIT=${LIMIT}M exec node build"]

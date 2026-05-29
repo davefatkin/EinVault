@@ -4,18 +4,24 @@ import { validateAuth } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
-import { S3_CONFIG, logImmichBootStatus, logStorageBootStatus } from '$lib/server/env';
+import {
+	S3_CONFIG,
+	logImmichBootStatus,
+	logStorageBootStatus,
+	logDeprecatedEnvWarnings
+} from '$lib/server/env';
 
 logOidcBootStatus();
 logStorageBootStatus();
 logImmichBootStatus();
+logDeprecatedEnvWarnings();
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
-// host. CSP is enforced on the final navigation target after redirects, so
-// the S3 origin has to appear in img-src or the browser blocks the load.
-// Computed once at boot from runtime env so swapping S3_ENDPOINT only needs a
-// container restart, not a rebuild.
-const S3_IMG_ORIGIN: string | null = (() => {
+// host. CSP is enforced on the final navigation target after redirects, so the
+// S3 origin has to appear in img-src (photos/avatars) AND media-src (videos) or
+// the browser blocks the load. Computed once at boot from runtime env so
+// swapping S3_ENDPOINT only needs a container restart, not a rebuild.
+const S3_ASSET_ORIGIN: string | null = (() => {
 	if (!S3_CONFIG) return null;
 	try {
 		return new URL(S3_CONFIG.endpoint).origin;
@@ -24,15 +30,28 @@ const S3_IMG_ORIGIN: string | null = (() => {
 	}
 })();
 
-function injectImgSrcOrigin(csp: string, origin: string): string {
-	// Append the origin inside every img-src directive. Callback form so
-	// arbitrary characters in `origin` are not interpreted as $1 backrefs.
-	// `gi` so multiple directives all pick up the origin.
-	if (/(^|;)\s*img-src\b/i.test(csp)) {
-		return csp.replace(/(img-src\b[^;]*)/gi, (_m, captured) => `${captured} ${origin}`);
+// Default sources used when a directive is absent and we need to add it.
+const DIRECTIVE_DEFAULTS: Record<string, string> = {
+	'img-src': "'self' data: blob:",
+	'media-src': "'self' blob:"
+};
+
+function injectAssetOrigin(csp: string, origin: string): string {
+	let result = csp;
+	for (const directive of Object.keys(DIRECTIVE_DEFAULTS)) {
+		const present = new RegExp(`(^|;)\\s*${directive}\\b`, 'i').test(result);
+		if (present) {
+			// Append the origin inside every matching directive. Callback form so
+			// arbitrary characters in `origin` are not interpreted as backrefs.
+			result = result.replace(
+				new RegExp(`(${directive}\\b[^;]*)`, 'gi'),
+				(_m, captured) => `${captured} ${origin}`
+			);
+		} else {
+			result = `${result.replace(/;?\s*$/, '')}; ${directive} ${DIRECTIVE_DEFAULTS[directive]} ${origin}`;
+		}
 	}
-	// No img-src directive present; add one.
-	return `${csp.replace(/;?\s*$/, '')}; img-src 'self' data: blob: ${origin}`;
+	return result;
 }
 
 const securityHeaders: Handle = async ({ event, resolve }) => {
@@ -51,14 +70,14 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 	if (contentType.startsWith('text/html') && !response.headers.has('content-security-policy')) {
 		response.headers.set(
 			'Content-Security-Policy',
-			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		);
 	}
 
-	if (S3_IMG_ORIGIN) {
+	if (S3_ASSET_ORIGIN) {
 		const csp = response.headers.get('content-security-policy');
 		if (csp) {
-			response.headers.set('content-security-policy', injectImgSrcOrigin(csp, S3_IMG_ORIGIN));
+			response.headers.set('content-security-policy', injectAssetOrigin(csp, S3_ASSET_ORIGIN));
 		}
 	}
 

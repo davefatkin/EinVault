@@ -159,7 +159,7 @@
 			<div class="flex-1 overflow-y-auto p-4" onscroll={handleScroll}>
 				{#if error}
 					<div
-						class="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive mb-3"
+						class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-300 mb-3"
 					>
 						{error}
 					</div>

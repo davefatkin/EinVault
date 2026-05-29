@@ -28,6 +28,7 @@ const config = {
 				'style-src': ['self', 'unsafe-inline'],
 				'font-src': ['self'],
 				'img-src': ['self', 'data:', 'blob:'],
+				'media-src': ['self', 'blob:'],
 				'connect-src': ['self'],
 				'frame-ancestors': ['none'],
 				'base-uri': ['self'],

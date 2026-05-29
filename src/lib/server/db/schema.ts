@@ -139,6 +139,9 @@ export const journalPhotos = sqliteTable(
 			.default('local'),
 		storageKey: text('storage_key'),
 		originalName: text('original_name'),
+		mediaType: text('media_type', { enum: ['photo', 'video'] })
+			.notNull()
+			.default('photo'),
 		mimeType: text('mime_type').notNull(),
 		sizeBytes: integer('size_bytes').notNull(),
 		notes: text('notes'),

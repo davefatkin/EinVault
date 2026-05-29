@@ -29,7 +29,21 @@ function envNonNegativeInt(value: string | undefined, defaultValue: number): num
 }
 
 export const UPLOAD_MAX_MB = envInt(env.UPLOAD_MAX_MB, 10);
-export const MAX_DAILY_PHOTOS = envInt(env.MAX_DAILY_PHOTOS, 5);
+export const VIDEO_MAX_MB = envInt(env.VIDEO_MAX_MB, 100);
+
+// MAX_DAILY_PHOTOS was renamed to MAX_DAILY_MEDIA when journal video support
+// landed: the daily cap now counts photos and videos together. The old name is
+// still honored as a fallback; logDeprecatedEnvWarnings() warns about it at boot.
+export const MAX_DAILY_MEDIA = envInt(env.MAX_DAILY_MEDIA ?? env.MAX_DAILY_PHOTOS, 5);
+
+export function logDeprecatedEnvWarnings(): void {
+	if (env.MAX_DAILY_PHOTOS !== undefined) {
+		console.warn(
+			'[env] MAX_DAILY_PHOTOS is deprecated and will be removed in a future release. ' +
+				'Rename it to MAX_DAILY_MEDIA. The cap now counts photos and videos together.'
+		);
+	}
+}
 
 // Storage backend selection. 'local' writes to DATA_DIR/uploads; 's3' uses an
 // S3-compatible bucket (AWS, Garage, MinIO, Backblaze B2, R2, ...). Reads
