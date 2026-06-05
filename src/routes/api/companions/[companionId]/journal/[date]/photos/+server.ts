@@ -270,12 +270,21 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	// Remove every object this row owns: the primary file plus, for a transcoded
 	// video, the kept original and the generated poster. Missing keys are no-ops
 	// in the backend delete, so deleting all three is safe regardless of status.
+	// Use allSettled and delete the DB row unconditionally: the row is the source
+	// of truth, so a transient backend failure on one key must not abort the
+	// others or leave an undeletable row (an orphaned object is recoverable; a
+	// stuck row is not).
 	const backend = getStorage(photo.provider);
 	const key = photo.storageKey ?? journalKey(params.companionId, params.date, photo.filename);
 	const keys = [key, photo.originalKey, photo.posterKey].filter(
 		(k): k is string => typeof k === 'string' && k.length > 0
 	);
-	await Promise.all(keys.map((k) => backend.delete(k)));
+	const results = await Promise.allSettled(keys.map((k) => backend.delete(k)));
+	results.forEach((r, i) => {
+		if (r.status === 'rejected') {
+			console.warn(`[journal-photo] failed to delete object ${keys[i]}:`, r.reason);
+		}
+	});
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 

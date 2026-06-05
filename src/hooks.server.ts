@@ -8,7 +8,8 @@ import {
 	S3_CONFIG,
 	logImmichBootStatus,
 	logStorageBootStatus,
-	logDeprecatedEnvWarnings
+	logDeprecatedEnvWarnings,
+	logVideoTranscodeBootStatus
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
 
@@ -16,6 +17,7 @@ logOidcBootStatus();
 logStorageBootStatus();
 logImmichBootStatus();
 logDeprecatedEnvWarnings();
+logVideoTranscodeBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.

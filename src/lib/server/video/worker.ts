@@ -47,13 +47,24 @@ async function ensureTmpBase(): Promise<void> {
 	await mkdir(VIDEO_TRANSCODE.tmpDir, { recursive: true });
 }
 
-/** Read a web ReadableStream fully into a Buffer. */
-async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
+/**
+ * Read a web ReadableStream into a Buffer, aborting if it exceeds `maxBytes`.
+ * The whole object is held in memory, so this cap (the transcode size limit)
+ * bounds peak RAM and stops an out-of-band-grown or oversized object — e.g. a
+ * pre-existing row reprocessed on boot — from OOMing the worker.
+ */
+async function streamToBuffer(stream: ReadableStream, maxBytes: number): Promise<Buffer> {
 	const reader = stream.getReader();
 	const chunks: Buffer[] = [];
+	let total = 0;
 	for (;;) {
 		const { done, value } = await reader.read();
 		if (done) break;
+		total += (value as Uint8Array).byteLength;
+		if (total > maxBytes) {
+			await reader.cancel().catch(() => {});
+			throw new Error(`source exceeds ${maxBytes}-byte transcode cap`);
+		}
 		chunks.push(Buffer.from(value as Uint8Array));
 	}
 	return Buffer.concat(chunks);
@@ -61,16 +72,25 @@ async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
 
 /**
  * Fetch the bytes of a stored object regardless of backend: local returns a
- * stream, S3 returns a presigned redirect URL we then fetch.
+ * stream, S3 returns a presigned redirect URL we then fetch. Both paths enforce
+ * the source size cap.
  */
 async function downloadObject(provider: StorageProvider, key: string): Promise<Buffer> {
+	const maxBytes = VIDEO_TRANSCODE.maxMb * 1024 * 1024;
 	const res = await getStorage(provider).get(key);
 	if (!res) throw new Error(`source object missing: ${key}`);
-	if (res.kind === 'stream') return streamToBuffer(res.stream);
+	if (res.kind === 'stream') return streamToBuffer(res.stream, maxBytes);
 	if (res.kind === 'redirect') {
 		const r = await fetch(res.url);
 		if (!r.ok) throw new Error(`source fetch failed (${r.status})`);
-		return Buffer.from(await r.arrayBuffer());
+		// Reject early on an advertised over-cap length; still stream-cap below
+		// since Content-Length can be absent or wrong.
+		const len = Number(r.headers.get('content-length'));
+		if (Number.isFinite(len) && len > maxBytes) {
+			throw new Error(`source exceeds ${maxBytes}-byte transcode cap (${len})`);
+		}
+		if (!r.body) return Buffer.from(await r.arrayBuffer());
+		return streamToBuffer(r.body, maxBytes);
 	}
 	throw new Error(`unexpected get result: ${res.kind}`);
 }
@@ -84,58 +104,60 @@ interface ClaimedJob {
 }
 
 /**
- * Atomically claim the oldest queued job. Selects the oldest 'processing' row,
- * then transitions it to 'claimed' guarded on its still being 'processing'
- * (incrementing the attempt counter). Returns null when the queue is empty or
- * the candidate was claimed by a racing writer (caller loops again).
+ * Atomically claim the oldest claimable job. Selects the oldest 'processing'
+ * row, then transitions it to 'claimed' guarded on its still being 'processing'
+ * (incrementing the attempt counter). Loops past candidates lost to a racing
+ * writer or unclaimable (no storage key) so a single skip never ends the drain;
+ * returns null only when the queue is genuinely empty.
  */
 async function claimNext(): Promise<ClaimedJob | null> {
-	const [candidate] = await db
-		.select({
-			id: schema.journalPhotos.id,
-			storageKey: schema.journalPhotos.storageKey,
-			provider: schema.journalPhotos.provider,
-			mimeType: schema.journalPhotos.mimeType
-		})
-		.from(schema.journalPhotos)
-		.where(eq(schema.journalPhotos.status, 'processing'))
-		.orderBy(asc(schema.journalPhotos.createdAt))
-		.limit(1);
+	for (;;) {
+		const [candidate] = await db
+			.select({ id: schema.journalPhotos.id })
+			.from(schema.journalPhotos)
+			.where(eq(schema.journalPhotos.status, 'processing'))
+			.orderBy(asc(schema.journalPhotos.createdAt))
+			.limit(1);
 
-	if (!candidate) return null;
+		if (!candidate) return null; // queue empty
 
-	const claimed = await db
-		.update(schema.journalPhotos)
-		.set({
-			status: 'claimed',
-			transcodeAttempts: sql`${schema.journalPhotos.transcodeAttempts} + 1`
-		})
-		.where(
-			and(eq(schema.journalPhotos.id, candidate.id), eq(schema.journalPhotos.status, 'processing'))
-		)
-		.returning({
-			id: schema.journalPhotos.id,
-			storageKey: schema.journalPhotos.storageKey,
-			provider: schema.journalPhotos.provider,
-			mimeType: schema.journalPhotos.mimeType,
-			attempts: schema.journalPhotos.transcodeAttempts
-		});
+		const claimed = await db
+			.update(schema.journalPhotos)
+			.set({
+				status: 'claimed',
+				transcodeAttempts: sql`${schema.journalPhotos.transcodeAttempts} + 1`
+			})
+			.where(
+				and(
+					eq(schema.journalPhotos.id, candidate.id),
+					eq(schema.journalPhotos.status, 'processing')
+				)
+			)
+			.returning({
+				id: schema.journalPhotos.id,
+				storageKey: schema.journalPhotos.storageKey,
+				provider: schema.journalPhotos.provider,
+				mimeType: schema.journalPhotos.mimeType,
+				attempts: schema.journalPhotos.transcodeAttempts
+			});
 
-	if (claimed.length === 0) return null; // lost the race; try again
+		if (claimed.length === 0) continue; // lost the race; pick the next candidate
 
-	const row = claimed[0];
-	if (!row.storageKey) {
-		// A video row always has a storage key; if not, it cannot be transcoded.
-		await markFailed(row.id);
-		return null;
+		const row = claimed[0];
+		if (!row.storageKey) {
+			// A video row always has a storage key; if not, it cannot be
+			// transcoded. Fail it and keep draining the rest of the queue.
+			await markFailed(row.id);
+			continue;
+		}
+		return {
+			id: row.id,
+			storageKey: row.storageKey,
+			provider: row.provider,
+			mimeType: row.mimeType,
+			attempts: row.attempts
+		};
 	}
-	return {
-		id: row.id,
-		storageKey: row.storageKey,
-		provider: row.provider,
-		mimeType: row.mimeType,
-		attempts: row.attempts
-	};
 }
 
 async function markFailed(id: string): Promise<void> {
@@ -147,15 +169,44 @@ async function markFailed(id: string): Promise<void> {
 		.where(eq(schema.journalPhotos.id, id));
 }
 
+/**
+ * Deterministic output object keys for a job, derived from the source key's
+ * directory. The names depend only on the (server-generated) row id, so every
+ * attempt targets the same keys — re-runs overwrite rather than orphan.
+ */
+function outputKeys(job: ClaimedJob): { mp4Filename: string; mp4Key: string; posterKey: string } {
+	const slash = job.storageKey.lastIndexOf('/');
+	if (slash < 0) throw new Error(`malformed storage key (no path separator): ${job.storageKey}`);
+	const dir = job.storageKey.slice(0, slash);
+	const mp4Filename = `${job.id}.mp4`;
+	return {
+		mp4Filename,
+		mp4Key: `${dir}/${mp4Filename}`,
+		posterKey: `${dir}/${job.id}.poster.jpg`
+	};
+}
+
+/**
+ * Best-effort removal of a job's transcode outputs. Called when a job ends
+ * 'failed': the row stays pointing at its original source, so any MP4/poster a
+ * prior attempt uploaded before crashing is unreferenced and must be cleaned up.
+ */
+async function cleanupOutputs(job: ClaimedJob): Promise<void> {
+	let keys: ReturnType<typeof outputKeys>;
+	try {
+		keys = outputKeys(job);
+	} catch {
+		return;
+	}
+	const backend = getStorage(job.provider);
+	await Promise.allSettled([backend.delete(keys.mp4Key), backend.delete(keys.posterKey)]);
+}
+
 /** Process one claimed job end to end. Throws on any failure. */
 async function processJob(job: ClaimedJob): Promise<void> {
 	const backend = getStorage(job.provider);
 	const sourceKey = job.storageKey;
-	const dir = sourceKey.slice(0, sourceKey.lastIndexOf('/'));
-	const mp4Filename = `${job.id}.mp4`;
-	const posterFilename = `${job.id}.poster.jpg`;
-	const mp4Key = `${dir}/${mp4Filename}`;
-	const posterKey = `${dir}/${posterFilename}`;
+	const { mp4Filename, mp4Key, posterKey } = outputKeys(job);
 
 	await ensureTmpBase();
 	const jobDir = await mkdtemp(join(VIDEO_TRANSCODE.tmpDir, TMP_PREFIX));
@@ -211,6 +262,7 @@ async function drain(): Promise<void> {
 			if (job.attempts > MAX_ATTEMPTS) {
 				console.warn(`[video] job ${job.id} exhausted ${MAX_ATTEMPTS} attempts, marking failed`);
 				await markFailed(job.id);
+				await cleanupOutputs(job);
 				continue;
 			}
 			try {
@@ -219,6 +271,7 @@ async function drain(): Promise<void> {
 			} catch (err) {
 				console.error(`[video] transcode failed for ${job.id} (attempt ${job.attempts}):`, err);
 				await markFailed(job.id);
+				await cleanupOutputs(job);
 			}
 		}
 	} finally {

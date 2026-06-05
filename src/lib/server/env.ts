@@ -93,17 +93,37 @@ export interface VideoTranscodeConfig {
 	tmpDir: string;
 }
 
+// Hard ceiling for the per-job duration cap. Bounds the transcode wall-clock
+// timeout (derived from maxSeconds) so a misconfigured large value can't
+// effectively disable the SIGKILL backstop and pin the single worker for days.
+const VIDEO_TRANSCODE_MAX_SECONDS_CEILING = 3600;
+
 export const VIDEO_TRANSCODE: VideoTranscodeConfig = {
 	enabled: envBool(env.VIDEO_TRANSCODE, false),
 	keepOriginal: envBool(env.VIDEO_KEEP_ORIGINAL, true),
 	maxMb: envInt(env.VIDEO_TRANSCODE_MAX_MB, VIDEO_MAX_MB),
-	maxSeconds: envInt(env.VIDEO_TRANSCODE_MAX_SECONDS, 600),
+	maxSeconds: Math.min(
+		envInt(env.VIDEO_TRANSCODE_MAX_SECONDS, 600),
+		VIDEO_TRANSCODE_MAX_SECONDS_CEILING
+	),
 	maxWidth: envInt(env.VIDEO_TRANSCODE_MAX_WIDTH, 4096),
 	maxHeight: envInt(env.VIDEO_TRANSCODE_MAX_HEIGHT, 4096),
 	ffmpegPath: env.VIDEO_FFMPEG_PATH?.trim() || '/usr/bin/ffmpeg',
 	ffprobePath: env.VIDEO_FFPROBE_PATH?.trim() || '/usr/bin/ffprobe',
 	tmpDir: env.VIDEO_TMP_DIR?.trim() || join(DATA_DIR, 'transcode-tmp')
 };
+
+export function logVideoTranscodeBootStatus(): void {
+	// A set-but-unrecognized value parses as `false` (fail-closed). Warn so an
+	// operator who wrote VIDEO_TRANSCODE=1/yes isn't left believing it is on.
+	const raw = env.VIDEO_TRANSCODE?.trim().toLowerCase();
+	if (raw !== undefined && raw !== 'true' && raw !== 'false') {
+		console.warn(
+			`[video] VIDEO_TRANSCODE='${env.VIDEO_TRANSCODE}' is not 'true' or 'false'; treating as disabled.`
+		);
+	}
+	console.info(`[video] transcoding ${VIDEO_TRANSCODE.enabled ? 'requested' : 'disabled'} (env)`);
+}
 
 // Storage backend selection. 'local' writes to DATA_DIR/uploads; 's3' uses an
 // S3-compatible bucket (AWS, Garage, MinIO, Backblaze B2, R2, ...). Reads
