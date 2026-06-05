@@ -8,7 +8,7 @@ import { getStorage, type GetResult } from '$lib/server/storage';
 // URL shape: /api/photos/journal/{companionId}/{date}/{filename}
 const JOURNAL_PREFIX = 'journal';
 
-export const GET: RequestHandler = async ({ params, locals, request }) => {
+export const GET: RequestHandler = async ({ params, url, locals, request }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const requestedPath = params.path ?? '';
@@ -42,9 +42,24 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 		if (!assignment) error(403, t(locals.locale, 'error.forbidden'));
 	}
 
-	// For local rows the URL path IS the storage key. For S3 / Immich rows we
-	// use the row's storage_key column instead.
-	const key = photo.storageKey ?? requestedPath;
+	// `?poster` serves the transcoded video's generated poster JPEG instead of the
+	// media itself. The poster key comes from the row (resolved after the same
+	// companion/date/caretaker scoping above), never from the client, so it can't
+	// be used to read another companion's object. The kept original (originalKey)
+	// is deliberately never served by any route.
+	const wantPoster = url.searchParams.has('poster');
+	let key: string;
+	let contentType: string;
+	if (wantPoster) {
+		if (!photo.posterKey) error(404, t(locals.locale, 'error.notFound'));
+		key = photo.posterKey;
+		contentType = 'image/jpeg';
+	} else {
+		// For local rows the URL path IS the storage key. For S3 / Immich rows we
+		// use the row's storage_key column instead.
+		key = photo.storageKey ?? requestedPath;
+		contentType = photo.mimeType;
+	}
 	const ifNoneMatch = request.headers.get('if-none-match');
 	const range = request.headers.get('range');
 
@@ -82,7 +97,7 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
 		photo.provider === 'immich' ? 'private, max-age=300' : 'private, max-age=31536000, immutable';
 
 	const headers: Record<string, string> = {
-		'Content-Type': photo.mimeType,
+		'Content-Type': contentType,
 		'Cache-Control': cacheControl,
 		ETag: res.stat.etag,
 		'X-Content-Type-Options': 'nosniff',

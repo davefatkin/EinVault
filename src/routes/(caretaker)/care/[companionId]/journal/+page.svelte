@@ -101,6 +101,10 @@
 					mimeType: file.type,
 					sizeBytes: file.size,
 					notes: null,
+					status: 'ready',
+					originalKey: null,
+					posterKey: null,
+					transcodeAttempts: 0,
 					createdAt: new Date(),
 					loggedBy,
 					logger
@@ -155,6 +159,44 @@
 	function photoUrl(photo: (typeof photos)[0]) {
 		return `/api/photos/journal/${data.companion.id}/${data.today}/${photo.filename}`;
 	}
+
+	function posterUrl(photo: (typeof photos)[0]) {
+		return photo.posterKey ? `${photoUrl(photo)}?poster` : null;
+	}
+
+	// Poll transcoding videos and swap in the MP4 once ready, without a full
+	// reload (which would clobber the in-progress journal text).
+	$effect(() => {
+		const pending = photos.some((p) => p.status === 'processing' || p.status === 'claimed');
+		if (!pending) return;
+		const interval = setInterval(async () => {
+			try {
+				const res = await fetch(
+					`/api/companions/${data.companion.id}/journal/${data.today}/photos`
+				);
+				if (!res.ok) return;
+				const { photos: statuses } = await res.json();
+				const byId = new Map<string, (typeof statuses)[number]>(
+					statuses.map((s: { id: string }) => [s.id, s])
+				);
+				photos = photos.map((p) => {
+					const s = byId.get(p.id);
+					return s
+						? {
+								...p,
+								status: s.status,
+								filename: s.filename,
+								mimeType: s.mimeType,
+								posterKey: s.posterKey
+							}
+						: p;
+				});
+			} catch {
+				// transient; next tick retries
+			}
+		}, 3000);
+		return () => clearInterval(interval);
+	});
 
 	function formatDate(dateStr: string): string {
 		return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, {
@@ -333,6 +375,8 @@
 									{#if photo.mediaType === 'video'}
 										<JournalVideo
 											src={photoUrl(photo)}
+											poster={posterUrl(photo)}
+											status={photo.status}
 											downloadName={photo.originalName}
 											label={photo.originalName ?? undefined}
 											class="w-full h-full object-cover"

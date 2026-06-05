@@ -80,6 +80,10 @@
 		return `/api/photos/journal/${companion.id}/${date}/${photo.filename}`;
 	}
 
+	function posterUrl(photo: Entry['photos'][0], date: string) {
+		return photo.posterKey ? `${photoUrl(photo, date)}?poster` : null;
+	}
+
 	function monthKey(date: string) {
 		return date.slice(0, 7);
 	}
@@ -250,6 +254,8 @@
 				{#if lightboxPhoto.mediaType === 'video'}
 					<JournalVideo
 						src={photoUrl(lightboxPhoto, lightboxDate)}
+						poster={posterUrl(lightboxPhoto, lightboxDate)}
+						status={lightboxPhoto.status}
 						downloadName={lightboxPhoto.originalName}
 						label={lightboxPhoto.originalName ?? undefined}
 						autoplay
@@ -509,13 +515,22 @@
 										)}
 								>
 									{#if photo.mediaType === 'video'}
-										<video
-											src={photoUrl(photo, entry.date)}
-											preload="metadata"
-											muted
-											playsinline
-											class="w-full h-full object-cover pointer-events-none"
-										></video>
+										{#if photo.posterKey}
+											<img
+												src={posterUrl(photo, entry.date)}
+												alt={photo.originalName ?? ''}
+												class="w-full h-full object-cover pointer-events-none"
+												loading="lazy"
+											/>
+										{:else}
+											<video
+												src={photoUrl(photo, entry.date)}
+												preload="metadata"
+												muted
+												playsinline
+												class="w-full h-full object-cover pointer-events-none"
+											></video>
+										{/if}
 										<span
 											class="absolute inset-0 flex items-center justify-center bg-black/20"
 											aria-hidden="true"

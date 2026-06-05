@@ -10,6 +10,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - [Screenshots](#screenshots)
 - [Production (Docker)](#production-docker)
   - [Other options](#other-options)
+  - [Video transcoding (optional)](#video-transcoding-optional)
   - [External image storage (optional)](#external-image-storage-optional)
   - [Immich integration (optional)](#immich-integration-optional)
   - [Data and backup](#data-and-backup)
@@ -91,12 +92,34 @@ Everything else in the compose file can be edited directly:
 | ----------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TZ`                    | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.                            |
 | `UPLOAD_MAX_MB`         | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.       |
-| `VIDEO_MAX_MB`          | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is (no transcoding).                                                                    |
+| `VIDEO_MAX_MB`          | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                           |
 | `MAX_DAILY_MEDIA`       | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
 | `REMINDER_UNDO_SECONDS` | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
 | `user`                  | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume         | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
 | `DATABASE_URL`          | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
+
+### Video transcoding (optional)
+
+By default, uploaded videos are stored exactly as received. A browser can only play codecs it supports, so a clip in a format like H.265/HEVC (common from Apple devices) may fail to play and fall back to a download link.
+
+Set `VIDEO_TRANSCODE=true` to convert each uploaded video to a universal web profile (H.264 + AAC in an MP4 with the moov atom at the front) and generate a poster thumbnail. Conversion runs in the background after upload: the video shows a "converting" state and switches to the playable version when it finishes. The feature is off by default because it is CPU-intensive and depends on `ffmpeg`.
+
+`ffmpeg` and `ffprobe` ship in the official Docker image, including the HEVC decoder needed to read Apple-recorded source and `libx264` for H.264 output. If you run outside the image and the binaries are not found, the feature disables itself and videos are stored as-is.
+
+|                               | Default                | Description                                                                                                                                               |
+| ----------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VIDEO_TRANSCODE`             | `false`                | Enable background transcoding of uploaded videos to a web-playable MP4 plus a poster.                                                                     |
+| `VIDEO_KEEP_ORIGINAL`         | `true`                 | Keep the original source file alongside the transcoded copy. The original is never served; it is retained for re-encoding or backup. `false` discards it. |
+| `VIDEO_TRANSCODE_MAX_MB`      | `VIDEO_MAX_MB`         | Skip transcoding (store as-is) for inputs larger than this.                                                                                               |
+| `VIDEO_TRANSCODE_MAX_SECONDS` | `600`                  | Skip transcoding for inputs longer than this.                                                                                                             |
+| `VIDEO_TRANSCODE_MAX_WIDTH`   | `4096`                 | Skip transcoding for inputs wider than this.                                                                                                              |
+| `VIDEO_TRANSCODE_MAX_HEIGHT`  | `4096`                 | Skip transcoding for inputs taller than this.                                                                                                             |
+| `VIDEO_FFMPEG_PATH`           | `/usr/bin/ffmpeg`      | Absolute path to the `ffmpeg` binary. Override if it lives elsewhere (e.g. `/opt/homebrew/bin/ffmpeg` on macOS).                                          |
+| `VIDEO_FFPROBE_PATH`          | `/usr/bin/ffprobe`     | Absolute path to the `ffprobe` binary.                                                                                                                    |
+| `VIDEO_TMP_DIR`               | `<data>/transcode-tmp` | Scratch directory for in-progress transcodes. Must be on disk with room for the source plus output. Do not point it at the in-memory `/tmp` tmpfs.        |
+
+Transcoding decodes attacker-supplied media with `ffmpeg`. The shipped compose files already run the container with a read-only root filesystem, all capabilities dropped, and `no-new-privileges`, which contains a decoder exploit. For extra isolation you can run the container without network access. The conversion holds one CPU at a time (single job, capped threads); on the production compose file note the `cpus` limit and raise it if you process large clips.
 
 ### External image storage (optional)
 

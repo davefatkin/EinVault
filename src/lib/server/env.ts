@@ -1,5 +1,7 @@
 import { env } from '$env/dynamic/private';
+import { join } from 'path';
 import { REMINDER_UNDO_MAX_SECONDS } from '$lib/reminderUndo';
+import { DATA_DIR } from '$lib/server/paths';
 import type { StorageProvider } from '$lib/server/storage/types';
 
 export {
@@ -28,6 +30,17 @@ function envNonNegativeInt(value: string | undefined, defaultValue: number): num
 	return Number.isInteger(n) && n >= 0 ? n : defaultValue;
 }
 
+/**
+ * Parse an env var as a boolean. Only the exact string 'true' (case-insensitive,
+ * trimmed) is truthy; everything else — including unset — is `defaultValue` when
+ * the value is undefined, otherwise false. Mirrors the existing
+ * `S3_FORCE_PATH_STYLE === 'true'` convention.
+ */
+function envBool(value: string | undefined, defaultValue: boolean): boolean {
+	if (value === undefined) return defaultValue;
+	return value.trim().toLowerCase() === 'true';
+}
+
 export const UPLOAD_MAX_MB = envInt(env.UPLOAD_MAX_MB, 10);
 export const VIDEO_MAX_MB = envInt(env.VIDEO_MAX_MB, 100);
 
@@ -44,6 +57,53 @@ export function logDeprecatedEnvWarnings(): void {
 		);
 	}
 }
+
+// Optional server-side video transcoding (issue #86). Off by default: it needs
+// the ffmpeg/ffprobe binaries in the image and is CPU-intensive. When enabled,
+// uploaded videos are transcoded to a universal web profile (H.264 + AAC MP4,
+// +faststart) with a generated poster, so they play cross-browser instead of
+// failing to decode (e.g. Apple HEVC in Firefox). The binaries are probed at
+// boot by the transcode module; if absent, the feature self-disables and videos
+// are stored as-is (the pre-#86 behavior). Hardening rationale for the caps and
+// pinned paths lives in src/lib/server/video/.
+export interface VideoTranscodeConfig {
+	// Operator intent. The effective on/off state also depends on the boot-time
+	// binary probe (see src/lib/server/video/transcode.ts).
+	enabled: boolean;
+	// Keep the original source video alongside the transcoded copy. The original
+	// is never served to clients; it is retained for re-encode/backup only.
+	keepOriginal: boolean;
+	// Refuse to transcode inputs larger than this many MB (bounds decode work in
+	// addition to the resolution/duration caps below). Defaults to VIDEO_MAX_MB.
+	maxMb: number;
+	// Reject (via ffprobe) inputs longer than this, or larger than these pixel
+	// dimensions, before spending CPU on a decode. Guards against decompression
+	// bombs where a tiny file expands to enormous decoded work.
+	maxSeconds: number;
+	maxWidth: number;
+	maxHeight: number;
+	// Absolute, pinned binary paths. Pinned (not PATH-resolved) so the boot probe
+	// and the spawn target the same binary — closes a PATH-hijack TOCTOU.
+	ffmpegPath: string;
+	ffprobePath: string;
+	// Scratch directory for per-job temp files. MUST be disk-backed and roomy:
+	// it holds the downloaded original + decode scratch + output, which exceed
+	// the 64 MB RAM tmpfs the container mounts at /tmp. Defaults to a subdir of
+	// the data volume.
+	tmpDir: string;
+}
+
+export const VIDEO_TRANSCODE: VideoTranscodeConfig = {
+	enabled: envBool(env.VIDEO_TRANSCODE, false),
+	keepOriginal: envBool(env.VIDEO_KEEP_ORIGINAL, true),
+	maxMb: envInt(env.VIDEO_TRANSCODE_MAX_MB, VIDEO_MAX_MB),
+	maxSeconds: envInt(env.VIDEO_TRANSCODE_MAX_SECONDS, 600),
+	maxWidth: envInt(env.VIDEO_TRANSCODE_MAX_WIDTH, 4096),
+	maxHeight: envInt(env.VIDEO_TRANSCODE_MAX_HEIGHT, 4096),
+	ffmpegPath: env.VIDEO_FFMPEG_PATH?.trim() || '/usr/bin/ffmpeg',
+	ffprobePath: env.VIDEO_FFPROBE_PATH?.trim() || '/usr/bin/ffprobe',
+	tmpDir: env.VIDEO_TMP_DIR?.trim() || join(DATA_DIR, 'transcode-tmp')
+};
 
 // Storage backend selection. 'local' writes to DATA_DIR/uploads; 's3' uses an
 // S3-compatible bucket (AWS, Garage, MinIO, Backblaze B2, R2, ...). Reads

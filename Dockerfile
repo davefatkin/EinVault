@@ -36,6 +36,13 @@ FROM ${NODE_IMAGE} AS runner
 
 WORKDIR /app
 
+# ffmpeg/ffprobe for optional server-side video transcoding (issue #86). The
+# feature is off by default (VIDEO_TRANSCODE unset); the binaries ship anyway so
+# operators can enable it by flipping one env var without rebuilding. Alpine's
+# ffmpeg includes the native HEVC decoder (reads Apple-recorded source) and
+# libx264 for H.264 encode. Adds ~100-150MB to the image.
+RUN apk add --no-cache ffmpeg
+
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
 # app starts with `node build` and never invokes a package manager at runtime;
 # keeping them adds attack surface and CVE noise (npm's transitives, etc.).

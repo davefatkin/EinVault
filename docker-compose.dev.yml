@@ -38,6 +38,16 @@ services:
       # Default undo window (seconds) for dismissing a Reminder. 0 disables it.
       REMINDER_UNDO_SECONDS: ${REMINDER_UNDO_SECONDS:-7}
 
+      # Optional: server-side video transcoding (off by default). When 'true',
+      # uploaded videos are transcoded to H.264/AAC MP4 + poster in the
+      # background so they play cross-browser. ffmpeg ships in the image.
+      # Transcode scratch is written under /data; do not point it at /tmp (the
+      # 64 MB RAM tmpfs below is too small for video).
+      VIDEO_TRANSCODE: ${VIDEO_TRANSCODE:-false}
+      VIDEO_KEEP_ORIGINAL: ${VIDEO_KEEP_ORIGINAL:-true}
+      # VIDEO_TRANSCODE_MAX_MB / _MAX_SECONDS / _MAX_WIDTH / _MAX_HEIGHT cap cost.
+      # VIDEO_TMP_DIR defaults to /data/transcode-tmp.
+
       # Set to your local timezone so dates and times display correctly.
       # Defaults to UTC if omitted. Example: America/New_York, Europe/London
       # TZ: ${TZ:-America/New_York}
