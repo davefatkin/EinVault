@@ -36,6 +36,23 @@ services:
       # Each user can override in their settings.
       REMINDER_UNDO_SECONDS: 7
 
+      # Optional: server-side video transcoding (off by default).
+      # Set VIDEO_TRANSCODE=true to transcode uploaded videos to H.264/AAC MP4
+      # (+ poster) in the background so they play in every browser. ffmpeg ships
+      # in the image. Transcoding is CPU-intensive — note the cpus limit below;
+      # raise it if you enable this and process large clips. Scratch files are
+      # written under /data (disk), never the 64 MB /tmp tmpfs.
+      # VIDEO_TRANSCODE: 'true'
+      # Keep the source video alongside the transcode (default true). The
+      # original is never served; set false to discard it and save space.
+      # VIDEO_KEEP_ORIGINAL: 'true'
+      # Cost caps (input is stored as-is if it exceeds any): defaults shown.
+      # VIDEO_TRANSCODE_MAX_MB: 100
+      # VIDEO_TRANSCODE_MAX_SECONDS: 600
+      # VIDEO_TRANSCODE_MAX_WIDTH: 4096
+      # VIDEO_TRANSCODE_MAX_HEIGHT: 4096
+      # VIDEO_TMP_DIR: /data/transcode-tmp
+
       # Set to your local timezone so dates and times display correctly.
       # Defaults to UTC if omitted. Example: America/New_York, Europe/London
       # TZ: America/New_York
@@ -77,6 +94,11 @@ services:
     deploy:
       resources:
         limits:
+          # 0.5 / 256M is plenty for the app itself. If you enable VIDEO_TRANSCODE,
+          # raise both: transcoding bursts ffmpeg (capped at 2 threads, one job at
+          # a time) and the worker buffers the whole clip in memory. Suggested with
+          # transcoding on: cpus '1.5' (1.0 on a small host, 2.0 for fastest), and
+          # memory 512M (1G if you allow large/4K clips) to avoid an OOM mid-job.
           cpus: '0.5'
           memory: 256M
         reservations:

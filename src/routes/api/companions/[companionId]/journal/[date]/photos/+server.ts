@@ -6,8 +6,10 @@ import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
+import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '$lib/server/env';
 import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/server/storage/mime';
+import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
+import { kickWorker } from '$lib/server/video/worker';
 import { canModifyPhoto } from '$lib/permissions';
 import { isValidDate } from '$lib/server/validation';
 
@@ -18,6 +20,50 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 function journalKey(companionId: string, date: string, filename: string): string {
 	return `journal/${companionId}/${date}/${filename}`;
 }
+
+// Lightweight status poll for the journal UI. Returns just the transcode-relevant
+// fields so the client can update a 'processing' video to its transcoded MP4
+// (filename/mimeType change, poster appears) without reloading the page and
+// clobbering an in-progress journal edit. Scoped like the other handlers:
+// caretakers may only read their assigned companions.
+export const GET: RequestHandler = async ({ params, locals }) => {
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
+
+	const { companionId, date } = params;
+	if (!isValidDate(date)) error(400, t(locals.locale, 'error.invalidDate'));
+
+	if (locals.user.role === 'caretaker') {
+		const assignment = await db.query.companionCaretakers.findFirst({
+			where: and(
+				eq(schema.companionCaretakers.companionId, companionId),
+				eq(schema.companionCaretakers.userId, locals.user.id)
+			)
+		});
+		if (!assignment) error(403, t(locals.locale, 'error.forbidden'));
+	}
+
+	const entry = await db.query.journalEntries.findFirst({
+		where: and(
+			eq(schema.journalEntries.companionId, companionId),
+			eq(schema.journalEntries.date, date)
+		),
+		columns: { id: true }
+	});
+	if (!entry) return json({ photos: [] });
+
+	const rows = await db
+		.select({
+			id: schema.journalPhotos.id,
+			status: schema.journalPhotos.status,
+			filename: schema.journalPhotos.filename,
+			mimeType: schema.journalPhotos.mimeType,
+			posterKey: schema.journalPhotos.posterKey
+		})
+		.from(schema.journalPhotos)
+		.where(eq(schema.journalPhotos.entryId, entry.id));
+
+	return json({ photos: rows });
+};
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -113,7 +159,23 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		mimeType = 'image/jpeg';
 	}
 
-	const filename = `${photoId}.${ext}`;
+	// Queue this video for background transcoding when the feature is enabled,
+	// ffmpeg is present, the container is supported, and the clip is within the
+	// transcode size cap. The row is stored as a normal raw-video row and flipped
+	// to 'processing'; the worker repoints it at the transcoded MP4 when done.
+	// Anything that doesn't qualify is stored as-is (status defaults to 'ready').
+	const willTranscode =
+		isVideo &&
+		demuxerForMime(mimeType) !== null &&
+		processed.length <= VIDEO_TRANSCODE.maxMb * 1024 * 1024 &&
+		(await transcodeAvailable());
+
+	// A to-be-transcoded source is stored under a sentinel '.orig.' name so its
+	// key can never collide with the worker's output ('{photoId}.mp4'). Without
+	// this, an mp4-container source (e.g. Apple HEVC) would share the output key:
+	// the transcode would overwrite the kept original, or — with KEEP_ORIGINAL
+	// off — the post-transcode cleanup would delete the output itself.
+	const filename = willTranscode ? `${photoId}.orig.${ext}` : `${photoId}.${ext}`;
 	const key = journalKey(companionId, date, filename);
 	try {
 		await getStorage().put({
@@ -136,8 +198,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		mediaType,
 		mimeType,
 		sizeBytes: processed.length,
+		status: willTranscode ? 'processing' : 'ready',
 		loggedBy: locals.user.id
 	});
+
+	if (willTranscode) kickWorker();
 
 	const created = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, photoId),
@@ -202,8 +267,24 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 
 	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
+	// Remove every object this row owns: the primary file plus, for a transcoded
+	// video, the kept original and the generated poster. Missing keys are no-ops
+	// in the backend delete, so deleting all three is safe regardless of status.
+	// Use allSettled and delete the DB row unconditionally: the row is the source
+	// of truth, so a transient backend failure on one key must not abort the
+	// others or leave an undeletable row (an orphaned object is recoverable; a
+	// stuck row is not).
+	const backend = getStorage(photo.provider);
 	const key = photo.storageKey ?? journalKey(params.companionId, params.date, photo.filename);
-	await getStorage(photo.provider).delete(key);
+	const keys = [key, photo.originalKey, photo.posterKey].filter(
+		(k): k is string => typeof k === 'string' && k.length > 0
+	);
+	const results = await Promise.allSettled(keys.map((k) => backend.delete(k)));
+	results.forEach((r, i) => {
+		if (r.status === 'rejected') {
+			console.warn(`[journal-photo] failed to delete object ${keys[i]}:`, r.reason);
+		}
+	});
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 

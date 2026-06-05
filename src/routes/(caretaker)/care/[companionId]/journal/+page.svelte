@@ -16,6 +16,15 @@
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
 
+	// Shape of the transcode status poll response (GET .../photos).
+	type VideoStatus = {
+		id: string;
+		status: 'ready' | 'processing' | 'claimed' | 'failed';
+		filename: string;
+		mimeType: string;
+		posterKey: string | null;
+	};
+
 	let body = $state(untrack(() => data.todayEntry?.body ?? ''));
 	let mood = $state(untrack(() => data.todayEntry?.mood ?? ''));
 	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -87,7 +96,8 @@
 				setUploadError(err.message ?? 'Upload failed');
 				return;
 			}
-			const { id, filename, provider, storageKey, loggedBy, logger } = await res.json();
+			const { id, filename, provider, storageKey, status, posterKey, mimeType, loggedBy, logger } =
+				await res.json();
 			photos = [
 				...photos,
 				{
@@ -98,9 +108,13 @@
 					entryId: data.todayEntry?.id ?? '',
 					originalName: file.name,
 					mediaType: isVideoMime(file.type) ? 'video' : 'photo',
-					mimeType: file.type,
+					mimeType: mimeType ?? file.type,
 					sizeBytes: file.size,
 					notes: null,
+					status: status ?? 'ready',
+					originalKey: null,
+					posterKey: posterKey ?? null,
+					transcodeAttempts: 0,
 					createdAt: new Date(),
 					loggedBy,
 					logger
@@ -155,6 +169,55 @@
 	function photoUrl(photo: (typeof photos)[0]) {
 		return `/api/photos/journal/${data.companion.id}/${data.today}/${photo.filename}`;
 	}
+
+	function posterUrl(photo: (typeof photos)[0]) {
+		return photo.posterKey ? `${photoUrl(photo)}?poster` : null;
+	}
+
+	// True while any video is still transcoding. Derived so the poll effect starts
+	// once when work appears and stops once when it finishes.
+	const hasPendingTranscode = $derived(
+		photos.some((p) => p.status === 'processing' || p.status === 'claimed')
+	);
+
+	// Poll transcoding videos and swap in the MP4 once ready, without a full
+	// reload (which would clobber the in-progress journal text). Patches only the
+	// transcode-relevant fields of changed rows.
+	$effect(() => {
+		if (!hasPendingTranscode) return;
+		let inFlight = false;
+		const interval = setInterval(async () => {
+			if (inFlight) return; // don't stack requests if one poll is slow
+			inFlight = true;
+			try {
+				const res = await fetch(
+					`/api/companions/${data.companion.id}/journal/${data.today}/photos`
+				);
+				if (!res.ok) return;
+				const { photos: statuses }: { photos: VideoStatus[] } = await res.json();
+				const byId = new Map(statuses.map((s) => [s.id, s]));
+				let changed = false;
+				const next = photos.map((p) => {
+					const s = byId.get(p.id);
+					if (!s || s.status === p.status) return p;
+					changed = true;
+					return {
+						...p,
+						status: s.status,
+						filename: s.filename,
+						mimeType: s.mimeType,
+						posterKey: s.posterKey
+					};
+				});
+				if (changed) photos = next;
+			} catch {
+				// transient; next tick retries
+			} finally {
+				inFlight = false;
+			}
+		}, 3000);
+		return () => clearInterval(interval);
+	});
 
 	function formatDate(dateStr: string): string {
 		return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, {
@@ -333,6 +396,8 @@
 									{#if photo.mediaType === 'video'}
 										<JournalVideo
 											src={photoUrl(photo)}
+											poster={posterUrl(photo)}
+											status={photo.status}
 											downloadName={photo.originalName}
 											label={photo.originalName ?? undefined}
 											class="w-full h-full object-cover"

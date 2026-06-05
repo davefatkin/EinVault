@@ -145,13 +145,32 @@ export const journalPhotos = sqliteTable(
 		mimeType: text('mime_type').notNull(),
 		sizeBytes: integer('size_bytes').notNull(),
 		notes: text('notes'),
+		// Transcode lifecycle. 'ready' = playable as stored (the default for
+		// every pre-existing row and for any media that isn't queued for
+		// transcoding). 'processing' = enqueued, awaiting the worker. 'claimed'
+		// = a worker has atomically taken the job (crash-recovery marker).
+		// 'failed' = transcode gave up; UI falls back to a download link. Only
+		// VIDEO_TRANSCODE=true ever produces non-'ready' values.
+		status: text('status', { enum: ['ready', 'processing', 'claimed', 'failed'] })
+			.notNull()
+			.default('ready'),
+		// Storage key of the kept source video (VIDEO_KEEP_ORIGINAL=true). Never
+		// served to clients; retained for re-encode/backup only.
+		originalKey: text('original_key'),
+		// Storage key of the generated poster/thumbnail JPEG.
+		posterKey: text('poster_key'),
+		// Times the worker has attempted this job. Bounds retries so a poison
+		// input can't be requeued forever on every boot.
+		transcodeAttempts: integer('transcode_attempts').notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
-		entryIdx: index('photo_entry_idx').on(t.entryId)
+		entryIdx: index('photo_entry_idx').on(t.entryId),
+		// The worker scans for queued jobs by status; index it.
+		statusIdx: index('photo_status_idx').on(t.status)
 	})
 );
 

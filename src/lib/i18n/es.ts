@@ -478,6 +478,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.photoAlt': 'Foto del diario',
 	'page.journal.videoAlt': 'Vídeo del diario',
 	'page.journal.videoUnsupported': 'Este vídeo no se puede reproducir en tu navegador.',
+	'page.journal.videoProcessing': 'Convirtiendo vídeo…',
 	'page.journal.mediaLightboxLabel': 'Visor multimedia',
 
 	// Page: Journal day (app)

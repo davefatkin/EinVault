@@ -472,6 +472,7 @@ const messages = {
 	'page.journal.photoAlt': 'Journal photo',
 	'page.journal.videoAlt': 'Journal video',
 	'page.journal.videoUnsupported': "This video can't be played in your browser.",
+	'page.journal.videoProcessing': 'Converting video…',
 	'page.journal.mediaLightboxLabel': 'Media viewer',
 
 	// Page: Journal day (app)
