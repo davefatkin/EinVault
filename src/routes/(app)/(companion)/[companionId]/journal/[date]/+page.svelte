@@ -136,7 +136,8 @@
 				setUploadError(err.message ?? 'Upload failed');
 				return;
 			}
-			const { id, filename, provider, storageKey, loggedBy, logger } = await res.json();
+			const { id, filename, provider, storageKey, status, posterKey, mimeType, loggedBy, logger } =
+				await res.json();
 			photos = [
 				...photos,
 				{
@@ -147,12 +148,12 @@
 					entryId: data.entry?.id ?? '',
 					originalName: file.name,
 					mediaType: isVideoMime(file.type) ? 'video' : 'photo',
-					mimeType: file.type,
+					mimeType: mimeType ?? file.type,
 					sizeBytes: file.size,
 					notes: null,
-					status: 'ready',
+					status: status ?? 'ready',
 					originalKey: null,
-					posterKey: null,
+					posterKey: posterKey ?? null,
 					transcodeAttempts: 0,
 					createdAt: new Date(),
 					loggedBy,
