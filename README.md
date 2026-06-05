@@ -119,7 +119,9 @@ Set `VIDEO_TRANSCODE=true` to convert each uploaded video to a universal web pro
 | `VIDEO_FFPROBE_PATH`          | `/usr/bin/ffprobe`     | Absolute path to the `ffprobe` binary.                                                                                                                    |
 | `VIDEO_TMP_DIR`               | `<data>/transcode-tmp` | Scratch directory for in-progress transcodes. Must be on disk with room for the source plus output. Do not point it at the in-memory `/tmp` tmpfs.        |
 
-Transcoding decodes attacker-supplied media with `ffmpeg`. The shipped compose files already run the container with a read-only root filesystem, all capabilities dropped, and `no-new-privileges`, which contains a decoder exploit. For extra isolation you can run the container without network access. The conversion holds one CPU at a time (single job, capped threads); on the production compose file note the `cpus` limit and raise it if you process large clips.
+Transcoding decodes attacker-supplied media with `ffmpeg`. The shipped compose files already run the container with a read-only root filesystem, all capabilities dropped, and `no-new-privileges`, which contains a decoder exploit. For extra isolation you can run the container without network access.
+
+Transcoding is the only CPU-heavy thing EinVault does. It runs one job at a time with `ffmpeg` capped at two threads, so it never grabs the whole host, but the default `cpus: 0.5` / `memory: 256M` limits in `docker-compose.prod.yml` are sized for the app alone and are too low once it is enabled. With transcoding on, raise them to roughly `cpus: 1.5` (use `1.0` on a small host, `2.0` for the fastest conversions) and `memory: 512M` (`1G` if you allow large or 4K clips). The memory bump matters most: the worker buffers the whole clip while converting, and too low a limit will OOM-kill the job rather than slow it down.
 
 ### External image storage (optional)
 
@@ -160,15 +162,15 @@ docker compose -f docker-compose.prod.yml start einvault
 
 ### Container hardening
 
-|                     |                               |
-| ------------------- | ----------------------------- |
-| Runs as root        | No (runs as `node`, UID 1000) |
-| `no-new-privileges` | Enabled                       |
-| Linux capabilities  | All dropped                   |
-| Root filesystem     | Read-only                     |
-| Writable `/tmp`     | tmpfs, 64 MB                  |
-| CPU limit           | 0.5 cores                     |
-| Memory limit        | 256 MB                        |
+|                     |                                         |
+| ------------------- | --------------------------------------- |
+| Runs as root        | No (runs as `node`, UID 1000)           |
+| `no-new-privileges` | Enabled                                 |
+| Linux capabilities  | All dropped                             |
+| Root filesystem     | Read-only                               |
+| Writable `/tmp`     | tmpfs, 64 MB                            |
+| CPU limit           | 0.5 cores (raise for video transcoding) |
+| Memory limit        | 256 MB (raise for video transcoding)    |
 
 ### Image tags
 

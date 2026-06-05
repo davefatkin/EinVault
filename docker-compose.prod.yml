@@ -94,6 +94,11 @@ services:
     deploy:
       resources:
         limits:
+          # 0.5 / 256M is plenty for the app itself. If you enable VIDEO_TRANSCODE,
+          # raise both: transcoding bursts ffmpeg (capped at 2 threads, one job at
+          # a time) and the worker buffers the whole clip in memory. Suggested with
+          # transcoding on: cpus '1.5' (1.0 on a small host, 2.0 for fastest), and
+          # memory 512M (1G if you allow large/4K clips) to avoid an OOM mid-job.
           cpus: '0.5'
           memory: 256M
         reservations:
