@@ -92,6 +92,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordsMismatch': 'Les mots de passe ne correspondent pas.',
 	'error.usernameAlreadyTaken': "Nom d'utilisateur déjà pris.",
 	'error.emailAlreadyTaken': 'Cette adresse e-mail est déjà utilisée.',
+	'error.emailRequired': "L'adresse e-mail est requise.",
+	'error.emailInvalid': 'Saisissez une adresse e-mail valide.',
+	'error.tooManyResetRequests': 'Trop de demandes. Réessayez plus tard.',
 	'error.invalidTheme': 'Thème invalide.',
 	'error.invalidLocale': 'Langue invalide.',
 	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
@@ -243,6 +246,28 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.passwordLabel': 'Mot de passe',
 	'page.login.signIn': 'Se connecter',
 	'page.login.signingIn': 'Connexion…',
+	'page.login.forgotPassword': 'Mot de passe oublié ?',
+
+	// Page: Forgot password
+	'page.forgot.title': 'Réinitialiser votre mot de passe',
+	'page.forgot.instruction':
+		'Saisissez l’adresse e-mail de votre compte et nous vous enverrons un lien pour réinitialiser votre mot de passe.',
+	'page.forgot.emailLabel': 'E-mail',
+	'page.forgot.submit': 'Envoyer le lien',
+	'page.forgot.sending': 'Envoi…',
+	'page.forgot.success': 'Si un compte existe avec cet e-mail, un lien a été envoyé.',
+	'page.forgot.backToLogin': 'Retour à la connexion',
+
+	// Page: Reset password
+	'page.reset.title': 'Choisir un nouveau mot de passe',
+	'page.reset.newPasswordLabel': 'Nouveau mot de passe',
+	'page.reset.confirmPasswordLabel': 'Confirmer le nouveau mot de passe',
+	'page.reset.submit': 'Enregistrer le nouveau mot de passe',
+	'page.reset.saving': 'Enregistrement…',
+	'page.reset.success':
+		'Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter.',
+	'page.reset.invalid': 'Ce lien est invalide ou a expiré.',
+	'page.reset.requestNew': 'Demander un nouveau lien',
 
 	// Page: Setup
 	'page.setup.title': 'Configuration',
@@ -711,6 +736,14 @@ const messages: Record<keyof Messages, string> = {
 	'aria.previousMedia': 'Média précédent',
 	'aria.nextMedia': 'Média suivant',
 	'aria.viewPhoto': 'Voir la photo de {name}',
+
+	// Email: password reset
+	'email.reset.subject': 'Réinitialisez votre mot de passe EinVault',
+	'email.reset.greeting': 'Bonjour {name},',
+	'email.reset.body':
+		'Une réinitialisation de mot de passe a été demandée pour votre compte EinVault ({username}). Utilisez le lien ci-dessous pour choisir un nouveau mot de passe. Le lien expire dans 30 minutes.',
+	'email.reset.cta': 'Réinitialiser le mot de passe',
+	'email.reset.ignore': "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
 
 	// Immich picker
 	'immich.picker.title': 'Choisir depuis Immich',

@@ -89,6 +89,9 @@ const messages = {
 	'error.passwordsMismatch': 'Passwords do not match.',
 	'error.usernameAlreadyTaken': 'Username already taken.',
 	'error.emailAlreadyTaken': 'That email address is already in use.',
+	'error.emailRequired': 'Email address is required.',
+	'error.emailInvalid': 'Enter a valid email address.',
+	'error.tooManyResetRequests': 'Too many reset requests. Try again later.',
 	'error.invalidTheme': 'Invalid theme.',
 	'error.invalidLocale': 'Invalid locale.',
 	'error.invalidReminderUndo': 'Invalid undo window value.',
@@ -239,6 +242,27 @@ const messages = {
 	'page.login.passwordLabel': 'Password',
 	'page.login.signIn': 'Sign in',
 	'page.login.signingIn': 'Signing in…',
+	'page.login.forgotPassword': 'Forgot password?',
+
+	// Page: Forgot password
+	'page.forgot.title': 'Reset your password',
+	'page.forgot.instruction':
+		'Enter the email address on your account and we will send you a link to reset your password.',
+	'page.forgot.emailLabel': 'Email',
+	'page.forgot.submit': 'Send reset link',
+	'page.forgot.sending': 'Sending…',
+	'page.forgot.success': 'If an account with that email exists, a reset link has been sent.',
+	'page.forgot.backToLogin': 'Back to sign in',
+
+	// Page: Reset password
+	'page.reset.title': 'Choose a new password',
+	'page.reset.newPasswordLabel': 'New password',
+	'page.reset.confirmPasswordLabel': 'Confirm new password',
+	'page.reset.submit': 'Set new password',
+	'page.reset.saving': 'Saving…',
+	'page.reset.success': 'Your password has been updated. You can now sign in.',
+	'page.reset.invalid': 'This reset link is invalid or has expired.',
+	'page.reset.requestNew': 'Request a new link',
 
 	// Page: Setup
 	'page.setup.title': 'Setup',
@@ -702,6 +726,14 @@ const messages = {
 	'aria.previousMedia': 'Previous media',
 	'aria.nextMedia': 'Next media',
 	'aria.viewPhoto': "View {name}'s photo",
+
+	// Email: password reset
+	'email.reset.subject': 'Reset your EinVault password',
+	'email.reset.greeting': 'Hi {name},',
+	'email.reset.body':
+		'A password reset was requested for your EinVault account ({username}). Use the link below to choose a new password. The link expires in 30 minutes.',
+	'email.reset.cta': 'Reset password',
+	'email.reset.ignore': 'If you did not request this, you can safely ignore this email.',
 
 	// Immich picker
 	'immich.picker.title': 'Pick from Immich',

@@ -92,6 +92,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordsMismatch': 'As palavras-passe não coincidem.',
 	'error.usernameAlreadyTaken': 'Nome de utilizador já em uso.',
 	'error.emailAlreadyTaken': 'Esse e-mail já está em uso.',
+	'error.emailRequired': 'O e-mail é obrigatório.',
+	'error.emailInvalid': 'Digite um e-mail válido.',
+	'error.tooManyResetRequests': 'Muitas solicitações. Tente novamente mais tarde.',
 	'error.invalidTheme': 'Tema inválido.',
 	'error.invalidLocale': 'Idioma inválido.',
 	'error.invalidReminderUndo': 'Valor de janela para desfazer inválido.',
@@ -242,6 +245,27 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.passwordLabel': 'Palavra-passe',
 	'page.login.signIn': 'Iniciar sessão',
 	'page.login.signingIn': 'A iniciar sessão…',
+	'page.login.forgotPassword': 'Esqueceu a senha?',
+
+	// Page: Forgot password
+	'page.forgot.title': 'Redefinir sua senha',
+	'page.forgot.instruction':
+		'Digite o e-mail da sua conta e enviaremos um link para redefinir sua senha.',
+	'page.forgot.emailLabel': 'E-mail',
+	'page.forgot.submit': 'Enviar link',
+	'page.forgot.sending': 'Enviando…',
+	'page.forgot.success': 'Se existir uma conta com esse e-mail, um link foi enviado.',
+	'page.forgot.backToLogin': 'Voltar ao login',
+
+	// Page: Reset password
+	'page.reset.title': 'Escolha uma nova senha',
+	'page.reset.newPasswordLabel': 'Nova senha',
+	'page.reset.confirmPasswordLabel': 'Confirmar nova senha',
+	'page.reset.submit': 'Salvar nova senha',
+	'page.reset.saving': 'Salvando…',
+	'page.reset.success': 'Sua senha foi atualizada. Agora você pode entrar.',
+	'page.reset.invalid': 'Este link é inválido ou expirou.',
+	'page.reset.requestNew': 'Solicitar um novo link',
 
 	// Page: Setup
 	'page.setup.title': 'Configuração',
@@ -707,6 +731,14 @@ const messages: Record<keyof Messages, string> = {
 	'aria.previousMedia': 'Mídia anterior',
 	'aria.nextMedia': 'Próxima mídia',
 	'aria.viewPhoto': 'Ver foto de {name}',
+
+	// Email: password reset
+	'email.reset.subject': 'Redefina sua senha do EinVault',
+	'email.reset.greeting': 'Olá, {name}!',
+	'email.reset.body':
+		'Foi solicitada a redefinição de senha da sua conta EinVault ({username}). Use o link abaixo para escolher uma nova senha. O link expira em 30 minutos.',
+	'email.reset.cta': 'Redefinir senha',
+	'email.reset.ignore': 'Se você não solicitou isso, ignore este e-mail.',
 
 	// Immich picker
 	'immich.picker.title': 'Escolher do Immich',
