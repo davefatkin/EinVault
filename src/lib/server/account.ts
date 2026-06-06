@@ -96,7 +96,18 @@ export async function handleAccountUpdate(
 		updates.passwordHash = await bcrypt.hash(newPassword, 12);
 	}
 
-	await db.update(schema.users).set(updates).where(eq(schema.users.id, userId));
+	try {
+		await db.update(schema.users).set(updates).where(eq(schema.users.id, userId));
+	} catch (err) {
+		if (
+			err instanceof Error &&
+			(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
+			err.message.includes('users_email_idx')
+		) {
+			return fail(400, { accountError: t(locale, 'error.emailAlreadyTaken') });
+		}
+		throw err;
+	}
 
 	if (updates.passwordHash) {
 		await invalidateAllUserSessions(userId);
