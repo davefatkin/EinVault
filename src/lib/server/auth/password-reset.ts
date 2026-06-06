@@ -83,6 +83,7 @@ export async function validateResetToken(token: string) {
 	}
 
 	// Never hand the hash to callers — same hygiene as validateSessionToken.
+	// eslint-disable-next-line no-unused-vars
 	const { passwordHash: _passwordHash, ...user } = fullUser;
 	return { user };
 }
