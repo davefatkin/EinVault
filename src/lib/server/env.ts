@@ -305,6 +305,11 @@ export function logSmtpBootStatus(): void {
 				'[mail] ORIGIN is not set; password reset links may carry the wrong origin behind a reverse proxy.'
 			);
 		}
+		if (SMTP_CONFIG.user && !SMTP_CONFIG.pass) {
+			console.warn(
+				'[mail] SMTP_USER is set but SMTP_PASS is empty; auth will use a blank password.'
+			);
+		}
 	}
 }
 

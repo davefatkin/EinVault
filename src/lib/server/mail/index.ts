@@ -33,5 +33,6 @@ export interface MailMessage {
 
 export async function sendMail(message: MailMessage): Promise<void> {
 	if (!SMTP_CONFIG) throw new Error('SMTP is not configured');
-	await getTransporter().sendMail({ from: SMTP_CONFIG.from, ...message });
+	// from last: the configured sender is never caller-overridable.
+	await getTransporter().sendMail({ ...message, from: SMTP_CONFIG.from });
 }
