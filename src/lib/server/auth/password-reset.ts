@@ -1,5 +1,5 @@
 import { db, schema } from '$lib/server/db';
-import { and, eq, gt, lt } from 'drizzle-orm';
+import { and, eq, gte, lt } from 'drizzle-orm';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
 import { sha256 } from '@oslojs/crypto/sha2';
 
@@ -28,23 +28,35 @@ function tokenToId(token: string): string {
  * Last-request-wins: any previous tokens for the user are deleted.
  */
 export async function createResetToken(userId: string): Promise<string | null> {
-	const recent = await db.query.passwordResetTokens.findFirst({
-		where: and(
-			eq(schema.passwordResetTokens.userId, userId),
-			gt(schema.passwordResetTokens.createdAt, new Date(Date.now() - MIN_REISSUE_INTERVAL_MS))
-		),
-		columns: { id: true }
-	});
-	if (recent) return null;
-
 	const token = generateResetToken();
-	await db.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.userId, userId));
-	await db.insert(schema.passwordResetTokens).values({
-		id: tokenToId(token),
-		userId,
-		expiresAt: new Date(Date.now() + RESET_TOKEN_DURATION_MS)
+	// One synchronous transaction so two near-simultaneous requests cannot both
+	// pass the cooldown check (better-sqlite3 transactions must not await).
+	const issued = db.transaction((tx) => {
+		const recent = tx
+			.select({ id: schema.passwordResetTokens.id })
+			.from(schema.passwordResetTokens)
+			.where(
+				and(
+					eq(schema.passwordResetTokens.userId, userId),
+					gte(schema.passwordResetTokens.createdAt, new Date(Date.now() - MIN_REISSUE_INTERVAL_MS))
+				)
+			)
+			.get();
+		if (recent) return false;
+
+		tx.delete(schema.passwordResetTokens)
+			.where(eq(schema.passwordResetTokens.userId, userId))
+			.run();
+		tx.insert(schema.passwordResetTokens)
+			.values({
+				id: tokenToId(token),
+				userId,
+				expiresAt: new Date(Date.now() + RESET_TOKEN_DURATION_MS)
+			})
+			.run();
+		return true;
 	});
-	return token;
+	return issued ? token : null;
 }
 
 /**
@@ -64,12 +76,14 @@ export async function validateResetToken(token: string) {
 		return null;
 	}
 
-	const user = await db.query.users.findFirst({ where: eq(schema.users.id, row.userId) });
-	if (!user || !user.isActive || !user.passwordHash) {
+	const fullUser = await db.query.users.findFirst({ where: eq(schema.users.id, row.userId) });
+	if (!fullUser || !fullUser.isActive || !fullUser.passwordHash) {
 		await db.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.id, id));
 		return null;
 	}
 
+	// Never hand the hash to callers — same hygiene as validateSessionToken.
+	const { passwordHash: _passwordHash, ...user } = fullUser;
 	return { user };
 }
 
