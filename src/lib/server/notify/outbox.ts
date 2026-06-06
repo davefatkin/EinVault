@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, lt, notInArray, sql } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
 import type { OutboxPayload } from '$lib/server/db/schema';
@@ -26,10 +26,11 @@ export function reminderDedupeKey(
 export function shiftDedupeKey(
 	shiftId: string,
 	kind: 'shiftStart' | 'shiftEnd',
+	boundary: Date,
 	userId: string,
 	channel: OutboxChannel
 ): string {
-	return `shift:${shiftId}:${kind === 'shiftStart' ? 'start' : 'end'}:${userId}:${channel}`;
+	return `shift:${shiftId}:${kind === 'shiftStart' ? 'start' : 'end'}:${Math.floor(boundary.getTime() / 1000)}:${userId}:${channel}`;
 }
 
 export interface EnqueueRow {
@@ -60,13 +61,24 @@ export type ClaimedNotification = typeof schema.notificationOutbox.$inferSelect;
  * it queued -> claimed guarded on its still being queued (incrementing the
  * attempt counter). Loops past candidates lost to a race; returns null only
  * when the queue is empty. Mirrors the video worker's claimNext.
+ *
+ * Pass excludeIds to skip rows that already failed this pass — retries get one
+ * attempt per scan, so the 60s tick acts as retry backoff.
  */
-export async function claimNext(): Promise<ClaimedNotification | null> {
+export async function claimNext(
+	excludeIds?: ReadonlySet<string>
+): Promise<ClaimedNotification | null> {
 	for (;;) {
+		const where = excludeIds?.size
+			? and(
+					eq(schema.notificationOutbox.status, 'queued'),
+					notInArray(schema.notificationOutbox.id, [...excludeIds])
+				)
+			: eq(schema.notificationOutbox.status, 'queued');
 		const [candidate] = await db
 			.select({ id: schema.notificationOutbox.id })
 			.from(schema.notificationOutbox)
-			.where(eq(schema.notificationOutbox.status, 'queued'))
+			.where(where)
 			.orderBy(asc(schema.notificationOutbox.createdAt))
 			.limit(1);
 		if (!candidate) return null;
@@ -98,16 +110,6 @@ export async function markSkipped(id: string): Promise<void> {
 		.update(schema.notificationOutbox)
 		.set({ status: 'skipped' })
 		.where(eq(schema.notificationOutbox.id, id));
-}
-
-/**
- * Remove the row entirely so the dedupe key frees up and a producer can
- * re-create it later. Used when a shift is rescheduled beyond the lead window
- * before its alert went out — the alert should fire again when the new time
- * approaches, which a terminal 'skipped' row would block.
- */
-export async function deleteRow(id: string): Promise<void> {
-	await db.delete(schema.notificationOutbox).where(eq(schema.notificationOutbox.id, id));
 }
 
 /** Retry if attempts remain, else terminal failure. */

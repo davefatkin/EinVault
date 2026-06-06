@@ -90,15 +90,15 @@ export const passwordResetTokens = sqliteTable(
 // makes producers idempotent across overlapping scans and restarts.
 export type OutboxPayload =
 	| { kind: 'reminderDue'; reminderId: string }
-	| { kind: 'shiftStart'; shiftId: string }
-	| { kind: 'shiftEnd'; shiftId: string };
+	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
+	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number };
 
 export const notificationOutbox = sqliteTable(
 	'notification_outbox',
 	{
 		id: text('id').primaryKey(),
 		// reminder: 'reminder:{reminderId}:{dueAtEpochSeconds}:{userId}:{channel}'
-		// shift:    'shift:{shiftId}:{start|end}:{userId}:{channel}'
+		// shift:    'shift:{shiftId}:{start|end}:{boundaryEpochSeconds}:{userId}:{channel}'
 		// One row per occurrence per recipient per channel.
 		dedupeKey: text('dedupe_key').notNull(),
 		userId: text('user_id')

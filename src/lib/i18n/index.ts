@@ -70,7 +70,7 @@ export function t(
 	let msg = catalog[key] ?? catalogs[DEFAULT_LOCALE][key] ?? key;
 	if (params) {
 		for (const [k, v] of Object.entries(params)) {
-			msg = msg.replaceAll(`{${k}}`, String(v));
+			msg = msg.replaceAll(`{${k}}`, () => String(v));
 		}
 	}
 	return msg;

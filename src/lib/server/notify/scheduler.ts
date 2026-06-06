@@ -5,6 +5,7 @@
 // assumption: the in-memory flag and the select-then-claim pattern both
 // presume one app process per database — the same accepted constraint as the
 // video worker.
+// Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
 import { and, eq, gt, isNotNull, isNull, lte } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { db, schema } from '$lib/server/db';
@@ -13,7 +14,6 @@ import { buildReminderEmail, buildShiftEmail } from '$lib/server/mail/templates'
 import {
 	claimNext,
 	cleanupOldRows,
-	deleteRow,
 	enqueue,
 	markFailedOrRequeue,
 	markSent,
@@ -32,11 +32,6 @@ const SCAN_INTERVAL_MS = 60 * 1000;
 const CATCH_UP_MS = 24 * 60 * 60 * 1000;
 // Shift alerts fire when a boundary (start or end) enters this window.
 const SHIFT_LEAD_MS = 24 * 60 * 60 * 1000;
-// Reschedule slack: at delivery time a boundary may sit slightly past the
-// lead window because the producer ran up to one scan earlier. Beyond this,
-// the shift was genuinely rescheduled and the row is deleted for later
-// re-production.
-const SHIFT_RESCHEDULE_SLACK_MS = 5 * 60 * 1000;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let scanning = false;
@@ -138,10 +133,14 @@ async function produceShifts(now: Date): Promise<EnqueueRow[]> {
 				// Admins/members always; among caretakers only the shift owner.
 				if (user.role === 'caretaker' && user.id !== shift.userId) continue;
 				rows.push({
-					dedupeKey: shiftDedupeKey(shift.id, b.kind, user.id, 'email'),
+					dedupeKey: shiftDedupeKey(shift.id, b.kind, b.at, user.id, 'email'),
 					userId: user.id,
 					channel: 'email',
-					payload: { kind: b.kind, shiftId: shift.id }
+					payload: {
+						kind: b.kind,
+						shiftId: shift.id,
+						boundaryEpoch: Math.floor(b.at.getTime() / 1000)
+					}
 				});
 			}
 		}
@@ -190,6 +189,18 @@ async function deliverReminder(
 		await markSkipped(row.id);
 		return;
 	}
+	if (user.role === 'caretaker') {
+		const stillAssigned = await db.query.companionCaretakers.findFirst({
+			where: and(
+				eq(schema.companionCaretakers.companionId, reminder.companionId),
+				eq(schema.companionCaretakers.userId, user.id)
+			)
+		});
+		if (!stillAssigned) {
+			await markSkipped(row.id);
+			return;
+		}
+	}
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, reminder.companionId)
 	});
@@ -212,7 +223,7 @@ async function deliverReminder(
 
 async function deliverShift(
 	row: ClaimedNotification,
-	payload: { kind: 'shiftStart' | 'shiftEnd'; shiftId: string }
+	payload: { kind: 'shiftStart' | 'shiftEnd'; shiftId: string; boundaryEpoch: number }
 ): Promise<void> {
 	const shift = await db.query.caretakerShifts.findFirst({
 		where: eq(schema.caretakerShifts.id, payload.shiftId)
@@ -222,16 +233,16 @@ async function deliverShift(
 		return;
 	}
 	const boundary = payload.kind === 'shiftStart' ? shift.startAt : shift.endAt;
-	const now = Date.now();
-	// Boundary already passed: alert is stale, drop it silently.
-	if (boundary.getTime() <= now) {
+	// The row was created for a specific boundary time. If the shift has been
+	// rescheduled since, this row is moot — the producer creates a fresh row
+	// (new dedupe key) when the new time enters the window.
+	if (Math.floor(boundary.getTime() / 1000) !== payload.boundaryEpoch) {
 		await markSkipped(row.id);
 		return;
 	}
-	// Rescheduled far beyond the lead window: free the dedupe key so the
-	// producer re-creates the alert when the new time approaches.
-	if (boundary.getTime() - now > SHIFT_LEAD_MS + SHIFT_RESCHEDULE_SLACK_MS) {
-		await deleteRow(row.id);
+	// Boundary already passed: alert is stale, drop it silently.
+	if (boundary.getTime() <= Date.now()) {
+		await markSkipped(row.id);
 		return;
 	}
 	const user = await eligibleRecipient(row.userId);
@@ -265,8 +276,12 @@ async function deliverShift(
 
 /** Drain the queue until empty. Per-row errors requeue/fail that row only. */
 async function drain(): Promise<void> {
+	// One attempt per row per pass: rows requeued after a failure are excluded
+	// until the next scan, so the 60s tick acts as retry backoff instead of
+	// burning every attempt back-to-back against a struggling SMTP server.
+	const failedThisPass = new Set<string>();
 	for (;;) {
-		const row = await claimNext();
+		const row = await claimNext(failedThisPass);
 		if (!row) return;
 		try {
 			if (row.payload.kind === 'reminderDue') {
@@ -276,6 +291,7 @@ async function drain(): Promise<void> {
 			}
 		} catch (err) {
 			console.error(`[notify] delivery failed (attempt ${row.attempts}):`, err);
+			failedThisPass.add(row.id);
 			await markFailedOrRequeue(row);
 		}
 	}
