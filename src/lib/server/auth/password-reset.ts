@@ -88,10 +88,9 @@ export async function validateResetToken(token: string) {
 	return { user };
 }
 
-/** Single-use enforcement: drop every reset token a user holds. */
-export async function consumeUserResetTokens(userId: string): Promise<void> {
-	await db.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.userId, userId));
-}
+// Single-use enforcement lives inline in the reset action's transaction
+// (src/routes/auth/reset/+page.server.ts) so the token burn, password update,
+// and session sweep stay atomic.
 
 /** Opportunistic cleanup, piggybacked on forgot-page requests. */
 export async function cleanupExpiredResetTokens(): Promise<void> {
