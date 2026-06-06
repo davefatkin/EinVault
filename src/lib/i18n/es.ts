@@ -238,6 +238,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceLabel': 'Unidad predeterminada',
 	'page.settings.defaultRecurrenceSystem': 'Usar predeterminado del sistema (días)',
 	'page.settings.defaultRecurrenceUpdated': '✓ Recurrencia predeterminada actualizada.',
+	'page.settings.notificationsCard': 'Notificaciones',
+	'page.settings.notificationsDescription':
+		'Recibe correos de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+	'page.settings.notifyReminderEmailLabel': 'Enviarme un correo cuando venza un recordatorio',
+	'page.settings.notifyShiftEmailLabel':
+		'Enviarme un correo 24 horas antes de que un turno empiece o termine',
+	'page.settings.notificationsUpdated': 'Ajustes de notificaciones actualizados.',
+	'page.settings.notificationsNeedEmail':
+		'Añade un correo electrónico a tu cuenta para recibir notificaciones.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sesión',
@@ -742,6 +751,23 @@ const messages: Record<keyof Messages, string> = {
 		'Se ha solicitado un restablecimiento de contraseña para tu cuenta de EinVault ({username}). Usa el siguiente enlace para elegir una nueva contraseña. El enlace caduca en 30 minutos.',
 	'email.reset.cta': 'Restablecer contraseña',
 	'email.reset.ignore': 'Si no lo has solicitado, puedes ignorar este correo.',
+
+	// Email: reminder due
+	'email.reminder.subject': 'Recordatorio: {title}',
+	'email.reminder.greeting': 'Hola {name}:',
+	'email.reminder.body': '{companion} tiene un recordatorio pendiente: {title}',
+	'email.reminder.dueLine': 'Vence: {due}',
+	'email.reminder.cta': 'Abrir EinVault',
+	'email.reminder.footer':
+		'Recibes este correo porque las notificaciones de recordatorios están activadas en tus ajustes de EinVault.',
+
+	// Email: caretaker shift alerts
+	'email.shift.startSubject': 'Turno a punto de empezar: {caretaker}',
+	'email.shift.endSubject': 'Turno a punto de terminar: {caretaker}',
+	'email.shift.startBody': '{caretaker} comienza un turno de cuidado el {start}.',
+	'email.shift.endBody': '{caretaker} termina un turno de cuidado el {end}.',
+	'email.shift.footer':
+		'Recibes este correo porque las notificaciones de turnos están activadas en tus ajustes de EinVault.',
 
 	// Immich picker
 	'immich.picker.title': 'Elegir desde Immich',

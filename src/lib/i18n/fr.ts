@@ -236,6 +236,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceLabel': 'Unité par défaut',
 	'page.settings.defaultRecurrenceSystem': 'Utiliser la valeur par défaut (jours)',
 	'page.settings.defaultRecurrenceUpdated': '✓ Récurrence par défaut mise à jour.',
+	'page.settings.notificationsCard': 'Notifications',
+	'page.settings.notificationsDescription':
+		"Recevez des e-mails d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
+	'page.settings.notifyShiftEmailLabel':
+		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
+	'page.settings.notificationsUpdated': 'Réglages de notification mis à jour.',
+	'page.settings.notificationsNeedEmail':
+		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications.',
 
 	// Page: Login
 	'page.login.title': 'Se connecter',
@@ -744,6 +753,23 @@ const messages: Record<keyof Messages, string> = {
 		'Une réinitialisation de mot de passe a été demandée pour votre compte EinVault ({username}). Utilisez le lien ci-dessous pour choisir un nouveau mot de passe. Le lien expire dans 30 minutes.',
 	'email.reset.cta': 'Réinitialiser le mot de passe',
 	'email.reset.ignore': "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
+
+	// Email: reminder due
+	'email.reminder.subject': 'Rappel : {title}',
+	'email.reminder.greeting': 'Bonjour {name},',
+	'email.reminder.body': '{companion} a un rappel à échéance : {title}',
+	'email.reminder.dueLine': 'Échéance : {due}',
+	'email.reminder.cta': 'Ouvrir EinVault',
+	'email.reminder.footer':
+		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages EinVault.',
+
+	// Email: caretaker shift alerts
+	'email.shift.startSubject': 'Garde bientôt commencée : {caretaker}',
+	'email.shift.endSubject': 'Garde bientôt terminée : {caretaker}',
+	'email.shift.startBody': '{caretaker} commence une garde le {start}.',
+	'email.shift.endBody': '{caretaker} termine une garde le {end}.',
+	'email.shift.footer':
+		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages EinVault.',
 
 	// Immich picker
 	'immich.picker.title': 'Choisir depuis Immich',
