@@ -102,7 +102,7 @@ export async function handleAccountUpdate(
 		if (
 			err instanceof Error &&
 			(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
-			err.message.includes('users_email_idx')
+			err.message.includes('users.email')
 		) {
 			return fail(400, { accountError: t(locale, 'error.emailAlreadyTaken') });
 		}
