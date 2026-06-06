@@ -236,7 +236,10 @@ export const actions: Actions = {
 		const username = String(data.get('username') ?? '')
 			.trim()
 			.toLowerCase();
-		const email = String(data.get('email') ?? '').trim() || null;
+		const email =
+			String(data.get('email') ?? '')
+				.trim()
+				.toLowerCase() || null;
 		const phone = String(data.get('phone') ?? '').trim() || null;
 		const role = parseRole(String(data.get('role') ?? ''));
 
@@ -253,10 +256,30 @@ export const actions: Actions = {
 		});
 		if (conflict) return fail(400, { editError: t(locals.locale, 'error.usernameAlreadyTaken') });
 
-		await db
-			.update(schema.users)
-			.set({ displayName, username, email, phone, role })
-			.where(eq(schema.users.id, userId));
+		if (email) {
+			const emailConflict = await db.query.users.findFirst({
+				where: and(eq(schema.users.email, email), ne(schema.users.id, userId))
+			});
+			if (emailConflict) {
+				return fail(400, { editError: t(locals.locale, 'error.emailAlreadyTaken') });
+			}
+		}
+
+		try {
+			await db
+				.update(schema.users)
+				.set({ displayName, username, email, phone, role })
+				.where(eq(schema.users.id, userId));
+		} catch (err) {
+			if (
+				err instanceof Error &&
+				(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
+				err.message.includes('users.email')
+			) {
+				return fail(400, { editError: t(locals.locale, 'error.emailAlreadyTaken') });
+			}
+			throw err;
+		}
 
 		return { editSuccess: true };
 	},

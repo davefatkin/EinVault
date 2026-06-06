@@ -31,7 +31,10 @@ export async function handleAccountUpdate(
 	const username = String(data.get('username') ?? '')
 		.trim()
 		.toLowerCase();
-	const email = String(data.get('email') ?? '').trim() || null;
+	const email =
+		String(data.get('email') ?? '')
+			.trim()
+			.toLowerCase() || null;
 	const phone = String(data.get('phone') ?? '').trim() || null;
 	const currentPassword = String(data.get('currentPassword') ?? '');
 	const newPassword = String(data.get('newPassword') ?? '');
@@ -51,6 +54,15 @@ export async function handleAccountUpdate(
 	});
 	if (existing && existing.id !== userId) {
 		return fail(400, { accountError: t(locale, 'error.usernameAlreadyTakenAccount') });
+	}
+
+	if (email) {
+		const emailConflict = await db.query.users.findFirst({
+			where: eq(schema.users.email, email)
+		});
+		if (emailConflict && emailConflict.id !== userId) {
+			return fail(400, { accountError: t(locale, 'error.emailAlreadyTaken') });
+		}
 	}
 
 	const updates: Partial<typeof schema.users.$inferInsert> = {
@@ -84,7 +96,18 @@ export async function handleAccountUpdate(
 		updates.passwordHash = await bcrypt.hash(newPassword, 12);
 	}
 
-	await db.update(schema.users).set(updates).where(eq(schema.users.id, userId));
+	try {
+		await db.update(schema.users).set(updates).where(eq(schema.users.id, userId));
+	} catch (err) {
+		if (
+			err instanceof Error &&
+			(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
+			err.message.includes('users.email')
+		) {
+			return fail(400, { accountError: t(locale, 'error.emailAlreadyTaken') });
+		}
+		throw err;
+	}
 
 	if (updates.passwordHash) {
 		await invalidateAllUserSessions(userId);

@@ -90,6 +90,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordTooLong': 'La password deve contenere al massimo 128 caratteri.',
 	'error.passwordsMismatch': 'Le password non corrispondono.',
 	'error.usernameAlreadyTaken': 'Nome utente già in uso.',
+	'error.emailAlreadyTaken': 'Questo indirizzo e-mail è già in uso.',
+	'error.emailRequired': "L'indirizzo e-mail è obbligatorio.",
+	'error.emailInvalid': 'Inserisci un indirizzo e-mail valido.',
+	'error.tooManyResetRequests': 'Troppe richieste. Riprova più tardi.',
 	'error.invalidTheme': 'Tema non valido.',
 	'error.invalidLocale': 'Lingua non valida.',
 	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',
@@ -240,6 +244,27 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.passwordLabel': 'Password',
 	'page.login.signIn': 'Accedi',
 	'page.login.signingIn': 'Accesso in corso…',
+	'page.login.forgotPassword': 'Password dimenticata?',
+
+	// Page: Forgot password
+	'page.forgot.title': 'Reimposta la tua password',
+	'page.forgot.instruction':
+		"Inserisci l'indirizzo e-mail del tuo account e ti invieremo un link per reimpostare la password.",
+	'page.forgot.emailLabel': 'E-mail',
+	'page.forgot.submit': 'Invia link',
+	'page.forgot.sending': 'Invio…',
+	'page.forgot.success': 'Se esiste un account con questa e-mail, è stato inviato un link.',
+	'page.forgot.backToLogin': "Torna all'accesso",
+
+	// Page: Reset password
+	'page.reset.title': 'Scegli una nuova password',
+	'page.reset.newPasswordLabel': 'Nuova password',
+	'page.reset.confirmPasswordLabel': 'Conferma nuova password',
+	'page.reset.submit': 'Salva nuova password',
+	'page.reset.saving': 'Salvataggio…',
+	'page.reset.success': 'La tua password è stata aggiornata. Ora puoi accedere.',
+	'page.reset.invalid': 'Questo link non è valido o è scaduto.',
+	'page.reset.requestNew': 'Richiedi un nuovo link',
 
 	// Page: Setup
 	'page.setup.title': 'Configurazione',
@@ -704,6 +729,14 @@ const messages: Record<keyof Messages, string> = {
 	'aria.previousMedia': 'Contenuto precedente',
 	'aria.nextMedia': 'Contenuto successivo',
 	'aria.viewPhoto': 'Vedi la foto di {name}',
+
+	// Email: password reset
+	'email.reset.subject': 'Reimposta la tua password di EinVault',
+	'email.reset.greeting': 'Ciao {name},',
+	'email.reset.body':
+		'È stata richiesta la reimpostazione della password per il tuo account EinVault ({username}). Usa il link qui sotto per scegliere una nuova password. Il link scade tra 30 minuti.',
+	'email.reset.cta': 'Reimposta password',
+	'email.reset.ignore': 'Se non hai richiesto tu questa operazione, ignora questa e-mail.',
 
 	// Immich picker
 	'immich.picker.title': 'Scegli da Immich',

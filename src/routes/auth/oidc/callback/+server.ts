@@ -98,7 +98,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 	const sub = idTokenClaims.sub;
 	const iss = idTokenClaims.iss;
 	const email: string | undefined =
-		typeof idTokenClaims.email === 'string' ? idTokenClaims.email.toLowerCase() : undefined;
+		typeof idTokenClaims.email === 'string' ? idTokenClaims.email.trim().toLowerCase() : undefined;
 	const emailVerified = idTokenClaims.email_verified === true;
 	const preferredUsername: string | undefined =
 		typeof (idTokenClaims as Record<string, unknown>)['preferred_username'] === 'string'
@@ -203,6 +203,18 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 		const newUserId = generateId(15);
 		const role = evaluateRole(idTokenClaims, defaultRoleEnv);
 
+		// If the email is already owned by a different account, omit it from the
+		// new row rather than crashing on the unique constraint.
+		let insertEmail: string | null = email || null;
+		if (insertEmail) {
+			const emailTaken = tx
+				.select({ id: schema.users.id })
+				.from(schema.users)
+				.where(eq(schema.users.email, insertEmail))
+				.get();
+			if (emailTaken) insertEmail = null;
+		}
+
 		tx.insert(schema.users)
 			.values({
 				id: newUserId,
@@ -210,7 +222,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 				displayName: displayName || username,
 				passwordHash: null,
 				role,
-				email: email || null,
+				email: insertEmail,
 				oidcSubject: sub,
 				oidcIssuer: iss,
 				lastLoginAt: new Date()

@@ -1,0 +1,58 @@
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
+import { db, schema } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { validateResetToken } from '$lib/server/auth/password-reset';
+
+export const load: PageServerLoad = async ({ url, locals }) => {
+	if (locals.user) redirect(302, '/');
+
+	const token = url.searchParams.get('token') ?? '';
+	const valid = token ? (await validateResetToken(token)) !== null : false;
+	return { valid };
+};
+
+export const actions: Actions = {
+	default: async ({ request, locals }) => {
+		const locale = locals.locale;
+
+		const data = await request.formData();
+		const token = String(data.get('token') ?? '');
+		const newPassword = String(data.get('newPassword') ?? '');
+		const confirmPassword = String(data.get('confirmPassword') ?? '');
+
+		// Re-validate in the action: the load-time check is advisory only, and the
+		// token may have expired or been consumed between render and submit.
+		const result = token ? await validateResetToken(token) : null;
+		if (!result) {
+			return fail(400, { tokenInvalid: true });
+		}
+
+		if (newPassword.length < 8) {
+			return fail(400, { error: t(locale, 'error.passwordTooShort') });
+		}
+		if (newPassword.length > 128) {
+			return fail(400, { error: t(locale, 'error.passwordTooLong') });
+		}
+		if (newPassword !== confirmPassword) {
+			return fail(400, { error: t(locale, 'error.passwordsMismatch') });
+		}
+
+		const passwordHash = await bcrypt.hash(newPassword, 12);
+		const targetUserId = result.user.id;
+
+		// One transaction: the password change, token burn, and session sweep
+		// land together or not at all.
+		db.transaction((tx) => {
+			tx.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, targetUserId)).run();
+			tx.delete(schema.passwordResetTokens)
+				.where(eq(schema.passwordResetTokens.userId, targetUserId))
+				.run();
+			tx.delete(schema.sessions).where(eq(schema.sessions.userId, targetUserId)).run();
+		});
+
+		return { success: true };
+	}
+};
