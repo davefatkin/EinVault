@@ -250,6 +250,62 @@ export function logImmichBootStatus(): void {
 	}
 }
 
+// Optional SMTP email (issue #12). Off unless SMTP_HOST and SMTP_FROM are both
+// set (same gating convention as OIDC and Immich). Used for the forgot-password
+// flow; future PRs add reminder notifications on top of the same transport.
+export interface SmtpConfig {
+	host: string;
+	port: number;
+	// true = implicit TLS (typically port 465); false = STARTTLS upgrade (587).
+	secure: boolean;
+	// Auth is optional: unauthenticated LAN relays are common in homelab setups.
+	user: string | null;
+	pass: string | null;
+	// RFC 5322 From, e.g. 'EinVault <einvault@example.com>'.
+	from: string;
+}
+
+const SMTP_REQUIRED_VARS = ['SMTP_HOST', 'SMTP_FROM'] as const;
+
+function readSmtpConfig(): { config: SmtpConfig | null; missing: string[] } {
+	const missing = SMTP_REQUIRED_VARS.filter((name) => !env[name]?.trim());
+	if (missing.length === SMTP_REQUIRED_VARS.length) return { config: null, missing };
+	if (missing.length > 0) return { config: null, missing };
+	return {
+		config: {
+			host: env.SMTP_HOST!.trim(),
+			port: envInt(env.SMTP_PORT, 587),
+			secure: envBool(env.SMTP_SECURE, false),
+			user: env.SMTP_USER?.trim() || null,
+			pass: env.SMTP_PASS || null,
+			from: env.SMTP_FROM!.trim()
+		},
+		missing: []
+	};
+}
+
+const smtpResult = readSmtpConfig();
+export const SMTP_CONFIG = smtpResult.config;
+
+export function logSmtpBootStatus(): void {
+	if (smtpResult.missing.length > 0 && smtpResult.missing.length < SMTP_REQUIRED_VARS.length) {
+		console.warn(
+			`[mail] Partial SMTP config detected (missing: ${smtpResult.missing.join(', ')}). Email disabled. Set both SMTP_HOST and SMTP_FROM to enable.`
+		);
+		return;
+	}
+	if (SMTP_CONFIG) {
+		console.info(
+			`[mail] SMTP enabled host=${SMTP_CONFIG.host} port=${SMTP_CONFIG.port} secure=${SMTP_CONFIG.secure} auth=${SMTP_CONFIG.user ? 'yes' : 'no'}`
+		);
+		if (!env.ORIGIN) {
+			console.warn(
+				'[mail] ORIGIN is not set; password reset links may carry the wrong origin behind a reverse proxy.'
+			);
+		}
+	}
+}
+
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(
 	envNonNegativeInt(env.REMINDER_UNDO_SECONDS, 7),
