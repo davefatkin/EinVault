@@ -22,7 +22,7 @@ function tHtml(locale: Locale, key: Parameters<typeof t>[1], param?: [string, st
 	// Escape the catalog text with the placeholder still in it, then replace the
 	// placeholder with the escaped value. escapeHtml never produces '{' or '}',
 	// so the placeholder survives escaping intact.
-	return escapeHtml(t(locale, key)).replaceAll(`{${name}}`, escapeHtml(value));
+	return escapeHtml(t(locale, key)).replaceAll(`{${name}}`, () => escapeHtml(value));
 }
 
 export function buildResetEmail(

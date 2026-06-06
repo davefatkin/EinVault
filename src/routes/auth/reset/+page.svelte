@@ -38,7 +38,7 @@
 							{t(locale, 'page.forgot.backToLogin')}
 						</a>
 					</div>
-				{:else if !data.valid && !form?.error}
+				{:else if form?.tokenInvalid || (!data.valid && !form?.error)}
 					<Alert variant="destructive">
 						<AlertDescription>{t(locale, 'page.reset.invalid')}</AlertDescription>
 					</Alert>

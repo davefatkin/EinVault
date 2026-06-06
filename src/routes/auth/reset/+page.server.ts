@@ -4,8 +4,7 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import { invalidateAllUserSessions } from '$lib/server/auth/session';
-import { validateResetToken, consumeUserResetTokens } from '$lib/server/auth/password-reset';
+import { validateResetToken } from '$lib/server/auth/password-reset';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	if (locals.user) redirect(302, '/');
@@ -28,7 +27,7 @@ export const actions: Actions = {
 		// token may have expired or been consumed between render and submit.
 		const result = token ? await validateResetToken(token) : null;
 		if (!result) {
-			return fail(400, { error: t(locale, 'page.reset.invalid') });
+			return fail(400, { tokenInvalid: true });
 		}
 
 		if (newPassword.length < 8) {
@@ -42,11 +41,17 @@ export const actions: Actions = {
 		}
 
 		const passwordHash = await bcrypt.hash(newPassword, 12);
-		await db.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, result.user.id));
+		const targetUserId = result.user.id;
 
-		// Single-use + lock out anyone holding a stolen session.
-		await consumeUserResetTokens(result.user.id);
-		await invalidateAllUserSessions(result.user.id);
+		// One transaction: the password change, token burn, and session sweep
+		// land together or not at all.
+		db.transaction((tx) => {
+			tx.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, targetUserId)).run();
+			tx.delete(schema.passwordResetTokens)
+				.where(eq(schema.passwordResetTokens.userId, targetUserId))
+				.run();
+			tx.delete(schema.sessions).where(eq(schema.sessions.userId, targetUserId)).run();
+		});
 
 		return { success: true };
 	}
