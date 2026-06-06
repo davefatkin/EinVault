@@ -63,6 +63,23 @@ export const sessions = sqliteTable(
 	(t) => [index('session_user_idx').on(t.userId)]
 );
 
+export const passwordResetTokens = sqliteTable(
+	'password_reset_tokens',
+	{
+		// sha256 hex of the raw token — same storage pattern as sessions.id, so a
+		// DB leak never exposes a usable token.
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => [index('password_reset_user_idx').on(t.userId)]
+);
+
 // companions
 
 export const companions = sqliteTable(
@@ -333,6 +350,7 @@ export const caretakerShifts = sqliteTable(
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type Companion = typeof companions.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type JournalPhoto = typeof journalPhotos.$inferSelect;
@@ -349,8 +367,13 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 	user: one(users, { fields: [sessions.userId], references: [users.id] })
 }));
 
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+	user: one(users, { fields: [passwordResetTokens.userId], references: [users.id] })
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
+	passwordResetTokens: many(passwordResetTokens),
 	companionCaretakers: many(companionCaretakers),
 	shifts: many(caretakerShifts),
 	loggedJournalEntries: many(journalEntries),
