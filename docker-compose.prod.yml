@@ -83,6 +83,19 @@ services:
       # Optional: restrict picker to a single Immich album.
       # IMMICH_ALBUM_ID:
 
+      # Optional: SMTP email
+      # Enables outbound mail and the self-service "Forgot password?" flow on
+      # the login page. Disabled unless SMTP_HOST and SMTP_FROM are both set.
+      # ORIGIN above must be correct: password reset links are built from it.
+      # SMTP_HOST: smtp.example.com
+      # SMTP_PORT: 587
+      # true = implicit TLS (465). false (default) = STARTTLS on 587.
+      # SMTP_SECURE: 'false'
+      # Leave unset for unauthenticated LAN relays.
+      # SMTP_USER:
+      # SMTP_PASS:
+      # SMTP_FROM: EinVault <einvault@example.com>
+
     security_opt:
       - no-new-privileges:true
     cap_drop:
