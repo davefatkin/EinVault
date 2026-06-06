@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { isOidcEnabled, getOidcProviderName } from '$lib/server/auth/oidc';
+import { isMailEnabled } from '$lib/server/mail';
 import { db, schema } from '$lib/server/db';
 import {
 	generateSessionToken,
@@ -69,7 +70,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		oidcEnabled: isOidcEnabled(),
 		oidcProviderName: getOidcProviderName(),
-		oidcError
+		oidcError,
+		mailEnabled: isMailEnabled()
 	};
 };
 

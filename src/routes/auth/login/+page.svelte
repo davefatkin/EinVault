@@ -97,6 +97,16 @@
 							required
 							autocomplete="current-password"
 						/>
+						{#if data.mailEnabled}
+							<div class="text-right">
+								<a
+									href="/auth/forgot"
+									class="text-xs text-muted-foreground hover:text-primary underline"
+								>
+									{t(locale, 'page.login.forgotPassword')}
+								</a>
+							</div>
+						{/if}
 					</div>
 
 					<Button type="submit" class="w-full" disabled={loading}>
