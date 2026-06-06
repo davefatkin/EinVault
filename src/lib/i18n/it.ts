@@ -90,6 +90,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordTooLong': 'La password deve contenere al massimo 128 caratteri.',
 	'error.passwordsMismatch': 'Le password non corrispondono.',
 	'error.usernameAlreadyTaken': 'Nome utente già in uso.',
+	'error.emailAlreadyTaken': 'Questo indirizzo e-mail è già in uso.',
 	'error.invalidTheme': 'Tema non valido.',
 	'error.invalidLocale': 'Lingua non valida.',
 	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',

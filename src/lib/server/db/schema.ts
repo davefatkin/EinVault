@@ -41,7 +41,10 @@ export const users = sqliteTable(
 			enum: ['day', 'week', 'month', 'year']
 		})
 	},
-	(t) => [uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject)]
+	(t) => [
+		uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject),
+		uniqueIndex('users_email_idx').on(t.email)
+	]
 );
 
 export const sessions = sqliteTable(

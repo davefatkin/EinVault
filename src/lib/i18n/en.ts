@@ -88,6 +88,7 @@ const messages = {
 	'error.passwordTooLong': 'Password must be 128 characters or fewer.',
 	'error.passwordsMismatch': 'Passwords do not match.',
 	'error.usernameAlreadyTaken': 'Username already taken.',
+	'error.emailAlreadyTaken': 'That email address is already in use.',
 	'error.invalidTheme': 'Invalid theme.',
 	'error.invalidLocale': 'Invalid locale.',
 	'error.invalidReminderUndo': 'Invalid undo window value.',

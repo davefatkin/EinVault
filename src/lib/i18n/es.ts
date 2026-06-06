@@ -91,6 +91,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordTooLong': 'La contraseña debe tener 128 caracteres o menos.',
 	'error.passwordsMismatch': 'Las contraseñas no coinciden.',
 	'error.usernameAlreadyTaken': 'Nombre de usuario ya en uso.',
+	'error.emailAlreadyTaken': 'Ese correo electrónico ya está en uso.',
 	'error.invalidTheme': 'Tema no válido.',
 	'error.invalidLocale': 'Idioma no válido.',
 	'error.invalidReminderUndo': 'Valor de ventana de deshacer no válido.',

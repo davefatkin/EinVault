@@ -236,7 +236,10 @@ export const actions: Actions = {
 		const username = String(data.get('username') ?? '')
 			.trim()
 			.toLowerCase();
-		const email = String(data.get('email') ?? '').trim() || null;
+		const email =
+			String(data.get('email') ?? '')
+				.trim()
+				.toLowerCase() || null;
 		const phone = String(data.get('phone') ?? '').trim() || null;
 		const role = parseRole(String(data.get('role') ?? ''));
 
@@ -252,6 +255,15 @@ export const actions: Actions = {
 			where: and(eq(schema.users.username, username), ne(schema.users.id, userId))
 		});
 		if (conflict) return fail(400, { editError: t(locals.locale, 'error.usernameAlreadyTaken') });
+
+		if (email) {
+			const emailConflict = await db.query.users.findFirst({
+				where: and(eq(schema.users.email, email), ne(schema.users.id, userId))
+			});
+			if (emailConflict) {
+				return fail(400, { editError: t(locals.locale, 'error.emailAlreadyTaken') });
+			}
+		}
 
 		await db
 			.update(schema.users)

@@ -91,6 +91,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordTooLong': 'Le mot de passe doit comporter au plus 128 caractères.',
 	'error.passwordsMismatch': 'Les mots de passe ne correspondent pas.',
 	'error.usernameAlreadyTaken': "Nom d'utilisateur déjà pris.",
+	'error.emailAlreadyTaken': 'Cette adresse e-mail est déjà utilisée.',
 	'error.invalidTheme': 'Thème invalide.',
 	'error.invalidLocale': 'Langue invalide.',
 	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
