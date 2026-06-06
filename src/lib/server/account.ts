@@ -176,3 +176,16 @@ export async function handleDefaultRecurrenceUpdate(
 
 	return { defaultRecurrenceSuccess: true };
 }
+
+export async function handleNotificationsUpdate(userId: string, request: Request) {
+	const data = await request.formData();
+	const notifyReminderEmail = data.get('notifyReminderEmail') === 'on';
+	const notifyShiftEmail = data.get('notifyShiftEmail') === 'on';
+
+	await db
+		.update(schema.users)
+		.set({ notifyReminderEmail, notifyShiftEmail })
+		.where(eq(schema.users.id, userId));
+
+	return { notificationsSuccess: true };
+}
