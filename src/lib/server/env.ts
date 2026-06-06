@@ -277,6 +277,8 @@ function readSmtpConfig(): { config: SmtpConfig | null; missing: string[] } {
 			port: envInt(env.SMTP_PORT, 587),
 			secure: envBool(env.SMTP_SECURE, false),
 			user: env.SMTP_USER?.trim() || null,
+			// Deliberately not trimmed: passwords may legitimately contain
+			// leading/trailing whitespace.
 			pass: env.SMTP_PASS || null,
 			from: env.SMTP_FROM!.trim()
 		},

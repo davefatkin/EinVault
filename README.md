@@ -161,7 +161,7 @@ When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email a
 | `SMTP_HOST`   | —       | SMTP server hostname. Required (with `SMTP_FROM`) to enable email.                                                              |
 | `SMTP_PORT`   | `587`   | SMTP port. Use `465` with `SMTP_SECURE=true` for implicit TLS, or `587` (default) for STARTTLS.                                 |
 | `SMTP_SECURE` | `false` | `true` = implicit TLS (port 465). `false` = STARTTLS upgrade on connect.                                                        |
-| `SMTP_USER`   | —       | SMTP username. Leave unset for unauthenticated relays. Gmail requires an app password.                                          |
+| `SMTP_USER`   | —       | SMTP username. Leave unset for unauthenticated relays.                                                                          |
 | `SMTP_PASS`   | —       | SMTP password. Leave unset for unauthenticated relays.                                                                          |
 | `SMTP_FROM`   | —       | RFC 5322 From address shown to recipients, e.g. `EinVault <einvault@example.com>`. Required (with `SMTP_HOST`) to enable email. |
 

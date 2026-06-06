@@ -89,12 +89,12 @@ services:
       # ORIGIN above must be correct: password reset links are built from it.
       # SMTP_HOST: smtp.example.com
       # SMTP_PORT: 587
-      # true = implicit TLS (465). false (default) = STARTTLS on 587.
-      # SMTP_SECURE: 'false'
+      # Set true for implicit TLS (465). Default is STARTTLS on 587.
+      # SMTP_SECURE: 'true'
       # Leave unset for unauthenticated LAN relays.
       # SMTP_USER:
       # SMTP_PASS:
-      # SMTP_FROM: EinVault <einvault@example.com>
+      # SMTP_FROM: 'EinVault <einvault@example.com>'
 
     security_opt:
       - no-new-privileges:true
