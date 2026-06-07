@@ -96,6 +96,12 @@ services:
       # SMTP_PASS:
       # SMTP_FROM: 'EinVault <einvault@example.com>'
 
+      # Optional: ntfy push notifications
+      # Configures the ntfy server only; each user sets their own topic under
+      # Settings -> Notifications. Disabled unless NTFY_URL is set.
+      # NTFY_URL: https://ntfy.sh
+      # NTFY_TOKEN:
+
     security_opt:
       - no-new-privileges:true
     cap_drop:

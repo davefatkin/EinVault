@@ -165,6 +165,17 @@ When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email a
 | `SMTP_PASS`   | —       | SMTP password. Leave unset for unauthenticated relays.                                                                          |
 | `SMTP_FROM`   | —       | RFC 5322 From address shown to recipients, e.g. `EinVault <einvault@example.com>`. Required (with `SMTP_HOST`) to enable email. |
 
+### ntfy push notifications (optional)
+
+When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https://ntfy.sh). This configures the server only (base URL and optional access token). Each user sets their own topic name under Settings -> Notifications; a non-empty topic is that user's opt-in for pushes scoped to what they can see in the app (reminders due, shift alerts). The notification scheduler runs when either SMTP or ntfy is configured. The forgot-password flow remains email-only.
+
+On public servers like ntfy.sh, the topic name is the only access control. Users should pick long, random topic names that are hard to guess.
+
+|              | Default | Description                                                                                              |
+| ------------ | ------- | -------------------------------------------------------------------------------------------------------- |
+| `NTFY_URL`   | —       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.             |
+| `NTFY_TOKEN` | —       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic. |
+
 ### Data and backup
 
 Data lives in `./data` next to the compose file. Stop the container first so SQLite isn't mid-write, then copy the directory:
