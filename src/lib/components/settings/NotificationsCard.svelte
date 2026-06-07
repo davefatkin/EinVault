@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
@@ -28,6 +29,23 @@
 
 	const locale = getLocale();
 	let formEl: HTMLFormElement;
+	let submitting = $state(false);
+
+	// Default enhance resets the form on success, snapping every control back
+	// to its server-rendered attribute value before the invalidated data
+	// arrives -- the checkbox flicker and the "topic field reverts" bug.
+	// reset: false keeps the user's input; invalidation then syncs props.
+	// The submitting flag disables controls so a second change cannot race an
+	// in-flight save.
+	const handleSubmit: SubmitFunction = () => {
+		submitting = true;
+		return async ({ update }) => {
+			await update({ reset: false });
+			submitting = false;
+		};
+	};
+
+	const emailControlsDisabled = $derived(!hasEmail || submitting);
 </script>
 
 <Card>
@@ -53,30 +71,45 @@
 				{t(locale, 'page.settings.notificationsNeedEmail')}
 			</p>
 		{/if}
-		<form method="POST" action="?/notifications" bind:this={formEl} use:enhance class="space-y-2.5">
+		<form
+			method="POST"
+			action="?/notifications"
+			bind:this={formEl}
+			use:enhance={handleSubmit}
+			class="space-y-2.5"
+		>
 			{#if mailEnabled}
-				<label class="flex items-center gap-2.5">
+				<label
+					class="flex items-center gap-2.5 {!hasEmail ? 'opacity-50' : ''}"
+					class:cursor-not-allowed={!hasEmail}
+				>
 					<input
 						type="checkbox"
 						name="notifyReminderEmail"
 						checked={reminderEnabled}
-						disabled={!hasEmail}
+						disabled={emailControlsDisabled}
 						onchange={() => formEl.requestSubmit()}
-						class="h-4 w-4 rounded border-input accent-primary"
+						class="h-4 w-4 rounded border-input accent-primary disabled:cursor-not-allowed"
 					/>
-					<Label class="cursor-pointer">{t(locale, 'page.settings.notifyReminderEmailLabel')}</Label
+					<Label class={hasEmail ? 'cursor-pointer' : 'cursor-not-allowed'}
+						>{t(locale, 'page.settings.notifyReminderEmailLabel')}</Label
 					>
 				</label>
-				<label class="flex items-center gap-2.5">
+				<label
+					class="flex items-center gap-2.5 {!hasEmail ? 'opacity-50' : ''}"
+					class:cursor-not-allowed={!hasEmail}
+				>
 					<input
 						type="checkbox"
 						name="notifyShiftEmail"
 						checked={shiftEnabled}
-						disabled={!hasEmail}
+						disabled={emailControlsDisabled}
 						onchange={() => formEl.requestSubmit()}
-						class="h-4 w-4 rounded border-input accent-primary"
+						class="h-4 w-4 rounded border-input accent-primary disabled:cursor-not-allowed"
 					/>
-					<Label class="cursor-pointer">{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label>
+					<Label class={hasEmail ? 'cursor-pointer' : 'cursor-not-allowed'}
+						>{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label
+					>
 				</label>
 				{#if !hasEmail}
 					<!-- Disabled checkboxes do not submit; preserve stored flags. -->
@@ -97,6 +130,7 @@
 						type="text"
 						value={ntfyTopic ?? ''}
 						maxlength={64}
+						disabled={submitting}
 						onchange={() => formEl.requestSubmit()}
 					/>
 					<p class="text-xs text-muted-foreground">
