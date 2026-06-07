@@ -234,7 +234,7 @@ const messages = {
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notificationsUpdated': 'Notification settings updated.',
 	'page.settings.notificationsNeedEmail':
-		'Add an email address to your account to receive notifications.',
+		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
 		'Pushes go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',

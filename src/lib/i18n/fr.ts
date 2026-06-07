@@ -246,7 +246,7 @@ const messages: Record<keyof Messages, string> = {
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
 	'page.settings.notificationsUpdated': 'Réglages de notification mis à jour.',
 	'page.settings.notificationsNeedEmail':
-		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications.',
+		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications par e-mail.',
 	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
 	'page.settings.ntfyTopicHint':
 		"Les notifications push sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner. Laissez vide pour désactiver les push.",

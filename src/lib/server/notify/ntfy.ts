@@ -34,9 +34,16 @@ export async function sendNtfy(topic: string, msg: NtfyMessage): Promise<void> {
 			title: msg.title,
 			message: msg.message,
 			...(msg.click ? { click: msg.click } : {})
-		})
+		}),
+		// A hung publish must fail (and retry on the next scan) rather than
+		// wedge the single-flight drain loop forever.
+		signal: AbortSignal.timeout(15_000)
 	});
 	if (!res.ok) {
-		throw new Error(`ntfy publish failed: ${res.status} ${res.statusText}`);
+		const detail = await res.text().catch(() => '');
+		throw new Error(
+			`ntfy publish failed: ${res.status} ${res.statusText}${detail ? ` - ${detail.slice(0, 200)}` : ''}`
+		);
 	}
+	await res.body?.cancel();
 }

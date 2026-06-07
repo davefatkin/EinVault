@@ -244,7 +244,7 @@ const messages: Record<keyof Messages, string> = {
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
 	'page.settings.notificationsUpdated': 'Impostazioni delle notifiche aggiornate.',
 	'page.settings.notificationsNeedEmail':
-		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche.',
+		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche via e-mail.',
 	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
 	'page.settings.ntfyTopicHint':
 		'Le notifiche push vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi. Lascia vuoto per disattivare i push.',

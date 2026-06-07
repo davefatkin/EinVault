@@ -248,7 +248,7 @@ const messages: Record<keyof Messages, string> = {
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
 	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
 	'page.settings.notificationsNeedEmail':
-		'Füge deinem Konto eine E-Mail-Adresse hinzu, um Benachrichtigungen zu erhalten.',
+		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
 		'Push-Nachrichten gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',

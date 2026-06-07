@@ -10,6 +10,7 @@
 		reminderEnabled,
 		shiftEnabled,
 		hasEmail,
+		mailEnabled,
 		ntfyEnabled,
 		ntfyTopic,
 		successMessage,
@@ -18,6 +19,7 @@
 		reminderEnabled: boolean;
 		shiftEnabled: boolean;
 		hasEmail: boolean;
+		mailEnabled: boolean;
 		ntfyEnabled: boolean;
 		ntfyTopic: string | null;
 		successMessage: string | undefined;
@@ -46,34 +48,46 @@
 				<AlertDescription>{errorMessage}</AlertDescription>
 			</Alert>
 		{/if}
-		{#if !hasEmail}
+		{#if mailEnabled && !hasEmail}
 			<p class="text-sm text-muted-foreground mb-3">
 				{t(locale, 'page.settings.notificationsNeedEmail')}
 			</p>
 		{/if}
 		<form method="POST" action="?/notifications" bind:this={formEl} use:enhance class="space-y-2.5">
-			<label class="flex items-center gap-2.5">
-				<input
-					type="checkbox"
-					name="notifyReminderEmail"
-					checked={reminderEnabled}
-					disabled={!hasEmail}
-					onchange={() => formEl.requestSubmit()}
-					class="h-4 w-4 rounded border-input accent-primary"
-				/>
-				<Label class="cursor-pointer">{t(locale, 'page.settings.notifyReminderEmailLabel')}</Label>
-			</label>
-			<label class="flex items-center gap-2.5">
-				<input
-					type="checkbox"
-					name="notifyShiftEmail"
-					checked={shiftEnabled}
-					disabled={!hasEmail}
-					onchange={() => formEl.requestSubmit()}
-					class="h-4 w-4 rounded border-input accent-primary"
-				/>
-				<Label class="cursor-pointer">{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label>
-			</label>
+			{#if mailEnabled}
+				<label class="flex items-center gap-2.5">
+					<input
+						type="checkbox"
+						name="notifyReminderEmail"
+						checked={reminderEnabled}
+						disabled={!hasEmail}
+						onchange={() => formEl.requestSubmit()}
+						class="h-4 w-4 rounded border-input accent-primary"
+					/>
+					<Label class="cursor-pointer">{t(locale, 'page.settings.notifyReminderEmailLabel')}</Label
+					>
+				</label>
+				<label class="flex items-center gap-2.5">
+					<input
+						type="checkbox"
+						name="notifyShiftEmail"
+						checked={shiftEnabled}
+						disabled={!hasEmail}
+						onchange={() => formEl.requestSubmit()}
+						class="h-4 w-4 rounded border-input accent-primary"
+					/>
+					<Label class="cursor-pointer">{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label>
+				</label>
+				{#if !hasEmail}
+					<!-- Disabled checkboxes do not submit; preserve stored flags. -->
+					{#if reminderEnabled}<input type="hidden" name="notifyReminderEmail" value="on" />{/if}
+					{#if shiftEnabled}<input type="hidden" name="notifyShiftEmail" value="on" />{/if}
+				{/if}
+			{:else}
+				<!-- Email unconfigured: keep stored flags intact across topic edits. -->
+				{#if reminderEnabled}<input type="hidden" name="notifyReminderEmail" value="on" />{/if}
+				{#if shiftEnabled}<input type="hidden" name="notifyShiftEmail" value="on" />{/if}
+			{/if}
 			{#if ntfyEnabled}
 				<div class="space-y-1.5 pt-2">
 					<Label for="ntfyTopic">{t(locale, 'page.settings.ntfyTopicLabel')}</Label>

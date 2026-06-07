@@ -206,7 +206,7 @@ async function eligibleRecipient(userId: string) {
 		where: eq(schema.users.id, userId),
 		columns: { passwordHash: false }
 	});
-	if (!user || !user.isActive || !user.email) return null;
+	if (!user || !user.isActive) return null;
 	return user;
 }
 
@@ -237,7 +237,7 @@ async function deliverReminder(
 		return;
 	}
 	const user = await eligibleRecipient(row.userId);
-	if (!user || !user.notifyReminderEmail) {
+	if (!user || !user.email || !user.notifyReminderEmail) {
 		await markSkipped(row.id);
 		return;
 	}
@@ -264,7 +264,7 @@ async function deliverReminder(
 	const link = publicLink(`/${companion.id}/reminders`);
 	const message = buildReminderEmail(
 		user.locale,
-		{ displayName: user.displayName, email: user.email! },
+		{ displayName: user.displayName, email: user.email },
 		{ title: reminder.title, description: reminder.description, dueAt: reminder.dueAt },
 		companion.name,
 		link
@@ -298,7 +298,7 @@ async function deliverShift(
 		return;
 	}
 	const user = await eligibleRecipient(row.userId);
-	if (!user || !user.notifyShiftEmail) {
+	if (!user || !user.email || !user.notifyShiftEmail) {
 		await markSkipped(row.id);
 		return;
 	}
@@ -322,7 +322,7 @@ async function deliverShift(
 	const link = publicLink(user.role === 'caretaker' ? '/care' : '/');
 	const message = buildShiftEmail(
 		user.locale,
-		{ displayName: user.displayName, email: user.email! },
+		{ displayName: user.displayName, email: user.email },
 		payload.kind,
 		caretaker.displayName,
 		{ startAt: shift.startAt, endAt: shift.endAt },
