@@ -201,16 +201,18 @@ export async function handleNotificationsUpdate(userId: string, request: Request
 
 // Test sends are immediate (not via the outbox) so the user gets instant
 // feedback. Light per-user cooldown to keep a stuck double-click from
-// hammering SMTP or ntfy. In-process state, single-instance assumption.
+// hammering SMTP or ntfy. Only successful sends stamp the cooldown: a user
+// debugging a broken config gets to retry immediately. In-process state,
+// single-instance assumption.
 const TEST_COOLDOWN_MS = 10 * 1000;
 const lastTestAt = new Map<string, number>();
 
 function testOnCooldown(key: string): boolean {
-	const now = Date.now();
-	const last = lastTestAt.get(key) ?? 0;
-	if (now - last < TEST_COOLDOWN_MS) return true;
-	lastTestAt.set(key, now);
-	return false;
+	return Date.now() - (lastTestAt.get(key) ?? 0) < TEST_COOLDOWN_MS;
+}
+
+function stampTestCooldown(key: string): void {
+	lastTestAt.set(key, Date.now());
 }
 
 export async function handleTestEmail(
@@ -237,18 +239,16 @@ export async function handleTestEmail(
 			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })
 		});
 	}
+	stampTestCooldown(`${user.id}:email`);
 	return { notificationsTestSuccess: true };
 }
 
 export async function handleTestNtfy(
-	user: { id: string; displayName: string; locale: Locale },
+	user: { id: string; displayName: string; ntfyTopic: string | null; locale: Locale },
 	locale: Locale
 ) {
-	const row = await db.query.users.findFirst({
-		where: eq(schema.users.id, user.id),
-		columns: { ntfyTopic: true }
-	});
-	if (!isNtfyEnabled() || !row?.ntfyTopic) {
+	// locals.user is selected fresh per request, same trust as email above.
+	if (!isNtfyEnabled() || !user.ntfyTopic) {
 		return fail(400, {
 			notificationsTestError: t(locale, 'page.settings.testFailed', {
 				error: 'ntfy unavailable'
@@ -259,7 +259,7 @@ export async function handleTestNtfy(
 		return fail(429, { notificationsTestError: t(locale, 'error.testCooldown') });
 	}
 	try {
-		await sendNtfy(row.ntfyTopic, {
+		await sendNtfy(user.ntfyTopic, {
 			title: t(user.locale, 'email.test.subject'),
 			message: t(user.locale, 'email.test.body')
 		});
@@ -269,5 +269,6 @@ export async function handleTestNtfy(
 			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })
 		});
 	}
+	stampTestCooldown(`${user.id}:ntfy`);
 	return { notificationsTestSuccess: true };
 }

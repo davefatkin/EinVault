@@ -45,8 +45,11 @@
 	const handleSubmit: SubmitFunction = () => {
 		submitting = true;
 		return async ({ update }) => {
-			await update({ reset: false });
-			submitting = false;
+			try {
+				await update({ reset: false });
+			} finally {
+				submitting = false;
+			}
 		};
 	};
 
