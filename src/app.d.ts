@@ -18,6 +18,7 @@ declare global {
 				defaultRecurrenceUnit: RecurrenceUnit | null;
 				notifyReminderEmail: boolean;
 				notifyShiftEmail: boolean;
+				ntfyTopic: string | null;
 			} | null;
 			session: {
 				id: string;

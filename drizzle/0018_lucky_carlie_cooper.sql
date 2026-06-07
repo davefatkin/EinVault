@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `ntfy_topic` text;

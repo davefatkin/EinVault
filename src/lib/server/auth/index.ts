@@ -52,7 +52,8 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			reminderUndoSeconds: user.reminderUndoSeconds ?? null,
 			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null,
 			notifyReminderEmail: user.notifyReminderEmail ?? false,
-			notifyShiftEmail: user.notifyShiftEmail ?? false
+			notifyShiftEmail: user.notifyShiftEmail ?? false,
+			ntfyTopic: user.ntfyTopic ?? null
 		}
 	};
 }
