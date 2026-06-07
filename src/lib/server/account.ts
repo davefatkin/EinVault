@@ -18,7 +18,7 @@ import {
 	REMINDER_UNDO_DEFAULT_SENTINEL,
 	REMINDER_UNDO_SECONDS_DEFAULT
 } from '$lib/server/env';
-import { parseRecurrenceUnit } from '$lib/server/validation';
+import { parseRecurrenceUnit, EMAIL_RE } from '$lib/server/validation';
 import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '$lib/server/notify/ntfy';
 import { isMailEnabled, sendMail } from '$lib/server/mail';
 import { buildTestEmail } from '$lib/server/mail/templates';
@@ -60,6 +60,9 @@ export async function handleAccountUpdate(
 	}
 
 	if (email) {
+		if (!EMAIL_RE.test(email)) {
+			return fail(400, { accountError: t(locale, 'error.emailInvalid') });
+		}
 		const emailConflict = await db.query.users.findFirst({
 			where: eq(schema.users.email, email)
 		});
@@ -234,9 +237,13 @@ export async function handleTestEmail(
 			buildTestEmail(user.locale, { displayName: user.displayName, email: user.email })
 		);
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err);
+		// Full detail to the server log only. nodemailer messages can embed the
+		// SMTP host:port; surface just the error-code class (EAUTH, ECONNECTION,
+		// ...) to the client, which is host-free and still useful for debugging.
+		console.error(`[mail] test email for user ${user.id} failed:`, err);
+		const code = (err as { code?: string } | null)?.code ?? 'send failed';
 		return fail(502, {
-			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })
+			notificationsTestError: t(locale, 'page.settings.testFailed', { error: code })
 		});
 	}
 	stampTestCooldown(`${user.id}:email`);
@@ -264,6 +271,9 @@ export async function handleTestNtfy(
 			message: t(user.locale, 'email.test.body')
 		});
 	} catch (err) {
+		// sendNtfy errors are host-free (HTTP status, or undici's opaque "fetch
+		// failed"); safe to surface, but log full detail server-side too.
+		console.error(`[ntfy] test push for user ${user.id} failed:`, err);
 		const msg = err instanceof Error ? err.message : String(err);
 		return fail(502, {
 			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })

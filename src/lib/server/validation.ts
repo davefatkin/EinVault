@@ -2,6 +2,12 @@ function parseEnum<T extends string>(value: string, valid: readonly T[]): T | nu
 	return valid.includes(value as T) ? (value as T) : null;
 }
 
+// Loose email shape check, shared by every write path that stores users.email.
+// Deliberately permissive (one @, a dot in the domain, no whitespace): catches
+// fat-finger garbage before it becomes an undeliverable notification address,
+// without trying to fully validate RFC 5322.
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Mood
 
 export type Mood = 'great' | 'good' | 'meh' | 'off' | 'sick';

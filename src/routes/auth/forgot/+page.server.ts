@@ -1,11 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { env } from '$env/dynamic/private';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isMailEnabled, sendMail } from '$lib/server/mail';
 import { buildResetEmail } from '$lib/server/mail/templates';
 import { createResetToken, cleanupExpiredResetTokens } from '$lib/server/auth/password-reset';
+import { EMAIL_RE } from '$lib/server/validation';
 
 // In-process per-IP limiter, same caveats as the login limiter: state resets on
 // restart, single-instance only. A DB-backed per-user cooldown lives in
@@ -36,8 +38,6 @@ function checkRateLimit(ip: string): boolean {
 	record.count++;
 	return true;
 }
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!isMailEnabled()) redirect(302, '/auth/login');
@@ -73,7 +73,14 @@ export const actions: Actions = {
 			const userId = user.id;
 			const token = await createResetToken(userId);
 			if (token) {
-				const link = `${url.origin}/auth/reset?token=${encodeURIComponent(token)}`;
+				// Build the link from the configured ORIGIN, never the request's
+				// own origin. With ORIGIN unset, adapter-node derives url.origin
+				// from the Host header, so a forged Host (with a matching Origin to
+				// pass CSRF) would mint a valid token inside a link pointing at the
+				// attacker's host. ORIGIN is the documented production requirement;
+				// url.origin is only the dev (localhost) fallback.
+				const origin = env.ORIGIN?.trim().replace(/\/$/, '') || url.origin;
+				const link = `${origin}/auth/reset?token=${encodeURIComponent(token)}`;
 				const message = buildResetEmail(
 					user.locale,
 					{ displayName: user.displayName, username: user.username, email: user.email },

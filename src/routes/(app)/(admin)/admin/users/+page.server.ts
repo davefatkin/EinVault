@@ -6,7 +6,7 @@ import { eq, and, ne, lt, gt } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import bcrypt from 'bcryptjs';
 import { invalidateAllUserSessions } from '$lib/server/auth/session';
-import { parseRole } from '$lib/server/validation';
+import { parseRole, EMAIL_RE } from '$lib/server/validation';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -257,6 +257,9 @@ export const actions: Actions = {
 		if (conflict) return fail(400, { editError: t(locals.locale, 'error.usernameAlreadyTaken') });
 
 		if (email) {
+			if (!EMAIL_RE.test(email)) {
+				return fail(400, { editError: t(locals.locale, 'error.emailInvalid') });
+			}
 			const emailConflict = await db.query.users.findFirst({
 				where: and(eq(schema.users.email, email), ne(schema.users.id, userId))
 			});
