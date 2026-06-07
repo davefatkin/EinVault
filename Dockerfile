@@ -2,6 +2,22 @@
 
 ARG NODE_IMAGE=node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
+# pkgmeta: zero out the version field so version-bump commits don't invalidate
+# the npm ci layer in deps; nothing in the install depends on the real version.
+FROM ${NODE_IMAGE} AS pkgmeta
+
+WORKDIR /meta
+
+COPY package.json package-lock.json ./
+RUN node -e "const fs = require('fs'); \
+    for (const f of ['package.json', 'package-lock.json']) { \
+      const j = JSON.parse(fs.readFileSync(f, 'utf8')); \
+      j.version = '0.0.0'; \
+      if (j.packages) j.packages[''].version = '0.0.0'; \
+      fs.writeFileSync(f, JSON.stringify(j)); \
+    }"
+
+
 # deps
 FROM ${NODE_IMAGE} AS deps
 
@@ -10,7 +26,7 @@ WORKDIR /build
 # Install build deps for better-sqlite3 and sharp native modules
 RUN apk add --no-cache python3 make g++
 
-COPY package.json package-lock.json ./
+COPY --from=pkgmeta /meta/package.json /meta/package-lock.json ./
 # Default-deny install scripts; rebuild only the two native modules that need them.
 RUN npm ci --ignore-scripts \
     && npm rebuild better-sqlite3 sharp
