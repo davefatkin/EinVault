@@ -12,6 +12,7 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
+	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
 	import { Pencil, Plus, RotateCcw } from '@lucide/svelte';
 	import { getContext } from 'svelte';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
@@ -233,6 +234,17 @@
 			: undefined}
 		errorMessage={form?.reminderUndoError}
 	/>
+
+	{#if data.mailEnabled}
+		<NotificationsCard
+			reminderEnabled={data.user?.notifyReminderEmail ?? false}
+			shiftEnabled={data.user?.notifyShiftEmail ?? false}
+			hasEmail={Boolean(data.user?.email)}
+			successMessage={form?.notificationsSuccess
+				? t(locale, 'page.settings.notificationsUpdated')
+				: undefined}
+		/>
+	{/if}
 
 	{#if data.user?.role !== 'caretaker'}
 		<DefaultRecurrenceCard

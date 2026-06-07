@@ -1,13 +1,18 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { getUpcomingShifts } from '$lib/server/shifts';
-import { handleAccountUpdate, handleReminderUndoUpdate } from '$lib/server/account';
+import {
+	handleAccountUpdate,
+	handleReminderUndoUpdate,
+	handleNotificationsUpdate
+} from '$lib/server/account';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
 import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
+import { isMailEnabled } from '$lib/server/mail';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -15,7 +20,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user,
 		upcomingShifts,
-		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
+		mailEnabled: isMailEnabled()
 	};
 };
 
@@ -53,5 +59,10 @@ export const actions: Actions = {
 	reminderUndo: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleReminderUndoUpdate(locals.user.id, request, locals.locale);
+	},
+
+	notifications: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleNotificationsUpdate(locals.user.id, request);
 	}
 };

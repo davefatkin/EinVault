@@ -5,8 +5,10 @@ import { eq } from 'drizzle-orm';
 import {
 	handleAccountUpdate,
 	handleReminderUndoUpdate,
-	handleDefaultRecurrenceUpdate
+	handleDefaultRecurrenceUpdate,
+	handleNotificationsUpdate
 } from '$lib/server/account';
+import { isMailEnabled } from '$lib/server/mail';
 import { isSecureRequest } from '$lib/server/auth';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
@@ -35,7 +37,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		user: locals.user,
 		companions,
 		archivedCompanions,
-		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT
+		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
+		mailEnabled: isMailEnabled()
 	};
 };
 
@@ -103,6 +106,11 @@ export const actions: Actions = {
 	defaultRecurrence: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleDefaultRecurrenceUpdate(locals.user.id, request, locals.locale);
+	},
+
+	notifications: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleNotificationsUpdate(locals.user.id, request);
 	},
 
 	restore: async ({ request, locals }) => {

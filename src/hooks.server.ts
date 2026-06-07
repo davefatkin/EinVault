@@ -13,6 +13,7 @@ import {
 	logSmtpBootStatus
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
+import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -24,6 +25,7 @@ logSmtpBootStatus();
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
 recoverAndStart();
+startNotifyScheduler();
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
 // host. CSP is enforced on the final navigation target after redirects, so the

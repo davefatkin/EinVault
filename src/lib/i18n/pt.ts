@@ -235,6 +235,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceLabel': 'Unidade padrão',
 	'page.settings.defaultRecurrenceSystem': 'Usar padrão do sistema (dias)',
 	'page.settings.defaultRecurrenceUpdated': '✓ Recorrência padrão atualizada.',
+	'page.settings.notificationsCard': 'Notificações',
+	'page.settings.notificationsDescription':
+		'Receba e-mails do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
+	'page.settings.notifyShiftEmailLabel':
+		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
+	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
+	'page.settings.notificationsNeedEmail':
+		'Adicione um e-mail à sua conta para receber notificações.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',
@@ -739,6 +748,23 @@ const messages: Record<keyof Messages, string> = {
 		'Foi solicitada a redefinição de senha da sua conta EinVault ({username}). Use o link abaixo para escolher uma nova senha. O link expira em 30 minutos.',
 	'email.reset.cta': 'Redefinir senha',
 	'email.reset.ignore': 'Se você não solicitou isso, ignore este e-mail.',
+
+	// Email: reminder due
+	'email.reminder.subject': 'Lembrete: {title}',
+	'email.reminder.greeting': 'Olá, {name}!',
+	'email.reminder.body': '{companion} tem um lembrete pendente: {title}',
+	'email.reminder.dueLine': 'Vence: {due}',
+	'email.reminder.cta': 'Abrir EinVault',
+	'email.reminder.footer':
+		'Você está recebendo este e-mail porque as notificações de lembretes estão ativadas nas suas configurações do EinVault.',
+
+	// Email: caretaker shift alerts
+	'email.shift.startSubject': 'Turno começando em breve: {caretaker}',
+	'email.shift.endSubject': 'Turno terminando em breve: {caretaker}',
+	'email.shift.startBody': '{caretaker} começa um turno de cuidado em {start}.',
+	'email.shift.endBody': '{caretaker} termina um turno de cuidado em {end}.',
+	'email.shift.footer':
+		'Você está recebendo este e-mail porque as notificações de turnos estão ativadas nas suas configurações do EinVault.',
 
 	// Immich picker
 	'immich.picker.title': 'Escolher do Immich',

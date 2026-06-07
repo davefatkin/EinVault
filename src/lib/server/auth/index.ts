@@ -50,7 +50,9 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			email: user.email ?? null,
 			phone: user.phone ?? null,
 			reminderUndoSeconds: user.reminderUndoSeconds ?? null,
-			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null
+			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null,
+			notifyReminderEmail: user.notifyReminderEmail ?? false,
+			notifyShiftEmail: user.notifyShiftEmail ?? false
 		}
 	};
 }

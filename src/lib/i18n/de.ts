@@ -238,6 +238,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceLabel': 'Standardeinheit',
 	'page.settings.defaultRecurrenceSystem': 'System-Standard verwenden (Tage)',
 	'page.settings.defaultRecurrenceUpdated': '✓ Standard-Wiederholung aktualisiert.',
+	'page.settings.notificationsCard': 'Benachrichtigungen',
+	'page.settings.notificationsDescription':
+		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
+	'page.settings.notifyShiftEmailLabel':
+		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
+	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
+	'page.settings.notificationsNeedEmail':
+		'Füge deinem Konto eine E-Mail-Adresse hinzu, um Benachrichtigungen zu erhalten.',
 
 	// Page: Login
 	'page.login.title': 'Anmelden',
@@ -742,6 +751,23 @@ const messages: Record<keyof Messages, string> = {
 		'Für dein EinVault-Konto ({username}) wurde ein Zurücksetzen des Passworts angefordert. Nutze den folgenden Link, um ein neues Passwort zu wählen. Der Link läuft in 30 Minuten ab.',
 	'email.reset.cta': 'Passwort zurücksetzen',
 	'email.reset.ignore': 'Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren.',
+
+	// Email: reminder due
+	'email.reminder.subject': 'Erinnerung: {title}',
+	'email.reminder.greeting': 'Hallo {name},',
+	'email.reminder.body': 'Für {companion} ist eine Erinnerung fällig: {title}',
+	'email.reminder.dueLine': 'Fällig: {due}',
+	'email.reminder.cta': 'EinVault öffnen',
+	'email.reminder.footer':
+		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+
+	// Email: caretaker shift alerts
+	'email.shift.startSubject': 'Schicht beginnt bald: {caretaker}',
+	'email.shift.endSubject': 'Schicht endet bald: {caretaker}',
+	'email.shift.startBody': '{caretaker} beginnt eine Betreuungsschicht am {start}.',
+	'email.shift.endBody': '{caretaker} beendet eine Betreuungsschicht am {end}.',
+	'email.shift.footer':
+		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
 	// Immich picker
 	'immich.picker.title': 'Aus Immich auswählen',

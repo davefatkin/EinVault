@@ -225,6 +225,14 @@ const messages = {
 	'page.settings.defaultRecurrenceLabel': 'Default unit',
 	'page.settings.defaultRecurrenceSystem': 'Use system default (days)',
 	'page.settings.defaultRecurrenceUpdated': '✓ Default recurrence updated.',
+	'page.settings.notificationsCard': 'Notifications',
+	'page.settings.notificationsDescription':
+		'Get emails from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
+	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
+	'page.settings.notificationsUpdated': 'Notification settings updated.',
+	'page.settings.notificationsNeedEmail':
+		'Add an email address to your account to receive notifications.',
 
 	// Errors: OIDC
 	'error.oidc.notProvisioned':
@@ -734,6 +742,24 @@ const messages = {
 		'A password reset was requested for your EinVault account ({username}). Use the link below to choose a new password. The link expires in 30 minutes.',
 	'email.reset.cta': 'Reset password',
 	'email.reset.ignore': 'If you did not request this, you can safely ignore this email.',
+
+	// Email: reminder due
+	'email.reminder.subject': 'Reminder: {title}',
+	// greeting + cta are shared by reminder AND shift emails (see templates.ts)
+	'email.reminder.greeting': 'Hi {name},',
+	'email.reminder.body': '{companion} has a reminder due: {title}',
+	'email.reminder.dueLine': 'Due: {due}',
+	'email.reminder.cta': 'Open EinVault',
+	'email.reminder.footer':
+		'You are receiving this because reminder email notifications are enabled in your EinVault settings.',
+
+	// Email: caretaker shift alerts
+	'email.shift.startSubject': 'Shift starting soon: {caretaker}',
+	'email.shift.endSubject': 'Shift ending soon: {caretaker}',
+	'email.shift.startBody': '{caretaker} begins a care shift on {start}.',
+	'email.shift.endBody': '{caretaker} finishes a care shift on {end}.',
+	'email.shift.footer':
+		'You are receiving this because shift email notifications are enabled in your EinVault settings.',
 
 	// Immich picker
 	'immich.picker.title': 'Pick from Immich',
