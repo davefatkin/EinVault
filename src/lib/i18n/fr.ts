@@ -101,6 +101,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configuration de récurrence invalide.',
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
+	'error.invalidNtfyTopic':
+		'Le sujet ne peut contenir que des lettres, chiffres, tirets et tirets bas (max. 64).',
 	'error.invalidDate': 'Date invalide',
 	'error.invalidArchiveDate': "Date d'archivage invalide.",
 	'error.invalidCompanionIds': 'Un ou plusieurs identifiants de compagnon sont invalides.',
@@ -245,6 +247,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsUpdated': 'Réglages de notification mis à jour.',
 	'page.settings.notificationsNeedEmail':
 		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications.',
+	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
+	'page.settings.ntfyTopicHint':
+		"Les notifications push sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner. Laissez vide pour désactiver les push.",
 
 	// Page: Login
 	'page.login.title': 'Se connecter',

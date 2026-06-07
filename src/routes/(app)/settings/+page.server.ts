@@ -9,6 +9,7 @@ import {
 	handleNotificationsUpdate
 } from '$lib/server/account';
 import { isMailEnabled } from '$lib/server/mail';
+import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 import { isSecureRequest } from '$lib/server/auth';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
@@ -38,7 +39,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		companions,
 		archivedCompanions,
 		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
-		mailEnabled: isMailEnabled()
+		mailEnabled: isMailEnabled(),
+		ntfyEnabled: isNtfyEnabled()
 	};
 };
 
@@ -110,7 +112,7 @@ export const actions: Actions = {
 
 	notifications: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
-		return handleNotificationsUpdate(locals.user.id, request);
+		return handleNotificationsUpdate(locals.user.id, request, locals.locale);
 	},
 
 	restore: async ({ request, locals }) => {

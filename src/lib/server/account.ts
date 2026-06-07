@@ -19,6 +19,7 @@ import {
 	REMINDER_UNDO_SECONDS_DEFAULT
 } from '$lib/server/env';
 import { parseRecurrenceUnit } from '$lib/server/validation';
+import { NTFY_TOPIC_RE } from '$lib/server/notify/ntfy';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -177,14 +178,20 @@ export async function handleDefaultRecurrenceUpdate(
 	return { defaultRecurrenceSuccess: true };
 }
 
-export async function handleNotificationsUpdate(userId: string, request: Request) {
+export async function handleNotificationsUpdate(userId: string, request: Request, locale: Locale) {
 	const data = await request.formData();
 	const notifyReminderEmail = data.get('notifyReminderEmail') === 'on';
 	const notifyShiftEmail = data.get('notifyShiftEmail') === 'on';
+	const rawTopic = String(data.get('ntfyTopic') ?? '').trim();
+	const ntfyTopic = rawTopic || null;
+
+	if (ntfyTopic && !NTFY_TOPIC_RE.test(ntfyTopic)) {
+		return fail(400, { notificationsError: t(locale, 'error.invalidNtfyTopic') });
+	}
 
 	await db
 		.update(schema.users)
-		.set({ notifyReminderEmail, notifyShiftEmail })
+		.set({ notifyReminderEmail, notifyShiftEmail, ntfyTopic })
 		.where(eq(schema.users.id, userId));
 
 	return { notificationsSuccess: true };

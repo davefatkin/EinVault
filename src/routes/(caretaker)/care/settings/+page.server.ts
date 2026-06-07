@@ -13,6 +13,7 @@ import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
 import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
 import { isMailEnabled } from '$lib/server/mail';
+import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -21,7 +22,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		user: locals.user,
 		upcomingShifts,
 		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
-		mailEnabled: isMailEnabled()
+		mailEnabled: isMailEnabled(),
+		ntfyEnabled: isNtfyEnabled()
 	};
 };
 
@@ -63,6 +65,6 @@ export const actions: Actions = {
 
 	notifications: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
-		return handleNotificationsUpdate(locals.user.id, request);
+		return handleNotificationsUpdate(locals.user.id, request, locals.locale);
 	}
 };

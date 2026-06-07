@@ -101,6 +101,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Ungültige Wiederholungskonfiguration.',
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
+	'error.invalidNtfyTopic':
+		'Das Thema darf nur Buchstaben, Zahlen, Binde- und Unterstriche enthalten (max. 64).',
 	'error.invalidDate': 'Ungültiges Datum',
 	'error.invalidArchiveDate': 'Ungültiges Archivierungsdatum.',
 	'error.invalidCompanionIds': 'Eine oder mehrere Begleiter-IDs sind ungültig.',
@@ -247,6 +249,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
 	'page.settings.notificationsNeedEmail':
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um Benachrichtigungen zu erhalten.',
+	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
+	'page.settings.ntfyTopicHint':
+		'Push-Nachrichten gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
 
 	// Page: Login
 	'page.login.title': 'Anmelden',

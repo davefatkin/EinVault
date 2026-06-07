@@ -98,6 +98,8 @@ const messages = {
 	'error.invalidRecurrence': 'Invalid recurrence configuration.',
 	'error.invalidDefaultRecurrence': 'Invalid default recurrence unit.',
 	'error.invalidRole': 'Invalid role.',
+	'error.invalidNtfyTopic':
+		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',
 	'error.invalidArchiveDate': 'Invalid archive date.',
 	'error.invalidCompanionIds': 'One or more companion IDs are invalid.',
@@ -233,6 +235,9 @@ const messages = {
 	'page.settings.notificationsUpdated': 'Notification settings updated.',
 	'page.settings.notificationsNeedEmail':
 		'Add an email address to your account to receive notifications.',
+	'page.settings.ntfyTopicLabel': 'ntfy topic',
+	'page.settings.ntfyTopicHint':
+		'Pushes go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
 
 	// Errors: OIDC
 	'error.oidc.notProvisioned':

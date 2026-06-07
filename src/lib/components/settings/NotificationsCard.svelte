@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { t, getLocale } from '$lib/i18n';
@@ -9,12 +10,18 @@
 		reminderEnabled,
 		shiftEnabled,
 		hasEmail,
-		successMessage
+		ntfyEnabled,
+		ntfyTopic,
+		successMessage,
+		errorMessage
 	}: {
 		reminderEnabled: boolean;
 		shiftEnabled: boolean;
 		hasEmail: boolean;
+		ntfyEnabled: boolean;
+		ntfyTopic: string | null;
 		successMessage: string | undefined;
+		errorMessage: string | undefined;
 	} = $props();
 
 	const locale = getLocale();
@@ -32,6 +39,11 @@
 		{#if successMessage}
 			<Alert variant="success" class="mb-3">
 				<AlertDescription>{successMessage}</AlertDescription>
+			</Alert>
+		{/if}
+		{#if errorMessage}
+			<Alert variant="destructive" class="mb-3">
+				<AlertDescription>{errorMessage}</AlertDescription>
 			</Alert>
 		{/if}
 		{#if !hasEmail}
@@ -62,6 +74,24 @@
 				/>
 				<Label class="cursor-pointer">{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label>
 			</label>
+			{#if ntfyEnabled}
+				<div class="space-y-1.5 pt-2">
+					<Label for="ntfyTopic">{t(locale, 'page.settings.ntfyTopicLabel')}</Label>
+					<Input
+						id="ntfyTopic"
+						name="ntfyTopic"
+						type="text"
+						value={ntfyTopic ?? ''}
+						maxlength={64}
+						onchange={() => formEl.requestSubmit()}
+					/>
+					<p class="text-xs text-muted-foreground">
+						{t(locale, 'page.settings.ntfyTopicHint')}
+					</p>
+				</div>
+			{:else}
+				<input type="hidden" name="ntfyTopic" value={ntfyTopic ?? ''} />
+			{/if}
 		</form>
 	</CardContent>
 </Card>

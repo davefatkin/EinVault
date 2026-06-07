@@ -100,6 +100,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configurazione ricorrenza non valida.',
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
+	'error.invalidNtfyTopic':
+		"L'argomento può contenere solo lettere, numeri, trattini e trattini bassi (max 64).",
 	'error.invalidDate': 'Data non valida',
 	'error.invalidArchiveDate': 'Data di archiviazione non valida.',
 	'error.invalidCompanionIds': 'Uno o più ID compagno non sono validi.',
@@ -243,6 +245,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsUpdated': 'Impostazioni delle notifiche aggiornate.',
 	'page.settings.notificationsNeedEmail':
 		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche.',
+	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
+	'page.settings.ntfyTopicHint':
+		'Le notifiche push vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi. Lascia vuoto per disattivare i push.',
 
 	// Page: Login
 	'page.login.title': 'Accedi',
