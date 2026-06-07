@@ -89,7 +89,7 @@ export const passwordResetTokens = sqliteTable(
 // or SMTP outage never silently drops a notification. The unique dedupe key
 // makes producers idempotent across overlapping scans and restarts.
 export type OutboxPayload =
-	| { kind: 'reminderDue'; reminderId: string }
+	| { kind: 'reminderDue'; reminderId: string; dueAtEpoch: number }
 	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number };
 

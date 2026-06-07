@@ -745,6 +745,7 @@ const messages = {
 
 	// Email: reminder due
 	'email.reminder.subject': 'Reminder: {title}',
+	// greeting + cta are shared by reminder AND shift emails (see templates.ts)
 	'email.reminder.greeting': 'Hi {name},',
 	'email.reminder.body': '{companion} has a reminder due: {title}',
 	'email.reminder.dueLine': 'Due: {due}',

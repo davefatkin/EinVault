@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, lt, notInArray, sql } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
-import type { OutboxPayload } from '$lib/server/db/schema';
+import type { OutboxPayload, NotificationOutboxRow } from '$lib/server/db/schema';
 
 // Give up on a row after this many claims. The counter increments on each
 // atomic claim, so a row that keeps failing (SMTP rejects, render crash)
@@ -54,7 +54,7 @@ export async function enqueue(rows: EnqueueRow[]): Promise<number> {
 	return inserted.length;
 }
 
-export type ClaimedNotification = typeof schema.notificationOutbox.$inferSelect;
+export type ClaimedNotification = NotificationOutboxRow;
 
 /**
  * Atomically claim the oldest queued row: select a candidate, then transition

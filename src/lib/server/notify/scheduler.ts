@@ -89,7 +89,11 @@ async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 				dedupeKey: reminderDedupeKey(reminder.id, reminder.dueAt, user.id, 'email'),
 				userId: user.id,
 				channel: 'email',
-				payload: { kind: 'reminderDue', reminderId: reminder.id }
+				payload: {
+					kind: 'reminderDue',
+					reminderId: reminder.id,
+					dueAtEpoch: Math.floor(reminder.dueAt.getTime() / 1000)
+				}
 			});
 		}
 	}
@@ -174,13 +178,20 @@ function publicLink(path: string): string | null {
 
 async function deliverReminder(
 	row: ClaimedNotification,
-	payload: { reminderId: string }
+	payload: { reminderId: string; dueAtEpoch: number }
 ): Promise<void> {
 	const reminder = await db.query.reminders.findFirst({
 		where: eq(schema.reminders.id, payload.reminderId)
 	});
 	// Reminder deleted or completed since enqueue: nothing to say anymore.
 	if (!reminder || reminder.completedAt) {
+		await markSkipped(row.id);
+		return;
+	}
+	// The row was created for a specific occurrence time. If the reminder was
+	// rescheduled since, this row is moot — the producer creates a fresh row
+	// (new dedupe key) when the new time comes due.
+	if (Math.floor(reminder.dueAt.getTime() / 1000) !== payload.dueAtEpoch) {
 		await markSkipped(row.id);
 		return;
 	}
@@ -250,6 +261,12 @@ async function deliverShift(
 		await markSkipped(row.id);
 		return;
 	}
+	// Symmetry with deliverReminder's assignment re-check: a user demoted to
+	// caretaker after enqueue must not receive another caretaker's shift alert.
+	if (user.role === 'caretaker' && user.id !== shift.userId) {
+		await markSkipped(row.id);
+		return;
+	}
 	const caretaker = await db.query.users.findFirst({
 		where: eq(schema.users.id, shift.userId),
 		columns: { displayName: true }
@@ -284,6 +301,12 @@ async function drain(): Promise<void> {
 		const row = await claimNext(failedThisPass);
 		if (!row) return;
 		try {
+			// Drain handles the email channel only; ntfy/apprise land in later PRs.
+			if (row.channel !== 'email') {
+				console.error(`[notify] no deliverer for channel '${row.channel}'; skipping row ${row.id}`);
+				await markSkipped(row.id);
+				continue;
+			}
 			if (row.payload.kind === 'reminderDue') {
 				await deliverReminder(row, row.payload);
 			} else {
