@@ -251,7 +251,15 @@ const messages: Record<keyof Messages, string> = {
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen und Schichtmeldungen für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+	'page.settings.testEmail': 'Test-E-Mail senden',
+	'page.settings.testNtfy': 'Test-Push senden',
+	'page.settings.testSent': 'Testbenachrichtigung gesendet.',
+	'page.settings.testFailed': 'Test fehlgeschlagen: {error}',
+	'error.testCooldown': 'Warte ein paar Sekunden, bevor du einen weiteren Test sendest.',
+	'email.test.subject': 'EinVault-Testbenachrichtigung',
+	'email.test.body':
+		'Dies ist eine Testbenachrichtigung von EinVault. Wenn du das liest, funktionieren deine Benachrichtigungseinstellungen.',
 
 	// Page: Login
 	'page.login.title': 'Anmelden',

@@ -118,6 +118,29 @@ export function buildReminderEmail(
 	};
 }
 
+export function buildTestEmail(
+	locale: Locale,
+	user: { displayName: string; email: string }
+): MailMessage {
+	const greeting = t(locale, 'email.reminder.greeting', { name: user.displayName });
+	const body = t(locale, 'email.test.body');
+
+	const html = `<!doctype html>
+<html>
+	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
+		<p>${tHtml(locale, 'email.reminder.greeting', { name: user.displayName })}</p>
+		<p>${escapeHtml(body)}</p>
+	</body>
+</html>`;
+
+	return {
+		to: user.email,
+		subject: t(locale, 'email.test.subject'),
+		text: `${greeting}\n\n${body}`,
+		html
+	};
+}
+
 export function buildShiftEmail(
 	locale: Locale,
 	user: { displayName: string; email: string },

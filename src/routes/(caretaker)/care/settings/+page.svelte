@@ -281,6 +281,10 @@
 				? t(locale, 'page.settings.notificationsUpdated')
 				: undefined}
 			errorMessage={form?.notificationsError}
+			testSuccessMessage={form?.notificationsTestSuccess
+				? t(locale, 'page.settings.testSent')
+				: undefined}
+			testErrorMessage={form?.notificationsTestError}
 		/>
 	{/if}
 

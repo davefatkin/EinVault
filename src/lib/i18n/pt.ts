@@ -248,7 +248,15 @@ const messages: Record<keyof Messages, string> = {
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
-		'As notificações push vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
+		'As notificações push cobrem lembretes vencidos e alertas de turno do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
+	'page.settings.testEmail': 'Enviar e-mail de teste',
+	'page.settings.testNtfy': 'Enviar push de teste',
+	'page.settings.testSent': 'Notificação de teste enviada.',
+	'page.settings.testFailed': 'O teste falhou: {error}',
+	'error.testCooldown': 'Aguarde alguns segundos antes de enviar outro teste.',
+	'email.test.subject': 'Notificação de teste do EinVault',
+	'email.test.body':
+		'Esta é uma notificação de teste do EinVault. Se você está lendo isto, suas configurações de notificação funcionam.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',

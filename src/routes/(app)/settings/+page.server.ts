@@ -6,7 +6,9 @@ import {
 	handleAccountUpdate,
 	handleReminderUndoUpdate,
 	handleDefaultRecurrenceUpdate,
-	handleNotificationsUpdate
+	handleNotificationsUpdate,
+	handleTestEmail,
+	handleTestNtfy
 } from '$lib/server/account';
 import { isMailEnabled } from '$lib/server/mail';
 import { isNtfyEnabled } from '$lib/server/notify/ntfy';
@@ -113,6 +115,16 @@ export const actions: Actions = {
 	notifications: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleNotificationsUpdate(locals.user.id, request, locals.locale);
+	},
+
+	testEmail: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleTestEmail(locals.user, locals.locale);
+	},
+
+	testNtfy: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleTestNtfy(locals.user, locals.locale);
 	},
 
 	restore: async ({ request, locals }) => {

@@ -19,7 +19,9 @@ import {
 	REMINDER_UNDO_SECONDS_DEFAULT
 } from '$lib/server/env';
 import { parseRecurrenceUnit } from '$lib/server/validation';
-import { NTFY_TOPIC_RE } from '$lib/server/notify/ntfy';
+import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '$lib/server/notify/ntfy';
+import { isMailEnabled, sendMail } from '$lib/server/mail';
+import { buildTestEmail } from '$lib/server/mail/templates';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -195,4 +197,77 @@ export async function handleNotificationsUpdate(userId: string, request: Request
 		.where(eq(schema.users.id, userId));
 
 	return { notificationsSuccess: true };
+}
+
+// Test sends are immediate (not via the outbox) so the user gets instant
+// feedback. Light per-user cooldown to keep a stuck double-click from
+// hammering SMTP or ntfy. In-process state, single-instance assumption.
+const TEST_COOLDOWN_MS = 10 * 1000;
+const lastTestAt = new Map<string, number>();
+
+function testOnCooldown(key: string): boolean {
+	const now = Date.now();
+	const last = lastTestAt.get(key) ?? 0;
+	if (now - last < TEST_COOLDOWN_MS) return true;
+	lastTestAt.set(key, now);
+	return false;
+}
+
+export async function handleTestEmail(
+	user: { id: string; displayName: string; email: string | null; locale: Locale },
+	locale: Locale
+) {
+	if (!isMailEnabled() || !user.email) {
+		return fail(400, {
+			notificationsTestError: t(locale, 'page.settings.testFailed', {
+				error: 'email unavailable'
+			})
+		});
+	}
+	if (testOnCooldown(`${user.id}:email`)) {
+		return fail(429, { notificationsTestError: t(locale, 'error.testCooldown') });
+	}
+	try {
+		await sendMail(
+			buildTestEmail(user.locale, { displayName: user.displayName, email: user.email })
+		);
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return fail(502, {
+			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })
+		});
+	}
+	return { notificationsTestSuccess: true };
+}
+
+export async function handleTestNtfy(
+	user: { id: string; displayName: string; locale: Locale },
+	locale: Locale
+) {
+	const row = await db.query.users.findFirst({
+		where: eq(schema.users.id, user.id),
+		columns: { ntfyTopic: true }
+	});
+	if (!isNtfyEnabled() || !row?.ntfyTopic) {
+		return fail(400, {
+			notificationsTestError: t(locale, 'page.settings.testFailed', {
+				error: 'ntfy unavailable'
+			})
+		});
+	}
+	if (testOnCooldown(`${user.id}:ntfy`)) {
+		return fail(429, { notificationsTestError: t(locale, 'error.testCooldown') });
+	}
+	try {
+		await sendNtfy(row.ntfyTopic, {
+			title: t(user.locale, 'email.test.subject'),
+			message: t(user.locale, 'email.test.body')
+		});
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return fail(502, {
+			notificationsTestError: t(locale, 'page.settings.testFailed', { error: msg })
+		});
+	}
+	return { notificationsTestSuccess: true };
 }

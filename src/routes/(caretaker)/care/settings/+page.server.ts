@@ -4,7 +4,9 @@ import { getUpcomingShifts } from '$lib/server/shifts';
 import {
 	handleAccountUpdate,
 	handleReminderUndoUpdate,
-	handleNotificationsUpdate
+	handleNotificationsUpdate,
+	handleTestEmail,
+	handleTestNtfy
 } from '$lib/server/account';
 import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
@@ -66,5 +68,15 @@ export const actions: Actions = {
 	notifications: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleNotificationsUpdate(locals.user.id, request, locals.locale);
+	},
+
+	testEmail: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleTestEmail(locals.user, locals.locale);
+	},
+
+	testNtfy: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleTestNtfy(locals.user, locals.locale);
 	}
 };

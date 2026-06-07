@@ -3,6 +3,7 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { t, getLocale } from '$lib/i18n';
@@ -15,7 +16,9 @@
 		ntfyEnabled,
 		ntfyTopic,
 		successMessage,
-		errorMessage
+		errorMessage,
+		testSuccessMessage,
+		testErrorMessage
 	}: {
 		reminderEnabled: boolean;
 		shiftEnabled: boolean;
@@ -25,6 +28,8 @@
 		ntfyTopic: string | null;
 		successMessage: string | undefined;
 		errorMessage: string | undefined;
+		testSuccessMessage: string | undefined;
+		testErrorMessage: string | undefined;
 	} = $props();
 
 	const locale = getLocale();
@@ -141,5 +146,33 @@
 				<input type="hidden" name="ntfyTopic" value={ntfyTopic ?? ''} />
 			{/if}
 		</form>
+		{#if testSuccessMessage}
+			<Alert variant="success" class="mt-3">
+				<AlertDescription>{testSuccessMessage}</AlertDescription>
+			</Alert>
+		{/if}
+		{#if testErrorMessage}
+			<Alert variant="destructive" class="mt-3">
+				<AlertDescription>{testErrorMessage}</AlertDescription>
+			</Alert>
+		{/if}
+		{#if mailEnabled || ntfyEnabled}
+			<div class="flex flex-wrap gap-2 pt-3">
+				{#if mailEnabled}
+					<form method="POST" action="?/testEmail" use:enhance={handleSubmit}>
+						<Button type="submit" size="sm" variant="outline" disabled={!hasEmail || submitting}>
+							{t(locale, 'page.settings.testEmail')}
+						</Button>
+					</form>
+				{/if}
+				{#if ntfyEnabled}
+					<form method="POST" action="?/testNtfy" use:enhance={handleSubmit}>
+						<Button type="submit" size="sm" variant="outline" disabled={!ntfyTopic || submitting}>
+							{t(locale, 'page.settings.testNtfy')}
+						</Button>
+					</form>
+				{/if}
+			</div>
+		{/if}
 	</CardContent>
 </Card>

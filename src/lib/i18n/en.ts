@@ -237,7 +237,15 @@ const messages = {
 		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
-		'Pushes go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
+		'Pushes cover due reminders and shift alerts for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
+	'page.settings.testEmail': 'Send test email',
+	'page.settings.testNtfy': 'Send test push',
+	'page.settings.testSent': 'Test notification sent.',
+	'page.settings.testFailed': 'Test failed: {error}',
+	'error.testCooldown': 'Wait a few seconds before sending another test.',
+	'email.test.subject': 'EinVault test notification',
+	'email.test.body':
+		'This is a test notification from EinVault. If you are reading this, your notification settings work.',
 
 	// Errors: OIDC
 	'error.oidc.notProvisioned':
