@@ -235,14 +235,18 @@
 		errorMessage={form?.reminderUndoError}
 	/>
 
-	{#if data.mailEnabled}
+	{#if data.mailEnabled || data.ntfyEnabled}
 		<NotificationsCard
 			reminderEnabled={data.user?.notifyReminderEmail ?? false}
 			shiftEnabled={data.user?.notifyShiftEmail ?? false}
 			hasEmail={Boolean(data.user?.email)}
+			mailEnabled={data.mailEnabled}
+			ntfyEnabled={data.ntfyEnabled}
+			ntfyTopic={data.user?.ntfyTopic ?? null}
 			successMessage={form?.notificationsSuccess
 				? t(locale, 'page.settings.notificationsUpdated')
 				: undefined}
+			errorMessage={form?.notificationsError}
 		/>
 	{/if}
 

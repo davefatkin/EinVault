@@ -313,6 +313,54 @@ export function logSmtpBootStatus(): void {
 	}
 }
 
+// Optional ntfy push channel (issue #12). Off unless NTFY_URL is set. The
+// env configures the SERVER only (base URL + optional access token); each
+// user sets their own topic name in Settings -> Notifications. A non-empty
+// topic is that user's opt-in. Per-user topics (instead of one site topic)
+// preserve the caretaker visibility model: a shared topic would broadcast
+// every companion's reminders and every caretaker's schedule to anyone
+// subscribed.
+export interface NtfyConfig {
+	// Server base, e.g. 'https://ntfy.sh' or a self-hosted instance.
+	baseUrl: string;
+	// Optional bearer token (self-hosted ntfy with auth).
+	token: string | null;
+}
+
+function readNtfyConfig(): { config: NtfyConfig | null; invalid: boolean } {
+	const raw = env.NTFY_URL?.trim();
+	if (!raw) return { config: null, invalid: false };
+	try {
+		const url = new URL(raw);
+		return {
+			config: {
+				baseUrl: `${url.origin}${url.pathname.replace(/\/$/, '')}`,
+				token: env.NTFY_TOKEN?.trim() || null
+			},
+			invalid: false
+		};
+	} catch {
+		return { config: null, invalid: true };
+	}
+}
+
+const ntfyResult = readNtfyConfig();
+export const NTFY_CONFIG = ntfyResult.config;
+
+export function logNtfyBootStatus(): void {
+	if (ntfyResult.invalid) {
+		console.warn(
+			`[ntfy] NTFY_URL='${env.NTFY_URL}' is not a valid URL (expected e.g. https://ntfy.sh). ntfy disabled.`
+		);
+		return;
+	}
+	if (NTFY_CONFIG) {
+		console.info(
+			`[ntfy] enabled server=${NTFY_CONFIG.baseUrl} auth=${NTFY_CONFIG.token ? 'yes' : 'no'} (users opt in by setting a topic in Settings)`
+		);
+	}
+}
+
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(
 	envNonNegativeInt(env.REMINDER_UNDO_SECONDS, 7),

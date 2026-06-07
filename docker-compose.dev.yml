@@ -79,6 +79,11 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
 
+      # Optional: ntfy push notifications. Server config only; users set
+      # their own topic in Settings. Disabled unless NTFY_URL is set.
+      NTFY_URL: ${NTFY_URL:-}
+      NTFY_TOKEN: ${NTFY_TOKEN:-}
+
     security_opt:
       - no-new-privileges:true
     cap_drop:

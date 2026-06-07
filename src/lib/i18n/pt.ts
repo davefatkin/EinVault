@@ -101,6 +101,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configuração de recorrência inválida.',
 	'error.invalidDefaultRecurrence': 'Unidade de recorrência padrão inválida.',
 	'error.invalidRole': 'Função inválida.',
+	'error.invalidNtfyTopic':
+		'O tópico só pode conter letras, números, hífens e sublinhados (máx. 64).',
 	'error.invalidDate': 'Data inválida',
 	'error.invalidArchiveDate': 'Data de arquivo inválida.',
 	'error.invalidCompanionIds': 'Um ou mais IDs de companheiro são inválidos.',
@@ -243,7 +245,10 @@ const messages: Record<keyof Messages, string> = {
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
 	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
 	'page.settings.notificationsNeedEmail':
-		'Adicione um e-mail à sua conta para receber notificações.',
+		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
+	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
+	'page.settings.ntfyTopicHint':
+		'As notificações push vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',

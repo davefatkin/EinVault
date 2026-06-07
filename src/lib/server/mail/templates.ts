@@ -67,7 +67,7 @@ export function buildResetEmail(
 
 // Server TZ (the container's TZ env var) — consistent with how the app
 // renders times elsewhere.
-function formatWhen(locale: Locale, when: Date): string {
+export function formatWhen(locale: Locale, when: Date): string {
 	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(when);
 }
 

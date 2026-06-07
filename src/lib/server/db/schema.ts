@@ -43,7 +43,12 @@ export const users = sqliteTable(
 		notifyReminderEmail: integer('notify_reminder_email', { mode: 'boolean' })
 			.notNull()
 			.default(false),
-		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false)
+		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
+		// ntfy topic name on the site-configured server (env NTFY_URL). A
+		// non-empty topic is the opt-in for push notifications; the user
+		// receives both categories (reminders, shift alerts) within their
+		// role's visibility scope. Null = no pushes.
+		ntfyTopic: text('ntfy_topic')
 	},
 	(t) => [
 		uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject),

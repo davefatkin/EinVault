@@ -10,7 +10,8 @@ import {
 	logStorageBootStatus,
 	logDeprecatedEnvWarnings,
 	logVideoTranscodeBootStatus,
-	logSmtpBootStatus
+	logSmtpBootStatus,
+	logNtfyBootStatus
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
@@ -21,6 +22,7 @@ logImmichBootStatus();
 logDeprecatedEnvWarnings();
 logVideoTranscodeBootStatus();
 logSmtpBootStatus();
+logNtfyBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
