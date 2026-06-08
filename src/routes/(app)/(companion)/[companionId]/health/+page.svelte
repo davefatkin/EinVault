@@ -871,12 +871,11 @@
 										{#if data.linkedDocuments.some((d) => d.healthEventId === event.id)}
 											<div class="mt-1 flex flex-wrap gap-2">
 												{#each data.linkedDocuments.filter((d) => d.healthEventId === event.id) as doc (doc.id)}
-													<a
-														href={`/${data.companion.id}/documents`}
-														class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+													<span
+														class="inline-flex items-center gap-1 text-xs text-muted-foreground"
 													>
 														<FileText class="h-3 w-3" />{doc.title}
-													</a>
+													</span>
 												{/each}
 											</div>
 										{/if}
