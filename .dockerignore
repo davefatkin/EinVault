@@ -21,6 +21,10 @@ build/
 .git/
 .gitignore
 
+# Credentials (never copy into build layers)
+.npmrc
+.netrc
+
 # Docs/meta
 README.md
 *.md

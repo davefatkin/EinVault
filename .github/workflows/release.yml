@@ -22,6 +22,7 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -31,6 +32,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run lint
+      - run: npm run check
 
   # Each architecture builds natively (arm64 on an arm runner, no QEMU) and
   # pushes by digest; the merge job below stitches the digests into one
@@ -48,6 +50,7 @@ jobs:
             arch: arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
@@ -55,6 +58,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Build context only, no git operations: don't leave the token in
+          # .git/config where `COPY . .` could pull it into a build layer.
+          persist-credentials: false
 
       - name: Log in to GHCR
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
@@ -121,6 +128,7 @@ jobs:
 
   merge:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
@@ -180,6 +188,7 @@ jobs:
   # branch and tag runs at the same time.
   promote:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     needs: lint
     if: github.ref_type == 'tag'
     permissions:
