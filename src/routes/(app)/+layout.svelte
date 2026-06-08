@@ -12,6 +12,7 @@
 		NotebookPen,
 		HeartPulse,
 		Bell,
+		FileText,
 		Settings,
 		LogOut,
 		ShieldCheck
@@ -56,6 +57,11 @@
 						href: `/${activeCompanion.id}/reminders`,
 						label: t(locale, 'nav.reminders'),
 						icon: Bell
+					},
+					{
+						href: `/${activeCompanion.id}/documents`,
+						label: t(locale, 'nav.documents'),
+						icon: FileText
 					}
 				]
 			: []
@@ -183,7 +189,7 @@
 							<span class="hidden sm:inline">{t(locale, 'nav.admin')}</span>
 						</Button>
 					{/if}
-					<Button href="/settings" variant="ghost" size="sm" class="hidden md:inline-flex gap-1.5">
+					<Button href="/settings" variant="ghost" size="sm" class="gap-1.5">
 						<Settings class="h-4 w-4" />
 						<span class="hidden sm:inline">{t(locale, 'nav.settings')}</span>
 					</Button>
@@ -258,18 +264,6 @@
 						{item.label}
 					</a>
 				{/each}
-				<a
-					href="/settings"
-					aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-						'/settings'
-					)
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<Settings class="h-5 w-5" />
-					{t(locale, 'nav.settings')}
-				</a>
 			</div>
 		</nav>
 	{/if}

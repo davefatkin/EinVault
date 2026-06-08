@@ -159,6 +159,7 @@ const messages = {
 	'nav.journal': 'Journal',
 	'nav.health': 'Health',
 	'nav.reminders': 'Reminders',
+	'nav.documents': 'Documents',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
 	'nav.signOut': 'Sign Out',

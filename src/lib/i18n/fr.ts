@@ -170,6 +170,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.journal': 'Journal',
 	'nav.health': 'Santé',
 	'nav.reminders': 'Rappels',
+	'nav.documents': 'Documents',
 	'nav.settings': 'Paramètres',
 	'nav.admin': 'Administration',
 	'nav.signOut': 'Se déconnecter',
