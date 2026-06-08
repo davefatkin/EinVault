@@ -134,9 +134,9 @@
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-4">
 	<Card>
-		<CardHeader class="flex flex-row items-center justify-between">
+		<CardHeader class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 			<CardTitle>{t(locale, 'page.documents.title')}</CardTitle>
-			<div class="flex items-center gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				{#if data.paperlessEnabled}
 					<Button variant="outline" size="sm" onclick={() => (pickerOpen = true)}>
 						<FileText class="h-4 w-4 mr-1.5" />
