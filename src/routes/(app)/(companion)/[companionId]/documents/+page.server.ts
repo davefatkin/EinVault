@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
 			orderBy: (h, { desc }) => [desc(h.occurredAt)],
-			columns: { id: true, title: true, occurredAt: true }
+			columns: { id: true, title: true, type: true, occurredAt: true }
 		})
 	]);
 

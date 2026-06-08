@@ -9,12 +9,17 @@
 	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { healthTypeLabel } from '$lib/i18n/labels';
 	import type { MessageKey } from '$lib/i18n/en';
+	import { localDateISO } from '$lib/date';
 	import { FileText, Upload, Download, Trash2, Pencil, Loader2 } from '@lucide/svelte';
 
 	let { data } = $props();
 	const locale = getLocale();
 	const categoryLabel = (c: string) => t(locale, `documents.category.${c}` as MessageKey);
+	// Type · date · title — title alone is often ambiguous across visits.
+	const healthEventLabel = (e: (typeof data.healthEvents)[number]) =>
+		`${healthTypeLabel(locale, e.type)} · ${localDateISO(e.occurredAt)} · ${e.title}`;
 
 	const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 
@@ -236,7 +241,7 @@
 										>
 											<option value="">{t(locale, 'page.documents.noLinkedEvent')}</option>
 											{#each data.healthEvents as event (event.id)}
-												<option value={event.id}>{event.title}</option>
+												<option value={event.id}>{healthEventLabel(event)}</option>
 											{/each}
 										</select>
 									</div>
