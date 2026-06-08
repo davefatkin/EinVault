@@ -170,7 +170,7 @@
 						size="sm"
 						disabled={pageNum <= 1}
 						onclick={() => renderPage(pageNum - 1)}
-						aria-label="previous page"
+						aria-label={t(locale, 'aria.previousPage')}
 					>
 						<ChevronLeft class="h-4 w-4" />
 					</Button>
@@ -182,7 +182,7 @@
 						size="sm"
 						disabled={pageNum >= pageCount}
 						onclick={() => renderPage(pageNum + 1)}
-						aria-label="next page"
+						aria-label={t(locale, 'aria.nextPage')}
 					>
 						<ChevronRight class="h-4 w-4" />
 					</Button>

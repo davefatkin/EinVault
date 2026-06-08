@@ -752,6 +752,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.close': 'Chiudi',
 	'aria.previousMedia': 'Contenuto precedente',
 	'aria.nextMedia': 'Contenuto successivo',
+	'aria.previousPage': 'Pagina precedente',
+	'aria.nextPage': 'Pagina successiva',
 	'aria.viewPhoto': 'Vedi la foto di {name}',
 
 	// Email: password reset

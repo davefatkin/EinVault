@@ -748,6 +748,8 @@ const messages = {
 	'aria.close': 'Close',
 	'aria.previousMedia': 'Previous media',
 	'aria.nextMedia': 'Next media',
+	'aria.previousPage': 'Previous page',
+	'aria.nextPage': 'Next page',
 	'aria.viewPhoto': "View {name}'s photo",
 
 	// Email: password reset
