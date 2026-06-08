@@ -185,6 +185,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # Lets the promote step query whether this commit was built on the
+      # default branch (the fail-fast guard below).
+      actions: read
 
     steps:
       - name: Log in to GHCR
@@ -205,18 +208,55 @@ jobs:
 
       - name: Promote release tags
         env:
+          GH_TOKEN: ${{ github.token }}
           IMAGE: ghcr.io/${{ github.repository_owner }}/einvault
           TAGS: ${{ steps.meta.outputs.tags }}
+          REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           SOURCE="$IMAGE:sha-${GITHUB_SHA::7}"
-          echo "waiting for $SOURCE (built by the main-branch run for this commit)"
+
+          # Fail fast when the tag points at a commit that was never built on
+          # the default branch. promote never builds; it only stamps release
+          # tags onto the image the branch run already pushed. A tag left on a
+          # pre-merge commit (e.g. `npm version` run before merging the default
+          # branch) would otherwise poll for an image that can never appear.
+          #
+          # Count default-branch Release runs for this exact commit, excluding
+          # cancelled/skipped ones: a run superseded while still pending under
+          # the concurrency group above never produced an image. In-progress
+          # runs (conclusion null) are kept on purpose -- with
+          # `git push --follow-tags` the branch build runs concurrently with
+          # this tag run, and `needs: lint` above buys enough time for it to be
+          # listed before this query.
+          # Fail-open on an API error: the guard is only an optimization, and
+          # the poll below is the real source of truth for whether the image
+          # exists. A transient gh/API hiccup must not fail a valid release.
+          if ! builds=$(gh api \
+            "repos/$REPO/actions/workflows/release.yml/runs?head_sha=$GITHUB_SHA&branch=$DEFAULT_BRANCH" \
+            --jq '[.workflow_runs[] | select(.conclusion != "cancelled" and .conclusion != "skipped")] | length'); then
+            echo "warning: could not query Release runs for ${GITHUB_SHA::7}; skipping the build-exists guard and polling directly"
+            builds=""
+          fi
+          if [ "$builds" = "0" ]; then
+            echo "::error::Commit ${GITHUB_SHA::7} was never built on $DEFAULT_BRANCH, so $SOURCE does not exist. Re-tag the built commit you intend to release (confirm its package.json version matches $GITHUB_REF_NAME), e.g. git tag -f $GITHUB_REF_NAME <sha> && git push -f origin $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          # A usable branch run exists (possibly still building). Poll for the
+          # image. The guard already fails the doomed case fast, so keep a
+          # generous ceiling here: this path only runs on a legit release whose
+          # build is still in flight (push --follow-tags), where a false timeout
+          # would fail a valid tag. 30 min covers a cold-cache multi-arch build
+          # plus the Trivy scan and manifest merge.
+          echo "found ${builds:-unknown} $DEFAULT_BRANCH Release run(s) for ${GITHUB_SHA::7}; waiting for $SOURCE"
           for i in $(seq 1 60); do
             if docker buildx imagetools inspect "$SOURCE" >/dev/null 2>&1; then
               break
             fi
             if [ "$i" -eq 60 ]; then
-              echo "::error::$SOURCE not found after 30 minutes. Tags must point at a commit that was built from main." >&2
+              echo "::error::$SOURCE not found after 30 minutes despite a $DEFAULT_BRANCH run for this commit. Check that run's build job." >&2
               exit 1
             fi
             sleep 30
