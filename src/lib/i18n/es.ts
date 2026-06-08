@@ -818,7 +818,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.download': 'Descargar',
 	'page.documents.view': 'Ver',
 	'page.documents.delete': 'Eliminar',
-	'page.documents.deleteConfirm': '¿Eliminar este documento?',
 	'page.documents.deleteConfirmBody':
 		'Esto elimina el documento de EinVault. Los documentos de Paperless no se eliminan de Paperless.',
 	'page.documents.editTitle': 'Editar documento',

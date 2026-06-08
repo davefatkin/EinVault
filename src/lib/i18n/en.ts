@@ -810,7 +810,6 @@ const messages = {
 	'page.documents.download': 'Download',
 	'page.documents.view': 'View',
 	'page.documents.delete': 'Delete',
-	'page.documents.deleteConfirm': 'Delete this document?',
 	'page.documents.deleteConfirmBody':
 		'This removes the document from EinVault. Paperless documents are not deleted from Paperless.',
 	'page.documents.editTitle': 'Edit document',
