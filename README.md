@@ -90,16 +90,17 @@ Open your domain and follow the `/setup` prompt to create your admin account.
 
 Everything else in the compose file can be edited directly:
 
-|                         | Default             | Description                                                                                                                                                |
-| ----------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TZ`                    | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.                            |
-| `UPLOAD_MAX_MB`         | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.       |
-| `VIDEO_MAX_MB`          | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                           |
-| `MAX_DAILY_MEDIA`       | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
-| `REMINDER_UNDO_SECONDS` | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
-| `user`                  | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
-| `./data` volume         | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
-| `DATABASE_URL`          | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
+|                               | Default             | Description                                                                                                                                                |
+| ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TZ`                          | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.                            |
+| `UPLOAD_MAX_MB`               | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.       |
+| `VIDEO_MAX_MB`                | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                           |
+| `MAX_DAILY_MEDIA`             | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
+| `MAX_DOCUMENTS_PER_COMPANION` | `200`               | Maximum number of documents (uploads and paperless references combined) stored per companion.                                                              |
+| `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
+| `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
+| `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
+| `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
 
 ### Video transcoding (optional)
 
@@ -151,6 +152,22 @@ When `IMMICH_URL` and `IMMICH_API_KEY` are set, members and admins get a "Pick f
 | `IMMICH_URL`      | —       | Base URL of your Immich server, e.g. `http://immich.local:2283`. No trailing slash. Required if `IMMICH_API_KEY` is set.                                                                     |
 | `IMMICH_API_KEY`  | —       | API key. Required permissions: `asset.read`, `asset.view`, plus `album.read` if `IMMICH_ALBUM_ID` is set. Generate in Immich → Account Settings → API Keys. Required if `IMMICH_URL` is set. |
 | `IMMICH_ALBUM_ID` | —       | If set, the picker only shows assets in this album. If unset, the picker shows the user's most recent assets across the whole library.                                                       |
+
+### Documents
+
+Each companion has a Documents tab for receipts, invoices, vaccination records, and other paperwork. Members and admins can upload PDFs and images (JPEG, PNG, WebP, HEIC) up to `UPLOAD_MAX_MB`, sort them into categories, set a document date, and link a document to a health event. Uploaded images are re-encoded server-side to strip metadata; PDFs are stored as received. Documents are private to members and admins; caretakers have no access. PDFs preview in the browser without leaving the page.
+
+### paperless-ngx integration (optional)
+
+When `PAPERLESS_URL` and `PAPERLESS_API_TOKEN` are set, members and admins get an "Add from paperless" option on the Documents tab that searches a [paperless-ngx](https://docs.paperless-ngx.com/) instance and attaches a document by reference. The document stays in paperless; EinVault stores only a reference and proxies reads through the server using the token. EinVault never uploads to or deletes from paperless. Caretakers cannot use the picker. EinVault serves the archived (OCR'd PDF) version of each referenced document.
+
+The token can read every document its paperless user can see, and any member can then search and attach them. Set `PAPERLESS_TAG_ID` to limit the picker and import to one tag, and use a dedicated paperless user whose object permissions are restricted to that tag.
+
+|                       | Default | Description                                                                                                                                                         |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PAPERLESS_URL`       | —       | Base URL of your paperless-ngx instance, e.g. `http://paperless.local:8000`. No trailing slash. Required if `PAPERLESS_API_TOKEN` is set.                           |
+| `PAPERLESS_API_TOKEN` | —       | API token. Generate in paperless under Settings → "My Profile". Use a dedicated user limited to the documents you want visible. Required if `PAPERLESS_URL` is set. |
+| `PAPERLESS_TAG_ID`    | —       | If set, only documents carrying this paperless tag id can be searched and imported. Strongly recommended; without it every member can search the whole library.     |
 
 ### SMTP email (optional)
 

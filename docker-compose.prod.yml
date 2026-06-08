@@ -32,6 +32,8 @@ services:
       VIDEO_MAX_MB: 100
       # Maximum journal photos and videos (combined) per companion per day.
       MAX_DAILY_MEDIA: 5
+      # Maximum documents (uploads and paperless references) per companion.
+      MAX_DOCUMENTS_PER_COMPANION: 200
       # Default undo window (seconds) for dismissing a Reminder. 0 disables it.
       # Each user can override in their settings.
       REMINDER_UNDO_SECONDS: 7
@@ -82,6 +84,16 @@ services:
       # IMMICH_API_KEY:
       # Optional: restrict picker to a single Immich album.
       # IMMICH_ALBUM_ID:
+
+      # Optional: paperless-ngx document import (reference mode)
+      # When set, members and admins can attach paperless documents to a
+      # companion. EinVault stores a reference and proxies reads through the
+      # token; it never uploads or deletes from paperless. Both URL and token
+      # must be set together.
+      # PAPERLESS_URL: http://paperless.local:8000
+      # PAPERLESS_API_TOKEN:
+      # Optional but recommended: restrict picker/import to a single tag id.
+      # PAPERLESS_TAG_ID:
 
       # Optional: SMTP email
       # Enables outbound mail and the self-service "Forgot password?" flow on
