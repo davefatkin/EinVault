@@ -130,7 +130,7 @@ export function logVideoTranscodeBootStatus(): void {
 // always honor the per-row provider column, so switching here only affects
 // new writes — existing 'local' rows keep streaming from disk.
 //
-// Immich and paperless are intentionally excluded from this set: both are
+// Immich and Paperless are intentionally excluded from this set: both are
 // read-only reference layers, never write destinations. The type derives from
 // StorageProvider so adding a provider to the union forces an update here.
 export type StorageBackendName = Exclude<StorageProvider, 'immich' | 'paperless'>;
@@ -252,17 +252,17 @@ export function logImmichBootStatus(): void {
 
 // Paperless-ngx integration is a read-only reference layer, NOT a write
 // destination — same model as Immich. When configured, users can pick
-// documents from their paperless library to attach to a companion. EinVault
+// documents from their Paperless library to attach to a companion. EinVault
 // stores a reference (provider='paperless', storage_key='paperless:{id}') and
 // proxies reads through the server using the API token. EinVault never
-// uploads to or deletes from paperless.
+// uploads to or deletes from Paperless.
 export interface PaperlessConfig {
 	url: string;
 	token: string;
-	// Optional tag id (paperless tag PK). When set, the picker search AND the
+	// Optional tag ID (Paperless tag PK). When set, the picker search AND the
 	// from-paperless import only accept documents carrying this tag. This is
 	// the EinVault-side scope guard; operators should ALSO use a dedicated
-	// paperless user whose object permissions are limited to that tag.
+	// Paperless user whose object permissions are limited to that tag.
 	tagId: number | null;
 }
 
@@ -324,7 +324,7 @@ export function logPaperlessBootStatus(): void {
 	}
 }
 
-// Hard cap on document rows per companion (uploads AND paperless references).
+// Hard cap on document rows per companion (uploads AND Paperless references).
 // Guards the shared data volume: a full disk breaks SQLite WAL writes for the
 // whole app, not just uploads.
 export const MAX_DOCUMENTS_PER_COMPANION = envInt(env.MAX_DOCUMENTS_PER_COMPANION, 200);

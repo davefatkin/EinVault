@@ -6,7 +6,7 @@ const KEY_PREFIX = 'paperless:';
 // referencing '1/../../users' can never sneak through parseKey into a URL.
 export const DOC_ID_RE = /^\d{1,10}$/;
 
-// Default timeout for any single paperless HTTP call. A hung paperless must
+// Default timeout for any single Paperless HTTP call. A hung Paperless must
 // not pin request workers, especially on the streaming download path.
 const DEFAULT_TIMEOUT_MS = 8_000;
 
@@ -20,7 +20,7 @@ function parseKey(key: string): string {
 	}
 	const id = key.slice(KEY_PREFIX.length);
 	if (!DOC_ID_RE.test(id)) {
-		throw new Error('Invalid paperless document id in key');
+		throw new Error('Invalid Paperless document id in key');
 	}
 	return id;
 }
@@ -50,13 +50,13 @@ export function createPaperlessBackend(config: PaperlessConfig): StorageBackend 
 
 		async get(key: string): Promise<GetResult | null> {
 			const docId = parseKey(key);
-			// Serve the archived version (PDF/A with OCR layer) — paperless's
+			// Serve the archived version (PDF/A with OCR layer) — Paperless's
 			// /download/ default. Image originals arrive as PDFs too, so every
-			// paperless row previews uniformly via pdf.js.
+			// Paperless row previews uniformly via pdf.js.
 			const res = await fetch(`${config.url}/api/documents/${docId}/download/`, {
 				headers: { Authorization: `Token ${config.token}` },
 				// Never follow redirects: a redirecting reverse proxy in front of
-				// paperless must not receive (or bounce) the Authorization header.
+				// Paperless must not receive (or bounce) the Authorization header.
 				redirect: 'error',
 				signal: timeoutSignal()
 			});
@@ -67,7 +67,7 @@ export function createPaperlessBackend(config: PaperlessConfig): StorageBackend 
 			// Always report size 0 (= "unknown", so the serving route omits
 			// Content-Length and streams the body). The upstream content-length
 			// reflects the COMPRESSED body when a reverse proxy in front of
-			// paperless gzips the response; undici transparently decompresses
+			// Paperless gzips the response; undici transparently decompresses
 			// res.body, so passing that length through truncates the document
 			// (e.g. a 18049-byte PDF capped at the 17040-byte gzipped length,
 			// breaking pdf.js with "Invalid PDF structure").
@@ -85,9 +85,9 @@ export function createPaperlessBackend(config: PaperlessConfig): StorageBackend 
 		},
 
 		async delete() {
-			// Intentional no-op. EinVault stores a reference to a paperless
+			// Intentional no-op. EinVault stores a reference to a Paperless
 			// document; removing the reference must not delete the user's
-			// document from their paperless archive.
+			// document from their Paperless archive.
 		}
 	};
 }
@@ -193,7 +193,7 @@ export function createPaperlessClient(config: PaperlessConfig): PaperlessClient 
 
 		async fetchThumbnail(docId: string) {
 			if (!DOC_ID_RE.test(docId)) return new Response(null, { status: 404 });
-			// Accept: '*/*' — paperless's DRF thumb endpoint does content
+			// Accept: '*/*' — Paperless's DRF thumb endpoint does content
 			// negotiation and returns 406 to a narrowed 'image/*' Accept.
 			return fetch(`${config.url}/api/documents/${docId}/thumb/`, {
 				headers: { Authorization: `Token ${config.token}`, Accept: '*/*' },

@@ -35,7 +35,7 @@ services:
       VIDEO_MAX_MB: ${VIDEO_MAX_MB:-100}
       # Maximum journal photos and videos (combined) per companion per day.
       MAX_DAILY_MEDIA: ${MAX_DAILY_MEDIA:-5}
-      # Maximum documents (uploads and paperless references) per companion.
+      # Maximum documents (uploads and Paperless references) per companion.
       MAX_DOCUMENTS_PER_COMPANION: ${MAX_DOCUMENTS_PER_COMPANION:-200}
       # Default undo window (seconds) for dismissing a Reminder. 0 disables it.
       REMINDER_UNDO_SECONDS: ${REMINDER_UNDO_SECONDS:-7}
@@ -72,7 +72,7 @@ services:
       IMMICH_API_KEY: ${IMMICH_API_KEY:-}
       IMMICH_ALBUM_ID: ${IMMICH_ALBUM_ID:-}
 
-      # Optional: paperless-ngx document import (reference mode). Both URL and
+      # Optional: Paperless-ngx document import (reference mode). Both URL and
       # token must be set together for the picker to activate.
       PAPERLESS_URL: ${PAPERLESS_URL:-}
       PAPERLESS_API_TOKEN: ${PAPERLESS_API_TOKEN:-}

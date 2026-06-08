@@ -786,15 +786,15 @@ const messages = {
 	'immich.picker.pickFailed': 'Could not attach Immich asset.',
 
 	// Paperless picker
-	'paperless.picker.title': 'Pick from paperless',
+	'paperless.picker.title': 'Pick from Paperless',
 	'paperless.picker.tagScoped': 'Showing documents with the configured tag.',
-	'paperless.picker.empty': 'No documents found in paperless.',
+	'paperless.picker.empty': 'No documents found in Paperless.',
 	'paperless.picker.searchPlaceholder': 'Search documents…',
 	'paperless.picker.cancel': 'Cancel',
 	'paperless.picker.close': 'Close picker',
-	'paperless.picker.loadError': 'Could not load paperless library.',
-	'paperless.picker.button': 'Add from paperless',
-	'paperless.picker.pickFailed': 'Could not attach paperless document.',
+	'paperless.picker.loadError': 'Could not load Paperless library.',
+	'paperless.picker.button': 'Add from Paperless',
+	'paperless.picker.pickFailed': 'Could not attach Paperless document.',
 
 	// Page: Documents
 	'page.documents.title': 'Documents',
@@ -810,7 +810,7 @@ const messages = {
 	'page.documents.delete': 'Delete',
 	'page.documents.deleteConfirm': 'Delete this document?',
 	'page.documents.deleteConfirmBody':
-		'This removes the document from EinVault. Paperless documents are not deleted from paperless.',
+		'This removes the document from EinVault. Paperless documents are not deleted from Paperless.',
 	'page.documents.editTitle': 'Edit document',
 	'page.documents.labelTitle': 'Title',
 	'page.documents.labelCategory': 'Category',
@@ -821,7 +821,7 @@ const messages = {
 	'page.documents.previewLoading': 'Loading preview…',
 	'page.documents.previewFailed': 'Could not render preview. Use Download instead.',
 	'page.documents.pageOf': 'Page {page} of {total}',
-	'page.documents.fromPaperless': 'paperless',
+	'page.documents.fromPaperless': 'Paperless',
 
 	// Enum: Document categories
 	'documents.category.receipt': 'Receipt',

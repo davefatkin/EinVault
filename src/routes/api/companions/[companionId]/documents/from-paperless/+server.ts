@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		error(404, t(locals.locale, 'error.notFound'));
 	}
 
-	// We serve the archived version (always PDF) when paperless has one;
+	// We serve the archived version (always PDF) when Paperless has one;
 	// otherwise the original must itself be an allowed type.
 	const mimeType = doc.hasArchiveVersion ? 'application/pdf' : doc.originalMimeType;
 	if (!isAllowedDocumentMime(mimeType)) {
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	// original's ext for the rare no-archive case.
 	const filename = `${documentId}.${documentExtFromMime(mimeType)}`;
 	const title = (doc.title || filename).slice(0, 255);
-	// paperless `created` is an ISO datetime; keep the date part, but don't
+	// Paperless `created` is an ISO datetime; keep the date part, but don't
 	// trust upstream format blindly.
 	const createdDate = doc.created?.slice(0, 10) ?? '';
 	const documentDate = isValidDate(createdDate) ? createdDate : null;
@@ -67,7 +67,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const result = db.transaction(
 		(tx) => {
-			// Idempotency guard: the same paperless doc twice on one companion
+			// Idempotency guard: the same Paperless doc twice on one companion
 			// is almost certainly a double-click.
 			const dupe = tx
 				.select({ id: schema.documents.id })

@@ -791,15 +791,15 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.pickFailed': 'Não foi possível anexar o item do Immich.',
 
 	// Paperless picker
-	'paperless.picker.title': 'Escolher do paperless',
+	'paperless.picker.title': 'Escolher do Paperless',
 	'paperless.picker.tagScoped': 'A mostrar documentos com a etiqueta configurada.',
-	'paperless.picker.empty': 'Nenhum documento encontrado no paperless.',
+	'paperless.picker.empty': 'Nenhum documento encontrado no Paperless.',
 	'paperless.picker.searchPlaceholder': 'Pesquisar documentos…',
 	'paperless.picker.cancel': 'Cancelar',
 	'paperless.picker.close': 'Fechar seletor',
-	'paperless.picker.loadError': 'Não foi possível carregar a biblioteca do paperless.',
-	'paperless.picker.button': 'Adicionar do paperless',
-	'paperless.picker.pickFailed': 'Não foi possível anexar o documento do paperless.',
+	'paperless.picker.loadError': 'Não foi possível carregar a biblioteca do Paperless.',
+	'paperless.picker.button': 'Adicionar do Paperless',
+	'paperless.picker.pickFailed': 'Não foi possível anexar o documento do Paperless.',
 
 	// Page: Documents
 	'page.documents.title': 'Documentos',
@@ -815,7 +815,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.delete': 'Eliminar',
 	'page.documents.deleteConfirm': 'Eliminar este documento?',
 	'page.documents.deleteConfirmBody':
-		'O documento será removido do EinVault. Os documentos do paperless não são eliminados do paperless.',
+		'O documento será removido do EinVault. Os documentos do Paperless não são eliminados do Paperless.',
 	'page.documents.editTitle': 'Editar documento',
 	'page.documents.labelTitle': 'Título',
 	'page.documents.labelCategory': 'Categoria',
@@ -826,7 +826,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewLoading': 'A carregar pré-visualização…',
 	'page.documents.previewFailed': 'Não foi possível mostrar a pré-visualização. Use Transferir.',
 	'page.documents.pageOf': 'Página {page} de {total}',
-	'page.documents.fromPaperless': 'paperless',
+	'page.documents.fromPaperless': 'Paperless',
 
 	// Enum: Document categories
 	'documents.category.receipt': 'Recibo',

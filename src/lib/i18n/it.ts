@@ -789,15 +789,15 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.pickFailed': "Impossibile allegare l'elemento Immich.",
 
 	// Paperless picker
-	'paperless.picker.title': 'Scegli da paperless',
+	'paperless.picker.title': 'Scegli da Paperless',
 	'paperless.picker.tagScoped': 'Mostrando documenti con il tag configurato.',
-	'paperless.picker.empty': 'Nessun documento trovato in paperless.',
+	'paperless.picker.empty': 'Nessun documento trovato in Paperless.',
 	'paperless.picker.searchPlaceholder': 'Cerca documenti…',
 	'paperless.picker.cancel': 'Annulla',
 	'paperless.picker.close': 'Chiudi selettore',
-	'paperless.picker.loadError': 'Impossibile caricare la libreria paperless.',
-	'paperless.picker.button': 'Aggiungi da paperless',
-	'paperless.picker.pickFailed': 'Impossibile allegare il documento paperless.',
+	'paperless.picker.loadError': 'Impossibile caricare la libreria Paperless.',
+	'paperless.picker.button': 'Aggiungi da Paperless',
+	'paperless.picker.pickFailed': 'Impossibile allegare il documento Paperless.',
 
 	// Page: Documents
 	'page.documents.title': 'Documenti',
@@ -813,7 +813,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.delete': 'Elimina',
 	'page.documents.deleteConfirm': 'Eliminare questo documento?',
 	'page.documents.deleteConfirmBody':
-		'Il documento verrà rimosso da EinVault. I documenti paperless non vengono eliminati da paperless.',
+		'Il documento verrà rimosso da EinVault. I documenti Paperless non vengono eliminati da Paperless.',
 	'page.documents.editTitle': 'Modifica documento',
 	'page.documents.labelTitle': 'Titolo',
 	'page.documents.labelCategory': 'Categoria',
@@ -824,7 +824,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewLoading': 'Caricamento anteprima…',
 	'page.documents.previewFailed': "Impossibile visualizzare l'anteprima. Usa Scarica.",
 	'page.documents.pageOf': 'Pagina {page} di {total}',
-	'page.documents.fromPaperless': 'paperless',
+	'page.documents.fromPaperless': 'Paperless',
 
 	// Enum: Document categories
 	'documents.category.receipt': 'Ricevuta',
