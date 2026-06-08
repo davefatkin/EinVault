@@ -4,7 +4,7 @@ import { db, schema } from '$lib/server/db';
 import { version } from '../../package.json';
 import { t } from '$lib/i18n';
 import { resolveReminderUndoSeconds } from '$lib/server/env';
-import { isImmichEnabled } from '$lib/server/storage';
+import { isImmichEnabled, isPaperlessEnabled } from '$lib/server/storage';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
@@ -40,6 +40,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		year: new Date().getFullYear(),
 		reminderUndoSeconds: resolveReminderUndoSeconds(locals.user?.reminderUndoSeconds ?? null),
 		// Caretakers don't get the picker — the underlying endpoints reject them.
-		immichEnabled: isImmichEnabled() && locals.user?.role !== 'caretaker'
+		immichEnabled: isImmichEnabled() && locals.user?.role !== 'caretaker',
+		paperlessEnabled: isPaperlessEnabled() && locals.user?.role !== 'caretaker'
 	};
 };

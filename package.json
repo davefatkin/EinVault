@@ -56,6 +56,7 @@
 		"marked": "^18.0.3",
 		"nodemailer": "^8.0.10",
 		"openid-client": "^6.8.4",
+		"pdfjs-dist": "^6.0.227",
 		"sharp": "^0.34.5",
 		"tailwind-merge": "^3.5.0"
 	},
