@@ -270,6 +270,50 @@ export const healthEvents = sqliteTable(
 	})
 );
 
+// companion documents (issue #95)
+
+export const documents = sqliteTable(
+	'documents',
+	{
+		id: text('id').primaryKey(),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' }),
+		// Optional link to a health event of the SAME companion. App code
+		// validates the companion match on every write (SQLite can't express
+		// the composite constraint cleanly).
+		healthEventId: text('health_event_id').references(() => healthEvents.id, {
+			onDelete: 'set null'
+		}),
+		// `{documentId}.{ext}` — server-generated, never derived from the
+		// uploaded filename. Used in /api/documents URLs.
+		filename: text('filename').notNull(),
+		provider: text('provider', { enum: ['local', 's3', 'paperless'] })
+			.notNull()
+			.default('local'),
+		storageKey: text('storage_key').notNull(),
+		title: text('title').notNull(),
+		category: text('category', {
+			enum: ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other']
+		})
+			.notNull()
+			.default('other'),
+		// User-set document date (receipt date), not upload date. YYYY-MM-DD.
+		documentDate: text('document_date'),
+		originalName: text('original_name'),
+		mimeType: text('mime_type').notNull(),
+		sizeBytes: integer('size_bytes'),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => ({
+		companionIdx: index('document_companion_idx').on(t.companionId),
+		healthEventIdx: index('document_health_event_idx').on(t.healthEventId)
+	})
+);
+
 export const weightEntries = sqliteTable(
 	'weight_entries',
 	{
@@ -404,6 +448,7 @@ export type Companion = typeof companions.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type JournalPhoto = typeof journalPhotos.$inferSelect;
 export type HealthEvent = typeof healthEvents.$inferSelect;
+export type Document = typeof documents.$inferSelect;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
@@ -468,8 +513,18 @@ export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
 	logger: one(users, { fields: [dailyEvents.loggedBy], references: [users.id] })
 }));
 
-export const healthEventsRelations = relations(healthEvents, ({ one }) => ({
-	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] })
+export const healthEventsRelations = relations(healthEvents, ({ one, many }) => ({
+	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] }),
+	documents: many(documents)
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+	companion: one(companions, { fields: [documents.companionId], references: [companions.id] }),
+	healthEvent: one(healthEvents, {
+		fields: [documents.healthEventId],
+		references: [healthEvents.id]
+	}),
+	uploader: one(users, { fields: [documents.uploadedBy], references: [users.id] })
 }));
 
 export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
