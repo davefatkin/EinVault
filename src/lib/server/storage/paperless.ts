@@ -64,17 +64,20 @@ export function createPaperlessBackend(config: PaperlessConfig): StorageBackend 
 			if (!res.ok || !res.body) {
 				throw await logAndSanitize(`get doc=${docId}`, res, 'Paperless document fetch failed');
 			}
-			// Omit size when upstream is chunked (no content-length): emitting 0
-			// would make the serving route send Content-Length: 0 and truncate
-			// the body. size=0 is treated as "unknown" by the documents route.
-			const length = Number(res.headers.get('content-length') ?? 0);
+			// Always report size 0 (= "unknown", so the serving route omits
+			// Content-Length and streams the body). The upstream content-length
+			// reflects the COMPRESSED body when a reverse proxy in front of
+			// paperless gzips the response; undici transparently decompresses
+			// res.body, so passing that length through truncates the document
+			// (e.g. a 18049-byte PDF capped at the 17040-byte gzipped length,
+			// breaking pdf.js with "Invalid PDF structure").
 			const etag = res.headers.get('etag') ?? `"paperless-${docId}"`;
 			const lastModified = res.headers.get('last-modified');
 			return {
 				kind: 'stream',
 				stream: res.body,
 				stat: {
-					size: Number.isFinite(length) && length > 0 ? length : 0,
+					size: 0,
 					etag,
 					mtime: lastModified ? new Date(lastModified) : new Date(0)
 				}
@@ -190,8 +193,10 @@ export function createPaperlessClient(config: PaperlessConfig): PaperlessClient 
 
 		async fetchThumbnail(docId: string) {
 			if (!DOC_ID_RE.test(docId)) return new Response(null, { status: 404 });
+			// Accept: '*/*' — paperless's DRF thumb endpoint does content
+			// negotiation and returns 406 to a narrowed 'image/*' Accept.
 			return fetch(`${config.url}/api/documents/${docId}/thumb/`, {
-				headers: { Authorization: `Token ${config.token}`, Accept: 'image/*' },
+				headers: { Authorization: `Token ${config.token}`, Accept: '*/*' },
 				redirect: 'error',
 				signal: timeoutSignal()
 			});

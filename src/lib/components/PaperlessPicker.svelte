@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { X, FileText, Loader2 } from '@lucide/svelte';
 
@@ -81,7 +81,10 @@
 			hasNextPage = false;
 			error = '';
 			selecting = null;
-			loadPage(1, false);
+			// untrack: loadPage reads `query` synchronously (before its first
+			// await), which would otherwise make this open-effect depend on
+			// `query` and re-run on every keystroke, clearing the search field.
+			untrack(() => loadPage(1, false));
 			tick().then(() => dialogEl?.focus());
 		} else {
 			tick().then(() => triggerEl?.focus());
