@@ -13,6 +13,8 @@ EinVault is a private, self-hosted companion health and care tracker built for h
   - [Video transcoding (optional)](#video-transcoding-optional)
   - [External image storage (optional)](#external-image-storage-optional)
   - [Immich integration (optional)](#immich-integration-optional)
+  - [Documents](#documents)
+  - [Paperless-ngx integration (optional)](#paperless-ngx-integration-optional)
   - [SMTP email (optional)](#smtp-email-optional)
   - [ntfy push notifications (optional)](#ntfy-push-notifications-optional)
   - [Data and backup](#data-and-backup)
