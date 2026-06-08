@@ -162,6 +162,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidGifFile': 'Fichier GIF invalide',
 	'error.maxMediaExceeded': 'Maximum {max} photos ou vidéos par jour',
 	'error.requestBodyTooLarge': 'Requête trop volumineuse',
+	'error.maxDocumentsExceeded': 'Limite de documents atteinte (max {max} par compagnon)',
 
 	// Navigation
 	'nav.dashboard': 'Tableau de bord',
@@ -792,7 +793,53 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.close': 'Fermer le sélecteur',
 	'immich.picker.loadError': 'Impossible de charger la bibliothèque Immich.',
 	'immich.picker.button': 'Choisir depuis Immich',
-	'immich.picker.pickFailed': "Impossible d'attacher l'élément Immich."
+	'immich.picker.pickFailed': "Impossible d'attacher l'élément Immich.",
+
+	// Paperless picker
+	'paperless.picker.title': 'Choisir depuis paperless',
+	'paperless.picker.tagScoped': 'Affichage des documents avec le tag configuré.',
+	'paperless.picker.empty': 'Aucun document trouvé dans paperless.',
+	'paperless.picker.searchPlaceholder': 'Rechercher des documents…',
+	'paperless.picker.cancel': 'Annuler',
+	'paperless.picker.close': 'Fermer le sélecteur',
+	'paperless.picker.loadError': 'Impossible de charger la bibliothèque paperless.',
+	'paperless.picker.button': 'Ajouter depuis paperless',
+	'paperless.picker.pickFailed': "Impossible d'attacher le document paperless.",
+
+	// Page: Documents
+	'page.documents.title': 'Documents',
+	'page.documents.empty': 'Aucun document pour le moment.',
+	'page.documents.upload': 'Téléverser un document',
+	'page.documents.uploading': 'Téléversement…',
+	'page.documents.dropHint': "PDF ou image, jusqu'à {max}Mo",
+	'page.documents.filterAll': 'Toutes les catégories',
+	'page.documents.linkedEvent': 'Événement de santé lié',
+	'page.documents.noLinkedEvent': 'Non lié',
+	'page.documents.download': 'Télécharger',
+	'page.documents.view': 'Voir',
+	'page.documents.delete': 'Supprimer',
+	'page.documents.deleteConfirm': 'Supprimer ce document ?',
+	'page.documents.deleteConfirmBody':
+		"Ce document sera supprimé d'EinVault. Les documents paperless ne sont pas supprimés de paperless.",
+	'page.documents.editTitle': 'Modifier le document',
+	'page.documents.labelTitle': 'Titre',
+	'page.documents.labelCategory': 'Catégorie',
+	'page.documents.labelDate': 'Date du document',
+	'page.documents.save': 'Enregistrer',
+	'page.documents.saveFailed': "Impossible d'enregistrer les modifications.",
+	'page.documents.uploadFailed': 'Échec du téléversement.',
+	'page.documents.previewLoading': "Chargement de l'aperçu…",
+	'page.documents.previewFailed': "Impossible d'afficher l'aperçu. Utilisez Télécharger.",
+	'page.documents.pageOf': 'Page {page} sur {total}',
+	'page.documents.fromPaperless': 'paperless',
+
+	// Enum: Document categories
+	'documents.category.receipt': 'Reçu',
+	'documents.category.invoice': 'Facture',
+	'documents.category.medical': 'Médical',
+	'documents.category.insurance': 'Assurance',
+	'documents.category.ownership': 'Propriété',
+	'documents.category.other': 'Autre'
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

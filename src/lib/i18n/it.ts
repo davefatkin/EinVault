@@ -160,6 +160,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidGifFile': 'File GIF non valido',
 	'error.maxMediaExceeded': 'Massimo {max} foto o video al giorno',
 	'error.requestBodyTooLarge': 'Corpo della richiesta troppo grande',
+	'error.maxDocumentsExceeded': 'Limite documenti raggiunto (max {max} per compagno)',
 
 	// Navigation
 	'nav.dashboard': 'Bacheca',
@@ -785,7 +786,53 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.close': 'Chiudi selettore',
 	'immich.picker.loadError': 'Impossibile caricare la libreria Immich.',
 	'immich.picker.button': 'Scegli da Immich',
-	'immich.picker.pickFailed': "Impossibile allegare l'elemento Immich."
+	'immich.picker.pickFailed': "Impossibile allegare l'elemento Immich.",
+
+	// Paperless picker
+	'paperless.picker.title': 'Scegli da paperless',
+	'paperless.picker.tagScoped': 'Mostrando documenti con il tag configurato.',
+	'paperless.picker.empty': 'Nessun documento trovato in paperless.',
+	'paperless.picker.searchPlaceholder': 'Cerca documenti…',
+	'paperless.picker.cancel': 'Annulla',
+	'paperless.picker.close': 'Chiudi selettore',
+	'paperless.picker.loadError': 'Impossibile caricare la libreria paperless.',
+	'paperless.picker.button': 'Aggiungi da paperless',
+	'paperless.picker.pickFailed': 'Impossibile allegare il documento paperless.',
+
+	// Page: Documents
+	'page.documents.title': 'Documenti',
+	'page.documents.empty': 'Nessun documento ancora.',
+	'page.documents.upload': 'Carica documento',
+	'page.documents.uploading': 'Caricamento…',
+	'page.documents.dropHint': 'PDF o immagine, fino a {max}MB',
+	'page.documents.filterAll': 'Tutte le categorie',
+	'page.documents.linkedEvent': 'Evento sanitario collegato',
+	'page.documents.noLinkedEvent': 'Non collegato',
+	'page.documents.download': 'Scarica',
+	'page.documents.view': 'Visualizza',
+	'page.documents.delete': 'Elimina',
+	'page.documents.deleteConfirm': 'Eliminare questo documento?',
+	'page.documents.deleteConfirmBody':
+		'Il documento verrà rimosso da EinVault. I documenti paperless non vengono eliminati da paperless.',
+	'page.documents.editTitle': 'Modifica documento',
+	'page.documents.labelTitle': 'Titolo',
+	'page.documents.labelCategory': 'Categoria',
+	'page.documents.labelDate': 'Data documento',
+	'page.documents.save': 'Salva',
+	'page.documents.saveFailed': 'Impossibile salvare le modifiche.',
+	'page.documents.uploadFailed': 'Caricamento non riuscito.',
+	'page.documents.previewLoading': 'Caricamento anteprima…',
+	'page.documents.previewFailed': "Impossibile visualizzare l'anteprima. Usa Scarica.",
+	'page.documents.pageOf': 'Pagina {page} di {total}',
+	'page.documents.fromPaperless': 'paperless',
+
+	// Enum: Document categories
+	'documents.category.receipt': 'Ricevuta',
+	'documents.category.invoice': 'Fattura',
+	'documents.category.medical': 'Medico',
+	'documents.category.insurance': 'Assicurazione',
+	'documents.category.ownership': 'Proprietà',
+	'documents.category.other': 'Altro'
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

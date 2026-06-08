@@ -151,6 +151,7 @@ const messages = {
 	'error.invalidGifFile': 'Invalid GIF file',
 	'error.maxMediaExceeded': 'Maximum {max} photos or videos per day',
 	'error.requestBodyTooLarge': 'Request body too large',
+	'error.maxDocumentsExceeded': 'Document limit reached (max {max} per companion)',
 
 	// Navigation
 	'nav.dashboard': 'Dashboard',
@@ -782,7 +783,53 @@ const messages = {
 	'immich.picker.close': 'Close picker',
 	'immich.picker.loadError': 'Could not load Immich library.',
 	'immich.picker.button': 'Pick from Immich',
-	'immich.picker.pickFailed': 'Could not attach Immich asset.'
+	'immich.picker.pickFailed': 'Could not attach Immich asset.',
+
+	// Paperless picker
+	'paperless.picker.title': 'Pick from paperless',
+	'paperless.picker.tagScoped': 'Showing documents with the configured tag.',
+	'paperless.picker.empty': 'No documents found in paperless.',
+	'paperless.picker.searchPlaceholder': 'Search documents…',
+	'paperless.picker.cancel': 'Cancel',
+	'paperless.picker.close': 'Close picker',
+	'paperless.picker.loadError': 'Could not load paperless library.',
+	'paperless.picker.button': 'Add from paperless',
+	'paperless.picker.pickFailed': 'Could not attach paperless document.',
+
+	// Page: Documents
+	'page.documents.title': 'Documents',
+	'page.documents.empty': 'No documents yet.',
+	'page.documents.upload': 'Upload document',
+	'page.documents.uploading': 'Uploading…',
+	'page.documents.dropHint': 'PDF or image, up to {max}MB',
+	'page.documents.filterAll': 'All categories',
+	'page.documents.linkedEvent': 'Linked health event',
+	'page.documents.noLinkedEvent': 'Not linked',
+	'page.documents.download': 'Download',
+	'page.documents.view': 'View',
+	'page.documents.delete': 'Delete',
+	'page.documents.deleteConfirm': 'Delete this document?',
+	'page.documents.deleteConfirmBody':
+		'This removes the document from EinVault. Paperless documents are not deleted from paperless.',
+	'page.documents.editTitle': 'Edit document',
+	'page.documents.labelTitle': 'Title',
+	'page.documents.labelCategory': 'Category',
+	'page.documents.labelDate': 'Document date',
+	'page.documents.save': 'Save',
+	'page.documents.saveFailed': 'Could not save changes.',
+	'page.documents.uploadFailed': 'Upload failed.',
+	'page.documents.previewLoading': 'Loading preview…',
+	'page.documents.previewFailed': 'Could not render preview. Use Download instead.',
+	'page.documents.pageOf': 'Page {page} of {total}',
+	'page.documents.fromPaperless': 'paperless',
+
+	// Enum: Document categories
+	'documents.category.receipt': 'Receipt',
+	'documents.category.invoice': 'Invoice',
+	'documents.category.medical': 'Medical',
+	'documents.category.insurance': 'Insurance',
+	'documents.category.ownership': 'Ownership',
+	'documents.category.other': 'Other'
 
 	// Meta
 } as const;
