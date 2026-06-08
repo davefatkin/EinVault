@@ -12,7 +12,7 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Scale, Plus, Pencil, Trash2, X } from '@lucide/svelte';
+	import { Scale, Plus, Pencil, Trash2, X, FileText } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
@@ -867,6 +867,18 @@
 											<p class="text-sm mt-1 text-muted-foreground">
 												{stripMarkdown(event.notes)}
 											</p>
+										{/if}
+										{#if data.linkedDocuments.some((d) => d.healthEventId === event.id)}
+											<div class="mt-1 flex flex-wrap gap-2">
+												{#each data.linkedDocuments.filter((d) => d.healthEventId === event.id) as doc (doc.id)}
+													<a
+														href={`/${data.companion.id}/documents`}
+														class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+													>
+														<FileText class="h-3 w-3" />{doc.title}
+													</a>
+												{/each}
+											</div>
 										{/if}
 										<ByLine user={event.logger} class="mt-0.5" />
 									</div>

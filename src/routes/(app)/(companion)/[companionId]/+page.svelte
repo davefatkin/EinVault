@@ -19,6 +19,7 @@
 		Pencil,
 		UserCheck,
 		NotebookPen,
+		FileText,
 		X,
 		CheckCheck
 	} from '@lucide/svelte';
@@ -27,6 +28,7 @@
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
+	import type { MessageKey } from '$lib/i18n/en';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -40,7 +42,8 @@
 		upcomingReminders,
 		recentWeights,
 		todayJournal,
-		activeCaretakerShift
+		activeCaretakerShift,
+		recentDocuments
 	} = $derived(data);
 
 	const locale = getLocale();
@@ -856,6 +859,49 @@
 								</div>
 							{/if}
 						</button>
+					{/each}
+				</div>
+			{/if}
+		</CardContent>
+	</Card>
+
+	<!-- Recent documents -->
+	<Card>
+		<CardHeader class="pb-3">
+			<div class="flex items-center justify-between">
+				<CardTitle class="text-sm font-semibold flex items-center gap-2">
+					<FileText class="h-4 w-4" />
+					{t(locale, 'page.documents.title')}
+				</CardTitle>
+				<Button
+					href="/{companion.id}/documents"
+					variant="ghost"
+					size="sm"
+					class="h-7 text-xs text-primary px-2"
+				>
+					{t(locale, 'page.dashboard.healthViewAll')}
+				</Button>
+			</div>
+		</CardHeader>
+		<CardContent class="pt-0">
+			{#if recentDocuments.length === 0}
+				<p class="text-sm italic text-muted-foreground">
+					{t(locale, 'page.documents.empty')}
+				</p>
+			{:else}
+				<div class="space-y-1">
+					{#each recentDocuments as doc (doc.id)}
+						<a
+							href="/{companion.id}/documents"
+							class="block w-full rounded-md px-2 py-1.5 -mx-2 hover:bg-accent transition-colors text-left"
+						>
+							<div class="flex items-center justify-between gap-3 text-sm">
+								<span class="truncate text-foreground text-sm">{doc.title}</span>
+								<Badge variant="bark" class="capitalize"
+									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
+								>
+							</div>
+						</a>
 					{/each}
 				</div>
 			{/if}

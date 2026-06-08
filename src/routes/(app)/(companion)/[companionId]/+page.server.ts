@@ -19,7 +19,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		upcomingReminders,
 		recentWeights,
 		todayJournal,
-		activeCaretakerShift
+		activeCaretakerShift,
+		recentDocuments
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -76,7 +77,12 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.innerJoin(schema.users, eq(schema.users.id, schema.caretakerShifts.userId))
 			.where(and(lte(schema.caretakerShifts.startAt, now), gte(schema.caretakerShifts.endAt, now)))
 			.limit(1)
-			.then((rows) => rows[0] ?? null)
+			.then((rows) => rows[0] ?? null),
+		db.query.documents.findMany({
+			where: eq(schema.documents.companionId, params.companionId),
+			orderBy: (d, { desc }) => [desc(d.createdAt)],
+			limit: 5
+		})
 	]);
 
 	return {
@@ -86,7 +92,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		upcomingReminders,
 		recentWeights,
 		todayJournal,
-		activeCaretakerShift
+		activeCaretakerShift,
+		recentDocuments
 	};
 };
 

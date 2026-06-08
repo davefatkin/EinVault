@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const { companion } = await parent();
 
-	const [healthEvents, weightEntries] = await Promise.all([
+	const [healthEvents, weightEntries, linkedDocuments] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
 			orderBy: (h, { desc }) => [desc(h.occurredAt)],
@@ -21,10 +21,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			where: eq(schema.weightEntries.companionId, params.companionId),
 			orderBy: (w, { desc }) => [desc(w.recordedAt)],
 			with: { logger: { columns: { displayName: true } } }
+		}),
+		db.query.documents.findMany({
+			where: eq(schema.documents.companionId, params.companionId),
+			columns: { id: true, title: true, healthEventId: true, filename: true }
 		})
 	]);
 
-	return { companion, healthEvents, weightEntries };
+	return { companion, healthEvents, weightEntries, linkedDocuments };
 };
 
 export const actions: Actions = {
