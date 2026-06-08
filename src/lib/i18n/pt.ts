@@ -804,6 +804,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Documents
 	'page.documents.title': 'Documentos',
+	'page.documents.archivedNotice': '{name} está arquivado. Modo de leitura.',
 	'page.documents.empty': 'Ainda não há documentos.',
 	'page.documents.upload': 'Carregar documento',
 	'page.documents.uploading': 'A carregar…',

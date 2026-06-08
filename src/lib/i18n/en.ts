@@ -799,6 +799,7 @@ const messages = {
 
 	// Page: Documents
 	'page.documents.title': 'Documents',
+	'page.documents.archivedNotice': '{name} is archived. Viewing in read-only mode.',
 	'page.documents.empty': 'No documents yet.',
 	'page.documents.upload': 'Upload document',
 	'page.documents.uploading': 'Uploading…',

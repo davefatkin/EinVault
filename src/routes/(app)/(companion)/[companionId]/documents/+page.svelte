@@ -3,7 +3,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+	import { Card, CardContent } from '$lib/components/ui/card/index.js';
+	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
@@ -132,10 +133,18 @@
 	<title>{t(locale, 'page.documents.title')} · {data.companion.name}</title>
 </svelte:head>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-4">
-	<Card>
-		<CardHeader class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<CardTitle>{t(locale, 'page.documents.title')}</CardTitle>
+<div class="space-y-6 pb-20 md:pb-0">
+	{#if !data.companion.isActive}
+		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
+			{t(locale, 'page.documents.archivedNotice', { name: data.companion.name })}
+		</div>
+	{/if}
+
+	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+		<h1 class="font-display text-2xl font-bold text-foreground">
+			{t(locale, 'page.documents.title')}
+		</h1>
+		{#if data.companion.isActive !== false}
 			<div class="flex flex-wrap items-center gap-2">
 				{#if data.paperlessEnabled}
 					<Button variant="outline" size="sm" onclick={() => (pickerOpen = true)}>
@@ -161,19 +170,21 @@
 					onchange={(e) => upload(e.currentTarget.files)}
 				/>
 			</div>
-		</CardHeader>
-		<CardContent class="space-y-3">
-			<p class="text-xs text-muted-foreground">
-				{t(locale, 'page.documents.dropHint', { max: data.uploadMaxMb })}
-			</p>
+		{/if}
+	</div>
 
-			{#if uploadError}
-				<div
-					role="alert"
-					class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
-				>
-					{uploadError}
-				</div>
+	{#if uploadError}
+		<Alert variant="destructive">
+			<AlertDescription>{uploadError}</AlertDescription>
+		</Alert>
+	{/if}
+
+	<Card>
+		<CardContent class="space-y-3 pt-6">
+			{#if data.companion.isActive !== false}
+				<p class="text-xs text-muted-foreground">
+					{t(locale, 'page.documents.dropHint', { max: data.uploadMaxMb })}
+				</p>
 			{/if}
 
 			<select
