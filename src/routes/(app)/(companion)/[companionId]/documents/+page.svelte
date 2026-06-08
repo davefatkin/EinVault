@@ -270,7 +270,7 @@
 								<div class="flex items-center gap-3">
 									<button
 										type="button"
-										class="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-75"
+										class="flex items-center gap-3 flex-1 min-w-0 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
 										onclick={() => (preview = doc)}
 										aria-label={t(locale, 'page.documents.view')}
 									>
