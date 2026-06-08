@@ -71,3 +71,78 @@ export function safeExtFromMime(mime: string, originalFileName: string | null | 
 	if (mime === 'image/heic') return 'heic';
 	return 'jpg';
 }
+
+// Mime types accepted for companion documents (issue #95). PDFs and the
+// photo formats people scan receipts with. No SVG (active content), no
+// office formats (no inline preview, larger parse surface).
+export const ALLOWED_DOCUMENT_MIME = [
+	'application/pdf',
+	'image/jpeg',
+	'image/png',
+	'image/webp',
+	'image/heic'
+] as const;
+
+export function isAllowedDocumentMime(mime: string | null | undefined): boolean {
+	return !!mime && (ALLOWED_DOCUMENT_MIME as readonly string[]).includes(mime);
+}
+
+// Strict mime -> extension map for document storage keys. Deliberately NOT
+// safeExtFromMime: that helper prefers the filename-hinted extension, which
+// for documents would let 'report.html' uploaded as application/pdf get an
+// .html extension on disk and in URLs.
+export function documentExtFromMime(mime: string): string {
+	switch (mime) {
+		case 'application/pdf':
+			return 'pdf';
+		case 'image/jpeg':
+			return 'jpg';
+		case 'image/png':
+			return 'png';
+		case 'image/webp':
+			return 'webp';
+		case 'image/heic':
+			return 'heic';
+		default:
+			return 'bin';
+	}
+}
+
+// Magic-byte sniff confirming an accepted document mime matches its bytes,
+// mirroring looksLikeVideo. Requiring %PDF- at offset 0 (the spec allows up
+// to 1024, but real producers emit 0) kills HTML-prefix PDF polyglots.
+export function looksLikeDocument(bytes: Uint8Array, mime: string): boolean {
+	if (mime === 'application/pdf') {
+		return (
+			bytes.length >= 5 &&
+			bytes[0] === 0x25 && // %
+			bytes[1] === 0x50 && // P
+			bytes[2] === 0x44 && // D
+			bytes[3] === 0x46 && // F
+			bytes[4] === 0x2d // -
+		);
+	}
+	if (mime === 'image/jpeg') {
+		return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+	}
+	if (mime === 'image/png') {
+		const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+		return bytes.length >= 8 && sig.every((b, i) => bytes[i] === b);
+	}
+	if (mime === 'image/webp') {
+		return (
+			bytes.length >= 12 &&
+			String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === 'RIFF' &&
+			String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === 'WEBP'
+		);
+	}
+	if (mime === 'image/heic') {
+		// ISO BMFF: bytes 4..8 = 'ftyp', brand at 8..12.
+		if (bytes.length < 12) return false;
+		const box = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
+		if (box !== 'ftyp') return false;
+		const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]);
+		return ['heic', 'heix', 'mif1', 'msf1', 'heim', 'heis'].includes(brand);
+	}
+	return false;
+}
