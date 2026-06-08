@@ -7,6 +7,7 @@ import { logOidcBootStatus } from '$lib/server/auth/oidc';
 import {
 	S3_CONFIG,
 	logImmichBootStatus,
+	logPaperlessBootStatus,
 	logStorageBootStatus,
 	logDeprecatedEnvWarnings,
 	logVideoTranscodeBootStatus,
@@ -19,6 +20,7 @@ import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 logOidcBootStatus();
 logStorageBootStatus();
 logImmichBootStatus();
+logPaperlessBootStatus();
 logDeprecatedEnvWarnings();
 logVideoTranscodeBootStatus();
 logSmtpBootStatus();
