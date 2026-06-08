@@ -15,6 +15,10 @@ import {
 import { isValidDate } from '$lib/server/validation';
 
 const MAX_DOCUMENT_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
+// Bound decoded pixels so a small, highly-compressible image can't decode to
+// sharp's ~268MP default and pressure memory. 50MP comfortably covers a
+// high-DPI document scan while capping the per-request decode buffer.
+const MAX_DECODE_PIXELS = 50_000_000;
 const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 type Category = (typeof CATEGORIES)[number];
 
@@ -119,7 +123,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		// Lossless re-encode: launders structure, strips EXIF, keeps receipts
 		// crisp. Larger resize cap than journal photos — these must stay legible.
 		try {
-			processed = await sharp(raw)
+			processed = await sharp(raw, { limitInputPixels: MAX_DECODE_PIXELS })
 				.resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
 				.png()
 				.toBuffer();
@@ -132,7 +136,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		// renderable format. sharp without libheif throws on HEIC: surface as
 		// invalid file type rather than a 500.
 		try {
-			processed = await sharp(raw)
+			processed = await sharp(raw, { limitInputPixels: MAX_DECODE_PIXELS })
 				.rotate()
 				.resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
 				.jpeg({ quality: 90 })
