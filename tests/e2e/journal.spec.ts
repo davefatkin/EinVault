@@ -127,9 +127,28 @@ test.describe('journal day editor', () => {
 		await expect(asMember.getByText('Seed journal entry')).toBeVisible({ timeout: 8_000 });
 	});
 
-	test.fixme('edit shows the editor, not the original author, as attribution', async () => {
-		// #24: editing another user's entry overwrites nothing visibly — the entry
-		// still shows the original loggedBy with no updatedBy. Flip to a real test
-		// when #24 lands updatedBy.
+	test('edit shows the editor alongside the original author', async ({ asMember, asAdmin }) => {
+		const date = '2026-05-20';
+
+		// Member authors the entry.
+		await asMember.goto(`/${COMP}/journal/${date}`);
+		await asMember.locator('textarea').first().fill('authored by member');
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
+
+		// Admin edits the same entry.
+		await asAdmin.goto(`/${COMP}/journal/${date}`);
+		await asAdmin.locator('textarea').first().fill('edited by admin');
+		await asAdmin.locator('h1').first().click();
+		await expect(asAdmin.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
+
+		// List shows both attributions on that entry's card.
+		await asMember.goto(`/${COMP}/journal`);
+		// Scope to the card containing the edited body text (each entry is a rounded-lg border card).
+		const card = asMember
+			.locator('div.rounded-lg.border.bg-card')
+			.filter({ hasText: 'edited by admin' });
+		await expect(card.getByText(/by Seed Member/)).toBeVisible({ timeout: 8_000 });
+		await expect(card.getByText(/edited by Seed Admin/)).toBeVisible({ timeout: 8_000 });
 	});
 });
