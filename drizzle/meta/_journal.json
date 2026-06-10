@@ -141,6 +141,13 @@
       "when": 1780881094924,
       "tag": "0019_smart_dreaming_celestial",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1781126813759,
+      "tag": "0020_melodic_deathbird",
+      "breakpoints": true
     }
   ]
 }

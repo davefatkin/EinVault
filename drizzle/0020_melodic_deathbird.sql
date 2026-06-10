@@ -1,0 +1,1 @@
+ALTER TABLE `journal_entries` ADD `updated_by` text REFERENCES users(id);

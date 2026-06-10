@@ -187,7 +187,8 @@ export const journalEntries = sqliteTable(
 		updatedAt: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
-		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
+		updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
 		uniquePerDay: uniqueIndex('journal_companion_date_idx').on(t.companionId, t.date)
@@ -475,7 +476,8 @@ export const usersRelations = relations(users, ({ many }) => ({
 	notificationOutbox: many(notificationOutbox),
 	companionCaretakers: many(companionCaretakers),
 	shifts: many(caretakerShifts),
-	loggedJournalEntries: many(journalEntries),
+	loggedJournalEntries: many(journalEntries, { relationName: 'journalLogger' }),
+	updatedJournalEntries: many(journalEntries, { relationName: 'journalUpdater' }),
 	loggedJournalPhotos: many(journalPhotos),
 	loggedDailyEvents: many(dailyEvents),
 	loggedHealthEvents: many(healthEvents),
@@ -497,7 +499,16 @@ export const caretakerShiftsRelations = relations(caretakerShifts, ({ one }) => 
 }));
 
 export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({
-	logger: one(users, { fields: [journalEntries.loggedBy], references: [users.id] }),
+	logger: one(users, {
+		fields: [journalEntries.loggedBy],
+		references: [users.id],
+		relationName: 'journalLogger'
+	}),
+	updater: one(users, {
+		fields: [journalEntries.updatedBy],
+		references: [users.id],
+		relationName: 'journalUpdater'
+	}),
 	photos: many(journalPhotos)
 }));
 
