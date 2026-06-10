@@ -39,7 +39,7 @@ npm run test:e2e    # end-to-end tests (Playwright, builds the app first)
 npm test            # both
 ```
 
-Unit tests live next to the code they cover (`src/**/*.test.ts`) and each test file gets a fresh in-memory database. E2e specs live in `tests/e2e/` and drive a real browser against real server processes booted from the production build; shared fixtures, seed data, and fakes (SMTP sink, mock OIDC IdP) live in `tests/lib/` and `tests/fakes/`.
+Unit tests live next to the code they cover (`src/**/*.test.ts`) and each test file gets a fresh in-memory database. E2e specs live in `tests/e2e/` and drive a real browser against real server processes booted from the production build; shared fixtures and seed data live in `tests/lib/`; service fakes (SMTP sink, mock OIDC IdP, S3, Immich, Paperless, ntfy) live in `tests/fakes/` with their own unit self-tests.
 
 The e2e suite needs Chromium once: `npx playwright install chromium`, plus `sudo npx playwright install-deps chromium` on Debian/Ubuntu for its system libraries. During iteration, `PW_SKIP_BUILD=1 npm run test:e2e` skips the rebuild and reuses the existing `build/` output; rebuild after changing server code.
 

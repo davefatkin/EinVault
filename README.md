@@ -291,7 +291,7 @@ When you change `src/lib/server/db/schema.ts`, run `db:generate` then `db:migrat
 
 ### Testing
 
-Unit tests cover server helpers against a fresh in-memory database per test file. End-to-end tests build the app for production and drive a real browser against real server processes, each with its own throwaway SQLite database under `.test-data/`. Email and OIDC flows run against local fakes, so no external services are needed.
+Unit tests cover server helpers against a fresh in-memory database per test file. End-to-end tests build the app for production and drive a real browser against real server processes, each with its own throwaway SQLite database under `.test-data/`. Integrations run against local fakes (SMTP, OIDC, S3, Immich, Paperless, ntfy), so no external services are needed.
 
 The e2e suite needs Chromium once:
 
