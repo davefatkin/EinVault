@@ -56,7 +56,7 @@ test.describe('forgot password', () => {
 		await page.getByRole('button', { name: 'Send reset link' }).click();
 
 		const mail = await app.smtp.waitForMail((m) =>
-			(m.to?.text ?? '').includes('seed-reset@example.com')
+			[m.to ?? []].flat().some((addr) => addr.text.includes('seed-reset@example.com'))
 		);
 		const link = (mail.text ?? '').match(/https?:\/\/\S+/)?.[0];
 		expect(link).toBeTruthy();
