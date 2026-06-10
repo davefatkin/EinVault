@@ -100,8 +100,12 @@ test.describe('settings', () => {
 		await asMember.reload();
 		await expect(asMember.locator('html')).toHaveClass(/dark/, { timeout: 6_000 });
 
-		// Reset to system so the shared session is not left in dark mode.
+		// Reset to system so the shared session is not left in dark mode. The
+		// reload forces the reset POST to complete before the test ends —
+		// otherwise context teardown can abort it and leak dark mode to later tests.
 		await asMember.getByRole('button', { name: /system mode/i }).click();
+		await asMember.reload();
+		await expect(asMember.locator('html')).not.toHaveClass(/dark/, { timeout: 6_000 });
 	});
 
 	// -------------------------------------------------------------------------
