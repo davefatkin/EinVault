@@ -21,7 +21,10 @@ export async function getEnrichedJournalEntries(
 		),
 		orderBy: (j, { desc }) => [desc(j.date)],
 		limit: pageSize + 1,
-		with: { logger: { columns: { displayName: true } } }
+		with: {
+			logger: { columns: { displayName: true } },
+			updater: { columns: { displayName: true } }
+		}
 	});
 
 	const hasMore = entries.length > pageSize;
@@ -103,7 +106,7 @@ export async function upsertJournalEntry(
 	if (existing) {
 		await db
 			.update(schema.journalEntries)
-			.set({ body: body ?? '', mood, updatedAt: new Date() })
+			.set({ body: body ?? '', mood, updatedAt: new Date(), updatedBy: userId })
 			.where(eq(schema.journalEntries.id, existing.id));
 	} else {
 		await db.insert(schema.journalEntries).values({

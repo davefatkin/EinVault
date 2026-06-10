@@ -67,4 +67,39 @@ describe('journal', () => {
 		expect(rest.entries.every((e) => e.date < page.oldestDate!)).toBe(true);
 		expect(rest.hasMore).toBe(false);
 	});
+
+	it('update sets updatedBy; create leaves it null', async () => {
+		await db.insert(schema.users).values({
+			id: 'u-j2',
+			username: 'journal-editor',
+			displayName: 'J Editor',
+			role: 'admin'
+		} as typeof schema.users.$inferInsert);
+
+		await upsertJournalEntry('c-j', '2026-03-10', 'original', null, 'u-j');
+		let row = await db.query.journalEntries.findFirst({
+			where: and(
+				eq(schema.journalEntries.companionId, 'c-j'),
+				eq(schema.journalEntries.date, '2026-03-10')
+			)
+		});
+		expect(row!.updatedBy).toBeNull();
+
+		await upsertJournalEntry('c-j', '2026-03-10', 'edited', null, 'u-j2');
+		row = await db.query.journalEntries.findFirst({
+			where: and(
+				eq(schema.journalEntries.companionId, 'c-j'),
+				eq(schema.journalEntries.date, '2026-03-10')
+			)
+		});
+		expect(row!.updatedBy).toBe('u-j2');
+		expect(row!.loggedBy).toBe('u-j'); // original author preserved
+	});
+
+	it('enriched entries expose the updater displayName', async () => {
+		const page = await getEnrichedJournalEntries('c-j', { limit: 50 });
+		const entry = page.entries.find((e) => e.date === '2026-03-10');
+		expect(entry?.updater?.displayName).toBe('J Editor');
+		expect(entry?.logger?.displayName).toBe('J User');
+	});
 });
