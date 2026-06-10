@@ -40,6 +40,11 @@ export function logOidcBootStatus(): void {
 
 	if (missing.length === 0) {
 		console.info(`[oidc] enabled provider=${getOidcProviderName()} issuer=${env.OIDC_ISSUER_URL}`);
+		if (env.OIDC_ALLOW_INSECURE_HTTP === 'true') {
+			console.warn(
+				'[oidc] OIDC_ALLOW_INSECURE_HTTP=true — plain-HTTP issuer allowed. Test use only.'
+			);
+		}
 		return;
 	}
 
@@ -64,9 +69,27 @@ export function discoverOidcClient(): Promise<client.Configuration> {
 	inflight = (async () => {
 		try {
 			const serverUrl = new URL(config.issuerUrl);
+			// openid-client v6 rejects non-HTTPS issuers. Tests run a plain-HTTP mock
+			// IdP; this flag must never be set in production.
+			const discoveryOptions =
+				env.OIDC_ALLOW_INSECURE_HTTP === 'true'
+					? { execute: [client.allowInsecureRequests] }
+					: undefined;
 			const discovered = config.clientSecret
-				? await client.discovery(serverUrl, config.clientId, config.clientSecret)
-				: await client.discovery(serverUrl, config.clientId, undefined, client.None());
+				? await client.discovery(
+						serverUrl,
+						config.clientId,
+						config.clientSecret,
+						undefined,
+						discoveryOptions
+					)
+				: await client.discovery(
+						serverUrl,
+						config.clientId,
+						undefined,
+						client.None(),
+						discoveryOptions
+					);
 			cached = { configuration: discovered, cachedAt: Date.now() };
 			return discovered;
 		} catch (err) {

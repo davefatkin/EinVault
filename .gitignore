@@ -19,3 +19,9 @@ data/
 Thumbs.db
 .vscode/settings.json
 .idea/
+
+# Tests
+.test-data/
+test-results/
+playwright-report/
+blob-report/

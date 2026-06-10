@@ -27,7 +27,12 @@ import {
 	type EnqueueRow
 } from './outbox';
 
-const SCAN_INTERVAL_MS = 60 * 1000;
+// Overridable for tests (NOTIFY_SCAN_INTERVAL_MS=1000); floor prevents a
+// misconfigured prod value from busy-looping the scheduler.
+const SCAN_INTERVAL_MS = (() => {
+	const raw = Number(env.NOTIFY_SCAN_INTERVAL_MS);
+	return Number.isFinite(raw) && raw >= 250 ? raw : 60 * 1000;
+})();
 // First-deploy guard: reminders overdue longer than this never produce a
 // notification. Without it, enabling the feature on an existing install would
 // email every historically overdue reminder at once.
@@ -499,7 +504,7 @@ export function startNotifyScheduler(): void {
 	timer = setInterval(() => void scan(), SCAN_INTERVAL_MS);
 	timer.unref();
 	console.info(
-		`[notify] notification scheduler started (60s interval, channels: ${[
+		`[notify] notification scheduler started (${SCAN_INTERVAL_MS}ms interval, channels: ${[
 			...(isMailEnabled() ? ['email'] : []),
 			...(isNtfyEnabled() ? ['ntfy'] : [])
 		].join('+')})`
