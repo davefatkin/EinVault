@@ -24,6 +24,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - [Docker (local build)](#docker-local-build)
 - [Local development](#local-development)
   - [Commands](#commands)
+  - [Testing](#testing)
 - [User management](#user-management)
 - [OIDC / SSO (optional)](#oidc--sso-optional)
   - [Required variables](#required-variables)
@@ -192,10 +193,11 @@ When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https
 
 On public servers like ntfy.sh, the topic name is the only access control. Users should pick long, random topic names that are hard to guess.
 
-|              | Default | Description                                                                                              |
-| ------------ | ------- | -------------------------------------------------------------------------------------------------------- |
-| `NTFY_URL`   | —       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.             |
-| `NTFY_TOKEN` | —       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic. |
+|                           | Default | Description                                                                                                                                                                   |
+| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NTFY_URL`                | —       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.                                                                                  |
+| `NTFY_TOKEN`              | —       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic.                                                                      |
+| `NOTIFY_SCAN_INTERVAL_MS` | `60000` | How often the notification scheduler scans for due reminders and shift alerts, in milliseconds. Values below 250 fall back to the default. Mainly useful for automated tests. |
 
 ### Data and backup
 
@@ -277,12 +279,30 @@ npm run build          # production build
 npm run check          # SvelteKit type checking
 npm run lint           # ESLint + Prettier check
 npm run format         # auto-format with Prettier
+npm run test:unit      # unit tests (Vitest)
+npm run test:e2e       # end-to-end tests (Playwright, builds the app first)
+npm test               # both
 npm run db:generate    # generate a migration file after schema changes
 npm run db:migrate     # apply pending migrations
 npm run db:studio      # Drizzle Studio (visual database browser)
 ```
 
 When you change `src/lib/server/db/schema.ts`, run `db:generate` then `db:migrate` and commit both files together.
+
+### Testing
+
+Unit tests cover server helpers against a fresh in-memory database per test file. End-to-end tests build the app for production and drive a real browser against real server processes, each with its own throwaway SQLite database under `.test-data/`. Email and OIDC flows run against local fakes, so no external services are needed.
+
+The e2e suite needs Chromium once:
+
+```bash
+npx playwright install chromium
+sudo npx playwright install-deps chromium   # system libraries, Debian/Ubuntu
+```
+
+`PW_SKIP_BUILD=1 npm run test:e2e` reuses the existing `build/` output instead of rebuilding. The build goes stale silently, so rebuild after changing server code.
+
+CI runs lint, type checks, unit tests, and the e2e suite (sharded four ways) on every PR.
 
 ---
 
@@ -313,15 +333,16 @@ Register `https://<your-domain>/auth/oidc/callback` as an allowed redirect URI w
 
 ### Optional variables
 
-| Variable                        | Default                | Description                                                                                                |
-| ------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `OIDC_SCOPES`                   | `openid profile email` | Space-separated scopes requested from the IdP.                                                             |
-| `OIDC_PROVIDER_NAME`            | `SSO`                  | Display label on the login button.                                                                         |
-| `OIDC_ALLOW_SIGNUP`             | `false`                | If `true`, auto-creates accounts for users who authenticate but have no matching record. See below.        |
-| `OIDC_DEFAULT_ROLE`             | `member`               | Role assigned to auto-created users. Allowed: `member`, `caretaker`. Admin can only be granted via groups. |
-| `OIDC_ADMIN_GROUPS`             | _(unset)_              | Comma-separated. Users whose `groups` claim contains any value here are promoted to admin on every login.  |
-| `OIDC_POST_LOGOUT_REDIRECT_URI` | _(unset)_              | If set and the IdP advertises `end_session_endpoint`, logout triggers RP-initiated logout at the IdP.      |
-| `OIDC_STATE_SECRET`             | _(random)_             | Pin a long random string. Without it, in-flight logins break across server restarts.                       |
+| Variable                        | Default                | Description                                                                                                       |
+| ------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `OIDC_SCOPES`                   | `openid profile email` | Space-separated scopes requested from the IdP.                                                                    |
+| `OIDC_PROVIDER_NAME`            | `SSO`                  | Display label on the login button.                                                                                |
+| `OIDC_ALLOW_SIGNUP`             | `false`                | If `true`, auto-creates accounts for users who authenticate but have no matching record. See below.               |
+| `OIDC_DEFAULT_ROLE`             | `member`               | Role assigned to auto-created users. Allowed: `member`, `caretaker`. Admin can only be granted via groups.        |
+| `OIDC_ADMIN_GROUPS`             | _(unset)_              | Comma-separated. Users whose `groups` claim contains any value here are promoted to admin on every login.         |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | _(unset)_              | If set and the IdP advertises `end_session_endpoint`, logout triggers RP-initiated logout at the IdP.             |
+| `OIDC_STATE_SECRET`             | _(random)_             | Pin a long random string. Without it, in-flight logins break across server restarts.                              |
+| `OIDC_ALLOW_INSECURE_HTTP`      | `false`                | Allows plain-HTTP issuer URLs. Exists for automated tests against a local mock IdP. Never set this in production. |
 
 ### Account linking
 
