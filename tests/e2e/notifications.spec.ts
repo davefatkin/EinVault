@@ -5,8 +5,17 @@ import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { startSmtpSink, type SmtpSink } from '../fakes/smtp';
 import { startNtfyFake, type NtfyFake } from '../fakes/ntfy';
+import type { ParsedMail } from 'mailparser';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
+
+// mailparser types .to as AddressObject | AddressObject[]; flatten either shape.
+function toText(to: ParsedMail['to']): string {
+	return [to ?? []]
+		.flat()
+		.map((a) => a.text)
+		.join(', ');
+}
 
 // ---------------------------------------------------------------------------
 // World fixture — one per test (full isolation)
@@ -164,7 +173,7 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	// mailparser exposes .to as an AddressObject; use .text to get the address string.
 	const mail = await world.smtp.waitForMail(
 		(m) =>
-			(m.to?.text ?? '').includes('seed-member@example.com') &&
+			toText(m.to).includes('seed-member@example.com') &&
 			(m.subject ?? '').includes('e2e-notify-rem'),
 		20_000
 	);
@@ -176,7 +185,7 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	expect(bodyText).toMatch(/Biscuit/);
 	expect(bodyText).toMatch(/e2e-notify-rem/);
 	// Recipient
-	expect(mail.to?.text).toContain('seed-member@example.com');
+	expect(toText(mail.to)).toContain('seed-member@example.com');
 
 	// ntfy push
 	const publish = await world.ntfy.waitForPublish(
@@ -191,7 +200,7 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	// Dedup: after ~4 scan cycles (1s) the count must not have grown
 	// ------------------------------------------------------------------
 	const reminderMailMatcher = (m: import('mailparser').ParsedMail) =>
-		(m.to?.text ?? '').includes('seed-member@example.com') &&
+		toText(m.to).includes('seed-member@example.com') &&
 		(m.subject ?? '').includes('e2e-notify-rem');
 
 	await expect
@@ -269,13 +278,13 @@ test('shift start email fires for caretaker', async ({ world, browser }) => {
 	// mailparser exposes .to as an AddressObject; use .text for the address string.
 	const mail = await world.smtp.waitForMail(
 		(m) =>
-			(m.to?.text ?? '').includes('seed-caretaker@example.com') &&
+			toText(m.to).includes('seed-caretaker@example.com') &&
 			(m.subject ?? '').toLowerCase().includes('shift starting soon'),
 		20_000
 	);
 
 	expect(mail.subject).toMatch(/Shift starting soon: Seed Caretaker/i);
-	expect(mail.to?.text).toContain('seed-caretaker@example.com');
+	expect(toText(mail.to)).toContain('seed-caretaker@example.com');
 	// Body: "{caretaker} begins a care shift on {start}."
 	const bodyText = mail.text ?? '';
 	expect(bodyText).toMatch(/Seed Caretaker/);
