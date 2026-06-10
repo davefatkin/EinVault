@@ -11,6 +11,7 @@ import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/serve
 import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
 import { kickWorker } from '$lib/server/video/worker';
 import { canModifyPhoto } from '$lib/permissions';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 import { isValidDate } from '$lib/server/validation';
 
 const MAX_IMAGE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
@@ -70,6 +71,9 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const { companionId, date } = params;
 	if (!isValidDate(date)) error(400, t(locals.locale, 'error.invalidDate'));
+
+	// Caretakers may only upload for assigned companions (mirrors the GET guard).
+	await assertCanEditCompanion(locals, companionId);
 
 	// Verify companion exists
 	const companion = await db.query.companions.findFirst({
