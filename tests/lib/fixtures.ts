@@ -48,29 +48,34 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 			// change passwords for the cached roles (admin/member/caretaker) — the
 			// cookie in the state file would go stale for the rest of the worker.
 			// Destructive flows use SEED.resetUser or a dedicated seed identity.
-			const statePaths = new Map<Role, string>();
+			const statePromises = new Map<Role, Promise<string>>();
 			const app: AppWorker = {
 				server,
 				smtp,
 				dataDir,
-				async stateFor(role, browser) {
-					const cached = statePaths.get(role);
-					if (cached) return cached;
-					const user = SEED[role];
-					const context = await browser.newContext({ baseURL: server.baseURL });
-					const page = await context.newPage();
-					await page.goto('/auth/login');
-					await page.getByLabel('Username').fill(user.username);
-					await page.getByLabel('Password').fill(SEED.password);
-					await page.getByRole('button', { name: 'Sign in' }).click();
-					// Login failure here is also the harness's "server sees the seeded
-					// DB" assertion (guards resolveDbPath silent fallback).
-					await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
-					const statePath = path.join(dataDir, `state-${role}.json`);
-					await context.storageState({ path: statePath });
-					await context.close();
-					statePaths.set(role, statePath);
-					return statePath;
+				stateFor(role, browser) {
+					const inflight = statePromises.get(role);
+					if (inflight) return inflight;
+					const promise = (async () => {
+						const user = SEED[role];
+						const context = await browser.newContext({ baseURL: server.baseURL });
+						const page = await context.newPage();
+						await page.goto('/auth/login');
+						await page.getByLabel('Username').fill(user.username);
+						await page.getByLabel('Password').fill(SEED.password);
+						await page.getByRole('button', { name: 'Sign in' }).click();
+						// Login failure here is also the harness's "server sees the seeded
+						// DB" assertion (guards resolveDbPath silent fallback).
+						await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+						const statePath = path.join(dataDir, `state-${role}.json`);
+						await context.storageState({ path: statePath });
+						await context.close();
+						return statePath;
+					})();
+					statePromises.set(role, promise);
+					// A failed login attempt must not poison the cache for retries.
+					promise.catch(() => statePromises.delete(role));
+					return promise;
 				}
 			};
 
