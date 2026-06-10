@@ -60,9 +60,13 @@ async function uploadPhoto(page: Page, baseURL: string) {
 	await page.goto(baseURL + `/${COMP}/journal/2026-06-02`);
 	const fileInput = page.locator('input[type="file"][name="photos"]').first();
 	await fileInput.setInputFiles(pngUpload());
-	await expect(page.locator('img[src*="/api/photos/journal/"]').first()).toBeVisible({
-		timeout: 15_000
-	});
+	const img = page.locator('img[src*="/api/photos/journal/"]').first();
+	await expect(img).toBeVisible({ timeout: 15_000 });
+	// A broken 302 still leaves a visible-but-empty <img>; naturalWidth > 0
+	// proves the browser followed the presign redirect and decoded real bytes.
+	await expect
+		.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth), { timeout: 15_000 })
+		.toBeGreaterThan(0);
 }
 
 test('upload lands in the bucket', async ({ world, page }) => {
