@@ -68,4 +68,18 @@ describe('validateSessionToken', () => {
 		await invalidateSession(session.id);
 		expect(await validateSessionToken(token)).toBeNull();
 	});
+
+	it('extends expiry when a session nears its refresh threshold', async () => {
+		await insertUser('u5');
+		const token = generateSessionToken();
+		const session = await createSession(token, 'u5');
+		const nearExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000); // inside 15-day threshold
+		await db
+			.update(schema.sessions)
+			.set({ expiresAt: nearExpiry })
+			.where(eq(schema.sessions.id, session.id));
+		const result = await validateSessionToken(token);
+		expect(result).not.toBeNull();
+		expect(result!.session.expiresAt.getTime()).toBeGreaterThan(nearExpiry.getTime());
+	});
 });
