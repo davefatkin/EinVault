@@ -64,6 +64,8 @@ export async function startSmtpSink(): Promise<SmtpSink> {
 		},
 		reset() {
 			messages.length = 0;
+			// Abandon pending waiters; their callers own the timeout rejection.
+			waiters.length = 0;
 		},
 		stop: () => new Promise((resolve) => server.close(() => resolve()))
 	};

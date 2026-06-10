@@ -9,7 +9,7 @@ export default defineConfig({
 		port: 5173
 	},
 	test: {
-		include: ['src/**/*.test.ts'],
+		include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
 		environment: 'node',
 		setupFiles: ['./src/vitest.setup.ts']
 	}
