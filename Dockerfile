@@ -1,10 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_IMAGE=node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+# The node base image is pinned by digest and repeated in every FROM line
+# (instead of a single ARG) so Dependabot's docker ecosystem can see and bump
+# it — it does not reliably update ARG-indirected references. Dependabot
+# updates all four lines together in one PR; keep them identical.
 
 # pkgmeta: zero out the version field so version-bump commits don't invalidate
 # the npm ci layer in deps; nothing in the install depends on the real version.
-FROM ${NODE_IMAGE} AS pkgmeta
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS pkgmeta
 
 WORKDIR /meta
 
@@ -19,7 +22,7 @@ RUN node -e "const fs = require('fs'); \
 
 
 # deps
-FROM ${NODE_IMAGE} AS deps
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS deps
 
 WORKDIR /build
 
@@ -33,7 +36,7 @@ RUN npm ci --ignore-scripts \
 
 
 # builder
-FROM ${NODE_IMAGE} AS builder
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS builder
 
 WORKDIR /build
 
@@ -48,7 +51,7 @@ RUN npm prune --omit=dev
 
 
 # runner
-FROM ${NODE_IMAGE} AS runner
+FROM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS runner
 
 WORKDIR /app
 
