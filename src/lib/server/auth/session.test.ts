@@ -5,7 +5,9 @@ import {
 	generateSessionToken,
 	createSession,
 	validateSessionToken,
-	invalidateSession
+	invalidateSession,
+	invalidateAllUserSessions,
+	cleanupExpiredSessions
 } from './session';
 
 async function insertUser(id: string, opts: { isActive?: boolean } = {}) {
@@ -81,5 +83,45 @@ describe('validateSessionToken', () => {
 		const result = await validateSessionToken(token);
 		expect(result).not.toBeNull();
 		expect(result!.session.expiresAt.getTime()).toBeGreaterThan(nearExpiry.getTime());
+	});
+});
+
+describe('invalidateAllUserSessions', () => {
+	it('removes every session for that user only', async () => {
+		await insertUser('u6');
+		await insertUser('u7');
+		const t1 = generateSessionToken();
+		const t2 = generateSessionToken();
+		const t3 = generateSessionToken();
+		await createSession(t1, 'u6');
+		await createSession(t2, 'u6');
+		await createSession(t3, 'u7');
+
+		await invalidateAllUserSessions('u6');
+
+		expect(await validateSessionToken(t1)).toBeNull();
+		expect(await validateSessionToken(t2)).toBeNull();
+		expect((await validateSessionToken(t3))!.user.id).toBe('u7');
+	});
+});
+
+describe('cleanupExpiredSessions', () => {
+	it('removes only expired rows', async () => {
+		await insertUser('u8');
+		const live = generateSessionToken();
+		const dead = generateSessionToken();
+		const liveSession = await createSession(live, 'u8');
+		const deadSession = await createSession(dead, 'u8');
+		await db
+			.update(schema.sessions)
+			.set({ expiresAt: new Date(Date.now() - 1000) })
+			.where(eq(schema.sessions.id, deadSession.id));
+
+		await cleanupExpiredSessions();
+
+		const rows = await db.query.sessions.findMany();
+		const ids = rows.map((r) => r.id);
+		expect(ids).toContain(liveSession.id);
+		expect(ids).not.toContain(deadSession.id);
 	});
 });
