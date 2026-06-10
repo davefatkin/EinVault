@@ -542,10 +542,22 @@
 				>
 			{/if}
 		</div>
-		<ByLine user={data.entry?.logger} variant="inline" class="ml-0 hidden sm:flex" />
+		<span class="hidden items-center gap-1 sm:flex">
+			<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
+			{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
+				<span class="text-xs text-muted-foreground">
+					· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
+				</span>
+			{/if}
+		</span>
 	</div>
-	<div class="sm:hidden">
+	<div class="flex items-center gap-1 sm:hidden">
 		<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
+		{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
+			<span class="text-xs text-muted-foreground">
+				· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
+			</span>
+		{/if}
 	</div>
 
 	<!-- Mood -->

@@ -22,7 +22,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			eq(schema.journalEntries.companionId, companionId),
 			eq(schema.journalEntries.date, date)
 		),
-		with: { logger: { columns: { displayName: true } } }
+		with: {
+			logger: { columns: { displayName: true } },
+			updater: { columns: { displayName: true } }
+		}
 	});
 
 	// Load photos for this date

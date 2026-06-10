@@ -150,5 +150,11 @@ test.describe('journal day editor', () => {
 			.filter({ hasText: 'edited by admin' });
 		await expect(card.getByText(/by Seed Member/)).toBeVisible({ timeout: 8_000 });
 		await expect(card.getByText(/edited by Seed Admin/)).toBeVisible({ timeout: 8_000 });
+
+		// The day editor page shows the same attribution in its header.
+		await asMember.goto(`/${COMP}/journal/${date}`);
+		await expect(asMember.getByText(/edited by Seed Admin/).first()).toBeVisible({
+			timeout: 8_000
+		});
 	});
 });
