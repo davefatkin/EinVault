@@ -112,6 +112,8 @@ export function createEmptyDb(dir: string): string {
 	fs.mkdirSync(dir, { recursive: true });
 	const dbPath = path.join(dir, 'einvault.db');
 	const sqlite = new Database(dbPath);
+	sqlite.pragma('journal_mode = WAL');
+	sqlite.pragma('foreign_keys = ON');
 	const db = drizzle(sqlite, { schema });
 	migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
 	sqlite.close();

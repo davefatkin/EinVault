@@ -19,6 +19,9 @@ export async function startAppServer(opts: {
 	// Caller may pre-allocate the port (needed when other env vars must embed
 	// it, e.g. OIDC_REDIRECT_URI); otherwise probe one now.
 	const port = opts.env?.PORT ? Number(opts.env.PORT) : await getFreePort();
+	if (Number.isNaN(port) || !Number.isInteger(port) || port <= 0) {
+		throw new Error(`invalid PORT override: ${opts.env?.PORT}`);
+	}
 	const baseURL = `http://localhost:${port}`;
 
 	const childEnv: Record<string, string> = {
