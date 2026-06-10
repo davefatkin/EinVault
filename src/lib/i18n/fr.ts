@@ -13,6 +13,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.placeholderPhone': '+33 1 23 45 67 89',
 	'common.or': 'ou',
 	'common.loggedBy': 'par {name}',
+	'common.updatedBy': 'modifié par {name}',
 
 	// Common: Reminder actions
 	'common.reminder.done': 'Fait',

@@ -11,6 +11,7 @@ const messages = {
 	'common.placeholderPhone': '(555) 000-0000',
 	'common.or': 'or',
 	'common.loggedBy': 'by {name}',
+	'common.updatedBy': 'edited by {name}',
 
 	// Common: Reminder actions (shared across companion dashboard, reminders list, caretaker)
 	'common.reminder.done': 'Done',

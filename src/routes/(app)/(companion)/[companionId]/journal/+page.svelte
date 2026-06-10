@@ -474,6 +474,11 @@
 										>
 									{/if}
 									<ByLine user={entry.logger} variant="inline" class="ml-0" />
+									{#if entry.updatedBy && entry.updatedBy !== entry.loggedBy && entry.updater}
+										<span class="text-xs text-muted-foreground">
+											· {t(locale, 'common.updatedBy', { name: entry.updater.displayName })}
+										</span>
+									{/if}
 								</div>
 							</div>
 							{#if companion.isActive !== false}
