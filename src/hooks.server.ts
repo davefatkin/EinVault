@@ -116,9 +116,10 @@ const authContext: Handle = async ({ event, resolve }) => {
 
 const localeDetect: Handle = async ({ event, resolve }) => {
 	// Priority: user preference > cookie > Accept-Language > default
+	const cookieRaw = event.cookies.get('einvault_locale');
 	const locale =
 		event.locals.user?.locale ??
-		resolveLocale(event.cookies.get('einvault_locale')) ??
+		(cookieRaw ? resolveLocale(cookieRaw) : null) ??
 		parseAcceptLanguage(event.request.headers.get('accept-language'));
 
 	event.locals.locale = locale;
