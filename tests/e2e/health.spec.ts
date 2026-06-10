@@ -20,13 +20,13 @@ test.describe('health events and weight log', () => {
 
 		// Create the event this test owns
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
-		await asMember.locator('#title').fill('e2e-health-vacc');
+		await asMember.locator('#title').fill('e2e-health-edit-src');
 		await asMember.locator('select[name="type"]').selectOption('vaccination');
 		await asMember.getByRole('button', { name: 'Save Event' }).click();
-		await expect(asMember.getByText('e2e-health-vacc')).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText('e2e-health-edit-src')).toBeVisible({ timeout: 8_000 });
 
 		// Open detail modal by clicking the event row
-		await asMember.getByText('e2e-health-vacc').click();
+		await asMember.getByText('e2e-health-edit-src').click();
 
 		// Click Edit in the modal
 		const dialog = asMember.locator('[role="dialog"]');
@@ -34,12 +34,12 @@ test.describe('health events and weight log', () => {
 
 		// The inline edit form should now be visible; update the title
 		const editTitleInput = asMember.locator('input[name="title"]').last();
-		await editTitleInput.fill('e2e-health-vacc-2');
+		await editTitleInput.fill('e2e-health-edit-dst');
 		await asMember.getByRole('button', { name: 'Save' }).first().click();
 
 		// Updated title visible, old title gone
-		await expect(asMember.getByText('e2e-health-vacc-2')).toBeVisible({ timeout: 8_000 });
-		await expect(asMember.getByText('e2e-health-vacc', { exact: true })).toHaveCount(0);
+		await expect(asMember.getByText('e2e-health-edit-dst')).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText('e2e-health-edit-src', { exact: true })).toHaveCount(0);
 	});
 
 	test('delete event', async ({ asMember }) => {
@@ -71,11 +71,11 @@ test.describe('health events and weight log', () => {
 		await asMember.goto(`/${COMP}/health`);
 
 		await asMember.getByRole('button', { name: 'Log Weight' }).click();
-		await asMember.locator('#weight').fill('12.5');
+		await asMember.locator('#weight').fill('13.7');
 		await asMember.getByRole('button', { name: 'Log Weight' }).last().click();
 
 		// Weight history card should now show the recorded value
-		await expect(asMember.getByText(/12\.5/)).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText(/13\.7/)).toBeVisible({ timeout: 8_000 });
 	});
 
 	test('title required', async ({ asMember }) => {
