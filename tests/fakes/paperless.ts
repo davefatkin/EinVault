@@ -76,9 +76,11 @@ export async function startPaperlessFake(token = 'paperless-test-token'): Promis
 
 			const results = filtered.slice((page - 1) * size, page * size).map(summarize);
 			const hasNext = page * size < filtered.length;
+			const nextParams = new URLSearchParams(url.searchParams);
+			nextParams.set('page', String(page + 1));
 			json(200, {
 				count: filtered.length,
-				next: hasNext ? `${url.pathname}?page=${page + 1}` : null,
+				next: hasNext ? `${url.pathname}?${nextParams}` : null,
 				results
 			});
 			return;

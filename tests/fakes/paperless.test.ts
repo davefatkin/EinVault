@@ -31,12 +31,16 @@ describe('paperless fake', () => {
 		expect(taggedBody.results[0]).not.toHaveProperty('content');
 
 		const queried = await fetch(`${fake.url}/api/documents/?query=insurance`, { headers: auth() });
-		expect(((await queried.json()) as { results: unknown[] }).results).toHaveLength(1);
+		const queriedBody = (await queried.json()) as { results: { title: string }[] };
+		expect(queriedBody.results).toHaveLength(1);
+		expect(queriedBody.results[0].title).toBe('Insurance policy');
 	});
 
 	it('serves detail, download bytes, and thumbnails', async () => {
 		const detail = await fetch(`${fake.url}/api/documents/1/`, { headers: auth() });
-		expect(((await detail.json()) as { title: string }).title).toBe('Vaccination record');
+		const detailBody = (await detail.json()) as Record<string, unknown>;
+		expect(detailBody.title).toBe('Vaccination record');
+		expect(detailBody).not.toHaveProperty('content');
 
 		const dl = await fetch(`${fake.url}/api/documents/1/download/`, { headers: auth() });
 		expect(dl.headers.get('content-type')).toBe('application/pdf');
