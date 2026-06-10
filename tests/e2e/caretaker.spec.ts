@@ -89,6 +89,17 @@ test.describe('caretaker', () => {
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e-caretaker-journal', {
 			timeout: 10_000
 		});
+
+		// Member edits the caretaker's entry; the care journal then shows the
+		// editor attribution next to the original author (#24).
+		await asMember.locator('textarea').first().fill('e2e-member-edit');
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 10_000 });
+
+		await asCaretaker.goto(`/care/${BISCUIT}/journal`);
+		await expect(asCaretaker.getByText(/edited by Seed Member/)).toBeVisible({
+			timeout: 10_000
+		});
 	});
 
 	test('caretaker app-route bounce', async ({ asCaretaker }) => {

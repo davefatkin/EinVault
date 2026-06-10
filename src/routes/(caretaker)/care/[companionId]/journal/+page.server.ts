@@ -31,7 +31,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 			eq(schema.journalEntries.companionId, params.companionId),
 			eq(schema.journalEntries.date, today)
 		),
-		with: { logger: { columns: { displayName: true } } }
+		with: {
+			logger: { columns: { displayName: true } },
+			updater: { columns: { displayName: true } }
+		}
 	});
 
 	const photos = todayEntry
