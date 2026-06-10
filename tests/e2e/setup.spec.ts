@@ -7,6 +7,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
 const test = base.extend<{ pristine: AppServer }>({
+	// eslint-disable-next-line no-empty-pattern
 	pristine: async ({}, use, testInfo) => {
 		const dir = path.join(
 			REPO_ROOT,
