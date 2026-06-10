@@ -25,16 +25,29 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 			const dataDir = path.join(REPO_ROOT, '.test-data', `worker-${workerInfo.workerIndex}`);
 			const smtp = await startSmtpSink();
 			const dbPath = createSeededDb(dataDir);
-			const server = await startAppServer({
-				dbPath,
-				env: {
-					SMTP_HOST: '127.0.0.1',
-					SMTP_PORT: String(smtp.port),
-					SMTP_SECURE: 'false',
-					SMTP_FROM: 'einvault-test@example.com'
-				}
-			});
+			let server: AppServer;
+			try {
+				server = await startAppServer({
+					dbPath,
+					env: {
+						SMTP_HOST: '127.0.0.1',
+						SMTP_PORT: String(smtp.port),
+						SMTP_SECURE: 'false',
+						SMTP_FROM: 'einvault-test@example.com'
+					}
+				});
+			} catch (err) {
+				// Teardown below never runs if startup throws; don't leak the sink
+				// (CI retries would accumulate orphaned listeners).
+				await smtp.stop();
+				fs.rmSync(dataDir, { recursive: true, force: true });
+				throw err;
+			}
 
+			// Cached storageState contract: tests must never invalidate sessions or
+			// change passwords for the cached roles (admin/member/caretaker) — the
+			// cookie in the state file would go stale for the rest of the worker.
+			// Destructive flows use SEED.resetUser or a dedicated seed identity.
 			const statePaths = new Map<Role, string>();
 			const app: AppWorker = {
 				server,

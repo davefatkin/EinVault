@@ -504,7 +504,7 @@ export function startNotifyScheduler(): void {
 	timer = setInterval(() => void scan(), SCAN_INTERVAL_MS);
 	timer.unref();
 	console.info(
-		`[notify] notification scheduler started (60s interval, channels: ${[
+		`[notify] notification scheduler started (${SCAN_INTERVAL_MS}ms interval, channels: ${[
 			...(isMailEnabled() ? ['email'] : []),
 			...(isNtfyEnabled() ? ['ntfy'] : [])
 		].join('+')})`

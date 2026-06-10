@@ -15,7 +15,13 @@ const test = base.extend<{ pristine: AppServer }>({
 			`setup-${testInfo.workerIndex}-${testInfo.testId}`
 		);
 		const dbPath = createEmptyDb(dir);
-		const server = await startAppServer({ dbPath });
+		let server: AppServer;
+		try {
+			server = await startAppServer({ dbPath });
+		} catch (err) {
+			fs.rmSync(dir, { recursive: true, force: true });
+			throw err;
+		}
 		await use(server);
 		await server.stop();
 		fs.rmSync(dir, { recursive: true, force: true });

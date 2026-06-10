@@ -45,11 +45,18 @@ export async function startAppServer(opts: {
 	});
 	child.stdout!.on('data', (d: Buffer) => logs.push(d.toString()));
 	child.stderr!.on('data', (d: Buffer) => logs.push(d.toString()));
+	// Spawn failures (missing build/, ENOENT on node) emit 'error' and never
+	// fire 'exit'; surface the cause instead of an opaque readiness timeout.
+	let spawnError: Error | null = null;
+	child.on('error', (err) => {
+		spawnError = err;
+		logs.push(`[spawn error] ${err.message}\n`);
+	});
 
 	const deadline = Date.now() + 30_000;
 	let ready = false;
 	while (Date.now() < deadline) {
-		if (child.exitCode !== null) break;
+		if (child.exitCode !== null || spawnError) break;
 		try {
 			const res = await fetch(`${baseURL}/auth/login`);
 			if (res.ok) {
@@ -74,9 +81,13 @@ export async function startAppServer(opts: {
 		stop: () =>
 			new Promise((resolve) => {
 				if (child.exitCode !== null) return resolve();
-				child.once('exit', () => resolve());
+				const killTimer = setTimeout(() => child.kill('SIGKILL'), 3_000);
+				killTimer.unref();
+				child.once('exit', () => {
+					clearTimeout(killTimer);
+					resolve();
+				});
 				child.kill('SIGTERM');
-				setTimeout(() => child.kill('SIGKILL'), 3_000).unref();
 			})
 	};
 }

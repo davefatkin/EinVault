@@ -24,20 +24,28 @@ const test = base.extend<{ world: OidcWorld }>({
 		const oidc = await startOidcFake();
 		const appPort = await getFreePort();
 		const dbPath = createSeededDb(dir);
-		const server = await startAppServer({
-			dbPath,
-			env: {
-				PORT: String(appPort),
-				OIDC_ISSUER_URL: oidc.issuerUrl,
-				OIDC_CLIENT_ID: 'einvault-test',
-				OIDC_CLIENT_SECRET: 'einvault-test-secret',
-				OIDC_REDIRECT_URI: `http://localhost:${appPort}/auth/oidc/callback`,
-				OIDC_STATE_SECRET: 'e2e-oidc-state-secret-not-for-production',
-				OIDC_ALLOW_INSECURE_HTTP: 'true',
-				OIDC_ALLOW_SIGNUP: 'true',
-				OIDC_PROVIDER_NAME: 'MockIdP'
-			}
-		});
+		let server: AppServer;
+		try {
+			server = await startAppServer({
+				dbPath,
+				env: {
+					PORT: String(appPort),
+					OIDC_ISSUER_URL: oidc.issuerUrl,
+					OIDC_CLIENT_ID: 'einvault-test',
+					OIDC_CLIENT_SECRET: 'einvault-test-secret',
+					OIDC_REDIRECT_URI: `http://localhost:${appPort}/auth/oidc/callback`,
+					OIDC_STATE_SECRET: 'e2e-oidc-state-secret-not-for-production',
+					OIDC_ALLOW_INSECURE_HTTP: 'true',
+					OIDC_ALLOW_SIGNUP: 'true',
+					OIDC_PROVIDER_NAME: 'MockIdP'
+				}
+			});
+		} catch (err) {
+			// Teardown below never runs if startup throws; don't leak the IdP.
+			await oidc.stop();
+			fs.rmSync(dir, { recursive: true, force: true });
+			throw err;
+		}
 		await use({ server, oidc });
 		await server.stop();
 		await oidc.stop();
