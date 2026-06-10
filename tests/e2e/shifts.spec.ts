@@ -122,23 +122,26 @@ test.describe('shifts', () => {
 		const countText = await countBadge.textContent({ timeout: 8_000 });
 		expect(parseInt(countText ?? '0', 10)).toBeGreaterThanOrEqual(2);
 
-		// The card groups shifts. "This week" or "next week" depending on the day.
-		// Find the shift row for tomorrow by looking for the year string (unambiguous).
-		const [year, , day] = tomorrowUTC().split('-');
-		const dayNum = String(parseInt(day, 10)); // strip leading zero
+		// Shift rows are <button> elements inside the card (accordion: expanding one
+		// collapses the other, and notes render only while expanded). Picking the row
+		// by rendered date numbers is timezone-dependent — the seed shift crosses UTC
+		// midnight on evening runs and then also displays tomorrow's day number. So
+		// expand each candidate row in turn until the note shows up.
+		const [year] = tomorrowUTC().split('-');
+		const candidates = shiftsCard.getByRole('button').filter({ hasText: new RegExp(year) });
+		const count = await candidates.count();
+		expect(count).toBeGreaterThan(0);
 
-		// Shift rows are <button> elements inside the card. Filter to the one whose
-		// text includes tomorrow's year AND day number to distinguish it from the
-		// active seed shift (which runs today).
-		const tomorrowShiftRow = shiftsCard
-			.getByRole('button')
-			.filter({ hasText: new RegExp(year) })
-			.filter({ hasText: new RegExp(`\\b${dayNum}\\b`) })
-			.first();
-
-		// Click to expand and reveal notes.
-		await tomorrowShiftRow.click();
-		await expect(shiftsCard.getByText('e2e-shift-note')).toBeVisible({ timeout: 6_000 });
+		let revealed = false;
+		for (let i = 0; i < count && !revealed; i++) {
+			await candidates.nth(i).click();
+			revealed = await shiftsCard
+				.getByText('e2e-shift-note')
+				.waitFor({ state: 'visible', timeout: 2_000 })
+				.then(() => true)
+				.catch(() => false);
+		}
+		expect(revealed).toBe(true);
 	});
 
 	test('ICS export returns valid calendar with the new shift', async ({ asAdmin, asCaretaker }) => {
