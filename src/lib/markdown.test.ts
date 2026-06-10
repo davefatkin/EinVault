@@ -17,12 +17,17 @@ describe('renderMarkdown', () => {
 
 	it('neutralizes javascript: links', () => {
 		const html = renderMarkdown('[click](javascript:alert(1))');
-		expect(html).not.toContain('javascript:');
+		expect(html.toLowerCase()).not.toContain('javascript:');
+		const mixed = renderMarkdown('[click](JaVaScRiPt:alert(1))');
+		expect(mixed.toLowerCase()).not.toContain('javascript:');
 	});
 
 	it('keeps safe links but only href/rel attributes', () => {
-		const html = renderMarkdown('[ok](https://example.com)');
+		const html = renderMarkdown('[ok](https://example.com "tip")');
 		expect(html).toContain('href="https://example.com"');
+		// title comes from markdown but is not in ALLOWED_ATTR; a config
+		// regression would let it through.
+		expect(html).not.toContain('title=');
 	});
 
 	it('strips event handlers and disallowed tags injected via inline HTML', () => {
