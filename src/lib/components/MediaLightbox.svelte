@@ -81,6 +81,10 @@
 	function handleKey(e: KeyboardEvent) {
 		if (!open) return;
 		if (e.key === 'Escape') {
+			// The lightbox is the topmost overlay; consume Escape so a sibling
+			// window handler (e.g. the journal page's activity-detail modal) can't
+			// also close on the same keypress regardless of listener order.
+			e.stopImmediatePropagation();
 			close();
 		} else if (e.key === 'ArrowLeft') {
 			prev();
