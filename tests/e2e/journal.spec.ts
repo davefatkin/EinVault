@@ -144,9 +144,9 @@ test.describe('journal day editor', () => {
 
 		// List shows both attributions on that entry's card.
 		await asMember.goto(`/${COMP}/journal`);
-		// Scope to the card containing the edited body text (each entry is a rounded-lg border card).
+		// Scope to the card containing the edited body text (each entry is a rounded-2xl border card).
 		const card = asMember
-			.locator('div.rounded-lg.border.bg-card')
+			.locator('div.rounded-2xl.border.bg-card')
 			.filter({ hasText: 'edited by admin' });
 		await expect(card.getByText(/by Seed Member/)).toBeVisible({ timeout: 8_000 });
 		await expect(card.getByText(/edited by Seed Admin/)).toBeVisible({ timeout: 8_000 });
