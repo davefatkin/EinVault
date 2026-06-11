@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { db, schema } from '$lib/server/db';
-import { buildMatchQuery, search } from './search';
+import { search, buildMatchQuery, buildFilterClause, hasActiveFilters } from './search';
+import type { SearchFilters } from './search';
+
+function q(partial: Partial<SearchFilters>): SearchFilters {
+	return { text: '', companionIds: [], types: [], ...partial };
+}
 
 describe('buildMatchQuery', () => {
 	it('rejects short and empty input', () => {
@@ -17,6 +22,34 @@ describe('buildMatchQuery', () => {
 		expect(buildMatchQuery('NEAR(x y)')).toBe('"NEAR(x"* "y)"*');
 		expect(buildMatchQuery('""')).toBeNull();
 		expect(buildMatchQuery('" "')).toBeNull();
+	});
+});
+
+describe('buildFilterClause', () => {
+	it('is empty for no filters', () => {
+		expect(buildFilterClause(q({}))).toEqual({ sql: '', params: [] });
+	});
+	it('ORs within a kind, ANDs across kinds, params in order', () => {
+		const r = buildFilterClause(
+			q({
+				companionIds: ['c1', 'c2'],
+				types: ['health'],
+				after: '2026-01-01',
+				before: '2026-12-31'
+			})
+		);
+		expect(r.sql).toBe(
+			's.companion_id IN (?, ?) AND s.entity_type IN (?) AND s.event_date >= ? AND s.event_date <= ?'
+		);
+		expect(r.params).toEqual(['c1', 'c2', 'health', '2026-01-01', '2026-12-31']);
+	});
+});
+
+describe('hasActiveFilters', () => {
+	it('detects any filter', () => {
+		expect(hasActiveFilters(q({}))).toBe(false);
+		expect(hasActiveFilters(q({ types: ['health'] }))).toBe(true);
+		expect(hasActiveFilters(q({ after: '2026-01-01' }))).toBe(true);
 	});
 });
 
@@ -42,8 +75,8 @@ describe('search index + query', () => {
 			body: 'zephyr quince walk',
 			loggedBy: 'u-s'
 		} as typeof schema.journalEntries.$inferInsert);
-		expect(search('zephyr').length).toBe(1);
-		expect(search('zephyr')[0]).toMatchObject({
+		expect(search(q({ text: 'zephyr' })).length).toBe(1);
+		expect(search(q({ text: 'zephyr' }))[0]).toMatchObject({
 			type: 'journal',
 			companionName: 'Searchy',
 			href: '/c-s/journal/2026-04-01'
@@ -54,11 +87,11 @@ describe('search index + query', () => {
 			.update(schema.journalEntries)
 			.set({ body: 'flummox walk' })
 			.where(eq(schema.journalEntries.id, 'j-s1'));
-		expect(search('zephyr').length).toBe(0);
-		expect(search('flummox').length).toBe(1);
+		expect(search(q({ text: 'zephyr' })).length).toBe(0);
+		expect(search(q({ text: 'flummox' })).length).toBe(1);
 
 		await db.delete(schema.journalEntries).where(eq(schema.journalEntries.id, 'j-s1'));
-		expect(search('flummox').length).toBe(0);
+		expect(search(q({ text: 'flummox' })).length).toBe(0);
 	});
 
 	it('indexes every entity type', async () => {
@@ -96,21 +129,21 @@ describe('search index + query', () => {
 			loggedBy: 'u-s'
 		} as typeof schema.weightEntries.$inferInsert);
 
-		expect(search('xylograph')[0]?.type).toBe('health');
-		expect(search('quibble')[0]?.type).toBe('reminder');
-		expect(search('gargoyle')[0]?.type).toBe('daily');
-		expect(search('plimsoll')[0]?.type).toBe('weight');
+		expect(search(q({ text: 'xylograph' }))[0]?.type).toBe('health');
+		expect(search(q({ text: 'quibble' }))[0]?.type).toBe('reminder');
+		expect(search(q({ text: 'gargoyle' }))[0]?.type).toBe('daily');
+		expect(search(q({ text: 'plimsoll' }))[0]?.type).toBe('weight');
 		// health event_date derived from occurredAt
-		expect(search('xylograph')[0]?.date).toBe('2026-04-02');
+		expect(search(q({ text: 'xylograph' }))[0]?.date).toBe('2026-04-02');
 		// deep-link hrefs
-		expect(search('xylograph')[0]?.href).toBe('/c-s/health?detailHealth=h-s1');
-		expect(search('quibble')[0]?.href).toBe('/c-s/reminders?detail=r-s1');
-		expect(search('gargoyle')[0]?.href).toBe('/c-s/journal/2026-04-04');
-		expect(search('plimsoll')[0]?.href).toBe('/c-s/health?detailWeight=w-s1');
+		expect(search(q({ text: 'xylograph' }))[0]?.href).toBe('/c-s/health?detailHealth=h-s1');
+		expect(search(q({ text: 'quibble' }))[0]?.href).toBe('/c-s/reminders?detail=r-s1');
+		expect(search(q({ text: 'gargoyle' }))[0]?.href).toBe('/c-s/journal/2026-04-04');
+		expect(search(q({ text: 'plimsoll' }))[0]?.href).toBe('/c-s/health?detailWeight=w-s1');
 	});
 
 	it('snippet carries sentinel markers around the match', () => {
-		const r = search('gargoyle')[0];
+		const r = search(q({ text: 'gargoyle' }))[0];
 		expect(r.snippet).toContain('\x01gargoyle\x02');
 	});
 
@@ -132,8 +165,8 @@ describe('search index + query', () => {
 			notes: 'sphinx caption here'
 		} as typeof schema.journalPhotos.$inferInsert);
 
-		expect(search('sphinx').length).toBe(1);
-		expect(search('sphinx')[0]).toMatchObject({
+		expect(search(q({ text: 'sphinx' })).length).toBe(1);
+		expect(search(q({ text: 'sphinx' }))[0]).toMatchObject({
 			type: 'media',
 			href: '/c-s/journal/2026-04-09?media=p-s1'
 		});
@@ -143,13 +176,13 @@ describe('search index + query', () => {
 			.update(schema.journalPhotos)
 			.set({ notes: 'marmot updated' })
 			.where(eq(schema.journalPhotos.id, 'p-s1'));
-		expect(search('sphinx').length).toBe(0);
-		expect(search('marmot').length).toBe(1);
-		expect(search('marmot')[0]?.type).toBe('media');
+		expect(search(q({ text: 'sphinx' })).length).toBe(0);
+		expect(search(q({ text: 'marmot' })).length).toBe(1);
+		expect(search(q({ text: 'marmot' }))[0]?.type).toBe('media');
 
 		// delete: gone
 		await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, 'p-s1'));
-		expect(search('marmot').length).toBe(0);
+		expect(search(q({ text: 'marmot' })).length).toBe(0);
 	});
 
 	it('ranks the stronger match first', async () => {
@@ -169,7 +202,37 @@ describe('search index + query', () => {
 				loggedBy: 'u-s'
 			}
 		] as (typeof schema.journalEntries.$inferInsert)[]);
-		const results = search('brontide');
+		const results = search(q({ text: 'brontide' }));
 		expect(results[0].id).toBe('j-s2');
+	});
+
+	describe('search filters', () => {
+		it('text + type filter narrows to that type', () => {
+			expect(search(q({ text: 'xylograph' })).some((r) => r.type === 'health')).toBe(true);
+			expect(search(q({ text: 'xylograph', types: ['journal'] }))).toHaveLength(0);
+		});
+		it('filter-only browse returns that type, no text', () => {
+			const health = search(q({ types: ['health'] }));
+			expect(health.length).toBeGreaterThan(0);
+			expect(health.every((r) => r.type === 'health')).toBe(true);
+		});
+		it('companion filter restricts', () => {
+			const mine = search(q({ companionIds: ['c-s'], types: ['health'] }));
+			expect(mine.every((r) => r.companionId === 'c-s')).toBe(true);
+			expect(search(q({ companionIds: ['nope'], types: ['health'] }))).toHaveLength(0);
+		});
+		it('date range bounds are inclusive', () => {
+			expect(
+				search(q({ types: ['health'], after: '2026-04-02', before: '2026-04-02' })).some(
+					(r) => r.date === '2026-04-02'
+				)
+			).toBe(true);
+			expect(
+				search(q({ types: ['health'], after: '2026-04-03' })).some((r) => r.date === '2026-04-02')
+			).toBe(false);
+		});
+		it('empty everything returns nothing', () => {
+			expect(search(q({}))).toEqual([]);
+		});
 	});
 });

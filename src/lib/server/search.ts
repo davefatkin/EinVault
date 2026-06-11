@@ -1,13 +1,53 @@
 import { db } from '$lib/server/db';
 
-export type SearchEntityType =
-	| 'journal'
-	| 'health'
-	| 'reminder'
-	| 'document'
-	| 'daily'
-	| 'weight'
-	| 'media';
+export const SEARCH_ENTITY_TYPES = [
+	'journal',
+	'health',
+	'reminder',
+	'document',
+	'daily',
+	'weight',
+	'media'
+] as const;
+export type SearchEntityType = (typeof SEARCH_ENTITY_TYPES)[number];
+
+export interface SearchFilters {
+	text: string;
+	companionIds: string[];
+	types: SearchEntityType[];
+	after?: string; // YYYY-MM-DD inclusive lower bound on event_date
+	before?: string; // YYYY-MM-DD inclusive upper bound
+}
+
+export function hasActiveFilters(f: SearchFilters): boolean {
+	return f.companionIds.length > 0 || f.types.length > 0 || !!f.after || !!f.before;
+}
+
+/**
+ * Build the shared filter WHERE fragment + bound params. Same-kind lists are OR
+ * (IN), different kinds are AND. Returns an empty sql string when no filters.
+ */
+export function buildFilterClause(f: SearchFilters): { sql: string; params: string[] } {
+	const parts: string[] = [];
+	const params: string[] = [];
+	if (f.companionIds.length) {
+		parts.push(`s.companion_id IN (${f.companionIds.map(() => '?').join(', ')})`);
+		params.push(...f.companionIds);
+	}
+	if (f.types.length) {
+		parts.push(`s.entity_type IN (${f.types.map(() => '?').join(', ')})`);
+		params.push(...f.types);
+	}
+	if (f.after) {
+		parts.push('s.event_date >= ?');
+		params.push(f.after);
+	}
+	if (f.before) {
+		parts.push('s.event_date <= ?');
+		params.push(f.before);
+	}
+	return { sql: parts.join(' AND '), params };
+}
 
 export interface SearchResult {
 	type: SearchEntityType;
@@ -63,22 +103,46 @@ interface SearchRow {
 }
 
 /** Members/admins only — the API route gates caretakers out with 403. */
-export function search(rawQuery: string): SearchResult[] {
-	const match = buildMatchQuery(rawQuery);
-	if (!match) return [];
-	// drizzle has no FTS5 support; raw prepared statement on the underlying client.
-	const stmt = db.$client.prepare(`
-		SELECT
-			s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
-			snippet(search_index, 1, char(1), char(2), '…', 8) AS excerpt,
-			c.name AS companion_name
-		FROM search_index s
-		JOIN companions c ON c.id = s.companion_id
-		WHERE search_index MATCH ?
-		ORDER BY bm25(search_index), s.event_date DESC
-		LIMIT 20
-	`);
-	const rows = stmt.all(match) as SearchRow[];
+export function search(filters: SearchFilters): SearchResult[] {
+	const match = buildMatchQuery(filters.text);
+	const fc = buildFilterClause(filters);
+	let rows: SearchRow[];
+
+	if (match) {
+		const where = ['search_index MATCH ?', fc.sql].filter(Boolean).join(' AND ');
+		const stmt = db.$client.prepare(`
+			SELECT
+				s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
+				snippet(search_index, 1, char(1), char(2), '…', 8) AS excerpt,
+				c.name AS companion_name
+			FROM search_index s
+			JOIN companions c ON c.id = s.companion_id
+			WHERE ${where}
+			ORDER BY bm25(search_index), s.event_date DESC
+			LIMIT 20
+		`);
+		rows = stmt.all(match, ...fc.params) as SearchRow[];
+	} else if (hasActiveFilters(filters)) {
+		// Browse: filters only, no MATCH. FTS5 full-scans the virtual table by the
+		// UNINDEXED columns (no B-tree index possible on an FTS5 table — do not
+		// CREATE INDEX). Plain body excerpt (no matched terms to highlight).
+		// Relies on the index only holding data the user can already read.
+		const stmt = db.$client.prepare(`
+			SELECT
+				s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
+				substr(s.body, 1, 80) AS excerpt,
+				c.name AS companion_name
+			FROM search_index s
+			JOIN companions c ON c.id = s.companion_id
+			WHERE ${fc.sql}
+			ORDER BY s.event_date DESC
+			LIMIT 20
+		`);
+		rows = stmt.all(...fc.params) as SearchRow[];
+	} else {
+		return [];
+	}
+
 	return rows.map((r) => ({
 		type: r.entity_type,
 		id: r.entity_id,
