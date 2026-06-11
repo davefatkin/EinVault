@@ -80,7 +80,7 @@
 	);
 
 	// Overview context tabs (4 + no FAB; we insert FAB at position 2)
-	let overviewTabs = [
+	let overviewTabs = $derived([
 		{ href: '/', label: t(locale, 'nav.overview'), icon: LayoutGrid, key: 'overview' },
 		{
 			href: '#search',
@@ -89,9 +89,11 @@
 			key: 'search',
 			action: () => onOpenSearch()
 		},
-		{ href: '/admin/users', label: 'Members', icon: Users, key: 'members' },
+		...(user?.role === 'admin'
+			? [{ href: '/admin/users', label: 'Members', icon: Users, key: 'members' }]
+			: []),
 		{ href: '/settings', label: 'You', icon: UserRound, key: 'you' }
-	];
+	]);
 
 	// FAB menu state
 	let fabOpen = $state(false);
@@ -129,6 +131,14 @@
 		}
 	}
 
+	function handleSwitcherKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') switcherOpen = false;
+	}
+
+	function handleFabKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') fabOpen = false;
+	}
+
 	function isTabActive(href: string): boolean {
 		if (href === `/${activeCompanion?.id}`) return page.url.pathname === href;
 		if (href === '/') return page.url.pathname === '/';
@@ -148,6 +158,7 @@
 					<button
 						type="button"
 						onclick={() => (switcherOpen = !switcherOpen)}
+						onkeydown={handleSwitcherKeydown}
 						aria-label={t(locale, 'layout.switchCompanion')}
 						aria-expanded={switcherOpen}
 						aria-haspopup="listbox"
@@ -314,6 +325,7 @@
 				<button
 					type="button"
 					onclick={() => (fabOpen = !fabOpen)}
+					onkeydown={handleFabKeydown}
 					aria-label="Quick add"
 					aria-expanded={fabOpen}
 					class="relative -top-3 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
