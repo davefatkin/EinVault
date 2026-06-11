@@ -102,9 +102,7 @@ describe('getCalendarItems', () => {
 		await db
 			.insert(schema.users)
 			.values({ id: 'ct1', username: 'ct1', displayName: 'CT', role: 'caretaker' });
-		await db
-			.insert(schema.companionCaretakers)
-			.values({ userId: 'ct1', companionId: 'c-active' });
+		await db.insert(schema.companionCaretakers).values({ userId: 'ct1', companionId: 'c-active' });
 		// shift end is far in the future so getUpcomingShifts returns it
 		await db.insert(schema.caretakerShifts).values({
 			id: 'shift1',

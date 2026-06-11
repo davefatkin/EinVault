@@ -22,9 +22,7 @@ function dayInTz(d: Date, tz: string): number {
 	return Number(partInZone(d, tz, { day: 'numeric' }));
 }
 
-export type Recurrence =
-	| { kind: 'rrule'; rrule: string }
-	| { kind: 'rdate'; dates: Date[] };
+export type Recurrence = { kind: 'rrule'; rrule: string } | { kind: 'rdate'; dates: Date[] };
 
 // Translate a recurring reminder into an RRULE, or an RDATE expansion for the
 // day-29..31 / Feb-29 cases where the app clamps but BYMONTHDAY would skip.
@@ -38,7 +36,10 @@ export function reminderRecurrence(r: Reminder, dtstart: Date, tz: string): Recu
 		case 'day':
 			return { kind: 'rrule', rrule: `FREQ=DAILY;INTERVAL=${n}` };
 		case 'week':
-			return { kind: 'rrule', rrule: `FREQ=WEEKLY;INTERVAL=${n};BYDAY=${WEEKDAYS[weekdayInTz(dtstart, tz)]}` };
+			return {
+				kind: 'rrule',
+				rrule: `FREQ=WEEKLY;INTERVAL=${n};BYDAY=${WEEKDAYS[weekdayInTz(dtstart, tz)]}`
+			};
 		case 'month': {
 			const day = r.recurrenceAnchorValue ?? dayInTz(dtstart, tz);
 			if (day >= 29) return { kind: 'rdate', dates: expandSeries(r, dtstart) };
@@ -55,7 +56,10 @@ export function reminderRecurrence(r: Reminder, dtstart: Date, tz: string): Recu
 				day = dayInTz(dtstart, tz);
 			}
 			if (month === 2 && day === 29) return { kind: 'rdate', dates: expandSeries(r, dtstart) };
-			return { kind: 'rrule', rrule: `FREQ=YEARLY;INTERVAL=${n};BYMONTH=${month};BYMONTHDAY=${day}` };
+			return {
+				kind: 'rrule',
+				rrule: `FREQ=YEARLY;INTERVAL=${n};BYMONTH=${month};BYMONTHDAY=${day}`
+			};
 		}
 	}
 }

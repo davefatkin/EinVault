@@ -20,10 +20,7 @@ export async function enableFeedToken(userId: string): Promise<string> {
 }
 
 export async function disableFeedToken(userId: string): Promise<void> {
-	await db
-		.update(schema.users)
-		.set({ calendarFeedToken: null })
-		.where(eq(schema.users.id, userId));
+	await db.update(schema.users).set({ calendarFeedToken: null }).where(eq(schema.users.id, userId));
 }
 
 // Resolve a raw token to its owning user, or null. Lookup is by hash, so match
