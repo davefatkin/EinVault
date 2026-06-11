@@ -115,12 +115,13 @@
 
 	let groups = $derived(
 		(() => {
-			const map = new Map<GroupKey, ClientSearchResult[]>();
+			// Plain object keyed by entity type — derived locally per recompute, so no
+			// reactive Map (and no svelte/prefer-svelte-reactivity violation) needed.
+			const byType: Partial<Record<GroupKey, ClientSearchResult[]>> = {};
 			for (const r of results) {
-				if (!map.has(r.type)) map.set(r.type, []);
-				map.get(r.type)!.push(r);
+				(byType[r.type] ??= []).push(r);
 			}
-			return GROUP_ORDER.filter((k) => map.has(k)).map((k) => ({ type: k, items: map.get(k)! }));
+			return GROUP_ORDER.filter((k) => byType[k]).map((k) => ({ type: k, items: byType[k]! }));
 		})()
 	);
 
@@ -308,7 +309,7 @@
 												{/if}
 												{#if item.snippet && item.snippet.trim().length > 0}
 													<p class="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-														{#each item.snippet.split('\x01') as part, i}
+														{#each item.snippet.split('\x01') as part, i (i)}
 															{#if i === 0}{part}{:else}{@const [marked, rest] = splitOnce(
 																	part,
 																	'\x02'
