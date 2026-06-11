@@ -5,7 +5,11 @@ const COMP = 'seed-comp-biscuit';
 test.describe('global search palette', () => {
 	test('shortcut opens palette and seed journal entry navigates on Enter', async ({ asMember }) => {
 		await asMember.goto('/');
-		// Focus the page body so the window keydown handler receives Control+k
+		// The search button rendering proves the layout (and its window keydown
+		// handler) has hydrated, so the Ctrl+K below won't race mount.
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
 		await asMember.evaluate(() => document.body.focus());
 
 		await asMember.keyboard.press('Control+k');
@@ -90,10 +94,10 @@ test.describe('global search palette', () => {
 	}) => {
 		await asMember.goto('/');
 		const startUrl = asMember.url();
-		// Focus the page body so the window keydown handler receives Control+k
-		await asMember.evaluate(() => document.body.focus());
-
-		await asMember.keyboard.press('Control+k');
+		// Open via the button (the Ctrl+K shortcut is covered in the first test;
+		// here we exercise in-palette keyboard nav, and the button avoids a race
+		// where the key fires before the window handler has hydrated).
+		await asMember.getByRole('button', { name: 'Open search' }).click();
 		const dialog = asMember.locator('[role="dialog"]');
 		await expect(dialog).toBeVisible({ timeout: 8_000 });
 
