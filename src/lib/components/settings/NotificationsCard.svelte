@@ -54,6 +54,16 @@
 	};
 
 	const emailControlsDisabled = $derived(!hasEmail || submitting);
+
+	// Lead-in copy must match the channels the admin actually enabled, so an
+	// email-only sentence is not shown when only ntfy push is configured.
+	const descriptionKey = $derived(
+		mailEnabled && ntfyEnabled
+			? 'page.settings.notificationsDescriptionBoth'
+			: ntfyEnabled
+				? 'page.settings.notificationsDescriptionNtfy'
+				: 'page.settings.notificationsDescription'
+	);
 </script>
 
 <Card>
@@ -62,7 +72,7 @@
 	</CardHeader>
 	<CardContent>
 		<p class="text-sm text-muted-foreground mb-3">
-			{t(locale, 'page.settings.notificationsDescription')}
+			{t(locale, descriptionKey)}
 		</p>
 		{#if successMessage}
 			<Alert variant="success" class="mb-3">

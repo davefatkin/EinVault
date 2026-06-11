@@ -243,6 +243,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
 		"Recevez des e-mails d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+	'page.settings.notificationsDescriptionNtfy':
+		"Recevez des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+	'page.settings.notificationsDescriptionBoth':
+		"Recevez des e-mails et des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
 	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",

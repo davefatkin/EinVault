@@ -241,6 +241,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsCard': 'Notifiche',
 	'page.settings.notificationsDescription':
 		'Ricevi e-mail da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
+	'page.settings.notificationsDescriptionNtfy':
+		'Ricevi notifiche push da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
+	'page.settings.notificationsDescriptionBoth':
+		'Ricevi e-mail e notifiche push da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
 	'page.settings.notifyReminderEmailLabel': 'Inviami una e-mail quando un promemoria è in scadenza',
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',

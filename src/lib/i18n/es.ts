@@ -245,6 +245,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsCard': 'Notificaciones',
 	'page.settings.notificationsDescription':
 		'Recibe correos de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+	'page.settings.notificationsDescriptionNtfy':
+		'Recibe notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+	'page.settings.notificationsDescriptionBoth':
+		'Recibe correos y notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
 	'page.settings.notifyReminderEmailLabel': 'Enviarme un correo cuando venza un recordatorio',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviarme un correo 24 horas antes de que un turno empiece o termine',

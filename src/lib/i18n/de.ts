@@ -245,6 +245,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsCard': 'Benachrichtigungen',
 	'page.settings.notificationsDescription':
 		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+	'page.settings.notificationsDescriptionNtfy':
+		'Erhalte Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+	'page.settings.notificationsDescriptionBoth':
+		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
 	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',

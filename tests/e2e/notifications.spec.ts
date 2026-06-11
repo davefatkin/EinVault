@@ -290,3 +290,26 @@ test('shift start email fires for caretaker', async ({ world, browser }) => {
 	expect(bodyText).toMatch(/Seed Caretaker/);
 	expect(bodyText).toMatch(/begins a care shift/);
 });
+
+// Regression (#113): with email disabled and ntfy enabled, the notifications
+// card lead-in must describe push, not email.
+base('notifications card describes push when only ntfy is enabled', async ({ page }, testInfo) => {
+	const dir = path.join(REPO_ROOT, '.test-data', `notif-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`);
+	const ntfy = await startNtfyFake();
+	const dbPath = createSeededDb(dir);
+	const server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
+	try {
+		await login(page, server.baseURL, SEED.member.username);
+		await page.goto(server.baseURL + '/settings');
+		await expect(page.getByText('Get push notifications from EinVault')).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(page.getByText('Get emails from EinVault')).toHaveCount(0);
+		// The ntfy topic field is present (proves we're looking at the right card).
+		await expect(page.getByLabel('ntfy topic')).toBeVisible({ timeout: 8_000 });
+	} finally {
+		await server.stop();
+		await ntfy.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});

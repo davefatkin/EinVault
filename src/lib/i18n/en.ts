@@ -232,6 +232,10 @@ const messages = {
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
 		'Get emails from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+	'page.settings.notificationsDescriptionNtfy':
+		'Get push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+	'page.settings.notificationsDescriptionBoth':
+		'Get emails and push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
 	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notificationsUpdated': 'Notification settings updated.',

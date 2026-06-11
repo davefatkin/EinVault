@@ -242,6 +242,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notificationsCard': 'Notificações',
 	'page.settings.notificationsDescription':
 		'Receba e-mails do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+	'page.settings.notificationsDescriptionNtfy':
+		'Receba notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+	'page.settings.notificationsDescriptionBoth':
+		'Receba e-mails e notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
 	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
