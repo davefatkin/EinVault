@@ -375,11 +375,6 @@
 						</div>
 					{/each}
 				</div>
-				<div class="mt-4 pt-3 border-t border-border">
-					<a href="/api/shifts/export.ics" class="text-sm text-primary hover:underline">
-						{t(locale, 'page.settings.exportCalendar')}
-					</a>
-				</div>
 			{/if}
 		</CardContent>
 	</Card>

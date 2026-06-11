@@ -220,7 +220,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Rôle',
 	'page.settings.shiftsCard': 'Mes gardes',
 	'page.settings.noUpcomingShifts': 'Aucune garde programmée.',
-	'page.settings.exportCalendar': 'Exporter vers le calendrier',
 	'page.settings.shiftGroupActive': 'Actif maintenant',
 	'page.settings.shiftGroupThisWeek': 'Cette semaine',
 	'page.settings.shiftGroupNextWeek': 'Semaine prochaine',

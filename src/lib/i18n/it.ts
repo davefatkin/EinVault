@@ -218,7 +218,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Ruolo',
 	'page.settings.shiftsCard': 'I miei turni',
 	'page.settings.noUpcomingShifts': 'Nessun turno programmato.',
-	'page.settings.exportCalendar': 'Esporta nel calendario',
 	'page.settings.shiftGroupActive': 'Attivo ora',
 	'page.settings.shiftGroupThisWeek': 'Questa settimana',
 	'page.settings.shiftGroupNextWeek': 'Prossima settimana',

@@ -222,7 +222,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Rolle',
 	'page.settings.shiftsCard': 'Meine Schichten',
 	'page.settings.noUpcomingShifts': 'Keine Schichten geplant.',
-	'page.settings.exportCalendar': 'In Kalender exportieren',
 	'page.settings.shiftGroupActive': 'Jetzt aktiv',
 	'page.settings.shiftGroupThisWeek': 'Diese Woche',
 	'page.settings.shiftGroupNextWeek': 'Nächste Woche',

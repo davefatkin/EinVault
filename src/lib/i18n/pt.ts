@@ -219,7 +219,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Função',
 	'page.settings.shiftsCard': 'Os meus turnos',
 	'page.settings.noUpcomingShifts': 'Nenhum turno agendado.',
-	'page.settings.exportCalendar': 'Exportar para o calendário',
 	'page.settings.shiftGroupActive': 'Ativo agora',
 	'page.settings.shiftGroupThisWeek': 'Esta semana',
 	'page.settings.shiftGroupNextWeek': 'Próxima semana',

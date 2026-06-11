@@ -209,7 +209,6 @@ const messages = {
 	'page.settings.roleLabel': 'Role',
 	'page.settings.shiftsCard': 'My Shifts',
 	'page.settings.noUpcomingShifts': 'No upcoming shifts scheduled.',
-	'page.settings.exportCalendar': 'Export to calendar',
 	'page.settings.shiftGroupActive': 'Active Now',
 	'page.settings.shiftGroupThisWeek': 'This Week',
 	'page.settings.shiftGroupNextWeek': 'Next Week',

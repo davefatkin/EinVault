@@ -108,10 +108,4 @@ test.describe('api authz', () => {
 		expect(res.status()).toBe(401);
 		await ctx.close();
 	});
-
-	test('member cannot access caretaker shift calendar export', async ({ asMember }) => {
-		// Handler: if (locals.user.role !== 'caretaker') error(403, ...)
-		const res = await asMember.request.get('/api/shifts/export.ics');
-		expect(res.status()).toBe(403);
-	});
 });

@@ -1,5 +1,4 @@
 import { test, expect } from '../lib/fixtures';
-import { request as pwRequest } from '@playwright/test';
 import { SEED } from '../lib/seed';
 
 // The server runs in UTC; build tomorrow's date string relative to UTC midnight.
@@ -142,66 +141,5 @@ test.describe('shifts', () => {
 				.catch(() => false);
 		}
 		expect(revealed).toBe(true);
-	});
-
-	test('ICS export returns valid calendar with the new shift', async ({ asAdmin, asCaretaker }) => {
-		// Ensure the shift exists (same pattern as test 2 — add if missing).
-		await asAdmin.goto('/admin/users');
-		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
-
-		const caretakerRow = asAdmin
-			.locator('div.px-6.py-4')
-			.filter({ hasText: SEED.caretaker.displayName });
-		await expect(caretakerRow).toBeVisible({ timeout: 8_000 });
-
-		await caretakerRow.getByRole('button', { name: /more actions/i }).click();
-		await asAdmin.getByRole('menuitem', { name: /shifts/i }).click();
-
-		const panel = caretakerRow.locator('div.rounded-lg.border.border-border.bg-muted\\/30');
-		await expect(panel).toBeVisible({ timeout: 4_000 });
-
-		const alreadyPresent = await panel.getByText('e2e-shift-note').isVisible();
-		if (!alreadyPresent) {
-			await panel.locator('input[name="startAt"]').fill(tomorrowDatetimeLocal(9));
-			await panel.locator('input[name="endAt"]').fill(tomorrowDatetimeLocal(17));
-			await panel.locator('input[name="notes"]').fill('e2e-shift-note');
-			await panel.getByRole('button', { name: /add shift/i }).click();
-			await expect(panel.getByText('e2e-shift-note')).toBeVisible({ timeout: 10_000 });
-		}
-
-		// Caretaker fetches the ICS export.
-		const res = await asCaretaker.request.get('/api/shifts/export.ics');
-		expect(res.status()).toBe(200);
-
-		const contentType = res.headers()['content-type'] ?? '';
-		expect(contentType).toContain('text/calendar');
-
-		const body = await res.text();
-		expect(body).toContain('BEGIN:VCALENDAR');
-		expect(body).toContain('BEGIN:VEVENT');
-
-		// DTSTART line must match the iCal basic format (DTSTART:YYYYMMDDTHHmmssZ)
-		expect(body).toMatch(/DTSTART[^\n]*\d{8}T\d{6}/);
-
-		// The new shift's notes are exported in DESCRIPTION.
-		// src/routes/api/shifts/export.ics/+server.ts: `if (shift.notes) lines.push(\`DESCRIPTION:...\`)`
-		expect(body).toContain('e2e-shift-note');
-	});
-
-	test('ICS export: member gets 403', async ({ asMember }) => {
-		const res = await asMember.request.get('/api/shifts/export.ics');
-		expect(res.status()).toBe(403);
-	});
-
-	test('ICS export: anonymous gets redirected to login', async ({ app }) => {
-		// The handler calls `redirect(302, '/auth/login')` when there is no user.
-		// Create a fresh, unauthenticated request context.
-		const ctx = await pwRequest.newContext({ baseURL: app.server.baseURL });
-		const res = await ctx.get('/api/shifts/export.ics', { maxRedirects: 0 });
-		// The server emits a 302 redirect to /auth/login for unauthenticated requests.
-		expect(res.status()).toBe(302);
-		const location = res.headers()['location'] ?? '';
-		expect(location).toMatch(/\/auth\/login/);
-		await ctx.dispose();
 	});
 });
