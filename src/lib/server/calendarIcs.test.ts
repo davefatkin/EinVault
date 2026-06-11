@@ -74,6 +74,27 @@ describe('buildCalendar', () => {
 		expect(ics).not.toContain('RDATE;TZID=America/New_York:20260131T090000'); // first date is DTSTART, not an RDATE
 	});
 
+	it('escapes commas in companion name in CATEGORIES and SUMMARY', () => {
+		const item: CalendarItem = {
+			kind: 'health',
+			uid: 'health-h2@einvault',
+			companionId: 'c2',
+			companionName: 'Rex, Jr',
+			title: 'Checkup',
+			start: new Date('2026-06-15T13:00:00Z'),
+			allDay: true
+		};
+		const ics = buildCalendar([item], TZ, shiftLabel);
+		expect(ics).toContain('CATEGORIES:health,Rex\\, Jr');
+		expect(ics).toContain('SUMMARY:[Rex\\, Jr] Checkup');
+	});
+
+	it('keeps VTIMEZONE lines intact after folding (not space-continued blobs)', () => {
+		const lines = buildCalendar([], TZ, shiftLabel).split('\r\n');
+		expect(lines.includes('BEGIN:VTIMEZONE')).toBe(true);
+		expect(lines.includes('END:VTIMEZONE')).toBe(true);
+	});
+
 	it('uses the shift label for shift summaries', () => {
 		const item: CalendarItem = {
 			kind: 'shift',

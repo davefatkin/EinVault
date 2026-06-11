@@ -20,7 +20,7 @@ export function buildCalendar(items: CalendarItem[], tz: string, shiftLabel: str
 	];
 
 	if (tzBlock) {
-		lines.push(tzBlock);
+		lines.push(...tzBlock.split(/\r?\n/).filter(Boolean));
 	}
 
 	for (const item of items) {
@@ -72,12 +72,12 @@ export function buildCalendar(items: CalendarItem[], tz: string, shiftLabel: str
 		}
 		lines.push(`SUMMARY:${summary}`);
 
-		// CATEGORIES uses comma as a list separator; do not escape it
-		const categoryParts: string[] = [item.kind];
-		if (item.companionName) {
-			categoryParts.push(item.companionName);
-		}
-		lines.push(`CATEGORIES:${categoryParts.join(',')}`);
+		// CATEGORIES: comma is the RFC5545 multi-value delimiter (not escaped);
+		// each value must be individually escaped
+		const cats = item.companionName
+			? `${item.kind},${icsEscape(item.companionName)}`
+			: item.kind;
+		lines.push(`CATEGORIES:${cats}`);
 
 		lines.push('END:VEVENT');
 	}
