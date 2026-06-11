@@ -61,8 +61,8 @@ test.describe('journal day editor', () => {
 		await asMember.goto(`/${COMP}/journal/2026-05-02`);
 
 		// Make sure a photo is present; if not, upload one.
-		const photoImg = asMember.locator('img[src*="/api/photos/journal/"]').first();
-		const count = await photoImg.count();
+		const mediaImg = asMember.locator('img[src*="/api/photos/journal/"]').first();
+		const count = await mediaImg.count();
 		if (count === 0) {
 			const textarea = asMember.locator('textarea');
 			await textarea.fill('e2e caption test');
@@ -71,7 +71,7 @@ test.describe('journal day editor', () => {
 
 			const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
 			await fileInput.setInputFiles(pngUpload());
-			await expect(photoImg).toBeVisible({ timeout: 15_000 });
+			await expect(mediaImg).toBeVisible({ timeout: 15_000 });
 		}
 
 		// Click "Edit Caption"
@@ -94,13 +94,13 @@ test.describe('journal day editor', () => {
 
 		// Delete the photo
 		// Hover the photo thumbnail to reveal the delete button
-		const photoContainer = asMember
+		const mediaContainer = asMember
 			.locator('div.group')
 			.filter({ has: asMember.locator('img[src*="/api/photos/journal/"]') })
 			.first();
-		await photoContainer.hover();
+		await mediaContainer.hover();
 
-		const deleteBtn = photoContainer.locator('button[aria-label]');
+		const deleteBtn = mediaContainer.locator('button[aria-label]');
 		await deleteBtn.click();
 
 		// Confirm in the dialog (scope to the confirm dialog to avoid the aria-labeled trash button)

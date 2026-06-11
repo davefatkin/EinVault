@@ -33,10 +33,10 @@ export async function getEnrichedJournalEntries(
 	type EventWithUserRef = typeof schema.dailyEvents.$inferSelect & {
 		logger: UserRef;
 	};
-	type PhotoWithUserRef = typeof schema.journalPhotos.$inferSelect & {
+	type MediaWithUserRef = typeof schema.journalPhotos.$inferSelect & {
 		logger: UserRef;
 	};
-	let photosByEntry = new Map<string, PhotoWithUserRef[]>();
+	let mediaByEntry = new Map<string, MediaWithUserRef[]>();
 	let eventsByDate = new Map<string, EventWithUserRef[]>();
 
 	if (pageEntries.length > 0) {
@@ -48,7 +48,7 @@ export async function getEnrichedJournalEntries(
 		const rangeStart = new Date(oy, om - 1, od); // local midnight (respects TZ)
 		const rangeEnd = new Date(ny, nm - 1, nd + 1); // next local midnight after newest
 
-		const [allPhotos, allEvents] = await Promise.all([
+		const [allMedia, allEvents] = await Promise.all([
 			db.query.journalPhotos.findMany({
 				where: inArray(schema.journalPhotos.entryId, entryIds),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
@@ -65,9 +65,9 @@ export async function getEnrichedJournalEntries(
 			})
 		]);
 
-		for (const photo of allPhotos) {
-			if (!photosByEntry.has(photo.entryId)) photosByEntry.set(photo.entryId, []);
-			photosByEntry.get(photo.entryId)!.push(photo);
+		for (const item of allMedia) {
+			if (!mediaByEntry.has(item.entryId)) mediaByEntry.set(item.entryId, []);
+			mediaByEntry.get(item.entryId)!.push(item);
 		}
 		for (const event of allEvents) {
 			const date = localDateISO(new Date(event.loggedAt));
@@ -78,7 +78,7 @@ export async function getEnrichedJournalEntries(
 
 	const enrichedEntries = pageEntries.map((entry) => ({
 		...entry,
-		photos: photosByEntry.get(entry.id) ?? [],
+		photos: mediaByEntry.get(entry.id) ?? [],
 		events: eventsByDate.get(entry.date) ?? []
 	}));
 

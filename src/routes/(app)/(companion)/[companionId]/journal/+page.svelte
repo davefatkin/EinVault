@@ -76,12 +76,12 @@
 		});
 	}
 
-	function mediaUrl(photo: Entry['photos'][0], date: string) {
-		return `/api/photos/journal/${companion.id}/${date}/${photo.filename}`;
+	function mediaUrl(item: Entry['photos'][0], date: string) {
+		return `/api/photos/journal/${companion.id}/${date}/${item.filename}`;
 	}
 
-	function posterUrl(photo: Entry['photos'][0], date: string) {
-		return photo.posterKey ? `${mediaUrl(photo, date)}?poster` : null;
+	function posterUrl(item: Entry['photos'][0], date: string) {
+		return item.posterKey ? `${mediaUrl(item, date)}?poster` : null;
 	}
 
 	function monthKey(date: string) {
@@ -96,9 +96,9 @@
 	let lightboxEl = $state<HTMLElement | null>(null);
 	let lightboxTrigger = $state<HTMLElement | null>(null);
 
-	async function openLightbox(photos: Entry['photos'], date: string, index: number) {
+	async function openLightbox(items: Entry['photos'], date: string, index: number) {
 		lightboxTrigger = document.activeElement as HTMLElement | null;
-		lightboxMedia = photos;
+		lightboxMedia = items;
 		lightboxDate = date;
 		lightboxIndex = index;
 		await tick();
@@ -495,7 +495,7 @@
 						</div>
 					</CardHeader>
 
-					<!-- Photos -->
+					<!-- Media -->
 					{#if entry.photos.length > 0}
 						<div
 							class="grid gap-0.5 {entry.photos.length === 1
@@ -504,32 +504,30 @@
 									? 'grid-cols-2'
 									: 'grid-cols-3'}"
 						>
-							{#each entry.photos as photo, i (photo.id)}
+							{#each entry.photos as item, i (item.id)}
 								<button
 									type="button"
 									onclick={() => openLightbox(entry.photos, entry.date, i)}
 									class="relative block overflow-hidden {entry.photos.length === 1
 										? 'aspect-video'
 										: 'aspect-square'} hover:opacity-95 transition-opacity"
-									title={photo.originalName ??
+									title={item.originalName ??
 										t(
 											locale,
-											photo.mediaType === 'video'
-												? 'page.journal.videoAlt'
-												: 'page.journal.photoAlt'
+											item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
 										)}
 								>
-									{#if photo.mediaType === 'video'}
-										{#if photo.posterKey}
+									{#if item.mediaType === 'video'}
+										{#if item.posterKey}
 											<img
-												src={posterUrl(photo, entry.date)}
-												alt={photo.originalName ?? ''}
+												src={posterUrl(item, entry.date)}
+												alt={item.originalName ?? ''}
 												class="w-full h-full object-cover pointer-events-none"
 												loading="lazy"
 											/>
 										{:else}
 											<video
-												src={mediaUrl(photo, entry.date)}
+												src={mediaUrl(item, entry.date)}
 												preload="metadata"
 												muted
 												playsinline
@@ -546,8 +544,8 @@
 										</span>
 									{:else}
 										<img
-											src={mediaUrl(photo, entry.date)}
-											alt={photo.originalName ?? ''}
+											src={mediaUrl(item, entry.date)}
+											alt={item.originalName ?? ''}
 											class="w-full h-full object-cover"
 											loading="lazy"
 										/>

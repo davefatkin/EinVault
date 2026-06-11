@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		}
 	});
 
-	const photos = todayEntry
+	const media = todayEntry
 		? await db.query.journalPhotos.findMany({
 				where: eq(schema.journalPhotos.entryId, todayEntry.id),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	return {
 		companion,
 		todayEntry: todayEntry ?? null,
-		photos,
+		photos: media,
 		today,
 		maxDailyMedia: MAX_DAILY_MEDIA
 	};

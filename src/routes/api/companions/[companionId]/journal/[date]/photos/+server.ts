@@ -129,7 +129,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	const raw = Buffer.from(await file.arrayBuffer());
-	const photoId = generateId(15);
+	const mediaId = generateId(15);
 	let processed: Buffer;
 	let ext: string;
 	let mimeType: string;
@@ -175,11 +175,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		(await transcodeAvailable());
 
 	// A to-be-transcoded source is stored under a sentinel '.orig.' name so its
-	// key can never collide with the worker's output ('{photoId}.mp4'). Without
+	// key can never collide with the worker's output ('{mediaId}.mp4'). Without
 	// this, an mp4-container source (e.g. Apple HEVC) would share the output key:
 	// the transcode would overwrite the kept original, or — with KEEP_ORIGINAL
 	// off — the post-transcode cleanup would delete the output itself.
-	const filename = willTranscode ? `${photoId}.orig.${ext}` : `${photoId}.${ext}`;
+	const filename = willTranscode ? `${mediaId}.orig.${ext}` : `${mediaId}.${ext}`;
 	const key = journalKey(companionId, date, filename);
 	try {
 		await getStorage().put({
@@ -188,12 +188,12 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 			contentType: mimeType
 		});
 	} catch (err) {
-		console.error('[journal-photo] storage put failed:', err);
+		console.error('[journal-media] storage put failed:', err);
 		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
 
 	await db.insert(schema.journalPhotos).values({
-		id: photoId,
+		id: mediaId,
 		entryId: entry.id,
 		filename,
 		provider: STORAGE_BACKEND,
@@ -209,7 +209,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (willTranscode) kickWorker();
 
 	const created = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.id, photoId),
+		where: eq(schema.journalPhotos.id, mediaId),
 		with: { logger: { columns: { displayName: true } } }
 	});
 
@@ -225,19 +225,19 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	const photoId = url.searchParams.get('photoId');
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
-	const photo = await db.query.journalPhotos.findFirst({
+	const item = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, photoId)
 	});
-	if (!photo) error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
 
 	const entry = await db.query.journalEntries.findFirst({
-		where: eq(schema.journalEntries.id, photo.entryId),
+		where: eq(schema.journalEntries.id, item.entryId),
 		columns: { companionId: true }
 	});
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
-	if (!canModifyMedia(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+	if (!canModifyMedia(locals.user, item)) error(403, t(locals.locale, 'error.forbidden'));
 
 	const contentLength = parseInt(request.headers.get('content-length') ?? '0');
 	if (contentLength > 10_000) error(400, t(locals.locale, 'error.requestBodyTooLarge'));
@@ -257,19 +257,19 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	const photoId = url.searchParams.get('photoId');
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
-	const photo = await db.query.journalPhotos.findFirst({
+	const item = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, photoId)
 	});
-	if (!photo) error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
 
 	const entry = await db.query.journalEntries.findFirst({
-		where: eq(schema.journalEntries.id, photo.entryId),
+		where: eq(schema.journalEntries.id, item.entryId),
 		columns: { companionId: true }
 	});
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
-	if (!canModifyMedia(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+	if (!canModifyMedia(locals.user, item)) error(403, t(locals.locale, 'error.forbidden'));
 
 	// Remove every object this row owns: the primary file plus, for a transcoded
 	// video, the kept original and the generated poster. Missing keys are no-ops
@@ -278,15 +278,15 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	// of truth, so a transient backend failure on one key must not abort the
 	// others or leave an undeletable row (an orphaned object is recoverable; a
 	// stuck row is not).
-	const backend = getStorage(photo.provider);
-	const key = photo.storageKey ?? journalKey(params.companionId, params.date, photo.filename);
-	const keys = [key, photo.originalKey, photo.posterKey].filter(
+	const backend = getStorage(item.provider);
+	const key = item.storageKey ?? journalKey(params.companionId, params.date, item.filename);
+	const keys = [key, item.originalKey, item.posterKey].filter(
 		(k): k is string => typeof k === 'string' && k.length > 0
 	);
 	const results = await Promise.allSettled(keys.map((k) => backend.delete(k)));
 	results.forEach((r, i) => {
 		if (r.status === 'rejected') {
-			console.warn(`[journal-photo] failed to delete object ${keys[i]}:`, r.reason);
+			console.warn(`[journal-media] failed to delete object ${keys[i]}:`, r.reason);
 		}
 	});
 

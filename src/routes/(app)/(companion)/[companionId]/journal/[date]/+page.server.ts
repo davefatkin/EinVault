@@ -28,8 +28,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}
 	});
 
-	// Load photos for this date
-	const photos = entry
+	// Load media for this date
+	const media = entry
 		? await db.query.journalPhotos.findMany({
 				where: eq(schema.journalPhotos.entryId, entry.id),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	return {
 		companion,
 		entry: entry ?? null,
-		photos,
+		photos: media,
 		recentEntries,
 		dailyEvents,
 		date,

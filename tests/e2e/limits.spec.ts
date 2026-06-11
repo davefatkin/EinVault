@@ -48,12 +48,12 @@ async function login(page: Page, baseURL: string, username: string) {
 	await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
 }
 
-async function apiUploadPhoto(
+async function apiUploadMedia(
 	page: Page,
 	baseURL: string,
 	comp: string,
 	date: string,
-	photoBuffer: Buffer,
+	mediaBuffer: Buffer,
 	name = 'photo.png'
 ) {
 	return page.request.post(`${baseURL}/api/companions/${comp}/journal/${date}/photos`, {
@@ -62,7 +62,7 @@ async function apiUploadPhoto(
 			photo: {
 				name,
 				mimeType: 'image/png',
-				buffer: photoBuffer
+				buffer: mediaBuffer
 			}
 		}
 	});
@@ -76,7 +76,7 @@ test('oversized upload is rejected with fileTooLarge', async ({ world, page }) =
 	// calling sharp, so this returns 400 with the fileTooLarge message.
 	const oversized = Buffer.concat([PNG_BYTES, Buffer.alloc(1_300_000)]);
 
-	const res = await apiUploadPhoto(page, world.server.baseURL, COMP, '2026-06-10', oversized);
+	const res = await apiUploadMedia(page, world.server.baseURL, COMP, '2026-06-10', oversized);
 	expect(res.status()).toBe(400);
 	const body = await res.text();
 	expect(body).toContain('File too large');
@@ -86,17 +86,17 @@ test('daily media cap rejects the third upload', async ({ world, page }) => {
 	await login(page, world.server.baseURL, SEED.member.username);
 
 	const date = '2026-06-11';
-	const photoData = PNG_BYTES;
+	const mediaData = PNG_BYTES;
 
 	// First two uploads must succeed
-	const first = await apiUploadPhoto(page, world.server.baseURL, COMP, date, photoData);
+	const first = await apiUploadMedia(page, world.server.baseURL, COMP, date, mediaData);
 	expect(first.status()).toBe(200);
 
-	const second = await apiUploadPhoto(page, world.server.baseURL, COMP, date, photoData);
+	const second = await apiUploadMedia(page, world.server.baseURL, COMP, date, mediaData);
 	expect(second.status()).toBe(200);
 
 	// Third upload must be rejected
-	const third = await apiUploadPhoto(page, world.server.baseURL, COMP, date, photoData);
+	const third = await apiUploadMedia(page, world.server.baseURL, COMP, date, mediaData);
 	expect(third.status()).toBe(400);
 	const body = await third.text();
 	expect(body).toContain('Maximum 2 photos or videos per day');

@@ -1,10 +1,10 @@
 // Background video transcode worker (issue #86). A single in-process loop that
-// drains queued transcode jobs (journal_photos rows with status='processing'),
+// drains queued transcode jobs (journal media rows (journal_photos table) with status='processing'),
 // converts the source to a web-playable MP4 + poster via the hardened ffmpeg
 // wrapper, and updates the row. No external job queue — this fits the app's
 // single-process adapter-node + SQLite model.
 //
-// State machine (journal_photos.status):
+// State machine (journal media rows (journal_photos table).status):
 //   processing -> claimed -> ready          (success)
 //   processing -> claimed -> failed         (error, or attempts exhausted)
 //

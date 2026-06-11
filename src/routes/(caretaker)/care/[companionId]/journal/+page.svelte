@@ -336,7 +336,7 @@
 			</div>
 		</Card>
 
-		<!-- Photos -->
+		<!-- Media -->
 		<Card class="overflow-hidden">
 			<CardHeader class="pb-3 flex flex-row items-center justify-between">
 				<h2 class="font-semibold flex items-center gap-2">
@@ -393,34 +393,34 @@
 					</label>
 				{:else}
 					<div class="space-y-3">
-						{#each media as photo (photo.id)}
+						{#each media as item (item.id)}
 							<div class="flex gap-3 items-start">
 								<div
-									class="group relative shrink-0 {photo.mediaType === 'video'
+									class="group relative shrink-0 {item.mediaType === 'video'
 										? 'w-40'
 										: 'w-24'} h-24 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
 								>
-									{#if photo.mediaType === 'video'}
+									{#if item.mediaType === 'video'}
 										<JournalVideo
-											src={mediaUrl(photo)}
-											poster={posterUrl(photo)}
-											status={photo.status}
-											downloadName={photo.originalName}
-											label={photo.originalName ?? undefined}
+											src={mediaUrl(item)}
+											poster={posterUrl(item)}
+											status={item.status}
+											downloadName={item.originalName}
+											label={item.originalName ?? undefined}
 											class="w-full h-full object-cover"
 											compact
 										/>
 									{:else}
 										<img
-											src={mediaUrl(photo)}
-											alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
+											src={mediaUrl(item)}
+											alt={item.originalName ?? t(locale, 'page.journal.photoAlt')}
 											class="w-full h-full object-cover"
 											loading="lazy"
 										/>
 									{/if}
-									{#if canModifyMedia(data.user, photo)}
+									{#if canModifyMedia(data.user, item)}
 										<button
-											onclick={() => deleteMedia(photo.id)}
+											onclick={() => deleteMedia(item.id)}
 											aria-label={t(locale, 'aria.deleteMedia')}
 											class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 											flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
@@ -431,7 +431,7 @@
 									{/if}
 								</div>
 								<div class="flex-1 min-w-0">
-									{#if editingMediaId === photo.id}
+									{#if editingMediaId === item.id}
 										<MarkdownTextarea
 											value={editingMediaNotes}
 											oninput={(e) => (editingMediaNotes = (e.target as HTMLTextAreaElement).value)}
@@ -442,7 +442,7 @@
 										<div class="flex gap-2 mt-2">
 											<button
 												type="button"
-												onclick={() => saveMediaNotes(photo.id)}
+												onclick={() => saveMediaNotes(item.id)}
 												class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-2 py-1 text-xs font-medium shadow hover:bg-primary/90 transition-colors"
 											>
 												{t(locale, 'common.save')}
@@ -456,9 +456,9 @@
 											</button>
 										</div>
 									{:else}
-										{#if photo.notes}
+										{#if item.notes}
 											<p class="text-sm text-muted-foreground">
-												{stripMarkdown(photo.notes)}
+												{stripMarkdown(item.notes)}
 											</p>
 										{:else}
 											<p class="text-sm italic text-muted-foreground">
@@ -466,16 +466,16 @@
 											</p>
 										{/if}
 										<div class="flex items-center gap-2 mt-1">
-											{#if canModifyMedia(data.user, photo)}
+											{#if canModifyMedia(data.user, item)}
 												<button
 													type="button"
-													onclick={() => startEditMediaNotes(photo)}
+													onclick={() => startEditMediaNotes(item)}
 													class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
 												>
 													{t(locale, 'page.journal.caretaker.editCaption')}
 												</button>
 											{/if}
-											<ByLine user={photo.logger} variant="inline" />
+											<ByLine user={item.logger} variant="inline" />
 										</div>
 									{/if}
 								</div>
