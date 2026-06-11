@@ -76,8 +76,8 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 				.from(schema.journalPhotos)
 				.where(eq(schema.journalPhotos.entryId, entryId))
 				.all();
-			const photoCount = rows[0]?.value ?? 0;
-			if (photoCount >= MAX_DAILY_MEDIA) {
+			const mediaCount = rows[0]?.value ?? 0;
+			if (mediaCount >= MAX_DAILY_MEDIA) {
 				return { ok: false as const };
 			}
 			tx.insert(schema.journalPhotos)

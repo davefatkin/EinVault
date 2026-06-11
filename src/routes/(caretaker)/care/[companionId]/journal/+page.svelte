@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { stripMarkdown } from '$lib/markdown';
-	import { canModifyPhoto } from '$lib/permissions';
+	import { canModifyMedia } from '$lib/permissions';
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import { Trash2 } from '@lucide/svelte';
@@ -30,8 +30,8 @@
 	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
 	let saveTimer: ReturnType<typeof setTimeout>;
 
-	// Photos
-	let photos = $state(untrack(() => data.photos ?? []));
+	// Media
+	let media = $state(untrack(() => data.photos ?? []));
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let uploadErrorTimer: ReturnType<typeof setTimeout>;
@@ -43,14 +43,14 @@
 		uploadErrorTimer = setTimeout(() => (uploadError = ''), 5000);
 	}
 
-	// Photo caption editing
-	let editingPhotoId = $state<string | null>(null);
-	let editingPhotoNotes = $state('');
+	// Media caption editing
+	let editingMediaId = $state<string | null>(null);
+	let editingMediaNotes = $state('');
 
 	$effect(() => {
 		body = data.todayEntry?.body ?? '';
 		mood = data.todayEntry?.mood ?? '';
-		photos = data.photos ?? [];
+		media = data.photos ?? [];
 	});
 
 	const MOODS = moodOptions(locale);
@@ -76,8 +76,8 @@
 		}, 800);
 	}
 
-	async function uploadPhoto(file: File) {
-		if (photos.length >= data.maxDailyMedia) {
+	async function uploadMedia(file: File) {
+		if (media.length >= data.maxDailyMedia) {
 			setUploadError(t(locale, 'error.maxMediaExceeded', { max: data.maxDailyMedia }));
 			return;
 		}
@@ -98,8 +98,8 @@
 			}
 			const { id, filename, provider, storageKey, status, posterKey, mimeType, loggedBy, logger } =
 				await res.json();
-			photos = [
-				...photos,
+			media = [
+				...media,
 				{
 					id,
 					filename,
@@ -127,33 +127,33 @@
 		}
 	}
 
-	async function deletePhoto(photoId: string) {
+	async function deleteMedia(photoId: string) {
 		const res = await fetch(
 			`/api/companions/${data.companion.id}/journal/${data.today}/photos?photoId=${photoId}`,
 			{ method: 'DELETE' }
 		);
-		if (res.ok) photos = photos.filter((p) => p.id !== photoId);
+		if (res.ok) media = media.filter((p) => p.id !== photoId);
 	}
 
-	function startEditPhotoNotes(photo: (typeof photos)[0]) {
-		editingPhotoId = photo.id;
-		editingPhotoNotes = photo.notes ?? '';
+	function startEditMediaNotes(item: (typeof media)[0]) {
+		editingMediaId = item.id;
+		editingMediaNotes = item.notes ?? '';
 	}
 
-	async function savePhotoNotes(photoId: string) {
+	async function saveMediaNotes(photoId: string) {
 		const res = await fetch(
 			`/api/companions/${data.companion.id}/journal/${data.today}/photos?photoId=${photoId}`,
 			{
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ notes: editingPhotoNotes })
+				body: JSON.stringify({ notes: editingMediaNotes })
 			}
 		);
 		if (res.ok) {
-			photos = photos.map((p) =>
-				p.id === photoId ? { ...p, notes: editingPhotoNotes.trim() || null } : p
+			media = media.map((p) =>
+				p.id === photoId ? { ...p, notes: editingMediaNotes.trim() || null } : p
 			);
-			editingPhotoId = null;
+			editingMediaId = null;
 		}
 	}
 
@@ -161,23 +161,23 @@
 		const files = (e.target as HTMLInputElement).files;
 		if (!files?.length) return;
 		for (const file of Array.from(files)) {
-			if (photos.length < data.maxDailyMedia) uploadPhoto(file);
+			if (media.length < data.maxDailyMedia) uploadMedia(file);
 		}
 		if (fileInputEl) fileInputEl.value = '';
 	}
 
-	function photoUrl(photo: (typeof photos)[0]) {
-		return `/api/photos/journal/${data.companion.id}/${data.today}/${photo.filename}`;
+	function mediaUrl(item: (typeof media)[0]) {
+		return `/api/photos/journal/${data.companion.id}/${data.today}/${item.filename}`;
 	}
 
-	function posterUrl(photo: (typeof photos)[0]) {
-		return photo.posterKey ? `${photoUrl(photo)}?poster` : null;
+	function posterUrl(item: (typeof media)[0]) {
+		return item.posterKey ? `${mediaUrl(item)}?poster` : null;
 	}
 
 	// True while any video is still transcoding. Derived so the poll effect starts
 	// once when work appears and stops once when it finishes.
 	const hasPendingTranscode = $derived(
-		photos.some((p) => p.status === 'processing' || p.status === 'claimed')
+		media.some((p) => p.status === 'processing' || p.status === 'claimed')
 	);
 
 	// Poll transcoding videos and swap in the MP4 once ready, without a full
@@ -197,7 +197,7 @@
 				const { photos: statuses }: { photos: VideoStatus[] } = await res.json();
 				const byId = new Map(statuses.map((s) => [s.id, s]));
 				let changed = false;
-				const next = photos.map((p) => {
+				const next = media.map((p) => {
 					const s = byId.get(p.id);
 					if (!s || s.status === p.status) return p;
 					changed = true;
@@ -209,7 +209,7 @@
 						posterKey: s.posterKey
 					};
 				});
-				if (changed) photos = next;
+				if (changed) media = next;
 			} catch {
 				// transient; next tick retries
 			} finally {
@@ -343,10 +343,10 @@
 					<span>📷</span>
 					{t(locale, 'page.journal.caretaker.media')}
 					<span class="text-xs font-normal text-muted-foreground"
-						>{photos.length}/{data.maxDailyMedia}</span
+						>{media.length}/{data.maxDailyMedia}</span
 					>
 				</h2>
-				{#if photos.length < data.maxDailyMedia}
+				{#if media.length < data.maxDailyMedia}
 					<label
 						class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
 					>
@@ -373,7 +373,7 @@
 				</div>
 			{/if}
 			<CardContent>
-				{#if photos.length === 0}
+				{#if media.length === 0}
 					<label
 						class="flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-8
 					cursor-pointer hover:opacity-80 transition-colors"
@@ -393,7 +393,7 @@
 					</label>
 				{:else}
 					<div class="space-y-3">
-						{#each photos as photo (photo.id)}
+						{#each media as photo (photo.id)}
 							<div class="flex gap-3 items-start">
 								<div
 									class="group relative shrink-0 {photo.mediaType === 'video'
@@ -402,7 +402,7 @@
 								>
 									{#if photo.mediaType === 'video'}
 										<JournalVideo
-											src={photoUrl(photo)}
+											src={mediaUrl(photo)}
 											poster={posterUrl(photo)}
 											status={photo.status}
 											downloadName={photo.originalName}
@@ -412,15 +412,15 @@
 										/>
 									{:else}
 										<img
-											src={photoUrl(photo)}
+											src={mediaUrl(photo)}
 											alt={photo.originalName ?? t(locale, 'page.journal.photoAlt')}
 											class="w-full h-full object-cover"
 											loading="lazy"
 										/>
 									{/if}
-									{#if canModifyPhoto(data.user, photo)}
+									{#if canModifyMedia(data.user, photo)}
 										<button
-											onclick={() => deletePhoto(photo.id)}
+											onclick={() => deleteMedia(photo.id)}
 											aria-label={t(locale, 'aria.deleteMedia')}
 											class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 											flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
@@ -431,10 +431,10 @@
 									{/if}
 								</div>
 								<div class="flex-1 min-w-0">
-									{#if editingPhotoId === photo.id}
+									{#if editingMediaId === photo.id}
 										<MarkdownTextarea
-											value={editingPhotoNotes}
-											oninput={(e) => (editingPhotoNotes = (e.target as HTMLTextAreaElement).value)}
+											value={editingMediaNotes}
+											oninput={(e) => (editingMediaNotes = (e.target as HTMLTextAreaElement).value)}
 											placeholder={t(locale, 'page.journal.caretaker.addCaption')}
 											rows={3}
 											name="photo-notes"
@@ -442,14 +442,14 @@
 										<div class="flex gap-2 mt-2">
 											<button
 												type="button"
-												onclick={() => savePhotoNotes(photo.id)}
+												onclick={() => saveMediaNotes(photo.id)}
 												class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-2 py-1 text-xs font-medium shadow hover:bg-primary/90 transition-colors"
 											>
 												{t(locale, 'common.save')}
 											</button>
 											<button
 												type="button"
-												onclick={() => (editingPhotoId = null)}
+												onclick={() => (editingMediaId = null)}
 												class="inline-flex items-center justify-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-sm hover:bg-accent transition-colors"
 											>
 												{t(locale, 'common.cancel')}
@@ -466,10 +466,10 @@
 											</p>
 										{/if}
 										<div class="flex items-center gap-2 mt-1">
-											{#if canModifyPhoto(data.user, photo)}
+											{#if canModifyMedia(data.user, photo)}
 												<button
 													type="button"
-													onclick={() => startEditPhotoNotes(photo)}
+													onclick={() => startEditMediaNotes(photo)}
 													class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
 												>
 													{t(locale, 'page.journal.caretaker.editCaption')}
@@ -481,7 +481,7 @@
 								</div>
 							</div>
 						{/each}
-						{#if photos.length < data.maxDailyMedia}
+						{#if media.length < data.maxDailyMedia}
 							<label
 								class="aspect-square w-24 rounded-lg border-2 border-dashed flex flex-col items-center
 							justify-center cursor-pointer hover:opacity-80 transition-colors"

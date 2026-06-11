@@ -10,7 +10,7 @@ import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '$
 import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/server/storage/mime';
 import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
 import { kickWorker } from '$lib/server/video/worker';
-import { canModifyPhoto } from '$lib/permissions';
+import { canModifyMedia } from '$lib/permissions';
 import { assertCanEditCompanion } from '$lib/server/permissions';
 import { isValidDate } from '$lib/server/validation';
 
@@ -102,13 +102,13 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		entry = created;
 	}
 
-	// Check current photo count for this entry
-	const [{ value: photoCount }] = await db
+	// Check current media count for this entry
+	const [{ value: mediaCount }] = await db
 		.select({ value: count() })
 		.from(schema.journalPhotos)
 		.where(eq(schema.journalPhotos.entryId, entry.id));
 
-	if (photoCount >= MAX_DAILY_MEDIA) {
+	if (mediaCount >= MAX_DAILY_MEDIA) {
 		error(400, t(locals.locale, 'error.maxMediaExceeded', { max: MAX_DAILY_MEDIA }));
 	}
 
@@ -237,7 +237,7 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
-	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+	if (!canModifyMedia(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
 	const contentLength = parseInt(request.headers.get('content-length') ?? '0');
 	if (contentLength > 10_000) error(400, t(locals.locale, 'error.requestBodyTooLarge'));
@@ -269,7 +269,7 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	if (!entry || entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
-	if (!canModifyPhoto(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
+	if (!canModifyMedia(locals.user, photo)) error(403, t(locals.locale, 'error.forbidden'));
 
 	// Remove every object this row owns: the primary file plus, for a transcoded
 	// video, the kept original and the generated poster. Missing keys are no-ops

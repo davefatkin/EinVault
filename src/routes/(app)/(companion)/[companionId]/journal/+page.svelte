@@ -76,12 +76,12 @@
 		});
 	}
 
-	function photoUrl(photo: Entry['photos'][0], date: string) {
+	function mediaUrl(photo: Entry['photos'][0], date: string) {
 		return `/api/photos/journal/${companion.id}/${date}/${photo.filename}`;
 	}
 
 	function posterUrl(photo: Entry['photos'][0], date: string) {
-		return photo.posterKey ? `${photoUrl(photo, date)}?poster` : null;
+		return photo.posterKey ? `${mediaUrl(photo, date)}?poster` : null;
 	}
 
 	function monthKey(date: string) {
@@ -232,7 +232,7 @@
 				{/if}
 				<div class="flex items-center gap-1">
 					<a
-						href={photoUrl(lightboxPhoto, lightboxDate)}
+						href={mediaUrl(lightboxPhoto, lightboxDate)}
 						download={lightboxPhoto.originalName ?? lightboxPhoto.filename}
 						class="text-white/70 hover:text-white p-1 rounded"
 						aria-label={t(locale, 'aria.downloadMedia')}
@@ -253,7 +253,7 @@
 			<div class="relative">
 				{#if lightboxPhoto.mediaType === 'video'}
 					<JournalVideo
-						src={photoUrl(lightboxPhoto, lightboxDate)}
+						src={mediaUrl(lightboxPhoto, lightboxDate)}
 						poster={posterUrl(lightboxPhoto, lightboxDate)}
 						status={lightboxPhoto.status}
 						downloadName={lightboxPhoto.originalName}
@@ -263,7 +263,7 @@
 					/>
 				{:else}
 					<img
-						src={photoUrl(lightboxPhoto, lightboxDate)}
+						src={mediaUrl(lightboxPhoto, lightboxDate)}
 						alt={lightboxPhoto.originalName ?? ''}
 						class="max-h-[78vh] w-full object-contain rounded-lg"
 					/>
@@ -529,7 +529,7 @@
 											/>
 										{:else}
 											<video
-												src={photoUrl(photo, entry.date)}
+												src={mediaUrl(photo, entry.date)}
 												preload="metadata"
 												muted
 												playsinline
@@ -546,7 +546,7 @@
 										</span>
 									{:else}
 										<img
-											src={photoUrl(photo, entry.date)}
+											src={mediaUrl(photo, entry.date)}
 											alt={photo.originalName ?? ''}
 											class="w-full h-full object-cover"
 											loading="lazy"

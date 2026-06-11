@@ -6,11 +6,11 @@
 type AuthUser = { id: string; role: 'admin' | 'member' | 'caretaker' } | null | undefined;
 
 /**
- * Admins can modify (edit caption, delete) any journal photo. Other users
- * can modify only photos they uploaded. Photos with a null `loggedBy`
+ * Admins can modify (edit caption, delete) any journal media item. Other users
+ * can modify only items they uploaded. Items with a null `loggedBy`
  * (pre-migration legacy rows) are modifiable only by admins.
  */
-export function canModifyPhoto(user: AuthUser, photo: { loggedBy: string | null }): boolean {
+export function canModifyMedia(user: AuthUser, item: { loggedBy: string | null }): boolean {
 	if (!user) return false;
-	return user.role === 'admin' || photo.loggedBy === user.id;
+	return user.role === 'admin' || item.loggedBy === user.id;
 }
