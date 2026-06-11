@@ -102,7 +102,9 @@ test('delete removes from bucket', async ({ world, page }) => {
 		.first();
 	await photoContainer.hover();
 
-	const deleteBtn = photoContainer.locator('button[aria-label]');
+	// The thumbnail is itself a button (opens the lightbox), so scope to the
+	// delete control by its accessible name rather than "any aria-labelled button".
+	const deleteBtn = photoContainer.getByRole('button', { name: 'Delete media' });
 	await deleteBtn.click();
 
 	// Confirm in the dialog
