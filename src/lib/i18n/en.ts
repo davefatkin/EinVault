@@ -798,6 +798,8 @@ const messages = {
 	'search.filter.removeType': 'Remove {type} filter',
 	'search.filter.removeAfter': 'Remove after date filter',
 	'search.filter.removeBefore': 'Remove before date filter',
+	'search.tipCompanion': 'filter by companion',
+	'search.tipType': 'filter by type',
 	'aria.sigilAutocomplete': 'Filter suggestions',
 
 	// Immich picker

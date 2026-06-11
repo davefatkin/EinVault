@@ -277,11 +277,13 @@
 			if (e.key === 'ArrowDown') {
 				e.preventDefault();
 				sigilSelected = Math.min(sigilSelected + 1, sigilItems.length - 1);
+				scrollSigilIntoView();
 				return;
 			}
 			if (e.key === 'ArrowUp') {
 				e.preventDefault();
 				sigilSelected = Math.max(sigilSelected - 1, 0);
+				scrollSigilIntoView();
 				return;
 			}
 			if (e.key === 'Enter') {
@@ -367,6 +369,13 @@
 		});
 	}
 
+	function scrollSigilIntoView() {
+		tick().then(() => {
+			const el = dialogEl?.querySelector(`#sigil-option-${sigilSelected}`);
+			el?.scrollIntoView({ block: 'nearest' });
+		});
+	}
+
 	function groupLabel(type: GroupKey): string {
 		const keyMap: Record<GroupKey, Parameters<typeof t>[1]> = {
 			journal: 'search.group.journal',
@@ -413,7 +422,7 @@
 			aria-modal="true"
 			aria-label={t(locale, 'aria.searchResults')}
 			tabindex="-1"
-			class="relative z-10 w-full max-w-xl rounded-lg border border-border bg-card shadow-xl flex flex-col overflow-hidden"
+			class="relative z-10 w-full max-w-xl rounded-lg border border-border bg-card shadow-xl flex flex-col"
 		>
 			<!-- Input row -->
 			<div class="flex items-center gap-2 px-4 py-3 border-b border-border">
@@ -442,7 +451,7 @@
 							id="search-sigil-popup"
 							role="listbox"
 							aria-label={t(locale, 'aria.sigilAutocomplete')}
-							class="absolute left-0 top-full mt-1 z-20 w-full min-w-[12rem] rounded-md border border-border bg-popover shadow-md py-1"
+							class="absolute left-0 top-full mt-1 z-20 max-h-72 w-full min-w-[12rem] overflow-y-auto rounded-md border border-border bg-popover shadow-md py-1"
 						>
 							{#each sigilItems as item, i (item.value)}
 								<li
@@ -646,6 +655,20 @@
 						{/each}
 					</ul>
 				{/if}
+			</div>
+
+			<!-- Shortcut tips -->
+			<div
+				class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 border-t border-border text-xs text-muted-foreground"
+			>
+				<span>
+					<kbd class="rounded bg-muted px-1 font-mono text-foreground">@</kbd>
+					{t(locale, 'search.tipCompanion')}
+				</span>
+				<span>
+					<kbd class="rounded bg-muted px-1 font-mono text-foreground">#</kbd>
+					{t(locale, 'search.tipType')}
+				</span>
 			</div>
 		</div>
 	</div>

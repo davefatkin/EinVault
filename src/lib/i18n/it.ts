@@ -801,6 +801,8 @@ const messages: Record<keyof Messages, string> = {
 	'search.filter.removeType': 'Rimuovi filtro {type}',
 	'search.filter.removeAfter': 'Rimuovi filtro data dopo',
 	'search.filter.removeBefore': 'Rimuovi filtro data prima',
+	'search.tipCompanion': 'filtra per compagno',
+	'search.tipType': 'filtra per tipo',
 	'aria.sigilAutocomplete': 'Suggerimenti filtro',
 
 	// Immich picker
