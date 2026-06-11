@@ -36,6 +36,28 @@
 		xl: 'h-24 w-24 text-5xl'
 	};
 
+	// 5 gradient pairs built from the design-language accent tokens.
+	// Each entry is [from-color, to-color] as CSS hsl() references.
+	const GRADIENTS = [
+		['hsl(var(--primary))', 'hsl(var(--coral))'], // violet → coral
+		['hsl(var(--gold))', 'hsl(var(--coral))'], // gold → coral
+		['hsl(var(--primary))', 'hsl(var(--teal))'], // violet → teal
+		['hsl(var(--coral))', 'hsl(var(--primary))'], // coral → violet
+		['hsl(var(--teal))', 'hsl(var(--gold))'] // teal → gold
+	] as const;
+
+	// Deterministic gradient pick: sum of char codes in companionId mod GRADIENTS.length.
+	function gradientIndex(id: string): number {
+		let sum = 0;
+		for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
+		return sum % GRADIENTS.length;
+	}
+
+	let avatarGradient = $derived.by(() => {
+		const [from, to] = GRADIENTS[gradientIndex(companionId)];
+		return `linear-gradient(135deg, ${from}, ${to})`;
+	});
+
 	let uploading = $state(false);
 	let imgError = $state(false);
 	let uploaded = $state(false);
@@ -127,9 +149,10 @@
 		<div
 			class="{sizes[
 				size
-			]} rounded-full overflow-hidden bg-bark-100 dark:bg-bark-900 flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-stone-700 {archived
+			]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-stone-700 {archived
 				? 'grayscale opacity-75'
 				: ''}"
+			style={imgSrc ? undefined : `background: ${avatarGradient}`}
 		>
 			{#if imgSrc}
 				<img
@@ -139,7 +162,12 @@
 					onerror={() => (imgError = true)}
 				/>
 			{:else}
-				<span class="select-none" aria-hidden="true">🐕</span>
+				<span
+					class="font-display font-bold text-white select-none leading-none"
+					aria-label={t(locale, 'component.avatar.alt', { name })}
+				>
+					{name.charAt(0).toUpperCase()}
+				</span>
 			{/if}
 		</div>
 	{/if}
