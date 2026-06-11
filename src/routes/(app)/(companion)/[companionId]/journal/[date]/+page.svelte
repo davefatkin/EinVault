@@ -231,30 +231,27 @@
 		lightboxOpen = true;
 	}
 
-	// Deep-link: ?media={id} opens the lightbox at that item.
-	// lastDeepLinkId is only committed once the item is found so the effect can
-	// re-run if the media array is still empty when the param is first read.
-	// deepLinkStripped tracks whether the URL has been cleaned for the current id
-	// so we strip exactly once even when the item is not found.
+	// Deep-link: ?media={id} opens the lightbox at that item. Re-fires for a
+	// different id/date (the page component is reused across date navigations),
+	// idempotent for the same one. Wait until `media` has loaded (a sibling
+	// effect fills it from data.photos) so we don't strip the param before the
+	// item can resolve, then resolve + strip exactly once per id.
 	let lastDeepLinkId = '';
-	let deepLinkStripped = false;
 	$effect(() => {
 		const mediaId = page.url.searchParams.get('media');
 		if (!mediaId || mediaId === lastDeepLinkId) return;
+		if (media.length === 0) return;
+		lastDeepLinkId = mediaId;
 		const idx = media.findIndex((m) => m.id === mediaId);
 		if (idx !== -1) {
-			lastDeepLinkId = mediaId;
 			lightboxIndex = idx;
 			lightboxOpen = true;
 		}
-		if (!deepLinkStripped) {
-			deepLinkStripped = true;
-			tick().then(() => {
-				const url = new URL(page.url);
-				url.searchParams.delete('media');
-				history.replaceState(history.state, '', url.pathname + url.search);
-			});
-		}
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('media');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
 	});
 
 	async function pickFromImmich(assetId: string) {
