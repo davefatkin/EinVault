@@ -16,6 +16,11 @@ async function enableAndGetUrl(page: Page, settingsPath: string): Promise<string
 	return await urlInput.inputValue();
 }
 
+// These tests mutate the shared asMember / asCaretaker user's calendar feed
+// token (enable/regenerate/disable). Playwright runs a single spec file's tests
+// serially in one worker by default, so they don't collide. Do NOT add
+// describe parallel mode or run this file with --repeat-each across workers:
+// duplicate copies would clobber each other's token on the same user.
 test.describe('calendar feed', () => {
 	test('member enable + fetch: 200 text/calendar with VCALENDAR wrapper', async ({
 		asMember,
