@@ -1,6 +1,5 @@
-@import '@fontsource-variable/fraunces';
-@import '@fontsource-variable/fraunces/wght-italic.css';
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/sora';
 @import '@fontsource-variable/geist-mono';
 
 @import 'tailwindcss';
@@ -20,9 +19,9 @@
 	--container-2xl: 1400px;
 
 	/* Font families */
-	--font-sans: 'Geist Variable', system-ui, sans-serif;
+	--font-sans: 'Sora Variable', system-ui, sans-serif;
 	--font-mono: 'Geist Mono Variable', monospace;
-	--font-display: 'Fraunces Variable', Georgia, serif;
+	--font-display: 'Bricolage Grotesque Variable', Georgia, serif;
 
 	/* Semantic colour tokens — wired to CSS variables so that
 	   light/dark overrides in :root / .dark still drive them.    */
