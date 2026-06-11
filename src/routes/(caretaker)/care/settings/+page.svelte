@@ -22,6 +22,8 @@
 	let localeForm: HTMLFormElement;
 	let expandedShiftId = $state<string | null>(null);
 
+	const browserOrigin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
+
 	const now = new SvelteDate();
 
 	type Shift = (typeof data.upcomingShifts)[0];
@@ -379,6 +381,81 @@
 					</a>
 				</div>
 			{/if}
+		</CardContent>
+	</Card>
+
+	<Card>
+		<CardHeader>
+			<CardTitle>{t(locale, 'settings.calendar.title')}</CardTitle>
+		</CardHeader>
+		<CardContent class="space-y-4">
+			<p class="text-sm text-muted-foreground">{t(locale, 'settings.calendar.description')}</p>
+
+			{#if form?.calendarToken}
+				<div class="space-y-2">
+					<p class="text-xs text-muted-foreground font-medium">
+						{t(locale, 'settings.calendar.url')}
+					</p>
+					<div class="flex items-center gap-2">
+						<Input
+							type="text"
+							readonly
+							value="{browserOrigin}/api/calendar/{form.calendarToken}/feed.ics"
+							class="font-mono text-xs"
+						/>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onclick={() =>
+								navigator.clipboard.writeText(
+									`${browserOrigin}/api/calendar/${form?.calendarToken}/feed.ics`
+								)}
+						>
+							{t(locale, 'settings.calendar.copy')}
+						</Button>
+					</div>
+					<Alert>
+						<AlertDescription class="text-xs"
+							>{t(locale, 'settings.calendar.revealOnce')}</AlertDescription
+						>
+					</Alert>
+				</div>
+				<div class="flex gap-2">
+					<form method="POST" action="?/calendarEnable">
+						<Button type="submit" variant="outline" size="sm">
+							{t(locale, 'settings.calendar.regenerate')}
+						</Button>
+					</form>
+					<form method="POST" action="?/calendarDisable">
+						<Button type="submit" variant="outline" size="sm">
+							{t(locale, 'settings.calendar.disable')}
+						</Button>
+					</form>
+				</div>
+			{:else if data.calendarFeedEnabled}
+				<p class="text-sm text-foreground">{t(locale, 'settings.calendar.enabled')}</p>
+				<div class="flex gap-2">
+					<form method="POST" action="?/calendarEnable">
+						<Button type="submit" variant="outline" size="sm">
+							{t(locale, 'settings.calendar.regenerate')}
+						</Button>
+					</form>
+					<form method="POST" action="?/calendarDisable">
+						<Button type="submit" variant="outline" size="sm">
+							{t(locale, 'settings.calendar.disable')}
+						</Button>
+					</form>
+				</div>
+			{:else}
+				<form method="POST" action="?/calendarEnable">
+					<Button type="submit" size="sm">
+						{t(locale, 'settings.calendar.enable')}
+					</Button>
+				</form>
+			{/if}
+
+			<p class="text-xs text-muted-foreground">{t(locale, 'settings.calendar.help')}</p>
 		</CardContent>
 	</Card>
 
