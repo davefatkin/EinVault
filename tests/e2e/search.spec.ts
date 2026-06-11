@@ -1,6 +1,22 @@
+import { type Page } from '@playwright/test';
 import { test, expect } from '../lib/fixtures';
 
 const COMP = 'seed-comp-biscuit';
+
+// Select a sigil filter option. Fills the input with the full sigil token so
+// the reactive effect narrows the popup to its first match, then presses Enter
+// to commit the selection through the component's own keydown handler (the
+// input keeps focus after fill(), so Enter reaches handleKeydown's
+// autocomplete-open branch).
+async function selectSigilOption(page: Page, fullSigil: string, optionLabel: string) {
+	const input = page.locator('input[role="combobox"]');
+	await input.fill(fullSigil);
+	const sigilPopup = page.locator('#search-sigil-popup');
+	await expect(sigilPopup).toBeVisible({ timeout: 8_000 });
+	await expect(page.locator('#sigil-option-0')).toContainText(optionLabel, { timeout: 8_000 });
+	await input.press('Enter');
+	await expect(sigilPopup).toBeHidden({ timeout: 8_000 });
+}
 
 test.describe('global search palette', () => {
 	test('shortcut opens palette and seed journal entry navigates on Enter', async ({ asMember }) => {
@@ -219,5 +235,172 @@ test.describe('global search palette', () => {
 		// URL should have changed away from the start page and into seed-comp-biscuit
 		await expect(asMember).not.toHaveURL(startUrl, { timeout: 8_000 });
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/`), { timeout: 8_000 });
+	});
+
+	// ---- Filter tests ----
+
+	test('#type filter narrows results to health only', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select the Health type filter via the sigil popup
+		await selectSigilOption(asMember, '#health', 'Health');
+
+		// A Health chip should appear — check on the full page first for debugging
+		await expect(asMember.getByRole('button', { name: 'Remove Health filter' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Now search for "Seed"
+		await asMember.keyboard.type('Seed');
+
+		// The health result should appear
+		await expect(dialog.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+
+		// No Journal group heading should be present in the results list
+		await expect(
+			dialog.locator('#search-results').getByText('Journal', { exact: true })
+		).toHaveCount(0, { timeout: 8_000 });
+	});
+
+	test('@companion filter scopes results to Biscuit', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select the Biscuit companion filter via the sigil popup
+		await selectSigilOption(asMember, '@biscuit', 'Biscuit');
+
+		// Biscuit chip should appear
+		const biscuitChip = dialog.getByRole('button', { name: 'Remove Biscuit filter' });
+		await expect(biscuitChip).toBeVisible({ timeout: 8_000 });
+
+		// Search for "Seed"
+		await asMember.keyboard.type('Seed');
+
+		// A result should appear with Biscuit as companion badge
+		await expect(dialog.locator('[role="option"]').first()).toBeVisible({ timeout: 8_000 });
+		await expect(dialog.locator('[role="option"]').first()).toContainText('Biscuit');
+	});
+
+	test('date after filter excludes then includes Seed checkup', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select #health filter via keyboard
+		await selectSigilOption(asMember, '#health', 'Health');
+		await expect(dialog.getByRole('button', { name: 'Remove Health filter' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// With no text, filter-only browse shows Seed checkup
+		await expect(dialog.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+
+		// Set after date past the health event date — it should disappear
+		await asMember.fill('input[name="after"]', '2026-03-02');
+		await expect(dialog.getByText('Seed checkup')).toBeHidden({ timeout: 8_000 });
+
+		// Clear the after filter — Seed checkup should reappear
+		await asMember.fill('input[name="after"]', '');
+		await expect(dialog.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('filter-only browse: #reminder shows Seed vet visit', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select the Reminders type filter via the sigil popup
+		await selectSigilOption(asMember, '#reminder', 'Reminders');
+
+		// With no text, browse shows Seed vet visit under Reminders group.
+		// Scope the group-heading check to the results listbox so it doesn't
+		// also match the "Reminders" filter chip (same localized label).
+		await expect(dialog.getByText('Seed vet visit')).toBeVisible({ timeout: 8_000 });
+		await expect(
+			dialog.locator('#search-results').getByText('Reminders', { exact: true })
+		).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('combined #health + @biscuit filter shows Seed checkup', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select #health filter via keyboard
+		await selectSigilOption(asMember, '#health', 'Health');
+		await expect(dialog.getByRole('button', { name: 'Remove Health filter' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Select @biscuit companion filter via keyboard
+		await selectSigilOption(asMember, '@biscuit', 'Biscuit');
+		await expect(dialog.getByRole('button', { name: 'Remove Biscuit filter' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Type "Seed" — health result for Biscuit should appear
+		await asMember.keyboard.type('Seed');
+		await expect(dialog.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+		// Companion badge should say Biscuit
+		await expect(dialog.locator('[role="option"]').first()).toContainText('Biscuit');
+	});
+
+	test('removing health chip broadens results to include journal', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// Select #health filter via keyboard
+		await selectSigilOption(asMember, '#health', 'Health');
+		await expect(dialog.getByRole('button', { name: 'Remove Health filter' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Search "Seed" — with health filter, only health results visible; no Journal group
+		await asMember.keyboard.type('Seed');
+		await expect(dialog.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+		await expect(
+			dialog.locator('#search-results').getByText('Journal', { exact: true })
+		).toHaveCount(0, { timeout: 8_000 });
+
+		// Remove the Health chip
+		await dialog.getByRole('button', { name: 'Remove Health filter' }).click();
+
+		// Journal group should now appear in the results list (seed 'Seed journal entry')
+		await expect(
+			dialog.locator('#search-results').getByText('Journal', { exact: true })
+		).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('caretaker gets 403 on /api/search with type filter', async ({ asCaretaker }) => {
+		const res = await asCaretaker.request.get('/api/search?q=seed&type=health');
+		expect(res.status()).toBe(403);
 	});
 });
