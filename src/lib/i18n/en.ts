@@ -209,7 +209,6 @@ const messages = {
 	'page.settings.roleLabel': 'Role',
 	'page.settings.shiftsCard': 'My Shifts',
 	'page.settings.noUpcomingShifts': 'No upcoming shifts scheduled.',
-	'page.settings.exportCalendar': 'Export to calendar',
 	'page.settings.shiftGroupActive': 'Active Now',
 	'page.settings.shiftGroupThisWeek': 'This Week',
 	'page.settings.shiftGroupNextWeek': 'Next Week',
@@ -249,6 +248,21 @@ const messages = {
 	'email.test.subject': 'EinVault test notification',
 	'email.test.body':
 		'This is a test notification from EinVault. If you are reading this, your notification settings work.',
+
+	// Page: settings (calendar feed)
+	'settings.calendar.title': 'Calendar Feed',
+	'settings.calendar.description':
+		'Subscribe to your health events, reminders, and shifts in any calendar app.',
+	'settings.calendar.enable': 'Enable calendar feed',
+	'settings.calendar.regenerate': 'Regenerate URL',
+	'settings.calendar.disable': 'Disable',
+	'settings.calendar.copy': 'Copy',
+	'settings.calendar.url': 'Feed URL',
+	'settings.calendar.revealOnce':
+		"Copy this URL now. For your security it won't be shown again; regenerate if you lose it.",
+	'settings.calendar.enabled': 'Your calendar feed is enabled.',
+	'settings.calendar.help':
+		'Works with Apple Calendar, Google Calendar, Thunderbird, and Home Assistant (Remote Calendar). The feed updates when your calendar app refreshes.',
 
 	// Errors: OIDC
 	'error.oidc.notProvisioned':

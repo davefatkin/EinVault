@@ -218,7 +218,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Ruolo',
 	'page.settings.shiftsCard': 'I miei turni',
 	'page.settings.noUpcomingShifts': 'Nessun turno programmato.',
-	'page.settings.exportCalendar': 'Esporta nel calendario',
 	'page.settings.shiftGroupActive': 'Attivo ora',
 	'page.settings.shiftGroupThisWeek': 'Questa settimana',
 	'page.settings.shiftGroupNextWeek': 'Prossima settimana',
@@ -259,6 +258,21 @@ const messages: Record<keyof Messages, string> = {
 	'email.test.subject': 'Notifica di prova di EinVault',
 	'email.test.body':
 		'Questa è una notifica di prova di EinVault. Se la stai leggendo, le tue impostazioni di notifica funzionano.',
+
+	// Page: settings (calendar feed)
+	'settings.calendar.title': 'Feed calendario',
+	'settings.calendar.description':
+		'Iscriviti ai tuoi eventi di salute, promemoria e turni in qualsiasi app di calendario.',
+	'settings.calendar.enable': 'Attiva feed calendario',
+	'settings.calendar.regenerate': 'Rigenera URL',
+	'settings.calendar.disable': 'Disattiva',
+	'settings.calendar.copy': 'Copia',
+	'settings.calendar.url': 'URL del feed',
+	'settings.calendar.revealOnce':
+		'Copia questo URL ora. Per la tua sicurezza non verrà mostrato di nuovo; rigeneralo se lo perdi.',
+	'settings.calendar.enabled': 'Il tuo feed calendario è attivo.',
+	'settings.calendar.help':
+		'Compatibile con Apple Calendar, Google Calendar, Thunderbird e Home Assistant (Remote Calendar). Il feed si aggiorna quando la tua app di calendario si sincronizza.',
 
 	// Page: Login
 	'page.login.title': 'Accedi',

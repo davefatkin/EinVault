@@ -18,6 +18,7 @@ export const users = sqliteTable(
 		username: text('username').notNull().unique(),
 		displayName: text('display_name').notNull(),
 		passwordHash: text('password_hash'),
+		calendarFeedToken: text('calendar_feed_token'),
 		role: text('role', { enum: ['admin', 'member', 'caretaker'] })
 			.notNull()
 			.default('member'),
@@ -52,7 +53,8 @@ export const users = sqliteTable(
 	},
 	(t) => [
 		uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject),
-		uniqueIndex('users_email_idx').on(t.email)
+		uniqueIndex('users_email_idx').on(t.email),
+		uniqueIndex('users_calendar_feed_token_idx').on(t.calendarFeedToken)
 	]
 );
 

@@ -220,7 +220,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.roleLabel': 'Rôle',
 	'page.settings.shiftsCard': 'Mes gardes',
 	'page.settings.noUpcomingShifts': 'Aucune garde programmée.',
-	'page.settings.exportCalendar': 'Exporter vers le calendrier',
 	'page.settings.shiftGroupActive': 'Actif maintenant',
 	'page.settings.shiftGroupThisWeek': 'Cette semaine',
 	'page.settings.shiftGroupNextWeek': 'Semaine prochaine',
@@ -261,6 +260,21 @@ const messages: Record<keyof Messages, string> = {
 	'email.test.subject': 'Notification de test EinVault',
 	'email.test.body':
 		"Ceci est une notification de test d'EinVault. Si vous lisez ceci, vos réglages de notification fonctionnent.",
+
+	// Page: settings (calendar feed)
+	'settings.calendar.title': 'Flux de calendrier',
+	'settings.calendar.description':
+		'Abonnez-vous à vos événements de santé, rappels et gardes dans toute application de calendrier.',
+	'settings.calendar.enable': 'Activer le flux de calendrier',
+	'settings.calendar.regenerate': "Regénérer l'URL",
+	'settings.calendar.disable': 'Désactiver',
+	'settings.calendar.copy': 'Copier',
+	'settings.calendar.url': 'URL du flux',
+	'settings.calendar.revealOnce':
+		'Copiez cette URL maintenant. Pour votre sécurité, elle ne sera plus affichée ; regénérez-la si vous la perdez.',
+	'settings.calendar.enabled': 'Votre flux de calendrier est activé.',
+	'settings.calendar.help':
+		'Compatible avec Apple Calendar, Google Calendar, Thunderbird et Home Assistant (Remote Calendar). Le flux se met à jour quand votre application de calendrier se synchronise.',
 
 	// Page: Login
 	'page.login.title': 'Se connecter',
