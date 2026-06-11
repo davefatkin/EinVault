@@ -48,7 +48,7 @@ describe('buildCalendar', () => {
 		expect(ics).toContain('RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15');
 	});
 
-	it('renders RDATE expansion for clamped recurrences', () => {
+	it('expands a clamped (rdate) series into one standalone VEVENT per occurrence', () => {
 		const item: CalendarItem = {
 			kind: 'reminder',
 			uid: 'reminder-series-s2@einvault',
@@ -60,18 +60,22 @@ describe('buildCalendar', () => {
 			recurrence: {
 				kind: 'rdate',
 				dates: [
-					new Date('2026-01-31T14:00:00Z'),
-					new Date('2026-02-28T14:00:00Z'),
-					new Date('2026-03-31T14:00:00Z')
+					new Date('2026-01-31T14:00:00Z'), // 09:00 EST
+					new Date('2026-02-28T14:00:00Z'), // 09:00 EST
+					new Date('2026-03-31T13:00:00Z') // 09:00 EDT (after Mar 8 DST)
 				]
 			}
 		};
 		const ics = buildCalendar([item], TZ, shiftLabel);
-		// DTSTART is the first date; RDATE lines cover the remaining occurrences (not the first).
+		// No RDATE/RRULE: each occurrence is its own VEVENT with a distinct, stable UID.
+		expect(ics).not.toContain('RDATE');
+		expect((ics.match(/BEGIN:VEVENT/g) ?? []).length).toBe(3);
+		expect(ics).toContain('UID:reminder-series-s2-0@einvault');
+		expect(ics).toContain('UID:reminder-series-s2-1@einvault');
+		expect(ics).toContain('UID:reminder-series-s2-2@einvault');
 		expect(ics).toContain('DTSTART;TZID=America/New_York:20260131T090000');
-		expect(ics).toContain('RDATE;TZID=America/New_York:20260228T090000');
-		expect(ics).toContain('RDATE;TZID=America/New_York:20260331T100000');
-		expect(ics).not.toContain('RDATE;TZID=America/New_York:20260131T090000'); // first date is DTSTART, not an RDATE
+		expect(ics).toContain('DTSTART;TZID=America/New_York:20260228T090000');
+		expect(ics).toContain('DTSTART;TZID=America/New_York:20260331T090000');
 	});
 
 	it('escapes commas in companion name in CATEGORIES and SUMMARY', () => {
