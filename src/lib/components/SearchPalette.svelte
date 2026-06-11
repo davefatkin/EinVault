@@ -104,21 +104,27 @@
 		const tok = parseSigilToken(query);
 		if (tok) {
 			const partial = tok.partial.toLowerCase();
+			// Compute into a local first; reading the `sigilItems` state we just
+			// wrote inside this same effect would make it self-triggering (Svelte 5
+			// effect_update_depth loop).
+			let items: { label: string; value: string; id?: string }[];
 			if (tok.sigil === '@') {
-				const filtered = companions
+				items = companions
 					.filter((c) => !companionFilters.some((f) => f.id === c.id))
-					.filter((c) => c.name.toLowerCase().includes(partial));
-				sigilItems = filtered.map((c) => ({ label: c.name, value: c.id, id: c.id }));
+					.filter((c) => c.name.toLowerCase().includes(partial))
+					.map((c) => ({ label: c.name, value: c.id, id: c.id }));
 			} else {
 				// '#'
-				const filtered = typeList.filter(
-					(t) =>
-						!typeFilters.includes(t.value) &&
-						(t.label.toLowerCase().includes(partial) || t.value.toLowerCase().includes(partial))
-				);
-				sigilItems = filtered.map((t) => ({ label: t.label, value: t.value }));
+				items = typeList
+					.filter(
+						(t) =>
+							!typeFilters.includes(t.value) &&
+							(t.label.toLowerCase().includes(partial) || t.value.toLowerCase().includes(partial))
+					)
+					.map((t) => ({ label: t.label, value: t.value }));
 			}
-			if (sigilItems.length > 0) {
+			sigilItems = items;
+			if (items.length > 0) {
 				autocompleteOpen = true;
 				sigilSelected = 0;
 			} else {
