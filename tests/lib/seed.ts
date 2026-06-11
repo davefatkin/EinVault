@@ -97,7 +97,7 @@ export function createSeededDb(dir: string): string {
 			companionId: SEED.companions.biscuit.id,
 			type: 'vet_visit',
 			title: 'Seed checkup',
-			occurredAt: new Date(now - 60 * day),
+			occurredAt: new Date('2026-03-01T12:00:00Z'),
 			loggedBy: SEED.member.id
 		})
 		.run();
