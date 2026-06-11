@@ -68,6 +68,52 @@ test.describe('global search palette', () => {
 		await expect(dialog.getByText('e2e-srch-xenolith')).toBeVisible({ timeout: 8_000 });
 	});
 
+	test('search result for health event deep-links to its detail modal', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const palette = asMember.locator('[role="dialog"]');
+		await expect(palette).toBeVisible({ timeout: 8_000 });
+
+		await asMember.keyboard.type('Seed checkup');
+		await expect(palette.locator('[role="option"]').first()).toBeVisible({ timeout: 8_000 });
+
+		// Click the result to navigate
+		await palette.locator('[role="option"]').first().click();
+
+		// After navigation the palette closes; wait for the detail dialog on the health page
+		await asMember.waitForURL(new RegExp(`/${COMP}/health`), { timeout: 8_000 });
+		const detailDialog = asMember.locator('[role="dialog"][aria-modal="true"]');
+		await expect(detailDialog).toBeVisible({ timeout: 8_000 });
+		await expect(detailDialog).toContainText('Seed checkup', { timeout: 8_000 });
+	});
+
+	test('search result for reminder deep-links to its detail modal', async ({ asMember }) => {
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const palette = asMember.locator('[role="dialog"]');
+		await expect(palette).toBeVisible({ timeout: 8_000 });
+
+		await asMember.keyboard.type('Seed vet visit');
+		await expect(palette.locator('[role="option"]').first()).toBeVisible({ timeout: 8_000 });
+
+		// Click the result to navigate
+		await palette.locator('[role="option"]').first().click();
+
+		// After navigation the palette closes; wait for the detail dialog on the reminders page
+		await asMember.waitForURL(new RegExp(`/${COMP}/reminders`), { timeout: 8_000 });
+		const detailDialog = asMember.locator('[role="dialog"][aria-modal="true"]');
+		await expect(detailDialog).toBeVisible({ timeout: 8_000 });
+		await expect(detailDialog).toContainText('Seed vet visit', { timeout: 8_000 });
+	});
+
 	test('caretaker gets 403 on /api/search and has no search button', async ({
 		asCaretaker,
 		app,
