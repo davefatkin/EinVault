@@ -92,6 +92,11 @@
 				}
 			}
 		}, 200);
+
+		return () => {
+			clearTimeout(debounceTimer);
+			controller.abort();
+		};
 	});
 
 	function close() {
