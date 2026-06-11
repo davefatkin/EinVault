@@ -2,67 +2,90 @@
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { t, getLocale } from '$lib/i18n';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { CheckCheck, Pencil, Plus, X, HeartPulse, NotebookPen } from '@lucide/svelte';
+	import { Plus, Zap, ChevronRight } from '@lucide/svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { tick } from 'svelte';
-	import { formatRecurrence } from '$lib/reminderRecurrence';
-	import {
-		ACTIVITY_ICONS,
-		MOOD_ICONS,
-		REMINDER_ICONS,
-		activityLabel,
-		healthTypeLabel
-	} from '$lib/i18n/labels';
 	import { localDateISO } from '$lib/date';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
+	import { ACTIVITY_ICONS, REMINDER_ICONS } from '$lib/i18n/labels';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
 
-	let companionsById = $derived(Object.fromEntries(data.companions.map((c) => [c.id, c])));
+	// Urgency classification for reminders
+	type Urgency = 'overdue' | 'today' | 'upcoming';
+
+	function reminderUrgency(dueAt: Date | string | number): Urgency {
+		const now = new Date();
+		const due = new Date(dueAt);
+		const todayISO = localDateISO(now);
+		const dueISO = localDateISO(due);
+		if (due < now) return 'overdue';
+		if (dueISO === todayISO) return 'today';
+		return 'upcoming';
+	}
 
 	type Reminder = (typeof data.upcomingReminders)[number];
-	let remindersByDay = $derived.by(() => {
-		const out: Record<string, Reminder[]> = {};
-		for (const r of data.upcomingReminders) {
-			const day = localDateISO(new Date(r.dueAt));
-			(out[day] ??= []).push(r);
+
+	// Needs-attention: overdue + today reminders, sorted overdue first
+	let attentionItems = $derived.by(() => {
+		return data.upcomingReminders
+			.map((r) => ({ r, urgency: reminderUrgency(r.dueAt) }))
+			.filter(({ urgency }) => urgency === 'overdue' || urgency === 'today')
+			.sort((a, b) => {
+				if (a.urgency === 'overdue' && b.urgency !== 'overdue') return -1;
+				if (b.urgency === 'overdue' && a.urgency !== 'overdue') return 1;
+				return new Date(a.r.dueAt).getTime() - new Date(b.r.dueAt).getTime();
+			});
+	});
+
+	// Per-companion maps for quick lookup
+	let companionsById = $derived(Object.fromEntries(data.companions.map((c) => [c.id, c])));
+
+	// Last daily event per companion
+	let lastActivityByCompanion = $derived.by(() => {
+		const out: Record<string, (typeof data.recentDaily)[number]> = {};
+		for (const e of data.recentDaily) {
+			if (!out[e.companionId]) out[e.companionId] = e;
 		}
 		return out;
 	});
-	let reminderDays = $derived(Object.keys(remindersByDay).sort());
 
-	type DailyEvent = (typeof data.recentDaily)[number];
-	type HealthEvent = (typeof data.recentHealth)[number];
-	type MergedEvent =
-		| { kind: 'daily'; row: DailyEvent; at: Date }
-		| { kind: 'health'; row: HealthEvent; at: Date };
-
-	let recentTimeline = $derived.by<MergedEvent[]>(() => {
-		const merged: MergedEvent[] = [
-			...data.recentDaily.map((d) => ({
-				kind: 'daily' as const,
-				row: d,
-				at: new Date(d.loggedAt)
-			})),
-			...data.recentHealth.map((h) => ({
-				kind: 'health' as const,
-				row: h,
-				at: new Date(h.occurredAt)
-			}))
-		];
-		merged.sort((a, b) => b.at.getTime() - a.at.getTime());
-		return merged.slice(0, 20);
+	// Next reminder per companion (first upcoming, incl. overdue)
+	let nextReminderByCompanion = $derived.by(() => {
+		const out: Record<string, Reminder> = {};
+		for (const r of data.upcomingReminders) {
+			if (!out[r.companionId]) out[r.companionId] = r;
+		}
+		return out;
 	});
+
+	// Age from DOB string "YYYY-MM-DD"
+	function companionAge(dob: string | null | undefined): string | null {
+		if (!dob) return null;
+		const [y, m, d] = dob.split('-').map(Number);
+		const born = new Date(y, m - 1, d);
+		const now = new Date();
+		const years = now.getFullYear() - born.getFullYear();
+		const adjusted =
+			now < new Date(now.getFullYear(), born.getMonth(), born.getDate()) ? years - 1 : years;
+		if (adjusted < 1) {
+			const months = Math.floor((now.getTime() - born.getTime()) / (30 * 24 * 60 * 60 * 1000));
+			return `${months}mo`;
+		}
+		return `${adjusted}y`;
+	}
+
+	function urgencyLabel(urgency: Urgency): string {
+		if (urgency === 'overdue') return t(locale, 'page.dashboard.caretaker.reminderOverdue');
+		if (urgency === 'today') return t(locale, 'overview.day.today');
+		return t(locale, 'overview.day.tomorrow');
+	}
 
 	let undoDelayMs = $derived((data.reminderUndoSeconds ?? 0) * 1000);
 	const pendingDismiss = createPendingDismissals(
@@ -71,596 +94,166 @@
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
-
-	let selectedReminder = $state<Reminder | null>(null);
-	let reminderDialogEl = $state<HTMLElement | null>(null);
-
-	let selectedEvent = $state<MergedEvent | null>(null);
-	let eventDialogEl = $state<HTMLElement | null>(null);
-
-	async function openReminderDetail(r: Reminder) {
-		selectedReminder = r;
-		await tick();
-		reminderDialogEl?.focus();
-	}
-
-	function closeReminderDetail() {
-		selectedReminder = null;
-	}
-
-	async function openEventDetail(e: MergedEvent) {
-		selectedEvent = e;
-		await tick();
-		eventDialogEl?.focus();
-	}
-
-	function closeEventDetail() {
-		selectedEvent = null;
-	}
-
-	function trapFocus(e: KeyboardEvent, dialogEl: HTMLElement | null, onClose: () => void) {
-		if (!dialogEl) return;
-		const focusable = Array.from(
-			dialogEl.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			)
-		).filter((el) => !el.hasAttribute('disabled'));
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.key === 'Tab') {
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		}
-		if (e.key === 'Escape') onClose();
-	}
-
-	function submitWithAndEvent(reminderId: string) {
-		const form = dismissFormRegistry.get(reminderId);
-		if (!form) {
-			console.warn('Reminder dismiss form not found for', reminderId);
-			return;
-		}
-		pendingDismiss.commitWithEvent(reminderId, form);
-	}
-
-	function formatDayHeading(iso: string): string {
-		const today = localDateISO(new Date());
-		const tomorrow = localDateISO(new Date(Date.now() + 86400000));
-		if (iso === today) return t(locale, 'overview.day.today');
-		if (iso === tomorrow) return t(locale, 'overview.day.tomorrow');
-		const [y, m, d] = iso.split('-').map(Number);
-		return new Date(y, m - 1, d).toLocaleDateString(undefined, {
-			weekday: 'short',
-			month: 'short',
-			day: 'numeric'
-		});
-	}
 </script>
 
 <svelte:head>
 	<title>{t(locale, 'overview.title')} | EinVault</title>
 </svelte:head>
 
-<!-- Reminder detail modal -->
-{#if selectedReminder}
-	{@const r = selectedReminder}
-	{@const companion = companionsById[r.companionId]}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'aria.closeDialog')}
-			onclick={closeReminderDetail}
-		></button>
-		<div
-			bind:this={reminderDialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={(e) => trapFocus(e, reminderDialogEl, closeReminderDetail)}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">{r.title}</h2>
-				<button
-					onclick={closeReminderDetail}
-					aria-label={t(locale, 'aria.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.dashboard.modalLabelType')}</span
-					>
-					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
-				</div>
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.dashboard.modalLabelDue')}</span
-					>
-					<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
-				</div>
-				{#if r.isRecurring}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelRepeats')}</span
-						>
-						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
-					</div>
-				{/if}
-				{#if r.description}
-					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">
-							{t(locale, 'page.dashboard.modalLabelNotes')}
-						</p>
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(r.description)}
-						</div>
-					</div>
-				{/if}
-				<ByLine user={r.logger} />
-			</div>
-
-			<Separator />
-
-			<div class="flex flex-wrap gap-2 px-5 py-4">
-				{#if companion}
-					<Button
-						href="/{companion.id}/reminders?edit={r.id}"
-						variant="outline"
-						size="sm"
-						onclick={closeReminderDetail}
-					>
-						<Pencil class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.dashboard.modalEditReminders')}
-					</Button>
-				{/if}
-				<Button
-					size="sm"
-					onclick={() => {
-						const item = r;
-						const form = dismissFormRegistry.get(item.id);
-						if (!form) return;
-						closeReminderDetail();
-						pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
-					}}
-				>
-					<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
-					{t(locale, 'common.reminder.done')}
-				</Button>
-				<Button
-					variant="outline"
-					size="sm"
-					aria-label={t(locale, 'common.reminder.logEventAria')}
-					onclick={() => {
-						const item = r;
-						closeReminderDetail();
-						submitWithAndEvent(item.id);
-					}}
-				>
-					<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-					{t(locale, 'common.reminder.logEvent')}
-				</Button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Recent activity detail modal -->
-{#if selectedEvent}
-	{@const ev = selectedEvent}
-	{@const companion = companionsById[ev.row.companionId]}
-	{@const journalDay = localDateISO(ev.at)}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'aria.closeDialog')}
-			onclick={closeEventDetail}
-		></button>
-		<div
-			bind:this={eventDialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={(e) => trapFocus(e, eventDialogEl, closeEventDetail)}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground flex items-center gap-2">
-					{#if ev.kind === 'daily'}
-						<span aria-hidden="true">{ACTIVITY_ICONS[ev.row.type] ?? '📝'}</span>
-						{activityLabel(locale, ev.row.type)}
-					{:else}
-						<span aria-hidden="true">🏥</span>
-						{ev.row.title}
-					{/if}
-				</h2>
-				<button
-					onclick={closeEventDetail}
-					aria-label={t(locale, 'aria.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				{#if ev.kind === 'daily'}
-					{@const e = ev.row}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelType')}</span
-						>
-						<Badge variant="secondary" class="capitalize">{activityLabel(locale, e.type)}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={e.loggedAt} format="datetime" /><ByLine
-								user={e.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if e.durationMinutes}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelDuration')}</span
-							>
-							<span class="text-foreground">{e.durationMinutes} min</span>
-						</div>
-					{/if}
-					{#if e.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(e.notes)}
-							</div>
-						</div>
-					{/if}
-				{:else}
-					{@const h = ev.row}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelType')}</span
-						>
-						<Badge variant="bark" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelDate')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" /><ByLine
-								user={h.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if h.vetName || h.vetClinic}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelVet')}</span
-							>
-							<span class="text-foreground"
-								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
-							>
-						</div>
-					{/if}
-					{#if h.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(h.notes)}
-							</div>
-						</div>
-					{/if}
-				{/if}
-			</div>
-
-			{#if companion}
-				<Separator />
-				<div class="flex flex-wrap gap-2 px-5 py-4">
-					{#if ev.kind === 'health'}
-						<Button
-							href="/{companion.id}/health?edit={ev.row.id}"
-							variant="outline"
-							size="sm"
-							onclick={closeEventDetail}
-						>
-							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.dashboard.modalEditHealth')}
-						</Button>
-					{/if}
-					<Button
-						href="/{companion.id}/journal/{journalDay}"
-						variant="outline"
-						size="sm"
-						onclick={closeEventDetail}
-					>
-						<NotebookPen class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.dashboard.modalOpenJournal')}
-					</Button>
-				</div>
-			{/if}
-		</div>
-	</div>
-{/if}
-
-<div class="space-y-8 pb-20 md:pb-0">
+<div class="space-y-6 pb-20 md:pb-0">
 	<h1 class="sr-only">{t(locale, 'overview.title')}</h1>
 
-	<section class="space-y-3">
-		<h2 class="font-display text-xl font-bold text-foreground">
-			{t(locale, 'overview.heading.reminders')}
-		</h2>
-		{#if reminderDays.length === 0}
-			<Card>
-				<CardContent class="text-center py-8">
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'overview.empty.reminders')}
-					</p>
-				</CardContent>
-			</Card>
-		{:else}
-			<div class="space-y-4">
-				{#each reminderDays as day (day)}
-					<div class="space-y-2">
-						<h3
-							class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sticky top-16 bg-background/95 backdrop-blur py-1 z-10"
-						>
-							{formatDayHeading(day)}
-						</h3>
-						<div class="space-y-2">
-							{#each remindersByDay[day] as r (r.id)}
-								{@const companion = companionsById[r.companionId]}
-								<Card class="overflow-hidden">
-									<CardContent class="py-3">
-										<div class="flex items-start gap-3">
-											{#if companion}
-												<a
-													href="/{companion.id}/reminders"
-													aria-label={t(locale, 'overview.reminders.openFor', {
-														name: companion.name
-													})}
-													class="shrink-0 -m-1 rounded-full p-1 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-												>
-													<CompanionAvatar
-														companionId={companion.id}
-														avatarPath={companion.avatarPath}
-														name={companion.name}
-														size="sm"
-													/>
-												</a>
-											{/if}
-											<button
-												type="button"
-												onclick={() => openReminderDetail(r)}
-												class="flex-1 min-w-0 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
-											>
-												<div class="flex items-center gap-2 flex-wrap">
-													<span class="text-base" aria-hidden="true"
-														>{REMINDER_ICONS[r.type] ?? '📌'}</span
-													>
-													<span class="font-medium text-foreground">{r.title}</span>
-												</div>
-												<p class="text-xs mt-0.5 text-muted-foreground">
-													{companion?.name ?? ''} ·
-													<LocalTime date={r.dueAt} format="time" />
-												</p>
-											</button>
-											<form
-												method="POST"
-												action="?/complete"
-												use:enhance={clearSubmittingFlag}
-												use:registerDismissForm={{
-													id: r.id,
-													registry: dismissFormRegistry
-												}}
-												class="shrink-0 flex items-center gap-1"
-											>
-												<input type="hidden" name="id" value={r.id} />
-												<Button
-													type="button"
-													size="sm"
-													class="h-8 gap-1.5 px-3 text-xs"
-													aria-label={t(locale, 'overview.markDone')}
-													onclick={(e: MouseEvent) => {
-														const btn = e.currentTarget as HTMLButtonElement;
-														if (btn.form)
-															pendingDismiss.queue(r.id, btn.form, r.title, {
-																allowLogEvent: true
-															});
-													}}
-												>
-													<CheckCheck class="h-3.5 w-3.5" />
-													<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
-												</Button>
-											</form>
-										</div>
-									</CardContent>
-								</Card>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</section>
-
-	<Separator />
-
-	<section class="space-y-3">
-		<h2 class="font-display text-xl font-bold text-foreground">
-			{t(locale, 'overview.heading.todayJournal')}
-		</h2>
-		<div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
-			{#each data.companions as companion (companion.id)}
-				{@const entry = data.todayJournalByCompanion[companion.id]}
-				{@const journalHref = `/${companion.id}/journal/${entry?.date ?? localDateISO(new Date())}`}
-				<Card>
-					<CardContent class="py-4">
-						<div class="flex items-center gap-2 mb-2">
-							<a
-								href={journalHref}
-								aria-label={companion.name}
-								class="flex min-w-0 items-center gap-2 -mx-2 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
-							>
-								<CompanionAvatar
-									companionId={companion.id}
-									avatarPath={companion.avatarPath}
-									name={companion.name}
-									size="sm"
-								/>
-								<span class="font-medium text-sm text-foreground truncate">{companion.name}</span>
-							</a>
-							{#if entry?.mood}
-								<span class="text-base ml-auto" aria-hidden="true">{MOOD_ICONS[entry.mood]}</span>
-							{/if}
-						</div>
-						{#if entry}
-							{#if entry.body}
-								<p class="text-sm text-muted-foreground line-clamp-3 mb-2">
-									{stripMarkdown(entry.body)}
-								</p>
-							{:else}
-								<p class="text-xs italic text-muted-foreground mb-2">
-									{t(locale, 'overview.empty.journal')}
-								</p>
-							{/if}
-							<Button
-								href="/{companion.id}/journal/{entry.date}"
-								variant="ghost"
-								size="sm"
-								class="h-7 gap-1.5 px-2 text-xs"
-							>
-								<Pencil class="h-3.5 w-3.5" />
-								{t(locale, 'overview.journal.editToday')}
-							</Button>
-						{:else}
-							<p class="text-xs italic text-muted-foreground mb-2">
-								{t(locale, 'overview.empty.journal')}
-							</p>
-							<Button
-								href="/{companion.id}/journal/{localDateISO(new Date())}"
-								variant="ghost"
-								size="sm"
-								class="h-7 gap-1.5 px-2 text-xs"
-							>
-								<Plus class="h-3.5 w-3.5" />
-								{t(locale, 'overview.journal.addToday')}
-							</Button>
-						{/if}
-					</CardContent>
-				</Card>
-			{/each}
+	<!-- Greeting header -->
+	<div class="flex items-start justify-between gap-3">
+		<div>
+			<p class="font-display text-2xl font-bold text-foreground">
+				{t(locale, 'overview.greeting', { name: data.user.displayName })}
+			</p>
+			<p class="text-sm text-muted-foreground mt-0.5">
+				<LocalTime date={new Date()} format="date" /> &middot;
+				{data.companions.length}
+				{data.companions.length === 1 ? 'companion' : 'companions'}
+			</p>
 		</div>
-	</section>
+		<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
+			<Plus class="h-4 w-4" />
+			<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
+			<span class="sm:hidden">Add</span>
+		</Button>
+	</div>
 
-	<Separator />
-
-	<section class="space-y-3">
-		<h2 class="font-display text-xl font-bold text-foreground">
-			{t(locale, 'overview.heading.recentActivity')}
-		</h2>
-		{#if recentTimeline.length === 0}
-			<Card>
-				<CardContent class="text-center py-8">
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'overview.empty.recent')}
-					</p>
-				</CardContent>
-			</Card>
-		{:else}
-			<div class="space-y-2">
-				{#each recentTimeline as event (event.kind + ':' + event.row.id)}
-					{@const companion = companionsById[event.row.companionId]}
-					<Card>
-						<CardContent class="py-3">
-							<div class="flex items-start gap-3">
-								{#if companion}
-									<a
-										href="/{companion.id}/journal/{localDateISO(event.at)}"
-										aria-label={t(locale, 'overview.journal.openFor', { name: companion.name })}
-										class="shrink-0 -m-1 rounded-full p-1 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-									>
-										<CompanionAvatar
-											companionId={companion.id}
-											avatarPath={companion.avatarPath}
-											name={companion.name}
-											size="sm"
-										/>
-									</a>
-								{/if}
-								<button
-									type="button"
-									onclick={() => openEventDetail(event)}
-									class="flex-1 min-w-0 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
-								>
-									<div class="flex items-center gap-2 flex-wrap">
-										{#if event.kind === 'daily'}
-											<span class="text-base" aria-hidden="true"
-												>{ACTIVITY_ICONS[event.row.type] ?? '📝'}</span
-											>
-											<span class="font-medium text-sm text-foreground truncate"
-												>{activityLabel(locale, event.row.type)}</span
-											>
-											{#if event.row.durationMinutes}
-												<Badge variant="secondary">{event.row.durationMinutes}m</Badge>
-											{/if}
-										{:else}
-											<span class="text-base" aria-hidden="true">🏥</span>
-											<span class="font-medium text-sm text-foreground truncate"
-												>{event.row.title}</span
-											>
-											<Badge variant="secondary">{healthTypeLabel(locale, event.row.type)}</Badge>
-										{/if}
-									</div>
-									{#if event.kind === 'daily' && event.row.notes}
-										<p class="text-xs mt-0.5 text-muted-foreground line-clamp-2">
-											{stripMarkdown(event.row.notes)}
-										</p>
-									{/if}
-									<p class="text-xs mt-0.5 text-muted-foreground">
-										{companion?.name ?? ''} ·
-										<LocalTime date={event.at} format="datetime" /><ByLine
-											user={event.row.logger}
-											variant="inline"
-										/>
-									</p>
-								</button>
-							</div>
-						</CardContent>
-					</Card>
+	<!-- Needs-attention strip -->
+	{#if attentionItems.length > 0}
+		<section aria-label={t(locale, 'overview.needsAttention')}>
+			<div class="flex items-center gap-1.5 mb-2">
+				<Zap class="h-3.5 w-3.5 text-coral" />
+				<h2 class="text-sm font-semibold text-coral">
+					{t(locale, 'overview.needsAttention')}
+				</h2>
+			</div>
+			<div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+				{#each attentionItems as { r, urgency } (r.id)}
+					{@const companion = companionsById[r.companionId]}
+					<a
+						href={companion ? `/${companion.id}/reminders` : '/'}
+						class="flex-none min-w-[140px] rounded-xl border bg-card p-3 hover:border-coral/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+					>
+						<p class="text-xs font-semibold text-foreground truncate">
+							{companion?.name ?? ''} &middot; {r.title}
+						</p>
+						<Badge
+							variant={urgency === 'overdue' ? 'coral' : urgency === 'today' ? 'gold' : 'teal'}
+							class="mt-1.5 text-[10px]"
+						>
+							{urgencyLabel(urgency)}
+						</Badge>
+					</a>
 				{/each}
 			</div>
-		{/if}
+
+			<!-- Quick-dismiss forms (hidden, needed for pendingDismiss) -->
+			{#each attentionItems as { r } (r.id + '-form')}
+				<form
+					method="POST"
+					action="?/complete"
+					use:enhance={clearSubmittingFlag}
+					use:registerDismissForm={{ id: r.id, registry: dismissFormRegistry }}
+					class="hidden"
+				>
+					<input type="hidden" name="id" value={r.id} />
+				</form>
+			{/each}
+		</section>
+
+		<Separator />
+	{/if}
+
+	<!-- Companions grid -->
+	<section>
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="font-display text-lg font-bold text-foreground">
+				{t(locale, 'overview.heading.companions')}
+			</h2>
+		</div>
+
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+			{#each data.companions as companion (companion.id)}
+				{@const lastActivity = lastActivityByCompanion[companion.id]}
+				{@const nextReminder = nextReminderByCompanion[companion.id]}
+				{@const age = companionAge(companion.dob)}
+				{@const urgency = nextReminder ? reminderUrgency(nextReminder.dueAt) : null}
+
+				<a
+					href="/{companion.id}"
+					class="group block rounded-xl border bg-card p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				>
+					<!-- Avatar + name -->
+					<div class="flex items-center gap-3 mb-3">
+						<CompanionAvatar
+							companionId={companion.id}
+							avatarPath={companion.avatarPath}
+							name={companion.name}
+							size="md"
+						/>
+						<div class="min-w-0">
+							<p class="font-semibold text-foreground truncate">{companion.name}</p>
+							{#if companion.breed || age}
+								<p class="text-xs text-muted-foreground truncate">
+									{[companion.breed, age].filter(Boolean).join(' · ')}
+								</p>
+							{/if}
+						</div>
+						<ChevronRight
+							class="h-4 w-4 text-muted-foreground ml-auto shrink-0 group-hover:text-foreground transition-colors"
+						/>
+					</div>
+
+					<!-- Last activity -->
+					{#if lastActivity}
+						<div class="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+							<span aria-hidden="true" class="text-sm"
+								>{ACTIVITY_ICONS[lastActivity.type] ?? '📝'}</span
+							>
+							<span class="truncate">{lastActivity.type}</span>
+							<span class="ml-auto shrink-0 tabular-nums"
+								><LocalTime date={lastActivity.loggedAt} format="relative" /></span
+							>
+						</div>
+					{/if}
+
+					<!-- Next reminder -->
+					{#if nextReminder}
+						<div
+							class="flex items-center gap-2 pt-2.5 border-t border-border text-xs text-muted-foreground"
+						>
+							<span aria-hidden="true" class="text-sm"
+								>{REMINDER_ICONS[nextReminder.type] ?? '📌'}</span
+							>
+							<span class="truncate">{nextReminder.title}</span>
+							{#if urgency}
+								<Badge
+									variant={urgency === 'overdue' ? 'coral' : urgency === 'today' ? 'gold' : 'teal'}
+									class="ml-auto shrink-0 text-[10px] py-0 px-1.5"
+								>
+									{urgencyLabel(urgency)}
+								</Badge>
+							{/if}
+						</div>
+					{/if}
+				</a>
+			{/each}
+
+			<!-- Add companion card -->
+			<a
+				href="/companions/new"
+				class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border min-h-[130px] text-muted-foreground hover:border-primary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-4"
+			>
+				<div class="rounded-xl bg-primary/10 p-2.5">
+					<Plus class="h-5 w-5 text-primary" />
+				</div>
+				<p class="text-sm font-medium">{t(locale, 'layout.addCompanion')}</p>
+				<p class="text-xs">{t(locale, 'overview.companions.addStart')}</p>
+			</a>
+		</div>
 	</section>
 </div>

@@ -438,6 +438,12 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: overview (multi-companion landing)
 	'overview.title': 'Resumo',
+	'overview.greeting': 'Olá, {name}',
+	'overview.needsAttention': 'Requer atenção',
+	'overview.allCaughtUp': 'Tudo em dia',
+	'overview.heading.companions': 'Os seus companheiros',
+	'overview.companions.nextReminder': 'Próximo lembrete',
+	'overview.companions.addStart': 'Iniciar novo registo',
 	'overview.heading.reminders': 'Lembretes próximos (próximos 7 dias)',
 	'overview.heading.todayJournal': 'Diário de hoje',
 	'overview.heading.recentActivity': 'Atividade recente (últimos 7 dias)',

@@ -434,6 +434,12 @@ const messages = {
 
 	// Page: overview (multi-companion landing)
 	'overview.title': 'Overview',
+	'overview.greeting': 'Hello, {name}',
+	'overview.needsAttention': 'Needs attention',
+	'overview.allCaughtUp': 'All caught up',
+	'overview.heading.companions': 'Your companions',
+	'overview.companions.nextReminder': 'Next reminder',
+	'overview.companions.addStart': 'Start a new vault',
 	'overview.heading.reminders': 'Upcoming Reminders (Next 7 Days)',
 	'overview.heading.todayJournal': "Today's Journal",
 	'overview.heading.recentActivity': 'Recent Activity (Last 7 Days)',
