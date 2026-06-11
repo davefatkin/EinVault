@@ -799,6 +799,7 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.document': 'Documentos',
 	'search.group.daily': 'Registro diario',
 	'search.group.weight': 'Peso',
+	'search.group.media': 'Fotos y vídeos',
 
 	// Immich picker
 	'immich.picker.title': 'Elegir desde Immich',

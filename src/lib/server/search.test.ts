@@ -114,6 +114,44 @@ describe('search index + query', () => {
 		expect(r.snippet).toContain('\x01gargoyle\x02');
 	});
 
+	it('indexes journal media captions', async () => {
+		const { eq } = await import('drizzle-orm');
+		await db.insert(schema.journalEntries).values({
+			id: 'j-s-media',
+			companionId: 'c-s',
+			date: '2026-04-09',
+			body: 'ordinary entry',
+			loggedBy: 'u-s'
+		} as typeof schema.journalEntries.$inferInsert);
+		await db.insert(schema.journalPhotos).values({
+			id: 'p-s1',
+			entryId: 'j-s-media',
+			filename: 'sphinx.jpg',
+			mimeType: 'image/jpeg',
+			sizeBytes: 12345,
+			notes: 'sphinx caption here'
+		} as typeof schema.journalPhotos.$inferInsert);
+
+		expect(search('sphinx').length).toBe(1);
+		expect(search('sphinx')[0]).toMatchObject({
+			type: 'media',
+			href: '/c-s/journal/2026-04-09?media=p-s1'
+		});
+
+		// update: old term gone, new term found
+		await db
+			.update(schema.journalPhotos)
+			.set({ notes: 'marmot updated' })
+			.where(eq(schema.journalPhotos.id, 'p-s1'));
+		expect(search('sphinx').length).toBe(0);
+		expect(search('marmot').length).toBe(1);
+		expect(search('marmot')[0]?.type).toBe('media');
+
+		// delete: gone
+		await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, 'p-s1'));
+		expect(search('marmot').length).toBe(0);
+	});
+
 	it('ranks the stronger match first', async () => {
 		await db.insert(schema.journalEntries).values([
 			{

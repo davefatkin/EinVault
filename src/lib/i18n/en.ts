@@ -791,6 +791,7 @@ const messages = {
 	'search.group.document': 'Documents',
 	'search.group.daily': 'Daily log',
 	'search.group.weight': 'Weight',
+	'search.group.media': 'Photos & videos',
 
 	// Immich picker
 	'immich.picker.title': 'Pick from Immich',

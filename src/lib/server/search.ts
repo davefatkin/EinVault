@@ -1,6 +1,13 @@
 import { db } from '$lib/server/db';
 
-export type SearchEntityType = 'journal' | 'health' | 'reminder' | 'document' | 'daily' | 'weight';
+export type SearchEntityType =
+	| 'journal'
+	| 'health'
+	| 'reminder'
+	| 'document'
+	| 'daily'
+	| 'weight'
+	| 'media';
 
 export interface SearchResult {
 	type: SearchEntityType;
@@ -41,7 +48,8 @@ const HREF_BY_TYPE: Record<
 	health: (c, _d, id) => `/${c}/health?detailHealth=${id}`,
 	weight: (c, _d, id) => `/${c}/health?detailWeight=${id}`,
 	reminder: (c, _d, id) => `/${c}/reminders?detail=${id}`,
-	document: (c, _d, id) => `/${c}/documents?preview=${id}`
+	document: (c, _d, id) => `/${c}/documents?preview=${id}`,
+	media: (c, d, id) => `/${c}/journal/${d}?media=${id}`
 };
 
 interface SearchRow {
