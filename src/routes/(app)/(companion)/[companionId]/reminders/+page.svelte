@@ -98,6 +98,21 @@
 		});
 	});
 
+	let detailApplied = false;
+	$effect(() => {
+		if (detailApplied) return;
+		const detailId = page.url.searchParams.get('detail');
+		if (!detailId) return;
+		detailApplied = true;
+		const match = data.reminders.find((r) => r.id === detailId);
+		if (match) openDetail(match);
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('detail');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
+	});
+
 	function startEdit(reminder: (typeof data.reminders)[0]) {
 		editingId = reminder.id;
 	}

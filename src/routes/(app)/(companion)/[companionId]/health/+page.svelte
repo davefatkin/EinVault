@@ -111,6 +111,29 @@
 		});
 	});
 
+	let detailApplied = false;
+	$effect(() => {
+		if (detailApplied) return;
+		const params = page.url.searchParams;
+		const healthId = params.get('detailHealth');
+		const weightId = params.get('detailWeight');
+		if (!healthId && !weightId) return;
+		detailApplied = true;
+		if (healthId) {
+			const match = data.healthEvents.find((e) => e.id === healthId);
+			if (match) openDetail({ kind: 'health', item: match });
+		} else if (weightId) {
+			const match = data.weightEntries.find((e) => e.id === weightId);
+			if (match) openDetail({ kind: 'weight', item: match });
+		}
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('detailHealth');
+			url.searchParams.delete('detailWeight');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
+	});
+
 	// Detail modal
 	type SelectedItem =
 		| { kind: 'weight'; item: (typeof data.weightEntries)[0] }

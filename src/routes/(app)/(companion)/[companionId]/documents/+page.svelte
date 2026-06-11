@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { tick } from 'svelte';
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -127,6 +129,21 @@
 		if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
+
+	let previewApplied = false;
+	$effect(() => {
+		if (previewApplied) return;
+		const previewId = page.url.searchParams.get('preview');
+		if (!previewId) return;
+		previewApplied = true;
+		const match = data.documents.find((d) => d.id === previewId);
+		if (match) preview = match;
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('preview');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
+	});
 </script>
 
 <svelte:head>
