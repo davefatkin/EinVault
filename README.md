@@ -44,6 +44,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
 - **Activity logging:** walks, meals, bathroom trips, treats, play sessions, and grooming
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
+- **Search:** full-text search across journals, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
 - **Caretaker shifts:** schedule work shifts and export to calendar via iCalendar (.ics)
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
