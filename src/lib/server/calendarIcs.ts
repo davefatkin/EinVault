@@ -74,9 +74,7 @@ export function buildCalendar(items: CalendarItem[], tz: string, shiftLabel: str
 
 		// CATEGORIES: comma is the RFC5545 multi-value delimiter (not escaped);
 		// each value must be individually escaped
-		const cats = item.companionName
-			? `${item.kind},${icsEscape(item.companionName)}`
-			: item.kind;
+		const cats = item.companionName ? `${item.kind},${icsEscape(item.companionName)}` : item.kind;
 		lines.push(`CATEGORIES:${cats}`);
 
 		lines.push('END:VEVENT');
