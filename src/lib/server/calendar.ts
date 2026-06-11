@@ -137,7 +137,7 @@ export async function getCalendarItems(
 		}
 	}
 
-	if (user.role === 'caretaker' && wants(filters, 'shift')) {
+	if (user.role === 'caretaker' && wants(filters, 'shift') && filters.companionIds.length === 0) {
 		const shifts = await getUpcomingShifts(user.id);
 		for (const s of shifts) {
 			items.push({
