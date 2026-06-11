@@ -5,20 +5,11 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import {
-		ChevronLeft,
-		ChevronRight,
-		X,
-		Pencil,
-		NotebookPen,
-		ArrowRight,
-		Download,
-		Play
-	} from '@lucide/svelte';
-	import JournalVideo from '$lib/components/JournalVideo.svelte';
+	import { X, Pencil, NotebookPen, ArrowRight, Play } from '@lucide/svelte';
+	import { tick } from 'svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
-	import { tick } from 'svelte';
+	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 
@@ -88,71 +79,22 @@
 		return date.slice(0, 7);
 	}
 
-	// Lightbox
-	let lightboxMedia = $state<Entry['photos']>([]);
+	// Lightbox state (bound to MediaLightbox)
+	let lightboxOpen = $state(false);
+	let lightboxItems = $state<Entry['photos']>([]);
 	let lightboxDate = $state('');
 	let lightboxIndex = $state(0);
-	let lightboxItem = $derived(lightboxMedia.length > 0 ? lightboxMedia[lightboxIndex] : null);
-	let lightboxEl = $state<HTMLElement | null>(null);
-	let lightboxTrigger = $state<HTMLElement | null>(null);
 
-	async function openLightbox(items: Entry['photos'], date: string, index: number) {
-		lightboxTrigger = document.activeElement as HTMLElement | null;
-		lightboxMedia = items;
+	function openLightbox(items: Entry['photos'], date: string, index: number) {
+		lightboxItems = items;
 		lightboxDate = date;
 		lightboxIndex = index;
-		await tick();
-		lightboxEl?.focus();
-	}
-	function closeLightbox() {
-		lightboxMedia = [];
-		lightboxDate = '';
-		lightboxIndex = 0;
-		tick().then(() => lightboxTrigger?.focus());
-	}
-	function lightboxPrev() {
-		if (lightboxIndex > 0) lightboxIndex--;
-	}
-	function lightboxNext() {
-		if (lightboxIndex < lightboxMedia.length - 1) lightboxIndex++;
+		lightboxOpen = true;
 	}
 
-	function handleLightboxKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			if (lightboxItem) {
-				closeLightbox();
-				return;
-			}
-			if (detailEvent) {
-				closeDetail();
-				return;
-			}
-		}
-		if (!lightboxItem) return;
-		if (e.key === 'ArrowLeft') lightboxPrev();
-		else if (e.key === 'ArrowRight') lightboxNext();
-	}
-
-	function trapLightboxFocus(e: KeyboardEvent) {
-		if (!lightboxEl || e.key !== 'Tab') return;
-		const focusable = Array.from(
-			lightboxEl.querySelectorAll<HTMLElement>(
-				'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
-			)
-		);
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.shiftKey) {
-			if (document.activeElement === first) {
-				e.preventDefault();
-				last.focus();
-			}
-		} else {
-			if (document.activeElement === last) {
-				e.preventDefault();
-				first.focus();
-			}
+	function handleEscapeForDetail(e: KeyboardEvent) {
+		if (e.key === 'Escape' && !lightboxOpen && detailEvent) {
+			closeDetail();
 		}
 	}
 
@@ -201,114 +143,16 @@
 	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleLightboxKey} />
+<svelte:window onkeydown={handleEscapeForDetail} />
 
 <!-- Lightbox -->
-{#if lightboxItem}
-	<div
-		bind:this={lightboxEl}
-		role="dialog"
-		aria-modal="true"
-		aria-label={t(locale, 'page.journal.mediaLightboxLabel')}
-		tabindex="-1"
-		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 focus:outline-none"
-		onclick={closeLightbox}
-		onkeydown={(e) => {
-			handleLightboxKey(e);
-			trapLightboxFocus(e);
-		}}
-	>
-		<div
-			role="presentation"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			class="relative max-w-4xl w-full"
-		>
-			<div class="flex items-center justify-between mb-2">
-				{#if lightboxMedia.length > 1}
-					<span class="text-sm text-white/60">{lightboxIndex + 1} / {lightboxMedia.length}</span>
-				{:else}
-					<span></span>
-				{/if}
-				<div class="flex items-center gap-1">
-					<a
-						href={mediaUrl(lightboxItem, lightboxDate)}
-						download={lightboxItem.originalName ?? lightboxItem.filename}
-						class="text-white/70 hover:text-white p-1 rounded"
-						aria-label={t(locale, 'aria.downloadMedia')}
-					>
-						<Download class="h-5 w-5" />
-					</a>
-					<button
-						type="button"
-						onclick={closeLightbox}
-						class="text-white/70 hover:text-white p-1 rounded"
-						aria-label={t(locale, 'aria.close')}
-					>
-						<X class="h-5 w-5" />
-					</button>
-				</div>
-			</div>
-
-			<div class="relative">
-				{#if lightboxItem.mediaType === 'video'}
-					<JournalVideo
-						src={mediaUrl(lightboxItem, lightboxDate)}
-						poster={posterUrl(lightboxItem, lightboxDate)}
-						status={lightboxItem.status}
-						downloadName={lightboxItem.originalName}
-						label={lightboxItem.originalName ?? undefined}
-						autoplay
-						class="max-h-[78vh] w-full object-contain rounded-lg bg-black"
-					/>
-				{:else}
-					<img
-						src={mediaUrl(lightboxItem, lightboxDate)}
-						alt={lightboxItem.originalName ?? ''}
-						class="max-h-[78vh] w-full object-contain rounded-lg"
-					/>
-				{/if}
-				{#if lightboxMedia.length > 1}
-					<button
-						type="button"
-						onclick={lightboxPrev}
-						disabled={lightboxIndex === 0}
-						class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white transition-opacity bg-black/40 {lightboxIndex ===
-						0
-							? 'opacity-20 cursor-default'
-							: 'opacity-70 hover:opacity-100'}"
-						aria-label={t(locale, 'aria.previousMedia')}
-					>
-						<ChevronLeft class="h-5 w-5" />
-					</button>
-					<button
-						type="button"
-						onclick={lightboxNext}
-						disabled={lightboxIndex === lightboxMedia.length - 1}
-						class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white transition-opacity bg-black/40 {lightboxIndex ===
-						lightboxMedia.length - 1
-							? 'opacity-20 cursor-default'
-							: 'opacity-70 hover:opacity-100'}"
-						aria-label={t(locale, 'aria.nextMedia')}
-					>
-						<ChevronRight class="h-5 w-5" />
-					</button>
-				{/if}
-			</div>
-
-			{#if lightboxItem.notes}
-				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm">
-					{@html renderMarkdown(lightboxItem.notes)}
-				</div>
-			{/if}
-			{#if lightboxItem.logger}
-				<div class="mt-2 flex justify-center">
-					<ByLine user={lightboxItem.logger} variant="inline" class="!text-white/60 !ml-0" />
-				</div>
-			{/if}
-		</div>
-	</div>
-{/if}
+<MediaLightbox
+	companionId={companion.id}
+	items={lightboxItems}
+	date={lightboxDate}
+	bind:open={lightboxOpen}
+	bind:index={lightboxIndex}
+/>
 
 <!-- Activity detail modal -->
 {#if detailEvent}
