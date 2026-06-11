@@ -250,7 +250,7 @@ const messages = {
 		'This is a test notification from EinVault. If you are reading this, your notification settings work.',
 
 	// Page: settings (calendar feed)
-	'settings.calendar.title': 'Calendar feed',
+	'settings.calendar.title': 'Calendar Feed',
 	'settings.calendar.description':
 		'Subscribe to your health events, reminders, and shifts in any calendar app.',
 	'settings.calendar.enable': 'Enable calendar feed',

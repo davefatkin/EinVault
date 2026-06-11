@@ -13,7 +13,7 @@ import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
-import { REMINDER_UNDO_SECONDS_DEFAULT } from '$lib/server/env';
+import { REMINDER_UNDO_SECONDS_DEFAULT, CALENDAR_FEED_ENABLED } from '$lib/server/env';
 import { isMailEnabled } from '$lib/server/mail';
 import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
@@ -28,6 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
 		mailEnabled: isMailEnabled(),
 		ntfyEnabled: isNtfyEnabled(),
+		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
 		calendarFeedEnabled: calUser?.calendarFeedToken != null
 	};
 };
@@ -85,6 +86,7 @@ export const actions: Actions = {
 
 	calendarEnable: async ({ locals }) => {
 		if (!locals.user) return fail(401);
+		if (!CALENDAR_FEED_ENABLED) return fail(403);
 		const token = await enableFeedToken(locals.user.id);
 		return { calendarToken: token };
 	},

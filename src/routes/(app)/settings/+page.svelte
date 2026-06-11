@@ -375,7 +375,7 @@
 		</Card>
 	{/if}
 
-	{#if data.user?.role !== 'caretaker'}
+	{#if data.user?.role !== 'caretaker' && data.calendarFeedAvailable}
 		<Card>
 			<CardHeader>
 				<CardTitle>{t(locale, 'settings.calendar.title')}</CardTitle>
