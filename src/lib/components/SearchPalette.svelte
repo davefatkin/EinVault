@@ -289,6 +289,20 @@
 			}
 		}
 
+		if (e.key === 'Backspace' && query.length === 0 && hasFilters()) {
+			e.preventDefault();
+			if (before) {
+				before = '';
+			} else if (after) {
+				after = '';
+			} else if (typeFilters.length > 0) {
+				typeFilters = typeFilters.slice(0, -1);
+			} else if (companionFilters.length > 0) {
+				companionFilters = companionFilters.slice(0, -1);
+			}
+			return;
+		}
+
 		if (e.key === 'Escape') {
 			close();
 			return;
