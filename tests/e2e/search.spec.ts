@@ -84,8 +84,10 @@ test.describe('global search palette', () => {
 		// Click the result to navigate
 		await palette.locator('[role="option"]').first().click();
 
-		// After navigation the palette closes; wait for the detail dialog on the health page
+		// After navigation the palette (a combobox dialog) closes; wait for it to
+		// detach so the dialog selector resolves only to the page's detail modal.
 		await asMember.waitForURL(new RegExp(`/${COMP}/health`), { timeout: 8_000 });
+		await expect(asMember.locator('[role="combobox"]')).toHaveCount(0, { timeout: 8_000 });
 		const detailDialog = asMember.locator('[role="dialog"][aria-modal="true"]');
 		await expect(detailDialog).toBeVisible({ timeout: 8_000 });
 		await expect(detailDialog).toContainText('Seed checkup', { timeout: 8_000 });
@@ -107,8 +109,10 @@ test.describe('global search palette', () => {
 		// Click the result to navigate
 		await palette.locator('[role="option"]').first().click();
 
-		// After navigation the palette closes; wait for the detail dialog on the reminders page
+		// Wait for the palette (combobox dialog) to detach before resolving the
+		// page's detail modal via the shared dialog selector.
 		await asMember.waitForURL(new RegExp(`/${COMP}/reminders`), { timeout: 8_000 });
+		await expect(asMember.locator('[role="combobox"]')).toHaveCount(0, { timeout: 8_000 });
 		const detailDialog = asMember.locator('[role="dialog"][aria-modal="true"]');
 		await expect(detailDialog).toBeVisible({ timeout: 8_000 });
 		await expect(detailDialog).toContainText('Seed vet visit', { timeout: 8_000 });
