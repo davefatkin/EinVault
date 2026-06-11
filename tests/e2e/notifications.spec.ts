@@ -294,7 +294,11 @@ test('shift start email fires for caretaker', async ({ world, browser }) => {
 // Regression (#113): with email disabled and ntfy enabled, the notifications
 // card lead-in must describe push, not email.
 base('notifications card describes push when only ntfy is enabled', async ({ page }, testInfo) => {
-	const dir = path.join(REPO_ROOT, '.test-data', `notif-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`);
+	const dir = path.join(
+		REPO_ROOT,
+		'.test-data',
+		`notif-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`
+	);
 	const ntfy = await startNtfyFake();
 	const dbPath = createSeededDb(dir);
 	const server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
