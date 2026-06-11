@@ -250,6 +250,21 @@ const messages = {
 	'email.test.body':
 		'This is a test notification from EinVault. If you are reading this, your notification settings work.',
 
+	// Page: settings (calendar feed)
+	'settings.calendar.title': 'Calendar feed',
+	'settings.calendar.description':
+		'Subscribe to your health events, reminders, and shifts in any calendar app.',
+	'settings.calendar.enable': 'Enable calendar feed',
+	'settings.calendar.regenerate': 'Regenerate URL',
+	'settings.calendar.disable': 'Disable',
+	'settings.calendar.copy': 'Copy',
+	'settings.calendar.url': 'Feed URL',
+	'settings.calendar.revealOnce':
+		"Copy this URL now. For your security it won't be shown again; regenerate if you lose it.",
+	'settings.calendar.enabled': 'Your calendar feed is enabled.',
+	'settings.calendar.help':
+		'Works with Apple Calendar, Google Calendar, Thunderbird, and Home Assistant (Remote Calendar). The feed updates when your calendar app refreshes.',
+
 	// Errors: OIDC
 	'error.oidc.notProvisioned':
 		'Your account has not been provisioned. Please contact an administrator.',

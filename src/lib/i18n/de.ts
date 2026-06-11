@@ -264,6 +264,21 @@ const messages: Record<keyof Messages, string> = {
 	'email.test.body':
 		'Dies ist eine Testbenachrichtigung von EinVault. Wenn du das liest, funktionieren deine Benachrichtigungseinstellungen.',
 
+	// Page: settings (calendar feed)
+	'settings.calendar.title': 'Kalender-Feed',
+	'settings.calendar.description':
+		'Abonniere deine Gesundheitsereignisse, Erinnerungen und Schichten in jeder Kalender-App.',
+	'settings.calendar.enable': 'Kalender-Feed aktivieren',
+	'settings.calendar.regenerate': 'URL neu generieren',
+	'settings.calendar.disable': 'Deaktivieren',
+	'settings.calendar.copy': 'Kopieren',
+	'settings.calendar.url': 'Feed-URL',
+	'settings.calendar.revealOnce':
+		'Kopiere diese URL jetzt. Aus Sicherheitsgründen wird sie nicht erneut angezeigt; generiere sie neu, falls du sie verlierst.',
+	'settings.calendar.enabled': 'Dein Kalender-Feed ist aktiviert.',
+	'settings.calendar.help':
+		'Funktioniert mit Apple Calendar, Google Calendar, Thunderbird und Home Assistant (Remote Calendar). Der Feed wird aktualisiert, wenn deine Kalender-App synchronisiert.',
+
 	// Page: Login
 	'page.login.title': 'Anmelden',
 	'page.login.tagline': 'Dein privates Begleiter-Pflegetagebuch',
