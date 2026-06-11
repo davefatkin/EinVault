@@ -18,6 +18,8 @@ test.describe('global search palette', () => {
 		// Wait for the result option to appear before attempting keyboard navigation
 		const firstOption = dialog.locator('[role="option"]').first();
 		await expect(firstOption).toBeVisible({ timeout: 8_000 });
+		// Result is grouped under the Journal heading.
+		await expect(dialog.getByText('Journal', { exact: true })).toBeVisible({ timeout: 8_000 });
 
 		// ArrowDown to select the first result, then Enter to navigate
 		await asMember.keyboard.press('ArrowDown');
