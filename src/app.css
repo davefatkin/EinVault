@@ -52,6 +52,15 @@
 	--color-card: hsl(var(--card));
 	--color-card-foreground: hsl(var(--card-foreground));
 
+	/* Companion accent tokens */
+	--color-coral: hsl(var(--coral));
+	--color-coral-foreground: hsl(var(--coral-foreground));
+	--color-gold: hsl(var(--gold));
+	--color-gold-foreground: hsl(var(--gold-foreground));
+	--color-teal: hsl(var(--teal));
+	--color-teal-foreground: hsl(var(--teal-foreground));
+	--color-surface-2: hsl(var(--surface-2));
+
 	/* Bark palette */
 	--color-bark-50: #fdf8f0;
 	--color-bark-100: #f9edda;
@@ -153,26 +162,34 @@
 @layer base {
 	:root {
 		color-scheme: light;
-		--background: 45 20% 97%;
-		--foreground: 20 14% 4%;
+		--background: 258 47% 96%;
+		--foreground: 252 43% 15%;
 		--card: 0 0% 100%;
-		--card-foreground: 20 14% 4%;
+		--card-foreground: 252 43% 15%;
 		--popover: 0 0% 100%;
-		--popover-foreground: 20 14% 4%;
-		--primary: 29 91% 37%;
-		--primary-foreground: 0 0% 98%;
-		--secondary: 220 14% 96%;
-		--secondary-foreground: 20 14% 4%;
-		--muted: 220 14% 96%;
-		--muted-foreground: 30 5% 48%;
-		--accent: 220 14% 96%;
-		--accent-foreground: 20 14% 4%;
+		--popover-foreground: 252 43% 15%;
+		--primary: 255 89% 62%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 258 30% 94%;
+		--secondary-foreground: 252 43% 15%;
+		--muted: 258 30% 94%;
+		--muted-foreground: 249 13% 47%;
+		--accent: 258 30% 94%;
+		--accent-foreground: 252 43% 15%;
 		--destructive: 0 72% 51%;
-		--destructive-foreground: 0 0% 98%;
-		--border: 220 13% 91%;
-		--input: 220 13% 91%;
-		--ring: 29 91% 37%;
-		--radius: 0.5rem;
+		--destructive-foreground: 0 0% 100%;
+		--border: 252 33% 92%;
+		--input: 252 33% 92%;
+		--ring: 255 89% 62%;
+		--radius: 0.85rem;
+		--surface-2: 258 40% 98%;
+		--coral: 12 86% 59%;
+		--coral-foreground: 0 0% 100%;
+		--gold: 41 86% 38%;
+		--gold-foreground: 0 0% 100%;
+		--teal: 175 83% 27%;
+		--teal-foreground: 0 0% 100%;
+		--brand-gradient: linear-gradient(135deg, hsl(255 89% 62%), hsl(12 86% 59%));
 
 		/* Semantic extras used throughout the app */
 		--moss: 116 24% 38%;
@@ -183,25 +200,33 @@
 
 	.dark {
 		color-scheme: dark;
-		--background: 20 14% 4%;
-		--foreground: 60 9% 98%;
-		--card: 20 11% 10%;
-		--card-foreground: 60 9% 98%;
-		--popover: 20 11% 10%;
-		--popover-foreground: 60 9% 98%;
-		--primary: 45 96% 56%;
-		--primary-foreground: 20 14% 4%;
-		--secondary: 20 8% 16%;
-		--secondary-foreground: 60 9% 98%;
-		--muted: 20 8% 16%;
-		--muted-foreground: 30 6% 55%;
-		--accent: 20 8% 16%;
-		--accent-foreground: 60 9% 98%;
-		--destructive: 0 63% 31%;
-		--destructive-foreground: 60 9% 98%;
-		--border: 20 8% 23%;
-		--input: 20 8% 23%;
-		--ring: 45 96% 56%;
+		--background: 236 36% 9%;
+		--foreground: 0 0% 100%;
+		--card: 237 28% 14%;
+		--card-foreground: 0 0% 100%;
+		--popover: 237 28% 14%;
+		--popover-foreground: 0 0% 100%;
+		--primary: 252 100% 65%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 238 30% 19%;
+		--secondary-foreground: 0 0% 100%;
+		--muted: 238 30% 19%;
+		--muted-foreground: 240 14% 66%;
+		--accent: 238 30% 19%;
+		--accent-foreground: 0 0% 100%;
+		--destructive: 0 63% 50%;
+		--destructive-foreground: 0 0% 100%;
+		--border: 238 25% 22%;
+		--input: 238 25% 22%;
+		--ring: 252 100% 68%;
+		--surface-2: 238 35% 19%;
+		--coral: 13 100% 67%;
+		--coral-foreground: 240 36% 9%;
+		--gold: 42 100% 70%;
+		--gold-foreground: 240 36% 9%;
+		--teal: 172 66% 50%;
+		--teal-foreground: 174 80% 8%;
+		--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 100% 67%));
 
 		--moss: 142 71% 45%;
 		--moss-foreground: 142 71% 10%;
@@ -277,6 +302,14 @@
 	   background. Used by shadcn-style UI components for focus rings. */
 	.ring-offset-background {
 		--tw-ring-offset-color: hsl(var(--background));
+	}
+
+	/* Brand gradient utilities */
+	.bg-brand-gradient {
+		background-image: var(--brand-gradient);
+	}
+	.glow-brand {
+		box-shadow: 0 10px 26px -6px hsl(var(--primary) / 0.45);
 	}
 
 	/* ---- animate-in (previously tailwindcss-animate) ---- */
