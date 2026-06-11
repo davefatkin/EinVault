@@ -102,6 +102,11 @@ describe('search index + query', () => {
 		expect(search('plimsoll')[0]?.type).toBe('weight');
 		// health event_date derived from occurredAt
 		expect(search('xylograph')[0]?.date).toBe('2026-04-02');
+		// deep-link hrefs
+		expect(search('xylograph')[0]?.href).toBe('/c-s/health?detailHealth=h-s1');
+		expect(search('quibble')[0]?.href).toBe('/c-s/reminders?detail=r-s1');
+		expect(search('gargoyle')[0]?.href).toBe('/c-s/journal/2026-04-04');
+		expect(search('plimsoll')[0]?.href).toBe('/c-s/health?detailWeight=w-s1');
 	});
 
 	it('snippet carries sentinel markers around the match', () => {

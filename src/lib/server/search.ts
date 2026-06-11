@@ -32,13 +32,16 @@ export function buildMatchQuery(raw: string): string | null {
 	return tokens.join(' ');
 }
 
-const HREF_BY_TYPE: Record<SearchEntityType, (companionId: string, date: string) => string> = {
+const HREF_BY_TYPE: Record<
+	SearchEntityType,
+	(companionId: string, date: string, id: string) => string
+> = {
 	journal: (c, d) => `/${c}/journal/${d}`,
 	daily: (c, d) => `/${c}/journal/${d}`,
-	health: (c) => `/${c}/health`,
-	weight: (c) => `/${c}/health`,
-	reminder: (c) => `/${c}/reminders`,
-	document: (c) => `/${c}/documents`
+	health: (c, _d, id) => `/${c}/health?detailHealth=${id}`,
+	weight: (c, _d, id) => `/${c}/health?detailWeight=${id}`,
+	reminder: (c, _d, id) => `/${c}/reminders?detail=${id}`,
+	document: (c, _d, id) => `/${c}/documents?preview=${id}`
 };
 
 interface SearchRow {
@@ -76,6 +79,6 @@ export function search(rawQuery: string): SearchResult[] {
 		title: r.title,
 		snippet: r.excerpt,
 		date: r.event_date ?? '',
-		href: HREF_BY_TYPE[r.entity_type](r.companion_id, r.event_date ?? '')
+		href: HREF_BY_TYPE[r.entity_type](r.companion_id, r.event_date ?? '', r.entity_id)
 	}));
 }
