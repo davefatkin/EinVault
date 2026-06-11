@@ -130,12 +130,13 @@
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
-	let previewApplied = false;
+	// Re-fires for a different document/companion (page component is reused
+	// across companion navigations), idempotent for the same one.
+	let lastDeepLinkId = '';
 	$effect(() => {
-		if (previewApplied) return;
 		const previewId = page.url.searchParams.get('preview');
-		if (!previewId) return;
-		previewApplied = true;
+		if (!previewId || previewId === lastDeepLinkId) return;
+		lastDeepLinkId = previewId;
 		const match = data.documents.find((d) => d.id === previewId);
 		if (match) preview = match;
 		tick().then(() => {

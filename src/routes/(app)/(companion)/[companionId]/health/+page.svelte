@@ -111,14 +111,17 @@
 		});
 	});
 
-	let detailApplied = false;
+	// Track the last id we opened so the effect re-fires when a search result
+	// deep-links to a DIFFERENT item or companion (SvelteKit reuses this page
+	// component across companion navigations), but not for the same one.
+	let lastDeepLinkId = '';
 	$effect(() => {
-		if (detailApplied) return;
 		const params = page.url.searchParams;
 		const healthId = params.get('detailHealth');
 		const weightId = params.get('detailWeight');
-		if (!healthId && !weightId) return;
-		detailApplied = true;
+		const id = healthId ?? weightId;
+		if (!id || id === lastDeepLinkId) return;
+		lastDeepLinkId = id;
 		if (healthId) {
 			const match = data.healthEvents.find((e) => e.id === healthId);
 			if (match) openDetail({ kind: 'health', item: match });

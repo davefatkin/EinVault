@@ -98,12 +98,13 @@
 		});
 	});
 
-	let detailApplied = false;
+	// Re-fires for a different reminder/companion (page component is reused
+	// across companion navigations), idempotent for the same one.
+	let lastDeepLinkId = '';
 	$effect(() => {
-		if (detailApplied) return;
 		const detailId = page.url.searchParams.get('detail');
-		if (!detailId) return;
-		detailApplied = true;
+		if (!detailId || detailId === lastDeepLinkId) return;
+		lastDeepLinkId = detailId;
 		const match = data.reminders.find((r) => r.id === detailId);
 		if (match) openDetail(match);
 		tick().then(() => {
