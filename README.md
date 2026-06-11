@@ -45,6 +45,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 - **Activity logging:** walks, meals, bathroom trips, treats, play sessions, and grooming
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
 - **Search:** full-text search across journals, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
+- **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
 - **Caretaker shifts:** schedule work shifts and export to calendar via iCalendar (.ics)
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
@@ -102,9 +103,13 @@ Everything else in the compose file can be edited directly:
 | `MAX_DAILY_MEDIA`             | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
 | `MAX_DOCUMENTS_PER_COMPANION` | `200`               | Maximum number of documents (uploads and Paperless references combined) stored per companion.                                                              |
 | `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
+| `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
+| `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
 | `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
+
+The calendar feed URL contains a secret token that authenticates the subscriber. Avoid logging full `/api/calendar/` request URLs at the reverse proxy, as the token would appear in plain text in your access logs.
 
 ### Video transcoding (optional)
 
