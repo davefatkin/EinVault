@@ -493,6 +493,17 @@ const messages = {
 	'page.dashboard.modalOpenJournal': 'Open Journal',
 	'page.dashboard.closeDialog': 'Close dialog',
 	'page.dashboard.closePhoto': 'Close',
+	'page.dashboard.cardUpcomingReminders': 'Upcoming Reminders',
+	'page.dashboard.cardRecentActivity': 'Recent Activity',
+	'page.dashboard.cardWeightTrend': 'Weight Trend',
+	'page.dashboard.weightTrendViewHealth': 'View Health',
+	'page.dashboard.weightTrendEmpty': 'No weight recorded yet.',
+	'page.dashboard.nextVet': 'Next vet',
+	'page.dashboard.noUpcomingReminders': 'No upcoming reminders.',
+	'page.dashboard.heroHealthy': 'Healthy',
+	'page.dashboard.heroRecentActivity': '{count} activities',
+	'page.dashboard.reminderOverdue': 'Overdue',
+	'page.dashboard.reminderToday': 'Today',
 
 	// Page: dashboard caretaker
 	'page.dashboard.caretaker.microchip': 'Microchip: {id}',

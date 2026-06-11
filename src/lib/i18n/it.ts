@@ -496,6 +496,17 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalOpenJournal': 'Apri diario',
 	'page.dashboard.closeDialog': 'Chiudi finestra',
 	'page.dashboard.closePhoto': 'Chiudi',
+	'page.dashboard.cardUpcomingReminders': 'Promemoria in arrivo',
+	'page.dashboard.cardRecentActivity': 'Attività recente',
+	'page.dashboard.cardWeightTrend': 'Andamento del peso',
+	'page.dashboard.weightTrendViewHealth': 'Vedi salute',
+	'page.dashboard.weightTrendEmpty': 'Nessun peso registrato.',
+	'page.dashboard.nextVet': 'Prossimo veterinario',
+	'page.dashboard.noUpcomingReminders': 'Nessun promemoria in arrivo.',
+	'page.dashboard.heroHealthy': 'In salute',
+	'page.dashboard.heroRecentActivity': '{count} attività',
+	'page.dashboard.reminderOverdue': 'Scaduto',
+	'page.dashboard.reminderToday': 'Oggi',
 
 	// Page: dashboard caretaker
 	'page.dashboard.caretaker.microchip': 'Microchip: {id}',

@@ -500,6 +500,17 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalOpenJournal': 'Ouvrir le journal',
 	'page.dashboard.closeDialog': 'Fermer la boîte de dialogue',
 	'page.dashboard.closePhoto': 'Fermer',
+	'page.dashboard.cardUpcomingReminders': 'Rappels à venir',
+	'page.dashboard.cardRecentActivity': 'Activité récente',
+	'page.dashboard.cardWeightTrend': 'Tendance du poids',
+	'page.dashboard.weightTrendViewHealth': 'Voir la santé',
+	'page.dashboard.weightTrendEmpty': 'Aucun poids enregistré.',
+	'page.dashboard.nextVet': 'Prochain vétérinaire',
+	'page.dashboard.noUpcomingReminders': 'Aucun rappel à venir.',
+	'page.dashboard.heroHealthy': 'En bonne santé',
+	'page.dashboard.heroRecentActivity': '{count} activités',
+	'page.dashboard.reminderOverdue': 'En retard',
+	'page.dashboard.reminderToday': "Aujourd'hui",
 
 	// Page: dashboard caretaker
 	'page.dashboard.caretaker.microchip': 'Micropuce : {id}',

@@ -497,6 +497,17 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalOpenJournal': 'Abrir diário',
 	'page.dashboard.closeDialog': 'Fechar diálogo',
 	'page.dashboard.closePhoto': 'Fechar',
+	'page.dashboard.cardUpcomingReminders': 'Lembretes próximos',
+	'page.dashboard.cardRecentActivity': 'Atividade recente',
+	'page.dashboard.cardWeightTrend': 'Tendência de peso',
+	'page.dashboard.weightTrendViewHealth': 'Ver saúde',
+	'page.dashboard.weightTrendEmpty': 'Nenhum peso registrado.',
+	'page.dashboard.nextVet': 'Próximo veterinário',
+	'page.dashboard.noUpcomingReminders': 'Nenhum lembrete próximo.',
+	'page.dashboard.heroHealthy': 'Saudável',
+	'page.dashboard.heroRecentActivity': '{count} atividades',
+	'page.dashboard.reminderOverdue': 'Atrasado',
+	'page.dashboard.reminderToday': 'Hoje',
 
 	// Page: dashboard caretaker
 	'page.dashboard.caretaker.microchip': 'Microchip: {id}',
