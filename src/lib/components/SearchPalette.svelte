@@ -10,7 +10,8 @@
 		| 'reminder'
 		| 'document'
 		| 'daily'
-		| 'weight';
+		| 'weight'
+		| 'media';
 
 	export interface ClientSearchResult {
 		type: SearchEntityType;
@@ -111,7 +112,15 @@
 
 	type GroupKey = SearchEntityType;
 
-	const GROUP_ORDER: GroupKey[] = ['journal', 'daily', 'health', 'weight', 'reminder', 'document'];
+	const GROUP_ORDER: GroupKey[] = [
+		'journal',
+		'daily',
+		'health',
+		'weight',
+		'reminder',
+		'document',
+		'media'
+	];
 
 	let groups = $derived(
 		(() => {
@@ -196,7 +205,8 @@
 			reminder: 'search.group.reminder',
 			document: 'search.group.document',
 			daily: 'search.group.daily',
-			weight: 'search.group.weight'
+			weight: 'search.group.weight',
+			media: 'search.group.media'
 		};
 		return t(locale, keyMap[type]);
 	}

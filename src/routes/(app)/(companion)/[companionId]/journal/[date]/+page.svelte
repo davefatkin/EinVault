@@ -3,8 +3,10 @@
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
 	import { canModifyMedia } from '$lib/permissions';
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
@@ -219,6 +221,41 @@
 	}
 
 	let immichPickerOpen = $state(false);
+
+	// Lightbox state
+	let lightboxOpen = $state(false);
+	let lightboxIndex = $state(0);
+
+	function openLightbox(index: number) {
+		lightboxIndex = index;
+		lightboxOpen = true;
+	}
+
+	// Deep-link: ?media={id} opens the lightbox at that item.
+	// lastDeepLinkId is only committed once the item is found so the effect can
+	// re-run if the media array is still empty when the param is first read.
+	// deepLinkStripped tracks whether the URL has been cleaned for the current id
+	// so we strip exactly once even when the item is not found.
+	let lastDeepLinkId = '';
+	let deepLinkStripped = false;
+	$effect(() => {
+		const mediaId = page.url.searchParams.get('media');
+		if (!mediaId || mediaId === lastDeepLinkId) return;
+		const idx = media.findIndex((m) => m.id === mediaId);
+		if (idx !== -1) {
+			lastDeepLinkId = mediaId;
+			lightboxIndex = idx;
+			lightboxOpen = true;
+		}
+		if (!deepLinkStripped) {
+			deepLinkStripped = true;
+			tick().then(() => {
+				const url = new URL(page.url);
+				url.searchParams.delete('media');
+				history.replaceState(history.state, '', url.pathname + url.search);
+			});
+		}
+	});
 
 	async function pickFromImmich(assetId: string) {
 		try {
@@ -812,12 +849,19 @@
 										compact
 									/>
 								{:else}
-									<img
-										src={mediaUrl(item)}
-										alt={item.originalName ?? t(locale, 'page.journal.photoAlt')}
-										class="w-full h-full object-cover"
-										loading="lazy"
-									/>
+									<button
+										type="button"
+										onclick={() => openLightbox(media.indexOf(item))}
+										class="block w-full h-full focus:outline-none"
+										aria-label={item.originalName ?? t(locale, 'page.journal.photoAlt')}
+									>
+										<img
+											src={mediaUrl(item)}
+											alt={item.originalName ?? t(locale, 'page.journal.photoAlt')}
+											class="w-full h-full object-cover"
+											loading="lazy"
+										/>
+									</button>
 								{/if}
 								{#if canModifyMedia(data.user, item)}
 									<button
@@ -1245,6 +1289,14 @@
 >
 	<input type="hidden" name="id" value={deleteActivityId} />
 </form>
+
+<MediaLightbox
+	companionId={data.companion.id}
+	items={media}
+	date={data.date}
+	bind:open={lightboxOpen}
+	bind:index={lightboxIndex}
+/>
 
 <ConfirmDialog
 	open={confirmOpen}
