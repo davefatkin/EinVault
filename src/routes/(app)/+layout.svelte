@@ -15,11 +15,13 @@
 		FileText,
 		Settings,
 		LogOut,
-		ShieldCheck
+		ShieldCheck,
+		Search
 	} from '@lucide/svelte';
 	import { THEME_ICONS, THEMES, applyTheme, saveTheme, type Theme } from '$lib/theme';
 	import AppFooter from '$lib/components/AppFooter.svelte';
 	import { ToastRegion } from '$lib/components/ui/toast';
+	import SearchPalette from '$lib/components/SearchPalette.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -83,6 +85,8 @@
 		}
 	}
 
+	let searchOpen = $state(false);
+
 	// Theme toggle
 	let themeOverride = $state<Theme | null>(null);
 	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
@@ -93,6 +97,21 @@
 		await saveTheme(theme);
 	}
 </script>
+
+<svelte:window
+	onkeydown={(e) => {
+		if (!(e.ctrlKey || e.metaKey) || e.key !== 'k' || e.defaultPrevented) return;
+		const tgt = e.target as HTMLElement;
+		if (
+			tgt instanceof HTMLInputElement ||
+			tgt instanceof HTMLTextAreaElement ||
+			tgt.isContentEditable
+		)
+			return;
+		e.preventDefault();
+		searchOpen = true;
+	}}
+/>
 
 <div class="min-h-screen flex flex-col bg-background">
 	<header
@@ -164,6 +183,17 @@
 
 				<!-- Right: theme toggle + user menu -->
 				<div class="flex items-center gap-1 shrink-0">
+					<!-- Search button -->
+					<button
+						type="button"
+						onclick={() => (searchOpen = true)}
+						aria-label={t(locale, 'aria.openSearch')}
+						class="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+					>
+						<Search class="h-4 w-4" />
+						<span class="hidden sm:inline text-xs text-muted-foreground/70">⌘K</span>
+					</button>
+
 					<!-- Theme toggle -->
 					<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
 						{#each THEMES as theme (theme)}
@@ -239,6 +269,8 @@
 	<AppFooter version={data.version} year={data.year} />
 
 	<ToastRegion ariaLabel={t(locale, 'common.reminder.toastAriaRegion')} />
+
+	<SearchPalette bind:open={searchOpen} />
 
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}

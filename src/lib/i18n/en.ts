@@ -752,6 +752,8 @@ const messages = {
 	'aria.previousPage': 'Previous page',
 	'aria.nextPage': 'Next page',
 	'aria.viewPhoto': "View {name}'s photo",
+	'aria.openSearch': 'Open search',
+	'aria.searchResults': 'Search results',
 
 	// Email: password reset
 	'email.reset.subject': 'Reset your EinVault password',
@@ -778,6 +780,17 @@ const messages = {
 	'email.shift.endBody': '{caretaker} finishes a care shift on {end}.',
 	'email.shift.footer':
 		'You are receiving this because shift email notifications are enabled in your EinVault settings.',
+
+	// Search palette
+	'search.placeholder': 'Search journals, health, documents…',
+	'search.hint': 'Type at least 2 characters to search',
+	'search.noResults': 'No results',
+	'search.group.journal': 'Journal',
+	'search.group.health': 'Health',
+	'search.group.reminder': 'Reminders',
+	'search.group.document': 'Documents',
+	'search.group.daily': 'Daily log',
+	'search.group.weight': 'Weight',
 
 	// Immich picker
 	'immich.picker.title': 'Pick from Immich',

@@ -761,6 +761,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.previousPage': 'Página anterior',
 	'aria.nextPage': 'Página siguiente',
 	'aria.viewPhoto': 'Ver foto de {name}',
+	'aria.openSearch': 'Abrir búsqueda',
+	'aria.searchResults': 'Resultados de búsqueda',
 
 	// Email: password reset
 	'email.reset.subject': 'Restablece tu contraseña de EinVault',
@@ -786,6 +788,17 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.endBody': '{caretaker} termina un turno de cuidado el {end}.',
 	'email.shift.footer':
 		'Recibes este correo porque las notificaciones de turnos están activadas en tus ajustes de EinVault.',
+
+	// Search palette
+	'search.placeholder': 'Buscar diarios, salud, documentos…',
+	'search.hint': 'Escribe al menos 2 caracteres para buscar',
+	'search.noResults': 'Sin resultados',
+	'search.group.journal': 'Diario',
+	'search.group.health': 'Salud',
+	'search.group.reminder': 'Recordatorios',
+	'search.group.document': 'Documentos',
+	'search.group.daily': 'Registro diario',
+	'search.group.weight': 'Peso',
 
 	// Immich picker
 	'immich.picker.title': 'Elegir desde Immich',
