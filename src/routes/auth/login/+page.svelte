@@ -3,10 +3,10 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 	import { Select } from '$lib/components/ui/select/index.js';
+	import PawLogo from '$lib/components/PawLogo.svelte';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	let loading = $state(false);
@@ -23,106 +23,145 @@
 	<title>{t(locale, 'page.login.title')} | EinVault</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center p-4 bg-background">
-	<div class="w-full max-w-sm">
-		<div class="text-center mb-8">
-			<a href="/" class="inline-flex items-center gap-2 justify-center mb-2">
-				<svg
-					class="w-9 h-9 text-primary"
-					viewBox="0 0 419.14 403.6"
-					fill="currentColor"
+<div class="min-h-screen flex items-center justify-center bg-background p-4 md:p-0">
+	<!-- Two-column card at md+, single column on mobile -->
+	<div
+		class="w-full max-w-sm md:max-w-none md:w-[860px] rounded-2xl overflow-hidden shadow-2xl md:grid md:grid-cols-[1.05fr_0.95fr]"
+	>
+		<!-- Brand panel — full column at md+, compact header strip on mobile -->
+		<div
+			class="relative flex flex-col justify-between px-8 py-7 md:px-11 md:py-12 text-white overflow-hidden"
+			style="background: radial-gradient(130% 130% at 0% 0%, hsl(252 100% 65% / 0.55), transparent 55%), radial-gradient(130% 130% at 100% 100%, hsl(13 100% 67% / 0.5), transparent 55%), hsl(237 28% 11%);"
+		>
+			<!-- Radial accent blobs -->
+			<div
+				class="pointer-events-none absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-20"
+				style="background: radial-gradient(circle, hsl(252 100% 65%), transparent 70%);"
+				aria-hidden="true"
+			></div>
+			<div
+				class="pointer-events-none absolute -bottom-16 -right-16 w-56 h-56 rounded-full opacity-15"
+				style="background: radial-gradient(circle, hsl(13 100% 67%), transparent 70%);"
+				aria-hidden="true"
+			></div>
+
+			<!-- Logo row -->
+			<a href="/" class="relative flex items-center gap-2.5 self-start z-10">
+				<div
+					class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-brand-gradient shadow-lg"
 					aria-hidden="true"
 				>
-					<path
-						d="m281.78 0c-0.88 0.011-1.79 0.055-2.69 0.125-35.82 6.184-55.52 44.064-58.37 77.469-4.17 30.316 9.19 69.266 42.47 76.066 4.83 0.92 9.84 0.5 14.56-0.78 40.08-13.44 58.01-60.908 52.22-100.22-1.69-25.396-20.83-53.009-48.19-52.66zm-151.87 1.625c-22.28 0.547-39.63 23.138-43.16 44.375-7.441 42.074 11.698 94.35 55.53 107.66 4.11 0.89 8.35 0.98 12.5 0.34 29.63-4.94 42.18-38.15 40.94-64.969-0.89-35.372-19.27-76.273-56-86.218-3.36-0.891-6.63-1.266-9.81-1.188zm248.93 119.5c-38.53 2.31-64.95 40.76-68.72 76.66-5.09 25.89 8.71 60.53 38.26 62.6 41.19-0.51 69.3-44.53 70.46-82.41 2.61-25.05-12.15-55.46-40-56.85zm-337.28 8.54c-16.394-0.14-32.517 9.68-37.874 26.34-14.293 44.58 14.408 101.04 61.624 110.41 19.706 3.37 37.018-11.76 41.908-29.97 10.35-38.95-10.915-84.17-46.908-101.85-5.863-3.29-12.334-4.88-18.75-4.93zm172.75 79.93c-32.14 0.07-64.78 16.38-85.59 40.66-22.48 28.3-40.892 61.23-48.095 96.94-8.751 25.7 11.083 55.29 38.565 55.47 33.06 0.91 61.47-21.79 94.34-23.47 27.89-4.25 52.86 10.25 77.94 19.75 21.35 9.13 50.85 5.63 61.75-17.35 8.57-23.41-4.05-48.39-14.5-69.18-21.32-33.76-44.17-69.24-79.13-90.32-14.01-8.68-29.58-12.53-45.28-12.5z"
-					/>
-				</svg>
-				<span class="font-display text-3xl font-bold text-primary">EinVault</span>
+					<PawLogo class="w-5 h-5 text-white" />
+				</div>
+				<span class="font-display font-extrabold text-xl tracking-tight text-white">EinVault</span>
 			</a>
-			<p class="text-sm text-muted-foreground">{t(locale, 'page.login.tagline')}</p>
+
+			<!-- Tagline block — hidden on mobile (too cramped in strip mode) -->
+			<div class="relative z-10 hidden md:block">
+				<p class="font-display font-extrabold text-4xl leading-[1.03] tracking-tight">
+					{t(locale, 'page.login.tagline')}
+				</p>
+				<p class="mt-3 text-[15px] text-white/80 max-w-[30ch]">
+					The self-hosted vault for your companion's health, journal, and daily care.
+				</p>
+				<div class="flex gap-2 mt-5" aria-hidden="true">
+					<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+					<span class="w-2.5 h-2.5 rounded-full bg-coral"></span>
+					<span class="w-2.5 h-2.5 rounded-full bg-gold"></span>
+					<span class="w-2.5 h-2.5 rounded-full bg-teal"></span>
+				</div>
+			</div>
+
+			<!-- Footer line — desktop only -->
+			<p class="relative z-10 hidden md:block text-xs text-white/50">
+				Your data. Your server. Your companions.
+			</p>
 		</div>
 
-		{#if data.oidcError}
-			<Alert variant="destructive" class="mb-4 animate-slide-up">
-				<AlertDescription>{data.oidcError}</AlertDescription>
-			</Alert>
-		{/if}
-
-		{#if data.oidcEnabled}
-			<Card class="animate-slide-up mb-4">
-				<CardContent class="pt-6">
-					<a href="/auth/oidc/login" class="w-full">
-						<Button variant="outline" class="w-full" type="button">
-							{t(locale, 'page.login.signInWith', { provider: data.oidcProviderName })}
-						</Button>
-					</a>
-				</CardContent>
-			</Card>
-
-			<div class="relative flex items-center gap-3 mb-4">
-				<div class="flex-1 border-t border-border"></div>
-				<span class="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
-				<div class="flex-1 border-t border-border"></div>
+		<!-- Form panel -->
+		<div class="flex flex-col justify-center px-8 py-8 md:px-11 md:py-12 bg-card">
+			<!-- Mobile-only tagline (replaces the hidden brand panel text) -->
+			<div class="mb-6 md:hidden text-center">
+				<p class="text-sm text-muted-foreground">{t(locale, 'page.login.tagline')}</p>
 			</div>
-		{/if}
 
-		<Card class="animate-slide-up">
-			<CardContent class="pt-6">
-				<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
-					{#if form?.error}
-						<Alert variant="destructive">
-							<AlertDescription>{form.error}</AlertDescription>
-						</Alert>
-					{/if}
+			<h2 class="font-display font-bold text-2xl text-foreground mb-1">Welcome back</h2>
+			<p class="text-sm text-muted-foreground mb-7">Sign in to pick up where you left off.</p>
 
-					<div class="space-y-1.5">
-						<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
-						<Input
-							id="username"
-							name="username"
-							type="text"
-							placeholder={t(locale, 'page.login.usernamePlaceholder')}
-							required
-							autocomplete="username"
-						/>
-					</div>
+			{#if data.oidcError}
+				<Alert variant="destructive" class="mb-5 animate-slide-up">
+					<AlertDescription>{data.oidcError}</AlertDescription>
+				</Alert>
+			{/if}
 
-					<div class="space-y-1.5">
-						<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
-						<Input
-							id="password"
-							name="password"
-							type="password"
-							placeholder="••••••••"
-							required
-							autocomplete="current-password"
-						/>
-						{#if data.mailEnabled}
-							<div class="text-right">
-								<a
-									href="/auth/forgot"
-									class="text-xs text-muted-foreground hover:text-primary underline"
-								>
-									{t(locale, 'page.login.forgotPassword')}
-								</a>
-							</div>
-						{/if}
-					</div>
-
-					<Button type="submit" class="w-full" disabled={loading}>
-						{loading ? t(locale, 'page.login.signingIn') : t(locale, 'page.login.signIn')}
+			{#if data.oidcEnabled}
+				<a href="/auth/oidc/login" class="w-full mb-4 block">
+					<Button variant="outline" class="w-full" type="button">
+						{t(locale, 'page.login.signInWith', { provider: data.oidcProviderName })}
 					</Button>
-				</form>
-			</CardContent>
-		</Card>
+				</a>
 
-		<div class="flex justify-center mt-4">
-			<div class="max-w-[200px]">
-				<Select value={locale} onchange={changeLocale}>
-					{#each SUPPORTED_LOCALES as loc (loc)}
-						<option value={loc}>{LOCALE_LABELS[loc]}</option>
-					{/each}
-				</Select>
+				<div class="relative flex items-center gap-3 mb-5">
+					<div class="flex-1 border-t border-border"></div>
+					<span class="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
+					<div class="flex-1 border-t border-border"></div>
+				</div>
+			{/if}
+
+			<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
+				{#if form?.error}
+					<Alert variant="destructive" class="animate-slide-up">
+						<AlertDescription>{form.error}</AlertDescription>
+					</Alert>
+				{/if}
+
+				<div class="space-y-1.5">
+					<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
+					<Input
+						id="username"
+						name="username"
+						type="text"
+						placeholder={t(locale, 'page.login.usernamePlaceholder')}
+						required
+						autocomplete="username"
+					/>
+				</div>
+
+				<div class="space-y-1.5">
+					<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
+					<Input
+						id="password"
+						name="password"
+						type="password"
+						placeholder="••••••••"
+						required
+						autocomplete="current-password"
+					/>
+					{#if data.mailEnabled}
+						<div class="text-right">
+							<a
+								href="/auth/forgot"
+								class="text-xs text-primary hover:underline underline-offset-4"
+							>
+								{t(locale, 'page.login.forgotPassword')}
+							</a>
+						</div>
+					{/if}
+				</div>
+
+				<Button type="submit" class="w-full" size="lg" disabled={loading}>
+					{loading ? t(locale, 'page.login.signingIn') : t(locale, 'page.login.signIn')}
+				</Button>
+			</form>
+
+			<div class="flex justify-center mt-6">
+				<div class="w-44">
+					<Select value={locale} onchange={changeLocale}>
+						{#each SUPPORTED_LOCALES as loc (loc)}
+							<option value={loc}>{LOCALE_LABELS[loc]}</option>
+						{/each}
+					</Select>
+				</div>
 			</div>
 		</div>
 	</div>

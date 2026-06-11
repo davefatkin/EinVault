@@ -278,7 +278,7 @@ const messages = {
 	// Page: Login
 	'page.login.title': 'Sign in',
 	'page.login.signInWith': 'Sign in with {provider}',
-	'page.login.tagline': 'Your private companion care log',
+	'page.login.tagline': 'Every tail has a story.',
 	'page.login.usernameLabel': 'Username',
 	'page.login.usernamePlaceholder': 'username',
 	'page.login.passwordLabel': 'Password',

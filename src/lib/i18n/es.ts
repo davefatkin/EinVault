@@ -284,7 +284,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Iniciar sesión',
-	'page.login.tagline': 'Tu diario privado de cuidado de compañeros',
+	'page.login.tagline': 'Cada historia merece ser contada.',
 	'page.login.signInWith': 'Iniciar sesión con {provider}',
 	'page.login.usernameLabel': 'Nombre de usuario',
 	'page.login.usernamePlaceholder': 'nombre de usuario',

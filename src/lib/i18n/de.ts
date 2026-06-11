@@ -284,7 +284,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Anmelden',
-	'page.login.tagline': 'Dein privates Begleiter-Pflegetagebuch',
+	'page.login.tagline': 'Jede Geschichte verdient bewahrt zu werden.',
 	'page.login.signInWith': 'Mit {provider} anmelden',
 	'page.login.usernameLabel': 'Benutzername',
 	'page.login.usernamePlaceholder': 'Benutzername',

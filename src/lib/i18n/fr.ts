@@ -282,7 +282,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Se connecter',
-	'page.login.tagline': 'Votre journal privé de soins pour compagnons',
+	'page.login.tagline': "Chaque histoire mérite d'être racontée.",
 	'page.login.signInWith': 'Se connecter avec {provider}',
 	'page.login.usernameLabel': "Nom d'utilisateur",
 	'page.login.usernamePlaceholder': "nom d'utilisateur",

@@ -280,7 +280,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Accedi',
-	'page.login.tagline': 'Il tuo diario privato per la cura dei compagni',
+	'page.login.tagline': 'Ogni storia merita di essere raccontata.',
 	'page.login.signInWith': 'Accedi con {provider}',
 	'page.login.usernameLabel': 'Nome utente',
 	'page.login.usernamePlaceholder': 'nome utente',
