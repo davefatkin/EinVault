@@ -787,7 +787,7 @@ const messages: Record<keyof Messages, string> = {
 		'Você está recebendo este e-mail porque as notificações de turnos estão ativadas nas suas configurações do EinVault.',
 
 	// Search palette
-	'search.placeholder': 'Pesquisar diários, fotos, saúde, documentos…',
+	'search.placeholder': 'Pesquisar diários, mídia, saúde, documentos…',
 	'search.hint': 'Digite pelo menos 2 caracteres para pesquisar',
 	'search.noResults': 'Sem resultados',
 	'search.group.journal': 'Diário',

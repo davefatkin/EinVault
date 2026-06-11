@@ -782,7 +782,7 @@ const messages = {
 		'You are receiving this because shift email notifications are enabled in your EinVault settings.',
 
 	// Search palette
-	'search.placeholder': 'Search journals, photos, health, documents…',
+	'search.placeholder': 'Search journals, media, health, documents…',
 	'search.hint': 'Type at least 2 characters to search',
 	'search.noResults': 'No results',
 	'search.group.journal': 'Journal',

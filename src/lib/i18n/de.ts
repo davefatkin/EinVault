@@ -790,7 +790,7 @@ const messages: Record<keyof Messages, string> = {
 		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
 	// Search palette
-	'search.placeholder': 'Tagebücher, Fotos, Gesundheit, Dokumente durchsuchen…',
+	'search.placeholder': 'Tagebücher, Medien, Gesundheit, Dokumente durchsuchen…',
 	'search.hint': 'Mindestens 2 Zeichen eingeben',
 	'search.noResults': 'Keine Ergebnisse',
 	'search.group.journal': 'Tagebuch',

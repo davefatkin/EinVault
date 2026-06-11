@@ -792,7 +792,7 @@ const messages: Record<keyof Messages, string> = {
 		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages EinVault.',
 
 	// Search palette
-	'search.placeholder': 'Rechercher journaux, photos, santé, documents…',
+	'search.placeholder': 'Rechercher journaux, médias, santé, documents…',
 	'search.hint': 'Saisissez au moins 2 caractères pour rechercher',
 	'search.noResults': 'Aucun résultat',
 	'search.group.journal': 'Journal',
