@@ -118,6 +118,63 @@ test.describe('global search palette', () => {
 		await expect(detailDialog).toContainText('Seed vet visit', { timeout: 8_000 });
 	});
 
+	test('media caption deep-links to journal day with lightbox open', async ({ asMember }) => {
+		const DATE = '2026-05-10';
+		const COMP_ID = COMP;
+
+		// Navigate to the day page and upload a photo.
+		await asMember.goto(`/${COMP_ID}/journal/${DATE}`);
+
+		const textarea = asMember.locator('textarea');
+		await textarea.fill('e2e lightbox test entry');
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
+
+		const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
+		await fileInput.setInputFiles({
+			name: 'photo.png',
+			mimeType: 'image/png',
+			buffer: Buffer.from(
+				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+				'base64'
+			)
+		});
+		await expect(asMember.locator('img[src*="/api/photos/journal/"]').first()).toBeVisible({
+			timeout: 15_000
+		});
+
+		// Set the caption with a term that only appears here, not in the journal body.
+		await asMember.getByRole('button', { name: 'Edit Caption' }).first().click();
+		await asMember.locator('textarea[name="photo-notes"]').first().fill('e2e-cap-zelkova');
+		await asMember.getByRole('button', { name: 'Save' }).first().click();
+		await expect(asMember.getByText('e2e-cap-zelkova')).toBeVisible({ timeout: 8_000 });
+
+		// Navigate away so the journal page mounts fresh when the search result is clicked.
+		await asMember.goto('/');
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Open search palette and find the caption.
+		await asMember.getByRole('button', { name: 'Open search' }).click();
+		const palette = asMember.locator('[role="dialog"]');
+		await expect(palette).toBeVisible({ timeout: 8_000 });
+
+		await asMember.keyboard.type('zelkova');
+		await expect(palette.locator('[role="option"]').first()).toBeVisible({ timeout: 8_000 });
+
+		// Click the media result.
+		await palette.locator('[role="option"]').first().click();
+
+		// Wait for navigation to the journal day page and palette to detach.
+		await asMember.waitForURL(new RegExp(`/${COMP_ID}/journal/${DATE}`), { timeout: 8_000 });
+		await expect(asMember.locator('[role="combobox"]')).toHaveCount(0, { timeout: 8_000 });
+
+		// MediaLightbox should be open.
+		const lightbox = asMember.locator('[role="dialog"][aria-modal="true"]');
+		await expect(lightbox).toBeVisible({ timeout: 8_000 });
+	});
+
 	test('caretaker gets 403 on /api/search and has no search button', async ({
 		asCaretaker,
 		app,

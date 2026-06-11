@@ -100,7 +100,7 @@ test.describe('journal day editor', () => {
 			.first();
 		await mediaContainer.hover();
 
-		const deleteBtn = mediaContainer.locator('button[aria-label]');
+		const deleteBtn = mediaContainer.getByRole('button', { name: 'Delete media' });
 		await deleteBtn.click();
 
 		// Confirm in the dialog (scope to the confirm dialog to avoid the aria-labeled trash button)
