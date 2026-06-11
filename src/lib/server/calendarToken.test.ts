@@ -27,4 +27,11 @@ describe('calendarToken', () => {
 		expect(await userByFeedToken('')).toBeNull();
 		expect(await userByFeedToken('nope')).toBeNull();
 	});
+	it('a deactivated user resolves to null (feed dies on deactivation)', async () => {
+		await makeUser('u-cal-3');
+		const raw = await enableFeedToken('u-cal-3');
+		expect((await userByFeedToken(raw))?.id).toBe('u-cal-3');
+		await db.update(schema.users).set({ isActive: false }).where(eq(schema.users.id, 'u-cal-3'));
+		expect(await userByFeedToken(raw)).toBeNull();
+	});
 });
