@@ -148,6 +148,13 @@
       "when": 1781126813759,
       "tag": "0020_melodic_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1781144492105,
+      "tag": "0021_search_index",
+      "breakpoints": true
     }
   ]
 }
