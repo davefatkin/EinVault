@@ -800,6 +800,13 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.daily': 'Registro diario',
 	'search.group.weight': 'Peso',
 	'search.group.media': 'Fotos y vídeos',
+	'search.filter.after': 'Después',
+	'search.filter.before': 'Antes',
+	'search.filter.removeCompanion': 'Quitar filtro {name}',
+	'search.filter.removeType': 'Quitar filtro {type}',
+	'search.filter.removeAfter': 'Quitar filtro de fecha posterior',
+	'search.filter.removeBefore': 'Quitar filtro de fecha anterior',
+	'aria.sigilAutocomplete': 'Sugerencias de filtro',
 
 	// Immich picker
 	'immich.picker.title': 'Elegir desde Immich',

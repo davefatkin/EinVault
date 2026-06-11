@@ -270,7 +270,10 @@
 
 	<ToastRegion ariaLabel={t(locale, 'common.reminder.toastAriaRegion')} />
 
-	<SearchPalette bind:open={searchOpen} />
+	<SearchPalette
+		bind:open={searchOpen}
+		companions={data.companions.map((c) => ({ id: c.id, name: c.name }))}
+	/>
 
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}
