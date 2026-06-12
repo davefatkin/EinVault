@@ -99,6 +99,24 @@ test.describe('documents', () => {
 		await expect(asMember.getByText('e2e-doc-del.pdf')).toHaveCount(0);
 	});
 
+	test('category chips filter the document list', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/documents`);
+		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-doc-chip.pdf'));
+		await expect(asMember.getByText('e2e-doc-chip.pdf')).toBeVisible({ timeout: 15_000 });
+		const li = asMember.locator('li').filter({ hasText: 'e2e-doc-chip.pdf' }).first();
+		await li.getByRole('button', { name: 'Edit document' }).click();
+		await asMember.locator('select[id^="doc-cat-"]').selectOption('medical');
+		await asMember.getByRole('button', { name: 'Save' }).first().click();
+		await expect(asMember.getByText('e2e-doc-chip.pdf')).toBeVisible({ timeout: 8_000 });
+
+		await asMember.getByRole('button', { name: 'Medical', exact: true }).click();
+		await expect(asMember.getByText('e2e-doc-chip.pdf')).toBeVisible({ timeout: 8_000 });
+		await asMember.getByRole('button', { name: 'Insurance', exact: true }).click();
+		await expect(asMember.getByText('e2e-doc-chip.pdf')).toHaveCount(0, { timeout: 8_000 });
+		await asMember.getByRole('button', { name: 'All categories', exact: true }).click();
+		await expect(asMember.getByText('e2e-doc-chip.pdf')).toBeVisible({ timeout: 8_000 });
+	});
+
 	test('caretaker blocked', async ({ asCaretaker }) => {
 		const response = await asCaretaker.request.get(`/api/companions/${COMP}/documents`);
 		expect(response.status()).toBe(403);
