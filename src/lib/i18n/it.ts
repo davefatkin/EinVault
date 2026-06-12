@@ -424,6 +424,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.placeholderVetClinic': 'Clinica Veterinaria Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (proprietario)',
 	'page.companion.edit.placeholderArchiveNote': 'es. Ha attraversato il ponte arcobaleno',
+	'page.companion.edit.profilePhoto': 'Foto del profilo',
 	'page.companion.edit.saveChanges': 'Salva modifiche',
 	'page.companion.edit.saving': 'Salvataggio…',
 	'page.companion.edit.changesSaved': 'Modifiche salvate.',

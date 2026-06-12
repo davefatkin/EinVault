@@ -421,6 +421,7 @@ const messages = {
 	'page.companion.edit.placeholderVetClinic': 'Valentine Animal Hospital',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (owner)',
 	'page.companion.edit.placeholderArchiveNote': 'e.g. Crossed the rainbow bridge',
+	'page.companion.edit.profilePhoto': 'Profile photo',
 	'page.companion.edit.saveChanges': 'Save Changes',
 	'page.companion.edit.saving': 'Saving…',
 	'page.companion.edit.changesSaved': 'Changes saved.',

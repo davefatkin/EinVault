@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
+	import { bustAvatarCache } from '$lib/avatarCache.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -19,6 +23,41 @@
 	const locale = getLocale();
 
 	let showArchivePanel = $state(false);
+
+	// Avatar Immich picker
+	let immichAvatarPickerOpen = $state(false);
+	let immichAvatarError = $state('');
+	let immichAvatarErrorTimer: ReturnType<typeof setTimeout>;
+
+	function setImmichAvatarError(msg: string) {
+		immichAvatarError = msg;
+		clearTimeout(immichAvatarErrorTimer);
+		immichAvatarErrorTimer = setTimeout(() => (immichAvatarError = ''), 5000);
+	}
+
+	async function pickAvatarFromImmich(assetId: string) {
+		try {
+			const res = await fetch(`/api/companions/${companion.id}/avatar/from-immich`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ assetId })
+			});
+			if (!res.ok) {
+				const err = await res
+					.json()
+					.catch(() => ({ message: t(locale, 'immich.picker.pickFailed') }));
+				setImmichAvatarError(err.message ?? t(locale, 'immich.picker.pickFailed'));
+				return;
+			}
+			bustAvatarCache(companion.id);
+			immichAvatarPickerOpen = false;
+			await invalidateAll();
+		} catch {
+			setImmichAvatarError(t(locale, 'immich.picker.pickFailed'));
+		}
+	}
+
+	$effect(() => () => clearTimeout(immichAvatarErrorTimer));
 </script>
 
 <svelte:head>
@@ -89,6 +128,24 @@
 					<CardTitle>{t(locale, 'page.companion.edit.cardProfile')}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-5">
+					<!-- Profile photo -->
+					<div class="flex flex-col items-center gap-2 pb-2">
+						<CompanionAvatar
+							companionId={companion.id}
+							avatarPath={companion.avatarPath}
+							name={companion.name}
+							size="xl"
+							editable
+							immichEnabled={data.immichEnabled}
+							onpickImmich={() => (immichAvatarPickerOpen = true)}
+						/>
+						<p class="text-xs text-muted-foreground">
+							{t(locale, 'page.companion.edit.profilePhoto')}
+						</p>
+					</div>
+
+					<Separator />
+
 					<div class="space-y-1.5">
 						<Label for="name"
 							>{t(locale, 'page.companion.labelName')}
@@ -315,6 +372,23 @@
 			<Button href="/{companion.id}" variant="ghost">{t(locale, 'common.cancel')}</Button>
 		</div>
 	</form>
+
+	{#if data.immichEnabled}
+		<ImmichPicker
+			open={immichAvatarPickerOpen}
+			onpick={pickAvatarFromImmich}
+			onclose={() => (immichAvatarPickerOpen = false)}
+		/>
+	{/if}
+
+	{#if immichAvatarError}
+		<div
+			role="alert"
+			class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-destructive text-destructive-foreground px-4 py-2 text-sm shadow-lg"
+		>
+			{immichAvatarError}
+		</div>
+	{/if}
 
 	<!-- Archive companion: admin only -->
 	{#if data.user?.role === 'admin'}
