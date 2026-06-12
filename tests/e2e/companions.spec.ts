@@ -34,7 +34,7 @@ test.describe('companion crud', () => {
 		await asMember.locator('#breed').fill('e2e-breed');
 		await asMember.getByRole('button', { name: 'Save Changes' }).click();
 
-		// After save the page stays on the edit page and shows a success alert
+		// After save the page stays on the edit page and shows a success toast
 		await expect(asMember.getByText('Changes saved.')).toBeVisible({ timeout: 8_000 });
 
 		// Reload and confirm the value is persisted

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { avatarCacheBusts, bustAvatarCache } from '$lib/avatarCache.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { Camera, ImagePlus, Loader2, AlertTriangle } from '@lucide/svelte';
 	const locale = getLocale();
 
 	interface Props {
@@ -126,14 +127,18 @@
 	}
 </script>
 
-<div class="relative inline-flex items-center gap-1.5 {className}">
+<div
+	class="relative inline-flex {editable
+		? 'flex-col items-center'
+		: 'items-center gap-1.5'} {className}"
+>
 	{#if onlightbox && imgSrc}
 		<button
 			type="button"
 			onclick={onlightbox}
 			class="{sizes[
 				size
-			]} rounded-full overflow-hidden bg-bark-100 dark:bg-bark-900 flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-stone-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-white/70 {archived
+			]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/70 {archived
 				? 'grayscale opacity-75'
 				: ''}"
 			aria-label={t(locale, 'aria.viewPhoto', { name })}
@@ -149,7 +154,7 @@
 		<div
 			class="{sizes[
 				size
-			]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-stone-700 {archived
+			]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-border {archived
 				? 'grayscale opacity-75'
 				: ''}"
 			style={imgSrc ? undefined : `background: ${avatarGradient}`}
@@ -177,17 +182,16 @@
 			<div
 				role="alert"
 				style="top: {tooltipTop}px; left: {tooltipLeft}px;"
-				class="fixed z-50 -translate-x-1/2 -translate-y-full -mt-2 w-max max-w-56 text-xs bg-red-600 text-white rounded px-2 py-1 shadow-lg text-center leading-snug pointer-events-none"
+				class="fixed z-50 -translate-x-1/2 -translate-y-full -mt-2 w-max max-w-56 text-xs bg-destructive text-destructive-foreground rounded px-2 py-1 shadow-lg text-center leading-snug pointer-events-none"
 			>
 				{uploadError}
 			</div>
 		{/if}
-		<div class="flex flex-col gap-1">
+		<div class="flex gap-1.5 mt-2">
 			<button
 				bind:this={buttonEl}
 				type="button"
-				class="h-7 w-7 rounded-full bg-white text-bark-700 flex items-center justify-center
-					cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
+				class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
 				title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
 				aria-label={uploadError
 					? t(locale, 'component.avatar.uploadError', { error: uploadError })
@@ -199,18 +203,18 @@
 				disabled={uploading}
 			>
 				{#if uploading}
-					⏳
+					<Loader2 class="h-3.5 w-3.5 animate-spin" />
 				{:else if uploadError}
-					⚠️
+					<AlertTriangle class="h-3.5 w-3.5 text-destructive" />
 				{:else}
-					📷
+					<Camera class="h-3.5 w-3.5" />
 				{/if}
+				{t(locale, 'component.avatar.changePhoto')}
 			</button>
 			{#if immichEnabled && onpickImmich}
 				<button
 					type="button"
-					class="h-7 w-7 rounded-full bg-white text-bark-700 flex items-center justify-center
-						cursor-pointer hover:bg-bark-50 transition-colors shadow-sm text-xs"
+					class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
 					title={t(locale, 'immich.picker.button')}
 					aria-label={t(locale, 'immich.picker.button')}
 					onclick={(e) => {
@@ -219,7 +223,8 @@
 					}}
 					disabled={uploading}
 				>
-					🖼️
+					<ImagePlus class="h-3.5 w-3.5" />
+					{t(locale, 'immich.picker.button')}
 				</button>
 			{/if}
 		</div>
