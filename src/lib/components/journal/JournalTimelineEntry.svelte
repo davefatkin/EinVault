@@ -124,6 +124,11 @@
 								locale,
 								item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
 							)}
+						aria-label={item.originalName ??
+							t(
+								locale,
+								item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
+							)}
 					>
 						{#if item.mediaType === 'video' && item.posterKey}
 							<img
@@ -171,7 +176,7 @@
 
 		{#if entry.body?.trim()}
 			<div
-				class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed overflow-hidden max-h-[6rem]"
+				class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed overflow-hidden max-h-[6rem] [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]"
 			>
 				{@html renderMarkdown(entry.body)}
 			</div>
