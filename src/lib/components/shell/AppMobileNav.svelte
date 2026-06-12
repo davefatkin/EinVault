@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { localDateISO } from '$lib/date';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
@@ -102,7 +103,7 @@
 		activeCompanion
 			? [
 					{
-						href: `/${activeCompanion.id}/journal/new`,
+						href: `/${activeCompanion.id}/journal/${localDateISO()}`,
 						label: 'Add journal entry',
 						icon: BookOpen
 					},
