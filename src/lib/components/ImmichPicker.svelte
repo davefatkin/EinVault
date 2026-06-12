@@ -209,7 +209,7 @@
 			</div>
 
 			<div class="flex justify-end gap-2 px-5 py-3 border-t border-border">
-				<Button variant="outline" size="sm" onclick={onclose}>
+				<Button variant="ghost" size="sm" onclick={onclose}>
 					{t(locale, 'immich.picker.cancel')}
 				</Button>
 			</div>
