@@ -53,7 +53,8 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null,
 			notifyReminderEmail: user.notifyReminderEmail ?? false,
 			notifyShiftEmail: user.notifyShiftEmail ?? false,
-			ntfyTopic: user.ntfyTopic ?? null
+			ntfyTopic: user.ntfyTopic ?? null,
+			avatarPath: user.avatarPath ?? null
 		}
 	};
 }

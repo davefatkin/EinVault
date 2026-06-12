@@ -19,6 +19,7 @@ declare global {
 				notifyReminderEmail: boolean;
 				notifyShiftEmail: boolean;
 				ntfyTopic: string | null;
+				avatarPath: string | null;
 			} | null;
 			session: {
 				id: string;
