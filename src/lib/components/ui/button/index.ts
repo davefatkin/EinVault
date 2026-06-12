@@ -11,13 +11,18 @@ export const buttonVariants = cva(
 				outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
 				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 				ghost: 'hover:bg-accent hover:text-accent-foreground',
-				link: 'text-primary underline-offset-4 hover:underline'
+				link: 'text-primary underline-offset-4 hover:underline',
+				soft: 'border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
+				softPrimary: 'border border-border bg-primary/10 text-primary hover:bg-primary/20',
+				softSuccess: 'border border-border bg-teal/10 text-teal hover:bg-teal/20',
+				softDestructive: 'border border-border bg-coral/10 text-coral hover:bg-coral/20'
 			},
 			size: {
 				default: 'h-10 px-4 py-2',
 				sm: 'h-9 rounded-xl px-3 text-xs',
 				lg: 'h-11 rounded-xl px-8',
-				icon: 'h-10 w-10'
+				icon: 'h-10 w-10',
+				'icon-sm': 'h-8 w-8 rounded-lg'
 			}
 		},
 		defaultVariants: {

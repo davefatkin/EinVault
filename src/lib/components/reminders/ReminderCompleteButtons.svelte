@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
 	import { Check, HeartPulse } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 
 	interface Props {
 		onDone: () => void;
@@ -14,24 +15,26 @@
 </script>
 
 <div class="flex items-center gap-1 shrink-0">
-	<button
+	<Button
 		type="button"
+		variant="softSuccess"
+		size="icon-sm"
 		onclick={onDone}
-		class="shrink-0 h-8 w-8 rounded-lg border border-border bg-teal/10 text-teal flex items-center justify-center hover:bg-teal/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 		aria-label={t(locale, 'overview.markDone')}
 		title={t(locale, 'common.reminder.done')}
 	>
 		<Check class="h-4 w-4" />
-	</button>
+	</Button>
 	{#if allowLogEvent && onDoneAndLog}
-		<button
+		<Button
 			type="button"
+			variant="softPrimary"
+			size="icon-sm"
 			onclick={onDoneAndLog}
-			class="shrink-0 h-8 w-8 rounded-lg border border-border bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 			aria-label={t(locale, 'common.reminder.logEventAria')}
 			title={t(locale, 'common.reminder.logEvent')}
 		>
 			<HeartPulse class="h-4 w-4" />
-		</button>
+		</Button>
 	{/if}
 </div>

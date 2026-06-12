@@ -589,13 +589,13 @@
 									<div class="flex items-center gap-1 shrink-0">
 										<Button
 											type="button"
-											variant="ghost"
-											size="sm"
+											variant="soft"
+											size="icon-sm"
 											onclick={() => startEdit(reminder)}
-											class="h-7 gap-1.5 px-2 text-xs"
+											aria-label={t(locale, 'common.edit')}
+											title={t(locale, 'common.edit')}
 										>
-											<Pencil class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
+											<Pencil class="h-4 w-4" />
 										</Button>
 										<ReminderCompleteButtons
 											onDone={() => {
@@ -615,16 +615,16 @@
 										/>
 										<Button
 											type="button"
-											variant="ghost"
-											size="sm"
-											class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+											variant="softDestructive"
+											size="icon-sm"
+											aria-label={t(locale, 'common.delete')}
+											title={t(locale, 'common.delete')}
 											onclick={() => {
 												deleteReminderId = reminder.id;
 												confirmOpen = true;
 											}}
 										>
-											<Trash2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
+											<Trash2 class="h-4 w-4" />
 										</Button>
 									</div>
 								{/if}
@@ -756,38 +756,38 @@
 									<div class="flex gap-1 shrink-0">
 										<Button
 											type="button"
-											variant="ghost"
-											size="sm"
+											variant="soft"
+											size="icon-sm"
 											onclick={() => startEdit(reminder)}
-											class="h-7 gap-1.5 px-2 text-xs"
+											aria-label={t(locale, 'common.edit')}
+											title={t(locale, 'common.edit')}
 										>
-											<Pencil class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
+											<Pencil class="h-4 w-4" />
 										</Button>
 										<form method="POST" action="?/restore" use:enhance>
 											<input type="hidden" name="id" value={reminder.id} />
 											<Button
 												type="submit"
-												variant="ghost"
-												size="sm"
-												class="h-7 gap-1.5 px-2 text-xs"
+												variant="softSuccess"
+												size="icon-sm"
+												aria-label={t(locale, 'page.reminders.restore')}
+												title={t(locale, 'page.reminders.restore')}
 											>
-												<RotateCcw class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">{t(locale, 'page.reminders.restore')}</span>
+												<RotateCcw class="h-4 w-4" />
 											</Button>
 										</form>
 										<Button
 											type="button"
-											variant="ghost"
-											size="sm"
-											class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+											variant="softDestructive"
+											size="icon-sm"
+											aria-label={t(locale, 'common.delete')}
+											title={t(locale, 'common.delete')}
 											onclick={() => {
 												deleteReminderId = reminder.id;
 												confirmOpen = true;
 											}}
 										>
-											<Trash2 class="h-3.5 w-3.5" />
-											<span class="hidden sm:inline">{t(locale, 'common.delete')}</span>
+											<Trash2 class="h-4 w-4" />
 										</Button>
 									</div>
 								</div>
