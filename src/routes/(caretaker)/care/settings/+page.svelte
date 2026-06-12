@@ -9,6 +9,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import AccountAvatar from '$lib/components/AccountAvatar.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
 	import { Calendar } from '@lucide/svelte';
@@ -98,6 +99,12 @@
 					<AlertDescription>{form.accountError}</AlertDescription>
 				</Alert>
 			{/if}
+
+			<AccountAvatar
+				userId={data.user?.id ?? ''}
+				displayName={data.user?.displayName ?? ''}
+				avatarPath={data.user?.avatarPath}
+			/>
 
 			<form
 				method="POST"

@@ -10,6 +10,7 @@
 
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import AccountAvatar from '$lib/components/AccountAvatar.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
@@ -75,6 +76,12 @@
 					<AlertDescription>{form.accountError}</AlertDescription>
 				</Alert>
 			{/if}
+
+			<AccountAvatar
+				userId={data.user?.id ?? ''}
+				displayName={data.user?.displayName ?? ''}
+				avatarPath={data.user?.avatarPath}
+			/>
 
 			<form
 				method="POST"
