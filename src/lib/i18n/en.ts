@@ -170,6 +170,15 @@ const messages = {
 	// Navigation: caretaker-specific
 	'nav.caretaker.overview': 'Overview',
 	'nav.caretaker.logActivity': 'Log activity',
+	'nav.caretaker.addJournal': 'Add journal entry',
+	'nav.search': 'Search',
+	'nav.you': 'You',
+	'nav.members': 'Members',
+	'nav.fab.quickAdd': 'Quick add',
+	'nav.fab.addJournal': 'Add journal entry',
+	'nav.fab.logHealth': 'Log health event',
+	'nav.fab.addReminder': 'Add reminder',
+	'nav.fab.recordWeight': 'Record weight',
 
 	// Layout: app
 	'layout.archived': '(archived)',
@@ -806,6 +815,10 @@ const messages = {
 	'aria.nextPage': 'Next page',
 	'aria.viewPhoto': "View {name}'s photo",
 	'aria.openSearch': 'Open search',
+	'aria.closeQuickAdd': 'Close quick add menu',
+	'aria.closeSwitcher': 'Close companion switcher',
+	'aria.accountMenu': 'Account menu',
+	'aria.closeAccountMenu': 'Close account menu',
 	'aria.searchResults': 'Search results',
 
 	// Email: password reset

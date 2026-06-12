@@ -183,6 +183,15 @@ const messages: Record<keyof Messages, string> = {
 	// Navigation: caretaker-specific
 	'nav.caretaker.overview': 'Resumen',
 	'nav.caretaker.logActivity': 'Registrar actividad',
+	'nav.caretaker.addJournal': 'Añadir entrada de diario',
+	'nav.search': 'Buscar',
+	'nav.you': 'Tú',
+	'nav.members': 'Miembros',
+	'nav.fab.quickAdd': 'Añadir rápido',
+	'nav.fab.addJournal': 'Añadir entrada de diario',
+	'nav.fab.logHealth': 'Registrar evento de salud',
+	'nav.fab.addReminder': 'Añadir recordatorio',
+	'nav.fab.recordWeight': 'Registrar peso',
 
 	// Layout: app
 	'layout.archived': '(archivado)',
@@ -815,6 +824,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextPage': 'Página siguiente',
 	'aria.viewPhoto': 'Ver foto de {name}',
 	'aria.openSearch': 'Abrir búsqueda',
+	'aria.closeQuickAdd': 'Cerrar menú de añadir',
+	'aria.closeSwitcher': 'Cerrar selector de compañero',
+	'aria.accountMenu': 'Menú de cuenta',
+	'aria.closeAccountMenu': 'Cerrar menú de cuenta',
 	'aria.searchResults': 'Resultados de búsqueda',
 
 	// Email: password reset
