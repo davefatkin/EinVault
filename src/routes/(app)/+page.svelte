@@ -304,11 +304,11 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.reminders.detailDue')}</span
 					>
-					<span class={overdue ? 'text-destructive' : 'text-foreground'}>
+					<span class={overdue ? 'text-coral' : 'text-foreground'}>
 						<LocalTime date={r.dueAt} format="datetime" />
 					</span>
 					{#if overdue}
-						<Badge variant="destructive" class="ml-1">{t(locale, 'page.reminders.overdue')}</Badge>
+						<Badge variant="coral" class="ml-1">{t(locale, 'page.reminders.overdue')}</Badge>
 					{/if}
 				</div>
 				{#if r.description}

@@ -311,29 +311,32 @@
 										</div>
 									</button>
 									<div class="flex items-center gap-1 shrink-0">
-										<a
+										<Button
 											href={`${docUrl(doc)}?download`}
-											class="rounded-md p-1.5 hover:bg-accent text-muted-foreground"
+											variant="soft"
+											size="icon-sm"
 											aria-label={t(locale, 'page.documents.download')}
 										>
 											<Download class="h-4 w-4" />
-										</a>
-										<button
+										</Button>
+										<Button
 											type="button"
-											class="rounded-md p-1.5 hover:bg-accent text-muted-foreground"
+											variant="soft"
+											size="icon-sm"
 											aria-label={t(locale, 'page.documents.editTitle')}
 											onclick={() => startEdit(doc)}
 										>
 											<Pencil class="h-4 w-4" />
-										</button>
-										<button
+										</Button>
+										<Button
 											type="button"
-											class="rounded-md p-1.5 hover:bg-accent text-red-600 dark:text-red-400"
+											variant="softDestructive"
+											size="icon-sm"
 											aria-label={t(locale, 'page.documents.delete')}
 											onclick={() => (deleteTarget = doc)}
 										>
 											<Trash2 class="h-4 w-4" />
-										</button>
+										</Button>
 									</div>
 								</div>
 							{/if}

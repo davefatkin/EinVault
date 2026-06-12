@@ -568,12 +568,7 @@
 							{companion.name}
 						</h1>
 						{#if companion.isActive !== false}
-							<Button
-								href="/companions/{companion.id}/edit"
-								variant="ghost"
-								size="sm"
-								class="h-7 px-2 text-muted-foreground shrink-0"
-							>
+							<Button href="/companions/{companion.id}/edit" variant="soft" size="icon-sm">
 								<Pencil class="h-3.5 w-3.5" />
 							</Button>
 						{/if}
