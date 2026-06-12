@@ -527,6 +527,16 @@
 {/if}
 
 <div class="space-y-4 pb-24 md:pb-0">
+	<!-- Back to journal -->
+	<div>
+		<a
+			href="/{companion.id}/journal"
+			class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+		>
+			<ChevronLeft class="h-3.5 w-3.5" />
+			{t(locale, 'page.journal.title')}
+		</a>
+	</div>
 	<!-- Date nav -->
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-2">
@@ -616,9 +626,7 @@
 						title={m.label}
 						aria-pressed={mood === m.value}
 						class="text-xl leading-none p-1.5 rounded-lg transition-all
-						{mood === m.value
-							? 'bg-bark-100 dark:bg-bark-900 ring-1 ring-bark-300 dark:ring-bark-700'
-							: 'opacity-40 hover:opacity-80'}"
+						{mood === m.value ? 'bg-primary/10 ring-1 ring-primary/30' : 'opacity-40 hover:opacity-80'}"
 					>
 						{m.icon}
 					</button>
