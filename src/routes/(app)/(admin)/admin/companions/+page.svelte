@@ -6,7 +6,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import { PawPrint, RotateCcw } from '@lucide/svelte';
+	import { PawPrint, RotateCcw, Pencil } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
@@ -76,6 +76,7 @@
 						</div>
 					</div>
 					<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+						<Pencil class="h-3.5 w-3.5 mr-1.5" />
 						{t(locale, 'common.edit')}
 					</Button>
 				</div>
@@ -118,6 +119,7 @@
 						</div>
 						<div class="flex items-center gap-1 shrink-0">
 							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+								<Pencil class="h-3.5 w-3.5 mr-1.5" />
 								{t(locale, 'common.edit')}
 							</Button>
 							<form

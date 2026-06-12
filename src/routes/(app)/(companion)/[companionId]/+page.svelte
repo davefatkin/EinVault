@@ -568,8 +568,9 @@
 							{companion.name}
 						</h1>
 						{#if companion.isActive !== false}
-							<Button href="/companions/{companion.id}/edit" variant="soft" size="icon-sm">
-								<Pencil class="h-3.5 w-3.5" />
+							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+								<Pencil class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'common.edit')}
 							</Button>
 						{/if}
 					</div>

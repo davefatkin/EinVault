@@ -276,9 +276,9 @@
 			<Separator />
 
 			{#if data.companion.isActive !== false}
-				<div class="flex gap-2 px-5 py-4">
+				<div class="flex flex-wrap gap-2 px-5 py-4">
 					<Button
-						variant="outline"
+						variant="soft"
 						size="sm"
 						onclick={() => {
 							if (selected) {
@@ -292,7 +292,7 @@
 						{t(locale, 'common.edit')}
 					</Button>
 					<Button
-						variant="outline"
+						variant="softSuccess"
 						size="sm"
 						onclick={() => {
 							const item = r;
@@ -306,7 +306,7 @@
 						{t(locale, 'common.reminder.done')}
 					</Button>
 					<Button
-						variant="outline"
+						variant="softPrimary"
 						size="sm"
 						aria-label={t(locale, 'common.reminder.logEventAria')}
 						onclick={() => {
@@ -319,7 +319,7 @@
 						{t(locale, 'common.reminder.logEvent')}
 					</Button>
 					<Button
-						variant="destructive"
+						variant="softDestructive"
 						size="sm"
 						onclick={() => {
 							const item = r;
