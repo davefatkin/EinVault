@@ -119,6 +119,33 @@ test.describe('journal day editor', () => {
 		});
 	});
 
+	test('journal timeline marks today and opens media in the lightbox', async ({ asMember }) => {
+		const today = (() => {
+			const n = new Date();
+			const p = (x: number) => String(x).padStart(2, '0');
+			return `${n.getUTCFullYear()}-${p(n.getUTCMonth() + 1)}-${p(n.getUTCDate())}`;
+		})();
+
+		// Create today's entry with a photo.
+		await asMember.goto(`/${COMP}/journal/${today}`);
+		await asMember.locator('textarea').first().fill('timeline e2e body');
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
+		const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
+		await fileInput.setInputFiles(pngUpload());
+		await expect(asMember.locator('img[src*="/api/photos/journal/"]').first()).toBeVisible({
+			timeout: 15_000
+		});
+
+		// On the list, today's row shows the "Today" marker and the thumbnail opens the lightbox.
+		await asMember.goto(`/${COMP}/journal`);
+		await expect(asMember.getByText('Today', { exact: true }).first()).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.locator('img[src*="/api/photos/journal/"]').first().click();
+		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
+	});
+
 	test('journal list shows entries', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal`);
 
