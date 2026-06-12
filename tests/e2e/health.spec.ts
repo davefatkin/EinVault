@@ -74,8 +74,18 @@ test.describe('health events and weight log', () => {
 		await asMember.locator('#weight').fill('13.7');
 		await asMember.getByRole('button', { name: 'Log Weight' }).last().click();
 
-		// Weight history card should now show the recorded value
-		await expect(asMember.getByText(/13\.7/)).toBeVisible({ timeout: 8_000 });
+		// Weight history section should now show the recorded value
+		await expect(
+			asMember.locator('section').filter({ hasText: 'Weight History' }).getByText(/13\.7/)
+		).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('health page shows the weight trend section', async ({ asMember }) => {
+		const COMP = 'seed-comp-biscuit';
+		await asMember.goto(`/${COMP}/health`);
+		await expect(asMember.getByText('Weight trend')).toBeVisible({ timeout: 8_000 });
+		// Seed has 0 weight rows — assert the empty-state text (<2 entries, no svg).
+		await expect(asMember.getByText('No weight recorded yet.')).toBeVisible({ timeout: 8_000 });
 	});
 
 	test('title required', async ({ asMember }) => {

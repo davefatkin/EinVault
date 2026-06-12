@@ -13,6 +13,7 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Scale, Plus, Pencil, Trash2, X, FileText } from '@lucide/svelte';
+	import WeightChart from '$lib/components/WeightChart.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
@@ -24,6 +25,17 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+
+	let weightPoints = $derived(
+		[...data.weightEntries]
+			.map((w) => ({
+				recordedAt: new Date(w.recordedAt),
+				weight: w.weight,
+				unit: w.unit as 'lbs' | 'kg'
+			}))
+			.sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime())
+	);
+
 	let showHealthForm = $state(false);
 	let showWeightForm = $state(false);
 	let submittingHealth = $state(false);
@@ -268,7 +280,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailType')}</span
 						>
-						<Badge variant="bark" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
+						<Badge variant="secondary" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -626,12 +638,19 @@
 		</Card>
 	{/if}
 
+	<section>
+		<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+			{t(locale, 'page.health.weightTrend')}
+		</p>
+		<WeightChart entries={weightPoints} />
+	</section>
+
 	{#if data.weightEntries.length > 0}
-		<Card>
-			<CardHeader>
-				<CardTitle>{t(locale, 'page.health.weightHistoryTitle')}</CardTitle>
-			</CardHeader>
-			<div class="divide-y divide-border">
+		<section>
+			<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+				{t(locale, 'page.health.weightHistoryTitle')}
+			</p>
+			<div class="rounded-2xl border bg-card divide-y divide-border">
 				{#each data.weightEntries as entry (entry.id)}
 					{#if editingWeightId === entry.id}
 						<div class="px-6 py-4">
@@ -756,14 +775,14 @@
 					{/if}
 				{/each}
 			</div>
-		</Card>
+		</section>
 	{/if}
 
-	<Card>
-		<CardHeader>
-			<CardTitle>{t(locale, 'page.health.healthEventsTitle')}</CardTitle>
-		</CardHeader>
-		<CardContent>
+	<section>
+		<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+			{t(locale, 'page.health.healthEventsTitle')}
+		</p>
+		<div class="rounded-2xl border bg-card px-5 py-4">
 			{#if data.healthEvents.length === 0}
 				<p class="text-sm italic text-muted-foreground">
 					{t(locale, 'page.health.noHealthEvents')}
@@ -885,7 +904,7 @@
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="bark" class="capitalize"
+											<Badge variant="secondary" class="capitalize"
 												>{healthTypeLabel(locale, event.type)}</Badge
 											>
 											<span class="font-medium text-sm text-foreground">{event.title}</span>
@@ -946,8 +965,8 @@
 					{/each}
 				</div>
 			{/if}
-		</CardContent>
-	</Card>
+		</div>
+	</section>
 </div>
 
 <form bind:this={deleteWeightForm} method="POST" action="?/deleteWeight" use:enhance class="hidden">
