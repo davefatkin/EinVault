@@ -10,8 +10,8 @@ export type WeightRange = '6m' | '1y' | 'all';
 export function filterByRange(points: WeightPoint[], range: WeightRange, now: Date): WeightPoint[] {
 	if (range === 'all') return points;
 	const cutoff = new Date(now);
-	if (range === '6m') cutoff.setMonth(cutoff.getMonth() - 5);
-	else cutoff.setMonth(cutoff.getMonth() - 11);
+	if (range === '6m') cutoff.setMonth(cutoff.getMonth() - 6);
+	else cutoff.setFullYear(cutoff.getFullYear() - 1);
 	return points.filter((p) => p.recordedAt >= cutoff);
 }
 

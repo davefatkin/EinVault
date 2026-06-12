@@ -8,21 +8,27 @@ const P = (recordedAt: string, weight: number, unit: 'lbs' | 'kg' = 'lbs'): Weig
 });
 
 describe('filterByRange', () => {
-	const pts = [P('2026-01-01', 30), P('2026-03-01', 31), P('2026-05-01', 32), P('2026-06-01', 33)];
+	const pts = [
+		P('2025-11-01', 29), // > 6 months before 2026-06-12 (cutoff 2025-12-12) -> excluded by 6m
+		P('2026-01-01', 30),
+		P('2026-03-01', 31),
+		P('2026-05-01', 32),
+		P('2026-06-01', 33)
+	];
 	const now = new Date('2026-06-12');
 	it('returns all for "all"', () => {
-		expect(filterByRange(pts, 'all', now)).toHaveLength(4);
+		expect(filterByRange(pts, 'all', now)).toHaveLength(5);
 	});
-	it('6mo keeps points within 6 months of now', () => {
+	it('6m keeps points within 6 months of now (excludes the Nov 2025 point)', () => {
 		const out = filterByRange(pts, '6m', now);
-		expect(out.map((p) => p.weight)).toEqual([31, 32, 33]);
+		expect(out.map((p) => p.weight)).toEqual([30, 31, 32, 33]);
 	});
 	it('1y keeps all here', () => {
-		expect(filterByRange(pts, '1y', now)).toHaveLength(4);
+		expect(filterByRange(pts, '1y', now)).toHaveLength(5);
 	});
 	it('keeps input order (assumed ascending by date)', () => {
 		const out = filterByRange(pts, 'all', now);
-		expect(out.map((p) => p.weight)).toEqual([30, 31, 32, 33]);
+		expect(out.map((p) => p.weight)).toEqual([29, 30, 31, 32, 33]);
 	});
 });
 
