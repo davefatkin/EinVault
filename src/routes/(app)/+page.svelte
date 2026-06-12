@@ -1,10 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell } from '@lucide/svelte';
+	import { Plus, Zap, Check, Pencil, Bell, X } from '@lucide/svelte';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { renderMarkdown } from '$lib/markdown';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { localDateISO } from '$lib/date';
@@ -190,11 +193,153 @@
 		}
 		pendingDismiss.commitWithEvent(reminderId, form);
 	}
+
+	// Detail modal
+	type AttentionReminder = (typeof data.upcomingReminders)[number];
+	let detailReminder = $state<AttentionReminder | null>(null);
+	let detailDialogEl = $state<HTMLElement | null>(null);
+
+	async function openReminderDetail(r: AttentionReminder) {
+		detailReminder = r;
+		await tick();
+		detailDialogEl?.focus();
+	}
+
+	function closeReminderDetail() {
+		detailReminder = null;
+	}
+
+	function handleOverviewWindowKey(e: KeyboardEvent) {
+		if (e.key === 'Escape' && detailReminder) {
+			closeReminderDetail();
+		}
+	}
+
+	function trapDetailFocus(e: KeyboardEvent) {
+		if (!detailDialogEl) return;
+		const focusable = Array.from(
+			detailDialogEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			)
+		).filter((el) => !el.hasAttribute('disabled'));
+		if (!focusable.length) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.key === 'Tab') {
+			if (e.shiftKey) {
+				if (document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				}
+			} else {
+				if (document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		}
+		if (e.key === 'Escape') closeReminderDetail();
+	}
 </script>
 
 <svelte:head>
 	<title>{t(locale, 'overview.title')} | EinVault</title>
 </svelte:head>
+
+<svelte:window onkeydown={handleOverviewWindowKey} />
+
+<!-- Reminder detail modal -->
+{#if detailReminder}
+	{@const r = detailReminder}
+	{@const companion = companionsById[r.companionId]}
+	{@const overdue = new Date(r.dueAt) < new Date()}
+	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+		<button
+			tabindex="-1"
+			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+			aria-label={t(locale, 'aria.closeDialog')}
+			onclick={closeReminderDetail}
+		></button>
+		<div
+			bind:this={detailDialogEl}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onkeydown={trapDetailFocus}
+			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
+				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
+		>
+			<div class="flex items-center justify-between px-5 pt-5 pb-3">
+				<h2 class="font-semibold text-base text-foreground">{r.title}</h2>
+				<button
+					onclick={closeReminderDetail}
+					aria-label={t(locale, 'aria.close')}
+					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+				>
+					<X class="h-4 w-4" />
+				</button>
+			</div>
+
+			<Separator />
+
+			<div class="px-5 py-4 space-y-3 text-sm">
+				{#if companion}
+					<div class="flex items-center gap-3">
+						<CompanionAvatar
+							companionId={companion.id}
+							avatarPath={companion.avatarPath}
+							name={companion.name}
+							size="sm"
+						/>
+						<span class="font-medium text-foreground">{companion.name}</span>
+					</div>
+				{/if}
+				<div class="flex items-center gap-3">
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.reminders.detailType')}</span
+					>
+					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
+				</div>
+				<div class="flex items-center gap-3">
+					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+						>{t(locale, 'page.reminders.detailDue')}</span
+					>
+					<span class={overdue ? 'text-destructive' : 'text-foreground'}>
+						<LocalTime date={r.dueAt} format="datetime" />
+					</span>
+					{#if overdue}
+						<Badge variant="destructive" class="ml-1">{t(locale, 'page.reminders.overdue')}</Badge>
+					{/if}
+				</div>
+				{#if r.description}
+					<div class="pt-1">
+						<p class="text-xs font-medium text-muted-foreground mb-1">
+							{t(locale, 'page.reminders.detailNotes')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(r.description)}
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<Separator />
+
+			<div class="flex gap-2 px-5 py-4">
+				{#if companion}
+					<Button
+						variant="outline"
+						size="sm"
+						href="/{companion.id}/reminders"
+						onclick={closeReminderDetail}
+					>
+						{t(locale, 'overview.reminders.openFor', { name: companion.name })}
+					</Button>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <div class="space-y-6 pb-20 md:pb-0">
 	<h1 class="sr-only">{t(locale, 'overview.title')}</h1>
@@ -250,9 +395,10 @@
 							/>
 						</a>
 					{/if}
-					<a
-						href={companion ? `/${companion.id}/reminders` : '/'}
-						class="flex items-center gap-2 min-w-0 flex-1 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+					<button
+						type="button"
+						onclick={() => openReminderDetail(r)}
+						class="flex items-center gap-2 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
 					>
 						{#if companion}
 							<span class="text-sm font-semibold text-foreground shrink-0">{companion.name}</span>
@@ -264,15 +410,17 @@
 						>
 							{urgencyLabel(urgency)}
 						</Badge>
-					</a>
-					<!-- Complete / log-event buttons -->
-					<ReminderCompleteButtons
-						onDone={() => handleComplete(r.id, r.title, r.type)}
-						onDoneAndLog={() => submitWithAndEvent(r.id)}
-						allowLogEvent={REMINDER_TO_HEALTH_TYPE[
-							r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-						] !== null}
-					/>
+					</button>
+					<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
+					<div onclick={(e) => e.stopPropagation()} role="none">
+						<ReminderCompleteButtons
+							onDone={() => handleComplete(r.id, r.title, r.type)}
+							onDoneAndLog={() => submitWithAndEvent(r.id)}
+							allowLogEvent={REMINDER_TO_HEALTH_TYPE[
+								r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+							] !== null}
+						/>
+					</div>
 				</div>
 			{/each}
 
@@ -396,7 +544,7 @@
 					</div>
 
 					<!-- Next reminder line -->
-					<div class="flex items-center gap-2 pt-2.5 border-t border-border text-xs">
+					<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
 						<span
 							class="shrink-0 h-6 w-6 rounded-lg {nextReminder
 								? nextUrgency === 'overdue'
@@ -435,7 +583,7 @@
 					<!-- Last activity line -->
 					{#if lastActivity}
 						<div
-							class="flex items-center gap-2 pt-2.5 border-t border-border text-xs text-muted-foreground"
+							class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs text-muted-foreground"
 						>
 							<span
 								class="shrink-0 h-6 w-6 rounded-lg bg-teal/10 text-teal flex items-center justify-center text-sm"
