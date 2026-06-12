@@ -163,6 +163,7 @@ const messages = {
 	'nav.documents': 'Documents',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
+	'nav.adminCompanions': 'Companions',
 	'nav.signOut': 'Sign Out',
 
 	// Navigation: caretaker-specific
@@ -773,6 +774,7 @@ const messages = {
 	// Page titles (used in <title> tags)
 	'page.care.title': 'Care',
 	'page.admin.pageTitle': 'User Admin',
+	'page.admin.companionsTitle': 'Companions',
 	'page.companion.edit.pageTitle': 'Edit {name}',
 
 	// Aria labels

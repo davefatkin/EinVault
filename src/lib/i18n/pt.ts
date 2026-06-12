@@ -173,6 +173,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.documents': 'Documentos',
 	'nav.settings': 'Definições',
 	'nav.admin': 'Administração',
+	'nav.adminCompanions': 'Companheiros',
 	'nav.signOut': 'Terminar sessão',
 
 	// Navigation: caretaker-specific
@@ -779,6 +780,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page titles
 	'page.care.title': 'Cuidados',
 	'page.admin.pageTitle': 'Gestão de utilizadores',
+	'page.admin.companionsTitle': 'Companheiros',
 	'page.companion.edit.pageTitle': 'Editar {name}',
 
 	// Aria labels

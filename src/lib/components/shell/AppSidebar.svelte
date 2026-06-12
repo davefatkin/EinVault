@@ -16,7 +16,8 @@
 		ChevronDown,
 		LayoutGrid,
 		UserRound,
-		PlusCircle
+		PlusCircle,
+		PawPrint
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 
@@ -320,19 +321,31 @@
 			</kbd>
 		</button>
 
-		<!-- Admin: Members link -->
+		<!-- Admin: Users link -->
 		{#if user?.role === 'admin'}
 			<a
 				href="/admin/users"
 				class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-accent {page.url.pathname.startsWith(
-					'/admin'
+					'/admin/users'
 				)
 					? 'bg-accent text-foreground'
 					: ''}"
-				aria-current={page.url.pathname.startsWith('/admin') ? 'page' : undefined}
+				aria-current={page.url.pathname.startsWith('/admin/users') ? 'page' : undefined}
 			>
 				<ShieldCheck class="h-4 w-4 shrink-0" />
 				{t(locale, 'nav.admin')}
+			</a>
+			<a
+				href="/admin/companions"
+				class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-accent {page.url.pathname.startsWith(
+					'/admin/companions'
+				)
+					? 'bg-accent text-foreground'
+					: ''}"
+				aria-current={page.url.pathname.startsWith('/admin/companions') ? 'page' : undefined}
+			>
+				<PawPrint class="h-4 w-4 shrink-0" />
+				{t(locale, 'nav.adminCompanions')}
 			</a>
 		{/if}
 
