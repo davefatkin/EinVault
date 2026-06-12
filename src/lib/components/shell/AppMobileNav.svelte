@@ -51,13 +51,26 @@
 		activeCompanion,
 		user,
 		today,
-		// eslint-disable-next-line no-unused-vars
-		companionStatus: _companionStatus,
+		companionStatus,
 		onOpenSearch,
 		class: className = ''
 	}: Props = $props();
 
 	const locale = getLocale();
+
+	function statusDotClass(id: string): string {
+		const s = companionStatus[id] ?? 'up-to-date';
+		if (s === 'needs-attention') return 'bg-coral';
+		if (s === 'due-today') return 'bg-gold';
+		return 'bg-teal';
+	}
+
+	function statusTitle(id: string): string {
+		const s = companionStatus[id] ?? 'up-to-date';
+		if (s === 'needs-attention') return t(locale, 'overview.careStatus.needsAttention');
+		if (s === 'due-today') return t(locale, 'overview.careStatus.dueToday');
+		return t(locale, 'overview.careStatus.upToDate');
+	}
 
 	const OVERVIEW_VALUE = '__overview__';
 
@@ -239,6 +252,10 @@
 											size="sm"
 										/>
 										<span class="truncate">{c.name}</span>
+										<span
+											class="ml-auto h-2 w-2 rounded-full shrink-0 {statusDotClass(c.id)}"
+											title={statusTitle(c.id)}
+										></span>
 									</button>
 								</li>
 							{/each}
