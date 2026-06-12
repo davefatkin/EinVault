@@ -733,6 +733,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.savingReminder': 'Enregistrement...',
 	'page.reminders.noUpcoming': 'Aucun rappel à venir.',
 	'page.reminders.overdue': 'En retard',
+	'page.reminders.groupOverdue': 'En retard',
 	'page.reminders.groupToday': "Aujourd'hui",
 	'page.reminders.groupUpcoming': 'À venir',
 	'page.reminders.detailType': 'Type',

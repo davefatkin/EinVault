@@ -641,9 +641,9 @@
 		{#if buckets.overdue.length > 0}
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-wide text-coral mb-2">
-					{t(locale, 'page.reminders.overdue')}
+					{t(locale, 'page.reminders.groupOverdue')}
 				</p>
-				<div class="space-y-3">
+				<div class="space-y-3" data-active-group>
 					{#each buckets.overdue as reminder (reminder.id)}
 						{@render reminderCard(reminder)}
 					{/each}
@@ -653,10 +653,10 @@
 
 		{#if buckets.today.length > 0}
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-amber-500 mb-2">
+				<p class="text-xs font-semibold uppercase tracking-wide text-gold mb-2">
 					{t(locale, 'page.reminders.groupToday')}
 				</p>
-				<div class="space-y-3">
+				<div class="space-y-3" data-active-group>
 					{#each buckets.today as reminder (reminder.id)}
 						{@render reminderCard(reminder)}
 					{/each}
@@ -669,7 +669,7 @@
 				<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
 					{t(locale, 'page.reminders.groupUpcoming')}
 				</p>
-				<div class="space-y-3">
+				<div class="space-y-3" data-active-group>
 					{#each buckets.upcoming as reminder (reminder.id)}
 						{@render reminderCard(reminder)}
 					{/each}

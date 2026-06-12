@@ -64,10 +64,10 @@ function justPast(): string {
 // with one Card per active reminder. We scope lookups to the whole page and
 // rely on the title text being unique per test (enforced by UNIQUE names).
 function activeSection(page: import('@playwright/test').Page) {
-	// Active reminders live in one `div.space-y-3` per urgency group (Overdue/
-	// Today/Upcoming). Completed reminders live inside a <details>, never a
-	// `div.space-y-3`, so scoping to these containers excludes completed.
-	return page.locator('div.space-y-3');
+	// Active reminders live in one container per urgency group, each marked
+	// data-active-group. Completed rows (in <details>) and the detail modal's
+	// inner lists are never marked, so this excludes them unambiguously.
+	return page.locator('[data-active-group]');
 }
 
 function completedSection(page: import('@playwright/test').Page) {
@@ -219,11 +219,18 @@ test.describe('reminders', () => {
 		await asMember.goto(BASE);
 		await addReminder(asMember, { title: 'e2e-overdue-grp', type: 'other', dueAt: justPast() });
 		await addReminder(asMember, { title: 'e2e-upcoming-grp', type: 'other', dueAt: tomorrow() });
-		await expect(activeSection(asMember).getByText('e2e-overdue-grp')).toBeVisible({
+
+		// The group container is the data-active-group div immediately after each header <p>.
+		const groupAfter = (label: string) =>
+			asMember.locator('p').filter({ hasText: label }).locator('xpath=following-sibling::div[1]');
+
+		await expect(groupAfter('Overdue').getByText('e2e-overdue-grp')).toBeVisible({
 			timeout: 8_000
 		});
-		await expect(activeSection(asMember).getByText('e2e-upcoming-grp')).toBeVisible({
+		await expect(groupAfter('Upcoming').getByText('e2e-upcoming-grp')).toBeVisible({
 			timeout: 8_000
 		});
+		// Cross-check: the overdue item is NOT in the upcoming group.
+		await expect(groupAfter('Overdue').getByText('e2e-upcoming-grp')).toHaveCount(0);
 	});
 });

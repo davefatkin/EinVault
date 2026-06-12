@@ -726,6 +726,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.savingReminder': 'Salvataggio...',
 	'page.reminders.noUpcoming': 'Nessun promemoria in arrivo.',
 	'page.reminders.overdue': 'Scaduto',
+	'page.reminders.groupOverdue': 'In ritardo',
 	'page.reminders.groupToday': 'Oggi',
 	'page.reminders.groupUpcoming': 'In arrivo',
 	'page.reminders.detailType': 'Tipo',
