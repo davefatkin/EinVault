@@ -1,6 +1,7 @@
 <script lang="ts">
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { Settings, LogOut, ShieldCheck, PawPrint, X } from '@lucide/svelte';
+	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	type User = {
@@ -21,9 +22,23 @@
 	let { user, open, onclose, variant = 'sheet' }: Props = $props();
 	const locale = getLocale();
 
+	let dialogEl = $state<HTMLElement | null>(null);
+	let triggerEl = $state<HTMLElement | null>(null);
+
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') onclose();
 	}
+
+	$effect(() => {
+		if (open) {
+			triggerEl = document.activeElement as HTMLElement | null;
+			tick().then(() => {
+				dialogEl?.querySelector<HTMLElement>('[href], button:not([disabled])')?.focus();
+			});
+		} else {
+			tick().then(() => triggerEl?.focus());
+		}
+	});
 </script>
 
 {#if open}
@@ -33,10 +48,12 @@
 			? 'bg-black/50 backdrop-blur-sm'
 			: ''}"
 		aria-label={t(locale, 'aria.closeAccountMenu')}
+		aria-hidden="true"
 		onclick={onclose}
 		tabindex="-1"
 	></button>
 	<div
+		bind:this={dialogEl}
 		role="dialog"
 		aria-modal="true"
 		aria-label={t(locale, 'aria.accountMenu')}

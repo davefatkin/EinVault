@@ -62,6 +62,10 @@
 
 	let accountOpen = $state(false);
 
+	$effect(() => {
+		if (isCompanionContext) accountOpen = false;
+	});
+
 	// Companion context nav tabs (4 + central FAB)
 	let companionTabs = $derived(
 		activeCompanion
@@ -290,7 +294,7 @@
 				{#if isAction}
 					<button
 						type="button"
-						onclick={tab.action}
+						onclick={() => tab.action?.()}
 						aria-label={tab.label}
 						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors min-h-[56px] justify-end pb-2 hover:text-foreground"
 					>

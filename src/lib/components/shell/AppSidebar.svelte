@@ -143,7 +143,10 @@
 				<div class="relative" role="none">
 					<button
 						type="button"
-						onclick={() => (switcherOpen = !switcherOpen)}
+						onclick={() => {
+							switcherOpen = !switcherOpen;
+							accountOpen = false;
+						}}
 						onkeydown={handleSwitcherKeydown}
 						aria-label={t(locale, 'layout.switchCompanion')}
 						aria-expanded={switcherOpen}
@@ -344,7 +347,10 @@
 			{#if user}
 				<button
 					type="button"
-					onclick={() => (accountOpen = !accountOpen)}
+					onclick={() => {
+						accountOpen = !accountOpen;
+						switcherOpen = false;
+					}}
 					aria-haspopup="dialog"
 					aria-expanded={accountOpen}
 					class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
