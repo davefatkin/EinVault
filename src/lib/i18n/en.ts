@@ -447,6 +447,9 @@ const messages = {
 	'page.companion.edit.archive': 'Archive',
 	'page.companion.edit.labelArchiveDate': 'Date',
 	'page.companion.edit.labelArchiveNote': 'Note',
+	'page.companion.edit.tabsAria': 'Edit sections',
+	'page.companion.edit.sectionBasics': 'Basics',
+	'page.companion.edit.sectionAbout': 'About',
 
 	// Page: overview (multi-companion landing)
 	'overview.title': 'Overview',

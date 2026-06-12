@@ -454,6 +454,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.archive': 'Archiver',
 	'page.companion.edit.labelArchiveDate': 'Date',
 	'page.companion.edit.labelArchiveNote': 'Note',
+	'page.companion.edit.tabsAria': "Sections d'édition",
+	'page.companion.edit.sectionBasics': 'Bases',
+	'page.companion.edit.sectionAbout': 'À propos',
 
 	// Page: overview (multi-companion landing)
 	'overview.title': 'Aperçu',

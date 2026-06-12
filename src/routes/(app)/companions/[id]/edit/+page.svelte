@@ -18,6 +18,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion } = $derived(data);
 	let loading = $state(false);
+	let archiving = $state(false);
 	let activeTab = $state<'profile' | 'caretaker'>('profile');
 	const locale = getLocale();
 
@@ -95,9 +96,14 @@
 	{/if}
 
 	<!-- Segmented tab control -->
-	<div class="inline-flex w-full rounded-lg border border-border bg-muted p-0.5">
+	<div
+		role="group"
+		aria-label={t(locale, 'page.companion.edit.tabsAria')}
+		class="inline-flex w-full rounded-lg border border-border bg-muted p-0.5"
+	>
 		<button
 			type="button"
+			aria-pressed={activeTab === 'profile'}
 			onclick={() => (activeTab = 'profile')}
 			class={[
 				'flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
@@ -110,6 +116,7 @@
 		</button>
 		<button
 			type="button"
+			aria-pressed={activeTab === 'caretaker'}
 			onclick={() => (activeTab = 'caretaker')}
 			class={[
 				'flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
@@ -155,7 +162,7 @@
 			<!-- BASICS section -->
 			<section class="space-y-4">
 				<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Basics
+					{t(locale, 'page.companion.edit.sectionBasics')}
 				</p>
 
 				<div class="space-y-1.5">
@@ -230,7 +237,7 @@
 			<!-- ABOUT section -->
 			<section class="space-y-4">
 				<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-					About
+					{t(locale, 'page.companion.edit.sectionAbout')}
 				</p>
 				<div class="space-y-1.5">
 					<Label for="bio">{t(locale, 'page.companion.labelBio')}</Label>
@@ -427,9 +434,9 @@
 						method="POST"
 						action="?/archive"
 						use:enhance={() => {
-							loading = true;
+							archiving = true;
 							return async ({ update }) => {
-								loading = false;
+								archiving = false;
 								await update({ reset: false });
 							};
 						}}
@@ -456,8 +463,8 @@
 							/>
 						</div>
 						<div class="flex gap-2">
-							<Button type="submit" variant="secondary" disabled={loading}>
-								{loading
+							<Button type="submit" variant="secondary" disabled={archiving}>
+								{archiving
 									? t(locale, 'page.companion.edit.archiving')
 									: t(locale, 'page.companion.edit.archive')}
 							</Button>
