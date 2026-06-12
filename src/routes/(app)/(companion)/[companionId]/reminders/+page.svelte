@@ -245,10 +245,10 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.reminders.detailDue')}</span
 					>
-					<span class={overdue ? 'text-destructive' : 'text-foreground'}>
+					<span class={overdue ? 'text-coral' : 'text-foreground'}>
 						<LocalTime date={r.dueAt} format="datetime" />
 					</span>
-					{#if overdue}<Badge variant="destructive" class="ml-1"
+					{#if overdue}<Badge variant="coral" class="ml-1"
 							>{t(locale, 'page.reminders.overdue')}</Badge
 						>{/if}
 				</div>
@@ -464,7 +464,7 @@
 		<div class="space-y-3">
 			{#each active as reminder (reminder.id)}
 				{@const overdue = isOverdue(reminder.dueAt)}
-				<Card class="overflow-hidden {overdue ? 'border-red-300 dark:border-red-800' : ''}">
+				<Card class="overflow-hidden {overdue ? 'border-coral/40' : ''}">
 					{#if editingId === reminder.id}
 						<CardContent class="pt-6">
 							<form
@@ -559,7 +559,7 @@
 									<div class="min-w-0">
 										<div class="flex items-center gap-2 flex-wrap">
 											<span class="font-medium text-foreground">{reminder.title}</span>
-											{#if overdue}<Badge variant="destructive"
+											{#if overdue}<Badge variant="coral"
 													>{t(locale, 'page.reminders.overdue')}</Badge
 												>{/if}
 											{#if reminder.isRecurring}
@@ -575,9 +575,7 @@
 												{@html renderMarkdown(reminder.description)}
 											</div>
 										{/if}
-										<p
-											class="text-xs mt-1 {overdue ? 'text-destructive' : 'text-muted-foreground'}"
-										>
+										<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
 											Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
 												user={reminder.logger}
 												variant="inline"

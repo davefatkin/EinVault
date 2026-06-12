@@ -224,7 +224,7 @@
 					<!-- Actions: Edit (primary) + overflow menu -->
 					<div class="flex items-center gap-0.5 shrink-0">
 						<Button
-							variant="ghost"
+							variant="soft"
 							size="sm"
 							class="h-8 w-8 p-0 md:w-auto md:px-2.5 md:gap-1.5 text-xs"
 							onclick={() => (editingUserId = editingUserId === user.id ? null : user.id)}
@@ -584,7 +584,7 @@
 											<div class="flex gap-1 shrink-0">
 												<Button
 													type="button"
-													variant="ghost"
+													variant="soft"
 													size="sm"
 													class="h-7 text-xs"
 													onclick={() => (editingShiftId = shift.id)}
@@ -592,9 +592,9 @@
 												>
 												<Button
 													type="button"
-													variant="ghost"
+													variant="softDestructive"
 													size="sm"
-													class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+													class="h-7 gap-1.5 px-2 text-xs"
 													onclick={() => {
 														deleteShiftId = shift.id;
 														confirmOpen = true;

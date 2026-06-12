@@ -233,7 +233,7 @@
 						href="/{companion.id}/journal/{new Date(detailEvent.loggedAt)
 							.toISOString()
 							.slice(0, 10)}"
-						variant="outline"
+						variant="soft"
 						size="sm"
 						onclick={closeDetail}
 					>
@@ -328,7 +328,7 @@
 							{#if companion.isActive !== false}
 								<Button
 									href="/{companion.id}/journal/{entry.date}"
-									variant="ghost"
+									variant="soft"
 									size="sm"
 									class="h-7 text-xs shrink-0 gap-1"
 								>

@@ -75,7 +75,7 @@
 							<Badge variant="moss">Active</Badge>
 						</div>
 					</div>
-					<Button href="/companions/{companion.id}/edit" variant="ghost" size="sm">
+					<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
 						{t(locale, 'common.edit')}
 					</Button>
 				</div>
@@ -117,7 +117,7 @@
 							</div>
 						</div>
 						<div class="flex items-center gap-1 shrink-0">
-							<Button href="/companions/{companion.id}/edit" variant="ghost" size="sm">
+							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
 								{t(locale, 'common.edit')}
 							</Button>
 							<form
@@ -129,7 +129,7 @@
 									}}
 							>
 								<input type="hidden" name="companionId" value={companion.id} />
-								<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
+								<Button type="submit" variant="softSuccess" size="sm" class="gap-1.5">
 									<RotateCcw class="h-3.5 w-3.5" />
 									<span class="hidden sm:inline">Restore</span>
 								</Button>

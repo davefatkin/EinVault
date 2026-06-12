@@ -310,7 +310,7 @@
 				<div class="flex gap-2 px-5 py-4">
 					{#if selected.kind === 'weight'}
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'weight') {
@@ -324,7 +324,7 @@
 							{t(locale, 'common.edit')}
 						</Button>
 						<Button
-							variant="destructive"
+							variant="softDestructive"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'weight') {
@@ -340,7 +340,7 @@
 						</Button>
 					{:else if selected.kind === 'health'}
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'health') {
@@ -354,7 +354,7 @@
 							{t(locale, 'common.edit')}
 						</Button>
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							href={reminderPrefillUrl(
 								data.companion.id,
@@ -367,7 +367,7 @@
 							{t(locale, 'page.reminders.addReminder')}
 						</Button>
 						<Button
-							variant="destructive"
+							variant="softDestructive"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'health') {

@@ -29,6 +29,7 @@
 		NotebookPen,
 		X
 	} from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
@@ -509,17 +510,17 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
-				<button
-					type="button"
+				<Button
+					variant="soft"
+					size="sm"
 					onclick={() => {
 						closeActivityDetail();
 						startEditActivity(detailEvent!);
 					}}
-					class="inline-flex items-center gap-1.5 justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
 				>
-					<Pencil class="h-3.5 w-3.5" />
+					<Pencil class="h-3.5 w-3.5 mr-1.5" />
 					{t(locale, 'common.edit')}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
@@ -1221,17 +1222,20 @@
 									<ByLine user={event.logger} />
 								</div>
 							</button>
-							<button
-								type="button"
+							<Button
+								variant="soft"
+								size="sm"
+								class="h-7 px-2 text-xs gap-1.5 shrink-0"
 								onclick={() => startEditActivity(event)}
-								class="inline-flex items-center gap-1.5 justify-center rounded-md h-7 px-2 text-xs font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
-								><Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
-									>{t(locale, 'common.edit')}</span
-								></button
 							>
-							<button
-								type="button"
-								class="inline-flex items-center gap-1.5 justify-center rounded-md h-7 px-2 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-red-500 dark:hover:text-red-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
+								<Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+									>{t(locale, 'common.edit')}</span
+								>
+							</Button>
+							<Button
+								variant="softDestructive"
+								size="sm"
+								class="h-7 px-2 text-xs gap-1.5 shrink-0"
 								onclick={() => {
 									deleteActivityId = event.id;
 									openConfirm(() => deleteActivityForm?.requestSubmit());
@@ -1240,7 +1244,7 @@
 								<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline"
 									>{t(locale, 'common.delete')}</span
 								>
-							</button>
+							</Button>
 						</div>
 					{/if}
 				{/each}
