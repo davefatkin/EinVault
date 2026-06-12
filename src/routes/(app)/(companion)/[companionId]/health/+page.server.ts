@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}),
 		db.query.documents.findMany({
 			where: eq(schema.documents.companionId, params.companionId),
-			columns: { id: true, title: true, healthEventId: true, filename: true }
+			columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
 		})
 	]);
 

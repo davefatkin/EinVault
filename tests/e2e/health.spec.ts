@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { pdfUpload } from '../lib/files';
 
 const COMP = 'seed-comp-biscuit';
 
@@ -82,9 +83,36 @@ test.describe('health events and weight log', () => {
 
 	test('health page shows the weight trend section', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		// The featured weight-trend section renders (its label is always present).
+		// Don't assert a count-dependent state here: the `log weight` test shares
+		// this worker's DB and may have added an entry, changing the chart state.
 		await expect(asMember.getByText('Weight trend')).toBeVisible({ timeout: 8_000 });
-		// Seed has 0 weight rows — assert the empty-state text (<2 entries, no svg).
-		await expect(asMember.getByText('No weight recorded yet.')).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('a document attached to a health event is previewable from the event modal', async ({
+		asMember
+	}) => {
+		// Upload a document and link it to the seeded "Seed checkup" health event.
+		await asMember.goto(`/${COMP}/documents`);
+		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-health-attach.pdf'));
+		await expect(asMember.getByText('e2e-health-attach.pdf')).toBeVisible({ timeout: 15_000 });
+		const li = asMember.locator('li').filter({ hasText: 'e2e-health-attach.pdf' }).first();
+		await li.getByRole('button', { name: 'Edit document' }).click();
+		await asMember.locator('select[id^="doc-event-"]').selectOption('seed-health-1');
+		await asMember.getByRole('button', { name: 'Save' }).first().click();
+		await expect(asMember.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+
+		// On the health page, open the "Seed checkup" event detail modal.
+		await asMember.goto(`/${COMP}/health`);
+		await asMember.getByText('Seed checkup').first().click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// The linked document appears in the modal and opens a preview when clicked.
+		await dialog.getByRole('button', { name: /e2e-health-attach\.pdf/ }).click();
+		await expect(asMember.getByRole('dialog', { name: 'e2e-health-attach.pdf' })).toBeVisible({
+			timeout: 8_000
+		});
 	});
 
 	test('title required', async ({ asMember }) => {

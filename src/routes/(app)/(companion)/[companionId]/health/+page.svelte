@@ -14,6 +14,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Scale, Plus, Pencil, Trash2, X, FileText } from '@lucide/svelte';
 	import WeightChart from '$lib/components/WeightChart.svelte';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
@@ -35,6 +36,16 @@
 			}))
 			.sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime())
 	);
+
+	// Document preview (documents attached to a health event)
+	type LinkedDoc = (typeof data.linkedDocuments)[0];
+	let previewDoc = $state<LinkedDoc | null>(null);
+	function docsForEvent(eventId: string): LinkedDoc[] {
+		return data.linkedDocuments.filter((d) => d.healthEventId === eventId);
+	}
+	function docUrl(doc: LinkedDoc) {
+		return `/api/documents/${data.companion.id}/${doc.filename}`;
+	}
 
 	let showHealthForm = $state(false);
 	let showWeightForm = $state(false);
@@ -311,6 +322,28 @@
 							</p>
 							<div class="prose prose-sm dark:prose-invert max-w-none">
 								{@html renderMarkdown(h.notes)}
+							</div>
+						</div>
+					{/if}
+					{#if docsForEvent(h.id).length > 0}
+						<div class="pt-1">
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'nav.documents')}
+							</p>
+							<div class="flex flex-col gap-1.5">
+								{#each docsForEvent(h.id) as doc (doc.id)}
+									<button
+										type="button"
+										onclick={() => {
+											closeDetail();
+											previewDoc = doc;
+										}}
+										class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
+									>
+										<FileText class="h-4 w-4 shrink-0 text-muted-foreground" />
+										<span class="truncate">{doc.title}</span>
+									</button>
+								{/each}
 							</div>
 						</div>
 					{/if}
@@ -986,3 +1019,13 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={docUrl(previewDoc)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
+	/>
+{/if}
