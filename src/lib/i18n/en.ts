@@ -399,10 +399,8 @@ const messages = {
 
 	// Page: companion new
 	'page.companion.new.pageTitle': 'Add companion | EinVault',
-	'page.companion.new.backToSettings': 'Back to Settings',
 	'page.companion.new.heading': 'Add a companion',
 	'page.companion.new.subheading': 'Fill in what you know. You can always edit later.',
-	'page.companion.new.cardTitle': 'Companion Details',
 	'page.companion.new.submit': 'Add Companion',
 
 	// Page: companion edit

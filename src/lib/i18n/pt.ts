@@ -403,10 +403,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion new
 	'page.companion.new.pageTitle': 'Adicionar companheiro | EinVault',
-	'page.companion.new.backToSettings': 'Voltar às definições',
 	'page.companion.new.heading': 'Adicionar um companheiro',
 	'page.companion.new.subheading': 'Preencha o que souber. Pode sempre editar depois.',
-	'page.companion.new.cardTitle': 'Detalhes do companheiro',
 	'page.companion.new.submit': 'Adicionar companheiro',
 
 	// Page: companion edit

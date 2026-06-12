@@ -406,10 +406,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion new
 	'page.companion.new.pageTitle': 'Begleiter hinzufügen | EinVault',
-	'page.companion.new.backToSettings': 'Zurück zu Einstellungen',
 	'page.companion.new.heading': 'Begleiter hinzufügen',
 	'page.companion.new.subheading': 'Fülle aus, was du weißt. Du kannst später immer noch ändern.',
-	'page.companion.new.cardTitle': 'Begleiterdetails',
 	'page.companion.new.submit': 'Begleiter hinzufügen',
 
 	// Page: companion edit

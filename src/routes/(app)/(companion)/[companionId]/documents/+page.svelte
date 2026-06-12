@@ -289,7 +289,7 @@
 									</select>
 								</div>
 								{#if saveError}
-									<p class="text-sm text-red-600 dark:text-red-400">{saveError}</p>
+									<p class="text-sm text-destructive">{saveError}</p>
 								{/if}
 								<div class="flex gap-2">
 									<Button size="sm" onclick={saveEdit}>{t(locale, 'page.documents.save')}</Button>
