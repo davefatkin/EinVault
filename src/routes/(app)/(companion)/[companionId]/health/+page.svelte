@@ -729,7 +729,7 @@
 								<div class="flex gap-1 shrink-0">
 									<Button
 										type="button"
-										variant="ghost"
+										variant="soft"
 										size="sm"
 										onclick={() => startEditWeight(entry)}
 										class="h-7 gap-1.5 px-2 text-xs"
@@ -739,9 +739,9 @@
 									</Button>
 									<Button
 										type="button"
-										variant="ghost"
+										variant="softDestructive"
 										size="sm"
-										class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+										class="h-7 gap-1.5 px-2 text-xs"
 										onclick={() => {
 											deleteWeightId = entry.id;
 											openConfirm(() => deleteWeightForm?.requestSubmit());
@@ -918,7 +918,7 @@
 									<div class="flex gap-1 shrink-0">
 										<Button
 											type="button"
-											variant="ghost"
+											variant="soft"
 											size="sm"
 											onclick={() => startEditHealth(event)}
 											class="h-7 gap-1.5 px-2 text-xs"
@@ -928,9 +928,9 @@
 										</Button>
 										<Button
 											type="button"
-											variant="ghost"
+											variant="softDestructive"
 											size="sm"
-											class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+											class="h-7 gap-1.5 px-2 text-xs"
 											onclick={() => {
 												deleteHealthId = event.id;
 												openConfirm(() => deleteHealthForm?.requestSubmit());
