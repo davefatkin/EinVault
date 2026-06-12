@@ -461,19 +461,20 @@
 			<Separator />
 
 			{#if companion.isActive !== false}
-				<div class="flex gap-2 px-5 py-4">
+				<div class="flex flex-wrap gap-2 px-5 py-4">
 					{#if selected.kind === 'reminder'}
 						<Button
 							href="/{companion.id}/reminders?edit={selected.item.id}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'page.dashboard.modalEditReminders')}
 						</Button>
-						<button
-							type="button"
+						<Button
+							variant="softSuccess"
+							size="sm"
 							onclick={() => {
 								if (selected?.kind !== 'reminder') return;
 								const item = selected.item;
@@ -482,13 +483,13 @@
 								closeDetail();
 								pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
 							}}
-							class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
 						>
-							<CheckCheck class="h-3.5 w-3.5" />
+							<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'common.reminder.done')}
-						</button>
-						<button
-							type="button"
+						</Button>
+						<Button
+							variant="softPrimary"
+							size="sm"
 							aria-label={t(locale, 'common.reminder.logEventAria')}
 							onclick={() => {
 								if (selected?.kind !== 'reminder') return;
@@ -496,15 +497,14 @@
 								closeDetail();
 								submitWithAndEvent(item.id);
 							}}
-							class="inline-flex items-center gap-1.5 justify-center rounded-md border border-input bg-background h-9 px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
 						>
-							<HeartPulse class="h-3.5 w-3.5" />
+							<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'common.reminder.logEvent')}
-						</button>
+						</Button>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
 							href="/{companion.id}/health?edit={selected.item.id}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
@@ -514,7 +514,7 @@
 					{:else if selected.kind === 'activity'}
 						<Button
 							href="/{companion.id}/journal/{eventDate(selected.item.loggedAt)}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
