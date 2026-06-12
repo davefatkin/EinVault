@@ -19,11 +19,15 @@
 		healthTypeLabel
 	} from '$lib/i18n/labels';
 	import { careStatus } from '$lib/careStatus';
+	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+	import { HeartPulse } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
 
-	const today = localDateISO(new Date());
+	// Use the server's notion of today so journal links don't drift on timezone boundary.
+	// The (app) layout server returns `today: localDateISO()` which SvelteKit merges into data.
+	let today = $derived(data.today);
 
 	// Health type → emoji icon (no dedicated icon map exists; define inline)
 	const HEALTH_ICONS: Record<string, string> = {
@@ -170,10 +174,21 @@
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
 
-	function handleComplete(reminderId: string) {
+	function handleComplete(reminderId: string, title: string, reminderType: string) {
 		const form = dismissFormRegistry.get(reminderId);
 		if (!form) return;
-		pendingDismiss.queue(reminderId, form, '');
+		const allowLogEvent =
+			REMINDER_TO_HEALTH_TYPE[reminderType as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null;
+		pendingDismiss.queue(reminderId, form, title, { allowLogEvent });
+	}
+
+	function submitWithAndEvent(reminderId: string) {
+		const form = dismissFormRegistry.get(reminderId);
+		if (!form) {
+			console.warn('Reminder dismiss form not found for', reminderId);
+			return;
+		}
+		pendingDismiss.commitWithEvent(reminderId, form);
 	}
 </script>
 
@@ -250,15 +265,29 @@
 							{urgencyLabel(urgency)}
 						</Badge>
 					</a>
-					<!-- Complete button -->
-					<button
-						type="button"
-						onclick={() => handleComplete(r.id)}
-						class="shrink-0 h-8 w-8 rounded-lg border border-border bg-teal/10 text-teal flex items-center justify-center hover:bg-teal/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						aria-label={t(locale, 'overview.markDone')}
-					>
-						<Check class="h-4 w-4" />
-					</button>
+					<!-- Complete / log-event buttons -->
+					<div class="flex items-center gap-1 shrink-0">
+						<button
+							type="button"
+							onclick={() => handleComplete(r.id, r.title, r.type)}
+							class="shrink-0 h-8 w-8 rounded-lg border border-border bg-teal/10 text-teal flex items-center justify-center hover:bg-teal/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							aria-label={t(locale, 'overview.markDone')}
+							title={t(locale, 'common.reminder.done')}
+						>
+							<Check class="h-4 w-4" />
+						</button>
+						{#if REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null}
+							<button
+								type="button"
+								onclick={() => submitWithAndEvent(r.id)}
+								class="shrink-0 h-8 w-8 rounded-lg border border-border bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								aria-label={t(locale, 'common.reminder.logEventAria')}
+								title={t(locale, 'common.reminder.logEvent')}
+							>
+								<HeartPulse class="h-4 w-4" />
+							</button>
+						{/if}
+					</div>
 				</div>
 			{/each}
 
@@ -349,7 +378,7 @@
 					</div>
 
 					<!-- Today's journal line -->
-					<div class="flex items-center gap-2 pt-2.5 border-t border-border text-xs">
+					<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
 						<span
 							class="shrink-0 h-6 w-6 rounded-lg {journalEntry
 								? 'bg-primary/15 text-primary'

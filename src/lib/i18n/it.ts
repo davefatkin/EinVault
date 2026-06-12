@@ -462,7 +462,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.careStatus.upToDate': 'In regola',
 	'overview.careStatus.dueToday': 'In scadenza oggi',
 	'overview.careStatus.needsAttention': 'Richiede attenzione',
-	'overview.journal.noEntryYet': 'Nessun diario ancora',
+	'overview.journal.noEntryYet': 'Nessuna voce di diario oggi',
 	'overview.journal.addTodayShort': '+ Aggiungi oggi',
 	'overview.reminders.none': 'Nessun promemoria',
 	'overview.recentHousehold': 'Attività recente in famiglia',

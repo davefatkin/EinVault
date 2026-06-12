@@ -459,7 +459,7 @@ const messages = {
 	'overview.careStatus.upToDate': 'Up to date',
 	'overview.careStatus.dueToday': 'Due today',
 	'overview.careStatus.needsAttention': 'Needs attention',
-	'overview.journal.noEntryYet': 'No journal yet',
+	'overview.journal.noEntryYet': 'No journal entry today',
 	'overview.journal.addTodayShort': '+ Add today',
 	'overview.reminders.none': 'No reminders',
 	'overview.recentHousehold': 'Recent across the household',
