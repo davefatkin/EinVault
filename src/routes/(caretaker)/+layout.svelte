@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
@@ -27,7 +27,7 @@
 
 	const locale = getLocale();
 
-	let activeCompanionId = $derived($page.params.companionId ?? null);
+	let activeCompanionId = $derived(page.params.companionId ?? null);
 	let activeCompanion = $derived(
 		data.companions.find((c) => c.id === activeCompanionId) ?? data.companions[0] ?? null
 	);
@@ -78,7 +78,7 @@
 							label: t(locale, 'nav.caretaker.addJournal')
 						}
 					],
-					currentFabSection($page.url.pathname)
+					currentFabSection(page.url.pathname)
 				)
 			: []
 	);
@@ -91,12 +91,12 @@
 	let overviewHref = $derived(activeCompanion ? `/care/${activeCompanion.id}` : '');
 	let journalHref = $derived(activeCompanion ? `/care/${activeCompanion.id}/journal` : '');
 	let logHref = $derived(activeCompanion ? `/care/${activeCompanion.id}/log` : '');
-	let overviewActive = $derived($page.url.pathname === overviewHref);
+	let overviewActive = $derived(page.url.pathname === overviewHref);
 	let journalActive = $derived(
-		$page.url.pathname === journalHref || $page.url.pathname.startsWith(journalHref + '/')
+		page.url.pathname === journalHref || page.url.pathname.startsWith(journalHref + '/')
 	);
 	let logActive = $derived(
-		$page.url.pathname === logHref || $page.url.pathname.startsWith(logHref + '/')
+		page.url.pathname === logHref || page.url.pathname.startsWith(logHref + '/')
 	);
 	let journalLabel = $derived(t(locale, 'nav.journal'));
 	let logLabel = $derived(t(locale, 'nav.caretaker.logActivity'));
@@ -211,8 +211,8 @@
 			>
 				{#each navItems as item (item.href)}
 					{@const isActive =
-						$page.url.pathname === item.href ||
-						($page.url.pathname.startsWith(item.href + '/') &&
+						page.url.pathname === item.href ||
+						(page.url.pathname.startsWith(item.href + '/') &&
 							item.href !== `/care/${activeCompanion?.id}`)}
 					{@const isLocked = item.restricted && !data.isOnShift}
 					{@const NavIcon = item.icon}
@@ -253,7 +253,10 @@
 
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}
-		<nav class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30">
+		<nav
+			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30"
+			aria-label={t(locale, 'aria.caretakerNav')}
+		>
 			<div class="relative flex items-end">
 				<!-- Overview tab -->
 				<a
@@ -361,11 +364,31 @@
 				<!-- Settings tab -->
 				<a
 					href="/care/settings"
-					aria-current={$page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
+					aria-current={page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
 					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors min-h-[56px] justify-end pb-2
-						{$page.url.pathname.startsWith('/care/settings') ? 'text-primary' : 'text-muted-foreground'}"
+						{page.url.pathname.startsWith('/care/settings') ? 'text-primary' : 'text-muted-foreground'}"
 				>
 					<Settings class="h-5 w-5 mb-0.5" />
+					{t(locale, 'nav.settings')}
+				</a>
+			</div>
+		</nav>
+	{:else}
+		<nav
+			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30"
+			aria-label={t(locale, 'aria.caretakerNav')}
+		>
+			<div class="flex">
+				<a
+					href="/care/settings"
+					aria-current={page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
+					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+						'/care/settings'
+					)
+						? 'text-primary'
+						: 'text-muted-foreground'}"
+				>
+					<Settings class="h-5 w-5" />
 					{t(locale, 'nav.settings')}
 				</a>
 			</div>
