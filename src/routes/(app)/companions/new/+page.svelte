@@ -21,9 +21,9 @@
 </svelte:head>
 
 <div class="max-w-2xl mx-auto space-y-6">
-	<Button href="/settings" variant="ghost" size="sm" class="gap-1.5 -ml-2 mb-4">
+	<Button href="/" variant="ghost" size="sm" class="gap-1.5 -ml-2 mb-4">
 		<ChevronLeft class="h-4 w-4" />
-		<span class="hidden sm:inline">{t(locale, 'page.companion.new.backToSettings')}</span>
+		<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
 	</Button>
 
 	<div>
@@ -141,7 +141,7 @@
 			<Button type="submit" disabled={loading}>
 				{loading ? t(locale, 'common.saving') : t(locale, 'page.companion.new.submit')}
 			</Button>
-			<Button href="/settings" variant="outline">{t(locale, 'common.cancel')}</Button>
+			<Button href="/" variant="outline">{t(locale, 'common.cancel')}</Button>
 		</div>
 	</form>
 </div>
