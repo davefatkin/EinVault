@@ -63,16 +63,13 @@
 			{weekday(entry.date)}
 		</div>
 		<div
-			class="mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-background {isToday
+			class="mt-1.5 h-3 w-3 rounded-full ring-4 ring-background {isToday
 				? 'bg-primary'
-				: 'bg-muted-foreground/40'}"
+				: 'bg-muted-foreground/50'}"
 			aria-hidden="true"
 		></div>
-		<div
-			class="absolute left-1/2 w-px -translate-x-1/2 bg-border"
-			style="top: calc(100% - 0.125rem); bottom: -0.75rem;"
-			aria-hidden="true"
-		></div>
+		<!-- Connector: fills the rest of the row height and bridges the gap to the next entry. -->
+		<div class="mt-1.5 -mb-3 w-0.5 flex-1 rounded-full bg-border" aria-hidden="true"></div>
 	</div>
 
 	<div class="min-w-0 flex-1 rounded-2xl border bg-card p-4">

@@ -216,7 +216,6 @@
 							.slice(0, 10)}"
 						variant="soft"
 						size="sm"
-						onclick={closeDetail}
 					>
 						<Pencil class="h-3.5 w-3.5 mr-1.5" />
 						{t(locale, 'page.journal.activityDetailOpenInJournal')}

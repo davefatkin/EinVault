@@ -512,8 +512,9 @@
 					variant="soft"
 					size="sm"
 					onclick={() => {
+						const ev = detailEvent;
 						closeActivityDetail();
-						startEditActivity(detailEvent!);
+						if (ev) startEditActivity(ev);
 					}}
 				>
 					<Pencil class="h-3.5 w-3.5 mr-1.5" />
@@ -693,7 +694,7 @@
 						<span class="text-xs text-muted-foreground"
 							>{t(locale, 'page.journal.day.toggleHint')}</span
 						>
-						<details class="group">
+						<details class="group relative">
 							<summary
 								class="inline-flex cursor-pointer select-none list-none items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors [&::-webkit-details-marker]:hidden"
 							>
@@ -710,7 +711,9 @@
 								>
 								Markdown supported
 							</summary>
-							<div class="mt-2 rounded-md bg-muted/60 px-3 py-2.5 text-xs space-y-1.5">
+							<div
+								class="absolute right-0 top-full z-20 mt-2 w-72 rounded-md border border-border bg-popover px-3 py-2.5 text-xs space-y-1.5 shadow-lg"
+							>
 								<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
 									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
 										>**bold**</code
