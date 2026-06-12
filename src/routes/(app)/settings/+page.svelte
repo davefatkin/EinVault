@@ -9,20 +9,16 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import AccountAvatar from '$lib/components/AccountAvatar.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
-	import { Pencil, Plus, RotateCcw } from '@lucide/svelte';
-	import { getContext } from 'svelte';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const locale = getLocale();
-	const serverTimezone = getContext<string | undefined>('serverTimezone');
 
 	let showPasswordFields = $state(false);
 	let localeForm: HTMLFormElement;
@@ -37,16 +33,6 @@
 	}
 
 	const browserOrigin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
-
-	function formatArchivedDate(d: Date | null | undefined): string {
-		if (!d) return '';
-		return new Date(d).toLocaleDateString(undefined, {
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-			...(serverTimezone ? { timeZone: serverTimezone } : {})
-		});
-	}
 </script>
 
 <svelte:head>
@@ -308,115 +294,6 @@
 				: undefined}
 			errorMessage={form?.defaultRecurrenceError}
 		/>
-	{/if}
-
-	{#if data.companions.length > 0 || data.user?.role !== 'caretaker'}
-		<Card>
-			<CardHeader>
-				<div class="flex items-center justify-between">
-					<CardTitle>{t(locale, 'page.settings.companionsCard')}</CardTitle>
-					<Button href="/companions/new" size="sm" variant="outline" class="gap-1.5">
-						<Plus class="h-4 w-4" /><span>{t(locale, 'page.settings.addCompanion')}</span>
-					</Button>
-				</div>
-			</CardHeader>
-			<CardContent>
-				{#if data.companions.length === 0}
-					<p class="text-sm text-muted-foreground">{t(locale, 'page.settings.noCompanions')}</p>
-				{:else}
-					<ul class="space-y-2">
-						{#each data.companions as companion (companion.id)}
-							<li class="flex items-center justify-between gap-3">
-								<div class="flex items-center gap-2.5 min-w-0">
-									<CompanionAvatar
-										companionId={companion.id}
-										avatarPath={companion.avatarPath}
-										name={companion.name}
-										size="sm"
-									/>
-									<span class="text-sm font-medium truncate text-foreground">{companion.name}</span>
-								</div>
-								<Button
-									href="/companions/{companion.id}/edit"
-									variant="ghost"
-									size="sm"
-									class="gap-1.5 shrink-0"
-								>
-									<Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
-										>{t(locale, 'common.edit')}</span
-									>
-								</Button>
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</CardContent>
-		</Card>
-	{/if}
-
-	{#if data.archivedCompanions && data.archivedCompanions.length > 0}
-		<Card>
-			<CardHeader>
-				<CardTitle>{t(locale, 'page.settings.pastCompanionsCard')}</CardTitle>
-			</CardHeader>
-			<CardContent>
-				{#if form?.restoreSuccess}
-					<Alert variant="success" class="mb-4">
-						<AlertDescription>{t(locale, 'page.settings.companionRestored')}</AlertDescription>
-					</Alert>
-				{/if}
-				<ul class="space-y-3">
-					{#each data.archivedCompanions as companion (companion.id)}
-						<li class="flex items-center justify-between gap-3">
-							<div class="flex items-center gap-2.5 min-w-0">
-								<CompanionAvatar
-									companionId={companion.id}
-									avatarPath={companion.avatarPath}
-									name={companion.name}
-									size="sm"
-									archived={true}
-								/>
-								<div class="min-w-0">
-									<span class="text-sm italic text-muted-foreground truncate block"
-										>{companion.name}</span
-									>
-									{#if companion.archivedAt}
-										<span class="text-xs text-muted-foreground">
-											{t(locale, 'page.settings.archivedOn')}
-											{formatArchivedDate(companion.archivedAt)}
-										</span>
-									{/if}
-									{#if companion.archiveNote}
-										<p class="text-xs text-muted-foreground">{companion.archiveNote}</p>
-									{/if}
-								</div>
-							</div>
-							<div class="flex items-center gap-1 shrink-0">
-								<Button href="/{companion.id}" variant="ghost" size="sm"
-									>{t(locale, 'page.settings.viewCompanion')}</Button
-								>
-								<form
-									method="POST"
-									action="?/restore"
-									use:enhance={() =>
-										async ({ update }) => {
-											await update({ reset: false });
-										}}
-								>
-									<input type="hidden" name="companionId" value={companion.id} />
-									<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
-										<RotateCcw class="h-3.5 w-3.5" />
-										<span class="hidden sm:inline"
-											>{t(locale, 'page.settings.restoreCompanion')}</span
-										>
-									</Button>
-								</form>
-							</div>
-						</li>
-					{/each}
-				</ul>
-			</CardContent>
-		</Card>
 	{/if}
 
 	{#if data.user?.role !== 'caretaker' && data.calendarFeedAvailable}

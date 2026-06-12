@@ -1,15 +1,17 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
+	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Card } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import { PawPrint } from '@lucide/svelte';
+	import { PawPrint, RotateCcw } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	function ageFromDob(dob: string | null): string | null {
 		if (!dob) return null;
@@ -86,6 +88,11 @@
 			<h2 class="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
 				{t(locale, 'page.settings.pastCompanionsCard')}
 			</h2>
+			{#if form?.restoreSuccess}
+				<Alert variant="success" class="mb-3">
+					<AlertDescription>Companion restored successfully.</AlertDescription>
+				</Alert>
+			{/if}
 			<Card class="divide-y divide-border">
 				{#each data.archivedCompanions as companion (companion.id)}
 					<div class="px-6 py-4 flex items-center gap-3">
@@ -109,9 +116,25 @@
 								</Badge>
 							</div>
 						</div>
-						<Button href="/companions/{companion.id}/edit" variant="ghost" size="sm">
-							{t(locale, 'common.edit')}
-						</Button>
+						<div class="flex items-center gap-1 shrink-0">
+							<Button href="/companions/{companion.id}/edit" variant="ghost" size="sm">
+								{t(locale, 'common.edit')}
+							</Button>
+							<form
+								method="POST"
+								action="?/restore"
+								use:enhance={() =>
+									async ({ update }) => {
+										await update({ reset: false });
+									}}
+							>
+								<input type="hidden" name="companionId" value={companion.id} />
+								<Button type="submit" variant="ghost" size="sm" class="gap-1.5">
+									<RotateCcw class="h-3.5 w-3.5" />
+									<span class="hidden sm:inline">Restore</span>
+								</Button>
+							</form>
+						</div>
 					</div>
 				{/each}
 			</Card>

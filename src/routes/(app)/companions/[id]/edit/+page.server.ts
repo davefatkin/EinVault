@@ -77,6 +77,6 @@ export const actions: Actions = {
 			})
 			.where(eq(schema.companions.id, params.id));
 
-		redirect(302, '/settings');
+		redirect(302, '/admin/companions');
 	}
 };

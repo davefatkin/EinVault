@@ -67,9 +67,14 @@
 <div class="max-w-2xl mx-auto space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<Button href="/settings" variant="ghost" size="sm" class="gap-1.5 -ml-2">
+			<Button
+				href={data.user?.role === 'admin' ? '/admin/companions' : '/'}
+				variant="ghost"
+				size="sm"
+				class="gap-1.5 -ml-2"
+			>
 				<ChevronLeft class="h-4 w-4" />
-				<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToSettings')}</span>
+				<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
 			</Button>
 			<h1 class="font-display text-2xl font-bold text-foreground mt-2">Edit {companion.name}</h1>
 			<p class="text-sm mt-1 text-muted-foreground">

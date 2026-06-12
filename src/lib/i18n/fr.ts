@@ -215,14 +215,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.removePhoto': 'Supprimer',
 	'page.settings.photoUpdated': 'Photo de profil mise à jour.',
 	'page.settings.photoRemoved': 'Photo de profil supprimée.',
-	'page.settings.companionsCard': 'Compagnons',
 	'page.settings.addCompanion': 'Ajouter un compagnon',
 	'page.settings.noCompanions': 'Aucun compagnon pour le moment.',
 	'page.settings.pastCompanionsCard': 'Anciens compagnons',
-	'page.settings.companionRestored': 'Compagnon restauré avec succès.',
 	'page.settings.archivedOn': 'Archivé le',
-	'page.settings.viewCompanion': 'Voir',
-	'page.settings.restoreCompanion': 'Restaurer',
 	'page.settings.roleLabel': 'Rôle',
 	'page.settings.shiftsCard': 'Mes gardes',
 	'page.settings.noUpcomingShifts': 'Aucune garde programmée.',
@@ -407,6 +403,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion edit
 	'page.companion.edit.backToSettings': 'Retour aux paramètres',
+	'page.companion.edit.backToCompanions': 'Retour aux compagnons',
 	'page.companion.edit.subheading': 'Mettre à jour les détails de {name}.',
 	'page.companion.edit.tabProfile': 'Profil',
 	'page.companion.edit.tabCaretaker': 'Info gardien',

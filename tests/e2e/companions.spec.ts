@@ -78,10 +78,10 @@ test.describe('companion crud', () => {
 		// The date field is pre-filled; submit immediately.
 		await archiveForm.locator('button[type="submit"]').click();
 
-		// Server redirects to /settings after archive
-		await expect(asAdmin).toHaveURL(/\/settings/, { timeout: 10_000 });
+		// Server redirects to /admin/companions after archive
+		await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 10_000 });
 
-		// The "Past Companions" card title must be visible on the settings page.
+		// The "Past Companions" section must be visible on the admin companions page.
 		await expect(asAdmin.getByText('Past Companions')).toBeVisible({ timeout: 8_000 });
 
 		// The archived companion entry has a restore form scoped to it.
@@ -93,14 +93,17 @@ test.describe('companion crud', () => {
 		await restoreForm.locator('button[type="submit"]').click();
 
 		// After restore the companion moves from Past Companions back to the active Companions
-		// list. The Past Companions card disappears once the list is empty (only one archived
+		// list. The Past Companions section disappears once the list is empty (only one archived
 		// companion in this test). Wait for "Past Companions" to leave the page as confirmation
 		// that the server re-render completed, then verify the companion is active again.
 		await expect(asAdmin.getByText('Past Companions')).toBeHidden({ timeout: 8_000 });
 
-		// Companion should now appear in the active Companions list
+		// Companion should now appear in the active companions list
 		await expect(
-			asAdmin.locator('li').filter({ hasText: 'e2e-comp-archive' }).first()
+			asAdmin
+				.locator('div')
+				.filter({ hasText: /e2e-comp-archive/ })
+				.first()
 		).toBeVisible();
 	});
 });

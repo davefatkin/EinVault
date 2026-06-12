@@ -204,14 +204,10 @@ const messages = {
 	'page.settings.removePhoto': 'Remove',
 	'page.settings.photoUpdated': 'Profile photo updated.',
 	'page.settings.photoRemoved': 'Profile photo removed.',
-	'page.settings.companionsCard': 'Companions',
 	'page.settings.addCompanion': 'Add Companion',
 	'page.settings.noCompanions': 'No companions yet.',
 	'page.settings.pastCompanionsCard': 'Past Companions',
-	'page.settings.companionRestored': 'Companion restored successfully.',
 	'page.settings.archivedOn': 'Archived',
-	'page.settings.viewCompanion': 'View',
-	'page.settings.restoreCompanion': 'Restore',
 	'page.settings.roleLabel': 'Role',
 	'page.settings.shiftsCard': 'My Shifts',
 	'page.settings.noUpcomingShifts': 'No upcoming shifts scheduled.',
@@ -400,6 +396,7 @@ const messages = {
 
 	// Page: companion edit
 	'page.companion.edit.backToSettings': 'Back to Settings',
+	'page.companion.edit.backToCompanions': 'Back to Companions',
 	'page.companion.edit.subheading': "Update {name}'s details.",
 	'page.companion.edit.tabProfile': 'Profile',
 	'page.companion.edit.tabCaretaker': 'Caretaker info',
