@@ -84,12 +84,12 @@ test('existing OIDC user logs back in with same identity', async ({ world, page 
 	// OAuth round-trip completed and the app accepted the session.
 	await expect(page).not.toHaveURL(/\/auth\//, { timeout: 15_000 });
 
-	// Navigate to settings (always accessible with any number of companions)
-	// so that the Sign Out button is visible in the app nav.
+	// Navigate to settings (always accessible with any number of companions).
 	await page.goto(world.server.baseURL + '/settings');
 	await expect(page).toHaveURL(/settings/, { timeout: 10_000 });
 
-	// Log out via the Sign Out button in the app navigation.
+	// Sign Out lives in the account menu (opened from the sidebar account row).
+	await page.locator('button[aria-haspopup="dialog"]').click();
 	await page.getByRole('button', { name: /sign out/i }).click();
 	await expect(page).toHaveURL(/auth\/login/, { timeout: 10_000 });
 
