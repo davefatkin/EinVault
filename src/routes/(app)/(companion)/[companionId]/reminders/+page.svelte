@@ -24,7 +24,9 @@
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import RecurrenceEditor from '$lib/components/reminders/RecurrenceEditor.svelte';
+	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -584,7 +586,7 @@
 									</div>
 								</button>
 								{#if data.companion.isActive !== false}
-									<div class="flex gap-1 shrink-0">
+									<div class="flex items-center gap-1 shrink-0">
 										<Button
 											type="button"
 											variant="ghost"
@@ -595,33 +597,22 @@
 											<Pencil class="h-3.5 w-3.5" />
 											<span class="hidden sm:inline">{t(locale, 'common.edit')}</span>
 										</Button>
-										<form
-											method="POST"
-											action="?/complete"
-											use:enhance={clearSubmittingFlag}
-											use:registerDismissForm={{
-												id: reminder.id,
-												registry: dismissFormRegistry
+										<ReminderCompleteButtons
+											onDone={() => {
+												const form = dismissFormRegistry.get(reminder.id);
+												if (form)
+													pendingDismiss.queue(reminder.id, form, reminder.title, {
+														allowLogEvent:
+															REMINDER_TO_HEALTH_TYPE[
+																reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+															] !== null
+													});
 											}}
-										>
-											<input type="hidden" name="id" value={reminder.id} />
-											<Button
-												type="button"
-												size="sm"
-												class="h-8 gap-1.5 px-3 text-xs"
-												onclick={(e: MouseEvent) => {
-													const btn = e.currentTarget as HTMLButtonElement;
-													if (btn.form) {
-														pendingDismiss.queue(reminder.id, btn.form, reminder.title, {
-															allowLogEvent: true
-														});
-													}
-												}}
-											>
-												<CheckCheck class="h-3.5 w-3.5" />
-												<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
-											</Button>
-										</form>
+											onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+											allowLogEvent={REMINDER_TO_HEALTH_TYPE[
+												reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+											] !== null}
+										/>
 										<Button
 											type="button"
 											variant="ghost"
@@ -643,6 +634,18 @@
 				</Card>
 			{/each}
 		</div>
+		<!-- Hidden dismiss forms -->
+		{#each active as reminder (reminder.id + '-form')}
+			<form
+				method="POST"
+				action="?/complete"
+				use:enhance={clearSubmittingFlag}
+				use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+				class="hidden"
+			>
+				<input type="hidden" name="id" value={reminder.id} />
+			</form>
+		{/each}
 	{/if}
 
 	{#if completed.length > 0}

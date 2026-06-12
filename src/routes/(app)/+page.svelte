@@ -20,7 +20,7 @@
 	} from '$lib/i18n/labels';
 	import { careStatus } from '$lib/careStatus';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
-	import { HeartPulse } from '@lucide/svelte';
+	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
@@ -266,28 +266,13 @@
 						</Badge>
 					</a>
 					<!-- Complete / log-event buttons -->
-					<div class="flex items-center gap-1 shrink-0">
-						<button
-							type="button"
-							onclick={() => handleComplete(r.id, r.title, r.type)}
-							class="shrink-0 h-8 w-8 rounded-lg border border-border bg-teal/10 text-teal flex items-center justify-center hover:bg-teal/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							aria-label={t(locale, 'overview.markDone')}
-							title={t(locale, 'common.reminder.done')}
-						>
-							<Check class="h-4 w-4" />
-						</button>
-						{#if REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null}
-							<button
-								type="button"
-								onclick={() => submitWithAndEvent(r.id)}
-								class="shrink-0 h-8 w-8 rounded-lg border border-border bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-								aria-label={t(locale, 'common.reminder.logEventAria')}
-								title={t(locale, 'common.reminder.logEvent')}
-							>
-								<HeartPulse class="h-4 w-4" />
-							</button>
-						{/if}
-					</div>
+					<ReminderCompleteButtons
+						onDone={() => handleComplete(r.id, r.title, r.type)}
+						onDoneAndLog={() => submitWithAndEvent(r.id)}
+						allowLogEvent={REMINDER_TO_HEALTH_TYPE[
+							r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+						] !== null}
+					/>
 				</div>
 			{/each}
 

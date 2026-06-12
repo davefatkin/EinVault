@@ -25,6 +25,8 @@
 	import { tick } from 'svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { ACTIVITY_ICONS, REMINDER_ICONS } from '$lib/i18n/labels';
+	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { MessageKey } from '$lib/i18n/en';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -678,6 +680,9 @@
 					<div class="space-y-1">
 						{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
 							{@const urgency = reminderUrgency(reminder.dueAt)}
+							{@const allowLogEvent =
+								REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
+								null}
 							<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
 								<button
 									type="button"
@@ -724,33 +729,30 @@
 										{/if}
 									</Badge>
 								</button>
-								<form
-									method="POST"
-									action="?/complete"
-									use:enhance={clearSubmittingFlag}
-									use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
-									class="flex items-center gap-1 shrink-0"
-								>
-									<input type="hidden" name="id" value={reminder.id} />
-									<button
-										type="button"
-										onclick={(e: MouseEvent) => {
-											const btn = e.currentTarget as HTMLButtonElement;
-											if (btn.form)
-												pendingDismiss.queue(reminder.id, btn.form, reminder.title, {
-													allowLogEvent: true
-												});
-										}}
-										title={t(locale, 'page.dashboard.reminderMarkDone')}
-										aria-label={t(locale, 'page.dashboard.reminderMarkDone')}
-										class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
-									>
-										<CheckCheck class="h-3.5 w-3.5" />
-									</button>
-								</form>
+								<ReminderCompleteButtons
+									onDone={() => {
+										const form = dismissFormRegistry.get(reminder.id);
+										if (form)
+											pendingDismiss.queue(reminder.id, form, reminder.title, { allowLogEvent });
+									}}
+									onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+									{allowLogEvent}
+								/>
 							</div>
 						{/each}
 					</div>
+					<!-- Hidden dismiss forms -->
+					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id + '-form')}
+						<form
+							method="POST"
+							action="?/complete"
+							use:enhance={clearSubmittingFlag}
+							use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+							class="hidden"
+						>
+							<input type="hidden" name="id" value={reminder.id} />
+						</form>
+					{/each}
 				{/if}
 			</CardContent>
 		</Card>
