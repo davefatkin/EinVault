@@ -63,7 +63,9 @@
 			onOpenSearch={() => (searchOpen = true)}
 		/>
 
-		<main class="flex-1 min-w-0 animate-fade-in pb-24 md:pb-0 px-4 sm:px-6 lg:px-8 py-6">
+		<main
+			class="flex-1 min-w-0 animate-fade-in pb-24 md:pb-0 px-4 sm:px-6 lg:px-8 py-6 mx-auto w-full max-w-6xl"
+		>
 			{@render children()}
 		</main>
 
