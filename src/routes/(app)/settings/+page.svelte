@@ -81,6 +81,7 @@
 				userId={data.user?.id ?? ''}
 				displayName={data.user?.displayName ?? ''}
 				avatarPath={data.user?.avatarPath}
+				immichEnabled={data.immichEnabled}
 			/>
 
 			<form

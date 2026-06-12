@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import { addToast } from '$lib/components/ui/toast';
 	import { t, getLocale } from '$lib/i18n';
-	import { Camera, Loader2, Trash2 } from '@lucide/svelte';
+	import { Camera, ImagePlus, Loader2, Trash2 } from '@lucide/svelte';
 
 	const locale = getLocale();
 
@@ -11,12 +12,14 @@
 		userId: string;
 		displayName: string;
 		avatarPath: string | null | undefined;
+		immichEnabled?: boolean;
 	}
 
-	let { userId, displayName, avatarPath }: Props = $props();
+	let { userId, displayName, avatarPath, immichEnabled = false }: Props = $props();
 
 	let uploading = $state(false);
 	let fileInputEl = $state<HTMLInputElement | undefined>(undefined);
+	let immichPickerOpen = $state(false);
 
 	async function handleFile(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
@@ -87,6 +90,38 @@
 			uploading = false;
 		}
 	}
+
+	async function pickAvatarFromImmich(assetId: string) {
+		try {
+			const res = await fetch('/api/account/avatar/from-immich', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ assetId })
+			});
+			if (res.ok) {
+				immichPickerOpen = false;
+				await invalidateAll();
+				addToast({
+					id: 'user-avatar-updated',
+					title: t(locale, 'page.settings.photoUpdated'),
+					durationMs: 4000
+				});
+			} else {
+				const data = await res.json().catch(() => null);
+				addToast({
+					id: 'user-avatar-error',
+					title: data?.message ?? t(locale, 'immich.picker.pickFailed'),
+					durationMs: 5000
+				});
+			}
+		} catch {
+			addToast({
+				id: 'user-avatar-error',
+				title: t(locale, 'immich.picker.pickFailed'),
+				durationMs: 5000
+			});
+		}
+	}
 </script>
 
 <div class="flex flex-col items-center gap-2 pb-2">
@@ -107,6 +142,18 @@
 			{/if}
 			{t(locale, 'page.settings.changePhoto')}
 		</button>
+		{#if immichEnabled}
+			<button
+				type="button"
+				class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
+				aria-label={t(locale, 'immich.picker.button')}
+				onclick={() => (immichPickerOpen = true)}
+				disabled={uploading}
+			>
+				<ImagePlus class="h-3.5 w-3.5" />
+				{t(locale, 'immich.picker.button')}
+			</button>
+		{/if}
 		{#if avatarPath}
 			<button
 				type="button"
@@ -130,3 +177,11 @@
 		disabled={uploading}
 	/>
 </div>
+
+{#if immichEnabled}
+	<ImmichPicker
+		open={immichPickerOpen}
+		onpick={pickAvatarFromImmich}
+		onclose={() => (immichPickerOpen = false)}
+	/>
+{/if}
