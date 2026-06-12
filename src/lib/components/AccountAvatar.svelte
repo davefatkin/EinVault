@@ -4,6 +4,7 @@
 	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import { addToast } from '$lib/components/ui/toast';
 	import { t, getLocale } from '$lib/i18n';
+	import { bustUserAvatarCache } from '$lib/avatarCache.svelte';
 	import { Camera, ImagePlus, Loader2, Trash2 } from '@lucide/svelte';
 
 	const locale = getLocale();
@@ -35,6 +36,7 @@
 				body: fd
 			});
 			if (res.ok) {
+				bustUserAvatarCache(userId);
 				await invalidateAll();
 				addToast({
 					id: 'user-avatar-updated',
@@ -66,6 +68,7 @@
 		try {
 			const res = await fetch('/api/account/avatar', { method: 'DELETE' });
 			if (res.ok) {
+				bustUserAvatarCache(userId);
 				await invalidateAll();
 				addToast({
 					id: 'user-avatar-removed',
@@ -100,6 +103,7 @@
 			});
 			if (res.ok) {
 				immichPickerOpen = false;
+				bustUserAvatarCache(userId);
 				await invalidateAll();
 				addToast({
 					id: 'user-avatar-updated',

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { userAvatarCacheBusts } from '$lib/avatarCache.svelte';
+
 	interface Props {
 		userId: string;
 		displayName: string;
@@ -50,6 +52,12 @@
 	});
 
 	let showImg = $derived(!!avatarPath && !imgError);
+
+	let imgSrc = $derived(
+		showImg
+			? `/api/users/${userId}/avatar${userAvatarCacheBusts[userId] ? `?t=${userAvatarCacheBusts[userId]}` : ''}`
+			: null
+	);
 </script>
 
 <div
@@ -60,7 +68,7 @@
 >
 	{#if showImg}
 		<img
-			src={`/api/users/${userId}/avatar`}
+			src={imgSrc}
 			alt={displayName}
 			class="w-full h-full object-cover"
 			onerror={() => (imgError = true)}
