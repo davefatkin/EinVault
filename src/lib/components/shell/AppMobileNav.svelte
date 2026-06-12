@@ -264,7 +264,7 @@
 						class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
 					>
 						{#each fabActions as action (action.key)}
-							{@const ActionIcon = FAB_ICONS[action.key as FabKey]}
+							{@const ActionIcon = FAB_ICONS[action.key as FabKey] ?? BookOpen}
 							<a
 								href={action.href}
 								onclick={() => (fabOpen = false)}

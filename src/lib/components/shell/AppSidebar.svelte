@@ -97,6 +97,12 @@
 	let switcherOpen = $state(false);
 	let accountOpen = $state(false);
 
+	$effect(() => {
+		page.url.pathname; // track
+		accountOpen = false;
+		switcherOpen = false;
+	});
+
 	function switchCompanion(id: string) {
 		switcherOpen = false;
 		if (id === OVERVIEW_VALUE) {
@@ -174,7 +180,7 @@
 							type="button"
 							class="fixed inset-0 z-40 cursor-default"
 							onclick={() => (switcherOpen = false)}
-							aria-label="Close companion switcher"
+							aria-label={t(locale, 'aria.closeSwitcher')}
 							tabindex="-1"
 						></button>
 						<ul
@@ -253,7 +259,7 @@
 				<p
 					class="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60"
 				>
-					Companions
+					{t(locale, 'layout.companionsHeading')}
 				</p>
 
 				{#each companions as c (c.id)}

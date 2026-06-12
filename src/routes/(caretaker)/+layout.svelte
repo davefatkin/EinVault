@@ -112,7 +112,7 @@
 				<!-- Logo (linked) -->
 				<a
 					href="/care/{data.companions?.[0]?.id ?? ''}"
-					class="logo-link flex items-center gap-2 shrink-0"
+					class="logo-link hidden sm:flex items-center gap-2 shrink-0"
 				>
 					<PawLogo
 						class="logo-paw w-7 h-7 text-muted-foreground transition-[color,transform] duration-200"
@@ -306,7 +306,8 @@
 								class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
 							>
 								{#each fabActions as action (action.key)}
-									{@const ActionIcon = CARE_FAB_ICONS[action.key as keyof typeof CARE_FAB_ICONS]}
+									{@const ActionIcon =
+										CARE_FAB_ICONS[action.key as keyof typeof CARE_FAB_ICONS] ?? ClipboardList}
 									<a
 										href={action.href}
 										onclick={() => (fabOpen = false)}
@@ -388,7 +389,7 @@
 						? 'text-primary'
 						: 'text-muted-foreground'}"
 				>
-					<Settings class="h-5 w-5" />
+					<Settings class="h-5 w-5 mb-0.5" />
 					{t(locale, 'nav.settings')}
 				</a>
 			</div>

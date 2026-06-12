@@ -182,6 +182,7 @@ const messages = {
 
 	// Layout: app
 	'layout.archived': '(archived)',
+	'layout.companionsHeading': 'Companions',
 	'layout.addCompanion': 'Add a Companion',
 	'layout.addFirstCompanion': 'Add Your First Companion',
 	'layout.switchCompanion': 'Switch companion',

@@ -47,7 +47,6 @@
 		class="fixed inset-0 z-40 cursor-default {variant === 'sheet'
 			? 'bg-black/50 backdrop-blur-sm'
 			: ''}"
-		aria-label={t(locale, 'aria.closeAccountMenu')}
 		aria-hidden="true"
 		onclick={onclose}
 		tabindex="-1"

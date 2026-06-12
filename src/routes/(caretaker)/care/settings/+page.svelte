@@ -366,7 +366,7 @@
 										!isActive && shift.id === data.upcomingShifts.find((s) => s.startAt > now)?.id}
 									<div
 										class="rounded-lg overflow-hidden {isActive
-											? 'bg-green-50 dark:bg-green-950 ring-1 ring-green-200 dark:ring-green-800'
+											? 'bg-teal/10 ring-1 ring-teal/30'
 											: isNext
 												? 'ring-1 ring-primary/20'
 												: ''}"
@@ -381,16 +381,12 @@
 										>
 											{#if isActive}
 												<span
-													class="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0"
+													class="inline-block w-2 h-2 rounded-full bg-teal shrink-0"
 													aria-hidden="true"
 												></span>
 											{/if}
 											<div class="flex-1 min-w-0">
-												<span
-													class={isActive
-														? 'text-green-700 dark:text-green-300 font-medium'
-														: 'text-foreground'}
-												>
+												<span class={isActive ? 'text-teal font-medium' : 'text-foreground'}>
 													<LocalTime date={shift.startAt} format="datetime" />
 												</span>
 												<span class="text-muted-foreground mx-1">–</span>

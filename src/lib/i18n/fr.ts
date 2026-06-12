@@ -193,6 +193,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Layout: app
 	'layout.archived': '(archivé)',
+	'layout.companionsHeading': 'Compagnons',
 	'layout.addCompanion': 'Ajouter un compagnon',
 	'layout.addFirstCompanion': 'Ajoutez votre premier compagnon',
 	'layout.switchCompanion': 'Changer de compagnon',
