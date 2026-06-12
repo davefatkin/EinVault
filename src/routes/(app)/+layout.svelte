@@ -45,6 +45,7 @@
 			companions={data.companions}
 			{activeCompanion}
 			user={data.user}
+			companionStatus={data.companionStatus}
 			onOpenSearch={() => (searchOpen = true)}
 		/>
 	</div>
@@ -58,6 +59,7 @@
 			{activeCompanion}
 			user={data.user}
 			today={data.today}
+			companionStatus={data.companionStatus}
 			onOpenSearch={() => (searchOpen = true)}
 		/>
 

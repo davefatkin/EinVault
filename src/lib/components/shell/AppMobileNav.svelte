@@ -20,6 +20,7 @@
 		ChevronDown
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import type { CareStatus } from '$lib/careStatus';
 
 	type Companion = {
 		id: string;
@@ -40,6 +41,7 @@
 		activeCompanion: Companion | null;
 		user: User | null;
 		today: string;
+		companionStatus: Record<string, CareStatus>;
 		onOpenSearch: () => void;
 		class?: string;
 	}
@@ -49,6 +51,8 @@
 		activeCompanion,
 		user,
 		today,
+		// eslint-disable-next-line no-unused-vars
+		companionStatus: _companionStatus,
 		onOpenSearch,
 		class: className = ''
 	}: Props = $props();

@@ -20,6 +20,7 @@
 		PawPrint
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import type { CareStatus } from '$lib/careStatus';
 
 	type Companion = {
 		id: string;
@@ -38,11 +39,26 @@
 		companions: Companion[];
 		activeCompanion: Companion | null;
 		user: User | null;
+		companionStatus: Record<string, CareStatus>;
 		/** Called when the user activates the search button */
 		onOpenSearch: () => void;
 	}
 
-	let { companions, activeCompanion, user, onOpenSearch }: Props = $props();
+	let { companions, activeCompanion, user, companionStatus, onOpenSearch }: Props = $props();
+
+	function statusDotClass(id: string): string {
+		const s = companionStatus[id] ?? 'up-to-date';
+		if (s === 'needs-attention') return 'bg-coral';
+		if (s === 'due-today') return 'bg-gold';
+		return 'bg-teal';
+	}
+
+	function statusTitle(id: string): string {
+		const s = companionStatus[id] ?? 'up-to-date';
+		if (s === 'needs-attention') return t(locale, 'overview.careStatus.needsAttention');
+		if (s === 'due-today') return t(locale, 'overview.careStatus.dueToday');
+		return t(locale, 'overview.careStatus.upToDate');
+	}
 
 	const locale = getLocale();
 
@@ -249,8 +265,11 @@
 					>
 						<CompanionAvatar companionId={c.id} avatarPath={c.avatarPath} name={c.name} size="sm" />
 						<span class="flex-1 min-w-0 truncate">{c.name}</span>
-						<!-- status dot placeholder — always healthy green for now -->
-						<span class="h-2 w-2 rounded-full shrink-0 bg-emerald-400" aria-hidden="true"></span>
+						<span
+							class="h-2 w-2 rounded-full shrink-0 {statusDotClass(c.id)}"
+							aria-hidden="true"
+							title={statusTitle(c.id)}
+						></span>
 					</a>
 				{/each}
 
