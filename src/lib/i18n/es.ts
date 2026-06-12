@@ -684,6 +684,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.detailType': 'Tipo',
 	'page.health.detailDate': 'Fecha',
 	'page.health.detailVet': 'Veterinario',
+	'page.health.weightTrend': 'Tendencia de peso',
+	'page.health.noWeightYet': 'Aún no hay peso registrado.',
+	'page.health.range6m': '6 meses',
+	'page.health.range1y': '1 año',
+	'page.health.rangeAll': 'Todo',
+	'page.health.weightChartAria': 'Tendencia de peso a lo largo del tiempo',
 
 	// Page: Reminders
 	'page.reminders.title': 'Recordatorios',

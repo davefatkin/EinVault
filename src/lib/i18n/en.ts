@@ -676,6 +676,12 @@ const messages = {
 	'page.health.detailType': 'Type',
 	'page.health.detailDate': 'Date',
 	'page.health.detailVet': 'Vet',
+	'page.health.weightTrend': 'Weight trend',
+	'page.health.noWeightYet': 'No weight recorded yet.',
+	'page.health.range6m': '6 months',
+	'page.health.range1y': '1 year',
+	'page.health.rangeAll': 'All',
+	'page.health.weightChartAria': 'Weight trend over time',
 
 	// Page: Reminders
 	'page.reminders.title': 'Reminders',

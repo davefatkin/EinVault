@@ -684,6 +684,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.detailType': 'Typ',
 	'page.health.detailDate': 'Datum',
 	'page.health.detailVet': 'Tierarzt',
+	'page.health.weightTrend': 'Gewichtsverlauf',
+	'page.health.noWeightYet': 'Noch kein Gewicht erfasst.',
+	'page.health.range6m': '6 Monate',
+	'page.health.range1y': '1 Jahr',
+	'page.health.rangeAll': 'Alle',
+	'page.health.weightChartAria': 'Gewichtsverlauf über die Zeit',
 
 	// Page: Reminders
 	'page.reminders.title': 'Erinnerungen',
