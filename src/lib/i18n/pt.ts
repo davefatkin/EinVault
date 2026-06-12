@@ -728,6 +728,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.savingReminder': 'A guardar...',
 	'page.reminders.noUpcoming': 'Sem lembretes próximos.',
 	'page.reminders.overdue': 'Atrasado',
+	'page.reminders.groupToday': 'Hoje',
+	'page.reminders.groupUpcoming': 'Próximos',
 	'page.reminders.detailType': 'Tipo',
 	'page.reminders.detailDue': 'Vencimento',
 	'page.reminders.detailRepeats': 'Repete-se',

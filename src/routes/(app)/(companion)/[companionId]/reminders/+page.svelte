@@ -27,6 +27,7 @@
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+	import { reminderBuckets } from '$lib/reminderBuckets';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -56,6 +57,12 @@
 
 	let active = $derived(data.reminders.filter((r) => !r.completedAt));
 	let completed = $derived(data.reminders.filter((r) => r.completedAt));
+	let buckets = $derived(
+		reminderBuckets(
+			active.map((r) => ({ ...r, dueAt: new Date(r.dueAt) })),
+			new Date()
+		)
+	);
 
 	function isOverdue(dueAt: Date | string) {
 		return new Date(dueAt) < new Date();
@@ -465,177 +472,211 @@
 			</CardContent>
 		</Card>
 	{:else}
-		<div class="space-y-3">
-			{#each active as reminder (reminder.id)}
-				{@const overdue = isOverdue(reminder.dueAt)}
-				<Card class="overflow-hidden {overdue ? 'border-coral/40' : ''}">
-					{#if editingId === reminder.id}
-						<CardContent class="pt-6">
-							<form
-								method="POST"
-								action="?/update"
-								use:localDatetimes
-								use:enhance={() =>
-									({ update }) => {
-										update();
-										editingId = null;
-									}}
-								class="space-y-4"
-							>
-								<input type="hidden" name="id" value={reminder.id} />
-								<div class="grid grid-cols-2 gap-4">
-									<div class="space-y-1.5 col-span-2 sm:col-span-1">
-										<Label for="edit-title-{reminder.id}"
-											>{t(locale, 'page.reminders.labelTitle')}</Label
-										>
-										<Input
-											id="edit-title-{reminder.id}"
-											name="title"
-											type="text"
-											autocomplete="off"
-											value={reminder.title}
-											required
-										/>
-									</div>
-									<div class="space-y-1.5">
-										<Label for="edit-type-{reminder.id}"
-											>{t(locale, 'page.reminders.labelType')}</Label
-										>
-										<Select id="edit-type-{reminder.id}" name="type">
-											{#each REMINDER_TYPES as rt (rt.value)}
-												<option value={rt.value} selected={reminder.type === rt.value}
-													>{rt.icon} {rt.label}</option
-												>
-											{/each}
-										</Select>
-									</div>
-								</div>
-								<div class="space-y-1.5">
-									<Label for="edit-dueAt-{reminder.id}"
-										>{t(locale, 'page.reminders.labelDueDate')}</Label
+		{#snippet reminderCard(reminder: (typeof active)[0])}
+			{@const overdue = isOverdue(reminder.dueAt)}
+			<Card class="overflow-hidden {overdue ? 'border-coral/40' : ''}">
+				{#if editingId === reminder.id}
+					<CardContent class="pt-6">
+						<form
+							method="POST"
+							action="?/update"
+							use:localDatetimes
+							use:enhance={() =>
+								({ update }) => {
+									update();
+									editingId = null;
+								}}
+							class="space-y-4"
+						>
+							<input type="hidden" name="id" value={reminder.id} />
+							<div class="grid grid-cols-2 gap-4">
+								<div class="space-y-1.5 col-span-2 sm:col-span-1">
+									<Label for="edit-title-{reminder.id}"
+										>{t(locale, 'page.reminders.labelTitle')}</Label
 									>
 									<Input
-										id="edit-dueAt-{reminder.id}"
-										name="dueAt"
-										type="datetime-local"
+										id="edit-title-{reminder.id}"
+										name="title"
+										type="text"
 										autocomplete="off"
-										value={localDatetimeISO(reminder.dueAt)}
+										value={reminder.title}
 										required
 									/>
 								</div>
 								<div class="space-y-1.5">
-									<Label for="edit-description-{reminder.id}"
-										>{t(locale, 'page.reminders.labelNotes')}</Label
+									<Label for="edit-type-{reminder.id}"
+										>{t(locale, 'page.reminders.labelType')}</Label
 									>
-									<MarkdownTextarea
-										id="edit-description-{reminder.id}"
-										name="description"
-										value={reminder.description ?? ''}
-										placeholder={t(locale, 'page.reminders.placeholderNotes')}
-										rows={3}
-									/>
+									<Select id="edit-type-{reminder.id}" name="type">
+										{#each REMINDER_TYPES as rt (rt.value)}
+											<option value={rt.value} selected={reminder.type === rt.value}
+												>{rt.icon} {rt.label}</option
+											>
+										{/each}
+									</Select>
 								</div>
-								<RecurrenceEditor
-									value={reminder}
-									userDefault={data.defaultRecurrenceUnit}
-									idPrefix="edit-{reminder.id}"
+							</div>
+							<div class="space-y-1.5">
+								<Label for="edit-dueAt-{reminder.id}"
+									>{t(locale, 'page.reminders.labelDueDate')}</Label
+								>
+								<Input
+									id="edit-dueAt-{reminder.id}"
+									name="dueAt"
+									type="datetime-local"
+									autocomplete="off"
+									value={localDatetimeISO(reminder.dueAt)}
+									required
 								/>
-								<div class="flex gap-3">
-									<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
+							</div>
+							<div class="space-y-1.5">
+								<Label for="edit-description-{reminder.id}"
+									>{t(locale, 'page.reminders.labelNotes')}</Label
+								>
+								<MarkdownTextarea
+									id="edit-description-{reminder.id}"
+									name="description"
+									value={reminder.description ?? ''}
+									placeholder={t(locale, 'page.reminders.placeholderNotes')}
+									rows={3}
+								/>
+							</div>
+							<RecurrenceEditor
+								value={reminder}
+								userDefault={data.defaultRecurrenceUnit}
+								idPrefix="edit-{reminder.id}"
+							/>
+							<div class="flex gap-3">
+								<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
+								<Button type="button" variant="outline" size="sm" onclick={() => (editingId = null)}
+									>{t(locale, 'common.cancel')}</Button
+								>
+							</div>
+						</form>
+					</CardContent>
+				{:else}
+					<CardContent class="pt-4 pb-4">
+						<div class="flex items-start justify-between gap-4">
+							<button
+								type="button"
+								onclick={() => openDetail(reminder)}
+								class="flex-1 flex items-start gap-3 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
+							>
+								<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
+								<div class="min-w-0">
+									<div class="flex items-center gap-2 flex-wrap">
+										<span class="font-medium text-foreground">{reminder.title}</span>
+										{#if overdue}<Badge variant="coral">{t(locale, 'page.reminders.overdue')}</Badge
+											>{/if}
+										{#if reminder.isRecurring}
+											<Badge variant="secondary"
+												>{formatRecurrence(reminder, locale, 'short')}</Badge
+											>
+										{/if}
+									</div>
+									{#if reminder.description}
+										<div
+											class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
+										>
+											{@html renderMarkdown(reminder.description)}
+										</div>
+									{/if}
+									<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
+										Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
+											user={reminder.logger}
+											variant="inline"
+										/>
+									</p>
+								</div>
+							</button>
+							{#if data.companion.isActive !== false}
+								<div class="flex items-center gap-1 shrink-0">
 									<Button
 										type="button"
-										variant="outline"
-										size="sm"
-										onclick={() => (editingId = null)}>{t(locale, 'common.cancel')}</Button
+										variant="soft"
+										size="icon-sm"
+										onclick={() => startEdit(reminder)}
+										aria-label={t(locale, 'common.edit')}
+										title={t(locale, 'common.edit')}
 									>
+										<Pencil class="h-4 w-4" />
+									</Button>
+									<ReminderCompleteButtons
+										onDone={() => {
+											const form = dismissFormRegistry.get(reminder.id);
+											if (form)
+												pendingDismiss.queue(reminder.id, form, reminder.title, {
+													allowLogEvent:
+														REMINDER_TO_HEALTH_TYPE[
+															reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+														] !== null
+												});
+										}}
+										onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+										allowLogEvent={REMINDER_TO_HEALTH_TYPE[
+											reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+										] !== null}
+									/>
+									<Button
+										type="button"
+										variant="softDestructive"
+										size="icon-sm"
+										aria-label={t(locale, 'common.delete')}
+										title={t(locale, 'common.delete')}
+										onclick={() => {
+											deleteReminderId = reminder.id;
+											confirmOpen = true;
+										}}
+									>
+										<Trash2 class="h-4 w-4" />
+									</Button>
 								</div>
-							</form>
-						</CardContent>
-					{:else}
-						<CardContent class="pt-4 pb-4">
-							<div class="flex items-start justify-between gap-4">
-								<button
-									type="button"
-									onclick={() => openDetail(reminder)}
-									class="flex-1 flex items-start gap-3 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
-								>
-									<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
-									<div class="min-w-0">
-										<div class="flex items-center gap-2 flex-wrap">
-											<span class="font-medium text-foreground">{reminder.title}</span>
-											{#if overdue}<Badge variant="coral"
-													>{t(locale, 'page.reminders.overdue')}</Badge
-												>{/if}
-											{#if reminder.isRecurring}
-												<Badge variant="secondary"
-													>{formatRecurrence(reminder, locale, 'short')}</Badge
-												>
-											{/if}
-										</div>
-										{#if reminder.description}
-											<div
-												class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
-											>
-												{@html renderMarkdown(reminder.description)}
-											</div>
-										{/if}
-										<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
-											Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
-												user={reminder.logger}
-												variant="inline"
-											/>
-										</p>
-									</div>
-								</button>
-								{#if data.companion.isActive !== false}
-									<div class="flex items-center gap-1 shrink-0">
-										<Button
-											type="button"
-											variant="soft"
-											size="icon-sm"
-											onclick={() => startEdit(reminder)}
-											aria-label={t(locale, 'common.edit')}
-											title={t(locale, 'common.edit')}
-										>
-											<Pencil class="h-4 w-4" />
-										</Button>
-										<ReminderCompleteButtons
-											onDone={() => {
-												const form = dismissFormRegistry.get(reminder.id);
-												if (form)
-													pendingDismiss.queue(reminder.id, form, reminder.title, {
-														allowLogEvent:
-															REMINDER_TO_HEALTH_TYPE[
-																reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-															] !== null
-													});
-											}}
-											onDoneAndLog={() => submitWithAndEvent(reminder.id)}
-											allowLogEvent={REMINDER_TO_HEALTH_TYPE[
-												reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-											] !== null}
-										/>
-										<Button
-											type="button"
-											variant="softDestructive"
-											size="icon-sm"
-											aria-label={t(locale, 'common.delete')}
-											title={t(locale, 'common.delete')}
-											onclick={() => {
-												deleteReminderId = reminder.id;
-												confirmOpen = true;
-											}}
-										>
-											<Trash2 class="h-4 w-4" />
-										</Button>
-									</div>
-								{/if}
-							</div>
-						</CardContent>
-					{/if}
-				</Card>
-			{/each}
-		</div>
+							{/if}
+						</div>
+					</CardContent>
+				{/if}
+			</Card>
+		{/snippet}
+
+		{#if buckets.overdue.length > 0}
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-wide text-coral mb-2">
+					{t(locale, 'page.reminders.overdue')}
+				</p>
+				<div class="space-y-3">
+					{#each buckets.overdue as reminder (reminder.id)}
+						{@render reminderCard(reminder)}
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if buckets.today.length > 0}
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-wide text-amber-500 mb-2">
+					{t(locale, 'page.reminders.groupToday')}
+				</p>
+				<div class="space-y-3">
+					{#each buckets.today as reminder (reminder.id)}
+						{@render reminderCard(reminder)}
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if buckets.upcoming.length > 0}
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+					{t(locale, 'page.reminders.groupUpcoming')}
+				</p>
+				<div class="space-y-3">
+					{#each buckets.upcoming as reminder (reminder.id)}
+						{@render reminderCard(reminder)}
+					{/each}
+				</div>
+			</div>
+		{/if}
+
 		<!-- Hidden dismiss forms -->
 		{#each active as reminder (reminder.id + '-form')}
 			<form

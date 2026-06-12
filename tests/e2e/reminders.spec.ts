@@ -64,11 +64,10 @@ function justPast(): string {
 // with one Card per active reminder. We scope lookups to the whole page and
 // rely on the title text being unique per test (enforced by UNIQUE names).
 function activeSection(page: import('@playwright/test').Page) {
-	// The active section is the sibling space-y-3 div before the <details> element.
-	// Simplest robust locator: a div that does NOT sit inside <details>.
-	// In practice we just use the page and narrow by the card's position above
-	// the completed summary line.
-	return page.locator('div.space-y-3').first();
+	// Active reminders live in one `div.space-y-3` per urgency group (Overdue/
+	// Today/Upcoming). Completed reminders live inside a <details>, never a
+	// `div.space-y-3`, so scoping to these containers excludes completed.
+	return page.locator('div.space-y-3');
 }
 
 function completedSection(page: import('@playwright/test').Page) {
@@ -214,5 +213,17 @@ test.describe('reminders', () => {
 
 		// Save button still visible — no redirect/close
 		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toBeVisible();
+	});
+
+	test('overdue and upcoming reminders sort into their urgency groups', async ({ asMember }) => {
+		await asMember.goto(BASE);
+		await addReminder(asMember, { title: 'e2e-overdue-grp', type: 'other', dueAt: justPast() });
+		await addReminder(asMember, { title: 'e2e-upcoming-grp', type: 'other', dueAt: tomorrow() });
+		await expect(activeSection(asMember).getByText('e2e-overdue-grp')).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(activeSection(asMember).getByText('e2e-upcoming-grp')).toBeVisible({
+			timeout: 8_000
+		});
 	});
 });

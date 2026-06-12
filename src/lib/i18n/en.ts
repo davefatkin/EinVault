@@ -722,6 +722,8 @@ const messages = {
 	'page.reminders.savingReminder': 'Saving...',
 	'page.reminders.noUpcoming': 'No upcoming reminders.',
 	'page.reminders.overdue': 'Overdue',
+	'page.reminders.groupToday': 'Today',
+	'page.reminders.groupUpcoming': 'Upcoming',
 	'page.reminders.detailType': 'Type',
 	'page.reminders.detailDue': 'Due',
 	'page.reminders.detailRepeats': 'Repeats',
