@@ -6,7 +6,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import type { CareStatus } from '$lib/careStatus';
 
-	type Companion = { id: string; name: string; avatarPath?: string | null; isActive?: boolean };
+	type Companion = { id: string; name: string; avatarPath?: string | null };
 
 	interface Props {
 		companions: Companion[];
@@ -48,7 +48,7 @@
 	function switchTo(id: string) {
 		open = false;
 		if (id === OVERVIEW_VALUE) {
-			goto('/');
+			goto(basePath || '/');
 			return;
 		}
 		const parts = page.url.pathname.split('/');
@@ -65,7 +65,7 @@
 		if (e.key === 'Escape') open = false;
 	}
 
-	let isOnOverview = $derived(page.url.pathname === '/');
+	let isOnOverview = $derived(page.url.pathname === (basePath || '/'));
 </script>
 
 {#if companions.length > 1}
