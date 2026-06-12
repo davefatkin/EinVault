@@ -17,6 +17,7 @@ const messages = {
 	'common.reminder.done': 'Done',
 	'common.reminder.dismissedAnnounce': '{title} dismissed',
 	'common.reminder.logEvent': 'Done & Log Event',
+	'common.reminder.logEventShort': 'Log Event',
 	'common.reminder.logEventAria': 'Mark done and log a Health Event',
 	'common.reminder.toastUndoLabel': 'Undo',
 	'common.reminder.toastDismiss': 'Dismiss',

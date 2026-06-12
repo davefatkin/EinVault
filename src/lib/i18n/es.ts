@@ -19,6 +19,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.done': 'Hecho',
 	'common.reminder.dismissedAnnounce': '{title} descartado',
 	'common.reminder.logEvent': 'Hecho y registrar evento',
+	'common.reminder.logEventShort': 'Evento',
 	'common.reminder.logEventAria': 'Marcar como hecho y registrar un evento de salud',
 	'common.reminder.toastUndoLabel': 'Deshacer',
 	'common.reminder.toastDismiss': 'Cerrar',

@@ -276,10 +276,11 @@
 			<Separator />
 
 			{#if data.companion.isActive !== false}
-				<div class="flex flex-wrap gap-2 px-5 py-4">
+				<div class="flex gap-1.5 px-5 py-4">
 					<Button
 						variant="soft"
 						size="sm"
+						class="flex-1 min-w-0 px-2"
 						onclick={() => {
 							if (selected) {
 								const item = selected;
@@ -288,12 +289,13 @@
 							}
 						}}
 					>
-						<Pencil class="h-3.5 w-3.5 mr-1.5" />
+						<Pencil class="h-3.5 w-3.5 mr-1 shrink-0" />
 						{t(locale, 'common.edit')}
 					</Button>
 					<Button
 						variant="softSuccess"
 						size="sm"
+						class="flex-1 min-w-0 px-2"
 						onclick={() => {
 							const item = r;
 							const form = dismissFormRegistry.get(item.id);
@@ -302,12 +304,13 @@
 							pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
 						}}
 					>
-						<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
+						<CheckCheck class="h-3.5 w-3.5 mr-1 shrink-0" />
 						{t(locale, 'common.reminder.done')}
 					</Button>
 					<Button
 						variant="softPrimary"
 						size="sm"
+						class="flex-1 min-w-0 px-2"
 						aria-label={t(locale, 'common.reminder.logEventAria')}
 						onclick={() => {
 							const item = r;
@@ -315,12 +318,13 @@
 							submitWithAndEvent(item.id);
 						}}
 					>
-						<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'common.reminder.logEvent')}
+						<HeartPulse class="h-3.5 w-3.5 mr-1 shrink-0" />
+						{t(locale, 'common.reminder.logEventShort')}
 					</Button>
 					<Button
 						variant="softDestructive"
 						size="sm"
+						class="flex-1 min-w-0 px-2"
 						onclick={() => {
 							const item = r;
 							closeDetail();
@@ -328,7 +332,7 @@
 							confirmOpen = true;
 						}}
 					>
-						<Trash2 class="h-3.5 w-3.5 mr-1.5" />
+						<Trash2 class="h-3.5 w-3.5 mr-1 shrink-0" />
 						{t(locale, 'common.delete')}
 					</Button>
 				</div>

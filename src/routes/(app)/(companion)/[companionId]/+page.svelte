@@ -461,7 +461,7 @@
 			<Separator />
 
 			{#if companion.isActive !== false}
-				<div class="flex flex-wrap gap-2 px-5 py-4">
+				<div class="flex gap-2 px-5 py-4">
 					{#if selected.kind === 'reminder'}
 						<Button
 							href="/{companion.id}/reminders?edit={selected.item.id}"
@@ -499,7 +499,7 @@
 							}}
 						>
 							<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.reminder.logEvent')}
+							{t(locale, 'common.reminder.logEventShort')}
 						</Button>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
