@@ -4,6 +4,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Search, X } from '@lucide/svelte';
 	import { parseSigilToken, stripSigilToken } from '$lib/searchSigil';
+	import { stripMarkdown } from '$lib/markdown';
 
 	export type SearchEntityType =
 		| 'journal'
@@ -591,7 +592,7 @@
 						{#each groups as group, gi (group.type)}
 							<li role="presentation">
 								<p
-									class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+									class="px-4 pt-3 pb-1 text-xs font-bold uppercase tracking-widest text-foreground border-b border-border/50 mb-0.5"
 								>
 									{groupLabel(group.type)}
 								</p>
@@ -627,13 +628,11 @@
 												{#if item.snippet && item.snippet.trim().length > 0}
 													<p class="text-xs text-muted-foreground mt-0.5 line-clamp-2">
 														{#each item.snippet.split('\x01') as part, i (i)}
-															{#if i === 0}{part}{:else}{@const [marked, rest] = splitOnce(
-																	part,
-																	'\x02'
-																)}<mark
+															{#if i === 0}{stripMarkdown(part)}{:else}{@const [marked, rest] =
+																	splitOnce(part, '\x02')}<mark
 																	class="bg-yellow-200 dark:bg-yellow-800 text-foreground rounded-sm px-0.5"
-																	>{marked}</mark
-																>{rest}{/if}
+																	>{stripMarkdown(marked)}</mark
+																>{stripMarkdown(rest)}{/if}
 														{/each}
 													</p>
 												{/if}
