@@ -220,13 +220,13 @@
 		--input: 238 25% 22%;
 		--ring: 252 100% 68%;
 		--surface-2: 238 35% 19%;
-		--coral: 13 100% 67%;
+		--coral: 13 84% 62%;
 		--coral-foreground: 240 36% 9%;
 		--gold: 42 100% 70%;
 		--gold-foreground: 240 36% 9%;
 		--teal: 172 66% 50%;
 		--teal-foreground: 174 80% 8%;
-		--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 100% 67%));
+		--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 84% 62%));
 
 		--moss: 142 71% 45%;
 		--moss-foreground: 142 71% 10%;

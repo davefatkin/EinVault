@@ -483,7 +483,7 @@
 				<div class="flex flex-wrap gap-1.5 px-4 py-2 border-b border-border">
 					{#each companionFilters as cf (cf.id)}
 						<span
-							class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-xs font-medium px-2 py-0.5"
+							class="inline-flex items-center gap-1 rounded-full bg-primary/15 text-foreground text-xs font-medium px-2 py-0.5"
 						>
 							{cf.name}
 							<button
@@ -640,7 +640,7 @@
 											</div>
 											<div class="flex flex-col items-end gap-1 shrink-0">
 												<span
-													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary"
+													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/15 text-foreground"
 												>
 													{item.companionName}
 												</span>
