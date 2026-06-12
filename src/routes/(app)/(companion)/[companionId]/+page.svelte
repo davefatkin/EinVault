@@ -31,6 +31,7 @@
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import { careStatus } from '$lib/careStatus';
 
 	let { data }: { data: PageData } = $props();
 	let {
@@ -60,6 +61,13 @@
 	let today = localDateISO();
 
 	const ACTIVITY_ICON = ACTIVITY_ICONS;
+
+	// Care status derived from outstanding reminders
+	let status = $derived(
+		careStatus(
+			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null }))
+		)
+	);
 
 	// Quick stats derived from loaded data
 	let latestWeight = $derived(recentWeights.length > 0 ? recentWeights[0] : null);
@@ -562,10 +570,22 @@
 						)}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					<div class="mt-2">
-						<Badge variant="teal" class="text-xs">
-							<HeartPulse class="h-3 w-3 mr-1" />
-							{t(locale, 'page.dashboard.heroHealthy')}
-						</Badge>
+						{#if status === 'up-to-date'}
+							<Badge variant="teal" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.upToDate')}
+							</Badge>
+						{:else if status === 'due-today'}
+							<Badge variant="gold" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.dueToday')}
+							</Badge>
+						{:else}
+							<Badge variant="coral" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.needsAttention')}
+							</Badge>
+						{/if}
 					</div>
 				</div>
 			</div>

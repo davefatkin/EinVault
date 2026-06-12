@@ -518,7 +518,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.weightTrendEmpty': 'Nessun peso registrato.',
 	'page.dashboard.nextVet': 'Prossimo veterinario',
 	'page.dashboard.noUpcomingReminders': 'Nessun promemoria in arrivo.',
-	'page.dashboard.heroHealthy': 'In salute',
 	'page.dashboard.heroRecentActivity': '{count} attività',
 	'page.dashboard.reminderOverdue': 'Scaduto',
 	'page.dashboard.reminderToday': 'Oggi',

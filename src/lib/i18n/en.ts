@@ -515,7 +515,6 @@ const messages = {
 	'page.dashboard.weightTrendEmpty': 'No weight recorded yet.',
 	'page.dashboard.nextVet': 'Next vet',
 	'page.dashboard.noUpcomingReminders': 'No upcoming reminders.',
-	'page.dashboard.heroHealthy': 'Healthy',
 	'page.dashboard.heroRecentActivity': '{count} activities',
 	'page.dashboard.reminderOverdue': 'Overdue',
 	'page.dashboard.reminderToday': 'Today',
