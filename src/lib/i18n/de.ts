@@ -686,6 +686,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.detailVet': 'Tierarzt',
 	'page.health.weightTrend': 'Gewichtsverlauf',
 	'page.health.noWeightYet': 'Noch kein Gewicht erfasst.',
+	'page.health.oneWeightNeedMore': 'Erfasse ein weiteres Gewicht, um den Verlauf zu sehen.',
 	'page.health.range6m': '6 Monate',
 	'page.health.range1y': '1 Jahr',
 	'page.health.rangeAll': 'Alle',

@@ -223,13 +223,16 @@
 			bind:this={dialogEl}
 			role="dialog"
 			aria-modal="true"
+			aria-labelledby="reminder-detail-title"
 			tabindex="-1"
 			onkeydown={trapFocus}
 			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
 				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">{r.title}</h2>
+				<h2 id="reminder-detail-title" class="font-semibold text-base text-foreground">
+					{r.title}
+				</h2>
 				<button
 					onclick={closeDetail}
 					aria-label={t(locale, 'aria.close')}
@@ -640,7 +643,7 @@
 
 		{#if buckets.overdue.length > 0}
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-coral mb-2">
+				<p class="text-xs font-semibold uppercase tracking-wider text-coral mb-2">
 					{t(locale, 'page.reminders.groupOverdue')}
 				</p>
 				<div class="space-y-3" data-active-group>
@@ -653,7 +656,7 @@
 
 		{#if buckets.today.length > 0}
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-gold mb-2">
+				<p class="text-xs font-semibold uppercase tracking-wider text-gold mb-2">
 					{t(locale, 'page.reminders.groupToday')}
 				</p>
 				<div class="space-y-3" data-active-group>
@@ -666,7 +669,7 @@
 
 		{#if buckets.upcoming.length > 0}
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+				<p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 					{t(locale, 'page.reminders.groupUpcoming')}
 				</p>
 				<div class="space-y-3" data-active-group>

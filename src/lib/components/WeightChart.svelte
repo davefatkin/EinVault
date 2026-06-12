@@ -5,6 +5,7 @@
 		buildAreaPath,
 		buildLinePath,
 		percentChange,
+		convertWeight,
 		type WeightPoint,
 		type WeightRange
 	} from '$lib/weightChart';
@@ -26,11 +27,17 @@
 	let ref = $derived(now ?? new Date());
 	let visible = $derived(filterByRange(entries, range, ref));
 	let effective = $derived(visible.length < 2 && entries.length >= 2 ? entries : visible);
-	let values = $derived(effective.map((p) => p.weight));
+	let latest = $derived(entries.at(-1) ?? null);
+	let displayUnit = $derived(latest?.unit ?? 'lbs');
+	let normalized = $derived(effective.map((p) => convertWeight(p.weight, p.unit, displayUnit)));
+	let values = $derived(normalized);
 	let areaPath = $derived(buildAreaPath(values, W, H));
 	let linePath = $derived(buildLinePath(values, W, H));
-	let latest = $derived(entries.at(-1) ?? null);
-	let change = $derived(percentChange(effective));
+	let change = $derived(
+		percentChange(
+			effective.map((p) => ({ ...p, weight: convertWeight(p.weight, p.unit, displayUnit) }))
+		)
+	);
 
 	const RANGES: {
 		value: WeightRange;
@@ -100,7 +107,7 @@
 				/>
 			</svg>
 		{:else}
-			<p class="mt-3 text-xs text-muted-foreground">{t(locale, 'page.health.noWeightYet')}</p>
+			<p class="mt-3 text-xs text-muted-foreground">{t(locale, 'page.health.oneWeightNeedMore')}</p>
 		{/if}
 	{/if}
 </div>

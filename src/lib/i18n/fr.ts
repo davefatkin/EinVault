@@ -688,6 +688,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.detailVet': 'Vétérinaire',
 	'page.health.weightTrend': 'Tendance du poids',
 	'page.health.noWeightYet': 'Aucun poids enregistré.',
+	'page.health.oneWeightNeedMore': 'Enregistre un autre poids pour voir la tendance.',
 	'page.health.range6m': '6 mois',
 	'page.health.range1y': '1 an',
 	'page.health.rangeAll': 'Tout',

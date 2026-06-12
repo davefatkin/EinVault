@@ -31,4 +31,10 @@ describe('reminderBuckets', () => {
 		);
 		expect(upcoming.map((r) => r.id)).toEqual(['a', 'b']);
 	});
+	it('returns empty buckets for empty input', () => {
+		const { overdue, today, upcoming } = reminderBuckets([], now);
+		expect(overdue).toEqual([]);
+		expect(today).toEqual([]);
+		expect(upcoming).toEqual([]);
+	});
 });

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { filterByRange, buildAreaPath, percentChange, type WeightPoint } from './weightChart';
+import {
+	filterByRange,
+	buildAreaPath,
+	buildLinePath,
+	percentChange,
+	convertWeight,
+	type WeightPoint
+} from './weightChart';
 
 const P = (recordedAt: string, weight: number, unit: 'lbs' | 'kg' = 'lbs'): WeightPoint => ({
 	recordedAt: new Date(recordedAt),
@@ -59,5 +66,27 @@ describe('buildAreaPath', () => {
 		expect(d.endsWith('Z')).toBe(true);
 		expect(d).toContain('L100.00,40.00');
 		expect(d).toContain('L0.00,40.00');
+	});
+});
+
+describe('buildLinePath', () => {
+	it('buildLinePath: starts with M, has the right L count, not closed', () => {
+		const d = buildLinePath([30, 31, 32], 100, 40);
+		expect(d.startsWith('M')).toBe(true);
+		expect(d.endsWith('Z')).toBe(false);
+		expect((d.match(/L/g) || []).length).toBe(2); // 3 points -> 2 L segments
+	});
+});
+
+describe('convertWeight', () => {
+	it('is identity for same unit', () => {
+		expect(convertWeight(30, 'lbs', 'lbs')).toBe(30);
+		expect(convertWeight(14, 'kg', 'kg')).toBe(14);
+	});
+	it('converts kg to lbs', () => {
+		expect(convertWeight(10, 'kg', 'lbs')).toBeCloseTo(22.0462, 3);
+	});
+	it('converts lbs to kg', () => {
+		expect(convertWeight(22.0462, 'lbs', 'kg')).toBeCloseTo(10, 3);
 	});
 });

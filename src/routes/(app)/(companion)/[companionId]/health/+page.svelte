@@ -640,7 +640,7 @@
 	{/if}
 
 	<section>
-		<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+		<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 			{t(locale, 'page.health.weightTrend')}
 		</p>
 		<WeightChart entries={weightPoints} />
@@ -648,7 +648,7 @@
 
 	{#if data.weightEntries.length > 0}
 		<section>
-			<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 				{t(locale, 'page.health.weightHistoryTitle')}
 			</p>
 			<div class="rounded-2xl border bg-card divide-y divide-border">
@@ -780,7 +780,7 @@
 	{/if}
 
 	<section>
-		<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+		<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 			{t(locale, 'page.health.healthEventsTitle')}
 		</p>
 		<div class="rounded-2xl border bg-card px-5 py-4">

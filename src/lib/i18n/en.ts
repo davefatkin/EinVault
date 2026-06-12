@@ -678,6 +678,7 @@ const messages = {
 	'page.health.detailVet': 'Vet',
 	'page.health.weightTrend': 'Weight trend',
 	'page.health.noWeightYet': 'No weight recorded yet.',
+	'page.health.oneWeightNeedMore': 'Log another weight to see the trend.',
 	'page.health.range6m': '6 months',
 	'page.health.range1y': '1 year',
 	'page.health.rangeAll': 'All',
