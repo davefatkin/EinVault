@@ -141,7 +141,10 @@
 		>
 			<div class="flex items-center justify-between mb-2">
 				{#if items.length > 1}
-					<span class="text-sm text-white/60">{index + 1} / {items.length}</span>
+					<span
+						class="text-xs font-medium text-white bg-black/55 px-2.5 py-1 rounded-full select-none"
+						>{index + 1} / {items.length}</span
+					>
 				{:else}
 					<span></span>
 				{/if}
@@ -149,7 +152,7 @@
 					<a
 						href={mediaUrl(item)}
 						download={item.originalName ?? item.filename}
-						class="text-white/70 hover:text-white p-1 rounded"
+						class="flex items-center justify-center w-9 h-9 rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
 						aria-label={t(locale, 'aria.downloadMedia')}
 					>
 						<Download class="h-5 w-5" />
@@ -157,7 +160,7 @@
 					<button
 						type="button"
 						onclick={close}
-						class="text-white/70 hover:text-white p-1 rounded"
+						class="flex items-center justify-center w-9 h-9 rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
 						aria-label={t(locale, 'aria.close')}
 					>
 						<X class="h-5 w-5" />
@@ -188,10 +191,10 @@
 						type="button"
 						onclick={prev}
 						disabled={index === 0}
-						class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white transition-opacity bg-black/40 {index ===
+						class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white bg-black/55 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 {index ===
 						0
-							? 'opacity-20 cursor-default'
-							: 'opacity-70 hover:opacity-100'}"
+							? 'opacity-25 cursor-default'
+							: 'hover:bg-black/70'}"
 						aria-label={t(locale, 'aria.previousMedia')}
 					>
 						<ChevronLeft class="h-5 w-5" />
@@ -200,10 +203,10 @@
 						type="button"
 						onclick={next}
 						disabled={index === items.length - 1}
-						class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white transition-opacity bg-black/40 {index ===
+						class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-white bg-black/55 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 {index ===
 						items.length - 1
-							? 'opacity-20 cursor-default'
-							: 'opacity-70 hover:opacity-100'}"
+							? 'opacity-25 cursor-default'
+							: 'hover:bg-black/70'}"
 						aria-label={t(locale, 'aria.nextMedia')}
 					>
 						<ChevronRight class="h-5 w-5" />
@@ -212,7 +215,7 @@
 			</div>
 
 			{#if item.notes}
-				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm">
+				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm text-white/90">
 					{@html renderMarkdown(item.notes)}
 				</div>
 			{/if}
