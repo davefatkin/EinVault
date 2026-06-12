@@ -114,7 +114,9 @@
 	// FAB menu state
 	let fabOpen = $state(false);
 
-	const FAB_ICONS: Record<string, typeof BookOpen> = {
+	type FabKey = 'journal' | 'health' | 'reminders' | 'weight';
+
+	const FAB_ICONS: Record<FabKey, typeof BookOpen> = {
 		journal: BookOpen,
 		health: Activity,
 		reminders: Bell,
@@ -262,7 +264,7 @@
 						class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
 					>
 						{#each fabActions as action (action.key)}
-							{@const ActionIcon = FAB_ICONS[action.key]}
+							{@const ActionIcon = FAB_ICONS[action.key as FabKey]}
 							<a
 								href={action.href}
 								onclick={() => (fabOpen = false)}
