@@ -91,18 +91,24 @@
 	$effect(() => {
 		if (prefillApplied) return;
 		const params = page.url.searchParams;
-		if (params.get('new') !== '1') return;
+		const newParam = params.get('new');
+		if (!newParam) return;
 		if (params.get('edit')) return;
 
-		prefillTitle = (params.get('title') ?? '').slice(0, 200);
-		const rawType = params.get('type') ?? '';
-		prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
-			? (rawType as HealthEventType)
-			: '';
-		prefillDescription = (params.get('description') ?? '').slice(0, 2000);
+		if (newParam === 'weight') {
+			showWeightForm = true;
+			showHealthForm = false;
+		} else {
+			prefillTitle = (params.get('title') ?? '').slice(0, 200);
+			const rawType = params.get('type') ?? '';
+			prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
+				? (rawType as HealthEventType)
+				: '';
+			prefillDescription = (params.get('description') ?? '').slice(0, 2000);
 
-		showHealthForm = true;
-		showWeightForm = false;
+			showHealthForm = true;
+			showWeightForm = false;
+		}
 		prefillApplied = true;
 		tick().then(() => {
 			const url = new URL(page.url);

@@ -107,9 +107,13 @@
 						label: 'Add journal entry',
 						icon: BookOpen
 					},
-					{ href: `/${activeCompanion.id}/health`, label: 'Log health event', icon: Activity },
-					{ href: `/${activeCompanion.id}/reminders`, label: 'Add reminder', icon: Bell },
-					{ href: `/${activeCompanion.id}/health`, label: 'Record weight', icon: Weight }
+					{
+						href: `/${activeCompanion.id}/health?new=1`,
+						label: 'Log health event',
+						icon: Activity
+					},
+					{ href: `/${activeCompanion.id}/reminders?new=1`, label: 'Add reminder', icon: Bell },
+					{ href: `/${activeCompanion.id}/health?new=weight`, label: 'Record weight', icon: Weight }
 				]
 			: []
 	);
