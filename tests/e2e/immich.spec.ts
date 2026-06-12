@@ -69,10 +69,10 @@ test('avatar from Immich', async ({ world, page }) => {
 	world.fake.setAssets(ASSETS);
 
 	await login(page, world.server.baseURL, SEED.member.username);
-	await page.goto(world.server.baseURL + `/${BISCUIT_ID}`);
+	await page.goto(world.server.baseURL + `/companions/${BISCUIT_ID}/edit`);
 
-	// The Immich avatar button has aria-label="Pick from Immich" and sits
-	// next to the file-upload button in the editable avatar group.
+	// The editable companion avatar lives on the edit form. Its Immich button
+	// has aria-label="Pick from Immich" and sits next to the file-upload button.
 	await page
 		.getByRole('button', { name: /pick from immich/i })
 		.first()
