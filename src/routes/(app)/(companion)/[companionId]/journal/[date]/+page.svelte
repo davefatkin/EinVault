@@ -751,7 +751,9 @@
 
 	<!-- Media -->
 	<div class="rounded-lg border border-border bg-card overflow-hidden">
-		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
+		<div
+			class="flex flex-col gap-3 px-5 py-3 border-b border-border sm:flex-row sm:items-center sm:justify-between"
+		>
 			<h2 class="font-semibold flex items-center gap-2 text-foreground">
 				<Camera class="h-4 w-4" />
 				{t(locale, 'page.journal.day.mediaTitle')}
@@ -760,7 +762,7 @@
 				>
 			</h2>
 			{#if media.length < data.maxDailyMedia}
-				<div class="flex items-center gap-2">
+				<div class="flex flex-wrap items-center gap-2">
 					{#if data.immichEnabled}
 						<button
 							type="button"

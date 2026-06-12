@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { localDateISO } from '$lib/date';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
@@ -17,6 +16,7 @@
 		Activity,
 		BookOpen,
 		Weight,
+		FileText,
 		ChevronDown
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -39,11 +39,19 @@
 		companions: Companion[];
 		activeCompanion: Companion | null;
 		user: User | null;
+		today: string;
 		onOpenSearch: () => void;
 		class?: string;
 	}
 
-	let { companions, activeCompanion, user, onOpenSearch, class: className = '' }: Props = $props();
+	let {
+		companions,
+		activeCompanion,
+		user,
+		today,
+		onOpenSearch,
+		class: className = ''
+	}: Props = $props();
 
 	const locale = getLocale();
 
@@ -103,7 +111,7 @@
 		activeCompanion
 			? [
 					{
-						href: `/${activeCompanion.id}/journal/${localDateISO()}`,
+						href: `/${activeCompanion.id}/journal/${today}`,
 						label: 'Add journal entry',
 						icon: BookOpen
 					},
@@ -263,7 +271,21 @@
 			</div>
 		{/if}
 
-		<!-- Right: search icon -->
+		<!-- Right: documents (companion context) + search -->
+		{#if isCompanionContext && activeCompanion}
+			<a
+				href={`/${activeCompanion.id}/documents`}
+				aria-label={t(locale, 'nav.documents')}
+				aria-current={isTabActive(`/${activeCompanion.id}/documents`) ? 'page' : undefined}
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
+					`/${activeCompanion.id}/documents`
+				)
+					? 'text-primary'
+					: ''}"
+			>
+				<FileText class="h-5 w-5" />
+			</a>
+		{/if}
 		<button
 			type="button"
 			onclick={onOpenSearch}

@@ -57,6 +57,7 @@
 			companions={data.companions}
 			{activeCompanion}
 			user={data.user}
+			today={data.today}
 			onOpenSearch={() => (searchOpen = true)}
 		/>
 

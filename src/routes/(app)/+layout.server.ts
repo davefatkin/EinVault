@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
+import { localDateISO } from '$lib/date';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -27,6 +28,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user,
 		companions,
-		archivedCompanions
+		archivedCompanions,
+		// Server-computed "today" (app timezone) so client links — e.g. the mobile
+		// quick-add journal FAB — match the journal page's own notion of today.
+		today: localDateISO()
 	};
 };
