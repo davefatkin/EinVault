@@ -460,6 +460,18 @@ const messages: Record<keyof Messages, string> = {
 	'overview.markDone': 'Marcar como concluído',
 	'overview.day.today': 'Hoje',
 	'overview.day.tomorrow': 'Amanhã',
+	'overview.careStatus.upToDate': 'Em dia',
+	'overview.careStatus.dueToday': 'Vence hoje',
+	'overview.careStatus.needsAttention': 'Requer atenção',
+	'overview.journal.noEntryYet': 'Sem diário ainda',
+	'overview.journal.addTodayShort': '+ Adicionar hoje',
+	'overview.reminders.none': 'Sem lembretes',
+	'overview.recentHousehold': 'Atividade recente da família',
+	'overview.last7Days': 'Últimos 7 dias',
+	'overview.activity.loggedFor': '{logger} registou {type} para {companion}',
+	'overview.activity.healthFor': '{type} registado para {companion}',
+	'overview.companionCount.one': '{count} companheiro',
+	'overview.companionCount.other': '{count} companheiros',
 
 	// Page: dashboard
 	'page.dashboard.archivedBanner': '{name} está arquivado. Modo de leitura.',

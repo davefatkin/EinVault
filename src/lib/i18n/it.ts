@@ -459,6 +459,18 @@ const messages: Record<keyof Messages, string> = {
 	'overview.markDone': 'Segna come fatto',
 	'overview.day.today': 'Oggi',
 	'overview.day.tomorrow': 'Domani',
+	'overview.careStatus.upToDate': 'In regola',
+	'overview.careStatus.dueToday': 'In scadenza oggi',
+	'overview.careStatus.needsAttention': 'Richiede attenzione',
+	'overview.journal.noEntryYet': 'Nessun diario ancora',
+	'overview.journal.addTodayShort': '+ Aggiungi oggi',
+	'overview.reminders.none': 'Nessun promemoria',
+	'overview.recentHousehold': 'Attività recente in famiglia',
+	'overview.last7Days': 'Ultimi 7 giorni',
+	'overview.activity.loggedFor': '{logger} ha registrato {type} per {companion}',
+	'overview.activity.healthFor': '{type} registrato per {companion}',
+	'overview.companionCount.one': '{count} compagno',
+	'overview.companionCount.other': '{count} compagni',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} è archiviato. Visualizzazione in sola lettura.',

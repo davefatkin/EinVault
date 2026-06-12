@@ -456,6 +456,18 @@ const messages = {
 	'overview.markDone': 'Mark as done',
 	'overview.day.today': 'Today',
 	'overview.day.tomorrow': 'Tomorrow',
+	'overview.careStatus.upToDate': 'Up to date',
+	'overview.careStatus.dueToday': 'Due today',
+	'overview.careStatus.needsAttention': 'Needs attention',
+	'overview.journal.noEntryYet': 'No journal yet',
+	'overview.journal.addTodayShort': '+ Add today',
+	'overview.reminders.none': 'No reminders',
+	'overview.recentHousehold': 'Recent across the household',
+	'overview.last7Days': 'Last 7 days',
+	'overview.activity.loggedFor': '{logger} logged a {type} for {companion}',
+	'overview.activity.healthFor': '{type} logged for {companion}',
+	'overview.companionCount.one': '{count} companion',
+	'overview.companionCount.other': '{count} companions',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} is archived. Viewing in read-only mode.',
