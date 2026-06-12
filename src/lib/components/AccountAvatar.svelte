@@ -69,9 +69,20 @@
 					title: t(locale, 'page.settings.photoRemoved'),
 					durationMs: 4000
 				});
+			} else {
+				const data = await res.json().catch(() => null);
+				addToast({
+					id: 'user-avatar-error',
+					title: data?.message ?? t(locale, 'component.avatar.uploadFailed'),
+					durationMs: 5000
+				});
 			}
 		} catch {
-			// ignore
+			addToast({
+				id: 'user-avatar-error',
+				title: t(locale, 'component.avatar.uploadFailed'),
+				durationMs: 5000
+			});
 		} finally {
 			uploading = false;
 		}
