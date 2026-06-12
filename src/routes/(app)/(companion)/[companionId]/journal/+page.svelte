@@ -227,7 +227,7 @@
 	</div>
 {/if}
 
-<div class="space-y-6 pb-24 md:pb-0">
+<div class="space-y-6 pb-24 md:pb-0 mx-auto max-w-2xl">
 	{#if !companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
 			{t(locale, 'page.journal.archivedNotice', { name: companion.name })}

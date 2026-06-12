@@ -51,19 +51,9 @@
 </script>
 
 <div class="flex gap-3">
-	<div class="relative w-12 shrink-0 text-center">
+	<div class="relative flex w-12 shrink-0 flex-col items-center">
 		<div
-			class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border"
-			aria-hidden="true"
-		></div>
-		<div
-			class="relative z-10 mx-auto mt-1 h-2.5 w-2.5 rounded-full ring-4 ring-background {isToday
-				? 'bg-primary'
-				: 'bg-muted-foreground/40'}"
-			aria-hidden="true"
-		></div>
-		<div
-			class="mt-1.5 font-display text-xl font-bold leading-none {isToday
+			class="font-display text-xl font-bold leading-none {isToday
 				? 'text-primary'
 				: 'text-foreground'}"
 		>
@@ -72,6 +62,17 @@
 		<div class="text-[10px] uppercase tracking-wide text-muted-foreground">
 			{weekday(entry.date)}
 		</div>
+		<div
+			class="mt-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-background {isToday
+				? 'bg-primary'
+				: 'bg-muted-foreground/40'}"
+			aria-hidden="true"
+		></div>
+		<div
+			class="absolute left-1/2 w-px -translate-x-1/2 bg-border"
+			style="top: calc(100% - 0.125rem); bottom: -0.75rem;"
+			aria-hidden="true"
+		></div>
 	</div>
 
 	<div class="min-w-0 flex-1 rounded-2xl border bg-card p-4">
@@ -175,9 +176,7 @@
 		{/if}
 
 		{#if entry.body?.trim()}
-			<div
-				class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed overflow-hidden max-h-[6rem] [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]"
-			>
+			<div class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed">
 				{@html renderMarkdown(entry.body)}
 			</div>
 		{:else if !entry.photos.length && !entry.events.length}
