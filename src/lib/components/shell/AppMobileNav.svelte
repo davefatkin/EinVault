@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import CompanionSwitcher from './CompanionSwitcher.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
@@ -17,8 +16,7 @@
 		Activity,
 		BookOpen,
 		Weight,
-		FileText,
-		ChevronDown
+		FileText
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { CareStatus } from '$lib/careStatus';
@@ -59,26 +57,6 @@
 	}: Props = $props();
 
 	const locale = getLocale();
-
-	function statusDotClass(id: string): string {
-		const s = companionStatus[id] ?? 'up-to-date';
-		if (s === 'needs-attention') return 'bg-coral';
-		if (s === 'due-today') return 'bg-gold';
-		return 'bg-teal';
-	}
-
-	function statusTitle(id: string): string {
-		const s = companionStatus[id] ?? 'up-to-date';
-		if (s === 'needs-attention') return t(locale, 'overview.careStatus.needsAttention');
-		if (s === 'due-today') return t(locale, 'overview.careStatus.dueToday');
-		return t(locale, 'overview.careStatus.upToDate');
-	}
-
-	const OVERVIEW_VALUE = '__overview__';
-
-	let isOverview = $derived(
-		activeCompanion === null && page.url.pathname === '/' && companions.length > 1
-	);
 
 	let isCompanionContext = $derived(activeCompanion !== null);
 
@@ -145,28 +123,6 @@
 			: []
 	);
 
-	// Companion switcher state
-	let switcherOpen = $state(false);
-
-	function switchCompanion(id: string) {
-		switcherOpen = false;
-		if (id === OVERVIEW_VALUE) {
-			goto('/');
-			return;
-		}
-		const parts = page.url.pathname.split('/');
-		if (parts[1] === activeCompanion?.id) {
-			const section = parts.slice(2).join('/');
-			goto(`/${id}${section ? `/${section}` : ''}`);
-		} else {
-			goto(`/${id}`);
-		}
-	}
-
-	function handleSwitcherKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') switcherOpen = false;
-	}
-
 	function handleFabKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') fabOpen = false;
 	}
@@ -184,100 +140,9 @@
 >
 	<div class="flex h-14 items-center gap-3 px-4">
 		{#if isCompanionContext && activeCompanion}
-			<!-- Companion switcher -->
-			{#if companions.length > 1}
-				<div class="relative flex-1 min-w-0" role="none">
-					<button
-						type="button"
-						onclick={() => (switcherOpen = !switcherOpen)}
-						onkeydown={handleSwitcherKeydown}
-						aria-label={t(locale, 'layout.switchCompanion')}
-						aria-expanded={switcherOpen}
-						aria-haspopup="listbox"
-						class="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-accent min-w-0"
-					>
-						<CompanionAvatar
-							companionId={activeCompanion.id}
-							avatarPath={activeCompanion.avatarPath}
-							name={activeCompanion.name}
-							size="sm"
-						/>
-						<span class="flex-1 min-w-0 font-semibold text-sm text-foreground truncate">
-							{activeCompanion.name}
-						</span>
-						<ChevronDown
-							class="h-4 w-4 shrink-0 text-muted-foreground transition-transform {switcherOpen
-								? 'rotate-180'
-								: ''}"
-						/>
-					</button>
-
-					{#if switcherOpen}
-						<button
-							type="button"
-							class="fixed inset-0 z-40 cursor-default"
-							onclick={() => (switcherOpen = false)}
-							aria-label="Close companion switcher"
-							tabindex="-1"
-						></button>
-						<ul
-							role="listbox"
-							aria-label={t(locale, 'layout.switchCompanion')}
-							class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-popover py-1 shadow-lg"
-						>
-							<li role="option" aria-selected={isOverview}>
-								<button
-									type="button"
-									onclick={() => switchCompanion(OVERVIEW_VALUE)}
-									class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isOverview
-										? 'bg-accent text-foreground'
-										: ''}"
-								>
-									<LayoutGrid class="h-4 w-4 shrink-0" />
-									{t(locale, 'nav.overview')}
-								</button>
-							</li>
-							{#each companions as c (c.id)}
-								<li role="option" aria-selected={c.id === activeCompanion.id}>
-									<button
-										type="button"
-										onclick={() => switchCompanion(c.id)}
-										class="flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-foreground {c.id ===
-										activeCompanion.id
-											? 'bg-accent text-foreground font-medium'
-											: 'text-muted-foreground'}"
-									>
-										<CompanionAvatar
-											companionId={c.id}
-											avatarPath={c.avatarPath}
-											name={c.name}
-											size="sm"
-										/>
-										<span class="truncate">{c.name}</span>
-										<span
-											class="ml-auto h-2 w-2 rounded-full shrink-0 {statusDotClass(c.id)}"
-											title={statusTitle(c.id)}
-										></span>
-									</button>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</div>
-			{:else}
-				<!-- Single companion — static display -->
-				<div class="flex items-center gap-2.5 flex-1 min-w-0">
-					<CompanionAvatar
-						companionId={activeCompanion.id}
-						avatarPath={activeCompanion.avatarPath}
-						name={activeCompanion.name}
-						size="sm"
-					/>
-					<span class="font-semibold text-sm text-foreground truncate flex-1 min-w-0">
-						{activeCompanion.name}
-					</span>
-				</div>
-			{/if}
+			<div class="flex-1 min-w-0">
+				<CompanionSwitcher {companions} {activeCompanion} {companionStatus} includeOverview />
+			</div>
 		{:else}
 			<!-- Overview / no companion: brand greeting -->
 			<div class="flex items-center gap-2.5 flex-1 min-w-0">
@@ -298,7 +163,9 @@
 					</div>
 				{/if}
 				<span class="font-display font-bold text-base text-foreground truncate">
-					{user ? `Hi, ${user.displayName.split(' ')[0]}` : 'EinVault'}
+					{user
+						? t(locale, 'overview.greeting', { name: user.displayName.split(' ')[0] })
+						: 'EinVault'}
 				</span>
 			</div>
 		{/if}
