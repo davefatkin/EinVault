@@ -32,6 +32,7 @@
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import { careStatus } from '$lib/careStatus';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let {
@@ -138,6 +139,13 @@
 	let avatarLightboxOpen = $state(false);
 	let avatarUrl = $derived(companion.avatarPath ? `/api/avatars/${companion.id}` : null);
 
+	// Document preview
+	type RecentDoc = (typeof recentDocuments)[0];
+	let previewDoc = $state<RecentDoc | null>(null);
+	function docUrl(doc: RecentDoc) {
+		return `/api/documents/${companion.id}/${doc.filename}`;
+	}
+
 	function closeAvatarLightbox() {
 		avatarLightboxOpen = false;
 		(document.activeElement as HTMLElement)?.blur();
@@ -166,6 +174,10 @@
 		if (e.key === 'Escape') {
 			if (avatarLightboxOpen) {
 				closeAvatarLightbox();
+				return;
+			}
+			if (previewDoc) {
+				previewDoc = null;
 				return;
 			}
 			if (selected) {
@@ -614,11 +626,11 @@
 						>{t(locale, 'page.dashboard.nextVet')}</span
 					>
 					{#if nextReminder}
-						<span class="text-sm font-medium text-foreground truncate max-w-[140px]"
+						<span class="text-base font-bold text-foreground truncate max-w-[140px]"
 							>{nextReminder.title}</span
 						>
 					{:else}
-						<span class="text-sm text-muted-foreground italic">—</span>
+						<span class="text-base font-bold text-muted-foreground italic">—</span>
 					{/if}
 				</div>
 
@@ -918,8 +930,9 @@
 			<CardContent class="pt-0">
 				<div class="space-y-1">
 					{#each recentDocuments as doc (doc.id)}
-						<a
-							href="/{companion.id}/documents"
+						<button
+							type="button"
+							onclick={() => (previewDoc = doc)}
 							class="block w-full rounded-md px-2 py-1.5 -mx-2 hover:bg-accent transition-colors text-left"
 						>
 							<div class="flex items-center justify-between gap-3 text-sm">
@@ -928,10 +941,20 @@
 									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
 								>
 							</div>
-						</a>
+						</button>
 					{/each}
 				</div>
 			</CardContent>
 		</Card>
 	{/if}
 </div>
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={docUrl(previewDoc)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
+	/>
+{/if}
