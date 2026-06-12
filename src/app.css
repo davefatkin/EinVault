@@ -262,6 +262,16 @@
 		font-family: var(--font-sans);
 	}
 
+	/* Markdown/code input must keep monospace alignment: disable the mono
+	   font's contextual ligatures (Geist Mono fuses runs like "###" into a
+	   single wider glyph, which breaks per-line left alignment). */
+	textarea {
+		font-variant-ligatures: none;
+		font-feature-settings:
+			'liga' 0,
+			'calt' 0;
+	}
+
 	::-webkit-scrollbar {
 		width: 6px;
 		height: 6px;
