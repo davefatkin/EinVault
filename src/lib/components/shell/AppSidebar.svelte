@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
 		House,
@@ -15,7 +16,6 @@
 		Search,
 		ChevronDown,
 		LayoutGrid,
-		UserRound,
 		PlusCircle,
 		PawPrint
 	} from '@lucide/svelte';
@@ -33,6 +33,7 @@
 		id: string;
 		displayName: string;
 		role: 'admin' | 'member' | 'caretaker';
+		avatarPath?: string | null;
 	};
 
 	interface Props {
@@ -385,13 +386,12 @@
 		<!-- Account area -->
 		<div class="flex items-center gap-2.5 rounded-lg px-3 py-2">
 			{#if user}
-				<div
-					class="h-7 w-7 rounded-full shrink-0 flex items-center justify-center"
-					style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.5))"
-					aria-hidden="true"
-				>
-					<UserRound class="h-4 w-4 text-white" />
-				</div>
+				<UserAvatar
+					userId={user.id}
+					displayName={user.displayName}
+					avatarPath={user.avatarPath}
+					size="sm"
+				/>
 				<div class="flex-1 min-w-0">
 					<p class="text-xs font-medium text-foreground truncate">{user.displayName}</p>
 					<p class="text-[10px] text-muted-foreground capitalize">{user.role}</p>

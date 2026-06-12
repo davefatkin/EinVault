@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
 		House,
@@ -34,6 +35,7 @@
 		displayName: string;
 		role: 'admin' | 'member' | 'caretaker';
 		theme: 'light' | 'dark' | 'system';
+		avatarPath?: string | null;
 	};
 
 	interface Props {
@@ -279,13 +281,22 @@
 		{:else}
 			<!-- Overview / no companion: brand greeting -->
 			<div class="flex items-center gap-2.5 flex-1 min-w-0">
-				<div
-					class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
-					style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
-					aria-hidden="true"
-				>
-					<PawLogo class="w-4 h-4 text-white" />
-				</div>
+				{#if user}
+					<UserAvatar
+						userId={user.id}
+						displayName={user.displayName}
+						avatarPath={user.avatarPath}
+						size="sm"
+					/>
+				{:else}
+					<div
+						class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+						style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
+						aria-hidden="true"
+					>
+						<PawLogo class="w-4 h-4 text-white" />
+					</div>
+				{/if}
 				<span class="font-display font-bold text-base text-foreground truncate">
 					{user ? `Hi, ${user.displayName.split(' ')[0]}` : 'EinVault'}
 				</span>

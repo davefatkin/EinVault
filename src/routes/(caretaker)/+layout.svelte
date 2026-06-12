@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -112,8 +113,17 @@
 					</div>
 				{/if}
 
-				<!-- Right: theme toggle + settings + sign out -->
+				<!-- Right: user avatar + theme toggle + settings + sign out -->
 				<div class="flex items-center gap-1 shrink-0">
+					{#if data.user}
+						<UserAvatar
+							userId={data.user.id}
+							displayName={data.user.displayName}
+							avatarPath={data.user.avatarPath}
+							size="sm"
+							class="mr-1"
+						/>
+					{/if}
 					<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
 						{#each THEMES as theme (theme)}
 							{@const Icon = THEME_ICONS[theme]}
