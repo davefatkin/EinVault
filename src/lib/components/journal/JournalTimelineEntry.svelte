@@ -5,19 +5,14 @@
 	import { Pencil, NotebookPen, Play } from '@lucide/svelte';
 	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
-	import type { JournalPhoto, DailyEvent } from '$server/db/schema';
+	import type { JournalEntry, JournalPhoto, DailyEvent } from '$server/db/schema';
 	import type { UserRef } from '$lib/types';
 
 	type Photo = JournalPhoto & { logger: UserRef };
 	type Activity = DailyEvent & { logger: UserRef };
 
-	type Entry = {
-		date: string;
-		mood: string | null;
-		body: string | null;
-		loggedBy: string | null;
-		updatedBy: string | null;
-		logger: UserRef;
+	type Entry = Pick<JournalEntry, 'date' | 'mood' | 'body' | 'loggedBy' | 'updatedBy'> & {
+		logger: UserRef | null;
 		updater: { displayName: string } | null;
 		photos: Photo[];
 		events: Activity[];
@@ -35,7 +30,6 @@
 	let { entry, companionId, today, canEdit, onOpenLightbox, onOpenActivity }: Props = $props();
 
 	const locale = getLocale();
-	const EVENT_ICONS = ACTIVITY_ICONS;
 	let isToday = $derived(entry.date === today);
 
 	const MAX_THUMBS = 4;
@@ -118,7 +112,12 @@
 				{#each visiblePhotos as item, i (item.id)}
 					<button
 						type="button"
-						onclick={() => onOpenLightbox(entry.photos, entry.date, i)}
+						onclick={() =>
+							onOpenLightbox(
+								entry.photos,
+								entry.date,
+								i === MAX_THUMBS - 1 && overflow > 0 ? MAX_THUMBS : i
+							)}
 						class="relative h-16 w-16 overflow-hidden rounded-lg transition-opacity hover:opacity-90"
 						title={item.originalName ??
 							t(
@@ -139,6 +138,7 @@
 								preload="metadata"
 								muted
 								playsinline
+								aria-hidden="true"
 								class="h-full w-full object-cover"
 							></video>
 						{:else}
@@ -171,8 +171,7 @@
 
 		{#if entry.body?.trim()}
 			<div
-				class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed overflow-hidden"
-				style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical"
+				class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed overflow-hidden max-h-[6rem]"
 			>
 				{@html renderMarkdown(entry.body)}
 			</div>
@@ -188,7 +187,7 @@
 						onclick={() => onOpenActivity(event)}
 						class="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
-						{EVENT_ICONS[event.type] ?? '📝'}
+						{ACTIVITY_ICONS[event.type] ?? '📝'}
 						<span class="capitalize">{event.type}</span>
 						{#if event.durationMinutes}<span class="text-muted-foreground"
 								>· {event.durationMinutes}m</span
