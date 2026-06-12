@@ -213,6 +213,7 @@ const messages = {
 	'page.settings.shiftGroupThisWeek': 'This Week',
 	'page.settings.shiftGroupNextWeek': 'Next Week',
 	'page.settings.shiftGroupLater': 'Later',
+	'page.settings.appearanceCard': 'Appearance',
 	'page.settings.languageCard': 'Language',
 	'page.settings.languageDescription': 'Choose your preferred language.',
 	'page.settings.reminderUndoCard': 'Reminder Undo Window',

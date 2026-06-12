@@ -226,6 +226,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupThisWeek': 'Diese Woche',
 	'page.settings.shiftGroupNextWeek': 'Nächste Woche',
 	'page.settings.shiftGroupLater': 'Später',
+	'page.settings.appearanceCard': 'Erscheinungsbild',
 	'page.settings.languageCard': 'Sprache',
 	'page.settings.languageDescription': 'Wähle deine bevorzugte Sprache.',
 	'page.settings.reminderUndoCard': 'Erinnerung-Rückgängig-Fenster',

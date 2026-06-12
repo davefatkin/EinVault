@@ -2,7 +2,6 @@
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { applyTheme, saveTheme, type Theme } from '$lib/theme';
 	import AppFooter from '$lib/components/AppFooter.svelte';
 	import { ToastRegion } from '$lib/components/ui/toast';
 	import SearchPalette from '$lib/components/SearchPalette.svelte';
@@ -22,16 +21,6 @@
 	);
 
 	let searchOpen = $state(false);
-
-	// Theme state: local override wins; falls back to saved user preference
-	let themeOverride = $state<Theme | null>(null);
-	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
-
-	async function setTheme(theme: Theme) {
-		themeOverride = theme;
-		applyTheme(theme);
-		await saveTheme(theme);
-	}
 </script>
 
 <svelte:window
@@ -56,8 +45,6 @@
 			companions={data.companions}
 			{activeCompanion}
 			user={data.user}
-			{currentTheme}
-			onSetTheme={setTheme}
 			onOpenSearch={() => (searchOpen = true)}
 		/>
 	</div>

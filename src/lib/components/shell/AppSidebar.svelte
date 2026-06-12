@@ -18,7 +18,6 @@
 		UserRound,
 		PlusCircle
 	} from '@lucide/svelte';
-	import { THEME_ICONS, THEMES, type Theme } from '$lib/theme';
 	import { t, getLocale } from '$lib/i18n';
 
 	type Companion = {
@@ -32,23 +31,17 @@
 		id: string;
 		displayName: string;
 		role: 'admin' | 'member' | 'caretaker';
-		theme: 'light' | 'dark' | 'system';
 	};
 
 	interface Props {
 		companions: Companion[];
 		activeCompanion: Companion | null;
 		user: User | null;
-		/** Theme override state — caller owns the state, passes current value here */
-		currentTheme: Theme;
-		/** Called when the sidebar wants to change the theme */
-		onSetTheme: (theme: Theme) => void;
 		/** Called when the user activates the search button */
 		onOpenSearch: () => void;
 	}
 
-	let { companions, activeCompanion, user, currentTheme, onSetTheme, onOpenSearch }: Props =
-		$props();
+	let { companions, activeCompanion, user, onOpenSearch }: Props = $props();
 
 	const locale = getLocale();
 
@@ -356,25 +349,6 @@
 			<Settings class="h-4 w-4 shrink-0" />
 			{t(locale, 'nav.settings')}
 		</a>
-
-		<!-- Theme toggle -->
-		<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted my-1">
-			{#each THEMES as theme (theme)}
-				{@const Icon = THEME_ICONS[theme]}
-				<button
-					type="button"
-					onclick={() => onSetTheme(theme)}
-					title="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
-					aria-label="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
-					aria-pressed={currentTheme === theme}
-					class="flex-1 rounded px-2 py-1.5 transition-all {currentTheme === theme
-						? 'bg-background text-foreground shadow-sm'
-						: 'text-muted-foreground hover:text-foreground'}"
-				>
-					<Icon class="h-3.5 w-3.5 mx-auto" />
-				</button>
-			{/each}
-		</div>
 
 		<!-- Account area -->
 		<div class="flex items-center gap-2.5 rounded-lg px-3 py-2">

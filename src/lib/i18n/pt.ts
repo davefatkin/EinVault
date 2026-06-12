@@ -223,6 +223,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupThisWeek': 'Esta semana',
 	'page.settings.shiftGroupNextWeek': 'Próxima semana',
 	'page.settings.shiftGroupLater': 'Mais tarde',
+	'page.settings.appearanceCard': 'Aparência',
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Escolha o seu idioma preferido.',
 	'page.settings.reminderUndoCard': 'Janela para desfazer Lembrete',
