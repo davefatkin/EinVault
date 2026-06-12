@@ -10,17 +10,14 @@
 		HeartPulse,
 		Bell,
 		FileText,
-		Settings,
-		LogOut,
-		ShieldCheck,
 		Search,
 		ChevronDown,
 		LayoutGrid,
-		PlusCircle,
-		PawPrint
+		PlusCircle
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { CareStatus } from '$lib/careStatus';
+	import AccountSheet from './AccountSheet.svelte';
 
 	type Companion = {
 		id: string;
@@ -98,6 +95,7 @@
 	);
 
 	let switcherOpen = $state(false);
+	let accountOpen = $state(false);
 
 	function switchCompanion(id: string) {
 		switcherOpen = false;
@@ -341,72 +339,39 @@
 			</kbd>
 		</button>
 
-		<!-- Admin: Users link -->
-		{#if user?.role === 'admin'}
-			<a
-				href="/admin/users"
-				class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-accent {page.url.pathname.startsWith(
-					'/admin/users'
-				)
-					? 'bg-accent text-foreground'
-					: ''}"
-				aria-current={page.url.pathname.startsWith('/admin/users') ? 'page' : undefined}
-			>
-				<ShieldCheck class="h-4 w-4 shrink-0" />
-				{t(locale, 'nav.admin')}
-			</a>
-			<a
-				href="/admin/companions"
-				class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-accent {page.url.pathname.startsWith(
-					'/admin/companions'
-				)
-					? 'bg-accent text-foreground'
-					: ''}"
-				aria-current={page.url.pathname.startsWith('/admin/companions') ? 'page' : undefined}
-			>
-				<PawPrint class="h-4 w-4 shrink-0" />
-				{t(locale, 'nav.adminCompanions')}
-			</a>
-		{/if}
-
-		<!-- Settings -->
-		<a
-			href="/settings"
-			class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-accent {page.url.pathname.startsWith(
-				'/settings'
-			)
-				? 'bg-accent text-foreground'
-				: ''}"
-			aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
-		>
-			<Settings class="h-4 w-4 shrink-0" />
-			{t(locale, 'nav.settings')}
-		</a>
-
-		<!-- Account area -->
-		<div class="flex items-center gap-2.5 rounded-lg px-3 py-2">
+		<!-- Account trigger + popover -->
+		<div class="relative">
 			{#if user}
-				<UserAvatar
-					userId={user.id}
-					displayName={user.displayName}
-					avatarPath={user.avatarPath}
-					size="sm"
-				/>
-				<div class="flex-1 min-w-0">
-					<p class="text-xs font-medium text-foreground truncate">{user.displayName}</p>
-					<p class="text-[10px] text-muted-foreground capitalize">{user.role}</p>
-				</div>
-			{/if}
-			<form method="POST" action="/auth/logout" class="shrink-0">
 				<button
-					type="submit"
-					aria-label={t(locale, 'nav.signOut')}
-					title={t(locale, 'nav.signOut')}
-					class="rounded p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+					type="button"
+					onclick={() => (accountOpen = !accountOpen)}
+					aria-haspopup="dialog"
+					aria-expanded={accountOpen}
+					class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
 				>
-					<LogOut class="h-3.5 w-3.5" />
+					<UserAvatar
+						userId={user.id}
+						displayName={user.displayName}
+						avatarPath={user.avatarPath}
+						size="sm"
+					/>
+					<div class="flex-1 min-w-0">
+						<p class="text-xs font-medium text-foreground truncate">{user.displayName}</p>
+						<p class="text-[10px] text-muted-foreground capitalize">{user.role}</p>
+					</div>
+					<ChevronDown
+						class="h-4 w-4 shrink-0 text-muted-foreground transition-transform {accountOpen
+							? 'rotate-180'
+							: ''}"
+					/>
 				</button>
-			</form>
+				<AccountSheet
+					{user}
+					open={accountOpen}
+					onclose={() => (accountOpen = false)}
+					variant="popover"
+				/>
+			{/if}
 		</div>
 	</div>
 </aside>

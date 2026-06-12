@@ -10,7 +10,6 @@
 		Bell,
 		Search,
 		LayoutGrid,
-		Users,
 		UserRound,
 		Plus,
 		Activity,
@@ -20,6 +19,7 @@
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { CareStatus } from '$lib/careStatus';
+	import AccountSheet from './AccountSheet.svelte';
 
 	type Companion = {
 		id: string;
@@ -60,6 +60,8 @@
 
 	let isCompanionContext = $derived(activeCompanion !== null);
 
+	let accountOpen = $state(false);
+
 	// Companion context nav tabs (4 + central FAB)
 	let companionTabs = $derived(
 		activeCompanion
@@ -85,20 +87,23 @@
 			: []
 	);
 
-	// Overview context tabs (4 + no FAB; we insert FAB at position 2)
+	// Overview context tabs (3 equal tabs, no FAB)
 	let overviewTabs = $derived([
 		{ href: '/', label: t(locale, 'nav.overview'), icon: LayoutGrid, key: 'overview' },
 		{
 			href: '#search',
-			label: 'Search',
+			label: t(locale, 'nav.search'),
 			icon: Search,
 			key: 'search',
 			action: () => onOpenSearch()
 		},
-		...(user?.role === 'admin'
-			? [{ href: '/admin/users', label: 'Members', icon: Users, key: 'members' }]
-			: []),
-		{ href: '/settings', label: 'You', icon: UserRound, key: 'you' }
+		{
+			href: '#you',
+			label: t(locale, 'nav.you'),
+			icon: UserRound,
+			key: 'you',
+			action: () => (accountOpen = true)
+		}
 	]);
 
 	// FAB menu state
@@ -277,20 +282,20 @@
 				</a>
 			{/each}
 		{:else}
-			<!-- Overview context: 4 equal tabs, no FAB -->
+			<!-- Overview context: 3 equal tabs, no FAB -->
 			{#each overviewTabs as tab (tab.key)}
-				{@const isSearch = tab.key === 'search'}
-				{@const active = !isSearch && isTabActive(tab.href)}
+				{@const isAction = tab.key === 'search' || tab.key === 'you'}
+				{@const active = !isAction && isTabActive(tab.href)}
 				{@const TabIcon = tab.icon}
-				{#if isSearch}
+				{#if isAction}
 					<button
 						type="button"
-						onclick={onOpenSearch}
-						aria-label={t(locale, 'aria.openSearch')}
+						onclick={tab.action}
+						aria-label={tab.label}
 						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors min-h-[56px] justify-end pb-2 hover:text-foreground"
 					>
 						<TabIcon class="h-5 w-5 mb-0.5" />
-						Search
+						{tab.label}
 					</button>
 				{:else}
 					<a
@@ -308,3 +313,7 @@
 		{/if}
 	</div>
 </nav>
+
+{#if user && !isCompanionContext}
+	<AccountSheet {user} open={accountOpen} onclose={() => (accountOpen = false)} variant="sheet" />
+{/if}
