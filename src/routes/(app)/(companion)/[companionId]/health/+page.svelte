@@ -217,13 +217,14 @@
 			bind:this={dialogEl}
 			role="dialog"
 			aria-modal="true"
+			aria-labelledby="health-detail-title"
 			tabindex="-1"
 			onkeydown={trapFocus}
 			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
 				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
+				<h2 id="health-detail-title" class="font-semibold text-base text-foreground">
 					{#if selected.kind === 'weight'}
 						{t(locale, 'page.health.detailWeightEntry')}
 					{:else if selected.kind === 'health'}

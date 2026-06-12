@@ -81,7 +81,6 @@ test.describe('health events and weight log', () => {
 	});
 
 	test('health page shows the weight trend section', async ({ asMember }) => {
-		const COMP = 'seed-comp-biscuit';
 		await asMember.goto(`/${COMP}/health`);
 		await expect(asMember.getByText('Weight trend')).toBeVisible({ timeout: 8_000 });
 		// Seed has 0 weight rows — assert the empty-state text (<2 entries, no svg).

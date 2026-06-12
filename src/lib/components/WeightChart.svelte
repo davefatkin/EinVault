@@ -16,6 +16,7 @@
 		now?: Date;
 	}
 	let { entries, now = undefined }: Props = $props();
+	const uid = $props.id();
 	const locale = getLocale();
 
 	const W = 600;
@@ -84,12 +85,12 @@
 				aria-label={t(locale, 'page.health.weightChartAria')}
 			>
 				<defs>
-					<linearGradient id="weightFill" x1="0" y1="0" x2="0" y2="1">
+					<linearGradient id="weightFill-{uid}" x1="0" y1="0" x2="0" y2="1">
 						<stop offset="0%" stop-color="hsl(var(--primary))" stop-opacity="0.35" />
 						<stop offset="100%" stop-color="hsl(var(--primary))" stop-opacity="0" />
 					</linearGradient>
 				</defs>
-				<path d={areaPath} fill="url(#weightFill)" />
+				<path d={areaPath} fill="url(#weightFill-{uid})" />
 				<path
 					d={linePath}
 					fill="none"
