@@ -14,7 +14,6 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { ChevronLeft } from '@lucide/svelte';
-	import { addToast } from '$lib/components/ui/toast';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -59,16 +58,6 @@
 	}
 
 	$effect(() => () => clearTimeout(immichAvatarErrorTimer));
-
-	$effect(() => {
-		if (form?.success) {
-			addToast({
-				id: 'companion-edit-saved',
-				title: t(locale, 'page.companion.edit.changesSaved'),
-				durationMs: 4000
-			});
-		}
-	});
 </script>
 
 <svelte:head>
@@ -95,6 +84,12 @@
 		</Alert>
 	{/if}
 
+	{#if form?.success}
+		<Alert variant="success">
+			<AlertDescription>{t(locale, 'page.companion.edit.changesSaved')}</AlertDescription>
+		</Alert>
+	{/if}
+
 	<!-- Tab switcher -->
 	<div class="flex gap-1 rounded-xl border border-border bg-muted p-1">
 		<Button
@@ -118,6 +113,7 @@
 	<form
 		method="POST"
 		action="?/save"
+		enctype="multipart/form-data"
 		use:enhance={() => {
 			loading = true;
 			return async ({ update }) => {
