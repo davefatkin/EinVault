@@ -18,6 +18,7 @@
 		FileText
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { currentFabSection, orderFabActions } from '$lib/nav/fabSections';
 	import type { CareStatus } from '$lib/careStatus';
 	import AccountSheet from './AccountSheet.svelte';
 
@@ -113,22 +114,40 @@
 	// FAB menu state
 	let fabOpen = $state(false);
 
+	const FAB_ICONS: Record<string, typeof BookOpen> = {
+		journal: BookOpen,
+		health: Activity,
+		reminders: Bell,
+		weight: Weight
+	};
+
 	let fabActions = $derived(
 		activeCompanion
-			? [
-					{
-						href: `/${activeCompanion.id}/journal/${today}`,
-						label: 'Add journal entry',
-						icon: BookOpen
-					},
-					{
-						href: `/${activeCompanion.id}/health?new=1`,
-						label: 'Log health event',
-						icon: Activity
-					},
-					{ href: `/${activeCompanion.id}/reminders?new=1`, label: 'Add reminder', icon: Bell },
-					{ href: `/${activeCompanion.id}/health?new=weight`, label: 'Record weight', icon: Weight }
-				]
+			? orderFabActions(
+					[
+						{
+							key: 'journal',
+							href: `/${activeCompanion.id}/journal/${today}`,
+							label: t(locale, 'nav.fab.addJournal')
+						},
+						{
+							key: 'health',
+							href: `/${activeCompanion.id}/health?new=1`,
+							label: t(locale, 'nav.fab.logHealth')
+						},
+						{
+							key: 'reminders',
+							href: `/${activeCompanion.id}/reminders?new=1`,
+							label: t(locale, 'nav.fab.addReminder')
+						},
+						{
+							key: 'weight',
+							href: `/${activeCompanion.id}/health?new=weight`,
+							label: t(locale, 'nav.fab.recordWeight')
+						}
+					],
+					currentFabSection(page.url.pathname)
+				)
 			: []
 	);
 
@@ -236,20 +255,26 @@
 						type="button"
 						class="fixed inset-0 z-40 cursor-default"
 						onclick={() => (fabOpen = false)}
-						aria-label="Close quick add menu"
+						aria-label={t(locale, 'aria.closeQuickAdd')}
 						tabindex="-1"
 					></button>
 					<div
 						class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
 					>
-						{#each fabActions as action (action.label)}
-							{@const ActionIcon = action.icon}
+						{#each fabActions as action (action.key)}
+							{@const ActionIcon = FAB_ICONS[action.key]}
 							<a
 								href={action.href}
 								onclick={() => (fabOpen = false)}
-								class="flex items-center gap-3 px-4 py-3 text-sm text-foreground transition-colors hover:bg-accent"
+								class="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent {action.highlight
+									? 'bg-primary/10 text-primary font-medium'
+									: 'text-foreground'}"
 							>
-								<ActionIcon class="h-4 w-4 shrink-0 text-muted-foreground" />
+								<ActionIcon
+									class="h-4 w-4 shrink-0 {action.highlight
+										? 'text-primary'
+										: 'text-muted-foreground'}"
+								/>
 								{action.label}
 							</a>
 						{/each}
@@ -261,7 +286,7 @@
 					type="button"
 					onclick={() => (fabOpen = !fabOpen)}
 					onkeydown={handleFabKeydown}
-					aria-label="Quick add"
+					aria-label={t(locale, 'nav.fab.quickAdd')}
 					aria-expanded={fabOpen}
 					class="relative -top-3 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
 					style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)); box-shadow: 0 8px 20px hsl(var(--primary) / 0.4);"
