@@ -554,6 +554,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardSitterNotes': 'Notas para o cuidador',
 	'page.dashboard.caretaker.cardAbout': 'Sobre {name}',
 	'page.dashboard.caretaker.cardTodayActivity': 'Atividade de hoje',
+	'page.dashboard.caretaker.sectionQuickLog': 'Registo rápido',
 	'page.dashboard.caretaker.logActivity': '+ Registar atividade',
 	'page.dashboard.caretaker.activityEmpty': 'Nada registado hoje.',
 	'page.dashboard.caretaker.modalLabelType': 'Tipo',

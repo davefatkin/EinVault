@@ -4,7 +4,7 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
+	import { Phone, Mail, X, Bell } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
@@ -22,8 +22,8 @@
 		$derived(data);
 
 	const locale = getLocale();
-	const quickLogTypes = activityTypeOptions(locale).filter((t) =>
-		['walk', 'meal', 'bathroom'].includes(t.value)
+	const quickLogTypes = activityTypeOptions(locale).filter((opt) =>
+		['walk', 'meal', 'bathroom'].includes(opt.value)
 	);
 
 	function age(dob: string | null): string {
@@ -345,9 +345,9 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
-				<button
-					type="button"
-					onclick={() => {
+				<ReminderCompleteButtons
+					allowLogEvent={false}
+					onDone={() => {
 						if (!selectedReminder) return;
 						const item = selectedReminder;
 						const form = dismissFormRegistry.get(item.id);
@@ -355,11 +355,7 @@
 						closeReminderDetail();
 						pendingDismiss.queue(item.id, form, item.title);
 					}}
-					class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-				>
-					<CheckCheck class="h-3.5 w-3.5" />
-					{t(locale, 'common.reminder.done')}
-				</button>
+				/>
 			</div>
 		</div>
 	</div>
@@ -412,18 +408,32 @@
 		</div>
 	</div>
 
+	<!-- 1b. Bio / About (reference) -->
+	{#if companion.bio}
+		<section>
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.dashboard.caretaker.cardAbout', { name: companion.name })}
+			</p>
+			<div class="prose prose-sm dark:prose-invert max-w-none">
+				{@html renderMarkdown(companion.bio)}
+			</div>
+		</section>
+	{/if}
+
 	<!-- 2. Today's tasks (on-shift only) -->
 	{#if data.isOnShift}
 		<section>
-			<h2
-				class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5"
-			>
-				<Bell class="h-3.5 w-3.5" />
-				{t(locale, 'page.dashboard.caretaker.cardReminders')}
+			<div class="mb-3 flex items-center gap-1.5">
+				<h2
+					class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+				>
+					<Bell class="h-3.5 w-3.5" />
+					{t(locale, 'page.dashboard.caretaker.cardReminders')}
+				</h2>
 				{#if upcomingReminders.length > 0}
-					<Badge variant="secondary" class="ml-1">{upcomingReminders.length}</Badge>
+					<Badge variant="secondary">{upcomingReminders.length}</Badge>
 				{/if}
-			</h2>
+			</div>
 			{#if upcomingReminders.length === 0}
 				<p class="text-sm italic text-muted-foreground">
 					{t(locale, 'page.dashboard.caretaker.remindersEmpty')}
@@ -480,7 +490,7 @@
 		<!-- 3. Quick log -->
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				{t(locale, 'page.dashboard.caretaker.logActivity')}
+				{t(locale, 'page.dashboard.caretaker.sectionQuickLog')}
 			</h2>
 			<div class="flex gap-2">
 				{#each quickLogTypes as opt (opt.value)}
@@ -539,7 +549,19 @@
 		</section>
 	{/if}
 
-	<!-- 4b. Medications (reference) -->
+	<!-- 4b. Sitter notes (reference) -->
+	{#if companion.notesForSitter}
+		<section>
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
+			</p>
+			<div class="prose prose-sm dark:prose-invert max-w-none">
+				{@html renderMarkdown(companion.notesForSitter)}
+			</div>
+		</section>
+	{/if}
+
+	<!-- 4c. Medications (reference) -->
 	{#if medications.length > 0}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">

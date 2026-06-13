@@ -553,6 +553,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardSitterNotes': 'Note per il custode',
 	'page.dashboard.caretaker.cardAbout': 'Informazioni su {name}',
 	'page.dashboard.caretaker.cardTodayActivity': 'Attività di oggi',
+	'page.dashboard.caretaker.sectionQuickLog': 'Registro rapido',
 	'page.dashboard.caretaker.logActivity': '+ Registra attività',
 	'page.dashboard.caretaker.activityEmpty': 'Nessuna attività registrata oggi.',
 	'page.dashboard.caretaker.modalLabelType': 'Tipo',
