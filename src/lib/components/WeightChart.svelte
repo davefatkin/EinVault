@@ -52,7 +52,7 @@
 
 <div class="rounded-2xl border bg-card p-4">
 	{#if !latest}
-		<EmptyState tint="muted" title={t(locale, 'page.health.noWeightYet')}>
+		<EmptyState size="sm" tint="muted" title={t(locale, 'page.health.noWeightYet')}>
 			{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
 		</EmptyState>
 	{:else}
