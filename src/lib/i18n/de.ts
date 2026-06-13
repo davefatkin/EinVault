@@ -828,6 +828,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.care.title': 'Betreuung',
 	'page.admin.pageTitle': 'Benutzerverwaltung',
 	'page.admin.companionsTitle': 'Begleiter',
+	'page.admin.companionsActiveCount': '{count} aktiver Begleiter',
+	'page.admin.companionsActiveCountPlural': '{count} aktive Begleiter',
+	'page.admin.companionActiveBadge': 'Aktiv',
+	'page.admin.companionRestored': 'Begleiter erfolgreich wiederhergestellt.',
+	'page.admin.restore': 'Wiederherstellen',
 	'page.companion.edit.pageTitle': '{name} bearbeiten',
 
 	// Aria labels

@@ -38,8 +38,9 @@
 				{t(locale, 'page.admin.companionsTitle')}
 			</h1>
 			<p class="text-sm mt-1 text-muted-foreground">
-				{data.companions.length}
-				{data.companions.length === 1 ? 'active companion' : 'active companions'}
+				{data.companions.length === 1
+					? t(locale, 'page.admin.companionsActiveCount', { count: data.companions.length })
+					: t(locale, 'page.admin.companionsActiveCountPlural', { count: data.companions.length })}
 			</p>
 		</div>
 		<Button href="/companions/new" size="sm">
@@ -72,7 +73,7 @@
 							{#if age}
 								<span class="text-xs text-muted-foreground">{age}</span>
 							{/if}
-							<Badge variant="moss">Active</Badge>
+							<Badge variant="teal">{t(locale, 'page.admin.companionActiveBadge')}</Badge>
 						</div>
 					</div>
 					<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
@@ -91,7 +92,7 @@
 			</h2>
 			{#if form?.restoreSuccess}
 				<Alert variant="success" class="mb-3">
-					<AlertDescription>Companion restored successfully.</AlertDescription>
+					<AlertDescription>{t(locale, 'page.admin.companionRestored')}</AlertDescription>
 				</Alert>
 			{/if}
 			<Card class="divide-y divide-border">
@@ -133,7 +134,7 @@
 								<input type="hidden" name="companionId" value={companion.id} />
 								<Button type="submit" variant="softSuccess" size="sm" class="gap-1.5">
 									<RotateCcw class="h-3.5 w-3.5" />
-									<span class="hidden sm:inline">Restore</span>
+									<span class="hidden sm:inline">{t(locale, 'page.admin.restore')}</span>
 								</Button>
 							</form>
 						</div>

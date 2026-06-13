@@ -822,6 +822,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.care.title': 'Cura',
 	'page.admin.pageTitle': 'Gestione utenti',
 	'page.admin.companionsTitle': 'Compagni',
+	'page.admin.companionsActiveCount': '{count} compagno attivo',
+	'page.admin.companionsActiveCountPlural': '{count} compagni attivi',
+	'page.admin.companionActiveBadge': 'Attivo',
+	'page.admin.companionRestored': 'Compagno ripristinato correttamente.',
+	'page.admin.restore': 'Ripristina',
 	'page.companion.edit.pageTitle': 'Modifica {name}',
 
 	// Aria labels

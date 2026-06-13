@@ -818,6 +818,11 @@ const messages = {
 	'page.care.title': 'Care',
 	'page.admin.pageTitle': 'User Admin',
 	'page.admin.companionsTitle': 'Companions',
+	'page.admin.companionsActiveCount': '{count} active companion',
+	'page.admin.companionsActiveCountPlural': '{count} active companions',
+	'page.admin.companionActiveBadge': 'Active',
+	'page.admin.companionRestored': 'Companion restored successfully.',
+	'page.admin.restore': 'Restore',
 	'page.companion.edit.pageTitle': 'Edit {name}',
 
 	// Aria labels
