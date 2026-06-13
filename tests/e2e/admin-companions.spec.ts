@@ -16,4 +16,14 @@ test.describe('admin-companions', () => {
 		const res = await asMember.request.get('/admin/companions');
 		expect(res.status()).toBe(403);
 	});
+
+	test('sub-nav switches to users', async ({ asAdmin }) => {
+		await asAdmin.goto('/admin/companions');
+		await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 10_000 });
+		await asAdmin
+			.getByRole('navigation', { name: /admin sections/i })
+			.getByRole('link', { name: /users/i })
+			.click();
+		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
+	});
 });
