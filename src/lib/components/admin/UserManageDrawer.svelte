@@ -75,8 +75,19 @@
 		return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
 	}
 
+	let triggerEl: HTMLElement | null = null;
+	let didFocus = false;
 	$effect(() => {
-		tick().then(() => dialogEl?.focus());
+		if (dialogEl && !didFocus) {
+			didFocus = true;
+			triggerEl = document.activeElement as HTMLElement | null;
+			tick().then(() => dialogEl?.focus());
+		}
+	});
+	$effect(() => {
+		return () => {
+			triggerEl?.focus();
+		};
 	});
 
 	function trapFocus(e: KeyboardEvent) {
@@ -386,6 +397,7 @@
 												variant="softDestructive"
 												size="sm"
 												class="h-7 gap-1.5 px-2 text-xs"
+												aria-label={t(locale, 'common.delete')}
 												onclick={() => {
 													deleteShiftId = shift.id;
 													confirmOpen = true;
@@ -474,6 +486,8 @@
 							update()}
 					class="flex gap-2"
 				>
+					<input type="hidden" name="userId" value={user.id} />
+					<Label for="np-{user.id}" class="sr-only">{t(locale, 'page.admin.labelPassword')}</Label>
 					<Input
 						id="np-{user.id}"
 						name="newPassword"
@@ -509,18 +523,16 @@
 			{/if}
 		</div>
 	</div>
+	<form bind:this={deleteShiftForm} method="POST" action="?/deleteShift" use:enhance class="hidden">
+		<input type="hidden" name="shiftId" value={deleteShiftId} />
+	</form>
+	<ConfirmDialog
+		open={confirmOpen}
+		message={t(locale, 'component.confirmDialog.cantBeUndone')}
+		onconfirm={() => {
+			confirmOpen = false;
+			deleteShiftForm?.requestSubmit();
+		}}
+		oncancel={() => (confirmOpen = false)}
+	/>
 </div>
-
-<form bind:this={deleteShiftForm} method="POST" action="?/deleteShift" use:enhance class="hidden">
-	<input type="hidden" name="shiftId" value={deleteShiftId} />
-</form>
-
-<ConfirmDialog
-	open={confirmOpen}
-	message={t(locale, 'component.confirmDialog.cantBeUndone')}
-	onconfirm={() => {
-		confirmOpen = false;
-		deleteShiftForm?.requestSubmit();
-	}}
-	oncancel={() => (confirmOpen = false)}
-/>
