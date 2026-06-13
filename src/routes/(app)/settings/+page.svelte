@@ -10,9 +10,11 @@
 
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import AccountAvatar from '$lib/components/AccountAvatar.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
+	import { PawPrint } from '@lucide/svelte';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
 
@@ -294,6 +296,21 @@
 				: undefined}
 			errorMessage={form?.defaultRecurrenceError}
 		/>
+	{/if}
+
+	{#if data.user?.role !== 'caretaker' && data.companions.length === 0}
+		<Card>
+			<EmptyState
+				tint="primary"
+				title={t(locale, 'page.settings.noCompanions')}
+				body={t(locale, 'page.settings.companionsEmptyBody')}
+			>
+				{#snippet icon()}<PawPrint class="h-5 w-5" />{/snippet}
+				{#snippet action()}
+					<Button href="/companions/new">{t(locale, 'page.settings.addCompanion')}</Button>
+				{/snippet}
+			</EmptyState>
+		</Card>
 	{/if}
 
 	{#if data.user?.role !== 'caretaker' && data.calendarFeedAvailable}

@@ -6,6 +6,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { PawPrint, RotateCcw, Pencil } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 
@@ -51,9 +52,16 @@
 
 	<Card class="divide-y divide-border">
 		{#if data.companions.length === 0}
-			<div class="px-6 py-8 text-sm text-muted-foreground text-center">
-				{t(locale, 'page.settings.noCompanions')}
-			</div>
+			<EmptyState
+				tint="primary"
+				title={t(locale, 'page.settings.noCompanions')}
+				body={t(locale, 'page.settings.companionsEmptyBody')}
+			>
+				{#snippet icon()}<PawPrint class="h-5 w-5" />{/snippet}
+				{#snippet action()}
+					<Button href="/companions/new">{t(locale, 'page.settings.addCompanion')}</Button>
+				{/snippet}
+			</EmptyState>
 		{:else}
 			{#each data.companions as companion (companion.id)}
 				{@const age = ageFromDob(companion.dob)}
