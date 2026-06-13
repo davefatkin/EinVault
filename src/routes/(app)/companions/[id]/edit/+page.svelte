@@ -12,7 +12,8 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { ChevronLeft } from '@lucide/svelte';
+	import { ChevronLeft, PawPrint } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -72,23 +73,22 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<div class="flex items-center justify-between">
-		<div>
-			<Button
-				href={data.user?.role === 'admin' ? '/admin/companions' : '/'}
-				variant="ghost"
-				size="sm"
-				class="gap-1.5 -ml-2"
-			>
-				<ChevronLeft class="h-4 w-4" />
-				<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
-			</Button>
-			<h1 class="font-display text-2xl font-bold text-foreground mt-2">Edit {companion.name}</h1>
-			<p class="text-sm mt-1 text-muted-foreground">
-				{t(locale, 'page.companion.edit.subheading', { name: companion.name })}
-			</p>
-		</div>
-	</div>
+	<Button
+		href={data.user?.role === 'admin' ? '/admin/companions' : '/'}
+		variant="ghost"
+		size="sm"
+		class="gap-1.5 -ml-2"
+	>
+		<ChevronLeft class="h-4 w-4" />
+		<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
+	</Button>
+	<PageHeader
+		title="Edit {companion.name}"
+		subtitle={t(locale, 'page.companion.edit.subheading', { name: companion.name })}
+		tint="primary"
+	>
+		{#snippet icon()}<PawPrint class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
 	{#if form?.error}
 		<Alert variant="coral">

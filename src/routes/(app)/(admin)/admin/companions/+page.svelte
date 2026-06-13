@@ -8,6 +8,7 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { PawPrint, RotateCcw, Pencil } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
@@ -33,22 +34,20 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="font-display text-2xl font-bold text-foreground">
-				{t(locale, 'page.admin.companionsTitle')}
-			</h1>
-			<p class="text-sm mt-1 text-muted-foreground">
-				{data.companions.length !== 1
-					? t(locale, 'page.admin.companionsActiveCountPlural', { count: data.companions.length })
-					: t(locale, 'page.admin.companionsActiveCount', { count: data.companions.length })}
-			</p>
-		</div>
-		<Button href="/companions/new" size="sm">
-			<PawPrint class="h-4 w-4 mr-1.5" />
-			{t(locale, 'page.settings.addCompanion')}
-		</Button>
-	</div>
+	<PageHeader title={t(locale, 'page.admin.companionsTitle')} tint="teal">
+		{#snippet icon()}<PawPrint class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			<Button href="/companions/new" size="sm">
+				<PawPrint class="h-4 w-4 mr-1.5" />
+				{t(locale, 'page.settings.addCompanion')}
+			</Button>
+		{/snippet}
+	</PageHeader>
+	<p class="text-sm text-muted-foreground -mt-2">
+		{data.companions.length !== 1
+			? t(locale, 'page.admin.companionsActiveCountPlural', { count: data.companions.length })
+			: t(locale, 'page.admin.companionsActiveCount', { count: data.companions.length })}
+	</p>
 
 	<Card class="divide-y divide-border">
 		{#if data.companions.length === 0}

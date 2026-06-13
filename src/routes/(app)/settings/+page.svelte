@@ -15,6 +15,8 @@
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
+	import { Settings } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -47,12 +49,13 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.settings.title')}
-		</h1>
-		<p class="text-sm mt-1 text-muted-foreground">{t(locale, 'page.settings.subtitle')}</p>
-	</div>
+	<PageHeader
+		title={t(locale, 'page.settings.title')}
+		subtitle={t(locale, 'page.settings.subtitle')}
+		tint="muted"
+	>
+		{#snippet icon()}<Settings class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
 	<Card>
 		<CardHeader>

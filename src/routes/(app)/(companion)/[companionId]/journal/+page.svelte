@@ -5,6 +5,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import JournalTimelineEntry from '$lib/components/journal/JournalTimelineEntry.svelte';
 	import { tick } from 'svelte';
@@ -235,17 +236,17 @@
 	{/if}
 
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.journal.title')}
-		</h1>
-		{#if companion.isActive !== false}
-			<Button href="/{companion.id}/journal/{data.today}" size="sm">
-				{t(locale, 'page.journal.todayEntry')}
-				<ArrowRight class="h-4 w-4 ml-1" />
-			</Button>
-		{/if}
-	</div>
+	<PageHeader title={t(locale, 'page.journal.title')} tint="gold">
+		{#snippet icon()}<NotebookPen class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if companion.isActive !== false}
+				<Button href="/{companion.id}/journal/{data.today}" size="sm">
+					{t(locale, 'page.journal.todayEntry')}
+					<ArrowRight class="h-4 w-4 ml-1" />
+				</Button>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	{#if entries.length === 0}
 		<div class="rounded-xl border bg-card">

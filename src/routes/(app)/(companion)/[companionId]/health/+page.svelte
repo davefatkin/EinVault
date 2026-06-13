@@ -13,6 +13,7 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Scale, Plus, Pencil, Trash2, X, FileText, HeartPulse } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import WeightChart from '$lib/components/WeightChart.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
@@ -442,12 +443,10 @@
 		</div>
 	{/if}
 
-	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.health.title')}
-		</h1>
-		{#if data.companion.isActive !== false}
-			<div class="flex gap-2">
+	<PageHeader title={t(locale, 'page.health.title')} tint="teal">
+		{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if data.companion.isActive !== false}
 				<Button
 					variant="outline"
 					size="sm"
@@ -470,9 +469,9 @@
 					<Plus class="h-4 w-4 mr-1.5" />
 					{t(locale, 'page.health.addEvent')}
 				</Button>
-			</div>
-		{/if}
-	</div>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	{#if form?.healthError || form?.weightError}
 		<Alert variant="coral">

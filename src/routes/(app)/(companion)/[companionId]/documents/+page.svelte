@@ -15,6 +15,7 @@
 	import type { MessageKey } from '$lib/i18n/en';
 	import { localDateISO } from '$lib/date';
 	import { FileText, Upload, Download, Trash2, Pencil, Loader2 } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 
 	let { data } = $props();
@@ -158,12 +159,10 @@
 		</div>
 	{/if}
 
-	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.documents.title')}
-		</h1>
-		{#if data.companion.isActive !== false}
-			<div class="flex flex-wrap items-center gap-2">
+	<PageHeader title={t(locale, 'page.documents.title')} tint="muted">
+		{#snippet icon()}<FileText class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if data.companion.isActive !== false}
 				{#if data.paperlessEnabled}
 					<Button variant="outline" size="sm" onclick={() => (pickerOpen = true)}>
 						<FileText class="h-4 w-4 mr-1.5" />
@@ -187,9 +186,9 @@
 					class="hidden"
 					onchange={(e) => upload(e.currentTarget.files)}
 				/>
-			</div>
-		{/if}
-	</div>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	{#if uploadError}
 		<Alert variant="coral">
