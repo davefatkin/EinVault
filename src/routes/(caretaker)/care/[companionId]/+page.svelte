@@ -23,7 +23,7 @@
 
 	const locale = getLocale();
 	const quickLogTypes = activityTypeOptions(locale).filter((t) =>
-		['walk', 'meal', 'medication'].includes(t.value)
+		['walk', 'meal', 'bathroom'].includes(t.value)
 	);
 
 	function age(dob: string | null): string {
