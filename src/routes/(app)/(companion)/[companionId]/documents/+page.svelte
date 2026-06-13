@@ -15,6 +15,7 @@
 	import type { MessageKey } from '$lib/i18n/en';
 	import { localDateISO } from '$lib/date';
 	import { FileText, Upload, Download, Trash2, Pencil, Loader2 } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 
 	let { data } = $props();
 	const locale = getLocale();
@@ -233,9 +234,16 @@
 		</div>
 
 		{#if filtered.length === 0}
-			<p class="text-sm text-muted-foreground py-8 text-center">
-				{t(locale, 'page.documents.empty')}
-			</p>
+			<EmptyState
+				tint="coral"
+				title={t(locale, 'page.documents.empty')}
+				body={t(locale, 'page.documents.emptyBody')}
+			>
+				{#snippet icon()}<FileText class="h-5 w-5" />{/snippet}
+				{#snippet action()}
+					<Button onclick={() => fileInput?.click()}>{t(locale, 'page.documents.upload')}</Button>
+				{/snippet}
+			</EmptyState>
 		{:else}
 			<ul class="divide-y divide-border">
 				{#each filtered as doc (doc.id)}

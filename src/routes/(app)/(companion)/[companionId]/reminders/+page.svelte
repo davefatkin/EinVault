@@ -13,7 +13,8 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, HeartPulse } from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, HeartPulse, Bell } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
@@ -469,9 +470,19 @@
 
 	{#if active.length === 0}
 		<Card>
-			<CardContent class="text-center py-12">
-				<p class="text-4xl mb-3">🔔</p>
-				<p class="text-sm italic text-muted-foreground">{t(locale, 'page.reminders.noUpcoming')}</p>
+			<CardContent class="py-4">
+				<EmptyState
+					tint="primary"
+					title={t(locale, 'page.reminders.noUpcoming')}
+					body={t(locale, 'page.reminders.emptyBody')}
+				>
+					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+					{#snippet action()}
+						<Button onclick={() => (showForm = true)}
+							>{t(locale, 'page.reminders.addReminder')}</Button
+						>
+					{/snippet}
+				</EmptyState>
 			</CardContent>
 		</Card>
 	{:else}

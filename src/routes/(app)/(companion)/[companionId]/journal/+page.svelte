@@ -5,6 +5,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import JournalTimelineEntry from '$lib/components/journal/JournalTimelineEntry.svelte';
 	import { tick } from 'svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
@@ -247,17 +248,21 @@
 	</div>
 
 	{#if entries.length === 0}
-		<div class="rounded-xl border bg-card text-center py-12 px-6">
-			<NotebookPen class="h-10 w-10 mb-3 mx-auto text-muted-foreground" />
-			<p class="font-medium mb-1 text-foreground">{t(locale, 'page.journal.emptyTitle')}</p>
-			<p class="text-sm mb-4 text-muted-foreground">
-				{t(locale, 'page.journal.emptyBody', { name: companion.name })}
-			</p>
-			{#if companion.isActive !== false}
-				<Button href="/{companion.id}/journal/{data.today}"
-					>{t(locale, 'page.journal.writeFirstEntry')}</Button
-				>
-			{/if}
+		<div class="rounded-xl border bg-card">
+			<EmptyState
+				tint="gold"
+				title={t(locale, 'page.journal.emptyTitle')}
+				body={t(locale, 'page.journal.emptyBody', { name: companion.name })}
+			>
+				{#snippet icon()}<NotebookPen class="h-5 w-5" />{/snippet}
+				{#snippet action()}
+					{#if companion.isActive !== false}
+						<Button href="/{companion.id}/journal/{data.today}"
+							>{t(locale, 'page.journal.writeFirstEntry')}</Button
+						>
+					{/if}
+				{/snippet}
+			</EmptyState>
 		</div>
 	{:else}
 		{@const grouped = entries.reduce<{ month: string; items: Entry[] }[]>((acc, entry) => {

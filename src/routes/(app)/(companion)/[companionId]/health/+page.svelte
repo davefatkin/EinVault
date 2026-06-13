@@ -12,7 +12,8 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Scale, Plus, Pencil, Trash2, X, FileText } from '@lucide/svelte';
+	import { Scale, Plus, Pencil, Trash2, X, FileText, HeartPulse } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import WeightChart from '$lib/components/WeightChart.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -818,9 +819,17 @@
 		</p>
 		<div class="rounded-2xl border bg-card px-5 py-4">
 			{#if data.healthEvents.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.health.noHealthEvents')}
-				</p>
+				<EmptyState
+					tint="teal"
+					title={t(locale, 'page.health.noHealthEvents')}
+					body={t(locale, 'page.health.emptyBody')}
+				>
+					{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
+					{#snippet action()}
+						<Button onclick={() => (showHealthForm = true)}>{t(locale, 'nav.fab.logHealth')}</Button
+						>
+					{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-3">
 					{#each data.healthEvents as event (event.id)}
