@@ -304,6 +304,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Se connecter',
 	'page.login.signingIn': 'Connexion…',
 	'page.login.forgotPassword': 'Mot de passe oublié ?',
+	'page.login.welcomeHeading': 'Bon retour',
+	'page.login.welcomeSubtext': 'Connectez-vous pour reprendre où vous en étiez.',
+	'page.login.taglineSubtext':
+		'Le coffre auto-hébergé pour la santé, le journal et les soins quotidiens de votre compagnon.',
+	'page.login.brandFooter': 'Vos données. Votre serveur. Vos compagnons.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Réinitialiser votre mot de passe',
@@ -339,6 +344,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Créer un compte administrateur',
 	'page.setup.creatingAccount': 'Création du compte…',
 	'page.setup.firstRunNote': "Cette page n'est disponible qu'au premier lancement.",
+	'page.setup.brandSubtext': 'Configurez le coffre de votre compagnon.',
 
 	// Page: Error
 	'page.error.404.title': 'Page introuvable',

@@ -306,6 +306,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Iniciar sesión',
 	'page.login.signingIn': 'Iniciando sesión…',
 	'page.login.forgotPassword': '¿Olvidaste tu contraseña?',
+	'page.login.welcomeHeading': 'Bienvenido de nuevo',
+	'page.login.welcomeSubtext': 'Inicia sesión y retoma donde lo dejaste.',
+	'page.login.taglineSubtext':
+		'El baúl autoalojado para la salud, el diario y el cuidado diario de tu compañero.',
+	'page.login.brandFooter': 'Tus datos. Tu servidor. Tus compañeros.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Restablecer tu contraseña',
@@ -340,6 +345,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Crear cuenta de administrador',
 	'page.setup.creatingAccount': 'Creando cuenta…',
 	'page.setup.firstRunNote': 'Esta página solo está disponible en la primera ejecución.',
+	'page.setup.brandSubtext': 'Configura el baúl de tu compañero.',
 
 	// Page: Error
 	'page.error.404.title': 'Página no encontrada',

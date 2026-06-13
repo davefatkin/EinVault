@@ -303,6 +303,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Iniciar sessão',
 	'page.login.signingIn': 'A iniciar sessão…',
 	'page.login.forgotPassword': 'Esqueceu a senha?',
+	'page.login.welcomeHeading': 'Bem-vindo de volta',
+	'page.login.welcomeSubtext': 'Inicie sessão e continue de onde parou.',
+	'page.login.taglineSubtext':
+		'O cofre auto-hospedado para a saúde, o diário e os cuidados diários do seu companheiro.',
+	'page.login.brandFooter': 'Os teus dados. O teu servidor. Os teus companheiros.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Redefinir sua senha',
@@ -337,6 +342,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Criar conta de administrador',
 	'page.setup.creatingAccount': 'A criar conta…',
 	'page.setup.firstRunNote': 'Esta página só está disponível na primeira execução.',
+	'page.setup.brandSubtext': 'Configura o cofre do teu companheiro.',
 
 	// Page: Error
 	'page.error.404.title': 'Página não encontrada',

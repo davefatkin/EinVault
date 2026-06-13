@@ -306,6 +306,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Anmelden',
 	'page.login.signingIn': 'Anmeldung…',
 	'page.login.forgotPassword': 'Passwort vergessen?',
+	'page.login.welcomeHeading': 'Willkommen zurück',
+	'page.login.welcomeSubtext': 'Melde dich an und mach dort weiter, wo du aufgehört hast.',
+	'page.login.taglineSubtext':
+		'Der selbst gehostete Tresor für Gesundheit, Tagebuch und tägliche Pflege deines Begleiters.',
+	'page.login.brandFooter': 'Deine Daten. Dein Server. Deine Begleiter.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Passwort zurücksetzen',
@@ -340,6 +345,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Administratorkonto erstellen',
 	'page.setup.creatingAccount': 'Konto wird erstellt…',
 	'page.setup.firstRunNote': 'Diese Seite ist nur bei der Ersteinrichtung verfügbar.',
+	'page.setup.brandSubtext': 'Richte deinen Begleiter-Tresor ein.',
 
 	// Page: Error
 	'page.error.404.title': 'Seite nicht gefunden',

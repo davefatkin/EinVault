@@ -302,6 +302,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Accedi',
 	'page.login.signingIn': 'Accesso in corso…',
 	'page.login.forgotPassword': 'Password dimenticata?',
+	'page.login.welcomeHeading': 'Bentornato',
+	'page.login.welcomeSubtext': 'Accedi e riprendi da dove avevi interrotto.',
+	'page.login.taglineSubtext':
+		'Il forziere self-hosted per la salute, il diario e la cura quotidiana del tuo compagno.',
+	'page.login.brandFooter': 'I tuoi dati. Il tuo server. I tuoi compagni.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Reimposta la tua password',
@@ -336,6 +341,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Crea account amministratore',
 	'page.setup.creatingAccount': 'Creazione account…',
 	'page.setup.firstRunNote': 'Questa pagina è disponibile solo alla prima esecuzione.',
+	'page.setup.brandSubtext': 'Configura il forziere del tuo compagno.',
 
 	// Page: Error
 	'page.error.404.title': 'Pagina non trovata',

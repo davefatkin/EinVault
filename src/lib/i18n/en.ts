@@ -299,6 +299,11 @@ const messages = {
 	'page.login.signIn': 'Sign in',
 	'page.login.signingIn': 'Signing in…',
 	'page.login.forgotPassword': 'Forgot password?',
+	'page.login.welcomeHeading': 'Welcome back',
+	'page.login.welcomeSubtext': 'Sign in to pick up where you left off.',
+	'page.login.taglineSubtext':
+		"The self-hosted vault for your companion's health, journal, and daily care.",
+	'page.login.brandFooter': 'Your data. Your server. Your companions.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Reset your password',
@@ -333,6 +338,7 @@ const messages = {
 	'page.setup.createAccount': 'Create Admin Account',
 	'page.setup.creatingAccount': 'Creating Account…',
 	'page.setup.firstRunNote': 'This page is only available on first run.',
+	'page.setup.brandSubtext': 'Set up your companion vault.',
 
 	// Page: Error
 	'page.error.404.title': 'Page not found',
