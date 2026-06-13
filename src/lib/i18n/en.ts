@@ -822,6 +822,7 @@ const messages = {
 
 	// Aria labels
 	'aria.caretakerNav': 'Caretaker navigation',
+	'aria.adminNav': 'Admin sections',
 	'aria.mainNav': 'Main navigation',
 	'aria.moreActions': 'More actions',
 	'aria.deleteEntry': 'Delete entry',

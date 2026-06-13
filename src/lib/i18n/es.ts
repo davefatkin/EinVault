@@ -831,6 +831,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Aria labels
 	'aria.caretakerNav': 'Navegación del cuidador',
+	'aria.adminNav': 'Secciones de administración',
 	'aria.mainNav': 'Navegación principal',
 	'aria.moreActions': 'Más acciones',
 	'aria.deleteEntry': 'Eliminar entrada',
