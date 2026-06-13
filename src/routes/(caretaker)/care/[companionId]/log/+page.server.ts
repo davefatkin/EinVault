@@ -2,7 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, and, gte, inArray } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseDailyEventType } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
@@ -61,15 +61,49 @@ export const actions: Actions = {
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
-		await db.insert(schema.dailyEvents).values({
-			id: generateId(15),
-			companionId: params.companionId,
-			type,
-			notes,
-			durationMinutes,
-			loggedAt,
-			loggedBy: locals.user.id
-		});
+		// "Also log for" — only companions this caretaker is also assigned to, and active.
+		const additionalIds = data
+			.getAll('additionalCompanionIds')
+			.map((v) => String(v))
+			.filter((v) => v && v !== params.companionId);
+
+		let validAdditionalIds: string[] = [];
+		if (additionalIds.length > 0) {
+			const assignedRows = await db.query.companionCaretakers.findMany({
+				where: and(
+					eq(schema.companionCaretakers.userId, locals.user.id),
+					inArray(schema.companionCaretakers.companionId, additionalIds)
+				),
+				columns: { companionId: true }
+			});
+			const assignedIds = assignedRows.map((r) => r.companionId);
+			if (assignedIds.length > 0) {
+				const activeRows = await db.query.companions.findMany({
+					where: and(
+						inArray(schema.companions.id, assignedIds),
+						eq(schema.companions.isActive, true)
+					),
+					columns: { id: true }
+				});
+				validAdditionalIds = activeRows.map((r) => r.id);
+			}
+		}
+
+		const targetIds = [params.companionId, ...validAdditionalIds];
+		const eventGroupId = targetIds.length > 1 ? generateId(15) : null;
+
+		await db.insert(schema.dailyEvents).values(
+			targetIds.map((cid) => ({
+				id: generateId(15),
+				companionId: cid,
+				type,
+				notes,
+				durationMinutes,
+				loggedAt,
+				loggedBy: locals.user!.id,
+				eventGroupId
+			}))
+		);
 
 		return { success: true };
 	},

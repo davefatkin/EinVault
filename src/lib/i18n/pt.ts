@@ -805,6 +805,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.noUpcomingShifts': 'Nenhum turno agendado.',
 	'page.log.nextShiftStarts': 'O seu próximo turno começa',
 	'page.log.activityLogged': '✓ Atividade registada!',
+	'page.log.alsoLogFor': 'Registar também para…',
+	'page.log.alsoLogForHint': 'Selecione outros companheiros para registar a mesma atividade.',
 	'page.log.quickLogTitle': 'Registo rápido',
 	'page.log.activityLabel': 'Atividade',
 	'page.log.durationLabel': 'Duração (minutos)',

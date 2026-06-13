@@ -808,6 +808,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.noUpcomingShifts': 'Keine Schichten geplant.',
 	'page.log.nextShiftStarts': 'Deine nächste Schicht beginnt',
 	'page.log.activityLogged': '✓ Aktivität erfasst!',
+	'page.log.alsoLogFor': 'Auch erfassen für…',
+	'page.log.alsoLogForHint':
+		'Weitere Begleiter auswählen, um dieselbe Aktivität für sie zu erfassen.',
 	'page.log.quickLogTitle': 'Schnellerfassung',
 	'page.log.activityLabel': 'Aktivität',
 	'page.log.durationLabel': 'Dauer (Minuten)',

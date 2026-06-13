@@ -799,6 +799,8 @@ const messages = {
 	'page.log.noUpcomingShifts': 'No upcoming shifts are scheduled.',
 	'page.log.nextShiftStarts': 'Your next shift starts',
 	'page.log.activityLogged': '✓ Activity logged!',
+	'page.log.alsoLogFor': 'Also Log For…',
+	'page.log.alsoLogForHint': 'Select other companions to record the same activity for.',
 	'page.log.quickLogTitle': 'Quick log',
 	'page.log.activityLabel': 'Activity',
 	'page.log.durationLabel': 'Duration (minutes)',

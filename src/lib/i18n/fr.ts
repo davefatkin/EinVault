@@ -810,6 +810,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.noUpcomingShifts': 'Aucune garde programmée.',
 	'page.log.nextShiftStarts': 'Votre prochaine garde commence',
 	'page.log.activityLogged': '✓ Activité enregistrée !',
+	'page.log.alsoLogFor': 'Enregistrer aussi pour…',
+	'page.log.alsoLogForHint': 'Sélectionner d’autres compagnons pour enregistrer la même activité.',
 	'page.log.quickLogTitle': 'Enregistrement rapide',
 	'page.log.activityLabel': 'Activité',
 	'page.log.durationLabel': 'Durée (minutes)',

@@ -32,6 +32,12 @@
 	let selectedType = $state(initialType);
 	let duration = $state('');
 	let notes = $state('');
+
+	// "Also log for" — other companions this caretaker is assigned to (layout-filtered to active).
+	let siblingCompanions = $derived(
+		(data.companions ?? []).filter((c) => c.id !== data.companion.id)
+	);
+	let selectedAdditionalIds = $state<string[]>([]);
 	let hasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
@@ -108,6 +114,7 @@
 							if (result.type === 'success') {
 								duration = '';
 								notes = '';
+								selectedAdditionalIds = [];
 							}
 						}}
 					class="space-y-4"
@@ -141,6 +148,40 @@
 							{/each}
 						</div>
 					</fieldset>
+
+					{#if siblingCompanions.length > 0}
+						<fieldset class="space-y-1.5 border-0 p-0 m-0">
+							<legend class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.log.alsoLogFor')}</legend
+							>
+							<p class="text-xs text-muted-foreground">
+								{t(locale, 'page.log.alsoLogForHint')}
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each siblingCompanions as sibling (sibling.id)}
+									{@const checked = selectedAdditionalIds.includes(sibling.id)}
+									<label class="cursor-pointer">
+										<input
+											type="checkbox"
+											name="additionalCompanionIds"
+											value={sibling.id}
+											bind:group={selectedAdditionalIds}
+											class="sr-only peer"
+										/>
+										<span
+											class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
+											peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
+											{checked
+												? 'bg-primary/10 border-primary/30 text-primary'
+												: 'border-border text-muted-foreground hover:text-foreground'}"
+										>
+											{sibling.name}
+										</span>
+									</label>
+								{/each}
+							</div>
+						</fieldset>
+					{/if}
 
 					{#if hasDuration}
 						<div class="space-y-1.5 animate-slide-up">
