@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
@@ -20,7 +21,15 @@
 
 	const EVENT_TYPES = activityTypeOptions(locale);
 
-	let selectedType = $state('walk');
+	const TYPE_VALUES = EVENT_TYPES.map((t) => t.value);
+	type ActivityType = (typeof TYPE_VALUES)[number];
+	const initialType = (() => {
+		const q = page.url.searchParams.get('type');
+		return q && (TYPE_VALUES as string[]).includes(q)
+			? (q as ActivityType)
+			: ('walk' as ActivityType);
+	})();
+	let selectedType = $state(initialType);
 	let duration = $state('');
 	let notes = $state('');
 	let hasDuration = $derived(
@@ -68,7 +77,7 @@
 	{:else}
 		{#if form?.success}
 			<div
-				class="rounded-lg bg-moss-50 dark:bg-moss-950 border border-moss-200 dark:border-moss-800 px-4 py-3 text-sm text-moss-700 dark:text-moss-300 animate-fade-in"
+				class="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal animate-fade-in"
 			>
 				{t(locale, 'page.log.activityLogged')}
 			</div>
@@ -77,7 +86,7 @@
 		{#if form?.error}
 			<div
 				role="alert"
-				class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+				class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
 			>
 				{form.error}
 			</div>
