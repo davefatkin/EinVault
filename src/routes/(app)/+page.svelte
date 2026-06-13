@@ -356,93 +356,97 @@
 				{companionCountLabel(data.companions.length)}
 			</p>
 		</div>
-		<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
-			<Plus class="h-4 w-4" />
-			<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
-			<span class="sm:hidden">Add</span>
-		</Button>
+		{#if data.companions.length > 0}
+			<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
+				<Plus class="h-4 w-4" />
+				<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
+				<span class="sm:hidden">Add</span>
+			</Button>
+		{/if}
 	</div>
 
-	<!-- 2. Needs-attention banner -->
-	{#if attentionItems.length > 0}
-		<section
-			aria-label={t(locale, 'overview.needsAttention')}
-			class="rounded-xl border bg-gradient-to-br from-coral/10 to-primary/5 p-3 space-y-1"
-		>
-			<div class="flex items-center gap-1.5 mb-2">
-				<Zap class="h-3.5 w-3.5 text-coral shrink-0" />
-				<h2 class="text-xs font-bold text-coral uppercase tracking-wide">
-					{t(locale, 'overview.needsAttention')}
-				</h2>
-			</div>
-			{#each attentionItems as { r, urgency } (r.id)}
-				{@const companion = companionsById[r.companionId]}
-				<div
-					class="flex items-center gap-2 py-1.5 border-t border-border/40 first-of-type:border-t-0"
-				>
-					{#if companion}
-						<a
-							href="/{companion.id}"
-							onclick={(e) => e.stopPropagation()}
-							class="shrink-0"
-							tabindex="-1"
-							aria-hidden="true"
-						>
-							<CompanionAvatar
-								companionId={companion.id}
-								avatarPath={companion.avatarPath}
-								name={companion.name}
-								size="sm"
-							/>
-						</a>
-					{/if}
-					<button
-						type="button"
-						onclick={() => openReminderDetail(r)}
-						class="flex items-center gap-2 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+	<!-- 2. Needs-attention banner (hidden on first run) -->
+	{#if data.companions.length > 0}
+		{#if attentionItems.length > 0}
+			<section
+				aria-label={t(locale, 'overview.needsAttention')}
+				class="rounded-xl border bg-gradient-to-br from-coral/10 to-primary/5 p-3 space-y-1"
+			>
+				<div class="flex items-center gap-1.5 mb-2">
+					<Zap class="h-3.5 w-3.5 text-coral shrink-0" />
+					<h2 class="text-xs font-bold text-coral uppercase tracking-wide">
+						{t(locale, 'overview.needsAttention')}
+					</h2>
+				</div>
+				{#each attentionItems as { r, urgency } (r.id)}
+					{@const companion = companionsById[r.companionId]}
+					<div
+						class="flex items-center gap-2 py-1.5 border-t border-border/40 first-of-type:border-t-0"
 					>
 						{#if companion}
-							<span class="text-sm font-semibold text-foreground shrink-0">{companion.name}</span>
+							<a
+								href="/{companion.id}"
+								onclick={(e) => e.stopPropagation()}
+								class="shrink-0"
+								tabindex="-1"
+								aria-hidden="true"
+							>
+								<CompanionAvatar
+									companionId={companion.id}
+									avatarPath={companion.avatarPath}
+									name={companion.name}
+									size="sm"
+								/>
+							</a>
 						{/if}
-						<span class="text-sm text-muted-foreground truncate">{r.title}</span>
-						<Badge
-							variant={urgency === 'overdue' ? 'coral' : 'gold'}
-							class="shrink-0 text-[10px] py-0 px-1.5"
+						<button
+							type="button"
+							onclick={() => openReminderDetail(r)}
+							class="flex items-center gap-2 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
 						>
-							{urgencyLabel(urgency)}
-						</Badge>
-					</button>
-					<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
-					<div onclick={(e) => e.stopPropagation()} role="none">
-						<ReminderCompleteButtons
-							onDone={() => handleComplete(r.id, r.title, r.type)}
-							onDoneAndLog={() => submitWithAndEvent(r.id)}
-							allowLogEvent={REMINDER_TO_HEALTH_TYPE[
-								r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-							] !== null}
-						/>
+							{#if companion}
+								<span class="text-sm font-semibold text-foreground shrink-0">{companion.name}</span>
+							{/if}
+							<span class="text-sm text-muted-foreground truncate">{r.title}</span>
+							<Badge
+								variant={urgency === 'overdue' ? 'coral' : 'gold'}
+								class="shrink-0 text-[10px] py-0 px-1.5"
+							>
+								{urgencyLabel(urgency)}
+							</Badge>
+						</button>
+						<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
+						<div onclick={(e) => e.stopPropagation()} role="none">
+							<ReminderCompleteButtons
+								onDone={() => handleComplete(r.id, r.title, r.type)}
+								onDoneAndLog={() => submitWithAndEvent(r.id)}
+								allowLogEvent={REMINDER_TO_HEALTH_TYPE[
+									r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+								] !== null}
+							/>
+						</div>
 					</div>
-				</div>
-			{/each}
+				{/each}
 
-			<!-- Hidden dismiss forms -->
-			{#each attentionItems as { r } (r.id + '-form')}
-				<form
-					method="POST"
-					action="?/complete"
-					use:enhance={clearSubmittingFlag}
-					use:registerDismissForm={{ id: r.id, registry: dismissFormRegistry }}
-					class="hidden"
-				>
-					<input type="hidden" name="id" value={r.id} />
-				</form>
-			{/each}
-		</section>
-	{:else}
-		<p class="text-sm text-muted-foreground flex items-center gap-1.5">
-			<Check class="h-4 w-4 text-teal" />
-			{t(locale, 'overview.allCaughtUp')}
-		</p>
+				<!-- Hidden dismiss forms -->
+				{#each attentionItems as { r } (r.id + '-form')}
+					<form
+						method="POST"
+						action="?/complete"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: r.id, registry: dismissFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={r.id} />
+					</form>
+				{/each}
+			</section>
+		{:else}
+			<p class="text-sm text-muted-foreground flex items-center gap-1.5">
+				<Check class="h-4 w-4 text-teal" />
+				{t(locale, 'overview.allCaughtUp')}
+			</p>
+		{/if}
 	{/if}
 
 	<!-- 3. Your companions -->
