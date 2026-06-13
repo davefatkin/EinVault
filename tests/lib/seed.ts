@@ -13,7 +13,12 @@ export const SEED = {
 	caretaker: { id: 'seed-caretaker', username: 'seed-caretaker', displayName: 'Seed Caretaker' },
 	resetUser: { id: 'seed-reset', username: 'seed-reset', displayName: 'Seed Reset' },
 	companions: {
-		biscuit: { id: 'seed-comp-biscuit', name: 'Biscuit' },
+		biscuit: {
+			id: 'seed-comp-biscuit',
+			name: 'Biscuit',
+			feedingSchedule: 'Morning kibble, evening kibble',
+			medicationSchedule: 'Heartworm chew monthly'
+		},
 		waffles: { id: 'seed-comp-waffles', name: 'Waffles' }
 	}
 } as const;

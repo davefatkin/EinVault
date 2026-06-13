@@ -421,6 +421,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.schedulesHint': 'Wird Betreuern auf ihrer Übersichtsseite angezeigt.',
 	'page.companion.edit.labelFeedingSchedule': 'Fütterungsplan',
 	'page.companion.edit.labelWalkSchedule': 'Spaziergangsplan',
+	'page.companion.edit.labelMedicationSchedule': 'Medikamentenplan',
 	'page.companion.edit.cardContacts': 'Kontakte',
 	'page.companion.edit.labelVetName': 'Tierarztname',
 	'page.companion.edit.labelVetPhone': 'Tierarzt-Telefon',
@@ -433,6 +434,8 @@ const messages: Record<keyof Messages, string> = {
 		'z.B. 7:00 Uhr: 1 Tasse Trockenfutter\n18:00 Uhr: 1 Tasse Trockenfutter\nLeckerlis nach Spaziergängen OK',
 	'page.companion.edit.placeholderWalkSchedule':
 		'z.B. Morgens ~7 Uhr, 30 Min.\nAbends ~17:30 Uhr, 20–30 Min.\nHundepark unter der Woche meiden',
+	'page.companion.edit.placeholderMedicationSchedule':
+		'z.B. Herzwurm-Tablette am 1. des Monats\nGelenkpräparat täglich zum Frühstück\nAugentropfen morgens und abends',
 	'page.companion.edit.placeholderSitterNotes':
 		'Alles, was ein Betreuer wissen sollte: Eigenheiten, Ängste, Lieblingsorte…',
 	'page.companion.edit.placeholderMicrochip': '15-stellige ID',
@@ -546,7 +549,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.weightAsOf': 'Stand',
 	'page.dashboard.caretaker.cardFeeding': 'Fütterungsplan',
 	'page.dashboard.caretaker.cardWalk': 'Spaziergangsplan',
-	'page.dashboard.caretaker.cardMedications': 'Medikamente',
+	'page.dashboard.caretaker.cardMedicationSchedule': 'Medikamentenplan',
 	'page.dashboard.caretaker.cardReminders': 'Anstehende Erinnerungen',
 	'page.dashboard.caretaker.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.caretaker.reminderOverdue': 'Überfällig',

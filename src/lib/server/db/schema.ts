@@ -159,6 +159,7 @@ export const companions = sqliteTable(
 		bio: text('bio'),
 		feedingSchedule: text('feeding_schedule'),
 		walkSchedule: text('walk_schedule'),
+		medicationSchedule: text('medication_schedule'),
 		emergencyContactName: text('emergency_contact_name'),
 		emergencyContactPhone: text('emergency_contact_phone'),
 		vetName: text('vet_name'),

@@ -17,15 +17,6 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	});
 	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
-	const medications = await db.query.healthEvents.findMany({
-		where: and(
-			eq(schema.healthEvents.companionId, params.companionId),
-			eq(schema.healthEvents.type, 'medication')
-		),
-		orderBy: (h, { desc }) => [desc(h.occurredAt)],
-		with: { logger: { columns: { displayName: true } } }
-	});
-
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
 	const todayActivity = isOnShift
@@ -83,7 +74,6 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 
 	return {
 		companion,
-		medications,
 		todayActivity,
 		latestWeight: latestWeight ?? null,
 		owners,

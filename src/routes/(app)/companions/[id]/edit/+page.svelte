@@ -286,6 +286,18 @@
 						rows={4}
 					/>
 				</div>
+				<div class="space-y-1.5">
+					<Label for="medicationSchedule"
+						>{t(locale, 'page.companion.edit.labelMedicationSchedule')}</Label
+					>
+					<MarkdownTextarea
+						id="medicationSchedule"
+						name="medicationSchedule"
+						value={companion.medicationSchedule ?? ''}
+						placeholder={t(locale, 'page.companion.edit.placeholderMedicationSchedule')}
+						rows={4}
+					/>
+				</div>
 			</section>
 
 			<Separator />

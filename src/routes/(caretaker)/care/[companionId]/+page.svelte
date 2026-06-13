@@ -18,8 +18,7 @@
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let { companion, medications, todayActivity, latestWeight, owners, upcomingReminders } =
-		$derived(data);
+	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
 	const quickLogTypes = activityTypeOptions(locale).filter((opt) =>
@@ -514,13 +513,15 @@
 	{/if}
 
 	<!-- 4a. Schedules (reference) -->
-	{#if companion.feedingSchedule || companion.walkSchedule}
+	{#if companion.feedingSchedule || companion.walkSchedule || companion.medicationSchedule}
+		{@const scheduleLabels = [
+			companion.feedingSchedule && t(locale, 'page.dashboard.caretaker.cardFeeding'),
+			companion.walkSchedule && t(locale, 'page.dashboard.caretaker.cardWalk'),
+			companion.medicationSchedule && t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')
+		].filter(Boolean)}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				{t(locale, 'page.dashboard.caretaker.cardFeeding')} &amp; {t(
-					locale,
-					'page.dashboard.caretaker.cardWalk'
-				)}
+				{scheduleLabels.join(' & ')}
 			</h2>
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				{#if companion.feedingSchedule}
@@ -545,6 +546,17 @@
 						</div>
 					</div>
 				{/if}
+				{#if companion.medicationSchedule}
+					<div class="rounded-xl border border-border bg-card p-4">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>💊</span>
+							{t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(companion.medicationSchedule)}
+						</div>
+					</div>
+				{/if}
 			</div>
 		</section>
 	{/if}
@@ -557,31 +569,6 @@
 			</h2>
 			<div class="prose prose-sm dark:prose-invert max-w-none">
 				{@html renderMarkdown(companion.notesForSitter)}
-			</div>
-		</section>
-	{/if}
-
-	<!-- 4c. Medications (reference) -->
-	{#if medications.length > 0}
-		<section>
-			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				💊 {t(locale, 'page.dashboard.caretaker.cardMedications')}
-			</h2>
-			<div class="rounded-xl border border-border bg-card divide-y divide-border">
-				{#each medications as med (med.id)}
-					<div class="flex gap-3 text-sm px-4 py-3">
-						<div class="flex-1">
-							<p class="font-medium">{med.title}</p>
-							{#if med.notes}
-								<div
-									class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
-								>
-									{@html renderMarkdown(med.notes)}
-								</div>
-							{/if}
-						</div>
-					</div>
-				{/each}
 			</div>
 		</section>
 	{/if}

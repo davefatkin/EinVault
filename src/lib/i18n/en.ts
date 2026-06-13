@@ -414,6 +414,7 @@ const messages = {
 	'page.companion.edit.schedulesHint': 'Shown to caretakers on their overview page.',
 	'page.companion.edit.labelFeedingSchedule': 'Feeding schedule',
 	'page.companion.edit.labelWalkSchedule': 'Walk schedule',
+	'page.companion.edit.labelMedicationSchedule': 'Medication schedule',
 	'page.companion.edit.cardContacts': 'Contacts',
 	'page.companion.edit.labelVetName': 'Vet name',
 	'page.companion.edit.labelVetPhone': 'Vet phone',
@@ -426,6 +427,8 @@ const messages = {
 		'e.g. 7:00am: 1 cup kibble\n6:00pm: 1 cup kibble\nTreats OK after walks',
 	'page.companion.edit.placeholderWalkSchedule':
 		'e.g. Morning ~7am, 30 min\nEvening ~5:30pm, 20–30 min\nAvoid the dog park on weekdays',
+	'page.companion.edit.placeholderMedicationSchedule':
+		'e.g. Heartworm chew 1st of the month\nJoint supplement daily with breakfast\nEye drops morning and night',
 	'page.companion.edit.placeholderSitterNotes':
 		'Anything a sitter or walker should know: quirks, fears, favorite spots…',
 	'page.companion.edit.placeholderMicrochip': '15-digit ID',
@@ -539,7 +542,7 @@ const messages = {
 	'page.dashboard.caretaker.weightAsOf': 'as of',
 	'page.dashboard.caretaker.cardFeeding': 'Feeding Schedule',
 	'page.dashboard.caretaker.cardWalk': 'Walk Schedule',
-	'page.dashboard.caretaker.cardMedications': 'Medications',
+	'page.dashboard.caretaker.cardMedicationSchedule': 'Medication Schedule',
 	'page.dashboard.caretaker.cardReminders': 'Upcoming Reminders',
 	'page.dashboard.caretaker.remindersEmpty': 'No upcoming reminders.',
 	'page.dashboard.caretaker.reminderOverdue': 'Overdue',

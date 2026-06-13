@@ -421,6 +421,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.schedulesHint': "Affichés aux gardiens sur leur page d'aperçu.",
 	'page.companion.edit.labelFeedingSchedule': 'Horaire des repas',
 	'page.companion.edit.labelWalkSchedule': 'Horaire des promenades',
+	'page.companion.edit.labelMedicationSchedule': 'Horaire des médicaments',
 	'page.companion.edit.cardContacts': 'Contacts',
 	'page.companion.edit.labelVetName': 'Nom du vétérinaire',
 	'page.companion.edit.labelVetPhone': 'Téléphone du vétérinaire',
@@ -433,6 +434,8 @@ const messages: Record<keyof Messages, string> = {
 		'ex. 7h00 : 1 tasse de croquettes\n18h00 : 1 tasse de croquettes\nFriandises OK après les promenades',
 	'page.companion.edit.placeholderWalkSchedule':
 		'ex. Matin ~7h, 30 min\nSoir ~17h30, 20–30 min\nÉviter le parc canin en semaine',
+	'page.companion.edit.placeholderMedicationSchedule':
+		'ex. Comprimé antiparasitaire le 1er du mois\nComplément articulaire chaque matin\nCollyre matin et soir',
 	'page.companion.edit.placeholderSitterNotes':
 		'Tout ce qu\u2019un gardien devrait savoir : habitudes, peurs, endroits préférés…',
 	'page.companion.edit.placeholderMicrochip': 'Identifiant à 15 chiffres',
@@ -546,7 +549,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.weightAsOf': 'au',
 	'page.dashboard.caretaker.cardFeeding': 'Horaire des repas',
 	'page.dashboard.caretaker.cardWalk': 'Horaire des promenades',
-	'page.dashboard.caretaker.cardMedications': 'Médicaments',
+	'page.dashboard.caretaker.cardMedicationSchedule': 'Horaire des médicaments',
 	'page.dashboard.caretaker.cardReminders': 'Rappels à venir',
 	'page.dashboard.caretaker.remindersEmpty': 'Aucun rappel à venir.',
 	'page.dashboard.caretaker.reminderOverdue': 'En retard',
