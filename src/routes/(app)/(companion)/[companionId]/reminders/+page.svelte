@@ -478,9 +478,11 @@
 				>
 					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
 					{#snippet action()}
-						<Button onclick={() => (showForm = true)}
-							>{t(locale, 'page.reminders.addReminder')}</Button
-						>
+						{#if data.companion.isActive !== false}
+							<Button onclick={() => (showForm = true)}
+								>{t(locale, 'page.reminders.addReminder')}</Button
+							>
+						{/if}
 					{/snippet}
 				</EmptyState>
 			</CardContent>

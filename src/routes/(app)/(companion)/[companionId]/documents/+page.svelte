@@ -241,7 +241,9 @@
 			>
 				{#snippet icon()}<FileText class="h-5 w-5" />{/snippet}
 				{#snippet action()}
-					<Button onclick={() => fileInput?.click()}>{t(locale, 'page.documents.upload')}</Button>
+					{#if data.companion.isActive !== false}
+						<Button onclick={() => fileInput?.click()}>{t(locale, 'page.documents.upload')}</Button>
+					{/if}
 				{/snippet}
 			</EmptyState>
 		{:else}

@@ -826,8 +826,11 @@
 				>
 					{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
 					{#snippet action()}
-						<Button onclick={() => (showHealthForm = true)}>{t(locale, 'nav.fab.logHealth')}</Button
-						>
+						{#if data.companion.isActive !== false}
+							<Button onclick={() => (showHealthForm = true)}
+								>{t(locale, 'nav.fab.logHealth')}</Button
+							>
+						{/if}
 					{/snippet}
 				</EmptyState>
 			{:else}
