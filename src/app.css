@@ -418,6 +418,14 @@
 	.prose hr {
 		border-color: hsl(var(--border));
 	}
+
+	/* Auth brand hero gradient (login + setup panels, forgot/reset backdrop) */
+	.bg-auth-brand {
+		background:
+			radial-gradient(130% 130% at 0% 0%, hsl(252 100% 65% / 0.55), transparent 55%),
+			radial-gradient(130% 130% at 100% 100%, hsl(13 100% 67% / 0.5), transparent 55%),
+			hsl(237 28% 11%);
+	}
 }
 
 /* ============================================================
