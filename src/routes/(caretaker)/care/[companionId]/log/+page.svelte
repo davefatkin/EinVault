@@ -113,9 +113,11 @@
 					class="space-y-4"
 				>
 					<!-- Activity type pills -->
-					<div class="space-y-2">
-						<Label>{t(locale, 'page.log.activityLabel')}</Label>
-						<div class="grid grid-cols-3 gap-2">
+					<fieldset class="space-y-2 border-0 p-0 m-0">
+						<legend class="text-sm font-medium text-foreground"
+							>{t(locale, 'page.log.activityLabel')}</legend
+						>
+						<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 							{#each EVENT_TYPES as t (t.value)}
 								<label class="cursor-pointer">
 									<input
@@ -123,11 +125,12 @@
 										name="type"
 										value={t.value}
 										bind:group={selectedType}
-										class="sr-only"
+										class="sr-only peer"
 									/>
 									<span
 										class="flex items-center justify-center gap-1 rounded-xl border px-3 py-3
 									text-sm font-medium transition-all text-center
+									peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 									{selectedType === t.value
 											? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
 											: 'border-border text-muted-foreground hover:border-border hover:bg-accent hover:text-accent-foreground'}"
@@ -137,7 +140,7 @@
 								</label>
 							{/each}
 						</div>
-					</div>
+					</fieldset>
 
 					{#if hasDuration}
 						<div class="space-y-1.5 animate-slide-up">
