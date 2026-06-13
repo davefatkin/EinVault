@@ -258,19 +258,20 @@ test('shift start email fires for caretaker', async ({ world, browser }) => {
 		.filter({ hasText: SEED.caretaker.displayName });
 	await expect(caretakerRow).toBeVisible({ timeout: 8_000 });
 
-	await caretakerRow.getByRole('button', { name: /more actions/i }).click();
-	await adminPage.getByRole('menuitem', { name: /shifts/i }).click();
+	await caretakerRow.getByRole('button', { name: /manage/i }).click();
+	const dialog = adminPage.getByRole('dialog');
+	await expect(dialog).toBeVisible({ timeout: 4_000 });
 
-	const panel = caretakerRow.locator('div.rounded-lg.border.border-border.bg-muted\\/30');
-	await expect(panel).toBeVisible({ timeout: 4_000 });
+	const addForm = dialog.locator('form[action="?/addShift"]');
+	await expect(addForm).toBeVisible({ timeout: 4_000 });
 
-	await panel.locator('input[name="startAt"]').fill(inNineHours());
-	await panel.locator('input[name="endAt"]').fill(inTenHours());
-	await panel.locator('input[name="notes"]').fill('e2e-notify-shift');
-	await panel.getByRole('button', { name: /add shift/i }).click();
+	await addForm.locator('input[name="startAt"]').fill(inNineHours());
+	await addForm.locator('input[name="endAt"]').fill(inTenHours());
+	await addForm.locator('input[name="notes"]').fill('e2e-notify-shift');
+	await addForm.getByRole('button', { name: /add shift/i }).click();
 
-	// After submission the panel re-renders with the new shift row.
-	await expect(panel.getByText('e2e-notify-shift')).toBeVisible({ timeout: 10_000 });
+	// After submission the drawer stays open and the new shift row appears.
+	await expect(dialog.getByText('e2e-notify-shift')).toBeVisible({ timeout: 10_000 });
 	await adminCtx.close();
 
 	// Wait for the scheduler to emit the shift-start email.
