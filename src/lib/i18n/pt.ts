@@ -786,6 +786,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.menuDeactivate': 'Desativar',
 	'page.admin.menuActivate': 'Ativar',
 	'page.admin.menuResetPassword': 'Redefinir palavra-passe',
+	'page.admin.manage': 'Gerir',
+	'page.admin.drawerProfile': 'Perfil',
 	'page.admin.editUserLabel': 'Editar {name}',
 	'page.admin.assignCompanionsLabel': 'Atribuir companheiros a {name}',
 	'page.admin.noActiveCompanions': 'Sem companheiros ativos.',

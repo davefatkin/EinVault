@@ -780,6 +780,8 @@ const messages = {
 	'page.admin.menuDeactivate': 'Deactivate',
 	'page.admin.menuActivate': 'Activate',
 	'page.admin.menuResetPassword': 'Reset Password',
+	'page.admin.manage': 'Manage',
+	'page.admin.drawerProfile': 'Profile',
 	'page.admin.editUserLabel': 'Edit {name}',
 	'page.admin.assignCompanionsLabel': 'Assign companions to {name}',
 	'page.admin.noActiveCompanions': 'No active companions.',
