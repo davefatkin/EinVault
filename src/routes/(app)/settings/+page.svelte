@@ -39,7 +39,7 @@
 	<title>{t(locale, 'page.settings.title')} | EinVault</title>
 </svelte:head>
 
-<div class="max-w-lg mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6">
 	<div>
 		<h1 class="font-display text-2xl font-bold text-foreground">
 			{t(locale, 'page.settings.title')}

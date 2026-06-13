@@ -64,7 +64,7 @@
 	<title>{t(locale, 'page.companion.edit.pageTitle', { name: companion.name })} | EinVault</title>
 </svelte:head>
 
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
 			<Button
