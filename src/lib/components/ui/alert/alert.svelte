@@ -8,8 +8,7 @@
 				default: 'bg-card text-foreground',
 				destructive:
 					'border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/20 dark:text-red-400',
-				success:
-					'border-moss-200 bg-moss-50 text-moss-800 dark:border-moss-800 dark:bg-moss-950/50 dark:text-moss-300'
+				success: 'border-teal/30 bg-teal/10 text-teal'
 			}
 		},
 		defaultVariants: { variant: 'default' }
