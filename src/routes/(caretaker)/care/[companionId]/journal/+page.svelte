@@ -263,7 +263,7 @@
 				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse"
 						>{t(locale, 'page.journal.caretaker.savingStatus')}</span
 					>
-				{:else if saveStatus === 'saved'}<span class="text-teal-600 dark:text-teal-400"
+				{:else if saveStatus === 'saved'}<span class="text-teal"
 						>{t(locale, 'page.journal.caretaker.savedStatus')}</span
 					>
 				{:else if saveStatus === 'error'}<span class="text-destructive"
