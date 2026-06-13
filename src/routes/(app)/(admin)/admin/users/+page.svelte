@@ -154,7 +154,7 @@
 							)}</Badge
 						>
 						{#if !user.isActive}
-							<Badge variant="destructive">{t(locale, 'page.admin.inactiveBadge')}</Badge>
+							<Badge variant="destructiveSoft">{t(locale, 'page.admin.inactiveBadge')}</Badge>
 						{/if}
 					</div>
 					{#if user.email || user.phone}

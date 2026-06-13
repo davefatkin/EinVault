@@ -375,15 +375,19 @@
 									</form>
 								{:else}
 									<div
-										class="flex items-center justify-between gap-3 text-sm rounded-lg border border-border bg-background px-3 py-2"
+										class="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2"
 									>
-										<div class="min-w-0 text-foreground">
-											<LocalTime date={shift.startAt} format="datetime" />
-											<span class="mx-1 text-muted-foreground">→</span>
-											<LocalTime date={shift.endAt} format="datetime" />
-											{#if shift.notes}<span class="ml-2 text-xs text-muted-foreground"
-													>{shift.notes}</span
-												>{/if}
+										<div class="min-w-0 text-foreground text-xs leading-snug">
+											<div class="truncate">
+												<LocalTime date={shift.startAt} format="datetime" />
+											</div>
+											<!-- shift end shown on its own line below -->
+											<div class="truncate text-muted-foreground">
+												→ <LocalTime date={shift.endAt} format="datetime" />
+											</div>
+											{#if shift.notes}<div class="truncate text-muted-foreground">
+													{shift.notes}
+												</div>{/if}
 										</div>
 										<div class="flex gap-1 shrink-0">
 											<Button
