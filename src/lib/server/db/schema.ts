@@ -49,7 +49,11 @@ export const users = sqliteTable(
 		// non-empty topic is the opt-in for push notifications; the user
 		// receives both categories (reminders, shift alerts) within their
 		// role's visibility scope. Null = no pushes.
-		ntfyTopic: text('ntfy_topic')
+		ntfyTopic: text('ntfy_topic'),
+		// Profile photo — mirrors the companion avatar columns.
+		avatarPath: text('avatar_path'),
+		avatarProvider: text('avatar_provider'),
+		avatarStorageKey: text('avatar_storage_key')
 	},
 	(t) => [
 		uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject),
@@ -155,6 +159,7 @@ export const companions = sqliteTable(
 		bio: text('bio'),
 		feedingSchedule: text('feeding_schedule'),
 		walkSchedule: text('walk_schedule'),
+		medicationSchedule: text('medication_schedule'),
 		emergencyContactName: text('emergency_contact_name'),
 		emergencyContactPhone: text('emergency_contact_phone'),
 		vetName: text('vet_name'),

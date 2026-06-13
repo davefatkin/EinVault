@@ -45,6 +45,7 @@ export const actions: Actions = {
 				// Caretaker fields
 				feedingSchedule: String(data.get('feedingSchedule') ?? '').trim() || null,
 				walkSchedule: String(data.get('walkSchedule') ?? '').trim() || null,
+				medicationSchedule: String(data.get('medicationSchedule') ?? '').trim() || null,
 				emergencyContactName: String(data.get('emergencyContactName') ?? '').trim() || null,
 				emergencyContactPhone: String(data.get('emergencyContactPhone') ?? '').trim() || null,
 				vetName: String(data.get('vetName') ?? '').trim() || null,
@@ -77,6 +78,6 @@ export const actions: Actions = {
 			})
 			.where(eq(schema.companions.id, params.id));
 
-		redirect(302, '/settings');
+		redirect(302, '/admin/companions');
 	}
 };

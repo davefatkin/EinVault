@@ -225,7 +225,52 @@ test.describe('settings', () => {
 	});
 
 	// -------------------------------------------------------------------------
-	// 5. Notification checkbox persists.
+	// 5. Profile photo: upload and remove.
+	// Uses setInputFiles to inject a tiny 1x1 PNG buffer into the hidden file
+	// input. Checks for the success toast and that an <img> appears in the
+	// avatar area. Then removes and checks the removal toast.
+	// -------------------------------------------------------------------------
+	test('profile photo upload and remove', async ({ asMember }) => {
+		await asMember.goto('/settings');
+		await expect(asMember).toHaveURL(/\/settings/, { timeout: 10_000 });
+
+		// The "Profile photo" label and "Change photo" button should be present.
+		await expect(asMember.getByText(/profile photo/i).first()).toBeVisible({ timeout: 6_000 });
+		const changeBtn = asMember.getByRole('button', { name: /change photo/i });
+		await expect(changeBtn).toBeVisible({ timeout: 6_000 });
+
+		// Inject a minimal valid PNG (1x1 white pixel) via the hidden file input.
+		const tinyPng = Buffer.from(
+			'89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de' +
+				'0000000c49444154789c63f8ffff3f0005fe02fe0def46b80000000049454e44ae426082',
+			'hex'
+		);
+		const fileInput = asMember.locator('input[type="file"][name="avatar"]');
+		await fileInput.setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: tinyPng });
+
+		// Success toast should appear.
+		await expect(asMember.getByText(/profile photo updated/i)).toBeVisible({ timeout: 10_000 });
+
+		// An img element should now be visible in the UserAvatar area (may appear in
+		// multiple places — nav + settings card — after invalidateAll).
+		await expect(asMember.locator(`img[src*="/api/users/"]`).first()).toBeVisible({
+			timeout: 6_000
+		});
+
+		// Remove button should now be present.
+		const removeBtn = asMember.getByRole('button', { name: /remove/i });
+		await expect(removeBtn).toBeVisible({ timeout: 4_000 });
+
+		// Remove the photo.
+		await removeBtn.click();
+		await expect(asMember.getByText(/profile photo removed/i)).toBeVisible({ timeout: 10_000 });
+
+		// The avatar img should be gone (back to gradient initial).
+		await expect(asMember.locator(`img[src*="/api/users/"]`)).toHaveCount(0, { timeout: 6_000 });
+	});
+
+	// -------------------------------------------------------------------------
+	// 6. Notification checkbox persists.
 	// The seed member has an email address. Mail is enabled in the worker env.
 	// The reminder-email checkbox is auto-submitted via onchange → formEl.requestSubmit().
 	// -------------------------------------------------------------------------

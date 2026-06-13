@@ -19,6 +19,7 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.done': 'Feito',
 	'common.reminder.dismissedAnnounce': '{title} dispensado',
 	'common.reminder.logEvent': 'Feito e registar evento',
+	'common.reminder.logEventShort': 'Evento',
 	'common.reminder.logEventAria': 'Marcar como feito e registar um evento de saúde',
 	'common.reminder.toastUndoLabel': 'Desfazer',
 	'common.reminder.toastDismiss': 'Fechar',
@@ -173,14 +174,25 @@ const messages: Record<keyof Messages, string> = {
 	'nav.documents': 'Documentos',
 	'nav.settings': 'Definições',
 	'nav.admin': 'Administração',
+	'nav.adminCompanions': 'Companheiros',
 	'nav.signOut': 'Terminar sessão',
 
 	// Navigation: caretaker-specific
 	'nav.caretaker.overview': 'Resumo',
 	'nav.caretaker.logActivity': 'Registar atividade',
+	'nav.caretaker.addJournal': 'Adicionar entrada de diário',
+	'nav.search': 'Pesquisar',
+	'nav.you': 'Você',
+	'nav.members': 'Membros',
+	'nav.fab.quickAdd': 'Adicionar rápido',
+	'nav.fab.addJournal': 'Adicionar entrada de diário',
+	'nav.fab.logHealth': 'Registar evento de saúde',
+	'nav.fab.addReminder': 'Adicionar lembrete',
+	'nav.fab.recordWeight': 'Registar peso',
 
 	// Layout: app
 	'layout.archived': '(arquivado)',
+	'layout.companionsHeading': 'Companheiros',
 	'layout.addCompanion': 'Adicionar companheiro',
 	'layout.addFirstCompanion': 'Adicione o seu primeiro companheiro',
 	'layout.switchCompanion': 'Mudar de companheiro',
@@ -208,14 +220,17 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.labelNewPassword': 'Nova palavra-passe',
 	'page.settings.labelConfirmPassword': 'Confirmar nova palavra-passe',
 	'page.settings.saveChanges': 'Guardar alterações',
-	'page.settings.companionsCard': 'Companheiros',
+	'page.settings.profilePhoto': 'Foto de perfil',
+	'page.settings.changePhoto': 'Mudar foto',
+	'page.settings.removePhoto': 'Remover',
+	'page.settings.photoUpdated': 'Foto de perfil atualizada.',
+	'page.settings.photoRemoved': 'Foto de perfil removida.',
 	'page.settings.addCompanion': 'Adicionar companheiro',
 	'page.settings.noCompanions': 'Ainda sem companheiros.',
+	'page.settings.companionsEmptyBody':
+		'Adiciona um companheiro para começar a acompanhar os seus cuidados.',
 	'page.settings.pastCompanionsCard': 'Companheiros anteriores',
-	'page.settings.companionRestored': 'Companheiro restaurado com sucesso.',
 	'page.settings.archivedOn': 'Arquivado em',
-	'page.settings.viewCompanion': 'Ver',
-	'page.settings.restoreCompanion': 'Restaurar',
 	'page.settings.roleLabel': 'Função',
 	'page.settings.shiftsCard': 'Os meus turnos',
 	'page.settings.noUpcomingShifts': 'Nenhum turno agendado.',
@@ -223,6 +238,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.shiftGroupThisWeek': 'Esta semana',
 	'page.settings.shiftGroupNextWeek': 'Próxima semana',
 	'page.settings.shiftGroupLater': 'Mais tarde',
+	'page.settings.appearanceCard': 'Aparência',
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Escolha o seu idioma preferido.',
 	'page.settings.reminderUndoCard': 'Janela para desfazer Lembrete',
@@ -281,7 +297,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',
-	'page.login.tagline': 'O seu diário privado de cuidados para companheiros',
+	'page.login.tagline': 'Cada história merece ser contada.',
 	'page.login.signInWith': 'Iniciar sessão com {provider}',
 	'page.login.usernameLabel': 'Nome de utilizador',
 	'page.login.usernamePlaceholder': 'nome de utilizador',
@@ -289,6 +305,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.signIn': 'Iniciar sessão',
 	'page.login.signingIn': 'A iniciar sessão…',
 	'page.login.forgotPassword': 'Esqueceu a senha?',
+	'page.login.welcomeHeading': 'Bem-vindo de volta',
+	'page.login.welcomeSubtext': 'Inicie sessão e continue de onde parou.',
+	'page.login.taglineSubtext':
+		'O cofre auto-hospedado para a saúde, o diário e os cuidados diários do seu companheiro.',
+	'page.login.brandFooter': 'Os teus dados. O teu servidor. Os teus companheiros.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Redefinir sua senha',
@@ -323,6 +344,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.createAccount': 'Criar conta de administrador',
 	'page.setup.creatingAccount': 'A criar conta…',
 	'page.setup.firstRunNote': 'Esta página só está disponível na primeira execução.',
+	'page.setup.brandSubtext': 'Configura o cofre do teu companheiro.',
 
 	// Page: Error
 	'page.error.404.title': 'Página não encontrada',
@@ -389,14 +411,13 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion new
 	'page.companion.new.pageTitle': 'Adicionar companheiro | EinVault',
-	'page.companion.new.backToSettings': 'Voltar às definições',
 	'page.companion.new.heading': 'Adicionar um companheiro',
 	'page.companion.new.subheading': 'Preencha o que souber. Pode sempre editar depois.',
-	'page.companion.new.cardTitle': 'Detalhes do companheiro',
 	'page.companion.new.submit': 'Adicionar companheiro',
 
 	// Page: companion edit
 	'page.companion.edit.backToSettings': 'Voltar às definições',
+	'page.companion.edit.backToCompanions': 'Voltar aos companheiros',
 	'page.companion.edit.subheading': 'Atualizar os detalhes de {name}.',
 	'page.companion.edit.tabProfile': 'Perfil',
 	'page.companion.edit.tabCaretaker': 'Info do cuidador',
@@ -405,6 +426,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.schedulesHint': 'Mostrados aos cuidadores na sua página de resumo.',
 	'page.companion.edit.labelFeedingSchedule': 'Horário de refeições',
 	'page.companion.edit.labelWalkSchedule': 'Horário de passeios',
+	'page.companion.edit.labelMedicationSchedule': 'Horário de medicação',
 	'page.companion.edit.cardContacts': 'Contactos',
 	'page.companion.edit.labelVetName': 'Nome do veterinário',
 	'page.companion.edit.labelVetPhone': 'Telefone do veterinário',
@@ -417,6 +439,8 @@ const messages: Record<keyof Messages, string> = {
 		'ex. 7:00: 1 chávena de ração\n18:00: 1 chávena de ração\nBiscoitos OK após passeios',
 	'page.companion.edit.placeholderWalkSchedule':
 		'ex. Manhã ~7h, 30 min\nFim de tarde ~17h30, 20–30 min\nEvitar o parque canino durante a semana',
+	'page.companion.edit.placeholderMedicationSchedule':
+		'ex. Comprimido antiparasitário no dia 1 do mês\nSuplemento articular diário ao pequeno-almoço\nColírio de manhã e à noite',
 	'page.companion.edit.placeholderSitterNotes':
 		'Tudo o que um cuidador deve saber: manias, medos, sítios preferidos…',
 	'page.companion.edit.placeholderMicrochip': 'ID de 15 dígitos',
@@ -424,6 +448,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.placeholderVetClinic': 'Hospital Veterinário Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (dono)',
 	'page.companion.edit.placeholderArchiveNote': 'ex. Atravessou a ponte do arco-íris',
+	'page.companion.edit.profilePhoto': 'Foto de perfil',
 	'page.companion.edit.saveChanges': 'Guardar alterações',
 	'page.companion.edit.saving': 'A guardar…',
 	'page.companion.edit.changesSaved': 'Alterações guardadas.',
@@ -435,9 +460,22 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.archive': 'Arquivar',
 	'page.companion.edit.labelArchiveDate': 'Data',
 	'page.companion.edit.labelArchiveNote': 'Nota',
+	'page.companion.edit.tabsAria': 'Secções de edição',
+	'page.companion.edit.sectionBasics': 'Básico',
+	'page.companion.edit.sectionAbout': 'Sobre',
 
 	// Page: overview (multi-companion landing)
 	'overview.title': 'Resumo',
+	'overview.greeting': 'Olá, {name}',
+	'overview.needsAttention': 'Requer atenção',
+	'overview.allCaughtUp': 'Tudo em dia',
+	'overview.heading.companions': 'Os seus companheiros',
+	'overview.companions.nextReminder': 'Próximo lembrete',
+	'overview.companions.addStart': 'Iniciar novo registo',
+	'overview.firstRun.title': 'Bem-vindo ao EinVault',
+	'overview.firstRun.body':
+		'Adiciona o teu primeiro companheiro para iniciar o registo de saúde, o diário e os cuidados diários.',
+	'overview.firstRun.cta': 'Adicionar o teu primeiro companheiro',
 	'overview.heading.reminders': 'Lembretes próximos (próximos 7 dias)',
 	'overview.heading.todayJournal': 'Diário de hoje',
 	'overview.heading.recentActivity': 'Atividade recente (últimos 7 dias)',
@@ -451,6 +489,18 @@ const messages: Record<keyof Messages, string> = {
 	'overview.markDone': 'Marcar como concluído',
 	'overview.day.today': 'Hoje',
 	'overview.day.tomorrow': 'Amanhã',
+	'overview.careStatus.upToDate': 'Em dia',
+	'overview.careStatus.dueToday': 'Vence hoje',
+	'overview.careStatus.needsAttention': 'Requer atenção',
+	'overview.journal.noEntryYet': 'Sem entrada de diário hoje',
+	'overview.journal.addTodayShort': '+ Adicionar hoje',
+	'overview.reminders.none': 'Sem lembretes',
+	'overview.recentHousehold': 'Atividade recente da família',
+	'overview.last7Days': 'Últimos 7 dias',
+	'overview.activity.loggedFor': '{logger} registou {type} para {companion}',
+	'overview.activity.healthFor': '{type} registado para {companion}',
+	'overview.companionCount.one': '{count} companheiro',
+	'overview.companionCount.other': '{count} companheiros',
 
 	// Page: dashboard
 	'page.dashboard.archivedBanner': '{name} está arquivado. Modo de leitura.',
@@ -491,6 +541,16 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.modalOpenJournal': 'Abrir diário',
 	'page.dashboard.closeDialog': 'Fechar diálogo',
 	'page.dashboard.closePhoto': 'Fechar',
+	'page.dashboard.cardUpcomingReminders': 'Lembretes próximos',
+	'page.dashboard.cardRecentActivity': 'Atividade recente',
+	'page.dashboard.cardWeightTrend': 'Tendência de peso',
+	'page.dashboard.weightTrendViewHealth': 'Ver saúde',
+	'page.dashboard.weightTrendEmpty': 'Nenhum peso registrado.',
+	'page.dashboard.nextVet': 'Próximo veterinário',
+	'page.dashboard.noUpcomingReminders': 'Nenhum lembrete próximo.',
+	'page.dashboard.heroRecentActivity': '{count} atividades',
+	'page.dashboard.reminderOverdue': 'Atrasado',
+	'page.dashboard.reminderToday': 'Hoje',
 
 	// Page: dashboard caretaker
 	'page.dashboard.caretaker.microchip': 'Microchip: {id}',
@@ -498,7 +558,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.weightAsOf': 'em',
 	'page.dashboard.caretaker.cardFeeding': 'Horário de refeições',
 	'page.dashboard.caretaker.cardWalk': 'Horário de passeios',
-	'page.dashboard.caretaker.cardMedications': 'Medicamentos',
+	'page.dashboard.caretaker.cardMedicationSchedule': 'Horário de medicação',
 	'page.dashboard.caretaker.cardReminders': 'Lembretes próximos',
 	'page.dashboard.caretaker.remindersEmpty': 'Sem lembretes próximos.',
 	'page.dashboard.caretaker.reminderOverdue': 'Atrasado',
@@ -509,7 +569,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardSitterNotes': 'Notas para o cuidador',
 	'page.dashboard.caretaker.cardAbout': 'Sobre {name}',
 	'page.dashboard.caretaker.cardTodayActivity': 'Atividade de hoje',
-	'page.dashboard.caretaker.logActivity': '+ Registar atividade',
+	'page.dashboard.caretaker.sectionQuickLog': 'Registo rápido',
+	'page.dashboard.caretaker.sectionSchedules': 'Horários',
+	'page.dashboard.caretaker.sectionContacts': 'Contactos',
+	'page.dashboard.caretaker.logActivity': 'Registar atividade',
 	'page.dashboard.caretaker.activityEmpty': 'Nada registado hoje.',
 	'page.dashboard.caretaker.modalLabelType': 'Tipo',
 	'page.dashboard.caretaker.modalLabelLogged': 'Registado',
@@ -629,6 +692,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.savingWeight': 'A guardar...',
 	'page.health.weightHistoryTitle': 'Histórico de peso',
 	'page.health.healthEventsTitle': 'Eventos de saúde',
+	'page.health.emptyBody':
+		'Regista visitas ao veterinário, vacinas e medicação para criar o registo.',
 	'page.health.noHealthEvents': 'Sem eventos de saúde registados.',
 	'page.health.detailWeightEntry': 'Registo de peso',
 	'page.health.detailWeight': 'Peso',
@@ -637,6 +702,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.detailType': 'Tipo',
 	'page.health.detailDate': 'Data',
 	'page.health.detailVet': 'Veterinário',
+	'page.health.weightTrend': 'Tendência do peso',
+	'page.health.noWeightYet': 'Ainda sem peso registado.',
+	'page.health.oneWeightNeedMore': 'Registe outro peso para ver a tendência.',
+	'page.health.range6m': '6 meses',
+	'page.health.range1y': '1 ano',
+	'page.health.rangeAll': 'Tudo',
+	'page.health.weightChartAria': 'Tendência do peso ao longo do tempo',
 
 	// Page: Reminders
 	'page.reminders.title': 'Lembretes',
@@ -678,6 +750,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.savingReminder': 'A guardar...',
 	'page.reminders.noUpcoming': 'Sem lembretes próximos.',
 	'page.reminders.overdue': 'Atrasado',
+	'page.reminders.groupOverdue': 'Atrasados',
+	'page.reminders.groupToday': 'Hoje',
+	'page.reminders.groupUpcoming': 'Próximos',
 	'page.reminders.detailType': 'Tipo',
 	'page.reminders.detailDue': 'Vencimento',
 	'page.reminders.detailRepeats': 'Repete-se',
@@ -699,6 +774,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} lembrete completado',
 	'page.reminders.completedCountPlural': '{count} lembretes completados',
+	'page.reminders.emptyBody':
+		'Define visitas ao veterinário, medicação ou higiene para não te esqueceres de nada.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilizadores',
@@ -725,6 +802,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.menuDeactivate': 'Desativar',
 	'page.admin.menuActivate': 'Ativar',
 	'page.admin.menuResetPassword': 'Redefinir palavra-passe',
+	'page.admin.manage': 'Gerir',
+	'page.admin.drawerProfile': 'Perfil',
 	'page.admin.editUserLabel': 'Editar {name}',
 	'page.admin.assignCompanionsLabel': 'Atribuir companheiros a {name}',
 	'page.admin.noActiveCompanions': 'Sem companheiros ativos.',
@@ -746,6 +825,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.noUpcomingShifts': 'Nenhum turno agendado.',
 	'page.log.nextShiftStarts': 'O seu próximo turno começa',
 	'page.log.activityLogged': '✓ Atividade registada!',
+	'page.log.alsoLogFor': 'Registar também para…',
+	'page.log.alsoLogForHint': 'Selecione outros companheiros para registar a mesma atividade.',
 	'page.log.quickLogTitle': 'Registo rápido',
 	'page.log.activityLabel': 'Atividade',
 	'page.log.durationLabel': 'Duração (minutos)',
@@ -760,10 +841,19 @@ const messages: Record<keyof Messages, string> = {
 	// Page titles
 	'page.care.title': 'Cuidados',
 	'page.admin.pageTitle': 'Gestão de utilizadores',
+	'page.admin.companionsTitle': 'Companheiros',
+	'page.admin.companionsActiveCount': '{count} companheiro ativo',
+	'page.admin.companionsActiveCountPlural': '{count} companheiros ativos',
+	'page.admin.companionActiveBadge': 'Ativo',
+	'page.admin.companionRestored': 'Companheiro restaurado com sucesso.',
+	'page.admin.restore': 'Restaurar',
 	'page.companion.edit.pageTitle': 'Editar {name}',
 
 	// Aria labels
 	'aria.caretakerNav': 'Navegação do cuidador',
+	'aria.adminNav': 'Secções de administração',
+	'aria.einvaultHome': 'Início do EinVault',
+	'aria.goToSignIn': 'Ir para iniciar sessão',
 	'aria.mainNav': 'Navegação principal',
 	'aria.moreActions': 'Mais ações',
 	'aria.deleteEntry': 'Eliminar entrada',
@@ -777,6 +867,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextPage': 'Próxima página',
 	'aria.viewPhoto': 'Ver foto de {name}',
 	'aria.openSearch': 'Abrir pesquisa',
+	'aria.closeQuickAdd': 'Fechar menu de adição',
+	'aria.closeSwitcher': 'Fechar seletor de companheiro',
+	'aria.accountMenu': 'Menu da conta',
+	'aria.closeAccountMenu': 'Fechar menu da conta',
 	'aria.searchResults': 'Resultados da pesquisa',
 
 	// Email: password reset
@@ -850,6 +944,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.title': 'Documentos',
 	'page.documents.archivedNotice': '{name} está arquivado. Modo de leitura.',
 	'page.documents.empty': 'Ainda não há documentos.',
+	'page.documents.emptyBody': 'Carrega boletins de vacinas, seguros ou papéis de adoção.',
 	'page.documents.upload': 'Carregar documento',
 	'page.documents.uploading': 'A carregar…',
 	'page.documents.dropHint': 'PDF ou imagem, até {max}MB',

@@ -21,14 +21,15 @@
 		ChevronLeft,
 		ChevronRight,
 		Calendar,
-		Camera,
 		ImageIcon,
-		ClipboardList,
 		Plus,
 		Pencil,
 		NotebookPen,
-		X
+		X,
+		Activity
 	} from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
@@ -509,300 +510,325 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
-				<button
-					type="button"
+				<Button
+					variant="soft"
+					size="sm"
 					onclick={() => {
+						const ev = detailEvent;
 						closeActivityDetail();
-						startEditActivity(detailEvent!);
+						if (ev) startEditActivity(ev);
 					}}
-					class="inline-flex items-center gap-1.5 justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
 				>
-					<Pencil class="h-3.5 w-3.5" />
+					<Pencil class="h-3.5 w-3.5 mr-1.5" />
 					{t(locale, 'common.edit')}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
 {/if}
 
-<div class="space-y-4 pb-24 md:pb-0">
-	<!-- Date nav -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-2">
+<div class="pb-24 md:pb-0">
+	<div class="space-y-6">
+		<!-- Back to journal -->
+		<div>
 			<a
-				href="/{companion.id}/journal/{prevDate(data.date)}"
-				class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-				><ChevronLeft class="h-4 w-4" /></a
+				href="/{companion.id}/journal"
+				class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
 			>
-			<div>
-				<h1 class="font-display font-semibold text-foreground">{formatDisplayDate(data.date)}</h1>
-			</div>
-			<a
-				href="/{companion.id}/journal/{nextDate(data.date)}"
-				class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring {isNextDisabled
-					? 'opacity-30 pointer-events-none'
-					: ''}"><ChevronRight class="h-4 w-4" /></a
-			>
-			<!-- Calendar picker -->
-			<div class="relative">
-				<button
-					type="button"
-					onclick={() => datePickerEl?.showPicker()}
-					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-					title="Go to date"><Calendar class="h-4 w-4" /></button
-				>
-				<input
-					bind:this={datePickerEl}
-					id="datePicker"
-					type="date"
-					value={data.date}
-					max={data.today}
-					onchange={(e) => {
-						const v = (e.target as HTMLInputElement).value;
-						if (v) goto(`/${companion.id}/journal/${v}`);
-					}}
-					class="sr-only"
-				/>
-			</div>
-			{#if data.isToday}
-				<span class="text-xs font-medium px-2 py-1 text-primary"
-					>{t(locale, 'page.journal.today')}</span
-				>
-			{:else}
-				<a
-					href="/{companion.id}/journal/{data.today}"
-					class="inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-					>{t(locale, 'page.journal.today')} <ChevronRight class="h-3.5 w-3.5" /></a
-				>
-			{/if}
+				<ChevronLeft class="h-3.5 w-3.5" />
+				{t(locale, 'page.journal.title')}
+			</a>
 		</div>
-		<span class="hidden items-center gap-1 sm:flex">
+
+		<!-- Date nav + autosave -->
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-2">
+				<a
+					href="/{companion.id}/journal/{prevDate(data.date)}"
+					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+					><ChevronLeft class="h-4 w-4" /></a
+				>
+				<div>
+					<h1 class="font-display font-semibold text-foreground">{formatDisplayDate(data.date)}</h1>
+				</div>
+				<a
+					href="/{companion.id}/journal/{nextDate(data.date)}"
+					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring {isNextDisabled
+						? 'opacity-30 pointer-events-none'
+						: ''}"><ChevronRight class="h-4 w-4" /></a
+				>
+				<!-- Calendar picker -->
+				<div class="relative">
+					<button
+						type="button"
+						onclick={() => datePickerEl?.showPicker()}
+						class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						title="Go to date"><Calendar class="h-4 w-4" /></button
+					>
+					<input
+						bind:this={datePickerEl}
+						id="datePicker"
+						type="date"
+						value={data.date}
+						max={data.today}
+						onchange={(e) => {
+							const v = (e.target as HTMLInputElement).value;
+							if (v) goto(`/${companion.id}/journal/${v}`);
+						}}
+						class="sr-only"
+					/>
+				</div>
+				{#if data.isToday}
+					<span class="text-xs font-medium px-2 py-1 text-primary"
+						>{t(locale, 'page.journal.today')}</span
+					>
+				{:else}
+					<a
+						href="/{companion.id}/journal/{data.today}"
+						class="inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+						>{t(locale, 'page.journal.today')} <ChevronRight class="h-3.5 w-3.5" /></a
+					>
+				{/if}
+			</div>
+			<div class="flex items-center gap-3">
+				<!-- Save status (inline, right of date nav) -->
+				<div class="flex items-center gap-2 text-sm shrink-0">
+					{#if saveStatus === 'saving'}
+						<span class="animate-pulse text-muted-foreground"
+							>{t(locale, 'page.journal.day.savingStatus')}</span
+						>
+					{:else if saveStatus === 'saved'}
+						<span class="text-green-600 dark:text-green-400"
+							>{t(locale, 'page.journal.day.savedStatus')}</span
+						>
+					{:else if saveStatus === 'error'}
+						<span class="text-red-500">{t(locale, 'page.journal.day.saveFailedStatus')}</span>
+						<button
+							type="button"
+							onclick={saveNow}
+							class="text-xs text-red-500 underline hover:no-underline"
+							>{t(locale, 'page.journal.day.saveFailedRetry')}</button
+						>
+					{/if}
+				</div>
+				<span class="hidden items-center gap-1 sm:flex">
+					<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
+					{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
+						<span class="text-xs text-muted-foreground">
+							· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
+						</span>
+					{/if}
+				</span>
+			</div>
+		</div>
+		<div class="flex items-center gap-1 sm:hidden">
 			<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
 			{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
 				<span class="text-xs text-muted-foreground">
 					· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
 				</span>
 			{/if}
-		</span>
-	</div>
-	<div class="flex items-center gap-1 sm:hidden">
-		<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
-		{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
-			<span class="text-xs text-muted-foreground">
-				· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
-			</span>
-		{/if}
-	</div>
-
-	<!-- Mood -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-2">
-			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-				>{t(locale, 'page.journal.day.mood')}</span
-			>
-			<div
-				role="group"
-				aria-label={t(locale, 'page.journal.day.moodQuestion', { name: companion.name })}
-				class="flex gap-1"
-			>
-				{#each MOODS as m (m.value)}
-					<button
-						type="button"
-						onclick={() => {
-							mood = mood === m.value ? '' : m.value;
-							triggerSave();
-						}}
-						title={m.label}
-						aria-pressed={mood === m.value}
-						class="text-xl leading-none p-1.5 rounded-lg transition-all
-						{mood === m.value
-							? 'bg-bark-100 dark:bg-bark-900 ring-1 ring-bark-300 dark:ring-bark-700'
-							: 'opacity-40 hover:opacity-80'}"
-					>
-						{m.icon}
-					</button>
-				{/each}
-			</div>
-		</div>
-		<!-- Save status -->
-		<div class="flex items-center gap-2 text-sm shrink-0">
-			{#if saveStatus === 'saving'}
-				<span class="animate-pulse text-muted-foreground"
-					>{t(locale, 'page.journal.day.savingStatus')}</span
-				>
-			{:else if saveStatus === 'saved'}
-				<span class="text-green-600 dark:text-green-400"
-					>{t(locale, 'page.journal.day.savedStatus')}</span
-				>
-			{:else if saveStatus === 'error'}
-				<span class="text-red-500">{t(locale, 'page.journal.day.saveFailedStatus')}</span>
-				<button
-					type="button"
-					onclick={saveNow}
-					class="text-xs text-red-500 underline hover:no-underline"
-					>{t(locale, 'page.journal.day.saveFailedRetry')}</button
-				>
-			{/if}
-		</div>
-	</div>
-
-	<!-- Editor -->
-	<div class="rounded-lg border border-border bg-card overflow-hidden">
-		<div class="flex items-center justify-between px-4 py-2 border-b border-border">
-			<div class="flex gap-0.5">
-				<button
-					type="button"
-					onclick={() => {
-						viewMode = 'write';
-						tick().then(() => textareaEl?.focus());
-					}}
-					class="px-3 py-1 rounded-md text-sm font-medium transition-colors {viewMode === 'write'
-						? 'bg-accent text-foreground'
-						: 'text-muted-foreground hover:text-foreground'}"
-				>
-					{t(locale, 'page.journal.day.write')}
-				</button>
-				<button
-					type="button"
-					onclick={() => (viewMode = 'preview')}
-					class="px-3 py-1 rounded-md text-sm font-medium transition-colors {viewMode === 'preview'
-						? 'bg-accent text-foreground'
-						: 'text-muted-foreground hover:text-foreground'}"
-				>
-					{t(locale, 'page.journal.day.preview')}
-				</button>
-			</div>
-			<div class="hidden sm:flex items-center gap-3">
-				<span class="text-xs text-muted-foreground">{t(locale, 'page.journal.day.toggleHint')}</span
-				>
-				<details class="group">
-					<summary
-						class="inline-flex cursor-pointer select-none list-none items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors [&::-webkit-details-marker]:hidden"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="h-3 w-3 transition-transform group-open:rotate-90"
-							aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg
-						>
-						Markdown supported
-					</summary>
-					<div class="mt-2 rounded-md bg-muted/60 px-3 py-2.5 text-xs space-y-1.5">
-						<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
-								>**bold**</code
-							>
-							<span><strong>bold</strong></span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
-								>_italic_</code
-							>
-							<span><em>italic</em></span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
-								>## Heading</code
-							>
-							<span class="font-semibold text-sm">Heading</span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">- item</code>
-							<span>bullet list item</span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">1. item</code
-							>
-							<span>numbered list item</span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
-								>&gt; note</code
-							>
-							<span class="border-l-2 border-border pl-2 text-muted-foreground">note</span>
-
-							<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
-								>[text](url)</code
-							>
-							<span class="text-primary underline">link text</span>
-						</div>
-					</div>
-				</details>
-			</div>
 		</div>
 
-		{#if viewMode === 'write'}
-			<textarea
-				bind:this={textareaEl}
-				bind:value={body}
-				oninput={triggerSave}
-				placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
-				class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-card text-foreground placeholder:text-muted-foreground focus:outline-none"
-				spellcheck="true"
-			></textarea>
-		{:else}
-			<div
-				class="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[360px] bg-card text-foreground"
-			>
-				{@html renderedMarkdown}
-			</div>
-		{/if}
-	</div>
-
-	<!-- Media -->
-	<div class="rounded-lg border border-border bg-card overflow-hidden">
-		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
-			<h2 class="font-semibold flex items-center gap-2 text-foreground">
-				<Camera class="h-4 w-4" />
-				{t(locale, 'page.journal.day.mediaTitle')}
-				<span class="text-xs font-normal text-muted-foreground"
-					>{media.length}/{data.maxDailyMedia}</span
+		<!-- Mood -->
+		<div>
+			<div class="flex items-center gap-2">
+				<span class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+					>{t(locale, 'page.journal.day.mood')}</span
 				>
-			</h2>
-			{#if media.length < data.maxDailyMedia}
-				<div class="flex items-center gap-2">
-					{#if data.immichEnabled}
+				<div
+					role="group"
+					aria-label={t(locale, 'page.journal.day.moodQuestion', { name: companion.name })}
+					class="flex gap-1"
+				>
+					{#each MOODS as m (m.value)}
 						<button
 							type="button"
-							class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-							onclick={() => (immichPickerOpen = true)}
+							onclick={() => {
+								mood = mood === m.value ? '' : m.value;
+								triggerSave();
+							}}
+							title={m.label}
+							aria-pressed={mood === m.value}
+							class="text-xl leading-none p-1.5 rounded-lg transition-all
+							{mood === m.value ? 'bg-primary/10 ring-1 ring-primary/30' : 'opacity-40 hover:opacity-80'}"
 						>
-							<ImageIcon class="h-3.5 w-3.5" />
-							{t(locale, 'immich.picker.button')}
+							{m.icon}
 						</button>
-					{/if}
-					<label
-						class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
-					>
-						{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
-								class="h-3.5 w-3.5"
-							/>
-							{t(locale, 'page.journal.day.addMedia')}{/if}
-						<input
-							bind:this={fileInputEl}
-							type="file"
-							name="photos"
-							accept={MEDIA_ACCEPT}
-							multiple
-							class="sr-only"
-							onchange={handleFileInput}
-							disabled={uploading}
-						/>
-					</label>
+					{/each}
 				</div>
-			{/if}
+			</div>
 		</div>
 
-		{#if uploadError}
-			<div
-				role="alert"
-				class="mx-4 my-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
-			>
-				{uploadError}
-			</div>
-		{/if}
+		<!-- Note editor -->
+		<div class="space-y-2">
+			<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+				{t(locale, 'page.journal.day.write')}
+			</p>
+			<div class="rounded-lg border border-input overflow-hidden">
+				<div class="flex items-center justify-between px-3 py-1.5 border-b border-border">
+					<div class="flex gap-0.5">
+						<button
+							type="button"
+							onclick={() => {
+								viewMode = 'write';
+								tick().then(() => textareaEl?.focus());
+							}}
+							class="px-3 py-1 rounded-md text-sm font-medium transition-colors {viewMode ===
+							'write'
+								? 'bg-accent text-foreground'
+								: 'text-muted-foreground hover:text-foreground'}"
+						>
+							{t(locale, 'page.journal.day.write')}
+						</button>
+						<button
+							type="button"
+							onclick={() => (viewMode = 'preview')}
+							class="px-3 py-1 rounded-md text-sm font-medium transition-colors {viewMode ===
+							'preview'
+								? 'bg-accent text-foreground'
+								: 'text-muted-foreground hover:text-foreground'}"
+						>
+							{t(locale, 'page.journal.day.preview')}
+						</button>
+					</div>
+					<div class="hidden sm:flex items-center gap-3">
+						<span class="text-xs text-muted-foreground"
+							>{t(locale, 'page.journal.day.toggleHint')}</span
+						>
+						<details class="group relative">
+							<summary
+								class="inline-flex cursor-pointer select-none list-none items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors [&::-webkit-details-marker]:hidden"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									class="h-3 w-3 transition-transform group-open:rotate-90"
+									aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg
+								>
+								Markdown supported
+							</summary>
+							<div
+								class="absolute right-0 top-full z-20 mt-2 w-72 rounded-md border border-border bg-popover px-3 py-2.5 text-xs space-y-1.5 shadow-lg"
+							>
+								<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>**bold**</code
+									>
+									<span><strong>bold</strong></span>
 
-		<div class="p-4">
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>_italic_</code
+									>
+									<span><em>italic</em></span>
+
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>## Heading</code
+									>
+									<span class="font-semibold text-sm">Heading</span>
+
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>- item</code
+									>
+									<span>bullet list item</span>
+
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>1. item</code
+									>
+									<span>numbered list item</span>
+
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>&gt; note</code
+									>
+									<span class="border-l-2 border-border pl-2 text-muted-foreground">note</span>
+
+									<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap"
+										>[text](url)</code
+									>
+									<span class="text-primary underline">link text</span>
+								</div>
+							</div>
+						</details>
+					</div>
+				</div>
+
+				{#if viewMode === 'write'}
+					<textarea
+						bind:this={textareaEl}
+						bind:value={body}
+						oninput={triggerSave}
+						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
+						dir="ltr"
+						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-background text-foreground placeholder:text-muted-foreground focus:outline-none"
+						spellcheck="true"
+					></textarea>
+				{:else}
+					<div
+						class="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[360px] text-foreground"
+					>
+						{@html renderedMarkdown}
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Photos & Videos -->
+		<div class="space-y-2">
+			<div class="flex items-center justify-between">
+				<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+					{t(locale, 'page.journal.day.mediaTitle')}
+					<span class="ml-1 normal-case font-normal text-muted-foreground/70"
+						>{media.length}/{data.maxDailyMedia}</span
+					>
+				</p>
+				{#if media.length < data.maxDailyMedia}
+					<div class="flex flex-wrap items-center gap-2">
+						{#if data.immichEnabled}
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+								onclick={() => (immichPickerOpen = true)}
+							>
+								<ImageIcon class="h-3.5 w-3.5" />
+								{t(locale, 'immich.picker.button')}
+							</button>
+						{/if}
+						<label
+							class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
+						>
+							{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
+									class="h-3.5 w-3.5"
+								/>
+								{t(locale, 'page.journal.day.addMedia')}{/if}
+							<input
+								bind:this={fileInputEl}
+								type="file"
+								name="photos"
+								accept={MEDIA_ACCEPT}
+								multiple
+								class="sr-only"
+								onchange={handleFileInput}
+								disabled={uploading}
+							/>
+						</label>
+					</div>
+				{/if}
+			</div>
+
+			{#if uploadError}
+				<div
+					role="alert"
+					class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+				>
+					{uploadError}
+				</div>
+			{/if}
+
 			{#if media.length === 0}
 				<label
 					class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
@@ -924,337 +950,337 @@
 				</div>
 			{/if}
 		</div>
-	</div>
 
-	<!-- Activity log -->
-	<div class="rounded-lg border border-border bg-card overflow-hidden">
-		<div class="flex items-center justify-between px-5 py-3 border-b border-border">
-			<h2 class="font-semibold flex items-center gap-2 text-foreground">
-				<ClipboardList class="h-4 w-4" />
-				{t(locale, 'page.journal.day.activitiesTitle')}
-			</h2>
-			<button
-				onclick={() => (showActivityForm = !showActivityForm)}
-				class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-			>
-				{#if showActivityForm}{t(locale, 'common.cancel')}{:else}<Plus class="h-3.5 w-3.5" />
-					{t(locale, 'page.journal.day.logActivity')}{/if}
-			</button>
-		</div>
-
-		{#if showActivityForm}
-			<div class="px-6 py-4 border-b border-border animate-slide-up">
-				<form
-					method="POST"
-					action="?/addActivity"
-					use:localDatetimes
-					use:enhance={() =>
-						({ update }) => {
-							update();
-							showActivityForm = false;
-							selectedType = 'walk';
-							selectedAdditionalIds = [];
-						}}
-					class="space-y-4"
+		<!-- Activities -->
+		<div class="space-y-2">
+			<div class="flex items-center justify-between">
+				<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+					{t(locale, 'page.journal.day.activitiesTitle')}
+				</p>
+				<button
+					onclick={() => (showActivityForm = !showActivityForm)}
+					class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
 				>
-					<div class="space-y-1.5">
-						<span class="text-sm font-medium text-foreground"
-							>{t(locale, 'page.journal.day.activityType')}</span
-						>
-						<div class="flex flex-wrap gap-2">
-							{#each EVENT_TYPES as evtType (evtType.value)}
-								<label class="cursor-pointer">
-									<input
-										type="radio"
-										name="type"
-										value={evtType.value}
-										bind:group={selectedType}
-										class="sr-only"
-									/>
-									<span
-										class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {selectedType ===
-										evtType.value
-											? 'bg-primary/10 border-primary/30 text-primary'
-											: 'hover:text-foreground'}"
-									>
-										{evtType.icon}
-										{evtType.label}
-									</span>
-								</label>
-							{/each}
-						</div>
-					</div>
-					{#if siblingCompanions.length > 0}
-						<fieldset class="space-y-1.5">
-							<legend class="text-sm font-medium text-foreground">
-								{t(locale, 'page.journal.day.alsoLogFor')}
-							</legend>
-							<p class="text-xs text-muted-foreground">
-								{t(locale, 'page.journal.day.alsoLogForHint')}
-							</p>
+					{#if showActivityForm}{t(locale, 'common.cancel')}{:else}<Plus class="h-3.5 w-3.5" />
+						{t(locale, 'page.journal.day.logActivity')}{/if}
+				</button>
+			</div>
+
+			{#if showActivityForm}
+				<div class="rounded-lg border border-border px-5 py-4 animate-slide-up">
+					<form
+						method="POST"
+						action="?/addActivity"
+						use:localDatetimes
+						use:enhance={() =>
+							({ update }) => {
+								update();
+								showActivityForm = false;
+								selectedType = 'walk';
+								selectedAdditionalIds = [];
+							}}
+						class="space-y-4"
+					>
+						<div class="space-y-1.5">
+							<span class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.journal.day.activityType')}</span
+							>
 							<div class="flex flex-wrap gap-2">
-								{#each siblingCompanions as sibling (sibling.id)}
-									{@const checked = selectedAdditionalIds.includes(sibling.id)}
+								{#each EVENT_TYPES as evtType (evtType.value)}
 									<label class="cursor-pointer">
 										<input
-											type="checkbox"
-											name="additionalCompanionIds"
-											value={sibling.id}
-											bind:group={selectedAdditionalIds}
+											type="radio"
+											name="type"
+											value={evtType.value}
+											bind:group={selectedType}
 											class="sr-only"
 										/>
 										<span
-											class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer {checked
+											class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {selectedType ===
+											evtType.value
 												? 'bg-primary/10 border-primary/30 text-primary'
-												: 'border-border text-muted-foreground hover:text-foreground'}"
+												: 'hover:text-foreground'}"
 										>
-											{sibling.name}
+											{evtType.icon}
+											{evtType.label}
 										</span>
 									</label>
 								{/each}
 							</div>
-						</fieldset>
-					{/if}
-					<div class="grid grid-cols-2 gap-4">
-						<div class="space-y-1.5">
-							<label for="act-loggedAt" class="text-sm font-medium text-foreground"
-								>{t(locale, 'page.journal.day.activityTime')}</label
-							>
-							<input
-								id="act-loggedAt"
-								name="loggedAt"
-								type="datetime-local"
-								autocomplete="off"
-								class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-								value={defaultLoggedAt()}
-							/>
 						</div>
-						{#if hasDuration}
+						{#if siblingCompanions.length > 0}
+							<fieldset class="space-y-1.5">
+								<legend class="text-sm font-medium text-foreground">
+									{t(locale, 'page.journal.day.alsoLogFor')}
+								</legend>
+								<p class="text-xs text-muted-foreground">
+									{t(locale, 'page.journal.day.alsoLogForHint')}
+								</p>
+								<div class="flex flex-wrap gap-2">
+									{#each siblingCompanions as sibling (sibling.id)}
+										{@const checked = selectedAdditionalIds.includes(sibling.id)}
+										<label class="cursor-pointer">
+											<input
+												type="checkbox"
+												name="additionalCompanionIds"
+												value={sibling.id}
+												bind:group={selectedAdditionalIds}
+												class="sr-only"
+											/>
+											<span
+												class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer {checked
+													? 'bg-primary/10 border-primary/30 text-primary'
+													: 'border-border text-muted-foreground hover:text-foreground'}"
+											>
+												{sibling.name}
+											</span>
+										</label>
+									{/each}
+								</div>
+							</fieldset>
+						{/if}
+						<div class="grid grid-cols-2 gap-4">
 							<div class="space-y-1.5">
-								<label for="act-duration" class="text-sm font-medium text-foreground"
-									>{t(locale, 'page.journal.day.activityDuration')}</label
+								<label for="act-loggedAt" class="text-sm font-medium text-foreground"
+									>{t(locale, 'page.journal.day.activityTime')}</label
 								>
 								<input
-									id="act-duration"
-									name="durationMinutes"
-									type="number"
-									min="1"
+									id="act-loggedAt"
+									name="loggedAt"
+									type="datetime-local"
 									autocomplete="off"
 									class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-									placeholder="30"
+									value={defaultLoggedAt()}
 								/>
 							</div>
-						{/if}
-					</div>
-					<div class="space-y-1.5">
-						<label for="act-notes" class="text-sm font-medium text-foreground"
-							>{t(locale, 'page.journal.day.activityNotes')}</label
-						>
-						<MarkdownTextarea
-							id="act-notes"
-							name="notes"
-							placeholder={t(locale, 'page.journal.day.activityNotes')}
-							rows={3}
-						/>
-					</div>
-					<div class="flex gap-3">
-						<button
-							type="submit"
-							class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-							>{t(locale, 'page.journal.day.logIt')}</button
-						>
-						<button
-							type="button"
-							onclick={() => (showActivityForm = false)}
-							class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
-							>{t(locale, 'common.cancel')}</button
-						>
-					</div>
-				</form>
-			</div>
-		{/if}
-
-		{#if data.dailyEvents.length === 0 && !showActivityForm}
-			<div class="text-center py-8 px-6">
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.journal.day.noActivities')}
-				</p>
-			</div>
-		{:else if data.dailyEvents.length > 0}
-			<div class="divide-y divide-border">
-				{#each data.dailyEvents as event (event.id)}
-					{#if editingActivityId === event.id}
-						<div class="px-6 py-4">
-							<form
-								method="POST"
-								action="?/updateActivity"
-								use:localDatetimes
-								use:enhance={() =>
-									({ update }) => {
-										update();
-										editingActivityId = null;
-									}}
-								class="space-y-4"
-							>
-								<input type="hidden" name="id" value={event.id} />
+							{#if hasDuration}
 								<div class="space-y-1.5">
-									<span class="text-sm font-medium text-foreground"
-										>{t(locale, 'page.journal.day.activityType')}</span
+									<label for="act-duration" class="text-sm font-medium text-foreground"
+										>{t(locale, 'page.journal.day.activityDuration')}</label
 									>
-									<div class="flex flex-wrap gap-2">
-										{#each EVENT_TYPES as evtType (evtType.value)}
-											<label class="cursor-pointer">
-												<input
-													type="radio"
-													name="type"
-													value={evtType.value}
-													bind:group={editActivityType}
-													class="sr-only"
-												/>
-												<span
-													class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {editActivityType ===
-													evtType.value
-														? 'bg-primary/10 border-primary/30 text-primary'
-														: 'hover:text-foreground'}"
-												>
-													{evtType.icon}
-													{evtType.label}
-												</span>
-											</label>
-										{/each}
-									</div>
-								</div>
-								<div class="grid grid-cols-2 gap-4">
-									<div class="space-y-1.5">
-										<label
-											for="edit-act-loggedAt-{event.id}"
-											class="text-sm font-medium text-foreground"
-											>{t(locale, 'page.journal.day.activityTime')}</label
-										>
-										<input
-											id="edit-act-loggedAt-{event.id}"
-											name="loggedAt"
-											autocomplete="off"
-											type="datetime-local"
-											class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-											value={localDatetimeISO(new Date(event.loggedAt))}
-										/>
-									</div>
-									{#if editActivityHasDuration}
-										<div class="space-y-1.5">
-											<label
-												for="edit-act-duration-{event.id}"
-												class="text-sm font-medium text-foreground"
-												>{t(locale, 'page.journal.day.activityDuration')}</label
-											>
-											<input
-												id="edit-act-duration-{event.id}"
-												name="durationMinutes"
-												autocomplete="off"
-												type="number"
-												min="1"
-												class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-												value={event.durationMinutes ?? ''}
-												placeholder="30"
-											/>
-										</div>
-									{/if}
-								</div>
-								<div class="space-y-1.5">
-									<label for="edit-act-notes-{event.id}" class="text-sm font-medium text-foreground"
-										>{t(locale, 'page.journal.day.activityNotes')}</label
-									>
-									<MarkdownTextarea
-										id="edit-act-notes-{event.id}"
-										name="notes"
-										value={event.notes ?? ''}
-										placeholder={t(locale, 'page.journal.day.activityNotes')}
-										rows={3}
+									<input
+										id="act-duration"
+										name="durationMinutes"
+										type="number"
+										min="1"
+										autocomplete="off"
+										class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+										placeholder="30"
 									/>
 								</div>
-								<div class="flex gap-3">
-									<button
-										type="submit"
-										class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-										>{t(locale, 'common.save')}</button
-									>
-									<button
-										type="button"
-										onclick={() => (editingActivityId = null)}
-										class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
-										>{t(locale, 'common.cancel')}</button
-									>
-								</div>
-							</form>
+							{/if}
 						</div>
-					{:else}
-						<div class="flex items-center gap-2 pl-6 pr-3 py-3">
+						<div class="space-y-1.5">
+							<label for="act-notes" class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.journal.day.activityNotes')}</label
+							>
+							<MarkdownTextarea
+								id="act-notes"
+								name="notes"
+								placeholder={t(locale, 'page.journal.day.activityNotes')}
+								rows={3}
+							/>
+						</div>
+						<div class="flex gap-3">
+							<button
+								type="submit"
+								class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
+								>{t(locale, 'page.journal.day.logIt')}</button
+							>
 							<button
 								type="button"
-								onclick={() => openActivityDetail(event)}
-								class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors -mx-2"
+								onclick={() => (showActivityForm = false)}
+								class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
+								>{t(locale, 'common.cancel')}</button
 							>
-								<span class="text-xl shrink-0">{EVENT_ICONS[event.type] ?? '📝'}</span>
-								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-2">
-										<Badge variant="secondary" class="capitalize">{event.type}</Badge>
-										{#if event.durationMinutes}
-											<span class="text-xs text-muted-foreground">{event.durationMinutes} min</span>
+						</div>
+					</form>
+				</div>
+			{/if}
+
+			{#if data.dailyEvents.length === 0 && !showActivityForm}
+				<EmptyState tint="muted" title={t(locale, 'page.journal.day.noActivities')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
+			{:else if data.dailyEvents.length > 0}
+				<div class="divide-y divide-border rounded-lg border border-border overflow-hidden">
+					{#each data.dailyEvents as event (event.id)}
+						{#if editingActivityId === event.id}
+							<div class="px-5 py-4">
+								<form
+									method="POST"
+									action="?/updateActivity"
+									use:localDatetimes
+									use:enhance={() =>
+										({ update }) => {
+											update();
+											editingActivityId = null;
+										}}
+									class="space-y-4"
+								>
+									<input type="hidden" name="id" value={event.id} />
+									<div class="space-y-1.5">
+										<span class="text-sm font-medium text-foreground"
+											>{t(locale, 'page.journal.day.activityType')}</span
+										>
+										<div class="flex flex-wrap gap-2">
+											{#each EVENT_TYPES as evtType (evtType.value)}
+												<label class="cursor-pointer">
+													<input
+														type="radio"
+														name="type"
+														value={evtType.value}
+														bind:group={editActivityType}
+														class="sr-only"
+													/>
+													<span
+														class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {editActivityType ===
+														evtType.value
+															? 'bg-primary/10 border-primary/30 text-primary'
+															: 'hover:text-foreground'}"
+													>
+														{evtType.icon}
+														{evtType.label}
+													</span>
+												</label>
+											{/each}
+										</div>
+									</div>
+									<div class="grid grid-cols-2 gap-4">
+										<div class="space-y-1.5">
+											<label
+												for="edit-act-loggedAt-{event.id}"
+												class="text-sm font-medium text-foreground"
+												>{t(locale, 'page.journal.day.activityTime')}</label
+											>
+											<input
+												id="edit-act-loggedAt-{event.id}"
+												name="loggedAt"
+												autocomplete="off"
+												type="datetime-local"
+												class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+												value={localDatetimeISO(new Date(event.loggedAt))}
+											/>
+										</div>
+										{#if editActivityHasDuration}
+											<div class="space-y-1.5">
+												<label
+													for="edit-act-duration-{event.id}"
+													class="text-sm font-medium text-foreground"
+													>{t(locale, 'page.journal.day.activityDuration')}</label
+												>
+												<input
+													id="edit-act-duration-{event.id}"
+													name="durationMinutes"
+													autocomplete="off"
+													type="number"
+													min="1"
+													class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+													value={event.durationMinutes ?? ''}
+													placeholder="30"
+												/>
+											</div>
 										{/if}
 									</div>
-									{#if event.notes}
-										<p class="text-sm mt-0.5 text-muted-foreground">
-											{stripMarkdown(event.notes)}
-										</p>
-									{/if}
-								</div>
-								<div class="text-xs shrink-0 text-muted-foreground text-right">
-									<span
-										>{new Date(event.loggedAt).toLocaleTimeString(undefined, {
-											hour: 'numeric',
-											minute: '2-digit',
-											...(serverTimezone ? { timeZone: serverTimezone } : {})
-										})}</span
-									>
-									<ByLine user={event.logger} />
-								</div>
-							</button>
-							<button
-								type="button"
-								onclick={() => startEditActivity(event)}
-								class="inline-flex items-center gap-1.5 justify-center rounded-md h-7 px-2 text-xs font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
-								><Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
-									>{t(locale, 'common.edit')}</span
-								></button
-							>
-							<button
-								type="button"
-								class="inline-flex items-center gap-1.5 justify-center rounded-md h-7 px-2 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-red-500 dark:hover:text-red-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
-								onclick={() => {
-									deleteActivityId = event.id;
-									openConfirm(() => deleteActivityForm?.requestSubmit());
-								}}
-							>
-								<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline"
-									>{t(locale, 'common.delete')}</span
+									<div class="space-y-1.5">
+										<label
+											for="edit-act-notes-{event.id}"
+											class="text-sm font-medium text-foreground"
+											>{t(locale, 'page.journal.day.activityNotes')}</label
+										>
+										<MarkdownTextarea
+											id="edit-act-notes-{event.id}"
+											name="notes"
+											value={event.notes ?? ''}
+											placeholder={t(locale, 'page.journal.day.activityNotes')}
+											rows={3}
+										/>
+									</div>
+									<div class="flex gap-3">
+										<button
+											type="submit"
+											class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
+											>{t(locale, 'common.save')}</button
+										>
+										<button
+											type="button"
+											onclick={() => (editingActivityId = null)}
+											class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
+											>{t(locale, 'common.cancel')}</button
+										>
+									</div>
+								</form>
+							</div>
+						{:else}
+							<div class="flex items-center gap-2 pl-5 pr-3 py-3">
+								<button
+									type="button"
+									onclick={() => openActivityDetail(event)}
+									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors -mx-2"
 								>
-							</button>
-						</div>
-					{/if}
-				{/each}
-			</div>
-		{/if}
-	</div>
+									<span class="text-xl shrink-0">{EVENT_ICONS[event.type] ?? '📝'}</span>
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center gap-2">
+											<Badge variant="secondary" class="capitalize">{event.type}</Badge>
+											{#if event.durationMinutes}
+												<span class="text-xs text-muted-foreground"
+													>{event.durationMinutes} min</span
+												>
+											{/if}
+										</div>
+										{#if event.notes}
+											<p class="text-sm mt-0.5 text-muted-foreground">
+												{stripMarkdown(event.notes)}
+											</p>
+										{/if}
+									</div>
+									<div class="text-xs shrink-0 text-muted-foreground text-right">
+										<span
+											>{new Date(event.loggedAt).toLocaleTimeString(undefined, {
+												hour: 'numeric',
+												minute: '2-digit',
+												...(serverTimezone ? { timeZone: serverTimezone } : {})
+											})}</span
+										>
+										<ByLine user={event.logger} />
+									</div>
+								</button>
+								<Button
+									variant="soft"
+									size="sm"
+									class="h-7 px-2 text-xs gap-1.5 shrink-0"
+									onclick={() => startEditActivity(event)}
+								>
+									<Pencil class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+										>{t(locale, 'common.edit')}</span
+									>
+								</Button>
+								<Button
+									variant="softDestructive"
+									size="sm"
+									class="h-7 px-2 text-xs gap-1.5 shrink-0"
+									onclick={() => {
+										deleteActivityId = event.id;
+										openConfirm(() => deleteActivityForm?.requestSubmit());
+									}}
+								>
+									<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+										>{t(locale, 'common.delete')}</span
+									>
+								</Button>
+							</div>
+						{/if}
+					{/each}
+				</div>
+			{/if}
+		</div>
 
-	<!-- Recent entries strip -->
-	{#if data.recentEntries.length > 0}
-		<div class="rounded-lg border border-border bg-card">
-			<div class="px-5 py-3 border-b border-border">
-				<h2 class="text-sm font-medium text-muted-foreground">
+		<!-- Recent entries -->
+		{#if data.recentEntries.length > 0}
+			<div class="space-y-2 pt-2 border-t border-border">
+				<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 					{t(locale, 'page.journal.day.recentEntries')}
-				</h2>
-			</div>
-			<div class="p-4">
+				</p>
 				<div class="flex flex-wrap gap-2">
 					{#each data.recentEntries as e (e.date)}
 						{@const entryMood = e.date === data.date ? mood : (e.mood ?? '')}
@@ -1273,8 +1299,8 @@
 					{/each}
 				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 <form

@@ -35,7 +35,7 @@
 	onfocusin={() => pauseToast(toast.id)}
 	onfocusout={() => resumeToast(toast.id)}
 	onkeydown={handleKeydown}
-	class="toast-item relative overflow-hidden rounded-md border bg-card text-card-foreground shadow-lg p-3 w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-2 duration-200"
+	class="toast-item relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-lg p-3 w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-2 duration-200"
 >
 	<div class="flex items-center gap-3">
 		<div class="flex-1 min-w-0">
@@ -49,7 +49,7 @@
 				type="button"
 				onclick={() => removeToast(toast.id)}
 				aria-label={toast.dismissLabel ?? 'Dismiss'}
-				class="inline-flex items-center justify-center rounded-md h-7 w-7 shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+				class="inline-flex items-center justify-center rounded-lg h-7 w-7 shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
 			>
 				<X class="h-3.5 w-3.5" />
 			</button>
@@ -61,9 +61,9 @@
 				<button
 					type="button"
 					onclick={() => fire(toast.onCommit)}
-					class="inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-xs font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+					class="inline-flex items-center gap-1 rounded-lg h-8 px-2.5 text-xs font-medium whitespace-nowrap border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
 				>
-					<CheckCheck class="h-3.5 w-3.5" />
+					<CheckCheck class="h-3.5 w-3.5 shrink-0" />
 					<span>{toast.commitLabel ?? 'Done'}</span>
 				</button>
 			{/if}
@@ -71,9 +71,9 @@
 				<button
 					type="button"
 					onclick={() => fire(toast.onLogEvent)}
-					class="inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-xs font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+					class="inline-flex items-center gap-1 rounded-lg h-8 px-2.5 text-xs font-medium whitespace-nowrap border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
 				>
-					<HeartPulse class="h-3.5 w-3.5" />
+					<HeartPulse class="h-3.5 w-3.5 shrink-0" />
 					<span>{toast.logEventLabel ?? 'Done & Log Event'}</span>
 				</button>
 			{/if}
@@ -83,9 +83,9 @@
 					data-toast-action="undo"
 					onclick={() => undoToast(toast.id)}
 					aria-label={toast.undoLabel ?? 'Undo'}
-					class="ms-auto inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-xs font-medium text-primary hover:bg-accent transition-colors"
+					class="ms-auto inline-flex items-center gap-1 rounded-lg h-8 px-2.5 text-xs font-medium whitespace-nowrap text-primary hover:bg-accent transition-colors"
 				>
-					<Undo2 class="h-3.5 w-3.5" />
+					<Undo2 class="h-3.5 w-3.5 shrink-0" />
 					<span>{toast.undoLabel ?? 'Undo'}</span>
 				</button>
 			{/if}

@@ -22,6 +22,16 @@ async function loginAs(
 
 const INITIAL_PASSWORD = 'e2e-password-123';
 
+// Opens the Manage drawer for the user row containing `username`, returns the dialog locator.
+async function openManage(page: import('@playwright/test').Page, username: string) {
+	const row = page.locator('div.px-6.py-4').filter({ hasText: username });
+	await expect(row).toBeVisible({ timeout: 6_000 });
+	await row.getByRole('button', { name: /manage/i }).click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog).toBeVisible({ timeout: 4_000 });
+	return dialog;
+}
+
 test.describe('admin-users', () => {
 	// -----------------------------------------------------------------------
 	// 1. Admin creates a new user and it appears in the list.
@@ -102,17 +112,16 @@ test.describe('admin-users', () => {
 		await form.getByRole('button', { name: /create user/i }).click();
 		await expect(asAdmin.getByText(/user created successfully/i)).toBeVisible({ timeout: 10_000 });
 
-		// Deactivate via More Actions menu.
+		// Deactivate via the Manage drawer.
 		const userRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'e2e-user-3' });
 		await expect(userRow).toBeVisible({ timeout: 6_000 });
 
-		await userRow.getByRole('button', { name: /more actions/i }).click();
-		const deactivateItem = asAdmin.getByRole('menuitem', { name: /deactivate/i });
-		await expect(deactivateItem).toBeVisible({ timeout: 4_000 });
-		await deactivateItem.click();
-
-		// Wait for the inactive badge to appear.
+		let dialog = await openManage(asAdmin, 'e2e-user-3');
+		await dialog.getByRole('button', { name: /deactivate/i }).click();
 		await expect(userRow.getByText(/inactive/i)).toBeVisible({ timeout: 10_000 });
+		// Close the drawer so it doesn't intercept pointer events for the next open.
+		await dialog.getByRole('button', { name: /close/i }).click();
+		await expect(asAdmin.getByRole('dialog')).toHaveCount(0, { timeout: 4_000 });
 
 		// Login with deactivated account should fail (stay on login page).
 		const ctx1 = await browser.newContext({ baseURL: app.server.baseURL });
@@ -126,13 +135,9 @@ test.describe('admin-users', () => {
 		await expect(loginPage1.locator('body')).not.toBeEmpty();
 		await ctx1.close();
 
-		// Reactivate via More Actions menu.
-		await userRow.getByRole('button', { name: /more actions/i }).click();
-		const activateItem = asAdmin.getByRole('menuitem', { name: /activate/i });
-		await expect(activateItem).toBeVisible({ timeout: 4_000 });
-		await activateItem.click();
-
-		// Inactive badge should disappear.
+		// Reactivate via Manage drawer.
+		dialog = await openManage(asAdmin, 'e2e-user-3');
+		await dialog.getByRole('button', { name: /^activate/i }).click();
 		await expect(userRow.getByText(/inactive/i)).toHaveCount(0, { timeout: 10_000 });
 
 		// Login now succeeds.
@@ -166,27 +171,17 @@ test.describe('admin-users', () => {
 		await form.getByRole('button', { name: /create user/i }).click();
 		await expect(asAdmin.getByText(/user created successfully/i)).toBeVisible({ timeout: 10_000 });
 
-		// Click the inline Edit button on the user row.
 		const userRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'e2e-user-4' });
 		await expect(userRow).toBeVisible({ timeout: 6_000 });
 
-		await userRow.getByRole('button', { name: /edit/i }).click();
-
-		// The inline edit form expands within the same row.
-		const editForm = userRow.locator('form[action="?/editUser"]');
+		const dialog = await openManage(asAdmin, 'e2e-user-4');
+		const editForm = dialog.locator('form[action="?/editUser"]');
 		await expect(editForm).toBeVisible({ timeout: 4_000 });
-
-		// Clear and re-fill the displayName field.
 		const displayNameInput = editForm.locator('input[name="displayName"]');
 		await displayNameInput.clear();
 		await displayNameInput.fill('E2E Renamed');
-
 		await editForm.getByRole('button', { name: /save/i }).click();
-
-		// Success feedback.
 		await expect(asAdmin.getByText(/user updated successfully/i)).toBeVisible({ timeout: 10_000 });
-
-		// The row should now show the new display name.
 		await expect(userRow.getByText('E2E Renamed')).toBeVisible({ timeout: 6_000 });
 	});
 
@@ -213,23 +208,15 @@ test.describe('admin-users', () => {
 		const userRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'e2e-user-5' });
 		await expect(userRow).toBeVisible({ timeout: 6_000 });
 
-		// Open More Actions → Reset Password.
-		await userRow.getByRole('button', { name: /more actions/i }).click();
-		const resetItem = asAdmin.getByRole('menuitem', { name: /reset password/i });
-		await expect(resetItem).toBeVisible({ timeout: 4_000 });
-		await resetItem.click();
-
-		// The reset-password inline panel appears (within the same row).
-		// Admin types the new password directly — there is no server-generated token.
-		const resetPanel = userRow.locator('form[action="?/resetPassword"]');
+		const dialog = await openManage(asAdmin, 'e2e-user-5');
+		const resetPanel = dialog.locator('form[action="?/resetPassword"]');
 		await expect(resetPanel).toBeVisible({ timeout: 4_000 });
-
 		const newPassword = 'e2e-new-password-456';
 		await resetPanel.locator('input[name="newPassword"]').fill(newPassword);
 		await resetPanel.getByRole('button', { name: /set password/i }).click();
-
-		// Panel disappears; no error shown.
-		await expect(resetPanel).toHaveCount(0, { timeout: 10_000 });
+		// Drawer stays open; close it before the re-login checks.
+		await dialog.getByRole('button', { name: /close/i }).click();
+		await expect(asAdmin.getByRole('dialog')).toHaveCount(0, { timeout: 4_000 });
 
 		// Old password no longer works.
 		const ctx1 = await browser.newContext({ baseURL: app.server.baseURL });
@@ -250,5 +237,20 @@ test.describe('admin-users', () => {
 		);
 		await expect(newPassPage).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
 		await cleanup();
+	});
+
+	// -----------------------------------------------------------------------
+	// 6. Sub-nav switches to companions; role badge shows for admin user.
+	// -----------------------------------------------------------------------
+	test('sub-nav switches to companions; role badge shows', async ({ asAdmin }) => {
+		await asAdmin.goto('/admin/users');
+		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
+		const adminRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'seed-admin' });
+		await expect(adminRow.getByText('Admin', { exact: true })).toBeVisible({ timeout: 6_000 });
+		await asAdmin
+			.getByRole('navigation', { name: /admin sections/i })
+			.getByRole('link', { name: /companions/i })
+			.click();
+		await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 10_000 });
 	});
 });

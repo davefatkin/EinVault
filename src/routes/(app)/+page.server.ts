@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 	const { companions } = await parent();
 
-	if (companions.length === 0) redirect(302, '/companions/new');
+	// 0 companions → fall through to the dashboard's first-run welcome (SP7).
 	if (companions.length === 1) redirect(302, `/${companions[0].id}`);
 
 	const now = new Date();

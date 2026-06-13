@@ -29,6 +29,9 @@
 
 	const fieldClass =
 		'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
+	// The preview renders block-level prose (paragraphs, <br>); `flex` would lay
+	// those out as flex items (paragraphs pushed side by side / right-aligned).
+	const previewClass = fieldClass.replace('flex ', 'block ');
 </script>
 
 <div class="space-y-1">
@@ -69,7 +72,7 @@
 
 	{#if mode === 'preview'}
 		<div
-			class="{fieldClass} prose prose-sm dark:prose-invert max-w-none"
+			class="{previewClass} prose prose-sm dark:prose-invert max-w-none"
 			style="min-height: {rows * 1.5}rem"
 		>
 			{#if value}
@@ -83,7 +86,7 @@
 		</div>
 	{/if}
 
-	<details class="group mt-1.5">
+	<details class="group relative mt-1.5">
 		<summary
 			class="inline-flex cursor-pointer select-none list-none items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors [&::-webkit-details-marker]:hidden"
 		>
@@ -100,7 +103,9 @@
 			>
 			{t(locale, 'component.markdown.markdownSupported')}
 		</summary>
-		<div class="mt-2 rounded-md bg-muted/60 px-3 py-2.5 text-xs space-y-1.5">
+		<div
+			class="absolute left-0 top-full z-20 mt-2 w-72 rounded-md border border-border bg-popover px-3 py-2.5 text-xs space-y-1.5 shadow-lg"
+		>
 			<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
 				<code class="font-mono text-[11px] text-foreground/70 whitespace-nowrap">**bold**</code>
 				<span><strong>{t(locale, 'component.markdown.cheatsheet.bold')}</strong></span>

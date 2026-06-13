@@ -1,16 +1,17 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { renderMarkdown } from '$lib/markdown';
-	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { X, Pencil, NotebookPen, ArrowRight, Play } from '@lucide/svelte';
+	import { X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import JournalTimelineEntry from '$lib/components/journal/JournalTimelineEntry.svelte';
 	import { tick } from 'svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
@@ -49,30 +50,11 @@
 		}
 	}
 
-	const EVENT_ICONS = ACTIVITY_ICONS;
-
-	function formatDate(d: string) {
-		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
 	function formatMonth(d: string) {
 		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
 			month: 'long',
 			year: 'numeric'
 		});
-	}
-
-	function mediaUrl(item: Entry['photos'][0], date: string) {
-		return `/api/photos/journal/${companion.id}/${date}/${item.filename}`;
-	}
-
-	function posterUrl(item: Entry['photos'][0], date: string) {
-		return item.posterKey ? `${mediaUrl(item, date)}?poster` : null;
 	}
 
 	function monthKey(date: string) {
@@ -174,7 +156,7 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{EVENT_ICONS[detailEvent.type] ?? '📝'}
+					{ACTIVITY_ICONS[detailEvent.type] ?? '📝'}
 					{detailEvent.type.charAt(0).toUpperCase() + detailEvent.type.slice(1)}
 				</h2>
 				<button
@@ -233,9 +215,8 @@
 						href="/{companion.id}/journal/{new Date(detailEvent.loggedAt)
 							.toISOString()
 							.slice(0, 10)}"
-						variant="outline"
+						variant="soft"
 						size="sm"
-						onclick={closeDetail}
 					>
 						<Pencil class="h-3.5 w-3.5 mr-1.5" />
 						{t(locale, 'page.journal.activityDetailOpenInJournal')}
@@ -267,20 +248,22 @@
 	</div>
 
 	{#if entries.length === 0}
-		<Card>
-			<CardContent class="text-center py-12">
-				<NotebookPen class="h-10 w-10 mb-3 mx-auto text-muted-foreground" />
-				<p class="font-medium mb-1 text-foreground">{t(locale, 'page.journal.emptyTitle')}</p>
-				<p class="text-sm mb-4 text-muted-foreground">
-					{t(locale, 'page.journal.emptyBody', { name: companion.name })}
-				</p>
-				{#if companion.isActive !== false}
-					<Button href="/{companion.id}/journal/{data.today}"
-						>{t(locale, 'page.journal.writeFirstEntry')}</Button
-					>
-				{/if}
-			</CardContent>
-		</Card>
+		<div class="rounded-xl border bg-card">
+			<EmptyState
+				tint="gold"
+				title={t(locale, 'page.journal.emptyTitle')}
+				body={t(locale, 'page.journal.emptyBody', { name: companion.name })}
+			>
+				{#snippet icon()}<NotebookPen class="h-5 w-5" />{/snippet}
+				{#snippet action()}
+					{#if companion.isActive !== false}
+						<Button href="/{companion.id}/journal/{data.today}"
+							>{t(locale, 'page.journal.writeFirstEntry')}</Button
+						>
+					{/if}
+				{/snippet}
+			</EmptyState>
+		</div>
 	{:else}
 		{@const grouped = entries.reduce<{ month: string; items: Entry[] }[]>((acc, entry) => {
 			const mk = monthKey(entry.date);
@@ -298,142 +281,18 @@
 				<Separator class="flex-1" />
 			</div>
 
-			{#each group.items as entry (entry.date)}
-				<Card class="overflow-hidden">
-					<CardHeader class="py-3 px-5">
-						<div class="flex items-center justify-between gap-3">
-							<div class="flex items-center gap-2 min-w-0">
-								{#if entry.mood && MOOD_ICONS[entry.mood]}
-									<span class="text-xl shrink-0" title={entry.mood}>{MOOD_ICONS[entry.mood]}</span>
-								{:else}
-									<NotebookPen class="h-5 w-5 shrink-0 opacity-30 text-foreground" />
-								{/if}
-								<div class="min-w-0">
-									<h2 class="font-semibold text-sm leading-snug truncate text-foreground">
-										{formatDate(entry.date)}
-									</h2>
-									{#if entry.date === data.today}
-										<span class="text-xs font-medium text-primary"
-											>{t(locale, 'page.journal.today')}</span
-										>
-									{/if}
-									<ByLine user={entry.logger} variant="inline" class="ml-0" />
-									{#if entry.updatedBy && entry.updatedBy !== entry.loggedBy && entry.updater}
-										<span class="text-xs text-muted-foreground">
-											· {t(locale, 'common.updatedBy', { name: entry.updater.displayName })}
-										</span>
-									{/if}
-								</div>
-							</div>
-							{#if companion.isActive !== false}
-								<Button
-									href="/{companion.id}/journal/{entry.date}"
-									variant="ghost"
-									size="sm"
-									class="h-7 text-xs shrink-0 gap-1"
-								>
-									<Pencil class="h-3 w-3" />
-									{t(locale, 'page.journal.edit')}
-								</Button>
-							{/if}
-						</div>
-					</CardHeader>
-
-					<!-- Media -->
-					{#if entry.photos.length > 0}
-						<div
-							class="grid gap-0.5 {entry.photos.length === 1
-								? 'grid-cols-1'
-								: entry.photos.length === 2
-									? 'grid-cols-2'
-									: 'grid-cols-3'}"
-						>
-							{#each entry.photos as item, i (item.id)}
-								<button
-									type="button"
-									onclick={() => openLightbox(entry.photos, entry.date, i)}
-									class="relative block overflow-hidden {entry.photos.length === 1
-										? 'aspect-video'
-										: 'aspect-square'} hover:opacity-95 transition-opacity"
-									title={item.originalName ??
-										t(
-											locale,
-											item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
-										)}
-								>
-									{#if item.mediaType === 'video'}
-										{#if item.posterKey}
-											<img
-												src={posterUrl(item, entry.date)}
-												alt={item.originalName ?? ''}
-												class="w-full h-full object-cover pointer-events-none"
-												loading="lazy"
-											/>
-										{:else}
-											<video
-												src={mediaUrl(item, entry.date)}
-												preload="metadata"
-												muted
-												playsinline
-												class="w-full h-full object-cover pointer-events-none"
-											></video>
-										{/if}
-										<span
-											class="absolute inset-0 flex items-center justify-center bg-black/20"
-											aria-hidden="true"
-										>
-											<span class="rounded-full bg-black/55 p-2">
-												<Play class="h-5 w-5 text-white" />
-											</span>
-										</span>
-									{:else}
-										<img
-											src={mediaUrl(item, entry.date)}
-											alt={item.originalName ?? ''}
-											class="w-full h-full object-cover"
-											loading="lazy"
-										/>
-									{/if}
-								</button>
-							{/each}
-						</div>
-					{/if}
-
-					<!-- Markdown body -->
-					{#if entry.body?.trim()}
-						<CardContent class="py-4">
-							<div class="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
-								{@html renderMarkdown(entry.body)}
-							</div>
-						</CardContent>
-					{:else if !entry.photos.length && !entry.events.length}
-						<CardContent class="py-4">
-							<p class="text-sm italic text-muted-foreground">
-								{t(locale, 'page.journal.noNotes')}
-							</p>
-						</CardContent>
-					{/if}
-
-					<!-- Activities -->
-					{#if entry.events.length > 0}
-						<div class="px-5 pt-3 pb-4 flex flex-wrap gap-1.5">
-							{#each entry.events as event (event.id)}
-								<button
-									type="button"
-									onclick={() => openDetail(event)}
-									class="inline-flex items-center gap-1 rounded-full border border-transparent bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-								>
-									{EVENT_ICONS[event.type] ?? '📝'}
-									<span class="capitalize">{event.type}</span>
-									{#if event.durationMinutes}
-										<span class="text-muted-foreground">· {event.durationMinutes}m</span>
-									{/if}
-								</button>
-							{/each}
-						</div>
-					{/if}
-				</Card>
-			{/each}
+			<div class="space-y-3">
+				{#each group.items as entry (entry.date)}
+					<JournalTimelineEntry
+						{entry}
+						companionId={companion.id}
+						today={data.today}
+						canEdit={companion.isActive !== false}
+						onOpenLightbox={openLightbox}
+						onOpenActivity={openDetail}
+					/>
+				{/each}
+			</div>
 		{/each}
 
 		{#if hasMore}

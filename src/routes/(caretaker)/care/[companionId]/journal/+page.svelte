@@ -263,10 +263,10 @@
 				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse"
 						>{t(locale, 'page.journal.caretaker.savingStatus')}</span
 					>
-				{:else if saveStatus === 'saved'}<span class="text-[hsl(var(--moss))]"
+				{:else if saveStatus === 'saved'}<span class="text-teal"
 						>{t(locale, 'page.journal.caretaker.savedStatus')}</span
 					>
-				{:else if saveStatus === 'error'}<span class="text-red-500"
+				{:else if saveStatus === 'error'}<span class="text-destructive"
 						>{t(locale, 'page.journal.caretaker.saveFailedStatus')}</span
 					>
 				{/if}
@@ -303,9 +303,7 @@
 						title={m.label}
 						aria-pressed={mood === m.value}
 						class="text-2xl leading-none p-2 rounded-xl transition-all
-						{mood === m.value
-							? 'bg-moss-100 dark:bg-moss-900 ring-1 ring-moss-300 dark:ring-moss-700'
-							: 'opacity-40 hover:opacity-80'}"
+						{mood === m.value ? 'bg-primary/10 ring-1 ring-primary/30' : 'opacity-40 hover:opacity-80'}"
 					>
 						{m.icon}
 					</button>
@@ -313,10 +311,10 @@
 			</div>
 		</div>
 
-		<!-- Write area -->
-		<Card class="overflow-hidden">
+		<!-- Write area: overflow-visible so the MarkdownTextarea "supported" popover isn't clipped -->
+		<Card class="overflow-visible">
 			<div class="border-b border-border/60 flex items-center justify-between px-4 py-2.5">
-				<span class="text-sm font-medium text-muted-foreground"
+				<span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
 					>{t(locale, 'page.journal.caretaker.todaysNotes')}</span
 				>
 				<span class="text-xs text-muted-foreground"
@@ -367,7 +365,7 @@
 			{#if uploadError}
 				<div
 					role="alert"
-					class="mx-4 my-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+					class="mx-4 my-3 rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive"
 				>
 					{uploadError}
 				</div>
@@ -424,7 +422,7 @@
 											aria-label={t(locale, 'aria.deleteMedia')}
 											class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 											flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
-											hover:bg-red-600 transition-all"
+											hover:bg-destructive transition-all"
 										>
 											<Trash2 class="h-3 w-3" />
 										</button>

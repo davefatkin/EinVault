@@ -112,4 +112,27 @@ test.describe('caretaker', () => {
 		// Must NOT be on the requested app route
 		await expect(asCaretaker).not.toHaveURL(new RegExp(`/${BISCUIT}/health`));
 	});
+
+	test('care page is action-first with a quick-log deep link', async ({ asCaretaker }) => {
+		await asCaretaker.goto(`/care/${BISCUIT}`);
+		// Scope to the quick-log section by its heading text to avoid collisions
+		const quickLogSection = asCaretaker.locator('section').filter({ hasText: 'Quick log' });
+		const walkQuick = quickLogSection.getByRole('link', { name: /walk/i });
+		await expect(walkQuick).toBeVisible({ timeout: 8_000 });
+		await walkQuick.click();
+		await expect(asCaretaker).toHaveURL(/\/log\?type=walk/, { timeout: 8_000 });
+	});
+
+	test('care page shows a Schedules section with one card per set schedule', async ({
+		asCaretaker
+	}) => {
+		await asCaretaker.goto(`/care/${BISCUIT}`);
+		const schedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
+		await expect(schedules.getByRole('heading', { name: 'Schedules' })).toBeVisible({
+			timeout: 8_000
+		});
+		// Walk schedule is unset → only the feeding + medication cards render.
+		await expect(schedules.getByText('Heartworm chew monthly')).toBeVisible();
+		await expect(schedules.getByText('Morning kibble, evening kibble')).toBeVisible();
+	});
 });

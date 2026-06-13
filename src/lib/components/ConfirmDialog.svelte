@@ -81,10 +81,10 @@
 		>
 			<p id={messageId} class="text-sm text-foreground">{message}</p>
 			<div class="flex justify-end gap-2 mt-5">
-				<Button variant="outline" size="sm" onclick={oncancel}
+				<Button variant="ghost" size="sm" onclick={oncancel}
 					>{t(locale, 'component.confirmDialog.cancel')}</Button
 				>
-				<Button variant="destructive" size="sm" onclick={onconfirm}
+				<Button variant="softDestructive" size="sm" onclick={onconfirm}
 					>{confirmLabel ?? t(locale, 'component.confirmDialog.delete')}</Button
 				>
 			</div>

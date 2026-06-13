@@ -3,25 +3,28 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
-	import { Card, CardHeader, CardContent, CardTitle } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell, CheckCheck } from '@lucide/svelte';
+	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { ACTIVITY_ICONS, activityTypeOptions } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let { companion, medications, todayActivity, latestWeight, owners, upcomingReminders } =
-		$derived(data);
+	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
+	const quickLogTypes = activityTypeOptions(locale).filter((opt) =>
+		['walk', 'meal', 'bathroom'].includes(opt.value)
+	);
 
 	function age(dob: string | null): string {
 		if (!dob) return 'Unknown age';
@@ -123,6 +126,10 @@
 	}
 
 	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
+	let hasVetInfo = $derived(!!(companion.vetName || companion.vetClinic || companion.vetPhone));
+	let hasEmergencyContact = $derived(
+		!!(companion.emergencyContactName || companion.emergencyContactPhone)
+	);
 
 	// Pending reminder dismissals
 	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 0) * 1000);
@@ -312,9 +319,7 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelDue')}</span
 					>
 					<span
-						class={new Date(selectedReminder.dueAt) < new Date()
-							? 'text-destructive'
-							: 'text-foreground'}
+						class={new Date(selectedReminder.dueAt) < new Date() ? 'text-coral' : 'text-foreground'}
 					>
 						<LocalTime date={selectedReminder.dueAt} format="datetime" />
 					</span>
@@ -344,9 +349,9 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
-				<button
-					type="button"
-					onclick={() => {
+				<ReminderCompleteButtons
+					allowLogEvent={false}
+					onDone={() => {
 						if (!selectedReminder) return;
 						const item = selectedReminder;
 						const form = dismissFormRegistry.get(item.id);
@@ -354,21 +359,20 @@
 						closeReminderDetail();
 						pendingDismiss.queue(item.id, form, item.title);
 					}}
-					class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
-				>
-					<CheckCheck class="h-3.5 w-3.5" />
-					{t(locale, 'common.reminder.done')}
-				</button>
+				/>
 			</div>
 		</div>
 	</div>
 {/if}
 
 <div class="space-y-5">
-	<!-- Companion card -->
-	<Card class="overflow-hidden">
-		<div class="bg-gradient-to-r from-moss-600 to-moss-700 px-6 py-5 text-white">
-			<div class="flex items-center gap-4">
+	<!-- 1. Companion hero -->
+	<div
+		class="rounded-2xl border bg-card overflow-hidden"
+		style="background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--color-teal) 20%, transparent), transparent 55%), radial-gradient(120% 140% at 0% 120%, color-mix(in srgb, var(--color-coral) 15%, transparent), transparent 55%), var(--color-card);"
+	>
+		<div class="px-5 py-6">
+			<div class="flex items-start gap-4">
 				<CompanionAvatar
 					companionId={companion.id}
 					avatarPath={companion.avatarPath}
@@ -376,329 +380,317 @@
 					size="lg"
 					onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
 				/>
-				<div>
-					<h1 class="font-display text-2xl font-bold">{companion.name}</h1>
-					<p class="text-moss-100 text-sm">
+				<div class="flex-1 min-w-0">
+					<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
+						{companion.name}
+					</h1>
+					<p class="text-sm text-muted-foreground mt-0.5">
 						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
 							companion.dob
 						)}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					{#if companion.microchip}
-						<p class="text-moss-200 text-xs mt-1">
+						<p class="text-xs text-muted-foreground mt-1">
 							{t(locale, 'page.dashboard.caretaker.microchip', { id: companion.microchip })}
 						</p>
+					{/if}
+					{#if latestWeight}
+						<div class="mt-2 flex items-baseline gap-1">
+							<span class="text-base font-bold text-foreground"
+								>{latestWeight.weight}<span class="text-xs font-normal ml-0.5 text-muted-foreground"
+									>{latestWeight.unit}</span
+								></span
+							>
+							<span class="text-xs text-muted-foreground">
+								· {t(locale, 'page.dashboard.caretaker.weightAsOf')}
+								<LocalTime date={latestWeight.recordedAt} /></span
+							>
+						</div>
 					{/if}
 				</div>
 			</div>
 		</div>
-	</Card>
-
-	<!-- Latest weight (read-only) -->
-	{#if latestWeight}
-		<div class="rounded-lg border border-border bg-card p-4">
-			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-				{t(locale, 'page.dashboard.caretaker.labelWeight')}
-			</h3>
-			<p class="text-2xl font-bold text-foreground">
-				{latestWeight.weight}<span class="text-sm font-normal ml-1 text-muted-foreground"
-					>{latestWeight.unit}</span
-				>
-			</p>
-			<p class="text-xs text-muted-foreground mt-1">
-				{t(locale, 'page.dashboard.caretaker.weightAsOf')}
-				<LocalTime date={latestWeight.recordedAt} />
-			</p>
-		</div>
-	{/if}
-
-	<!-- Schedules -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		{#if companion.feedingSchedule}
-			<Card>
-				<CardHeader class="pb-3">
-					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🍖</span>
-						{t(locale, 'page.dashboard.caretaker.cardFeeding')}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div class="prose prose-sm dark:prose-invert max-w-none">
-						{@html renderMarkdown(companion.feedingSchedule)}
-					</div>
-				</CardContent>
-			</Card>
-		{/if}
-		{#if companion.walkSchedule}
-			<Card>
-				<CardHeader class="pb-3">
-					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🦮</span>
-						{t(locale, 'page.dashboard.caretaker.cardWalk')}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div class="prose prose-sm dark:prose-invert max-w-none">
-						{@html renderMarkdown(companion.walkSchedule)}
-					</div>
-				</CardContent>
-			</Card>
-		{/if}
 	</div>
 
-	<!-- Medications -->
-	{#if medications.length > 0}
-		<Card>
-			<CardHeader class="pb-3">
-				<CardTitle class="font-semibold flex items-center gap-2">
-					<span>💊</span>
-					{t(locale, 'page.dashboard.caretaker.cardMedications')}
-				</CardTitle>
-			</CardHeader>
-			<CardContent class="space-y-3">
-				{#each medications as med (med.id)}
-					<div class="flex gap-3 text-sm">
-						<div class="flex-1">
-							<p class="font-medium">{med.title}</p>
-							{#if med.notes}<div
-									class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
-								>
-									{@html renderMarkdown(med.notes)}
-								</div>{/if}
-						</div>
-					</div>
-				{/each}
-			</CardContent>
-		</Card>
+	<!-- 1b. Bio / About (reference) -->
+	{#if companion.bio}
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.dashboard.caretaker.cardAbout', { name: companion.name })}
+			</h2>
+			<div class="prose prose-sm dark:prose-invert max-w-none">
+				{@html renderMarkdown(companion.bio)}
+			</div>
+		</section>
 	{/if}
 
-	<!-- Reminders (only visible when on shift) -->
+	<!-- 2. Today's tasks (on-shift only) -->
 	{#if data.isOnShift}
-		<Card>
-			<CardHeader class="pb-3">
-				<CardTitle class="font-semibold flex items-center gap-2">
-					<Bell class="h-4 w-4" />
+		<section>
+			<div class="mb-3 flex items-center gap-1.5">
+				<h2
+					class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+				>
+					<Bell class="h-3.5 w-3.5" />
 					{t(locale, 'page.dashboard.caretaker.cardReminders')}
-					{#if upcomingReminders.length > 0}
-						<Badge variant="secondary" class="ml-auto">{upcomingReminders.length}</Badge>
-					{/if}
-				</CardTitle>
-			</CardHeader>
-			<CardContent class="pt-0">
-				{#if upcomingReminders.length === 0}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.caretaker.remindersEmpty')}
-					</p>
-				{:else}
-					<div class="space-y-1">
-						{#each upcomingReminders as reminder (reminder.id)}
-							{@const isOverdue = new Date(reminder.dueAt) < new Date()}
-							<div class="flex items-center gap-2 rounded-lg">
-								<button
-									type="button"
-									onclick={() => openReminderDetail(reminder)}
-									class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0"
-								>
-									<span class="truncate text-foreground">{reminder.title}</span>
-									{#if isOverdue}
-										<Badge variant="destructive" class="shrink-0 text-xs"
-											>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
-										>
-									{/if}
-									<span
-										class="ml-auto shrink-0 text-xs {isOverdue
-											? 'text-destructive'
-											: 'text-muted-foreground'}"
+				</h2>
+				{#if upcomingReminders.length > 0}
+					<Badge variant="secondary">{upcomingReminders.length}</Badge>
+				{/if}
+			</div>
+			{#if upcomingReminders.length === 0}
+				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.remindersEmpty')}>
+					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+				</EmptyState>
+			{:else}
+				<div class="space-y-1">
+					{#each upcomingReminders as reminder (reminder.id)}
+						{@const isOverdue = new Date(reminder.dueAt) < new Date()}
+						<div class="flex items-center gap-2 rounded-lg">
+							<button
+								type="button"
+								onclick={() => openReminderDetail(reminder)}
+								class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0"
+							>
+								<span class="truncate text-foreground">{reminder.title}</span>
+								{#if isOverdue}
+									<Badge variant="coral" class="shrink-0 text-xs"
+										>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
 									>
-										<LocalTime date={reminder.dueAt} format="datetime" />
-									</span>
-								</button>
-								<form
-									method="POST"
-									action="?/complete"
-									use:enhance={clearSubmittingFlag}
-									use:registerDismissForm={{
-										id: reminder.id,
-										registry: dismissFormRegistry
+								{/if}
+								<span
+									class="ml-auto shrink-0 text-xs {isOverdue
+										? 'text-coral'
+										: 'text-muted-foreground'}"
+								>
+									<LocalTime date={reminder.dueAt} format="datetime" />
+								</span>
+							</button>
+							<form
+								method="POST"
+								action="?/complete"
+								use:enhance={clearSubmittingFlag}
+								use:registerDismissForm={{
+									id: reminder.id,
+									registry: dismissFormRegistry
+								}}
+								class="flex items-center gap-1 shrink-0"
+							>
+								<input type="hidden" name="id" value={reminder.id} />
+								<ReminderCompleteButtons
+									allowLogEvent={false}
+									onDone={() => {
+										const form = dismissFormRegistry.get(reminder.id);
+										if (form) pendingDismiss.queue(reminder.id, form, reminder.title);
 									}}
-									class="flex items-center gap-1 shrink-0"
-								>
-									<input type="hidden" name="id" value={reminder.id} />
-									<button
-										type="button"
-										onclick={(e: MouseEvent) => {
-											const btn = e.currentTarget as HTMLButtonElement;
-											if (btn.form) {
-												pendingDismiss.queue(reminder.id, btn.form, reminder.title);
-											}
-										}}
-										class="inline-flex items-center gap-1 justify-center rounded-md h-9 px-3 text-sm font-medium bg-primary text-primary-foreground transition-colors hover:bg-primary/90 shrink-0"
+								/>
+							</form>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
+
+		<!-- 3. Quick log -->
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+				{t(locale, 'page.dashboard.caretaker.sectionQuickLog')}
+			</h2>
+			<div class="flex gap-2">
+				{#each quickLogTypes as opt (opt.value)}
+					<a
+						href="/care/{companion.id}/log?type={opt.value}"
+						class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+					>
+						<span class="text-lg">{opt.icon}</span>
+						<span>{opt.label}</span>
+					</a>
+				{/each}
+				<a
+					href="/care/{companion.id}/log"
+					class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+				>
+					<span class="text-lg">+</span>
+					<span>{t(locale, 'page.dashboard.caretaker.logActivity')}</span>
+				</a>
+			</div>
+		</section>
+	{/if}
+
+	<!-- 4a. Schedules (reference): 1–3 cards, evenly spaced across one row (flex-1 each) -->
+	{#if companion.feedingSchedule || companion.walkSchedule || companion.medicationSchedule}
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+				{t(locale, 'page.dashboard.caretaker.sectionSchedules')}
+			</h2>
+			<div class="flex flex-col sm:flex-row gap-4">
+				{#if companion.feedingSchedule}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🍖</span>
+							{t(locale, 'page.dashboard.caretaker.cardFeeding')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(companion.feedingSchedule)}
+						</div>
+					</div>
+				{/if}
+				{#if companion.walkSchedule}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🦮</span>
+							{t(locale, 'page.dashboard.caretaker.cardWalk')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(companion.walkSchedule)}
+						</div>
+					</div>
+				{/if}
+				{#if companion.medicationSchedule}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>💊</span>
+							{t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')}
+						</p>
+						<div class="prose prose-sm dark:prose-invert max-w-none">
+							{@html renderMarkdown(companion.medicationSchedule)}
+						</div>
+					</div>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
+	<!-- 4b. Sitter notes (reference) -->
+	{#if companion.notesForSitter}
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
+			</h2>
+			<div class="prose prose-sm dark:prose-invert max-w-none">
+				{@html renderMarkdown(companion.notesForSitter)}
+			</div>
+		</section>
+	{/if}
+
+	<!-- 4c. Contacts (reference): vet + emergency prioritized, then household -->
+	{#if hasVetInfo || hasEmergencyContact || visibleOwners.length > 0}
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+				{t(locale, 'page.dashboard.caretaker.sectionContacts')}
+			</h2>
+			<div class="flex flex-col sm:flex-row gap-4">
+				{#if hasVetInfo}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4 space-y-1 text-sm">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🏥</span>
+							{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
+						</p>
+						{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
+						{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
+						{#if companion.vetPhone}
+							📞 <a
+								href="tel:{companion.vetPhone}"
+								class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
+							>
+						{/if}
+					</div>
+				{/if}
+				{#if hasEmergencyContact}
+					<div
+						class="flex-1 min-w-0 rounded-xl border border-coral/30 bg-card p-4 space-y-1 text-sm"
+					>
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🚨</span>
+							{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
+						</p>
+						{#if companion.emergencyContactName}
+							<p class="font-medium">{companion.emergencyContactName}</p>
+						{/if}
+						{#if companion.emergencyContactPhone}
+							📞 <a
+								href="tel:{companion.emergencyContactPhone}"
+								class="text-coral hover:underline font-medium text-base"
+								>{companion.emergencyContactPhone}</a
+							>
+						{/if}
+					</div>
+				{/if}
+				{#if visibleOwners.length > 0}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4 space-y-3">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🏠</span>
+							{visibleOwners.length === 1
+								? t(locale, 'page.dashboard.caretaker.householdOwner')
+								: t(locale, 'page.dashboard.caretaker.householdContacts')}
+						</p>
+						{#each visibleOwners as owner (owner.id)}
+							<div class="space-y-1">
+								<p class="font-semibold text-foreground">{owner.displayName}</p>
+								{#if owner.phone}
+									<a
+										href="tel:{owner.phone}"
+										class="flex items-center gap-2 text-sm text-primary-link hover:underline"
 									>
-										<CheckCheck class="h-3.5 w-3.5" />
-										<span class="hidden sm:inline">{t(locale, 'common.reminder.done')}</span>
-									</button>
-								</form>
+										<Phone class="h-4 w-4" />{owner.phone}
+									</a>
+								{/if}
+								{#if owner.email}
+									<a
+										href="mailto:{owner.email}"
+										class="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
+									>
+										<Mail class="h-4 w-4" />{owner.email}
+									</a>
+								{/if}
 							</div>
 						{/each}
 					</div>
 				{/if}
-			</CardContent>
-		</Card>
-	{/if}
-
-	<!-- Contacts -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		{#if companion.vetName || companion.vetClinic || companion.vetPhone}
-			<Card>
-				<CardHeader class="pb-3">
-					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🏥</span>
-						{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
-					</CardTitle>
-				</CardHeader>
-				<CardContent class="space-y-1 text-sm">
-					{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
-					{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
-					{#if companion.vetPhone}
-						📞 <a href="tel:{companion.vetPhone}" class="hover:underline font-medium text-primary"
-							>{companion.vetPhone}</a
-						>
-					{/if}
-				</CardContent>
-			</Card>
-		{/if}
-		{#if companion.emergencyContactName || companion.emergencyContactPhone}
-			<Card class="border-destructive/30">
-				<CardHeader class="pb-3 bg-destructive/5 dark:bg-destructive/10 rounded-t-lg">
-					<CardTitle class="font-semibold flex items-center gap-2">
-						<span>🚨</span>
-						{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
-					</CardTitle>
-				</CardHeader>
-				<CardContent class="space-y-1 text-sm">
-					{#if companion.emergencyContactName}
-						<p class="font-medium">{companion.emergencyContactName}</p>
-					{/if}
-					{#if companion.emergencyContactPhone}
-						📞 <a
-							href="tel:{companion.emergencyContactPhone}"
-							class="text-red-600 dark:text-red-400 hover:underline font-medium text-base"
-							>{companion.emergencyContactPhone}</a
-						>
-					{/if}
-				</CardContent>
-			</Card>
-		{/if}
-	</div>
-
-	<!-- Household contacts -->
-	{#if visibleOwners.length > 0}
-		<div class="rounded-lg border border-border bg-card p-4 space-y-3">
-			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-				{visibleOwners.length === 1
-					? t(locale, 'page.dashboard.caretaker.householdOwner')
-					: t(locale, 'page.dashboard.caretaker.householdContacts')}
-			</h3>
-			{#each visibleOwners as owner (owner.id)}
-				<div class="space-y-1">
-					<p class="font-semibold text-foreground">{owner.displayName}</p>
-					{#if owner.phone}
-						<a
-							href="tel:{owner.phone}"
-							class="flex items-center gap-2 text-sm text-primary hover:underline"
-						>
-							<Phone class="h-4 w-4" />{owner.phone}
-						</a>
-					{/if}
-					{#if owner.email}
-						<a
-							href="mailto:{owner.email}"
-							class="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
-						>
-							<Mail class="h-4 w-4" />{owner.email}
-						</a>
-					{/if}
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Sitter notes -->
-	{#if companion.notesForSitter}
-		<Card>
-			<CardHeader class="pb-3">
-				<CardTitle class="font-semibold flex items-center gap-2">
-					<span>📌</span>
-					{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div class="prose prose-sm dark:prose-invert max-w-none">
-					{@html renderMarkdown(companion.notesForSitter)}
-				</div>
-			</CardContent>
-		</Card>
-	{/if}
-
-	<!-- About companion (bio) -->
-	{#if companion.bio?.trim()}
-		<div class="rounded-lg border border-border bg-card p-4">
-			<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-				{t(locale, 'page.dashboard.caretaker.cardAbout', { name: companion.name })}
-			</h3>
-			<div class="prose prose-sm dark:prose-invert max-w-none">
-				{@html renderMarkdown(companion.bio)}
 			</div>
-		</div>
+		</section>
 	{/if}
 
-	<!-- Today's activity (only visible when on shift) -->
+	<!-- 5. Today's activity -->
 	{#if data.isOnShift}
-		<Card>
-			<CardHeader class="pb-3 flex flex-row items-center justify-between">
-				<CardTitle class="font-semibold flex items-center gap-2">
-					<span>📋</span>
-					{t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
-				</CardTitle>
-				<a href="/care/{companion.id}/log" class="text-primary text-xs hover:underline"
-					>{t(locale, 'page.dashboard.caretaker.logActivity')}</a
-				>
-			</CardHeader>
-			<CardContent>
-				{#if todayActivity.length === 0}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.caretaker.activityEmpty')}
-					</p>
-				{:else}
-					<div class="space-y-1">
-						{#each todayActivity as event (event.id)}
-							<button
-								type="button"
-								onclick={() => openDetail(event)}
-								class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
-							>
-								<div class="flex items-center gap-3 text-sm">
-									<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
-									<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
-									{#if event.durationMinutes}
-										<span class="text-xs text-muted-foreground shrink-0"
-											>{event.durationMinutes} min</span
-										>
-									{/if}
-									{#if event.notes}
-										<span class="truncate text-muted-foreground text-xs"
-											>{stripMarkdown(event.notes)}</span
-										>
-									{/if}
-									<span class="ml-auto text-xs shrink-0 text-muted-foreground">
-										<LocalTime date={event.loggedAt} format="time" />
-									</span>
-								</div>
-								<ByLine user={event.logger} class="pl-8" />
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</CardContent>
-		</Card>
+		<section>
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+				📋 {t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
+			</h2>
+			{#if todayActivity.length === 0}
+				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.activityEmpty')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
+			{:else}
+				<div class="space-y-1">
+					{#each todayActivity as event (event.id)}
+						<button
+							type="button"
+							onclick={() => openDetail(event)}
+							class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
+						>
+							<div class="flex items-center gap-3 text-sm">
+								<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
+								<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
+								{#if event.durationMinutes}
+									<span class="text-xs text-muted-foreground shrink-0"
+										>{event.durationMinutes} min</span
+									>
+								{/if}
+								{#if event.notes}
+									<span class="truncate text-muted-foreground text-xs"
+										>{stripMarkdown(event.notes)}</span
+									>
+								{/if}
+								<span class="ml-auto text-xs shrink-0 text-muted-foreground">
+									<LocalTime date={event.loggedAt} format="time" />
+								</span>
+							</div>
+							<ByLine user={event.logger} class="pl-8" />
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</section>
 	{/if}
 </div>

@@ -34,6 +34,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	theme: async ({ request, locals, cookies }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+
+		const data = await request.formData();
+		const theme = String(data.get('theme') ?? 'system');
+		if (!['light', 'dark', 'system'].includes(theme)) {
+			return fail(400, { themeError: t(locals.locale, 'error.invalidTheme') });
+		}
+
+		await db
+			.update(schema.users)
+			.set({ theme: theme as 'light' | 'dark' | 'system' })
+			.where(eq(schema.users.id, locals.user.id));
+
+		cookies.set('einvault_theme', theme, {
+			path: '/',
+			httpOnly: false,
+			secure: isSecureRequest(request),
+			sameSite: 'strict',
+			maxAge: 60 * 60 * 24 * 365
+		});
+
+		return { themeSuccess: true };
+	},
+
 	locale: async ({ request, locals, cookies }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 

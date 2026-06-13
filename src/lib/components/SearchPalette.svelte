@@ -4,6 +4,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Search, X } from '@lucide/svelte';
 	import { parseSigilToken, stripSigilToken } from '$lib/searchSigil';
+	import { stripMarkdown } from '$lib/markdown';
 
 	export type SearchEntityType =
 		| 'journal'
@@ -483,7 +484,7 @@
 				<div class="flex flex-wrap gap-1.5 px-4 py-2 border-b border-border">
 					{#each companionFilters as cf (cf.id)}
 						<span
-							class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-xs font-medium px-2 py-0.5"
+							class="inline-flex items-center gap-1 rounded-full bg-primary/15 text-foreground text-xs font-medium px-2 py-0.5"
 						>
 							{cf.name}
 							<button
@@ -578,9 +579,10 @@
 						{t(locale, 'common.loading')}
 					</p>
 				{:else if results.length === 0}
-					<p class="px-4 py-6 text-center text-sm text-muted-foreground">
-						{t(locale, 'search.noResults')}
-					</p>
+					<div class="px-4 py-8 flex flex-col items-center gap-2 text-center">
+						<Search class="h-5 w-5 text-muted-foreground" />
+						<p class="text-sm text-muted-foreground">{t(locale, 'search.noResults')}</p>
+					</div>
 				{:else}
 					<ul
 						id="search-results"
@@ -591,7 +593,7 @@
 						{#each groups as group, gi (group.type)}
 							<li role="presentation">
 								<p
-									class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+									class="px-4 pt-3 pb-1 text-xs font-bold uppercase tracking-widest text-foreground border-b border-border/50 mb-0.5"
 								>
 									{groupLabel(group.type)}
 								</p>
@@ -627,20 +629,18 @@
 												{#if item.snippet && item.snippet.trim().length > 0}
 													<p class="text-xs text-muted-foreground mt-0.5 line-clamp-2">
 														{#each item.snippet.split('\x01') as part, i (i)}
-															{#if i === 0}{part}{:else}{@const [marked, rest] = splitOnce(
-																	part,
-																	'\x02'
-																)}<mark
+															{#if i === 0}{stripMarkdown(part)}{:else}{@const [marked, rest] =
+																	splitOnce(part, '\x02')}<mark
 																	class="bg-yellow-200 dark:bg-yellow-800 text-foreground rounded-sm px-0.5"
-																	>{marked}</mark
-																>{rest}{/if}
+																	>{stripMarkdown(marked)}</mark
+																>{stripMarkdown(rest)}{/if}
 														{/each}
 													</p>
 												{/if}
 											</div>
 											<div class="flex flex-col items-end gap-1 shrink-0">
 												<span
-													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary"
+													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/15 text-foreground"
 												>
 													{item.companionName}
 												</span>

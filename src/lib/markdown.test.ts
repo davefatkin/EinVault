@@ -9,6 +9,13 @@ describe('renderMarkdown', () => {
 		expect(html).toContain('<code>code</code>');
 	});
 
+	it('turns a single newline into a line break', () => {
+		const html = renderMarkdown('line one\nline two');
+		expect(html).toContain('<br');
+		expect(html).toContain('line one');
+		expect(html).toContain('line two');
+	});
+
 	it('strips raw HTML blocks entirely', () => {
 		const html = renderMarkdown('before\n\n<script>alert(1)</script>\n\nafter');
 		expect(html).not.toContain('<script');

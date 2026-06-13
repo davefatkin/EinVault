@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
@@ -8,7 +9,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Trash2 } from '@lucide/svelte';
+	import { Trash2, ClipboardList } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
@@ -20,9 +22,23 @@
 
 	const EVENT_TYPES = activityTypeOptions(locale);
 
-	let selectedType = $state('walk');
+	const TYPE_VALUES = EVENT_TYPES.map((t) => t.value);
+	type ActivityType = (typeof TYPE_VALUES)[number];
+	const initialType = (() => {
+		const q = page.url.searchParams.get('type');
+		return q && (TYPE_VALUES as string[]).includes(q)
+			? (q as ActivityType)
+			: ('walk' as ActivityType);
+	})();
+	let selectedType = $state(initialType);
 	let duration = $state('');
 	let notes = $state('');
+
+	// "Also log for" — other companions this caretaker is assigned to (layout-filtered to active).
+	let siblingCompanions = $derived(
+		(data.companions ?? []).filter((c) => c.id !== data.companion.id)
+	);
+	let selectedAdditionalIds = $state<string[]>([]);
 	let hasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
@@ -68,7 +84,7 @@
 	{:else}
 		{#if form?.success}
 			<div
-				class="rounded-lg bg-moss-50 dark:bg-moss-950 border border-moss-200 dark:border-moss-800 px-4 py-3 text-sm text-moss-700 dark:text-moss-300 animate-fade-in"
+				class="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal animate-fade-in"
 			>
 				{t(locale, 'page.log.activityLogged')}
 			</div>
@@ -77,7 +93,7 @@
 		{#if form?.error}
 			<div
 				role="alert"
-				class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+				class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
 			>
 				{form.error}
 			</div>
@@ -99,14 +115,17 @@
 							if (result.type === 'success') {
 								duration = '';
 								notes = '';
+								selectedAdditionalIds = [];
 							}
 						}}
 					class="space-y-4"
 				>
 					<!-- Activity type pills -->
-					<div class="space-y-2">
-						<Label>{t(locale, 'page.log.activityLabel')}</Label>
-						<div class="grid grid-cols-3 gap-2">
+					<fieldset class="space-y-2 border-0 p-0 m-0">
+						<legend class="text-sm font-medium text-foreground"
+							>{t(locale, 'page.log.activityLabel')}</legend
+						>
+						<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 							{#each EVENT_TYPES as t (t.value)}
 								<label class="cursor-pointer">
 									<input
@@ -114,11 +133,12 @@
 										name="type"
 										value={t.value}
 										bind:group={selectedType}
-										class="sr-only"
+										class="sr-only peer"
 									/>
 									<span
 										class="flex items-center justify-center gap-1 rounded-xl border px-3 py-3
 									text-sm font-medium transition-all text-center
+									peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 									{selectedType === t.value
 											? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
 											: 'border-border text-muted-foreground hover:border-border hover:bg-accent hover:text-accent-foreground'}"
@@ -128,7 +148,41 @@
 								</label>
 							{/each}
 						</div>
-					</div>
+					</fieldset>
+
+					{#if siblingCompanions.length > 0}
+						<fieldset class="space-y-1.5 border-0 p-0 m-0">
+							<legend class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.log.alsoLogFor')}</legend
+							>
+							<p class="text-xs text-muted-foreground">
+								{t(locale, 'page.log.alsoLogForHint')}
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each siblingCompanions as sibling (sibling.id)}
+									{@const checked = selectedAdditionalIds.includes(sibling.id)}
+									<label class="cursor-pointer">
+										<input
+											type="checkbox"
+											name="additionalCompanionIds"
+											value={sibling.id}
+											bind:group={selectedAdditionalIds}
+											class="sr-only peer"
+										/>
+										<span
+											class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
+											peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
+											{checked
+												? 'bg-primary/10 border-primary/30 text-primary'
+												: 'border-border text-muted-foreground hover:text-foreground'}"
+										>
+											{sibling.name}
+										</span>
+									</label>
+								{/each}
+							</div>
+						</fieldset>
+					{/if}
 
 					{#if hasDuration}
 						<div class="space-y-1.5 animate-slide-up">
@@ -201,9 +255,9 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.todayEvents.length === 0}
-					<p class="text-sm italic text-center py-4 text-muted-foreground">
-						{t(locale, 'page.log.nothingLoggedYet')}
-					</p>
+					<EmptyState size="sm" tint="muted" title={t(locale, 'page.log.nothingLoggedYet')}>
+						{#snippet icon()}<ClipboardList class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
 					<div class="space-y-2">
 						{#each data.todayEvents as event (event.id)}
