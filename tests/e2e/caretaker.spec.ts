@@ -112,4 +112,13 @@ test.describe('caretaker', () => {
 		// Must NOT be on the requested app route
 		await expect(asCaretaker).not.toHaveURL(new RegExp(`/${BISCUIT}/health`));
 	});
+
+	test('care page is action-first with a quick-log deep link', async ({ asCaretaker }) => {
+		await asCaretaker.goto(`/care/${BISCUIT}`);
+		// The quick-log tiles render "🦮 Walk" — scope to the care page links to avoid collision
+		const walkQuick = asCaretaker.getByRole('link', { name: /walk/i }).first();
+		await expect(walkQuick).toBeVisible({ timeout: 8_000 });
+		await walkQuick.click();
+		await expect(asCaretaker).toHaveURL(/\/log\?type=walk/, { timeout: 8_000 });
+	});
 });
