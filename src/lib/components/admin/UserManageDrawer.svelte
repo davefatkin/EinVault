@@ -214,6 +214,7 @@
 								type="email"
 								class="h-8 text-sm"
 								autocomplete="email"
+								placeholder="radical@edward.com"
 								value={user.email ?? ''}
 							/>
 						</div>
@@ -230,6 +231,7 @@
 								type="tel"
 								class="h-8 text-sm"
 								autocomplete="tel"
+								placeholder={t(locale, 'common.placeholderPhone')}
 								value={user.phone ?? ''}
 							/>
 						</div>
