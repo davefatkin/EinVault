@@ -5,7 +5,8 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell, X } from '@lucide/svelte';
+	import { Plus, Zap, Check, Pencil, Bell, X, PawPrint } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '$lib/markdown';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
@@ -445,192 +446,207 @@
 	{/if}
 
 	<!-- 3. Your companions -->
-	<section>
-		<h2 class="font-display text-lg font-bold text-foreground mb-3">
-			{t(locale, 'overview.heading.companions')}
-		</h2>
+	{#if data.companions.length === 0}
+		<section class="rounded-2xl border bg-card">
+			<EmptyState
+				size="lg"
+				title={t(locale, 'overview.firstRun.title')}
+				body={t(locale, 'overview.firstRun.body')}
+			>
+				{#snippet icon()}<PawPrint class="h-7 w-7" />{/snippet}
+				{#snippet action()}
+					<Button href="/companions/new" size="lg">{t(locale, 'overview.firstRun.cta')}</Button>
+				{/snippet}
+			</EmptyState>
+		</section>
+	{:else}
+		<section>
+			<h2 class="font-display text-lg font-bold text-foreground mb-3">
+				{t(locale, 'overview.heading.companions')}
+			</h2>
 
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-			{#each data.companions as companion (companion.id)}
-				{@const age = companionAge(companion.dob)}
-				{@const compReminders = remindersByCompanion[companion.id] ?? []}
-				{@const status = careStatus(
-					compReminders.map((r) => ({
-						dueAt: new Date(r.dueAt),
-						completedAt: r.completedAt ? new Date(r.completedAt) : null
-					}))
-				)}
-				{@const nextReminder = nextReminderByCompanion[companion.id]}
-				{@const nextUrgency = nextReminder ? reminderUrgency(nextReminder.dueAt) : null}
-				{@const journalEntry = data.todayJournalByCompanion[companion.id]}
-				{@const lastActivity = lastActivityByCompanion[companion.id]}
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+				{#each data.companions as companion (companion.id)}
+					{@const age = companionAge(companion.dob)}
+					{@const compReminders = remindersByCompanion[companion.id] ?? []}
+					{@const status = careStatus(
+						compReminders.map((r) => ({
+							dueAt: new Date(r.dueAt),
+							completedAt: r.completedAt ? new Date(r.completedAt) : null
+						}))
+					)}
+					{@const nextReminder = nextReminderByCompanion[companion.id]}
+					{@const nextUrgency = nextReminder ? reminderUrgency(nextReminder.dueAt) : null}
+					{@const journalEntry = data.todayJournalByCompanion[companion.id]}
+					{@const lastActivity = lastActivityByCompanion[companion.id]}
 
-				<div
-					role="link"
-					tabindex="0"
-					onclick={() => {
-						window.location.href = `/${companion.id}`;
-					}}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
+					<div
+						role="link"
+						tabindex="0"
+						onclick={() => {
 							window.location.href = `/${companion.id}`;
-						}
-					}}
-					class="group block rounded-xl border bg-card p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-				>
-					<!-- Card header: avatar + name + care status badge -->
-					<div class="flex items-center gap-3 mb-3">
-						<CompanionAvatar
-							companionId={companion.id}
-							avatarPath={companion.avatarPath}
-							name={companion.name}
-							size="md"
-						/>
-						<div class="min-w-0 flex-1">
-							<p class="font-semibold text-foreground truncate">{companion.name}</p>
-							{#if companion.breed || age}
-								<p class="text-xs text-muted-foreground truncate">
-									{[companion.breed, age].filter(Boolean).join(' · ')}
-								</p>
-							{/if}
-						</div>
-						{#if status === 'up-to-date'}
-							<Badge variant="teal" class="shrink-0 text-[10px] py-0 px-1.5">
-								{t(locale, 'overview.careStatus.upToDate')}
-							</Badge>
-						{:else if status === 'due-today'}
-							<Badge variant="gold" class="shrink-0 text-[10px] py-0 px-1.5">
-								{t(locale, 'overview.careStatus.dueToday')}
-							</Badge>
-						{:else}
-							<Badge variant="coral" class="shrink-0 text-[10px] py-0 px-1.5">
-								{t(locale, 'overview.careStatus.needsAttention')}
-							</Badge>
-						{/if}
-					</div>
-
-					<!-- Today's journal line -->
-					<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
-						<span
-							class="shrink-0 h-6 w-6 rounded-lg {journalEntry
-								? 'bg-primary/15 text-primary'
-								: 'bg-muted text-muted-foreground'} flex items-center justify-center"
-							aria-hidden="true"
-						>
-							<Pencil class="h-3 w-3" />
-						</span>
-						{#if journalEntry}
-							<span class="text-foreground truncate flex-1">
-								{#if journalEntry.mood}
-									<span aria-hidden="true">{MOOD_ICONS[journalEntry.mood] ?? ''} </span>
+						}}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								window.location.href = `/${companion.id}`;
+							}
+						}}
+						class="group block rounded-xl border bg-card p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+					>
+						<!-- Card header: avatar + name + care status badge -->
+						<div class="flex items-center gap-3 mb-3">
+							<CompanionAvatar
+								companionId={companion.id}
+								avatarPath={companion.avatarPath}
+								name={companion.name}
+								size="md"
+							/>
+							<div class="min-w-0 flex-1">
+								<p class="font-semibold text-foreground truncate">{companion.name}</p>
+								{#if companion.breed || age}
+									<p class="text-xs text-muted-foreground truncate">
+										{[companion.breed, age].filter(Boolean).join(' · ')}
+									</p>
 								{/if}
-								{journalEntry.body
-									? journalEntry.body.slice(0, 60) + (journalEntry.body.length > 60 ? '…' : '')
-									: ''}
-							</span>
-						{:else}
-							<span class="text-muted-foreground flex-1"
-								>{t(locale, 'overview.journal.noEntryYet')}</span
-							>
-							<a
-								href="/{companion.id}/journal/{today}"
-								onclick={(e) => e.stopPropagation()}
-								class="shrink-0 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-							>
-								{t(locale, 'overview.journal.addTodayShort')}
-							</a>
-						{/if}
-					</div>
-
-					<!-- Next reminder line -->
-					<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
-						<span
-							class="shrink-0 h-6 w-6 rounded-lg {nextReminder
-								? nextUrgency === 'overdue'
-									? 'bg-coral/15 text-coral'
-									: nextUrgency === 'today'
-										? 'bg-gold/15 text-gold'
-										: 'bg-teal/15 text-teal'
-								: 'bg-muted text-muted-foreground'} flex items-center justify-center text-sm"
-							aria-hidden="true"
-						>
-							{#if nextReminder}
-								{REMINDER_ICONS[nextReminder.type] ?? '📌'}
+							</div>
+							{#if status === 'up-to-date'}
+								<Badge variant="teal" class="shrink-0 text-[10px] py-0 px-1.5">
+									{t(locale, 'overview.careStatus.upToDate')}
+								</Badge>
+							{:else if status === 'due-today'}
+								<Badge variant="gold" class="shrink-0 text-[10px] py-0 px-1.5">
+									{t(locale, 'overview.careStatus.dueToday')}
+								</Badge>
 							{:else}
-								<Bell class="h-3 w-3" />
-							{/if}
-						</span>
-						{#if nextReminder}
-							<span class="text-foreground truncate flex-1">{nextReminder.title}</span>
-							{#if nextUrgency}
-								<Badge
-									variant={nextUrgency === 'overdue'
-										? 'coral'
-										: nextUrgency === 'today'
-											? 'gold'
-											: 'teal'}
-									class="shrink-0 text-[10px] py-0 px-1.5"
-								>
-									{urgencyLabel(nextUrgency)}
+								<Badge variant="coral" class="shrink-0 text-[10px] py-0 px-1.5">
+									{t(locale, 'overview.careStatus.needsAttention')}
 								</Badge>
 							{/if}
-						{:else}
-							<span class="text-muted-foreground">{t(locale, 'overview.reminders.none')}</span>
-						{/if}
-					</div>
+						</div>
 
-					<!-- Last activity line -->
-					{#if lastActivity}
-						<div
-							class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs text-muted-foreground"
-						>
+						<!-- Today's journal line -->
+						<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
 							<span
-								class="shrink-0 h-6 w-6 rounded-lg bg-teal/10 text-teal flex items-center justify-center text-sm"
+								class="shrink-0 h-6 w-6 rounded-lg {journalEntry
+									? 'bg-primary/15 text-primary'
+									: 'bg-muted text-muted-foreground'} flex items-center justify-center"
 								aria-hidden="true"
 							>
-								{#if lastActivity.kind === 'daily'}
-									{ACTIVITY_ICONS[lastActivity.item.type] ?? '📝'}
-								{:else}
-									{HEALTH_ICONS[lastActivity.item.type] ?? '❤️'}
-								{/if}
+								<Pencil class="h-3 w-3" />
 							</span>
-							<span class="truncate flex-1">
-								{#if lastActivity.kind === 'daily'}
-									{activityLabel(locale, lastActivity.item.type)}
-								{:else}
-									{lastActivity.item.title}
-								{/if}
-								{#if lastActivity.kind === 'daily' && lastActivity.item.logger}
-									&middot; {lastActivity.item.logger.displayName}
-								{/if}
-							</span>
-							<span class="shrink-0 tabular-nums">
-								<LocalTime
-									date={lastActivity.kind === 'daily'
-										? lastActivity.item.loggedAt
-										: lastActivity.item.occurredAt}
-									format="relative"
-								/>
-							</span>
+							{#if journalEntry}
+								<span class="text-foreground truncate flex-1">
+									{#if journalEntry.mood}
+										<span aria-hidden="true">{MOOD_ICONS[journalEntry.mood] ?? ''} </span>
+									{/if}
+									{journalEntry.body
+										? journalEntry.body.slice(0, 60) + (journalEntry.body.length > 60 ? '…' : '')
+										: ''}
+								</span>
+							{:else}
+								<span class="text-muted-foreground flex-1"
+									>{t(locale, 'overview.journal.noEntryYet')}</span
+								>
+								<a
+									href="/{companion.id}/journal/{today}"
+									onclick={(e) => e.stopPropagation()}
+									class="shrink-0 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+								>
+									{t(locale, 'overview.journal.addTodayShort')}
+								</a>
+							{/if}
 						</div>
-					{/if}
-				</div>
-			{/each}
 
-			<!-- Add companion card -->
-			<a
-				href="/companions/new"
-				class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border min-h-[130px] text-muted-foreground hover:border-primary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-4"
-			>
-				<div class="rounded-xl bg-primary/10 p-2.5">
-					<Plus class="h-5 w-5 text-primary" />
-				</div>
-				<p class="text-sm font-medium">{t(locale, 'layout.addCompanion')}</p>
-				<p class="text-xs">{t(locale, 'overview.companions.addStart')}</p>
-			</a>
-		</div>
-	</section>
+						<!-- Next reminder line -->
+						<div class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs">
+							<span
+								class="shrink-0 h-6 w-6 rounded-lg {nextReminder
+									? nextUrgency === 'overdue'
+										? 'bg-coral/15 text-coral'
+										: nextUrgency === 'today'
+											? 'bg-gold/15 text-gold'
+											: 'bg-teal/15 text-teal'
+									: 'bg-muted text-muted-foreground'} flex items-center justify-center text-sm"
+								aria-hidden="true"
+							>
+								{#if nextReminder}
+									{REMINDER_ICONS[nextReminder.type] ?? '📌'}
+								{:else}
+									<Bell class="h-3 w-3" />
+								{/if}
+							</span>
+							{#if nextReminder}
+								<span class="text-foreground truncate flex-1">{nextReminder.title}</span>
+								{#if nextUrgency}
+									<Badge
+										variant={nextUrgency === 'overdue'
+											? 'coral'
+											: nextUrgency === 'today'
+												? 'gold'
+												: 'teal'}
+										class="shrink-0 text-[10px] py-0 px-1.5"
+									>
+										{urgencyLabel(nextUrgency)}
+									</Badge>
+								{/if}
+							{:else}
+								<span class="text-muted-foreground">{t(locale, 'overview.reminders.none')}</span>
+							{/if}
+						</div>
+
+						<!-- Last activity line -->
+						{#if lastActivity}
+							<div
+								class="flex items-center gap-2 pt-2.5 pb-2.5 border-t border-border text-xs text-muted-foreground"
+							>
+								<span
+									class="shrink-0 h-6 w-6 rounded-lg bg-teal/10 text-teal flex items-center justify-center text-sm"
+									aria-hidden="true"
+								>
+									{#if lastActivity.kind === 'daily'}
+										{ACTIVITY_ICONS[lastActivity.item.type] ?? '📝'}
+									{:else}
+										{HEALTH_ICONS[lastActivity.item.type] ?? '❤️'}
+									{/if}
+								</span>
+								<span class="truncate flex-1">
+									{#if lastActivity.kind === 'daily'}
+										{activityLabel(locale, lastActivity.item.type)}
+									{:else}
+										{lastActivity.item.title}
+									{/if}
+									{#if lastActivity.kind === 'daily' && lastActivity.item.logger}
+										&middot; {lastActivity.item.logger.displayName}
+									{/if}
+								</span>
+								<span class="shrink-0 tabular-nums">
+									<LocalTime
+										date={lastActivity.kind === 'daily'
+											? lastActivity.item.loggedAt
+											: lastActivity.item.occurredAt}
+										format="relative"
+									/>
+								</span>
+							</div>
+						{/if}
+					</div>
+				{/each}
+
+				<!-- Add companion card -->
+				<a
+					href="/companions/new"
+					class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border min-h-[130px] text-muted-foreground hover:border-primary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-4"
+				>
+					<div class="rounded-xl bg-primary/10 p-2.5">
+						<Plus class="h-5 w-5 text-primary" />
+					</div>
+					<p class="text-sm font-medium">{t(locale, 'layout.addCompanion')}</p>
+					<p class="text-xs">{t(locale, 'overview.companions.addStart')}</p>
+				</a>
+			</div>
+		</section>
+	{/if}
 
 	<!-- 4. Recent across the household -->
 	{#if householdFeed.length > 0}
