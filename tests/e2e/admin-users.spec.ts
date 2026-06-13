@@ -112,7 +112,7 @@ test.describe('admin-users', () => {
 		await form.getByRole('button', { name: /create user/i }).click();
 		await expect(asAdmin.getByText(/user created successfully/i)).toBeVisible({ timeout: 10_000 });
 
-		// Deactivate via More Actions menu.
+		// Deactivate via the Manage drawer.
 		const userRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'e2e-user-3' });
 		await expect(userRow).toBeVisible({ timeout: 6_000 });
 
