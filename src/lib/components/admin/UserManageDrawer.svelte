@@ -92,6 +92,8 @@
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
+			// Let the shift-delete confirmation handle its own Escape first.
+			if (confirmOpen) return;
 			onclose();
 			return;
 		}
