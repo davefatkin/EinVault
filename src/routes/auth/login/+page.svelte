@@ -38,7 +38,7 @@
 		<!-- Form panel -->
 		<div class="flex flex-col justify-center px-8 py-8 md:px-11 md:py-12 bg-card">
 			<!-- Mobile-only tagline (replaces the hidden brand panel text) -->
-			<div class="mb-6 md:hidden text-center">
+			<div class="mb-6 md:hidden text-center" aria-hidden="true">
 				<p class="text-sm text-muted-foreground">{t(locale, 'page.login.tagline')}</p>
 			</div>
 

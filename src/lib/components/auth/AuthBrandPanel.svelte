@@ -19,7 +19,7 @@
 		aria-hidden="true"
 	></div>
 
-	<a href="/" class="relative z-10 flex items-center gap-2.5 self-start">
+	<a href="/" aria-label="EinVault home" class="relative z-10 flex items-center gap-2.5 self-start">
 		<div
 			class="bg-brand-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg"
 			aria-hidden="true"
