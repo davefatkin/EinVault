@@ -132,7 +132,7 @@
 		tabindex="-1"
 		onkeydown={trapFocus}
 		class="relative z-10 flex h-full w-full max-w-[380px] flex-col border-l border-border bg-card text-card-foreground shadow-2xl
-			animate-in slide-in-from-right duration-200"
+			animate-slide-in-right"
 	>
 		<div class="flex items-center gap-2 border-b border-border px-5 py-4">
 			<Badge variant={roleBadge[user.role]}

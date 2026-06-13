@@ -154,6 +154,15 @@
 			transform: translateY(0);
 		}
 	}
+
+	@keyframes slide-in-from-right {
+		from {
+			transform: translateX(100%);
+		}
+		to {
+			transform: translateX(0);
+		}
+	}
 }
 
 /* ============================================================
@@ -346,6 +355,11 @@
 		--tw-enter-translate-y: 1rem;
 	}
 
+	/* Right-edge slide-over (admin Manage drawer) */
+	.animate-slide-in-right {
+		animation: slide-in-from-right var(--tw-duration, 200ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+
 	/* sm:slide-in-from-bottom-0 — zero vertical translate at sm breakpoint */
 	@media (min-width: 640px) {
 		.sm\:slide-in-from-bottom-0 {
@@ -357,7 +371,8 @@
 @media (prefers-reduced-motion: reduce) {
 	.animate-fade-in,
 	.animate-slide-up,
-	.animate-in {
+	.animate-in,
+	.animate-slide-in-right {
 		animation: none;
 	}
 
