@@ -300,7 +300,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.tagline': 'Cada história merece ser contada.',
 	'page.login.signInWith': 'Iniciar sessão com {provider}',
 	'page.login.usernameLabel': 'Nome de utilizador',
-	'page.login.usernamePlaceholder': 'nome de utilizador',
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Palavra-passe',
 	'page.login.signIn': 'Iniciar sessão',
 	'page.login.signingIn': 'A iniciar sessão…',
@@ -338,8 +338,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.cardDescription':
 		'Esta conta terá acesso total para gerir utilizadores e companheiros.',
 	'page.setup.displayNameLabel': 'Nome de exibição',
-	'page.setup.displayNamePlaceholder': 'O seu nome',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Confirmar palavra-passe',
 	'page.setup.createAccount': 'Criar conta de administrador',
 	'page.setup.creatingAccount': 'A criar conta…',
@@ -403,10 +403,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelWeightUnit': 'Unidade de peso',
 	'page.companion.labelMicrochip': 'Número do microchip',
 	'page.companion.labelBio': 'Bio / notas',
-	'page.companion.placeholderName': 'ex. Ein',
-	'page.companion.placeholderBreed': 'ex. Corgi Galês de Pembroke',
-	'page.companion.placeholderMicrochip': 'Normalmente um ID de 15 dígitos',
-	'page.companion.placeholderBio': 'Tudo o que vale a pena lembrar…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Desconhecido',
 
 	// Page: companion new
@@ -443,7 +443,7 @@ const messages: Record<keyof Messages, string> = {
 		'ex. Comprimido antiparasitário no dia 1 do mês\nSuplemento articular diário ao pequeno-almoço\nColírio de manhã e à noite',
 	'page.companion.edit.placeholderSitterNotes':
 		'Tudo o que um cuidador deve saber: manias, medos, sítios preferidos…',
-	'page.companion.edit.placeholderMicrochip': 'ID de 15 dígitos',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Hospital Veterinário Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (dono)',

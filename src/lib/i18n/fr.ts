@@ -300,7 +300,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.tagline': "Chaque histoire mérite d'être racontée.",
 	'page.login.signInWith': 'Se connecter avec {provider}',
 	'page.login.usernameLabel': "Nom d'utilisateur",
-	'page.login.usernamePlaceholder': "nom d'utilisateur",
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Mot de passe',
 	'page.login.signIn': 'Se connecter',
 	'page.login.signingIn': 'Connexion…',
@@ -339,8 +339,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.cardDescription':
 		'Ce compte aura un accès complet pour gérer les utilisateurs et les compagnons.',
 	'page.setup.displayNameLabel': "Nom d'affichage",
-	'page.setup.displayNamePlaceholder': 'Votre nom',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Confirmer le mot de passe',
 	'page.setup.createAccount': 'Créer un compte administrateur',
 	'page.setup.creatingAccount': 'Création du compte…',
@@ -404,10 +404,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelWeightUnit': 'Unité de poids',
 	'page.companion.labelMicrochip': 'Numéro de micropuce',
 	'page.companion.labelBio': 'Bio / notes',
-	'page.companion.placeholderName': 'ex. Ein',
-	'page.companion.placeholderBreed': 'ex. Corgi Gallois de Pembroke',
-	'page.companion.placeholderMicrochip': 'Habituellement un identifiant à 15 chiffres',
-	'page.companion.placeholderBio': 'Tout ce qui vaut la peine de retenir…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Inconnu',
 
 	// Page: companion new
@@ -445,7 +445,7 @@ const messages: Record<keyof Messages, string> = {
 		'ex. Comprimé antiparasitaire le 1er du mois\nComplément articulaire chaque matin\nCollyre matin et soir',
 	'page.companion.edit.placeholderSitterNotes':
 		'Tout ce qu\u2019un gardien devrait savoir : habitudes, peurs, endroits préférés…',
-	'page.companion.edit.placeholderMicrochip': 'Identifiant à 15 chiffres',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Clinique Vétérinaire Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (propriétaire)',

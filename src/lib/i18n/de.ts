@@ -302,7 +302,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.tagline': 'Jede Geschichte verdient bewahrt zu werden.',
 	'page.login.signInWith': 'Mit {provider} anmelden',
 	'page.login.usernameLabel': 'Benutzername',
-	'page.login.usernamePlaceholder': 'Benutzername',
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Passwort',
 	'page.login.signIn': 'Anmelden',
 	'page.login.signingIn': 'Anmeldung…',
@@ -340,8 +340,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.cardDescription':
 		'Dieses Konto hat vollen Zugriff auf die Verwaltung von Benutzern und Begleitern.',
 	'page.setup.displayNameLabel': 'Anzeigename',
-	'page.setup.displayNamePlaceholder': 'Dein Name',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Passwort bestätigen',
 	'page.setup.createAccount': 'Administratorkonto erstellen',
 	'page.setup.creatingAccount': 'Konto wird erstellt…',
@@ -405,10 +405,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelWeightUnit': 'Gewichtseinheit',
 	'page.companion.labelMicrochip': 'Mikrochipnummer',
 	'page.companion.labelBio': 'Bio / Notizen',
-	'page.companion.placeholderName': 'z.B. Ein',
-	'page.companion.placeholderBreed': 'z.B. Pembroke Welsh Corgi',
-	'page.companion.placeholderMicrochip': 'Normalerweise eine 15-stellige ID',
-	'page.companion.placeholderBio': 'Alles, was man sich merken sollte…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Unbekannt',
 
 	// Page: companion new
@@ -445,7 +445,7 @@ const messages: Record<keyof Messages, string> = {
 		'z.B. Herzwurm-Tablette am 1. des Monats\nGelenkpräparat täglich zum Frühstück\nAugentropfen morgens und abends',
 	'page.companion.edit.placeholderSitterNotes':
 		'Alles, was ein Betreuer wissen sollte: Eigenheiten, Ängste, Lieblingsorte…',
-	'page.companion.edit.placeholderMicrochip': '15-stellige ID',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Tierklinik',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (Besitzer)',

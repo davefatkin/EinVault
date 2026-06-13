@@ -389,11 +389,11 @@
 			<div class="flex items-center justify-between text-sm">
 				<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
 				{#if data.user?.role === 'admin'}
-					<Badge variant="coral">{t(locale, 'enum.role.admin')}</Badge>
+					<Badge variant="primary">{t(locale, 'enum.role.admin')}</Badge>
 				{:else if data.user?.role === 'caretaker'}
 					<Badge variant="teal">{t(locale, 'enum.role.caretaker')}</Badge>
 				{:else}
-					<Badge variant="teal">{t(locale, 'enum.role.member')}</Badge>
+					<Badge variant="secondary">{t(locale, 'enum.role.member')}</Badge>
 				{/if}
 			</div>
 		</CardContent>

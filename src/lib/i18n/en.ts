@@ -295,7 +295,7 @@ const messages = {
 	'page.login.signInWith': 'Sign in with {provider}',
 	'page.login.tagline': 'Every tail has a story.',
 	'page.login.usernameLabel': 'Username',
-	'page.login.usernamePlaceholder': 'username',
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Password',
 	'page.login.signIn': 'Sign in',
 	'page.login.signingIn': 'Signing in…',
@@ -333,8 +333,8 @@ const messages = {
 	'page.setup.cardDescription':
 		'This account will have full access to manage users and companions.',
 	'page.setup.displayNameLabel': 'Display name',
-	'page.setup.displayNamePlaceholder': 'Your name',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Confirm password',
 	'page.setup.createAccount': 'Create Admin Account',
 	'page.setup.creatingAccount': 'Creating Account…',
@@ -398,10 +398,10 @@ const messages = {
 	'page.companion.labelWeightUnit': 'Weight unit',
 	'page.companion.labelMicrochip': 'Microchip number',
 	'page.companion.labelBio': 'Bio / notes',
-	'page.companion.placeholderName': 'e.g. Ein',
-	'page.companion.placeholderBreed': 'e.g. Pembroke Welsh Corgi',
-	'page.companion.placeholderMicrochip': 'Normally a 15-digit ID',
-	'page.companion.placeholderBio': 'Anything worth remembering…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Unknown',
 
 	// Page: companion new
@@ -438,7 +438,7 @@ const messages = {
 		'e.g. Heartworm chew 1st of the month\nJoint supplement daily with breakfast\nEye drops morning and night',
 	'page.companion.edit.placeholderSitterNotes':
 		'Anything a sitter or walker should know: quirks, fears, favorite spots…',
-	'page.companion.edit.placeholderMicrochip': '15-digit ID',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Animal Hospital',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (owner)',

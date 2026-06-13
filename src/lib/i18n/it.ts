@@ -298,7 +298,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.tagline': 'Ogni storia merita di essere raccontata.',
 	'page.login.signInWith': 'Accedi con {provider}',
 	'page.login.usernameLabel': 'Nome utente',
-	'page.login.usernamePlaceholder': 'nome utente',
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Password',
 	'page.login.signIn': 'Accedi',
 	'page.login.signingIn': 'Accesso in corso…',
@@ -336,8 +336,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.cardDescription':
 		'Questo account avrà accesso completo per gestire utenti e compagni.',
 	'page.setup.displayNameLabel': 'Nome visualizzato',
-	'page.setup.displayNamePlaceholder': 'Il tuo nome',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Conferma password',
 	'page.setup.createAccount': 'Crea account amministratore',
 	'page.setup.creatingAccount': 'Creazione account…',
@@ -401,10 +401,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelWeightUnit': 'Unità di peso',
 	'page.companion.labelMicrochip': 'Numero microchip',
 	'page.companion.labelBio': 'Bio / note',
-	'page.companion.placeholderName': 'es. Ein',
-	'page.companion.placeholderBreed': 'es. Welsh Corgi Pembroke',
-	'page.companion.placeholderMicrochip': 'Di solito un codice di 15 cifre',
-	'page.companion.placeholderBio': 'Qualcosa da ricordare…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Sconosciuto',
 
 	// Page: companion new
@@ -441,7 +441,7 @@ const messages: Record<keyof Messages, string> = {
 		'es. Compressa antiparassitaria il 1° del mese\nIntegratore articolare ogni mattina\nCollirio mattina e sera',
 	'page.companion.edit.placeholderSitterNotes':
 		'Tutto ciò che un dog sitter dovrebbe sapere: abitudini, paure, posti preferiti…',
-	'page.companion.edit.placeholderMicrochip': 'Codice di 15 cifre',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dott. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Clinica Veterinaria Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (proprietario)',

@@ -302,7 +302,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.tagline': 'Cada historia merece ser contada.',
 	'page.login.signInWith': 'Iniciar sesión con {provider}',
 	'page.login.usernameLabel': 'Nombre de usuario',
-	'page.login.usernamePlaceholder': 'nombre de usuario',
+	'page.login.usernamePlaceholder': 'spike',
 	'page.login.passwordLabel': 'Contraseña',
 	'page.login.signIn': 'Iniciar sesión',
 	'page.login.signingIn': 'Iniciando sesión…',
@@ -340,8 +340,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.setup.cardDescription':
 		'Esta cuenta tendrá acceso completo para gestionar usuarios y compañeros.',
 	'page.setup.displayNameLabel': 'Nombre para mostrar',
-	'page.setup.displayNamePlaceholder': 'Tu nombre',
-	'page.setup.usernamePlaceholder': 'admin',
+	'page.setup.displayNamePlaceholder': 'Spike Spiegel',
+	'page.setup.usernamePlaceholder': 'spike',
 	'page.setup.confirmPasswordLabel': 'Confirmar contraseña',
 	'page.setup.createAccount': 'Crear cuenta de administrador',
 	'page.setup.creatingAccount': 'Creando cuenta…',
@@ -405,10 +405,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelWeightUnit': 'Unidad de peso',
 	'page.companion.labelMicrochip': 'Número de microchip',
 	'page.companion.labelBio': 'Bio / notas',
-	'page.companion.placeholderName': 'ej. Ein',
-	'page.companion.placeholderBreed': 'ej. Corgi Galés de Pembroke',
-	'page.companion.placeholderMicrochip': 'Normalmente un ID de 15 dígitos',
-	'page.companion.placeholderBio': 'Lo que valga la pena recordar…',
+	'page.companion.placeholderName': 'Ein',
+	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
+	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
 	'page.companion.sexUnknown': 'Desconocido',
 
 	// Page: companion new
@@ -445,7 +445,7 @@ const messages: Record<keyof Messages, string> = {
 		'ej. Pastilla antiparasitaria el día 1 del mes\nSuplemento articular a diario con el desayuno\nGotas oculares mañana y noche',
 	'page.companion.edit.placeholderSitterNotes':
 		'Todo lo que un cuidador debería saber: manías, miedos, lugares favoritos…',
-	'page.companion.edit.placeholderMicrochip': 'ID de 15 dígitos',
+	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Hospital Veterinario Valentine',
 	'page.companion.edit.placeholderEmergencyContact': 'Faye (propietario)',
