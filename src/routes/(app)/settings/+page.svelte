@@ -249,10 +249,12 @@
 			<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
 				{#each THEMES as theme (theme)}
 					{@const Icon = THEME_ICONS[theme]}
+					{@const THEME_LABELS: Record<string, import('$lib/i18n').MessageKey> = { light: 'theme.light', dark: 'theme.dark', system: 'theme.system' }}
+					{@const themeLabel = t(locale, THEME_LABELS[theme])}
 					<button
 						type="button"
 						onclick={() => setTheme(theme)}
-						aria-label="{theme.charAt(0).toUpperCase() + theme.slice(1)} mode"
+						aria-label={t(locale, 'aria.themeMode', { label: themeLabel })}
 						aria-pressed={currentTheme === theme}
 						class="flex-1 flex items-center justify-center gap-1.5 rounded px-3 py-2 text-sm transition-all {currentTheme ===
 						theme
@@ -260,7 +262,7 @@
 							: 'text-muted-foreground hover:text-foreground'}"
 					>
 						<Icon class="h-4 w-4 shrink-0" />
-						<span>{theme.charAt(0).toUpperCase() + theme.slice(1)}</span>
+						<span>{themeLabel}</span>
 					</button>
 				{/each}
 			</div>

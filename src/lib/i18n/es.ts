@@ -874,6 +874,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.accountMenu': 'Menú de cuenta',
 	'aria.closeAccountMenu': 'Cerrar menú de cuenta',
 	'aria.searchResults': 'Resultados de búsqueda',
+	'theme.light': 'Claro',
+	'theme.dark': 'Oscuro',
+	'theme.system': 'Sistema',
+	'aria.themeMode': 'Modo {label}',
 
 	// Email: password reset
 	'email.reset.subject': 'Restablece tu contraseña de EinVault',

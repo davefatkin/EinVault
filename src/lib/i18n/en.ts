@@ -515,7 +515,7 @@ const messages = {
 	'page.dashboard.weightAsOf': 'as of',
 	'page.dashboard.weightEmpty': 'No weight recorded yet.',
 	'page.dashboard.cardActivity': 'Recent Activity',
-	'page.dashboard.activityLog': 'Log Activity',
+	'page.dashboard.activityLog': 'Log activity',
 	'page.dashboard.activityEmpty': 'No activity logged yet.',
 	'page.dashboard.cardHealth': 'Recent Health Events',
 	'page.dashboard.healthViewAll': 'View all',
@@ -624,7 +624,7 @@ const messages = {
 	'page.journal.day.addCaption': 'Add a caption…',
 	'page.journal.day.editCaption': 'Edit Caption',
 	'page.journal.day.activitiesTitle': 'Activities',
-	'page.journal.day.logActivity': 'Log Activity',
+	'page.journal.day.logActivity': 'Log activity',
 	'page.journal.day.activityType': 'Type',
 	'page.journal.day.activityTime': 'Time',
 	'page.journal.day.activityDuration': 'Duration (min)',
@@ -772,7 +772,7 @@ const messages = {
 	'page.admin.usersTitle': 'Users',
 	'page.admin.accountCount': '{count} account',
 	'page.admin.accountCountPlural': '{count} accounts',
-	'page.admin.newUser': 'New User',
+	'page.admin.newUser': 'New user',
 	'page.admin.createUserTitle': 'Create user',
 	'page.admin.labelDisplayName': 'Display name',
 	'page.admin.labelUsername': 'Username',
@@ -807,7 +807,7 @@ const messages = {
 	'page.admin.shiftPlaceholder': 'e.g. Morning shift',
 	'page.admin.addShiftSubmit': 'Add Shift',
 	'page.admin.newPasswordPlaceholder': 'New password',
-	'page.admin.setPassword': 'Set Password',
+	'page.admin.setPassword': 'Set password',
 
 	// Page: Caretaker log
 	'page.log.title': 'Log activity',
@@ -863,6 +863,10 @@ const messages = {
 	'aria.accountMenu': 'Account menu',
 	'aria.closeAccountMenu': 'Close account menu',
 	'aria.searchResults': 'Search results',
+	'theme.light': 'Light',
+	'theme.dark': 'Dark',
+	'theme.system': 'System',
+	'aria.themeMode': '{label} mode',
 
 	// Email: password reset
 	'email.reset.subject': 'Reset your EinVault password',
