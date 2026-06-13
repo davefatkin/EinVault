@@ -120,7 +120,7 @@ test.describe('admin-users', () => {
 		await dialog.getByRole('button', { name: /deactivate/i }).click();
 		await expect(userRow.getByText(/inactive/i)).toBeVisible({ timeout: 10_000 });
 		// Close the drawer so it doesn't intercept pointer events for the next open.
-		await asAdmin.getByRole('dialog').getByRole('button', { name: /close/i }).first().click();
+		await dialog.getByRole('button', { name: /close/i }).click();
 		await expect(asAdmin.getByRole('dialog')).toHaveCount(0, { timeout: 4_000 });
 
 		// Login with deactivated account should fail (stay on login page).
@@ -215,7 +215,7 @@ test.describe('admin-users', () => {
 		await resetPanel.locator('input[name="newPassword"]').fill(newPassword);
 		await resetPanel.getByRole('button', { name: /set password/i }).click();
 		// Drawer stays open; close it before the re-login checks.
-		await asAdmin.getByRole('dialog').getByRole('button', { name: /close/i }).first().click();
+		await dialog.getByRole('button', { name: /close/i }).click();
 		await expect(asAdmin.getByRole('dialog')).toHaveCount(0, { timeout: 4_000 });
 
 		// Old password no longer works.
