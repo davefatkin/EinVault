@@ -34,6 +34,11 @@
 		/>
 
 		<div class="flex flex-col justify-center bg-card px-8 py-8 md:px-11 md:py-12">
+			<!-- Mobile-only subtext (the brand panel's copy is hidden on mobile) -->
+			<div class="mb-6 md:hidden text-center" aria-hidden="true">
+				<p class="text-sm text-muted-foreground">{t(locale, 'page.setup.brandSubtext')}</p>
+			</div>
+
 			<h2 class="font-display font-bold text-2xl text-foreground mb-1">
 				{t(locale, 'page.setup.cardTitle')}
 			</h2>
