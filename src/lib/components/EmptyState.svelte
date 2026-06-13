@@ -23,6 +23,8 @@
 		{@render icon()}
 	</div>
 	<p
+		role="heading"
+		aria-level={size === 'lg' ? 2 : 3}
 		class="mt-4 text-foreground {size === 'lg'
 			? 'font-display text-2xl font-bold'
 			: 'text-base font-medium'}"
