@@ -83,7 +83,7 @@
 		<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
 	</Button>
 	<PageHeader
-		title="Edit {companion.name}"
+		title={t(locale, 'page.companion.edit.pageTitle', { name: companion.name })}
 		subtitle={t(locale, 'page.companion.edit.subheading', { name: companion.name })}
 		tint="primary"
 	>
