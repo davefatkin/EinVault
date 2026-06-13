@@ -38,9 +38,9 @@
 				{t(locale, 'page.admin.companionsTitle')}
 			</h1>
 			<p class="text-sm mt-1 text-muted-foreground">
-				{data.companions.length === 1
-					? t(locale, 'page.admin.companionsActiveCount', { count: data.companions.length })
-					: t(locale, 'page.admin.companionsActiveCountPlural', { count: data.companions.length })}
+				{data.companions.length !== 1
+					? t(locale, 'page.admin.companionsActiveCountPlural', { count: data.companions.length })
+					: t(locale, 'page.admin.companionsActiveCount', { count: data.companions.length })}
 			</p>
 		</div>
 		<Button href="/companions/new" size="sm">
