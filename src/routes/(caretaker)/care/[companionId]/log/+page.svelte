@@ -9,7 +9,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Trash2 } from '@lucide/svelte';
+	import { Trash2, ClipboardList } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
@@ -254,9 +255,9 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.todayEvents.length === 0}
-					<p class="text-sm italic text-center py-4 text-muted-foreground">
-						{t(locale, 'page.log.nothingLoggedYet')}
-					</p>
+					<EmptyState size="sm" tint="muted" title={t(locale, 'page.log.nothingLoggedYet')}>
+						{#snippet icon()}<ClipboardList class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
 					<div class="space-y-2">
 						{#each data.todayEvents as event (event.id)}
