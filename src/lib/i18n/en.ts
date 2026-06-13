@@ -217,6 +217,7 @@ const messages = {
 	'page.settings.photoRemoved': 'Profile photo removed.',
 	'page.settings.addCompanion': 'Add Companion',
 	'page.settings.noCompanions': 'No companions yet.',
+	'page.settings.companionsEmptyBody': 'Add a companion to start tracking their care.',
 	'page.settings.pastCompanionsCard': 'Past Companions',
 	'page.settings.archivedOn': 'Archived',
 	'page.settings.roleLabel': 'Role',
@@ -466,6 +467,10 @@ const messages = {
 	'overview.heading.companions': 'Your companions',
 	'overview.companions.nextReminder': 'Next reminder',
 	'overview.companions.addStart': 'Start a new vault',
+	'overview.firstRun.title': 'Welcome to EinVault',
+	'overview.firstRun.body':
+		'Add your first companion to start their health record, journal, and daily care.',
+	'overview.firstRun.cta': 'Add your first companion',
 	'overview.heading.reminders': 'Upcoming Reminders (Next 7 Days)',
 	'overview.heading.todayJournal': "Today's Journal",
 	'overview.heading.recentActivity': 'Recent Activity (Last 7 Days)',
@@ -681,6 +686,7 @@ const messages = {
 	'page.health.savingWeight': 'Saving...',
 	'page.health.weightHistoryTitle': 'Weight History',
 	'page.health.healthEventsTitle': 'Health Events',
+	'page.health.emptyBody': 'Log vet visits, vaccinations, and medications to build the record.',
 	'page.health.noHealthEvents': 'No health events logged yet.',
 	'page.health.detailWeightEntry': 'Weight entry',
 	'page.health.detailWeight': 'Weight',
@@ -760,6 +766,7 @@ const messages = {
 	'page.reminders.restore': 'Restore',
 	'page.reminders.completedCount': '{count} completed reminder',
 	'page.reminders.completedCountPlural': '{count} completed reminders',
+	'page.reminders.emptyBody': 'Set vet visits, medications, or grooming so nothing slips.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Users',
@@ -929,6 +936,7 @@ const messages = {
 	'page.documents.title': 'Documents',
 	'page.documents.archivedNotice': '{name} is archived. Viewing in read-only mode.',
 	'page.documents.empty': 'No documents yet.',
+	'page.documents.emptyBody': 'Upload vaccination records, insurance, or adoption papers.',
 	'page.documents.upload': 'Upload document',
 	'page.documents.uploading': 'Uploading…',
 	'page.documents.dropHint': 'PDF or image, up to {max}MB',

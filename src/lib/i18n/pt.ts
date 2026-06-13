@@ -227,6 +227,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.photoRemoved': 'Foto de perfil removida.',
 	'page.settings.addCompanion': 'Adicionar companheiro',
 	'page.settings.noCompanions': 'Ainda sem companheiros.',
+	'page.settings.companionsEmptyBody':
+		'Adiciona um companheiro para começar a acompanhar os seus cuidados.',
 	'page.settings.pastCompanionsCard': 'Companheiros anteriores',
 	'page.settings.archivedOn': 'Arquivado em',
 	'page.settings.roleLabel': 'Função',
@@ -470,6 +472,10 @@ const messages: Record<keyof Messages, string> = {
 	'overview.heading.companions': 'Os seus companheiros',
 	'overview.companions.nextReminder': 'Próximo lembrete',
 	'overview.companions.addStart': 'Iniciar novo registo',
+	'overview.firstRun.title': 'Bem-vindo ao EinVault',
+	'overview.firstRun.body':
+		'Adiciona o teu primeiro companheiro para iniciar o registo de saúde, o diário e os cuidados diários.',
+	'overview.firstRun.cta': 'Adicionar o teu primeiro companheiro',
 	'overview.heading.reminders': 'Lembretes próximos (próximos 7 dias)',
 	'overview.heading.todayJournal': 'Diário de hoje',
 	'overview.heading.recentActivity': 'Atividade recente (últimos 7 dias)',
@@ -686,6 +692,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.savingWeight': 'A guardar...',
 	'page.health.weightHistoryTitle': 'Histórico de peso',
 	'page.health.healthEventsTitle': 'Eventos de saúde',
+	'page.health.emptyBody':
+		'Regista visitas ao veterinário, vacinas e medicação para criar o registo.',
 	'page.health.noHealthEvents': 'Sem eventos de saúde registados.',
 	'page.health.detailWeightEntry': 'Registo de peso',
 	'page.health.detailWeight': 'Peso',
@@ -766,6 +774,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} lembrete completado',
 	'page.reminders.completedCountPlural': '{count} lembretes completados',
+	'page.reminders.emptyBody':
+		'Define visitas ao veterinário, medicação ou higiene para não te esqueceres de nada.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilizadores',
@@ -934,6 +944,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.title': 'Documentos',
 	'page.documents.archivedNotice': '{name} está arquivado. Modo de leitura.',
 	'page.documents.empty': 'Ainda não há documentos.',
+	'page.documents.emptyBody': 'Carrega boletins de vacinas, seguros ou papéis de adoção.',
 	'page.documents.upload': 'Carregar documento',
 	'page.documents.uploading': 'A carregar…',
 	'page.documents.dropHint': 'PDF ou imagem, até {max}MB',

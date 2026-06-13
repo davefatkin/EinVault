@@ -230,6 +230,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.photoRemoved': 'Profilfoto entfernt.',
 	'page.settings.addCompanion': 'Begleiter hinzufügen',
 	'page.settings.noCompanions': 'Noch keine Begleiter.',
+	'page.settings.companionsEmptyBody': 'Füge einen Begleiter hinzu, um seine Pflege zu verfolgen.',
 	'page.settings.pastCompanionsCard': 'Frühere Begleiter',
 	'page.settings.archivedOn': 'Archiviert am',
 	'page.settings.roleLabel': 'Rolle',
@@ -473,6 +474,10 @@ const messages: Record<keyof Messages, string> = {
 	'overview.heading.companions': 'Deine Begleiter',
 	'overview.companions.nextReminder': 'Nächste Erinnerung',
 	'overview.companions.addStart': 'Neues Tresor starten',
+	'overview.firstRun.title': 'Willkommen bei EinVault',
+	'overview.firstRun.body':
+		'Füge deinen ersten Begleiter hinzu, um Gesundheitsakte, Tagebuch und tägliche Pflege zu beginnen.',
+	'overview.firstRun.cta': 'Ersten Begleiter hinzufügen',
 	'overview.heading.reminders': 'Anstehende Erinnerungen (nächste 7 Tage)',
 	'overview.heading.todayJournal': 'Heutiges Tagebuch',
 	'overview.heading.recentActivity': 'Letzte Aktivitäten (letzte 7 Tage)',
@@ -689,6 +694,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.savingWeight': 'Speichern...',
 	'page.health.weightHistoryTitle': 'Gewichtsverlauf',
 	'page.health.healthEventsTitle': 'Gesundheitsereignisse',
+	'page.health.emptyBody':
+		'Erfasse Tierarztbesuche, Impfungen und Medikamente, um die Akte aufzubauen.',
 	'page.health.noHealthEvents': 'Noch keine Gesundheitsereignisse erfasst.',
 	'page.health.detailWeightEntry': 'Gewichtseintrag',
 	'page.health.detailWeight': 'Gewicht',
@@ -769,6 +776,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Wiederherstellen',
 	'page.reminders.completedCount': '{count} erledigte Erinnerung',
 	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',
+	'page.reminders.emptyBody':
+		'Lege Tierarzttermine, Medikamente oder Pflege fest, damit nichts vergessen wird.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Benutzer',
@@ -938,6 +947,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.title': 'Dokumente',
 	'page.documents.archivedNotice': '{name} ist archiviert. Nur-Lese-Modus.',
 	'page.documents.empty': 'Noch keine Dokumente.',
+	'page.documents.emptyBody': 'Lade Impfnachweise, Versicherung oder Adoptionsunterlagen hoch.',
 	'page.documents.upload': 'Dokument hochladen',
 	'page.documents.uploading': 'Wird hochgeladen…',
 	'page.documents.dropHint': 'PDF oder Bild, bis zu {max}MB',

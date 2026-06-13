@@ -226,6 +226,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.photoRemoved': 'Foto profilo rimossa.',
 	'page.settings.addCompanion': 'Aggiungi compagno',
 	'page.settings.noCompanions': 'Nessun compagno ancora.',
+	'page.settings.companionsEmptyBody': 'Aggiungi un compagno per iniziare a seguirne la cura.',
 	'page.settings.pastCompanionsCard': 'Compagni passati',
 	'page.settings.archivedOn': 'Archiviato il',
 	'page.settings.roleLabel': 'Ruolo',
@@ -469,6 +470,10 @@ const messages: Record<keyof Messages, string> = {
 	'overview.heading.companions': 'I tuoi compagni',
 	'overview.companions.nextReminder': 'Prossimo promemoria',
 	'overview.companions.addStart': 'Inizia un nuovo registro',
+	'overview.firstRun.title': 'Benvenuto su EinVault',
+	'overview.firstRun.body':
+		'Aggiungi il tuo primo compagno per avviare la cartella sanitaria, il diario e la cura quotidiana.',
+	'overview.firstRun.cta': 'Aggiungi il primo compagno',
 	'overview.heading.reminders': 'Promemoria in arrivo (prossimi 7 giorni)',
 	'overview.heading.todayJournal': 'Diario di oggi',
 	'overview.heading.recentActivity': 'Attività recente (ultimi 7 giorni)',
@@ -684,6 +689,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.savingWeight': 'Salvataggio...',
 	'page.health.weightHistoryTitle': 'Storico peso',
 	'page.health.healthEventsTitle': 'Eventi sanitari',
+	'page.health.emptyBody':
+		'Registra visite veterinarie, vaccinazioni e farmaci per costruire la cartella.',
 	'page.health.noHealthEvents': 'Nessun evento sanitario registrato.',
 	'page.health.detailWeightEntry': 'Voce peso',
 	'page.health.detailWeight': 'Peso',
@@ -764,6 +771,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Ripristina',
 	'page.reminders.completedCount': '{count} promemoria completato',
 	'page.reminders.completedCountPlural': '{count} promemoria completati',
+	'page.reminders.emptyBody':
+		'Imposta visite veterinarie, farmaci o toelettatura per non dimenticare nulla.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utenti',
@@ -932,6 +941,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.title': 'Documenti',
 	'page.documents.archivedNotice': '{name} è archiviato. Visualizzazione in sola lettura.',
 	'page.documents.empty': 'Nessun documento ancora.',
+	'page.documents.emptyBody': 'Carica libretti vaccinali, assicurazione o documenti di adozione.',
 	'page.documents.upload': 'Carica documento',
 	'page.documents.uploading': 'Caricamento…',
 	'page.documents.dropHint': 'PDF o immagine, fino a {max}MB',

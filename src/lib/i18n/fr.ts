@@ -228,6 +228,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.photoRemoved': 'Photo de profil supprimée.',
 	'page.settings.addCompanion': 'Ajouter un compagnon',
 	'page.settings.noCompanions': 'Aucun compagnon pour le moment.',
+	'page.settings.companionsEmptyBody': 'Ajoutez un compagnon pour suivre ses soins.',
 	'page.settings.pastCompanionsCard': 'Anciens compagnons',
 	'page.settings.archivedOn': 'Archivé le',
 	'page.settings.roleLabel': 'Rôle',
@@ -473,6 +474,10 @@ const messages: Record<keyof Messages, string> = {
 	'overview.heading.companions': 'Vos compagnons',
 	'overview.companions.nextReminder': 'Prochain rappel',
 	'overview.companions.addStart': 'Créer un nouveau coffre',
+	'overview.firstRun.title': 'Bienvenue sur EinVault',
+	'overview.firstRun.body':
+		'Ajoutez votre premier compagnon pour démarrer son carnet de santé, son journal et ses soins quotidiens.',
+	'overview.firstRun.cta': 'Ajouter votre premier compagnon',
 	'overview.heading.reminders': 'Rappels à venir (7 prochains jours)',
 	'overview.heading.todayJournal': "Journal d'aujourd'hui",
 	'overview.heading.recentActivity': 'Activité récente (7 derniers jours)',
@@ -691,6 +696,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.savingWeight': 'Enregistrement...',
 	'page.health.weightHistoryTitle': 'Historique du poids',
 	'page.health.healthEventsTitle': 'Événements de santé',
+	'page.health.emptyBody':
+		'Consignez visites vétérinaires, vaccins et médicaments pour constituer le dossier.',
 	'page.health.noHealthEvents': 'Aucun événement de santé enregistré.',
 	'page.health.detailWeightEntry': 'Entrée de poids',
 	'page.health.detailWeight': 'Poids',
@@ -771,6 +778,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurer',
 	'page.reminders.completedCount': '{count} rappel terminé',
 	'page.reminders.completedCountPlural': '{count} rappels terminés',
+	'page.reminders.emptyBody':
+		'Planifiez visites vétérinaires, médicaments ou toilettage pour ne rien oublier.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilisateurs',
@@ -939,6 +948,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.title': 'Documents',
 	'page.documents.archivedNotice': '{name} est archivé. Mode lecture seule.',
 	'page.documents.empty': 'Aucun document pour le moment.',
+	'page.documents.emptyBody': "Téléversez carnets de vaccination, assurance ou papiers d'adoption.",
 	'page.documents.upload': 'Téléverser un document',
 	'page.documents.uploading': 'Téléversement…',
 	'page.documents.dropHint': "PDF ou image, jusqu'à {max}Mo",
