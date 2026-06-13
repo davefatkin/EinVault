@@ -14,6 +14,8 @@
 	import { SvelteDate } from 'svelte/reactivity';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
 	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { CalendarClock } from '@lucide/svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -170,9 +172,9 @@
 		</div>
 
 		{#if data.upcomingShifts.length === 0}
-			<p class="text-sm italic text-muted-foreground">
-				{t(locale, 'page.settings.noUpcomingShifts')}
-			</p>
+			<EmptyState tint="muted" title={t(locale, 'page.settings.noUpcomingShifts')}>
+				{#snippet icon()}<CalendarClock class="h-5 w-5" />{/snippet}
+			</EmptyState>
 		{:else}
 			<div class="space-y-4">
 				{#each grouped() as group (group.key)}

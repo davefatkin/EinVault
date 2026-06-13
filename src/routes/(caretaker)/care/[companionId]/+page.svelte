@@ -4,7 +4,8 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell } from '@lucide/svelte';
+	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
@@ -438,9 +439,9 @@
 				{/if}
 			</div>
 			{#if upcomingReminders.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.caretaker.remindersEmpty')}
-				</p>
+				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.remindersEmpty')}>
+					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-1">
 					{#each upcomingReminders as reminder (reminder.id)}
@@ -657,9 +658,9 @@
 				📋 {t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
 			</h2>
 			{#if todayActivity.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.caretaker.activityEmpty')}
-				</p>
+				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.activityEmpty')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-1">
 					{#each todayActivity as event (event.id)}
