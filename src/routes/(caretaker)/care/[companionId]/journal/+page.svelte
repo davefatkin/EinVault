@@ -311,8 +311,8 @@
 			</div>
 		</div>
 
-		<!-- Write area -->
-		<Card class="overflow-hidden">
+		<!-- Write area: overflow-visible so the MarkdownTextarea "supported" popover isn't clipped -->
+		<Card class="overflow-visible">
 			<div class="border-b border-border/60 flex items-center justify-between px-4 py-2.5">
 				<span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
 					>{t(locale, 'page.journal.caretaker.todaysNotes')}</span
