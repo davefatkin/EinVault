@@ -29,6 +29,9 @@
 
 	const fieldClass =
 		'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
+	// The preview renders block-level prose (paragraphs, <br>); `flex` would lay
+	// those out as flex items (paragraphs pushed side by side / right-aligned).
+	const previewClass = fieldClass.replace('flex ', 'block ');
 </script>
 
 <div class="space-y-1">
@@ -69,7 +72,7 @@
 
 	{#if mode === 'preview'}
 		<div
-			class="{fieldClass} prose prose-sm dark:prose-invert max-w-none"
+			class="{previewClass} prose prose-sm dark:prose-invert max-w-none"
 			style="min-height: {rows * 1.5}rem"
 		>
 			{#if value}
