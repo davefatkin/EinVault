@@ -578,49 +578,45 @@
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
 				{t(locale, 'page.dashboard.caretaker.sectionContacts')}
 			</h2>
-			<div class="space-y-4">
-				{#if hasVetInfo || hasEmergencyContact}
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						{#if hasVetInfo}
-							<div class="rounded-xl border border-border bg-card p-4 space-y-1 text-sm">
-								<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-									<span>🏥</span>
-									{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
-								</p>
-								{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
-								{#if companion.vetClinic}<p class="text-muted-foreground">
-										{companion.vetClinic}
-									</p>{/if}
-								{#if companion.vetPhone}
-									📞 <a
-										href="tel:{companion.vetPhone}"
-										class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
-									>
-								{/if}
-							</div>
+			<div class="flex flex-col sm:flex-row gap-4">
+				{#if hasVetInfo}
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4 space-y-1 text-sm">
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🏥</span>
+							{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
+						</p>
+						{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
+						{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
+						{#if companion.vetPhone}
+							📞 <a
+								href="tel:{companion.vetPhone}"
+								class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
+							>
 						{/if}
-						{#if hasEmergencyContact}
-							<div class="rounded-xl border border-coral/30 bg-card p-4 space-y-1 text-sm">
-								<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-									<span>🚨</span>
-									{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
-								</p>
-								{#if companion.emergencyContactName}
-									<p class="font-medium">{companion.emergencyContactName}</p>
-								{/if}
-								{#if companion.emergencyContactPhone}
-									📞 <a
-										href="tel:{companion.emergencyContactPhone}"
-										class="text-coral hover:underline font-medium text-base"
-										>{companion.emergencyContactPhone}</a
-									>
-								{/if}
-							</div>
+					</div>
+				{/if}
+				{#if hasEmergencyContact}
+					<div
+						class="flex-1 min-w-0 rounded-xl border border-coral/30 bg-card p-4 space-y-1 text-sm"
+					>
+						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+							<span>🚨</span>
+							{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
+						</p>
+						{#if companion.emergencyContactName}
+							<p class="font-medium">{companion.emergencyContactName}</p>
+						{/if}
+						{#if companion.emergencyContactPhone}
+							📞 <a
+								href="tel:{companion.emergencyContactPhone}"
+								class="text-coral hover:underline font-medium text-base"
+								>{companion.emergencyContactPhone}</a
+							>
 						{/if}
 					</div>
 				{/if}
 				{#if visibleOwners.length > 0}
-					<div class="rounded-xl border border-border bg-card p-4 space-y-3">
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4 space-y-3">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
 							<span>🏠</span>
 							{visibleOwners.length === 1
