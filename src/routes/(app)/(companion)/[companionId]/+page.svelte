@@ -19,8 +19,11 @@
 		NotebookPen,
 		FileText,
 		X,
-		CheckCheck
+		CheckCheck,
+		Activity,
+		TrendingUp
 	} from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
@@ -669,9 +672,9 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if upcomingReminders.length === 0}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.noUpcomingReminders')}
-					</p>
+					<EmptyState tint="muted" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
+						{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
 					<div class="space-y-1">
 						{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
@@ -773,9 +776,9 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if recentWeights.length === 0}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.weightTrendEmpty')}
-					</p>
+					<EmptyState tint="muted" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
+						{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
 					{@const latest = recentWeights[0]}
 					<div class="flex items-end justify-between gap-4">
@@ -829,9 +832,9 @@
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if activityTimeline.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.activityEmpty')}
-				</p>
+				<EmptyState tint="muted" title={t(locale, 'page.dashboard.activityEmpty')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-0.5">
 					{#each activityTimeline as entry (entry.item.id)}

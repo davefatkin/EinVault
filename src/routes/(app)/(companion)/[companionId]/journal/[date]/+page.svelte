@@ -25,8 +25,10 @@
 		Plus,
 		Pencil,
 		NotebookPen,
-		X
+		X,
+		Activity
 	} from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -1097,9 +1099,9 @@
 			{/if}
 
 			{#if data.dailyEvents.length === 0 && !showActivityForm}
-				<p class="text-sm italic text-muted-foreground py-4">
-					{t(locale, 'page.journal.day.noActivities')}
-				</p>
+				<EmptyState tint="muted" title={t(locale, 'page.journal.day.noActivities')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else if data.dailyEvents.length > 0}
 				<div class="divide-y divide-border rounded-lg border border-border overflow-hidden">
 					{#each data.dailyEvents as event (event.id)}

@@ -10,6 +10,7 @@
 		type WeightRange
 	} from '$lib/weightChart';
 	import { TrendingUp, TrendingDown } from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 
 	interface Props {
 		/** Weight entries, ascending by recordedAt. */
@@ -51,7 +52,9 @@
 
 <div class="rounded-2xl border bg-card p-4">
 	{#if !latest}
-		<p class="text-sm italic text-muted-foreground">{t(locale, 'page.health.noWeightYet')}</p>
+		<EmptyState tint="muted" title={t(locale, 'page.health.noWeightYet')}>
+			{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+		</EmptyState>
 	{:else}
 		<div class="flex items-start justify-between gap-3">
 			<div>

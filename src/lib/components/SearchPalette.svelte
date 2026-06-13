@@ -579,9 +579,10 @@
 						{t(locale, 'common.loading')}
 					</p>
 				{:else if results.length === 0}
-					<p class="px-4 py-6 text-center text-sm text-muted-foreground">
-						{t(locale, 'search.noResults')}
-					</p>
+					<div class="px-4 py-8 flex flex-col items-center gap-2 text-center">
+						<Search class="h-5 w-5 text-muted-foreground" />
+						<p class="text-sm text-muted-foreground">{t(locale, 'search.noResults')}</p>
+					</div>
 				{:else}
 					<ul
 						id="search-results"
