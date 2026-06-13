@@ -111,7 +111,7 @@
 			<div class="flex h-16 items-center justify-between gap-4">
 				<!-- Logo (linked) -->
 				<a
-					href="/care/{data.companions?.[0]?.id ?? ''}"
+					href="/care/{activeCompanion?.id ?? ''}"
 					class="logo-link hidden sm:flex items-center gap-2 shrink-0"
 				>
 					<PawLogo
