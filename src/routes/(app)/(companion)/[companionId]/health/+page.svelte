@@ -475,7 +475,7 @@
 	</div>
 
 	{#if form?.healthError || form?.weightError}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.healthError ?? form.weightError}</AlertDescription>
 		</Alert>
 	{/if}

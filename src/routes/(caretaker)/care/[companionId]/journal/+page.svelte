@@ -266,7 +266,7 @@
 				{:else if saveStatus === 'saved'}<span class="text-teal"
 						>{t(locale, 'page.journal.caretaker.savedStatus')}</span
 					>
-				{:else if saveStatus === 'error'}<span class="text-destructive"
+				{:else if saveStatus === 'error'}<span class="text-coral"
 						>{t(locale, 'page.journal.caretaker.saveFailedStatus')}</span
 					>
 				{/if}
@@ -365,7 +365,7 @@
 			{#if uploadError}
 				<div
 					role="alert"
-					class="mx-4 my-3 rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive"
+					class="mx-4 my-3 rounded-lg bg-coral/10 border border-coral/30 px-4 py-3 text-sm text-coral"
 				>
 					{uploadError}
 				</div>
@@ -422,7 +422,7 @@
 											aria-label={t(locale, 'aria.deleteMedia')}
 											class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 											flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
-											hover:bg-destructive transition-all"
+											hover:bg-coral transition-all"
 										>
 											<Trash2 class="h-3 w-3" />
 										</button>

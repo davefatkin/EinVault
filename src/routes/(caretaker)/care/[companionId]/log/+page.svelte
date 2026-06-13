@@ -93,7 +93,7 @@
 		{#if form?.error}
 			<div
 				role="alert"
-				class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+				class="rounded-lg border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-coral"
 			>
 				{form.error}
 			</div>
@@ -292,7 +292,7 @@
 											type="submit"
 											variant="ghost"
 											size="sm"
-											class="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+											class="h-7 w-7 p-0 text-muted-foreground hover:text-coral"
 											aria-label={t(locale, 'aria.deleteEntry')}
 										>
 											<Trash2 class="h-3.5 w-3.5" />

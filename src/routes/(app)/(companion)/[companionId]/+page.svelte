@@ -426,7 +426,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="bark" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+						<Badge variant="gold" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -881,13 +881,13 @@
 							>
 								<div class="flex items-center gap-3 text-sm">
 									<span
-										class="w-7 h-7 shrink-0 rounded-lg bg-bark-100 dark:bg-bark-950 flex items-center justify-center text-base"
+										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										<HeartPulse class="h-3.5 w-3.5 text-bark-600 dark:text-bark-400" />
+										<HeartPulse class="h-3.5 w-3.5 text-gold" />
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="bark" class="capitalize text-xs"
+											<Badge variant="gold" class="capitalize text-xs"
 												>{event.type.replace('_', ' ')}</Badge
 											>
 											<span class="truncate text-xs text-foreground">{event.title}</span>
@@ -939,7 +939,7 @@
 						>
 							<div class="flex items-center justify-between gap-3 text-sm">
 								<span class="truncate text-foreground text-sm">{doc.title}</span>
-								<Badge variant="bark" class="capitalize shrink-0"
+								<Badge variant="gold" class="capitalize shrink-0"
 									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
 								>
 							</div>

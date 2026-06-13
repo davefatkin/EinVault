@@ -6,8 +6,7 @@
 		variants: {
 			variant: {
 				default: 'bg-card text-foreground',
-				destructive:
-					'border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/20 dark:text-red-400',
+				coral: 'border-coral/30 bg-coral/10 text-coral',
 				success: 'border-teal/30 bg-teal/10 text-teal'
 			}
 		},

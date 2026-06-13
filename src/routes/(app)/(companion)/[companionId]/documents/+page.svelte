@@ -192,7 +192,7 @@
 	</div>
 
 	{#if uploadError}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{uploadError}</AlertDescription>
 		</Alert>
 	{/if}
@@ -299,7 +299,7 @@
 									</select>
 								</div>
 								{#if saveError}
-									<p class="text-sm text-destructive">{saveError}</p>
+									<p class="text-sm text-coral">{saveError}</p>
 								{/if}
 								<div class="flex gap-2">
 									<Button size="sm" onclick={saveEdit}>{t(locale, 'page.documents.save')}</Button>

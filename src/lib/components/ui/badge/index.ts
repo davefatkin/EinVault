@@ -8,11 +8,7 @@ export const badgeVariants = cva(
 			variant: {
 				default: 'border-transparent bg-primary text-primary-foreground',
 				secondary: 'border-transparent bg-secondary text-secondary-foreground',
-				destructive: 'border-transparent bg-destructive text-destructive-foreground',
 				outline: 'text-foreground',
-				bark: 'border-transparent bg-bark-100 text-bark-700 dark:bg-bark-950 dark:text-bark-300',
-				moss: 'border-transparent bg-moss-100 text-moss-700 dark:bg-moss-950 dark:text-moss-300',
-				sky: 'border-transparent bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
 				teal: 'border-transparent bg-teal/15 text-teal',
 				gold: 'border-transparent bg-gold/15 text-gold',
 				coral: 'border-transparent bg-coral/15 text-coral',

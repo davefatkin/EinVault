@@ -80,7 +80,7 @@
 			</Alert>
 		{/if}
 		{#if errorMessage}
-			<Alert variant="destructive" class="mb-3">
+			<Alert variant="coral" class="mb-3">
 				<AlertDescription>{errorMessage}</AlertDescription>
 			</Alert>
 		{/if}
@@ -165,7 +165,7 @@
 			</Alert>
 		{/if}
 		{#if testErrorMessage}
-			<Alert variant="destructive" class="mt-3">
+			<Alert variant="coral" class="mt-3">
 				<AlertDescription>{testErrorMessage}</AlertDescription>
 			</Alert>
 		{/if}

@@ -382,7 +382,7 @@
 	</div>
 
 	{#if form?.error}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.error}</AlertDescription>
 		</Alert>
 	{/if}

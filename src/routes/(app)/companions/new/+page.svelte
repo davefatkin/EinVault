@@ -36,7 +36,7 @@
 	</div>
 
 	{#if form?.error}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.error}</AlertDescription>
 		</Alert>
 	{/if}
@@ -60,7 +60,7 @@
 
 			<div class="space-y-1.5">
 				<Label for="name"
-					>{t(locale, 'page.companion.labelName')} <span class="text-destructive">*</span></Label
+					>{t(locale, 'page.companion.labelName')} <span class="text-coral">*</span></Label
 				>
 				<Input
 					id="name"

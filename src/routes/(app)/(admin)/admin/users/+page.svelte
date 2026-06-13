@@ -52,7 +52,7 @@
 	</div>
 
 	{#if form?.createError || form?.toggleError || form?.resetError || form?.assignError || form?.shiftError || form?.editError}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>
 				{form.createError ??
 					form.toggleError ??

@@ -67,7 +67,7 @@
 				</div>
 			{/if}
 			{#if form?.accountError}
-				<Alert variant="destructive" class="mb-4">
+				<Alert variant="coral" class="mb-4">
 					<AlertDescription>{form.accountError}</AlertDescription>
 				</Alert>
 			{/if}
@@ -389,11 +389,11 @@
 			<div class="flex items-center justify-between text-sm">
 				<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
 				{#if data.user?.role === 'admin'}
-					<Badge variant="bark">{t(locale, 'enum.role.admin')}</Badge>
+					<Badge variant="coral">{t(locale, 'enum.role.admin')}</Badge>
 				{:else if data.user?.role === 'caretaker'}
-					<Badge variant="moss">{t(locale, 'enum.role.caretaker')}</Badge>
+					<Badge variant="teal">{t(locale, 'enum.role.caretaker')}</Badge>
 				{:else}
-					<Badge variant="sky">{t(locale, 'enum.role.member')}</Badge>
+					<Badge variant="teal">{t(locale, 'enum.role.member')}</Badge>
 				{/if}
 			</div>
 		</CardContent>

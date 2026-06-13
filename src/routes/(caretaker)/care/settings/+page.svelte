@@ -371,7 +371,7 @@
 			</Alert>
 		{/if}
 		{#if form?.accountError}
-			<Alert variant="destructive" class="mb-4">
+			<Alert variant="coral" class="mb-4">
 				<AlertDescription>{form.accountError}</AlertDescription>
 			</Alert>
 		{/if}

@@ -91,7 +91,7 @@
 	</div>
 
 	{#if form?.error}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.error}</AlertDescription>
 		</Alert>
 	{/if}
@@ -177,7 +177,7 @@
 				<div class="space-y-1.5">
 					<Label for="name"
 						>{t(locale, 'page.companion.labelName')}
-						<span class="text-destructive">*</span></Label
+						<span class="text-coral">*</span></Label
 					>
 					<Input
 						id="name"
@@ -426,7 +426,7 @@
 	{#if immichAvatarError}
 		<div
 			role="alert"
-			class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-destructive text-destructive-foreground px-4 py-2 text-sm shadow-lg"
+			class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-coral text-coral-foreground px-4 py-2 text-sm shadow-lg"
 		>
 			{immichAvatarError}
 		</div>
