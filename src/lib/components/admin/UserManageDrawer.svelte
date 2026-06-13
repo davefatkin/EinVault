@@ -316,7 +316,7 @@
 										class="space-y-3 rounded-lg border border-border bg-background px-3 py-3"
 									>
 										<input type="hidden" name="shiftId" value={shift.id} />
-										<div class="grid grid-cols-2 gap-3">
+										<div class="space-y-3">
 											<div class="space-y-1">
 												<Label for="es-start-{shift.id}" class="text-xs"
 													>{t(locale, 'page.admin.shiftLabelStart')}</Label
@@ -432,7 +432,7 @@
 						<p class="text-xs font-medium text-muted-foreground">
 							{t(locale, 'page.admin.addShiftLabel')}
 						</p>
-						<div class="grid grid-cols-2 gap-3">
+						<div class="space-y-3">
 							<div class="space-y-1">
 								<Label for="ns-start-{user.id}" class="text-xs"
 									>{t(locale, 'page.admin.shiftLabelStart')}</Label

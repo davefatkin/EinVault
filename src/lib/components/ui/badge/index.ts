@@ -16,8 +16,7 @@ export const badgeVariants = cva(
 				teal: 'border-transparent bg-teal/15 text-teal',
 				gold: 'border-transparent bg-gold/15 text-gold',
 				coral: 'border-transparent bg-coral/15 text-coral',
-				primary: 'border-transparent bg-primary/15 text-primary',
-				destructiveSoft: 'border-transparent bg-destructive/15 text-destructive'
+				primary: 'border-transparent bg-primary/15 text-primary'
 			}
 		},
 		defaultVariants: {
