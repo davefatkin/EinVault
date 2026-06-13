@@ -677,7 +677,10 @@
 		<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 			{t(locale, 'page.health.weightTrend')}
 		</p>
-		<WeightChart entries={weightPoints} />
+		<WeightChart
+			entries={weightPoints}
+			onAddWeight={data.companion.isActive !== false ? () => (showWeightForm = true) : undefined}
+		/>
 	</section>
 
 	{#if data.weightEntries.length > 0}

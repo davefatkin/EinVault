@@ -11,13 +11,16 @@
 	} from '$lib/weightChart';
 	import { TrendingUp, TrendingDown } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 
 	interface Props {
 		/** Weight entries, ascending by recordedAt. */
 		entries: WeightPoint[];
 		now?: Date;
+		/** When provided, the empty state shows a "Record weight" CTA. Omit to keep it message-only (e.g. read-only / archived). */
+		onAddWeight?: () => void;
 	}
-	let { entries, now = undefined }: Props = $props();
+	let { entries, now = undefined, onAddWeight = undefined }: Props = $props();
 	const uid = $props.id();
 	const locale = getLocale();
 
@@ -54,6 +57,11 @@
 	{#if !latest}
 		<EmptyState size="sm" tint="muted" title={t(locale, 'page.health.noWeightYet')}>
 			{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+			{#snippet action()}
+				{#if onAddWeight}
+					<Button size="sm" onclick={onAddWeight}>{t(locale, 'nav.fab.recordWeight')}</Button>
+				{/if}
+			{/snippet}
 		</EmptyState>
 	{:else}
 		<div class="flex items-start justify-between gap-3">
