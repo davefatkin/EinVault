@@ -9,7 +9,7 @@
 	<div class="w-full max-w-sm">
 		<a
 			href="/auth/login"
-			aria-label="EinVault"
+			aria-label="Go to sign in"
 			class="mb-6 flex items-center justify-center gap-2.5"
 		>
 			<div
