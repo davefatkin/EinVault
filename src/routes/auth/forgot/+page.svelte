@@ -16,7 +16,7 @@
 	<title>{t(locale, 'page.forgot.title')} | EinVault</title>
 </svelte:head>
 
-<AuthBackdrop>
+<AuthBackdrop linkLabel={t(locale, 'aria.goToSignIn')}>
 	<div class="rounded-2xl border border-border bg-card p-6 shadow-2xl animate-slide-up">
 		<h1 class="font-display text-xl font-bold text-foreground mb-4 text-center">
 			{t(locale, 'page.forgot.title')}

@@ -846,6 +846,8 @@ const messages: Record<keyof Messages, string> = {
 	// Aria labels
 	'aria.caretakerNav': 'Betreuer-Navigation',
 	'aria.adminNav': 'Verwaltungsbereiche',
+	'aria.einvaultHome': 'EinVault Startseite',
+	'aria.goToSignIn': 'Zur Anmeldung',
 	'aria.mainNav': 'Hauptnavigation',
 	'aria.moreActions': 'Weitere Aktionen',
 	'aria.deleteEntry': 'Eintrag löschen',

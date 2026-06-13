@@ -33,6 +33,7 @@
 			tagline={t(locale, 'page.login.tagline')}
 			subtext={t(locale, 'page.login.taglineSubtext')}
 			footer={t(locale, 'page.login.brandFooter')}
+			homeLabel={t(locale, 'aria.einvaultHome')}
 		/>
 
 		<!-- Form panel -->

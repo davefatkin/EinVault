@@ -836,6 +836,8 @@ const messages = {
 	// Aria labels
 	'aria.caretakerNav': 'Caretaker navigation',
 	'aria.adminNav': 'Admin sections',
+	'aria.einvaultHome': 'EinVault home',
+	'aria.goToSignIn': 'Go to sign in',
 	'aria.mainNav': 'Main navigation',
 	'aria.moreActions': 'More actions',
 	'aria.deleteEntry': 'Delete entry',

@@ -31,6 +31,7 @@
 			tagline={t(locale, 'page.login.tagline')}
 			subtext={t(locale, 'page.setup.brandSubtext')}
 			footer={t(locale, 'page.login.brandFooter')}
+			homeLabel={t(locale, 'aria.einvaultHome')}
 		/>
 
 		<div class="flex flex-col justify-center bg-card px-8 py-8 md:px-11 md:py-12">
