@@ -411,9 +411,9 @@
 	<!-- 1b. Bio / About (reference) -->
 	{#if companion.bio}
 		<section>
-			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 				{t(locale, 'page.dashboard.caretaker.cardAbout', { name: companion.name })}
-			</p>
+			</h2>
 			<div class="prose prose-sm dark:prose-invert max-w-none">
 				{@html renderMarkdown(companion.bio)}
 			</div>
@@ -552,9 +552,9 @@
 	<!-- 4b. Sitter notes (reference) -->
 	{#if companion.notesForSitter}
 		<section>
-			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 				{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
-			</p>
+			</h2>
 			<div class="prose prose-sm dark:prose-invert max-w-none">
 				{@html renderMarkdown(companion.notesForSitter)}
 			</div>

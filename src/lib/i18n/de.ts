@@ -558,7 +558,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardAbout': 'Über {name}',
 	'page.dashboard.caretaker.cardTodayActivity': 'Heutige Aktivitäten',
 	'page.dashboard.caretaker.sectionQuickLog': 'Schnell erfassen',
-	'page.dashboard.caretaker.logActivity': '+ Aktivität erfassen',
+	'page.dashboard.caretaker.logActivity': 'Aktivität erfassen',
 	'page.dashboard.caretaker.activityEmpty': 'Heute noch nichts erfasst.',
 	'page.dashboard.caretaker.modalLabelType': 'Typ',
 	'page.dashboard.caretaker.modalLabelLogged': 'Erfasst',

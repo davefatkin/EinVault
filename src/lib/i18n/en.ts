@@ -551,7 +551,7 @@ const messages = {
 	'page.dashboard.caretaker.cardAbout': 'About {name}',
 	'page.dashboard.caretaker.cardTodayActivity': "Today's Activity",
 	'page.dashboard.caretaker.sectionQuickLog': 'Quick log',
-	'page.dashboard.caretaker.logActivity': '+ Log activity',
+	'page.dashboard.caretaker.logActivity': 'Log activity',
 	'page.dashboard.caretaker.activityEmpty': 'Nothing logged yet today.',
 	'page.dashboard.caretaker.modalLabelType': 'Type',
 	'page.dashboard.caretaker.modalLabelLogged': 'Logged',
