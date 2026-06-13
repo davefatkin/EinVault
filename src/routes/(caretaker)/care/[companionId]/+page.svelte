@@ -125,6 +125,10 @@
 	}
 
 	let visibleOwners = $derived((owners ?? []).filter((o) => o.phone || o.email));
+	let hasVetInfo = $derived(!!(companion.vetName || companion.vetClinic || companion.vetPhone));
+	let hasEmergencyContact = $derived(
+		!!(companion.emergencyContactName || companion.emergencyContactPhone)
+	);
 
 	// Pending reminder dismissals
 	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 0) * 1000);
@@ -512,20 +516,15 @@
 		</section>
 	{/if}
 
-	<!-- 4a. Schedules (reference) -->
+	<!-- 4a. Schedules (reference): 1–3 cards, evenly spaced across one row (flex-1 each) -->
 	{#if companion.feedingSchedule || companion.walkSchedule || companion.medicationSchedule}
-		{@const scheduleLabels = [
-			companion.feedingSchedule && t(locale, 'page.dashboard.caretaker.cardFeeding'),
-			companion.walkSchedule && t(locale, 'page.dashboard.caretaker.cardWalk'),
-			companion.medicationSchedule && t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')
-		].filter(Boolean)}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				{scheduleLabels.join(' & ')}
+				{t(locale, 'page.dashboard.caretaker.sectionSchedules')}
 			</h2>
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+			<div class="flex flex-col sm:flex-row gap-4">
 				{#if companion.feedingSchedule}
-					<div class="rounded-xl border border-border bg-card p-4">
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
 							<span>🍖</span>
 							{t(locale, 'page.dashboard.caretaker.cardFeeding')}
@@ -536,7 +535,7 @@
 					</div>
 				{/if}
 				{#if companion.walkSchedule}
-					<div class="rounded-xl border border-border bg-card p-4">
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
 							<span>🦮</span>
 							{t(locale, 'page.dashboard.caretaker.cardWalk')}
@@ -547,7 +546,7 @@
 					</div>
 				{/if}
 				{#if companion.medicationSchedule}
-					<div class="rounded-xl border border-border bg-card p-4">
+					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
 							<span>💊</span>
 							{t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')}
@@ -573,84 +572,84 @@
 		</section>
 	{/if}
 
-	<!-- 4c. Contacts (reference) -->
-	{#if companion.vetName || companion.vetClinic || companion.vetPhone || companion.emergencyContactName || companion.emergencyContactPhone}
+	<!-- 4c. Contacts (reference): vet + emergency prioritized, then household -->
+	{#if hasVetInfo || hasEmergencyContact || visibleOwners.length > 0}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				{t(locale, 'page.dashboard.caretaker.cardVetInfo')} &amp; {t(
-					locale,
-					'page.dashboard.caretaker.cardEmergencyContact'
-				)}
+				{t(locale, 'page.dashboard.caretaker.sectionContacts')}
 			</h2>
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-				{#if companion.vetName || companion.vetClinic || companion.vetPhone}
-					<div class="rounded-xl border border-border bg-card p-4 space-y-1 text-sm">
-						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-							<span>🏥</span>
-							{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
-						</p>
-						{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
-						{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
-						{#if companion.vetPhone}
-							📞 <a
-								href="tel:{companion.vetPhone}"
-								class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
-							>
+			<div class="space-y-4">
+				{#if hasVetInfo || hasEmergencyContact}
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						{#if hasVetInfo}
+							<div class="rounded-xl border border-border bg-card p-4 space-y-1 text-sm">
+								<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+									<span>🏥</span>
+									{t(locale, 'page.dashboard.caretaker.cardVetInfo')}
+								</p>
+								{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
+								{#if companion.vetClinic}<p class="text-muted-foreground">
+										{companion.vetClinic}
+									</p>{/if}
+								{#if companion.vetPhone}
+									📞 <a
+										href="tel:{companion.vetPhone}"
+										class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
+									>
+								{/if}
+							</div>
+						{/if}
+						{#if hasEmergencyContact}
+							<div class="rounded-xl border border-coral/30 bg-card p-4 space-y-1 text-sm">
+								<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+									<span>🚨</span>
+									{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
+								</p>
+								{#if companion.emergencyContactName}
+									<p class="font-medium">{companion.emergencyContactName}</p>
+								{/if}
+								{#if companion.emergencyContactPhone}
+									📞 <a
+										href="tel:{companion.emergencyContactPhone}"
+										class="text-coral hover:underline font-medium text-base"
+										>{companion.emergencyContactPhone}</a
+									>
+								{/if}
+							</div>
 						{/if}
 					</div>
 				{/if}
-				{#if companion.emergencyContactName || companion.emergencyContactPhone}
-					<div class="rounded-xl border border-coral/30 bg-card p-4 space-y-1 text-sm">
+				{#if visibleOwners.length > 0}
+					<div class="rounded-xl border border-border bg-card p-4 space-y-3">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-							<span>🚨</span>
-							{t(locale, 'page.dashboard.caretaker.cardEmergencyContact')}
+							<span>🏠</span>
+							{visibleOwners.length === 1
+								? t(locale, 'page.dashboard.caretaker.householdOwner')
+								: t(locale, 'page.dashboard.caretaker.householdContacts')}
 						</p>
-						{#if companion.emergencyContactName}
-							<p class="font-medium">{companion.emergencyContactName}</p>
-						{/if}
-						{#if companion.emergencyContactPhone}
-							📞 <a
-								href="tel:{companion.emergencyContactPhone}"
-								class="text-coral hover:underline font-medium text-base"
-								>{companion.emergencyContactPhone}</a
-							>
-						{/if}
+						{#each visibleOwners as owner (owner.id)}
+							<div class="space-y-1">
+								<p class="font-semibold text-foreground">{owner.displayName}</p>
+								{#if owner.phone}
+									<a
+										href="tel:{owner.phone}"
+										class="flex items-center gap-2 text-sm text-primary-link hover:underline"
+									>
+										<Phone class="h-4 w-4" />{owner.phone}
+									</a>
+								{/if}
+								{#if owner.email}
+									<a
+										href="mailto:{owner.email}"
+										class="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
+									>
+										<Mail class="h-4 w-4" />{owner.email}
+									</a>
+								{/if}
+							</div>
+						{/each}
 					</div>
 				{/if}
-			</div>
-		</section>
-	{/if}
-
-	<!-- 4d. Household owners (reference) -->
-	{#if visibleOwners.length > 0}
-		<section>
-			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-				{visibleOwners.length === 1
-					? t(locale, 'page.dashboard.caretaker.householdOwner')
-					: t(locale, 'page.dashboard.caretaker.householdContacts')}
-			</h2>
-			<div class="rounded-xl border border-border bg-card p-4 space-y-3">
-				{#each visibleOwners as owner (owner.id)}
-					<div class="space-y-1">
-						<p class="font-semibold text-foreground">{owner.displayName}</p>
-						{#if owner.phone}
-							<a
-								href="tel:{owner.phone}"
-								class="flex items-center gap-2 text-sm text-primary-link hover:underline"
-							>
-								<Phone class="h-4 w-4" />{owner.phone}
-							</a>
-						{/if}
-						{#if owner.email}
-							<a
-								href="mailto:{owner.email}"
-								class="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
-							>
-								<Mail class="h-4 w-4" />{owner.email}
-							</a>
-						{/if}
-					</div>
-				{/each}
 			</div>
 		</section>
 	{/if}

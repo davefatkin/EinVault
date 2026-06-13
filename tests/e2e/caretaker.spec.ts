@@ -123,15 +123,16 @@ test.describe('caretaker', () => {
 		await expect(asCaretaker).toHaveURL(/\/log\?type=walk/, { timeout: 8_000 });
 	});
 
-	test('care page shows schedules with a header reflecting present fields', async ({
+	test('care page shows a Schedules section with one card per set schedule', async ({
 		asCaretaker
 	}) => {
 		await asCaretaker.goto(`/care/${BISCUIT}`);
 		const schedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
-		// Walk schedule is unset, so the header lists only feeding + medication.
-		await expect(
-			schedules.getByRole('heading', { name: 'Feeding Schedule & Medication Schedule' })
-		).toBeVisible({ timeout: 8_000 });
+		await expect(schedules.getByRole('heading', { name: 'Schedules' })).toBeVisible({
+			timeout: 8_000
+		});
+		// Walk schedule is unset → only the feeding + medication cards render.
 		await expect(schedules.getByText('Heartworm chew monthly')).toBeVisible();
+		await expect(schedules.getByText('Morning kibble, evening kibble')).toBeVisible();
 	});
 });
