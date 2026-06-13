@@ -527,7 +527,7 @@
 	</div>
 {/if}
 
-<div class="pb-24 md:pb-0">
+<div class="max-w-3xl mx-auto pb-24 md:pb-0">
 	<div class="space-y-6">
 		<!-- Back to journal -->
 		<div>

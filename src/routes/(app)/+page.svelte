@@ -138,8 +138,10 @@
 				ts: new Date(item.occurredAt)
 			}))
 		];
-		items.sort((a, b) => b.ts.getTime() - a.ts.getTime());
-		return items.slice(0, 8);
+		return items
+			.filter((item) => item.ts.getTime() <= Date.now())
+			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
+			.slice(0, 8);
 	});
 
 	// Age from DOB string "YYYY-MM-DD"

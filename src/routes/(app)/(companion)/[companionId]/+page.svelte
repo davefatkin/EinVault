@@ -106,6 +106,7 @@
 				}))
 			] as ActivityItem[]
 		)
+			.filter((e) => e.ts.getTime() <= Date.now())
 			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
 			.slice(0, 8)
 	);

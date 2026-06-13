@@ -22,6 +22,13 @@
 
 	let showPasswordFields = $state(false);
 	let localeForm: HTMLFormElement;
+	let savedAlertEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (form?.accountSuccess && savedAlertEl) {
+			savedAlertEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	});
 
 	let themeOverride = $state<Theme | null>(null);
 	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
@@ -53,9 +60,11 @@
 		</CardHeader>
 		<CardContent>
 			{#if form?.accountSuccess}
-				<Alert variant="success" class="mb-4">
-					<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
-				</Alert>
+				<div bind:this={savedAlertEl}>
+					<Alert variant="success" class="mb-4">
+						<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
+					</Alert>
+				</div>
 			{/if}
 			{#if form?.accountError}
 				<Alert variant="destructive" class="mb-4">

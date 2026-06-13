@@ -23,6 +23,13 @@
 	const locale = getLocale();
 
 	let showArchivePanel = $state(false);
+	let savedAlertEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (form?.success && savedAlertEl) {
+			savedAlertEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	});
 
 	// Avatar Immich picker
 	let immichAvatarPickerOpen = $state(false);
@@ -90,9 +97,11 @@
 	{/if}
 
 	{#if form?.success}
-		<Alert variant="success">
-			<AlertDescription>{t(locale, 'page.companion.edit.changesSaved')}</AlertDescription>
-		</Alert>
+		<div bind:this={savedAlertEl}>
+			<Alert variant="success">
+				<AlertDescription>{t(locale, 'page.companion.edit.changesSaved')}</AlertDescription>
+			</Alert>
+		</div>
 	{/if}
 
 	<!-- Segmented tab control -->
