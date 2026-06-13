@@ -592,8 +592,9 @@
 						{#if companion.vetName}<p class="font-medium">{companion.vetName}</p>{/if}
 						{#if companion.vetClinic}<p class="text-muted-foreground">{companion.vetClinic}</p>{/if}
 						{#if companion.vetPhone}
-							📞 <a href="tel:{companion.vetPhone}" class="hover:underline font-medium text-primary"
-								>{companion.vetPhone}</a
+							📞 <a
+								href="tel:{companion.vetPhone}"
+								class="hover:underline font-medium text-primary-link">{companion.vetPhone}</a
 							>
 						{/if}
 					</div>
@@ -635,7 +636,7 @@
 						{#if owner.phone}
 							<a
 								href="tel:{owner.phone}"
-								class="flex items-center gap-2 text-sm text-primary hover:underline"
+								class="flex items-center gap-2 text-sm text-primary-link hover:underline"
 							>
 								<Phone class="h-4 w-4" />{owner.phone}
 							</a>

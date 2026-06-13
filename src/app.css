@@ -33,6 +33,8 @@
 
 	--color-primary: hsl(var(--primary));
 	--color-primary-foreground: hsl(var(--primary-foreground));
+	/* Brighter violet for primary-colored link text; readable on dark cards */
+	--color-primary-link: hsl(var(--primary-link));
 
 	--color-secondary: hsl(var(--secondary));
 	--color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -170,6 +172,7 @@
 		--popover-foreground: 252 43% 15%;
 		--primary: 255 89% 62%;
 		--primary-foreground: 0 0% 100%;
+		--primary-link: 255 89% 62%;
 		--secondary: 258 30% 94%;
 		--secondary-foreground: 252 43% 15%;
 		--muted: 258 30% 94%;
@@ -208,6 +211,7 @@
 		--popover-foreground: 0 0% 100%;
 		--primary: 252 100% 65%;
 		--primary-foreground: 0 0% 100%;
+		--primary-link: 252 100% 82%;
 		--secondary: 238 30% 19%;
 		--secondary-foreground: 0 0% 100%;
 		--muted: 238 30% 19%;
