@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 
 test.describe('health events and weight log', () => {
 	test('add health event', async ({ asMember }) => {
@@ -92,7 +92,7 @@ test.describe('health events and weight log', () => {
 	test('a document attached to a health event is previewable from the event modal', async ({
 		asMember
 	}) => {
-		// Upload a document and link it to the seeded "Seed checkup" health event.
+		// Upload a document and link it to the seeded "Wellness checkup" health event.
 		await asMember.goto(`/${COMP}/documents`);
 		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-health-attach.pdf'));
 		await expect(asMember.getByText('e2e-health-attach.pdf')).toBeVisible({ timeout: 15_000 });
@@ -100,11 +100,11 @@ test.describe('health events and weight log', () => {
 		await li.getByRole('button', { name: 'Edit document' }).click();
 		await asMember.locator('select[id^="doc-event-"]').selectOption('seed-health-1');
 		await asMember.getByRole('button', { name: 'Save' }).first().click();
-		await expect(asMember.getByText('Seed checkup')).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText('Wellness checkup')).toBeVisible({ timeout: 8_000 });
 
-		// On the health page, open the "Seed checkup" event detail modal.
+		// On the health page, open the "Wellness checkup" event detail modal.
 		await asMember.goto(`/${COMP}/health`);
-		await asMember.getByText('Seed checkup').first().click();
+		await asMember.getByText('Wellness checkup').first().click();
 		const dialog = asMember.locator('[role="dialog"]');
 		await expect(dialog).toBeVisible({ timeout: 8_000 });
 

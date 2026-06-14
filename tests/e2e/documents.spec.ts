@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 
 test.describe('documents', () => {
 	test('upload PDF', async ({ asMember }) => {

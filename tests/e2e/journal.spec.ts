@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import { pngUpload } from '../lib/files';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 
 test.describe('journal day editor', () => {
 	test('write entry with autosave', async ({ asMember }) => {
@@ -151,7 +151,7 @@ test.describe('journal day editor', () => {
 
 		// The seed entry body is rendered as markdown HTML; the raw text will appear
 		// inside the prose container
-		await expect(asMember.getByText('Seed journal entry')).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText('Clean bill of health')).toBeVisible({ timeout: 8_000 });
 	});
 
 	test('edit shows the editor alongside the original author', async ({ asMember, asAdmin }) => {
@@ -175,12 +175,12 @@ test.describe('journal day editor', () => {
 		const card = asMember
 			.locator('div.rounded-2xl.border.bg-card')
 			.filter({ hasText: 'edited by admin' });
-		await expect(card.getByText(/by Seed Member/)).toBeVisible({ timeout: 8_000 });
-		await expect(card.getByText(/edited by Seed Admin/)).toBeVisible({ timeout: 8_000 });
+		await expect(card.getByText(/by Jet/)).toBeVisible({ timeout: 8_000 });
+		await expect(card.getByText(/edited by Spike/)).toBeVisible({ timeout: 8_000 });
 
 		// The day editor page shows the same attribution in its header.
 		await asMember.goto(`/${COMP}/journal/${date}`);
-		await expect(asMember.getByText(/edited by Seed Admin/).first()).toBeVisible({
+		await expect(asMember.getByText(/edited by Spike/).first()).toBeVisible({
 			timeout: 8_000
 		});
 	});

@@ -245,7 +245,7 @@ test.describe('admin-users', () => {
 	test('sub-nav switches to companions; role badge shows', async ({ asAdmin }) => {
 		await asAdmin.goto('/admin/users');
 		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
-		const adminRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'seed-admin' });
+		const adminRow = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'spike' });
 		await expect(adminRow.getByText('Admin', { exact: true })).toBeVisible({ timeout: 6_000 });
 		await asAdmin
 			.getByRole('navigation', { name: /admin sections/i })

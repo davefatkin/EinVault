@@ -7,7 +7,7 @@ import { startS3Fake, type S3Fake } from '../fakes/s3';
 import { pngUpload } from '../lib/files';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
-const COMP = SEED.companions.biscuit.id;
+const COMP = SEED.companions.ein.id;
 
 interface S3World {
 	server: AppServer;

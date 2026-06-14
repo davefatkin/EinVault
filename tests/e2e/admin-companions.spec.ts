@@ -1,15 +1,13 @@
 import { test, expect } from '../lib/fixtures';
 
 test.describe('admin-companions', () => {
-	test('admin sees companion list with Biscuit and edit link', async ({ asAdmin }) => {
+	test('admin sees companion list with Ein and edit link', async ({ asAdmin }) => {
 		await asAdmin.goto('/admin/companions');
 		await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 10_000 });
 
 		const main = asAdmin.locator('main, [role="main"], .max-w-3xl').first();
-		await expect(main.getByText('Biscuit')).toBeVisible();
-		await expect(
-			asAdmin.locator('a[href="/companions/seed-comp-biscuit/edit"]').first()
-		).toBeVisible();
+		await expect(main.getByText('Ein')).toBeVisible();
+		await expect(asAdmin.locator('a[href="/companions/seed-comp-ein/edit"]').first()).toBeVisible();
 	});
 
 	test('member gets 403 on admin/companions', async ({ asMember }) => {

@@ -158,9 +158,9 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 		ntfyTopic: 'e2e-topic-1'
 	});
 
-	// Create a reminder due right now on Biscuit's reminders page.
-	const biscuitRemindersUrl = world.server.baseURL + `/${SEED.companions.biscuit.id}/reminders`;
-	await page.goto(biscuitRemindersUrl);
+	// Create a reminder due right now on Ein's reminders page.
+	const einRemindersUrl = world.server.baseURL + `/${SEED.companions.ein.id}/reminders`;
+	await page.goto(einRemindersUrl);
 	await page.getByRole('button', { name: 'Add Reminder' }).click();
 	await page.locator('#title').fill('e2e-notify-rem');
 	await page.locator('#dueAt').fill(justPast());
@@ -173,8 +173,7 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	// mailparser exposes .to as an AddressObject; use .text to get the address string.
 	const mail = await world.smtp.waitForMail(
 		(m) =>
-			toText(m.to).includes('seed-member@example.com') &&
-			(m.subject ?? '').includes('e2e-notify-rem'),
+			toText(m.to).includes('jet@hammerhead.ship') && (m.subject ?? '').includes('e2e-notify-rem'),
 		20_000
 	);
 
@@ -182,10 +181,10 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	expect(mail.subject).toMatch(/Reminder: e2e-notify-rem/);
 	// Body: "{companion} has a reminder due: {title}" → contains companion name
 	const bodyText = mail.text ?? '';
-	expect(bodyText).toMatch(/Biscuit/);
+	expect(bodyText).toMatch(/Ein/);
 	expect(bodyText).toMatch(/e2e-notify-rem/);
 	// Recipient
-	expect(toText(mail.to)).toContain('seed-member@example.com');
+	expect(toText(mail.to)).toContain('jet@hammerhead.ship');
 
 	// ntfy push
 	const publish = await world.ntfy.waitForPublish(
@@ -200,8 +199,7 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	// Dedup: after ~4 scan cycles (1s) the count must not have grown
 	// ------------------------------------------------------------------
 	const reminderMailMatcher = (m: import('mailparser').ParsedMail) =>
-		toText(m.to).includes('seed-member@example.com') &&
-		(m.subject ?? '').includes('e2e-notify-rem');
+		toText(m.to).includes('jet@hammerhead.ship') && (m.subject ?? '').includes('e2e-notify-rem');
 
 	await expect
 		.poll(() => world.smtp.messages.filter(reminderMailMatcher).length, {
@@ -275,20 +273,20 @@ test('shift start email fires for caretaker', async ({ world, browser }) => {
 	await adminCtx.close();
 
 	// Wait for the scheduler to emit the shift-start email.
-	// Subject: "Shift starting soon: {caretaker}" → "Shift starting soon: Seed Caretaker"
+	// Subject: "Shift starting soon: {caretaker}" → "Shift starting soon: Faye"
 	// mailparser exposes .to as an AddressObject; use .text for the address string.
 	const mail = await world.smtp.waitForMail(
 		(m) =>
-			toText(m.to).includes('seed-caretaker@example.com') &&
+			toText(m.to).includes('faye@redtail.ship') &&
 			(m.subject ?? '').toLowerCase().includes('shift starting soon'),
 		20_000
 	);
 
-	expect(mail.subject).toMatch(/Shift starting soon: Seed Caretaker/i);
-	expect(toText(mail.to)).toContain('seed-caretaker@example.com');
+	expect(mail.subject).toMatch(/Shift starting soon: Faye/i);
+	expect(toText(mail.to)).toContain('faye@redtail.ship');
 	// Body: "{caretaker} begins a care shift on {start}."
 	const bodyText = mail.text ?? '';
-	expect(bodyText).toMatch(/Seed Caretaker/);
+	expect(bodyText).toMatch(/Faye/);
 	expect(bodyText).toMatch(/begins a care shift/);
 });
 

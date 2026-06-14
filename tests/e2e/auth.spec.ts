@@ -52,11 +52,11 @@ test.describe('forgot password', () => {
 		const page = await ctx.newPage();
 
 		await page.goto('/auth/forgot');
-		await page.getByLabel('Email').fill('seed-reset@example.com');
+		await page.getByLabel('Email').fill('vicious@reddragon.club');
 		await page.getByRole('button', { name: 'Send reset link' }).click();
 
 		const mail = await app.smtp.waitForMail((m) =>
-			[m.to ?? []].flat().some((addr) => addr.text.includes('seed-reset@example.com'))
+			[m.to ?? []].flat().some((addr) => addr.text.includes('vicious@reddragon.club'))
 		);
 		const link = (mail.text ?? '').match(/https?:\/\/\S+/)?.[0];
 		expect(link).toBeTruthy();

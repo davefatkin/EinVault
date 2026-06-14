@@ -1,6 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 const BASE = `/${COMP}/reminders`;
 
 /**

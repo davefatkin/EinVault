@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 
-const BISCUIT = 'seed-comp-biscuit';
-const WAFFLES = 'seed-comp-waffles';
+const EIN = 'seed-comp-ein';
+const EDWARD = 'seed-comp-edward';
 
 // The server runs with TZ=UTC; localDateISO() uses the process timezone (UTC),
 // so "today" from the server's perspective is the current UTC date.
@@ -15,8 +15,8 @@ test.describe('caretaker', () => {
 	test('dashboard redirect + on-shift indicator', async ({ asCaretaker }) => {
 		await asCaretaker.goto('/care');
 
-		// /care redirects to the first assigned companion: Biscuit
-		await expect(asCaretaker).toHaveURL(new RegExp(BISCUIT), { timeout: 10_000 });
+		// /care redirects to the first assigned companion: Ein
+		await expect(asCaretaker).toHaveURL(new RegExp(EIN), { timeout: 10_000 });
 
 		// On-shift banner renders because the seeded shift is active (started 1h ago)
 		// The banner text starts with the i18n key 'layout.caretaker.onShift' = "On shift, ends"
@@ -27,8 +27,8 @@ test.describe('caretaker', () => {
 		// The load() in both the companion overview and log pages calls:
 		//   if (!companions.find((c) => c.id === params.companionId)) error(403, ...)
 		// companions is the list from the parent layout (assigned companions only).
-		// Waffles is NOT assigned to seed-caretaker, so a 403 error page is returned.
-		await asCaretaker.goto(`/care/${WAFFLES}/log`);
+		// Edward is NOT assigned to seed-caretaker, so a 403 error page is returned.
+		await asCaretaker.goto(`/care/${EDWARD}/log`);
 
 		// The load() guard calls error(403, ...) — SvelteKit renders an error page.
 		// The URL stays on the requested path (error rendered in-place, no redirect).
@@ -37,7 +37,7 @@ test.describe('caretaker', () => {
 	});
 
 	test('log activity', async ({ asCaretaker }) => {
-		await asCaretaker.goto(`/care/${BISCUIT}/log`);
+		await asCaretaker.goto(`/care/${EIN}/log`);
 
 		// The log page renders the quick-log form when on shift.
 		// Activity type pills: 'Walk' is selected by default ($state('walk')).
@@ -71,9 +71,9 @@ test.describe('caretaker', () => {
 	test('member sees caretaker journal entry', async ({ asCaretaker, asMember }) => {
 		const today = todayUTC();
 
-		// Caretaker opens their care journal for Biscuit.
+		// Caretaker opens their care journal for Ein.
 		// The care journal page is at /care/{companionId}/journal and works on today's date.
-		await asCaretaker.goto(`/care/${BISCUIT}/journal`);
+		await asCaretaker.goto(`/care/${EIN}/journal`);
 
 		// The journal textarea has name="body"; the MarkdownTextarea renders a <textarea>
 		const bodyField = asCaretaker.locator('textarea[name="body"]');
@@ -85,7 +85,7 @@ test.describe('caretaker', () => {
 		// Member views the journal entry for the same companion + date via the app route.
 		// The app [date] journal page renders the body in a raw <textarea> (no name attr)
 		// in write mode. Locate by placeholder substring.
-		await asMember.goto(`/${BISCUIT}/journal/${today}`);
+		await asMember.goto(`/${EIN}/journal/${today}`);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e-caretaker-journal', {
 			timeout: 10_000
 		});
@@ -96,25 +96,25 @@ test.describe('caretaker', () => {
 		await asMember.locator('h1').first().click();
 		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 10_000 });
 
-		await asCaretaker.goto(`/care/${BISCUIT}/journal`);
-		await expect(asCaretaker.getByText(/edited by Seed Member/)).toBeVisible({
+		await asCaretaker.goto(`/care/${EIN}/journal`);
+		await expect(asCaretaker.getByText(/edited by Jet/)).toBeVisible({
 			timeout: 10_000
 		});
 	});
 
 	test('caretaker app-route bounce', async ({ asCaretaker }) => {
 		// The (app) layout load() checks role === 'caretaker' and redirects to /care.
-		await asCaretaker.goto(`/${BISCUIT}/health`);
+		await asCaretaker.goto(`/${EIN}/health`);
 
 		// Must end up at /care (or a sub-path like /care/{companionId})
 		await expect(asCaretaker).toHaveURL(/\/care/, { timeout: 10_000 });
 
 		// Must NOT be on the requested app route
-		await expect(asCaretaker).not.toHaveURL(new RegExp(`/${BISCUIT}/health`));
+		await expect(asCaretaker).not.toHaveURL(new RegExp(`/${EIN}/health`));
 	});
 
 	test('care page is action-first with a quick-log deep link', async ({ asCaretaker }) => {
-		await asCaretaker.goto(`/care/${BISCUIT}`);
+		await asCaretaker.goto(`/care/${EIN}`);
 		// Scope to the quick-log section by its heading text to avoid collisions
 		const quickLogSection = asCaretaker.locator('section').filter({ hasText: 'Quick log' });
 		const walkQuick = quickLogSection.getByRole('link', { name: /walk/i });
@@ -126,13 +126,16 @@ test.describe('caretaker', () => {
 	test('care page shows a Schedules section with one card per set schedule', async ({
 		asCaretaker
 	}) => {
-		await asCaretaker.goto(`/care/${BISCUIT}`);
+		await asCaretaker.goto(`/care/${EIN}`);
 		const schedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
 		await expect(schedules.getByRole('heading', { name: 'Schedules' })).toBeVisible({
 			timeout: 8_000
 		});
-		// Walk schedule is unset → only the feeding + medication cards render.
-		await expect(schedules.getByText('Heartworm chew monthly')).toBeVisible();
-		await expect(schedules.getByText('Morning kibble, evening kibble')).toBeVisible();
+		// Ein has feeding, walk, and medication schedules set → all three cards render.
+		await expect(schedules.getByText('Half cup of kibble at 7am and 6pm.')).toBeVisible();
+		await expect(
+			schedules.getByText('Two short walks, after breakfast and before dark.')
+		).toBeVisible();
+		await expect(schedules.getByText('Heartworm chew on the first of the month.')).toBeVisible();
 	});
 });

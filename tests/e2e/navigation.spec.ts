@@ -7,7 +7,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
-const BISCUIT = SEED.companions.biscuit.id;
+const EIN = SEED.companions.ein.id;
 
 // ---------------------------------------------------------------------------
 // A. Owner household tabs + account sheet — mobile-only
@@ -131,7 +131,7 @@ test('caretaker on-shift: Journal and Log tabs are links (not locked) @mobile', 
 	asCaretaker
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile bottom nav is mobile-only');
-	await asCaretaker.goto(`/care/${BISCUIT}`);
+	await asCaretaker.goto(`/care/${EIN}`);
 	const nav = asCaretaker.getByRole('navigation', { name: 'Caretaker navigation' });
 	await expect(nav.getByRole('link', { name: 'Journal' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
@@ -141,7 +141,7 @@ test('caretaker on-shift: Quick add FAB is present and opens Log activity + Add 
 	asCaretaker
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
-	await asCaretaker.goto(`/care/${BISCUIT}`);
+	await asCaretaker.goto(`/care/${EIN}`);
 	// exact: true avoids matching the "Close quick add menu" backdrop button
 	const fab = asCaretaker.getByRole('button', { name: 'Quick add', exact: true });
 	await expect(fab).toBeVisible({ timeout: 8_000 });
@@ -163,14 +163,14 @@ test('caretaker on-shift desktop: Journal and Log are links (not locked)', async
 	asCaretaker
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'desktop', 'desktop only');
-	await asCaretaker.goto(`/care/${BISCUIT}`);
+	await asCaretaker.goto(`/care/${EIN}`);
 	const nav = asCaretaker.getByRole('navigation', { name: 'Caretaker navigation' });
 	await expect(nav.getByRole('link', { name: 'Journal' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
 });
 
 test('caretaker has no Open search control on care page', async ({ asCaretaker }) => {
-	await asCaretaker.goto(`/care/${BISCUIT}`);
+	await asCaretaker.goto(`/care/${EIN}`);
 	await expect(asCaretaker.getByRole('button', { name: 'Open search' })).toHaveCount(0, {
 		timeout: 8_000
 	});
@@ -224,7 +224,7 @@ offShiftTest(
 		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
 
-		await page.goto(`/care/${BISCUIT}`);
+		await page.goto(`/care/${EIN}`);
 
 		// Journal and Log tabs render as <span> (not <a>) with aria-label containing
 		// "requires active shift" text
@@ -259,7 +259,7 @@ offShiftTest(
 		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
 
-		await page.goto(`/care/${BISCUIT}`);
+		await page.goto(`/care/${EIN}`);
 		await expect(page.getByRole('button', { name: 'Quick add' })).toHaveCount(0, {
 			timeout: 8_000
 		});
@@ -281,7 +281,7 @@ offShiftTest(
 		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
 
-		await page.goto(`/care/${BISCUIT}`);
+		await page.goto(`/care/${EIN}`);
 
 		const nav = page.getByRole('navigation', { name: 'Caretaker navigation' });
 		// Locked items are <span> elements with aria-label containing "requires active shift"

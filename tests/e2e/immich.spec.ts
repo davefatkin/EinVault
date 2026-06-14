@@ -63,13 +63,13 @@ const ASSETS = [
 	makeImmichAsset(ASSET_ID_3)
 ];
 
-const BISCUIT_ID = SEED.companions.biscuit.id;
+const EIN_ID = SEED.companions.ein.id;
 
 test('avatar from Immich', async ({ world, page }) => {
 	world.fake.setAssets(ASSETS);
 
 	await login(page, world.server.baseURL, SEED.member.username);
-	await page.goto(world.server.baseURL + `/companions/${BISCUIT_ID}/edit`);
+	await page.goto(world.server.baseURL + `/companions/${EIN_ID}/edit`);
 
 	// The editable companion avatar lives on the edit form. Its Immich button
 	// has aria-label="Pick from Immich" and sits next to the file-upload button.
@@ -93,7 +93,7 @@ test('avatar from Immich', async ({ world, page }) => {
 	await expect(dialog).toHaveCount(0, { timeout: 10_000 });
 
 	// Avatar endpoint must now return an image
-	const avatarRes = await page.request.get(world.server.baseURL + `/api/avatars/${BISCUIT_ID}`);
+	const avatarRes = await page.request.get(world.server.baseURL + `/api/avatars/${EIN_ID}`);
 	expect(avatarRes.status()).toBe(200);
 	const ct = avatarRes.headers()['content-type'] ?? '';
 	expect(ct).toMatch(/^image\//);
@@ -103,7 +103,7 @@ test('journal photo from Immich', async ({ world, page }) => {
 	world.fake.setAssets(ASSETS);
 
 	await login(page, world.server.baseURL, SEED.member.username);
-	await page.goto(world.server.baseURL + `/${BISCUIT_ID}/journal/2026-06-01`);
+	await page.goto(world.server.baseURL + `/${EIN_ID}/journal/2026-06-01`);
 
 	// The "Pick from Immich" button is in the Photos section header
 	await page.getByRole('button', { name: /pick from immich/i }).click();
