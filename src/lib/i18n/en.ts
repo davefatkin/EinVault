@@ -193,6 +193,18 @@ const messages = {
 	'layout.caretaker.requiresActiveShift': 'requires active shift',
 	'layout.caretaker.shiftCalendarEvent': 'EinVault Shift',
 
+	// Page: 2FA
+	'page.twofa.title': 'Two-factor authentication',
+	'page.twofa.codeLabel': 'Authentication code',
+	'page.twofa.help': 'Enter the 6-digit code from your authenticator app, or a backup code.',
+	'page.twofa.invalidCode': 'Invalid or expired code.',
+	'page.twofa.submit': 'Verify',
+	'page.twofa.cannotDisableEnforced':
+		'Your administrator requires two-factor authentication, so it cannot be disabled.',
+	'page.twofa.setupRequiredTitle': 'Two-factor authentication required',
+	'page.twofa.setupRequiredBody':
+		'Your administrator requires two-factor authentication on your account. Set it up to continue.',
+
 	// Page: settings (shared between app and caretaker)
 	'page.settings.title': 'Settings',
 	'page.settings.subtitle': 'Manage your account.',
@@ -258,6 +270,23 @@ const messages = {
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
 		'Pushes cover due reminders and shift alerts for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
+	'page.settings.securityCard': 'Security',
+	'page.settings.twofaOn': 'Two-factor authentication is on.',
+	'page.settings.twofaOff': 'Add a second step at sign-in with an authenticator app.',
+	'page.settings.enable2fa': 'Enable two-factor authentication',
+	'page.settings.scanQr': 'Scan this QR code with your authenticator app.',
+	'page.settings.manualKey': 'Or enter this key manually:',
+	'page.settings.confirmCode': 'Enter the 6-digit code to confirm',
+	'page.settings.confirmEnable': 'Confirm',
+	'page.settings.backupCodesTitle': 'Save your backup codes',
+	'page.settings.backupCodesIntro':
+		'Store these somewhere safe. Each code works once if you lose your authenticator.',
+	'page.settings.backupCodesSaved': "I've saved my backup codes",
+	'page.settings.regenBackup': 'Regenerate backup codes',
+	'page.settings.disable2fa': 'Disable two-factor authentication',
+	'page.settings.twofaUnavailable':
+		'Two-factor authentication is unavailable. Set TWOFA_ENC_KEY to enable it.',
+	'page.settings.twofaUpdated': '✓ Two-factor settings updated.',
 	'page.settings.testEmail': 'Send test email',
 	'page.settings.testNtfy': 'Send test push',
 	'page.settings.testSent': 'Test notification sent.',
@@ -782,6 +811,14 @@ const messages = {
 	'page.admin.setPassword': 'Set password',
 	'page.admin.saveProfile': 'Save profile',
 	'page.admin.saveCompanions': 'Save companions',
+	'page.admin.securitySection': 'Security',
+	'page.admin.require2faLabel': 'Require two-factor authentication',
+	'page.admin.require2faOff': 'Off',
+	'page.admin.require2faAdmins': 'Admins only',
+	'page.admin.require2faEveryone': 'Everyone',
+	'page.admin.require2faHelp': 'Force users to set up 2FA. OIDC users are exempt.',
+	'page.admin.resetTwofa': 'Reset two-factor',
+	'page.admin.twofaReset': '✓ Two-factor reset for this user.',
 
 	// Page: Caretaker log
 	'page.log.title': 'Log activity',

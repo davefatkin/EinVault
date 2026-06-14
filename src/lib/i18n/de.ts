@@ -206,6 +206,19 @@ const messages: Record<keyof Messages, string> = {
 	'layout.caretaker.requiresActiveShift': 'erfordert aktive Schicht',
 	'layout.caretaker.shiftCalendarEvent': 'EinVault Schicht',
 
+	// Page: 2FA
+	'page.twofa.title': 'Zwei-Faktor-Authentifizierung',
+	'page.twofa.codeLabel': 'Authentifizierungscode',
+	'page.twofa.help':
+		'Gib den 6-stelligen Code aus deiner Authenticator-App ein oder einen Backup-Code.',
+	'page.twofa.invalidCode': 'Ungültiger oder abgelaufener Code.',
+	'page.twofa.submit': 'Bestätigen',
+	'page.twofa.cannotDisableEnforced':
+		'Dein Administrator verlangt Zwei-Faktor-Authentifizierung, daher kann sie nicht deaktiviert werden.',
+	'page.twofa.setupRequiredTitle': 'Zwei-Faktor-Authentifizierung erforderlich',
+	'page.twofa.setupRequiredBody':
+		'Dein Administrator verlangt Zwei-Faktor-Authentifizierung für dein Konto. Richte sie ein, um fortzufahren.',
+
 	// Page: settings
 	'page.settings.title': 'Einstellungen',
 	'page.settings.subtitle': 'Verwalte dein Konto.',
@@ -272,6 +285,24 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
 		'Push-Nachrichten umfassen fällige Erinnerungen und Schichtmeldungen für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+	'page.settings.securityCard': 'Sicherheit',
+	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
+	'page.settings.twofaOff':
+		'Füge beim Anmelden einen zweiten Schritt mit einer Authenticator-App hinzu.',
+	'page.settings.enable2fa': 'Zwei-Faktor-Authentifizierung aktivieren',
+	'page.settings.scanQr': 'Scanne diesen QR-Code mit deiner Authenticator-App.',
+	'page.settings.manualKey': 'Oder gib diesen Schlüssel manuell ein:',
+	'page.settings.confirmCode': 'Gib den 6-stelligen Code zur Bestätigung ein',
+	'page.settings.confirmEnable': 'Bestätigen',
+	'page.settings.backupCodesTitle': 'Speichere deine Backup-Codes',
+	'page.settings.backupCodesIntro':
+		'Bewahre sie sicher auf. Jeder Code kann einmal verwendet werden, falls du deinen Authenticator verlierst.',
+	'page.settings.backupCodesSaved': 'Ich habe meine Backup-Codes gespeichert',
+	'page.settings.regenBackup': 'Backup-Codes neu generieren',
+	'page.settings.disable2fa': 'Zwei-Faktor-Authentifizierung deaktivieren',
+	'page.settings.twofaUnavailable':
+		'Zwei-Faktor-Authentifizierung ist nicht verfügbar. Setze TWOFA_ENC_KEY, um sie zu aktivieren.',
+	'page.settings.twofaUpdated': '✓ Zwei-Faktor-Einstellungen aktualisiert.',
 	'page.settings.testEmail': 'Test-E-Mail senden',
 	'page.settings.testNtfy': 'Test-Push senden',
 	'page.settings.testSent': 'Testbenachrichtigung gesendet.',
@@ -793,6 +824,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.setPassword': 'Passwort festlegen',
 	'page.admin.saveProfile': 'Profil speichern',
 	'page.admin.saveCompanions': 'Begleiter speichern',
+	'page.admin.securitySection': 'Sicherheit',
+	'page.admin.require2faLabel': 'Zwei-Faktor-Authentifizierung erforderlich',
+	'page.admin.require2faOff': 'Aus',
+	'page.admin.require2faAdmins': 'Nur Admins',
+	'page.admin.require2faEveryone': 'Alle',
+	'page.admin.require2faHelp':
+		'Benutzer zur Einrichtung von 2FA zwingen. OIDC-Benutzer sind ausgenommen.',
+	'page.admin.resetTwofa': 'Zwei-Faktor zurücksetzen',
+	'page.admin.twofaReset': '✓ Zwei-Faktor für diesen Benutzer zurückgesetzt.',
 
 	// Page: Caretaker log
 	'page.log.title': 'Aktivität erfassen',

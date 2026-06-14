@@ -203,6 +203,19 @@ const messages: Record<keyof Messages, string> = {
 	'layout.caretaker.requiresActiveShift': 'requer turno ativo',
 	'layout.caretaker.shiftCalendarEvent': 'Turno EinVault',
 
+	// Page: 2FA
+	'page.twofa.title': 'Autenticação de dois fatores',
+	'page.twofa.codeLabel': 'Código de autenticação',
+	'page.twofa.help':
+		'Introduza o código de 6 dígitos da sua app autenticadora ou um código de recuperação.',
+	'page.twofa.invalidCode': 'Código inválido ou expirado.',
+	'page.twofa.submit': 'Verificar',
+	'page.twofa.cannotDisableEnforced':
+		'O seu administrador exige autenticação de dois fatores, pelo que não pode ser desativada.',
+	'page.twofa.setupRequiredTitle': 'Autenticação de dois fatores obrigatória',
+	'page.twofa.setupRequiredBody':
+		'O seu administrador exige autenticação de dois fatores na sua conta. Configure-a para continuar.',
+
 	// Page: settings
 	'page.settings.title': 'Definições',
 	'page.settings.subtitle': 'Gerir a sua conta.',
@@ -270,6 +283,24 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
 		'As notificações push cobrem lembretes vencidos e alertas de turno do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
+	'page.settings.securityCard': 'Segurança',
+	'page.settings.twofaOn': 'A autenticação de dois fatores está ativa.',
+	'page.settings.twofaOff':
+		'Adicione um segundo passo no início de sessão com uma app autenticadora.',
+	'page.settings.enable2fa': 'Ativar autenticação de dois fatores',
+	'page.settings.scanQr': 'Digitalize este código QR com a sua app autenticadora.',
+	'page.settings.manualKey': 'Ou introduza esta chave manualmente:',
+	'page.settings.confirmCode': 'Introduza o código de 6 dígitos para confirmar',
+	'page.settings.confirmEnable': 'Confirmar',
+	'page.settings.backupCodesTitle': 'Guarde os seus códigos de recuperação',
+	'page.settings.backupCodesIntro':
+		'Guarde-os num lugar seguro. Cada código funciona uma vez se perder o seu autenticador.',
+	'page.settings.backupCodesSaved': 'Guardei os meus códigos de recuperação',
+	'page.settings.regenBackup': 'Regenerar códigos de recuperação',
+	'page.settings.disable2fa': 'Desativar autenticação de dois fatores',
+	'page.settings.twofaUnavailable':
+		'A autenticação de dois fatores não está disponível. Defina TWOFA_ENC_KEY para a ativar.',
+	'page.settings.twofaUpdated': '✓ Definições de dois fatores atualizadas.',
 	'page.settings.testEmail': 'Enviar e-mail de teste',
 	'page.settings.testNtfy': 'Enviar push de teste',
 	'page.settings.testSent': 'Notificação de teste enviada.',
@@ -791,6 +822,15 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.setPassword': 'Definir palavra-passe',
 	'page.admin.saveProfile': 'Salvar perfil',
 	'page.admin.saveCompanions': 'Salvar companheiros',
+	'page.admin.securitySection': 'Segurança',
+	'page.admin.require2faLabel': 'Exigir autenticação de dois fatores',
+	'page.admin.require2faOff': 'Desativado',
+	'page.admin.require2faAdmins': 'Apenas admins',
+	'page.admin.require2faEveryone': 'Todos',
+	'page.admin.require2faHelp':
+		'Obriga os utilizadores a configurar 2FA. Os utilizadores OIDC estão isentos.',
+	'page.admin.resetTwofa': 'Redefinir dois fatores',
+	'page.admin.twofaReset': '✓ Dois fatores redefinido para este utilizador.',
 
 	// Page: Caretaker log
 	'page.log.title': 'Registar atividade',
