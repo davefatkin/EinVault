@@ -17,6 +17,12 @@ import { REMINDER_UNDO_SECONDS_DEFAULT, CALENDAR_FEED_ENABLED } from '$lib/serve
 import { isMailEnabled } from '$lib/server/mail';
 import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
+import {
+	totpBegin,
+	totpConfirm,
+	totpRegenerate,
+	totpDisable
+} from '$lib/server/auth/two-factor-actions';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -120,5 +126,25 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		await disableFeedToken(locals.user.id);
 		return { calendarDisabled: true };
+	},
+
+	totpBegin: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpBegin({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpConfirm: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpConfirm({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpRegenerate: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpRegenerate({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpDisable: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpDisable({ user: locals.user, request, locale: locals.locale });
 	}
 };
