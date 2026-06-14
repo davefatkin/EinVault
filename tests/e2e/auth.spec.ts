@@ -75,3 +75,11 @@ test.describe('forgot password', () => {
 		await ctx.close();
 	});
 });
+
+test.describe('auth brand', () => {
+	test('login brand panel shows Ein', async ({ app, page }, testInfo) => {
+		test.skip(testInfo.project.name !== 'desktop', 'brand panel is desktop-only');
+		await page.goto(app.server.baseURL + '/auth/login');
+		await expect(page.getByTestId('ein')).toBeVisible({ timeout: 8_000 });
+	});
+});

@@ -5,9 +5,10 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell, X, PawPrint, House } from '@lucide/svelte';
+	import { Plus, Zap, Check, Pencil, Bell, X, House } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import Ein from '$lib/components/Ein.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '$lib/markdown';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
@@ -460,7 +461,7 @@
 				title={t(locale, 'overview.firstRun.title')}
 				body={t(locale, 'overview.firstRun.body')}
 			>
-				{#snippet icon()}<PawPrint class="h-7 w-7" />{/snippet}
+				{#snippet illustration()}<Ein pose="welcome" class="h-40 w-40" />{/snippet}
 				{#snippet action()}
 					<Button href="/companions/new" size="lg">{t(locale, 'overview.firstRun.cta')}</Button>
 				{/snippet}
