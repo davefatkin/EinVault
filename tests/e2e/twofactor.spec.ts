@@ -50,6 +50,7 @@ interface TwoFactorWorld {
 }
 
 const test = base.extend<TwoFactorWorld>({
+	// eslint-disable-next-line no-empty-pattern
 	server: async ({}, use) => {
 		if (!sharedServer) {
 			throw new Error('Shared server not started — did beforeAll run?');

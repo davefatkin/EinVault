@@ -83,9 +83,7 @@
 
 	let selectedCompanionIds = $state<string[]>([]);
 	$effect(() => {
-		// Track user.id so the effect re-runs when the drawer opens for a different user.
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		user.id;
+		void user.id; // re-run when the drawer opens for a different user
 		selectedCompanionIds = [...assignedIds];
 	});
 
