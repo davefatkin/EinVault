@@ -33,13 +33,19 @@ let _key: Promise<CryptoKey> | null = null;
 function getKey(): Promise<CryptoKey> {
 	if (_key) return _key;
 	_key = (async () => {
-		const secret = env.OIDC_STATE_SECRET; // reuse the existing app HMAC secret
-		if (!secret && process.env.NODE_ENV === 'production') {
-			throw new Error('[2fa] OIDC_STATE_SECRET is required in production for the MFA cookie.');
+		// Sign the MFA challenge cookie with a key derived from TWOFA_ENC_KEY, which
+		// is always set when 2FA is in use. Independent of OIDC. The label gives
+		// domain separation from the AES-GCM secret-encryption use of the same key.
+		const raw = env.TWOFA_ENC_KEY;
+		if (!raw) {
+			throw new Error('[2fa] TWOFA_ENC_KEY is required for the MFA challenge cookie.');
 		}
-		const material = secret
-			? await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret))
-			: crypto.getRandomValues(new Uint8Array(32));
+		const keyBytes = Buffer.from(raw, 'base64');
+		const labeled = new Uint8Array([
+			...keyBytes,
+			...new TextEncoder().encode('einvault-mfa-cookie-v1')
+		]);
+		const material = await crypto.subtle.digest('SHA-256', labeled);
 		return crypto.subtle.importKey('raw', material, { name: 'HMAC', hash: 'SHA-256' }, false, [
 			'sign',
 			'verify'

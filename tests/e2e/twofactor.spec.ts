@@ -79,8 +79,9 @@ test.describe('2FA @desktop', () => {
 			dbPath,
 			env: {
 				PORT: String(appPort),
-				TWOFA_ENC_KEY: ENC_KEY,
-				OIDC_STATE_SECRET: 'test-2fa-secret'
+				// Deliberately NO OIDC_STATE_SECRET: 2FA must work without it
+				// (the MFA cookie key derives from TWOFA_ENC_KEY).
+				TWOFA_ENC_KEY: ENC_KEY
 			}
 		});
 	});
