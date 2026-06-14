@@ -173,10 +173,8 @@
 					method="POST"
 					action="?/editUser"
 					use:enhance={() =>
-						({ result, update }) => {
-							update();
-							if (result.type === 'success') onclose();
-						}}
+						({ update }) =>
+							update({ reset: false })}
 					class="space-y-3"
 				>
 					<input type="hidden" name="userId" value={user.id} />
@@ -272,7 +270,7 @@
 						action="?/assignCompanions"
 						use:enhance={() =>
 							({ update }) =>
-								update()}
+								update({ reset: false })}
 						class="space-y-3"
 					>
 						<input type="hidden" name="userId" value={user.id} />
