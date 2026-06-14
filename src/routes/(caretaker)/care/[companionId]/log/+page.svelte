@@ -9,7 +9,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Trash2, ClipboardList, Lock } from '@lucide/svelte';
+	import { Trash2, Activity, Lock } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -63,9 +63,9 @@
 	<PageHeader
 		title={t(locale, 'page.log.title')}
 		subtitle={t(locale, 'page.log.subtitle', { name: data.companion.name })}
-		tint="primary"
+		tint="gold"
 	>
-		{#snippet icon()}<ClipboardList class="h-5 w-5" />{/snippet}
+		{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 	</PageHeader>
 
 	{#if !data.isOnShift}
@@ -260,8 +260,8 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.todayEvents.length === 0}
-					<EmptyState size="sm" tint="muted" title={t(locale, 'page.log.nothingLoggedYet')}>
-						{#snippet icon()}<ClipboardList class="h-5 w-5" />{/snippet}
+					<EmptyState size="sm" tint="gold" title={t(locale, 'page.log.nothingLoggedYet')}>
+						{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
 					<div class="space-y-2">
