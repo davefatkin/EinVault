@@ -1,39 +1,25 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
+	import { SvelteDate } from 'svelte/reactivity';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import AccountAvatar from '$lib/components/AccountAvatar.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { CalendarClock, Settings } from '@lucide/svelte';
+	import AccountCard from '$lib/components/settings/AccountCard.svelte';
+	import LanguageCard from '$lib/components/settings/LanguageCard.svelte';
+	import AppearanceCard from '$lib/components/settings/AppearanceCard.svelte';
+	import CalendarFeedCard from '$lib/components/settings/CalendarFeedCard.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
-	import { SvelteDate } from 'svelte/reactivity';
-	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
-	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { CalendarClock } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { t, getLocale, type MessageKey } from '$lib/i18n';
+	import type { Theme } from '$lib/theme';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const locale = getLocale();
-	let showPasswordFields = $state(false);
-
-	let themeOverride = $state<Theme | null>(null);
-	let currentTheme = $derived<Theme>(themeOverride ?? (data.user?.theme as Theme) ?? 'system');
-
-	async function setTheme(theme: Theme) {
-		themeOverride = theme;
-		applyTheme(theme);
-		await saveTheme(theme, '/care/settings');
-	}
-	let localeForm: HTMLFormElement;
 	let expandedShiftId = $state<string | null>(null);
-
-	const browserOrigin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
 
 	const now = new SvelteDate();
 
@@ -44,7 +30,7 @@
 		const msPerDay = 86_400_000;
 		const startOfToday = new SvelteDate(now);
 		startOfToday.setHours(0, 0, 0, 0);
-		const dayOfWeek = startOfToday.getDay(); // 0 = Sun
+		const dayOfWeek = startOfToday.getDay();
 		const startOfWeek = new SvelteDate(startOfToday.getTime() - dayOfWeek * msPerDay);
 		const endOfWeek = new SvelteDate(startOfWeek.getTime() + 7 * msPerDay);
 		const endOfNextWeek = new SvelteDate(startOfWeek.getTime() + 14 * msPerDay);
@@ -86,247 +72,38 @@
 	<title>{t(locale, 'page.settings.title')} | EinVault</title>
 </svelte:head>
 
-<div class="max-w-lg mx-auto space-y-8">
-	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.settings.title')}
-		</h1>
-		<p class="text-sm mt-1 text-muted-foreground">{t(locale, 'page.settings.subtitle')}</p>
-	</div>
+<div class="max-w-3xl mx-auto space-y-6">
+	<PageHeader
+		title={t(locale, 'page.settings.title')}
+		subtitle={t(locale, 'page.settings.subtitle')}
+		tint="muted"
+	>
+		{#snippet icon()}<Settings class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
-	<!-- APPEARANCE -->
-	<section aria-labelledby="section-appearance">
-		<p
-			id="section-appearance"
-			class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3"
-		>
-			{t(locale, 'page.settings.appearanceCard')}
-		</p>
-		<div class="flex rounded-md border border-border p-0.5 gap-0.5 bg-muted">
-			{#each THEMES as theme (theme)}
-				{@const Icon = THEME_ICONS[theme]}
-				{@const THEME_LABELS: Record<string, MessageKey> = { light: 'theme.light', dark: 'theme.dark', system: 'theme.system' }}
-				{@const themeLabel = t(locale, THEME_LABELS[theme])}
-				<button
-					type="button"
-					onclick={() => setTheme(theme)}
-					aria-label={t(locale, 'aria.themeMode', { label: themeLabel })}
-					aria-pressed={currentTheme === theme}
-					class="flex-1 flex items-center justify-center gap-1.5 rounded px-3 py-2 text-sm transition-all {currentTheme ===
-					theme
-						? 'bg-background text-foreground shadow-sm'
-						: 'text-muted-foreground hover:text-foreground'}"
-				>
-					<Icon class="h-4 w-4 shrink-0" />
-					<span>{themeLabel}</span>
-				</button>
-			{/each}
-		</div>
-	</section>
+	<AccountCard
+		user={data.user}
+		immichEnabled={data.immichEnabled ?? false}
+		successMessage={form?.accountSuccess ? t(locale, 'page.settings.accountUpdated') : undefined}
+		errorMessage={form?.accountError}
+	/>
 
-	<!-- LANGUAGE -->
-	<section aria-labelledby="section-language">
-		<p
-			id="section-language"
-			class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3"
-		>
-			{t(locale, 'page.settings.languageCard')}
-		</p>
-		<p class="text-sm text-muted-foreground mb-3">
-			{t(locale, 'page.settings.languageDescription')}
-		</p>
-		<form
-			method="POST"
-			action="?/locale"
-			bind:this={localeForm}
-			use:enhance={() => {
-				return async () => {
-					window.location.reload();
-				};
-			}}
-		>
-			<div class="max-w-[200px]">
-				<Select
-					name="locale"
-					value={data.user?.locale ?? 'en'}
-					onchange={() => localeForm.requestSubmit()}
-				>
-					{#each SUPPORTED_LOCALES as loc (loc)}
-						<option value={loc}>{LOCALE_LABELS[loc]}</option>
-					{/each}
-				</Select>
-			</div>
-		</form>
-	</section>
+	<LanguageCard currentLocale={data.user?.locale ?? 'en'} />
 
-	<!-- SHIFTS -->
-	<section id="shifts" aria-labelledby="section-shifts">
-		<div class="flex items-center gap-2 mb-3">
-			<p
-				id="section-shifts"
-				class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-			>
-				{t(locale, 'page.settings.shiftsCard')}
-			</p>
-			{#if data.upcomingShifts.length > 0}
-				<Badge variant="secondary" class="tabular-nums">{data.upcomingShifts.length}</Badge>
-			{/if}
-		</div>
+	<AppearanceCard
+		currentTheme={(data.user?.theme as Theme) ?? 'system'}
+		redirectPath="/care/settings"
+	/>
 
-		{#if data.upcomingShifts.length === 0}
-			<EmptyState tint="muted" title={t(locale, 'page.settings.noUpcomingShifts')}>
-				{#snippet icon()}<CalendarClock class="h-5 w-5" />{/snippet}
-			</EmptyState>
-		{:else}
-			<div class="space-y-4">
-				{#each grouped() as group (group.key)}
-					<div>
-						<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-							{group.label}
-						</h3>
-						<div class="space-y-1">
-							{#each group.shifts as shift (shift.id)}
-								{@const isActive = group.key === 'active'}
-								{@const isNext =
-									!isActive && shift.id === data.upcomingShifts.find((s) => s.startAt > now)?.id}
-								<div
-									class="rounded-lg overflow-hidden {isActive
-										? 'bg-teal/10 ring-1 ring-teal/30'
-										: isNext
-											? 'ring-1 ring-primary/20'
-											: ''}"
-								>
-									<button
-										type="button"
-										onclick={() =>
-											(expandedShiftId = expandedShiftId === shift.id ? null : shift.id)}
-										class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left {shift.notes
-											? 'hover:bg-accent/50 transition-colors'
-											: 'cursor-default'}"
-									>
-										{#if isActive}
-											<span
-												class="inline-block w-2 h-2 rounded-full bg-teal shrink-0"
-												aria-hidden="true"
-											></span>
-										{/if}
-										<div class="flex-1 min-w-0">
-											<span class={isActive ? 'text-teal font-medium' : 'text-foreground'}>
-												<LocalTime date={shift.startAt} format="datetime" />
-											</span>
-											<span class="text-muted-foreground mx-1">–</span>
-											{#if shift.startAt.toDateString() === shift.endAt.toDateString()}
-												<span class="text-muted-foreground"
-													><LocalTime date={shift.endAt} format="time" /></span
-												>
-											{:else}
-												<span class="text-muted-foreground"
-													><LocalTime date={shift.endAt} format="datetime" /></span
-												>
-											{/if}
-										</div>
-										<Badge variant="secondary" class="shrink-0 tabular-nums"
-											>{shiftDuration(shift)}</Badge
-										>
-									</button>
-									{#if shift.notes && expandedShiftId === shift.id}
-										<div class="px-3 pb-2.5 text-xs text-muted-foreground animate-slide-up">
-											{shift.notes}
-										</div>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</section>
+	<ReminderUndoCard
+		currentValue={data.user?.reminderUndoSeconds ?? null}
+		defaultSeconds={data.reminderUndoDefault}
+		successMessage={form?.reminderUndoSuccess
+			? t(locale, 'page.settings.reminderUndoUpdated')
+			: undefined}
+		errorMessage={form?.reminderUndoError}
+	/>
 
-	<!-- CALENDAR FEED -->
-	{#if data.calendarFeedAvailable}
-		<section aria-labelledby="section-calendar">
-			<p
-				id="section-calendar"
-				class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3"
-			>
-				{t(locale, 'settings.calendar.title')}
-			</p>
-			<div class="space-y-4">
-				<p class="text-sm text-muted-foreground">
-					{t(locale, 'settings.calendar.description')}
-				</p>
-
-				{#if form?.calendarToken}
-					<div class="space-y-2">
-						<p class="text-xs text-muted-foreground font-medium">
-							{t(locale, 'settings.calendar.url')}
-						</p>
-						<div class="flex items-center gap-2">
-							<Input
-								type="text"
-								readonly
-								value="{browserOrigin}/api/calendar/{form.calendarToken}/feed.ics"
-								class="font-mono text-xs"
-							/>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onclick={() =>
-									navigator.clipboard.writeText(
-										`${browserOrigin}/api/calendar/${form?.calendarToken}/feed.ics`
-									)}
-							>
-								{t(locale, 'settings.calendar.copy')}
-							</Button>
-						</div>
-						<Alert>
-							<AlertDescription class="text-xs"
-								>{t(locale, 'settings.calendar.revealOnce')}</AlertDescription
-							>
-						</Alert>
-					</div>
-					<div class="flex gap-2">
-						<form method="POST" action="?/calendarEnable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.regenerate')}
-							</Button>
-						</form>
-						<form method="POST" action="?/calendarDisable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.disable')}
-							</Button>
-						</form>
-					</div>
-				{:else if data.calendarFeedEnabled}
-					<p class="text-sm text-foreground">{t(locale, 'settings.calendar.enabled')}</p>
-					<div class="flex gap-2">
-						<form method="POST" action="?/calendarEnable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.regenerate')}
-							</Button>
-						</form>
-						<form method="POST" action="?/calendarDisable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.disable')}
-							</Button>
-						</form>
-					</div>
-				{:else}
-					<form method="POST" action="?/calendarEnable">
-						<Button type="submit" size="sm">
-							{t(locale, 'settings.calendar.enable')}
-						</Button>
-					</form>
-				{/if}
-
-				<p class="text-xs text-muted-foreground">{t(locale, 'settings.calendar.help')}</p>
-			</div>
-		</section>
-	{/if}
-
-	<!-- NOTIFICATIONS -->
 	{#if data.mailEnabled || data.ntfyEnabled}
 		<NotificationsCard
 			reminderEnabled={data.user?.notifyReminderEmail ?? false}
@@ -346,173 +123,93 @@
 		/>
 	{/if}
 
-	<!-- REMINDER UNDO -->
-	<ReminderUndoCard
-		currentValue={data.user?.reminderUndoSeconds ?? null}
-		defaultSeconds={data.reminderUndoDefault}
-		successMessage={form?.reminderUndoSuccess
-			? t(locale, 'page.settings.reminderUndoUpdated')
-			: undefined}
-		errorMessage={form?.reminderUndoError}
-	/>
-
-	<!-- PROFILE / ACCOUNT -->
-	<section aria-labelledby="section-profile">
-		<p
-			id="section-profile"
-			class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3"
-		>
-			{t(locale, 'page.settings.accountCard')}
-		</p>
-
-		{#if form?.accountSuccess}
-			<Alert variant="success" class="mb-4">
-				<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
-			</Alert>
-		{/if}
-		{#if form?.accountError}
-			<Alert variant="coral" class="mb-4">
-				<AlertDescription>{form.accountError}</AlertDescription>
-			</Alert>
-		{/if}
-
-		<AccountAvatar
-			userId={data.user?.id ?? ''}
-			displayName={data.user?.displayName ?? ''}
-			avatarPath={data.user?.avatarPath}
-			immichEnabled={data.immichEnabled}
-		/>
-
-		<form
-			method="POST"
-			action="?/account"
-			use:enhance={() =>
-				async ({ update }) =>
-					update({ reset: false })}
-			class="space-y-4"
-		>
-			<div class="space-y-1.5">
-				<Label for="displayName">{t(locale, 'page.settings.labelDisplayName')}</Label>
-				<Input
-					id="displayName"
-					name="displayName"
-					type="text"
-					autocomplete="name"
-					value={data.user?.displayName ?? ''}
-					required
-				/>
+	<Card id="shifts">
+		<CardHeader>
+			<div class="flex items-center gap-2">
+				<CardTitle>{t(locale, 'page.settings.shiftsCard')}</CardTitle>
+				{#if data.upcomingShifts.length > 0}
+					<Badge variant="secondary" class="tabular-nums">{data.upcomingShifts.length}</Badge>
+				{/if}
 			</div>
-
-			<div class="space-y-1.5">
-				<Label for="username">{t(locale, 'page.settings.labelUsername')}</Label>
-				<Input
-					id="username"
-					name="username"
-					type="text"
-					value={data.user?.username ?? ''}
-					required
-					autocomplete="username"
-				/>
-			</div>
-
-			<div class="space-y-1.5">
-				<Label for="email">
-					{t(locale, 'page.settings.labelEmail')}
-					<span class="text-muted-foreground font-normal"
-						>{t(locale, 'page.settings.optional')}</span
-					>
-				</Label>
-				<Input
-					id="email"
-					name="email"
-					type="email"
-					value={data.user?.email ?? ''}
-					autocomplete="email"
-					placeholder="jet@black.com"
-				/>
-			</div>
-
-			<div class="space-y-1.5">
-				<Label for="phone">
-					{t(locale, 'page.settings.labelPhone')}
-					<span class="text-muted-foreground font-normal"
-						>{t(locale, 'page.settings.optional')}</span
-					>
-				</Label>
-				<Input
-					id="phone"
-					name="phone"
-					type="tel"
-					value={data.user?.phone ?? ''}
-					autocomplete="tel"
-					placeholder={t(locale, 'common.placeholderPhone')}
-				/>
-			</div>
-
-			<div>
-				<button
-					type="button"
-					onclick={() => (showPasswordFields = !showPasswordFields)}
-					class="text-sm text-primary hover:underline"
-				>
-					{showPasswordFields
-						? t(locale, 'page.settings.cancelPasswordChange')
-						: t(locale, 'page.settings.changePassword')}
-				</button>
-			</div>
-
-			{#if showPasswordFields}
-				<input
-					type="text"
-					autocomplete="username"
-					value={data.user?.username ?? ''}
-					readonly
-					tabindex="-1"
-					aria-hidden="true"
-					class="sr-only"
-				/>
-				<div class="space-y-4 animate-slide-up border-t border-border pt-4">
-					<div class="space-y-1.5">
-						<Label for="currentPassword">{t(locale, 'page.settings.labelCurrentPassword')}</Label>
-						<Input
-							id="currentPassword"
-							name="currentPassword"
-							type="password"
-							placeholder="••••••••"
-							autocomplete="current-password"
-						/>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="newPassword">{t(locale, 'page.settings.labelNewPassword')}</Label>
-						<Input
-							id="newPassword"
-							name="newPassword"
-							type="password"
-							placeholder="••••••••"
-							minlength={8}
-							autocomplete="new-password"
-						/>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="confirmPassword">{t(locale, 'page.settings.labelConfirmPassword')}</Label>
-						<Input
-							id="confirmPassword"
-							name="confirmPassword"
-							type="password"
-							placeholder="••••••••"
-							minlength={8}
-							autocomplete="new-password"
-						/>
-					</div>
+		</CardHeader>
+		<CardContent>
+			{#if data.upcomingShifts.length === 0}
+				<EmptyState tint="muted" title={t(locale, 'page.settings.noUpcomingShifts')}>
+					{#snippet icon()}<CalendarClock class="h-5 w-5" />{/snippet}
+				</EmptyState>
+			{:else}
+				<div class="space-y-4">
+					{#each grouped() as group (group.key)}
+						<div>
+							<h3
+								class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
+							>
+								{group.label}
+							</h3>
+							<div class="space-y-1">
+								{#each group.shifts as shift (shift.id)}
+									{@const isActive = group.key === 'active'}
+									{@const isNext =
+										!isActive && shift.id === data.upcomingShifts.find((s) => s.startAt > now)?.id}
+									<div
+										class="rounded-lg overflow-hidden {isActive
+											? 'bg-teal/10 ring-1 ring-teal/30'
+											: isNext
+												? 'ring-1 ring-primary/20'
+												: ''}"
+									>
+										<button
+											type="button"
+											onclick={() =>
+												(expandedShiftId = expandedShiftId === shift.id ? null : shift.id)}
+											class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left {shift.notes
+												? 'hover:bg-accent/50 transition-colors'
+												: 'cursor-default'}"
+										>
+											{#if isActive}
+												<span
+													class="inline-block w-2 h-2 rounded-full bg-teal shrink-0"
+													aria-hidden="true"
+												></span>
+											{/if}
+											<div class="flex-1 min-w-0">
+												<span class={isActive ? 'text-teal font-medium' : 'text-foreground'}>
+													<LocalTime date={shift.startAt} format="datetime" />
+												</span>
+												<span class="text-muted-foreground mx-1">–</span>
+												{#if shift.startAt.toDateString() === shift.endAt.toDateString()}
+													<span class="text-muted-foreground"
+														><LocalTime date={shift.endAt} format="time" /></span
+													>
+												{:else}
+													<span class="text-muted-foreground"
+														><LocalTime date={shift.endAt} format="datetime" /></span
+													>
+												{/if}
+											</div>
+											<Badge variant="secondary" class="shrink-0 tabular-nums"
+												>{shiftDuration(shift)}</Badge
+											>
+										</button>
+										{#if shift.notes && expandedShiftId === shift.id}
+											<div class="px-3 pb-2.5 text-xs text-muted-foreground animate-slide-up">
+												{shift.notes}
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/each}
 				</div>
 			{/if}
+		</CardContent>
+	</Card>
 
-			<Button type="submit">{t(locale, 'page.settings.saveChanges')}</Button>
-		</form>
-
-		<div class="flex items-center justify-between text-sm mt-6 pt-4 border-t border-border">
-			<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
-			<Badge variant="secondary">{t(locale, 'enum.role.caretaker')}</Badge>
-		</div>
-	</section>
+	{#if data.calendarFeedAvailable}
+		<CalendarFeedCard
+			calendarToken={form?.calendarToken}
+			calendarFeedEnabled={data.calendarFeedEnabled}
+		/>
+	{/if}
 </div>
