@@ -83,6 +83,12 @@ export const actions: Actions = {
 			.set({ lastLoginAt: new Date() })
 			.where(eq(schema.users.id, user.id));
 
+		if (user.totpEnabledAt) {
+			const { setPendingMfaCookie } = await import('$lib/server/auth/two-factor');
+			await setPendingMfaCookie(cookies, user.id, isSecureRequest(request));
+			redirect(302, '/auth/2fa');
+		}
+
 		const token = generateSessionToken();
 		const session = await createSession(token, user.id);
 
