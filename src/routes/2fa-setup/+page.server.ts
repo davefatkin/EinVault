@@ -1,0 +1,42 @@
+import { redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { getAppSettings } from '$lib/server/app-settings';
+import { requiresTwoFactor } from '$lib/server/auth/two-factor';
+import { isTwoFactorConfigured } from '$lib/server/auth/totp-crypto';
+import { totpBegin, totpConfirm } from '$lib/server/auth/two-factor-actions';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.user) {
+		redirect(302, '/auth/login');
+	}
+	if (!isTwoFactorConfigured()) {
+		redirect(302, '/');
+	}
+	const { require2fa } = await getAppSettings();
+	const required = requiresTwoFactor(
+		{ role: locals.user.role, isOidc: locals.user.isOidc, totpEnabled: locals.user.totpEnabled },
+		require2fa
+	);
+	if (!required) {
+		redirect(302, '/');
+	}
+	return {};
+};
+
+export const actions: Actions = {
+	totpBegin: async ({ locals, request }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return totpBegin({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpConfirm: async ({ locals, request }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		const result = await totpConfirm({ user: locals.user, request, locale: locals.locale });
+		// totpConfirm returns { totpSuccess: true, totpBackupCodes } on success, or fail() on error.
+		// On success, redirect away — the user is now enrolled and the gate won't fire again.
+		if (result && typeof result === 'object' && 'totpSuccess' in result && result.totpSuccess) {
+			redirect(302, '/');
+		}
+		return result;
+	}
+};
