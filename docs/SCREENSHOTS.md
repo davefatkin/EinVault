@@ -12,6 +12,21 @@
 ![Member dashboard mobile dark](screenshots/member_dashboard_mobile_dark.png)
 ![Member dashboard mobile light](screenshots/member_dashboard_mobile_light.png)
 
+### Companion overview
+
+![Companion overview dark](screenshots/member_companion_dark.png)
+![Companion overview light](screenshots/member_companion_light.png)
+
+### Companion overview (mobile)
+
+![Companion overview mobile dark](screenshots/member_companion_mobile_dark.png)
+![Companion overview mobile light](screenshots/member_companion_mobile_light.png)
+
+### Health
+
+![Health dark](screenshots/member_health_dark.png)
+![Health light](screenshots/member_health_light.png)
+
 ### Admin panel
 
 ![Admin panel dark](screenshots/member_admin_dark.png)

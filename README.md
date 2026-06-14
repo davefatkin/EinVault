@@ -1,6 +1,7 @@
 # 🐾 EinVault
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.15.1-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
@@ -54,17 +55,19 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 
 ## Screenshots
 
-### Caretaker Dashboard
+![EinVault dashboard](docs/screenshots/member_dashboard_hybrid.png)
 
-![Caretaker dashboard](docs/screenshots/caretaker_dashboard.gif)
+### Companion overview
 
-### Member Dashboard
+![Companion overview](docs/screenshots/member_companion_light.png)
 
-![Member dashboard](docs/screenshots/member_dashboard_hybrid.png)
+### Caretaker dashboard
 
-| Member Dashboard (mobile)                                                       | Caretaker Dashboard (mobile)                                                          |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_readme.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_mobile_dashboard_readme.png) |
+![Caretaker dashboard](docs/screenshots/caretaker_dashboard_light.png)
+
+| Member dashboard (mobile)                                                      | Caretaker dashboard (mobile)                                                         |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_light.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_light.png) |
 
 [More screenshots](docs/SCREENSHOTS.md)
 
