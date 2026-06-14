@@ -97,13 +97,13 @@
 
 		<!-- collar + tag -->
 		<path
-			d="M30 100 q30 16 60 0"
+			d="M40 104 Q62 116 84 104"
 			stroke="#7348f4"
-			stroke-width="7"
+			stroke-width="8"
 			fill="none"
 			stroke-linecap="round"
 		/>
-		<circle cx="60" cy="107" r="5" fill="#16b5a6" />
+		<circle cx="62" cy="113" r="5.5" fill="#16b5a6" stroke="#fff" stroke-width="1.5" />
 
 		{#if pose === 'confused'}
 			<text
