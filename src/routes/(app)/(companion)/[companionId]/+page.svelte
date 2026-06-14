@@ -672,7 +672,7 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if upcomingReminders.length === 0}
-					<EmptyState tint="muted" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
+					<EmptyState tint="coral" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
 						{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
@@ -832,7 +832,7 @@
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if activityTimeline.length === 0}
-				<EmptyState tint="muted" title={t(locale, 'page.dashboard.activityEmpty')}>
+				<EmptyState tint="gold" title={t(locale, 'page.dashboard.activityEmpty')}>
 					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else}

@@ -1110,7 +1110,7 @@
 			{/if}
 
 			{#if data.dailyEvents.length === 0 && !showActivityForm}
-				<EmptyState tint="muted" title={t(locale, 'page.journal.day.noActivities')}>
+				<EmptyState tint="gold" title={t(locale, 'page.journal.day.noActivities')}>
 					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else if data.dailyEvents.length > 0}
