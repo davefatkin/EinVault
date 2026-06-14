@@ -13,7 +13,7 @@ const BISCUIT = SEED.companions.biscuit.id;
 // A. Owner household tabs + account sheet — mobile-only
 // ---------------------------------------------------------------------------
 
-test('bottom tab bar shows Overview, Search, You but not Members @mobile', async ({
+test('bottom tab bar shows Overview, Search, You but not Users @mobile', async ({
 	asMember
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
@@ -22,7 +22,7 @@ test('bottom tab bar shows Overview, Search, You but not Members @mobile', async
 	await expect(nav.getByRole('link', { name: 'Overview' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('button', { name: 'Search' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('link', { name: 'Members' })).toHaveCount(0);
+	await expect(nav.getByRole('link', { name: 'Users' })).toHaveCount(0);
 });
 
 test('member You tab opens account sheet with Settings + Sign Out only @mobile', async ({
@@ -38,11 +38,11 @@ test('member You tab opens account sheet with Settings + Sign Out only @mobile',
 	await expect(sheet.getByRole('link', { name: 'Settings' })).toBeVisible();
 	await expect(sheet.getByRole('button', { name: 'Sign Out' })).toBeVisible();
 	// Admin-only entries must not appear for a member
-	await expect(sheet.getByRole('link', { name: 'Members' })).toHaveCount(0);
+	await expect(sheet.getByRole('link', { name: 'Users' })).toHaveCount(0);
 	await expect(sheet.getByRole('link', { name: 'Companions' })).toHaveCount(0);
 });
 
-test('admin You tab account sheet shows Members and Companions @mobile', async ({
+test('admin You tab account sheet shows Users and Companions @mobile', async ({
 	asAdmin
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
@@ -52,11 +52,11 @@ test('admin You tab account sheet shows Members and Companions @mobile', async (
 
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
-	await expect(sheet.getByRole('link', { name: 'Members' })).toBeVisible();
+	await expect(sheet.getByRole('link', { name: 'Users' })).toBeVisible();
 	await expect(sheet.getByRole('link', { name: 'Companions' })).toBeVisible();
 });
 
-test('admin account sheet Members link navigates to /admin/users @mobile', async ({
+test('admin account sheet Users link navigates to /admin/users @mobile', async ({
 	asAdmin
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
@@ -65,7 +65,7 @@ test('admin account sheet Members link navigates to /admin/users @mobile', async
 	await nav.getByRole('button', { name: 'You' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
-	await sheet.getByRole('link', { name: 'Members' }).click();
+	await sheet.getByRole('link', { name: 'Users' }).click();
 	await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 8_000 });
 });
 
@@ -86,7 +86,7 @@ test('admin account sheet Companions link navigates to /admin/companions @mobile
 // B. Owner account popover — desktop sidebar
 // ---------------------------------------------------------------------------
 
-test('admin sidebar account popover shows Settings + Members + Companions + Sign Out', async ({
+test('admin sidebar account popover shows Settings + Users + Companions + Sign Out', async ({
 	asAdmin
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'desktop', 'desktop sidebar only');
@@ -99,12 +99,12 @@ test('admin sidebar account popover shows Settings + Members + Companions + Sign
 	const popover = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(popover).toBeVisible({ timeout: 8_000 });
 	await expect(popover.getByRole('link', { name: 'Settings' })).toBeVisible();
-	await expect(popover.getByRole('link', { name: 'Members' })).toBeVisible();
+	await expect(popover.getByRole('link', { name: 'Users' })).toBeVisible();
 	await expect(popover.getByRole('link', { name: 'Companions' })).toBeVisible();
 	await expect(popover.getByRole('button', { name: 'Sign Out' })).toBeVisible();
 });
 
-test('member sidebar account popover shows Settings + Sign Out but not Members/Companions', async ({
+test('member sidebar account popover shows Settings + Sign Out but not Users/Companions', async ({
 	asMember
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'desktop', 'desktop sidebar only');
@@ -119,7 +119,7 @@ test('member sidebar account popover shows Settings + Sign Out but not Members/C
 	await expect(popover).toBeVisible({ timeout: 8_000 });
 	await expect(popover.getByRole('link', { name: 'Settings' })).toBeVisible();
 	await expect(popover.getByRole('button', { name: 'Sign Out' })).toBeVisible();
-	await expect(popover.getByRole('link', { name: 'Members' })).toHaveCount(0);
+	await expect(popover.getByRole('link', { name: 'Users' })).toHaveCount(0);
 	await expect(popover.getByRole('link', { name: 'Companions' })).toHaveCount(0);
 });
 

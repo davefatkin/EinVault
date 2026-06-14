@@ -34,7 +34,7 @@
 				</a>
 			</div>
 		{:else if form?.tokenInvalid || (!data.valid && !form?.error)}
-			<Alert variant="destructive">
+			<Alert variant="coral">
 				<AlertDescription>{t(locale, 'page.reset.invalid')}</AlertDescription>
 			</Alert>
 			<div class="mt-4 text-center">
@@ -45,7 +45,7 @@
 		{:else}
 			<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
 				{#if form?.error}
-					<Alert variant="destructive">
+					<Alert variant="coral">
 						<AlertDescription>{form.error}</AlertDescription>
 					</Alert>
 				{/if}

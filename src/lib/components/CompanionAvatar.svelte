@@ -182,7 +182,7 @@
 			<div
 				role="alert"
 				style="top: {tooltipTop}px; left: {tooltipLeft}px;"
-				class="fixed z-50 -translate-x-1/2 -translate-y-full -mt-2 w-max max-w-56 text-xs bg-destructive text-destructive-foreground rounded px-2 py-1 shadow-lg text-center leading-snug pointer-events-none"
+				class="fixed z-50 -translate-x-1/2 -translate-y-full -mt-2 w-max max-w-56 text-xs bg-coral text-coral-foreground rounded px-2 py-1 shadow-lg text-center leading-snug pointer-events-none"
 			>
 				{uploadError}
 			</div>
@@ -205,7 +205,7 @@
 				{#if uploading}
 					<Loader2 class="h-3.5 w-3.5 animate-spin" />
 				{:else if uploadError}
-					<AlertTriangle class="h-3.5 w-3.5 text-destructive" />
+					<AlertTriangle class="h-3.5 w-3.5 text-coral" />
 				{:else}
 					<Camera class="h-3.5 w-3.5" />
 				{/if}

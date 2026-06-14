@@ -9,8 +9,9 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Trash2, ClipboardList } from '@lucide/svelte';
+	import { Trash2, Activity, Lock } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
@@ -59,25 +60,29 @@
 </svelte:head>
 
 <div class="space-y-5">
-	<div>
-		<h1 class="font-display text-2xl font-bold">{t(locale, 'page.log.title')}</h1>
-		<p class="text-sm mt-1 text-muted-foreground">
-			{t(locale, 'page.log.subtitle', { name: data.companion.name })}
-		</p>
-	</div>
+	<PageHeader
+		title={t(locale, 'page.log.title')}
+		subtitle={t(locale, 'page.log.subtitle', { name: data.companion.name })}
+		tint="gold"
+	>
+		{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
 	{#if !data.isOnShift}
 		<Card>
-			<CardContent class="text-center py-12">
-				<p class="text-4xl mb-3">🔒</p>
-				<p class="font-medium mb-1">{t(locale, 'page.log.noActiveShift')}</p>
+			<CardContent class="py-4">
+				<EmptyState tint="muted" title={t(locale, 'page.log.noActiveShift')}>
+					{#snippet icon()}<Lock class="h-5 w-5" />{/snippet}
+				</EmptyState>
 				{#if data.nextShift}
-					<p class="text-sm text-muted-foreground">
+					<p class="text-sm text-center text-muted-foreground pb-4">
 						{t(locale, 'page.log.nextShiftStarts')}
 						<LocalTime date={data.nextShift.startAt} format="datetime" />.
 					</p>
 				{:else}
-					<p class="text-sm text-muted-foreground">{t(locale, 'page.log.noUpcomingShifts')}</p>
+					<p class="text-sm text-center text-muted-foreground pb-4">
+						{t(locale, 'page.log.noUpcomingShifts')}
+					</p>
 				{/if}
 			</CardContent>
 		</Card>
@@ -93,7 +98,7 @@
 		{#if form?.error}
 			<div
 				role="alert"
-				class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+				class="rounded-lg border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-coral"
 			>
 				{form.error}
 			</div>
@@ -255,8 +260,8 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.todayEvents.length === 0}
-					<EmptyState size="sm" tint="muted" title={t(locale, 'page.log.nothingLoggedYet')}>
-						{#snippet icon()}<ClipboardList class="h-5 w-5" />{/snippet}
+					<EmptyState size="sm" tint="gold" title={t(locale, 'page.log.nothingLoggedYet')}>
+						{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
 					<div class="space-y-2">
@@ -292,7 +297,7 @@
 											type="submit"
 											variant="ghost"
 											size="sm"
-											class="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+											class="h-7 w-7 p-0 text-muted-foreground hover:text-coral"
 											aria-label={t(locale, 'aria.deleteEntry')}
 										>
 											<Trash2 class="h-3.5 w-3.5" />

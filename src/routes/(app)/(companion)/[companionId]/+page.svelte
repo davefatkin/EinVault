@@ -20,8 +20,7 @@
 		FileText,
 		X,
 		CheckCheck,
-		Activity,
-		TrendingUp
+		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -106,6 +105,7 @@
 				}))
 			] as ActivityItem[]
 		)
+			.filter((e) => e.ts.getTime() <= Date.now())
 			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
 			.slice(0, 8)
 	);
@@ -425,7 +425,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="bark" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+						<Badge variant="gold" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -672,7 +672,7 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if upcomingReminders.length === 0}
-					<EmptyState tint="muted" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
+					<EmptyState tint="coral" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
 						{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
@@ -776,8 +776,8 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if recentWeights.length === 0}
-					<EmptyState tint="muted" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
-						{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+					<EmptyState tint="teal" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
+						{#snippet icon()}<Scale class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
 					{@const latest = recentWeights[0]}
@@ -832,7 +832,7 @@
 		</CardHeader>
 		<CardContent class="pt-0">
 			{#if activityTimeline.length === 0}
-				<EmptyState tint="muted" title={t(locale, 'page.dashboard.activityEmpty')}>
+				<EmptyState tint="gold" title={t(locale, 'page.dashboard.activityEmpty')}>
 					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else}
@@ -880,13 +880,13 @@
 							>
 								<div class="flex items-center gap-3 text-sm">
 									<span
-										class="w-7 h-7 shrink-0 rounded-lg bg-bark-100 dark:bg-bark-950 flex items-center justify-center text-base"
+										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										<HeartPulse class="h-3.5 w-3.5 text-bark-600 dark:text-bark-400" />
+										<HeartPulse class="h-3.5 w-3.5 text-gold" />
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="bark" class="capitalize text-xs"
+											<Badge variant="gold" class="capitalize text-xs"
 												>{event.type.replace('_', ' ')}</Badge
 											>
 											<span class="truncate text-xs text-foreground">{event.title}</span>
@@ -938,7 +938,7 @@
 						>
 							<div class="flex items-center justify-between gap-3 text-sm">
 								<span class="truncate text-foreground text-sm">{doc.title}</span>
-								<Badge variant="bark" class="capitalize shrink-0"
+								<Badge variant="gold" class="capitalize shrink-0"
 									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
 								>
 							</div>

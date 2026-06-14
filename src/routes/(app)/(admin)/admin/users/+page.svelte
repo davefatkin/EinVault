@@ -9,7 +9,8 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
-	import { Plus } from '@lucide/svelte';
+	import { Plus, Users } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import UserManageDrawer from '$lib/components/admin/UserManageDrawer.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
@@ -22,7 +23,7 @@
 
 	let manageUser = $derived(data.users.find((u) => u.id === manageUserId) ?? null);
 
-	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'secondary' } as const;
+	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'gold' } as const;
 </script>
 
 <svelte:head>
@@ -30,53 +31,34 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="font-display text-2xl font-bold text-foreground">
-				{t(locale, 'page.admin.usersTitle')}
-			</h1>
-			<p class="text-sm mt-1 text-muted-foreground">
-				{data.users.length !== 1
-					? t(locale, 'page.admin.accountCountPlural', { count: data.users.length })
-					: t(locale, 'page.admin.accountCount', { count: data.users.length })}
-			</p>
-		</div>
-		<Button
-			onclick={() => (showCreateForm = !showCreateForm)}
-			variant={showCreateForm ? 'secondary' : 'default'}
-			size="sm"
-		>
-			{#if !showCreateForm}<Plus class="h-4 w-4 mr-1.5" />{/if}
-			{showCreateForm ? t(locale, 'common.cancel') : t(locale, 'page.admin.newUser')}
-		</Button>
-	</div>
+	<PageHeader title={t(locale, 'page.admin.usersTitle')} tint="primary">
+		{#snippet icon()}<Users class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			<Button
+				onclick={() => (showCreateForm = !showCreateForm)}
+				variant={showCreateForm ? 'secondary' : 'default'}
+				size="sm"
+			>
+				{#if !showCreateForm}<Plus class="h-4 w-4 mr-1.5" />{/if}
+				{showCreateForm ? t(locale, 'common.cancel') : t(locale, 'page.admin.newUser')}
+			</Button>
+		{/snippet}
+	</PageHeader>
+	<p class="text-sm text-muted-foreground -mt-2">
+		{data.users.length !== 1
+			? t(locale, 'page.admin.accountCountPlural', { count: data.users.length })
+			: t(locale, 'page.admin.accountCount', { count: data.users.length })}
+	</p>
 
-	{#if form?.createError || form?.toggleError || form?.resetError || form?.assignError || form?.shiftError || form?.editError}
-		<Alert variant="destructive">
-			<AlertDescription>
-				{form.createError ??
-					form.toggleError ??
-					form.resetError ??
-					form.assignError ??
-					form.shiftError ??
-					form.editError}
-			</AlertDescription>
+	{#if form?.createError}
+		<Alert variant="coral">
+			<AlertDescription>{form.createError}</AlertDescription>
 		</Alert>
 	{/if}
 
-	{#if form?.createSuccess || form?.editSuccess}
+	{#if form?.createSuccess}
 		<Alert variant="success">
-			<AlertDescription>
-				{form.createSuccess
-					? t(locale, 'page.admin.userCreated')
-					: t(locale, 'page.admin.userUpdated')}
-			</AlertDescription>
-		</Alert>
-	{/if}
-
-	{#if form?.assignSuccess}
-		<Alert variant="success">
-			<AlertDescription>{t(locale, 'page.admin.assignmentsUpdated')}</AlertDescription>
+			<AlertDescription>{t(locale, 'page.admin.userCreated')}</AlertDescription>
 		</Alert>
 	{/if}
 

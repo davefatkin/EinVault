@@ -5,7 +5,9 @@
 	import { canModifyMedia } from '$lib/permissions';
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
-	import { Trash2 } from '@lucide/svelte';
+	import { Trash2, ImageIcon, Plus, NotebookPen, Lock } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { untrack } from 'svelte';
@@ -233,32 +235,30 @@
 </svelte:head>
 
 <div class="space-y-5">
+	<PageHeader title={t(locale, 'page.journal.title')} subtitle={formatDate(data.today)} tint="gold">
+		{#snippet icon()}<NotebookPen class="h-5 w-5" />{/snippet}
+	</PageHeader>
+
 	{#if !data.isOnShift}
-		<div>
-			<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
-		</div>
 		<Card>
-			<CardContent class="text-center py-12">
-				<p class="text-4xl mb-3">🔒</p>
-				<p class="font-medium mb-1">{t(locale, 'page.journal.caretaker.noActiveShift')}</p>
+			<CardContent class="py-4">
+				<EmptyState tint="muted" title={t(locale, 'page.journal.caretaker.noActiveShift')}>
+					{#snippet icon()}<Lock class="h-5 w-5" />{/snippet}
+				</EmptyState>
 				{#if data.nextShift}
-					<p class="text-sm text-muted-foreground">
+					<p class="text-sm text-center text-muted-foreground pb-4">
 						{t(locale, 'page.journal.caretaker.nextShiftStarts')}
 						<LocalTime date={data.nextShift.startAt} format="datetime" />.
 					</p>
 				{:else}
-					<p class="text-sm text-muted-foreground">
+					<p class="text-sm text-center text-muted-foreground pb-4">
 						{t(locale, 'page.journal.caretaker.noUpcomingShifts')}
 					</p>
 				{/if}
 			</CardContent>
 		</Card>
 	{:else}
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
-				<p class="text-muted-foreground text-sm mt-0.5">{formatDate(data.today)}</p>
-			</div>
+		<div class="flex items-center justify-end gap-2">
 			<span class="text-sm">
 				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse"
 						>{t(locale, 'page.journal.caretaker.savingStatus')}</span
@@ -266,7 +266,7 @@
 				{:else if saveStatus === 'saved'}<span class="text-teal"
 						>{t(locale, 'page.journal.caretaker.savedStatus')}</span
 					>
-				{:else if saveStatus === 'error'}<span class="text-destructive"
+				{:else if saveStatus === 'error'}<span class="text-coral"
 						>{t(locale, 'page.journal.caretaker.saveFailedStatus')}</span
 					>
 				{/if}
@@ -346,14 +346,15 @@
 				</h2>
 				{#if media.length < data.maxDailyMedia}
 					<label
-						class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+						class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
 					>
-						{uploading ? t(locale, 'common.loading') : t(locale, 'page.journal.caretaker.addMedia')}
+						{#if uploading}{t(locale, 'common.loading')}{:else}<Plus class="h-3.5 w-3.5" />
+							{t(locale, 'page.journal.caretaker.addMedia')}{/if}
 						<input
 							bind:this={fileInputEl}
 							type="file"
 							name="photos"
-							accept="image/jpeg,image/png,image/webp,image/gif"
+							accept={MEDIA_ACCEPT}
 							multiple
 							class="sr-only"
 							onchange={handleFileInput}
@@ -365,7 +366,7 @@
 			{#if uploadError}
 				<div
 					role="alert"
-					class="mx-4 my-3 rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive"
+					class="mx-4 my-3 rounded-lg bg-coral/10 border border-coral/30 px-4 py-3 text-sm text-coral"
 				>
 					{uploadError}
 				</div>
@@ -373,10 +374,9 @@
 			<CardContent>
 				{#if media.length === 0}
 					<label
-						class="flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-8
-					cursor-pointer hover:opacity-80 transition-colors"
+						class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
 					>
-						<span class="text-3xl mb-2">🖼️</span>
+						<ImageIcon class="h-8 w-8 mb-2 text-muted-foreground" />
 						<span class="text-sm text-muted-foreground"
 							>{t(locale, 'page.journal.caretaker.dropMedia')}</span
 						>
@@ -422,7 +422,7 @@
 											aria-label={t(locale, 'aria.deleteMedia')}
 											class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
 											flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
-											hover:bg-destructive transition-all"
+											hover:bg-coral transition-all"
 										>
 											<Trash2 class="h-3 w-3" />
 										</button>
@@ -481,14 +481,15 @@
 						{/each}
 						{#if media.length < data.maxDailyMedia}
 							<label
-								class="aspect-square w-24 rounded-lg border-2 border-dashed flex flex-col items-center
-							justify-center cursor-pointer hover:opacity-80 transition-colors"
+								class="aspect-square w-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:opacity-80 transition-colors"
 							>
-								<span class="text-2xl">{uploading ? '⏳' : '+'}</span>
+								{#if !uploading}<Plus class="h-5 w-5 text-muted-foreground" />{:else}<span
+										class="text-muted-foreground text-xs">{t(locale, 'common.loading')}</span
+									>{/if}
 								<input
 									type="file"
 									name="photos"
-									accept="image/jpeg,image/png,image/webp"
+									accept={MEDIA_ACCEPT}
 									multiple
 									class="sr-only"
 									onchange={handleFileInput}

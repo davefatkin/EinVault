@@ -49,7 +49,7 @@
 			<p class="text-sm text-muted-foreground mb-7">{t(locale, 'page.login.welcomeSubtext')}</p>
 
 			{#if data.oidcError}
-				<Alert variant="destructive" class="mb-5 animate-slide-up">
+				<Alert variant="coral" class="mb-5 animate-slide-up">
 					<AlertDescription>{data.oidcError}</AlertDescription>
 				</Alert>
 			{/if}
@@ -70,7 +70,7 @@
 
 			<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
 				{#if form?.error}
-					<Alert variant="destructive" class="animate-slide-up">
+					<Alert variant="coral" class="animate-slide-up">
 						<AlertDescription>{form.error}</AlertDescription>
 					</Alert>
 				{/if}

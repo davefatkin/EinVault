@@ -439,7 +439,7 @@
 				{/if}
 			</div>
 			{#if upcomingReminders.length === 0}
-				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.remindersEmpty')}>
+				<EmptyState tint="coral" title={t(locale, 'page.dashboard.caretaker.remindersEmpty')}>
 					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else}
@@ -658,7 +658,7 @@
 				📋 {t(locale, 'page.dashboard.caretaker.cardTodayActivity')}
 			</h2>
 			{#if todayActivity.length === 0}
-				<EmptyState tint="muted" title={t(locale, 'page.dashboard.caretaker.activityEmpty')}>
+				<EmptyState tint="gold" title={t(locale, 'page.dashboard.caretaker.activityEmpty')}>
 					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else}

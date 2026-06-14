@@ -363,6 +363,7 @@
 	let hasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
+	let duration = $state('');
 	let siblingCompanions = $derived(
 		data.companions.filter((c) => c.id !== data.companion.id && c.isActive)
 	);
@@ -527,7 +528,7 @@
 	</div>
 {/if}
 
-<div class="pb-24 md:pb-0">
+<div class="max-w-3xl mx-auto pb-24 md:pb-0">
 	<div class="space-y-6">
 		<!-- Back to journal -->
 		<div>
@@ -978,6 +979,7 @@
 								showActivityForm = false;
 								selectedType = 'walk';
 								selectedAdditionalIds = [];
+								duration = '';
 							}}
 						class="space-y-4"
 					>
@@ -1039,37 +1041,46 @@
 								</div>
 							</fieldset>
 						{/if}
-						<div class="grid grid-cols-2 gap-4">
+						<div class="space-y-1.5">
+							<label for="act-loggedAt" class="text-sm font-medium text-foreground"
+								>{t(locale, 'page.journal.day.activityTime')}</label
+							>
+							<input
+								id="act-loggedAt"
+								name="loggedAt"
+								type="datetime-local"
+								autocomplete="off"
+								class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+								value={defaultLoggedAt()}
+							/>
+						</div>
+						{#if hasDuration}
 							<div class="space-y-1.5">
-								<label for="act-loggedAt" class="text-sm font-medium text-foreground"
-									>{t(locale, 'page.journal.day.activityTime')}</label
+								<label for="act-duration" class="text-sm font-medium text-foreground"
+									>{t(locale, 'page.journal.day.activityDuration')}</label
 								>
-								<input
-									id="act-loggedAt"
-									name="loggedAt"
-									type="datetime-local"
-									autocomplete="off"
-									class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-									value={defaultLoggedAt()}
-								/>
-							</div>
-							{#if hasDuration}
-								<div class="space-y-1.5">
-									<label for="act-duration" class="text-sm font-medium text-foreground"
-										>{t(locale, 'page.journal.day.activityDuration')}</label
-									>
+								<div class="flex gap-2">
+									{#each [15, 30, 45, 60] as mins (mins)}
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											onclick={() => (duration = String(mins))}>{mins}m</Button
+										>
+									{/each}
 									<input
 										id="act-duration"
 										name="durationMinutes"
 										type="number"
 										min="1"
 										autocomplete="off"
-										class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+										bind:value={duration}
+										class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 										placeholder="30"
 									/>
 								</div>
-							{/if}
-						</div>
+							</div>
+						{/if}
 						<div class="space-y-1.5">
 							<label for="act-notes" class="text-sm font-medium text-foreground"
 								>{t(locale, 'page.journal.day.activityNotes')}</label
@@ -1099,7 +1110,7 @@
 			{/if}
 
 			{#if data.dailyEvents.length === 0 && !showActivityForm}
-				<EmptyState tint="muted" title={t(locale, 'page.journal.day.noActivities')}>
+				<EmptyState tint="gold" title={t(locale, 'page.journal.day.noActivities')}>
 					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
 				</EmptyState>
 			{:else if data.dailyEvents.length > 0}

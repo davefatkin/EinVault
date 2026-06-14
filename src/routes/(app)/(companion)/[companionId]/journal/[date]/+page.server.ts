@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			gte(schema.dailyEvents.loggedAt, dayStart),
 			lt(schema.dailyEvents.loggedAt, dayEnd)
 		),
-		orderBy: (d, { asc }) => [asc(d.loggedAt)],
+		orderBy: (d, { desc }) => [desc(d.createdAt)],
 		with: { logger: { columns: { displayName: true } } }
 	});
 

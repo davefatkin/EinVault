@@ -9,7 +9,7 @@
 		type WeightPoint,
 		type WeightRange
 	} from '$lib/weightChart';
-	import { TrendingUp, TrendingDown } from '@lucide/svelte';
+	import { Scale, TrendingUp, TrendingDown } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 
@@ -55,8 +55,8 @@
 
 <div class="rounded-2xl border bg-card p-4">
 	{#if !latest}
-		<EmptyState size="sm" tint="muted" title={t(locale, 'page.health.noWeightYet')}>
-			{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+		<EmptyState size="sm" tint="teal" title={t(locale, 'page.health.noWeightYet')}>
+			{#snippet icon()}<Scale class="h-5 w-5" />{/snippet}
 			{#snippet action()}
 				{#if onAddWeight}
 					<Button size="sm" onclick={onAddWeight}>{t(locale, 'nav.fab.recordWeight')}</Button>

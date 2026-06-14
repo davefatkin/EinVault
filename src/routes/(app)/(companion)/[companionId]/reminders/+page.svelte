@@ -14,6 +14,7 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, HeartPulse, Bell } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
@@ -359,30 +360,30 @@
 		</div>
 	{/if}
 
-	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.reminders.title')}
-		</h1>
-		{#if data.companion.isActive !== false}
-			<Button
-				size="sm"
-				onclick={() => {
-					showForm = !showForm;
-					if (!showForm) resetPrefill();
-				}}
-			>
-				{#if showForm}
-					{t(locale, 'common.cancel')}
-				{:else}
-					<Plus class="h-4 w-4 mr-1.5" />
-					{t(locale, 'page.reminders.addReminder')}
-				{/if}
-			</Button>
-		{/if}
-	</div>
+	<PageHeader title={t(locale, 'page.reminders.title')} tint="coral">
+		{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if data.companion.isActive !== false}
+				<Button
+					size="sm"
+					onclick={() => {
+						showForm = !showForm;
+						if (!showForm) resetPrefill();
+					}}
+				>
+					{#if showForm}
+						{t(locale, 'common.cancel')}
+					{:else}
+						<Plus class="h-4 w-4 mr-1.5" />
+						{t(locale, 'page.reminders.addReminder')}
+					{/if}
+				</Button>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	{#if form?.error}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.error}</AlertDescription>
 		</Alert>
 	{/if}
@@ -472,7 +473,7 @@
 		<Card>
 			<CardContent class="py-4">
 				<EmptyState
-					tint="primary"
+					tint="coral"
 					title={t(locale, 'page.reminders.noUpcoming')}
 					body={t(locale, 'page.reminders.emptyBody')}
 				>

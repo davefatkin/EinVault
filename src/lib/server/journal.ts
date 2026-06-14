@@ -76,11 +76,33 @@ export async function getEnrichedJournalEntries(
 		}
 	}
 
-	const enrichedEntries = pageEntries.map((entry) => ({
-		...entry,
-		photos: mediaByEntry.get(entry.id) ?? [],
-		events: eventsByDate.get(entry.date) ?? []
-	}));
+	// Collect all dates that have either a journal entry or a daily event
+	const entryDates = new Set(pageEntries.map((e) => e.date));
+	for (const date of eventsByDate.keys()) {
+		entryDates.add(date);
+	}
+	// Sort descending (ISO strings sort lexicographically)
+	const allDates = [...entryDates].sort((a, b) => (a < b ? 1 : -1));
+
+	const entryByDate = new Map(pageEntries.map((e) => [e.date, e]));
+	const enrichedEntries = allDates.map((date) => {
+		const entry = entryByDate.get(date);
+		return {
+			date,
+			id: entry?.id ?? null,
+			body: entry?.body ?? '',
+			mood: entry?.mood ?? null,
+			loggedBy: entry?.loggedBy ?? null,
+			updatedBy: entry?.updatedBy ?? null,
+			companionId: entry?.companionId ?? companionId,
+			createdAt: entry?.createdAt ?? null,
+			updatedAt: entry?.updatedAt ?? null,
+			logger: entry?.logger ?? null,
+			updater: entry?.updater ?? null,
+			photos: entry ? (mediaByEntry.get(entry.id) ?? []) : [],
+			events: eventsByDate.get(date) ?? []
+		};
+	});
 
 	return {
 		entries: enrichedEntries,

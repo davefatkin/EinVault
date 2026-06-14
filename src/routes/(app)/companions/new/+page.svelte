@@ -8,7 +8,8 @@
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { ChevronLeft } from '@lucide/svelte';
+	import { ChevronLeft, PawPrint } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { form }: { form: ActionData } = $props();
@@ -26,17 +27,16 @@
 		<span class="hidden sm:inline">{t(locale, 'page.companion.edit.backToCompanions')}</span>
 	</Button>
 
-	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.companion.new.heading')}
-		</h1>
-		<p class="text-sm mt-1 text-muted-foreground">
-			{t(locale, 'page.companion.new.subheading')}
-		</p>
-	</div>
+	<PageHeader
+		title={t(locale, 'page.companion.new.heading')}
+		subtitle={t(locale, 'page.companion.new.subheading')}
+		tint="primary"
+	>
+		{#snippet icon()}<PawPrint class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
 	{#if form?.error}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.error}</AlertDescription>
 		</Alert>
 	{/if}
@@ -60,7 +60,7 @@
 
 			<div class="space-y-1.5">
 				<Label for="name"
-					>{t(locale, 'page.companion.labelName')} <span class="text-destructive">*</span></Label
+					>{t(locale, 'page.companion.labelName')} <span class="text-coral">*</span></Label
 				>
 				<Input
 					id="name"

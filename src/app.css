@@ -63,32 +63,6 @@
 	--color-teal-foreground: hsl(var(--teal-foreground));
 	--color-surface-2: hsl(var(--surface-2));
 
-	/* Bark palette */
-	--color-bark-50: #fdf8f0;
-	--color-bark-100: #f9edda;
-	--color-bark-200: #f2d9b0;
-	--color-bark-300: #e8bf7d;
-	--color-bark-400: #dc9f48;
-	--color-bark-500: #d08428;
-	--color-bark-600: #b8691e;
-	--color-bark-700: #98511b;
-	--color-bark-800: #7b411d;
-	--color-bark-900: #65371b;
-	--color-bark-950: #371b0b;
-
-	/* Moss palette */
-	--color-moss-50: #f3f7f0;
-	--color-moss-100: #e4ecdd;
-	--color-moss-200: #cad9be;
-	--color-moss-300: #a6bf96;
-	--color-moss-400: #7ea06d;
-	--color-moss-500: #5e834f;
-	--color-moss-600: #48673c;
-	--color-moss-700: #3a5231;
-	--color-moss-800: #30422a;
-	--color-moss-900: #293825;
-	--color-moss-950: #131d11;
-
 	/* Border radius */
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -202,12 +176,6 @@
 		--teal: 175 83% 27%;
 		--teal-foreground: 0 0% 100%;
 		--brand-gradient: linear-gradient(135deg, hsl(255 89% 62%), hsl(12 86% 59%));
-
-		/* Semantic extras used throughout the app */
-		--moss: 116 24% 38%;
-		--moss-foreground: 0 0% 98%;
-		--sky: 199 89% 42%;
-		--sky-foreground: 0 0% 98%;
 	}
 
 	.dark {
@@ -240,11 +208,6 @@
 		--teal: 172 66% 50%;
 		--teal-foreground: 174 80% 8%;
 		--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 84% 62%));
-
-		--moss: 142 71% 45%;
-		--moss-foreground: 142 71% 10%;
-		--sky: 199 89% 52%;
-		--sky-foreground: 0 0% 98%;
 	}
 
 	* {

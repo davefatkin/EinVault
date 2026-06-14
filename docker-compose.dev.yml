@@ -93,8 +93,8 @@ services:
       NTFY_TOKEN: ${NTFY_TOKEN:-}
 
       # Calendar feed: past-event window in days (0 = full history); set ENABLED=false to disable the feed
-      # CALENDAR_FEED_HISTORY_DAYS: 90
-      # CALENDAR_FEED_ENABLED: 'true'
+      CALENDAR_FEED_HISTORY_DAYS: ${CALENDAR_FEED_HISTORY_DAYS:-90}
+      CALENDAR_FEED_ENABLED: ${CALENDAR_FEED_ENABLED:-true}
 
     security_opt:
       - no-new-privileges:true

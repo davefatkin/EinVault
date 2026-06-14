@@ -5,7 +5,8 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell, X, PawPrint } from '@lucide/svelte';
+	import { Plus, Zap, Check, Pencil, Bell, X, PawPrint, House } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '$lib/markdown';
@@ -138,8 +139,10 @@
 				ts: new Date(item.occurredAt)
 			}))
 		];
-		items.sort((a, b) => b.ts.getTime() - a.ts.getTime());
-		return items.slice(0, 8);
+		return items
+			.filter((item) => item.ts.getTime() <= Date.now())
+			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
+			.slice(0, 8);
 	});
 
 	// Age from DOB string "YYYY-MM-DD"
@@ -343,27 +346,26 @@
 {/if}
 
 <div class="space-y-6 pb-20 md:pb-0">
-	<h1 class="sr-only">{t(locale, 'overview.title')}</h1>
-
 	<!-- 1. Greeting header -->
-	<div class="flex items-start justify-between gap-3">
-		<div>
-			<p class="font-display text-2xl font-bold text-foreground">
-				{t(locale, 'overview.greeting', { name: data.user.displayName })}
-			</p>
-			<p class="text-sm text-muted-foreground mt-0.5">
-				<LocalTime date={new Date()} format="date" /> &middot;
-				{companionCountLabel(data.companions.length)}
-			</p>
-		</div>
-		{#if data.companions.length > 0}
-			<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
-				<Plus class="h-4 w-4" />
-				<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
-				<span class="sm:hidden">Add</span>
-			</Button>
-		{/if}
-	</div>
+	<PageHeader
+		title={t(locale, 'overview.greeting', { name: data.user.displayName })}
+		tint="primary"
+	>
+		{#snippet icon()}<House class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if data.companions.length > 0}
+				<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
+					<Plus class="h-4 w-4" />
+					<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
+					<span class="sm:hidden">Add</span>
+				</Button>
+			{/if}
+		{/snippet}
+	</PageHeader>
+	<p class="text-sm text-muted-foreground -mt-2">
+		<LocalTime date={new Date()} format="date" /> &middot;
+		{companionCountLabel(data.companions.length)}
+	</p>
 
 	<!-- 2. Needs-attention banner (hidden on first run) -->
 	{#if data.companions.length > 0}
@@ -454,6 +456,7 @@
 		<section class="rounded-2xl border bg-card">
 			<EmptyState
 				size="lg"
+				tint="primary"
 				title={t(locale, 'overview.firstRun.title')}
 				body={t(locale, 'overview.firstRun.body')}
 			>
