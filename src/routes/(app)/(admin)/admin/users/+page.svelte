@@ -9,7 +9,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
-	import { Plus, Users, ShieldCheck } from '@lucide/svelte';
+	import { Plus, Users } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import UserManageDrawer from '$lib/components/admin/UserManageDrawer.svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -118,18 +118,17 @@
 	{/if}
 
 	<!-- Security section -->
-	<PageHeader title={t(locale, 'page.admin.securitySection')} tint="primary">
-		{#snippet icon()}<ShieldCheck class="h-5 w-5" />{/snippet}
-	</PageHeader>
-
 	{#if form?.require2faSuccess}
-		<Alert variant="success" class="-mt-2">
+		<Alert variant="success">
 			<AlertDescription>{t(locale, 'common.saved')}</AlertDescription>
 		</Alert>
 	{/if}
 
 	<Card>
-		<CardContent class="pt-5">
+		<CardHeader>
+			<CardTitle>{t(locale, 'page.admin.securitySection')}</CardTitle>
+		</CardHeader>
+		<CardContent class="pt-0">
 			<form method="POST" action="?/setRequire2fa" use:enhance class="space-y-3">
 				<div class="space-y-1.5">
 					<Label for="require2fa">{t(locale, 'page.admin.require2faLabel')}</Label>
