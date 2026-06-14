@@ -24,6 +24,21 @@
 	<CardContent class="space-y-4">
 		<p class="text-sm text-muted-foreground">{t(locale, 'settings.calendar.description')}</p>
 
+		{#snippet manageButtons()}
+			<div class="flex gap-2">
+				<form method="POST" action="?/calendarEnable">
+					<Button type="submit" variant="outline" size="sm">
+						{t(locale, 'settings.calendar.regenerate')}
+					</Button>
+				</form>
+				<form method="POST" action="?/calendarDisable">
+					<Button type="submit" variant="outline" size="sm">
+						{t(locale, 'settings.calendar.disable')}
+					</Button>
+				</form>
+			</div>
+		{/snippet}
+
 		{#if calendarToken}
 			<div class="space-y-2">
 				<p class="text-xs text-muted-foreground font-medium">
@@ -54,32 +69,10 @@
 					>
 				</Alert>
 			</div>
-			<div class="flex gap-2">
-				<form method="POST" action="?/calendarEnable">
-					<Button type="submit" variant="outline" size="sm">
-						{t(locale, 'settings.calendar.regenerate')}
-					</Button>
-				</form>
-				<form method="POST" action="?/calendarDisable">
-					<Button type="submit" variant="outline" size="sm">
-						{t(locale, 'settings.calendar.disable')}
-					</Button>
-				</form>
-			</div>
+			{@render manageButtons()}
 		{:else if calendarFeedEnabled}
 			<p class="text-sm text-foreground">{t(locale, 'settings.calendar.enabled')}</p>
-			<div class="flex gap-2">
-				<form method="POST" action="?/calendarEnable">
-					<Button type="submit" variant="outline" size="sm">
-						{t(locale, 'settings.calendar.regenerate')}
-					</Button>
-				</form>
-				<form method="POST" action="?/calendarDisable">
-					<Button type="submit" variant="outline" size="sm">
-						{t(locale, 'settings.calendar.disable')}
-					</Button>
-				</form>
-			</div>
+			{@render manageButtons()}
 		{:else}
 			<form method="POST" action="?/calendarEnable">
 				<Button type="submit" size="sm">

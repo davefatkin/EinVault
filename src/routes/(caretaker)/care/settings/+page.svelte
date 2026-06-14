@@ -56,7 +56,7 @@
 		later: 'page.settings.shiftGroupLater'
 	};
 
-	const grouped = $derived(() => {
+	const grouped = $derived.by(() => {
 		const groups: { key: string; label: string; shifts: Shift[] }[] = [];
 		for (const shift of data.upcomingShifts) {
 			const key = shiftGroup(shift);
@@ -139,7 +139,7 @@
 				</EmptyState>
 			{:else}
 				<div class="space-y-4">
-					{#each grouped() as group (group.key)}
+					{#each grouped as group (group.key)}
 						<div>
 							<h3
 								class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
