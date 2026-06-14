@@ -5,7 +5,7 @@
 	import { canModifyMedia } from '$lib/permissions';
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
-	import { Trash2 } from '@lucide/svelte';
+	import { Trash2, ImageIcon, Plus } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { untrack } from 'svelte';
@@ -346,14 +346,15 @@
 				</h2>
 				{#if media.length < data.maxDailyMedia}
 					<label
-						class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+						class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
 					>
-						{uploading ? t(locale, 'common.loading') : t(locale, 'page.journal.caretaker.addMedia')}
+						{#if uploading}{t(locale, 'common.loading')}{:else}<Plus class="h-3.5 w-3.5" />
+							{t(locale, 'page.journal.caretaker.addMedia')}{/if}
 						<input
 							bind:this={fileInputEl}
 							type="file"
 							name="photos"
-							accept="image/jpeg,image/png,image/webp,image/gif"
+							accept={MEDIA_ACCEPT}
 							multiple
 							class="sr-only"
 							onchange={handleFileInput}
@@ -373,10 +374,9 @@
 			<CardContent>
 				{#if media.length === 0}
 					<label
-						class="flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-8
-					cursor-pointer hover:opacity-80 transition-colors"
+						class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
 					>
-						<span class="text-3xl mb-2">🖼️</span>
+						<ImageIcon class="h-8 w-8 mb-2 text-muted-foreground" />
 						<span class="text-sm text-muted-foreground"
 							>{t(locale, 'page.journal.caretaker.dropMedia')}</span
 						>
@@ -481,14 +481,15 @@
 						{/each}
 						{#if media.length < data.maxDailyMedia}
 							<label
-								class="aspect-square w-24 rounded-lg border-2 border-dashed flex flex-col items-center
-							justify-center cursor-pointer hover:opacity-80 transition-colors"
+								class="aspect-square w-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:opacity-80 transition-colors"
 							>
-								<span class="text-2xl">{uploading ? '⏳' : '+'}</span>
+								{#if !uploading}<Plus class="h-5 w-5 text-muted-foreground" />{:else}<span
+										class="text-muted-foreground text-xs">{t(locale, 'common.loading')}</span
+									>{/if}
 								<input
 									type="file"
 									name="photos"
-									accept="image/jpeg,image/png,image/webp"
+									accept={MEDIA_ACCEPT}
 									multiple
 									class="sr-only"
 									onchange={handleFileInput}
