@@ -7,24 +7,37 @@
 		body?: string;
 		tint?: EmptyTint;
 		size?: 'sm' | 'default' | 'lg';
-		icon: Snippet;
+		icon?: Snippet;
+		illustration?: Snippet;
 		action?: Snippet;
 	}
 
-	let { title, body, tint = 'primary', size = 'default', icon, action }: Props = $props();
+	let {
+		title,
+		body,
+		tint = 'primary',
+		size = 'default',
+		icon,
+		illustration,
+		action
+	}: Props = $props();
 
 	const isLg = $derived(size === 'lg');
 	const isSm = $derived(size === 'sm');
 </script>
 
 <div class="flex flex-col items-center text-center px-6 {isLg ? 'py-14' : isSm ? 'py-6' : 'py-10'}">
-	<div
-		class="flex items-center justify-center rounded-full {isLg
-			? 'h-16 w-16 bg-brand-gradient text-white shadow-lg'
-			: `${isSm ? 'h-10 w-10' : 'h-12 w-12'} ${emptyStateCircleClass(tint)}`}"
-	>
-		{@render icon()}
-	</div>
+	{#if illustration}
+		<div class="mb-1">{@render illustration()}</div>
+	{:else if icon}
+		<div
+			class="flex items-center justify-center rounded-full {isLg
+				? 'h-16 w-16 bg-brand-gradient text-white shadow-lg'
+				: `${isSm ? 'h-10 w-10' : 'h-12 w-12'} ${emptyStateCircleClass(tint)}`}"
+		>
+			{@render icon()}
+		</div>
+	{/if}
 	<p
 		role="heading"
 		aria-level={isLg ? 2 : 3}
