@@ -833,6 +833,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.require2faEveryone': 'Tout le monde',
 	'page.admin.require2faHelp':
 		'Oblige les utilisateurs à configurer la 2FA. Les utilisateurs OIDC sont exemptés.',
+	'page.admin.require2faNoKey':
+		"Définissez TWOFA_ENC_KEY pour activer l'application de la double authentification.",
 	'page.admin.resetTwofa': 'Réinitialiser deux facteurs',
 	'page.admin.twofaReset': '✓ Deux facteurs réinitialisé pour cet utilisateur.',
 

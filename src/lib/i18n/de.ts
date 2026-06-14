@@ -831,6 +831,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.require2faEveryone': 'Alle',
 	'page.admin.require2faHelp':
 		'Benutzer zur Einrichtung von 2FA zwingen. OIDC-Benutzer sind ausgenommen.',
+	'page.admin.require2faNoKey':
+		'TWOFA_ENC_KEY setzen, um die Zwei-Faktor-Erzwingung zu aktivieren.',
 	'page.admin.resetTwofa': 'Zwei-Faktor zurücksetzen',
 	'page.admin.twofaReset': '✓ Zwei-Faktor für diesen Benutzer zurückgesetzt.',
 

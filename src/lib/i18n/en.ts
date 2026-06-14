@@ -817,6 +817,7 @@ const messages = {
 	'page.admin.require2faAdmins': 'Admins only',
 	'page.admin.require2faEveryone': 'Everyone',
 	'page.admin.require2faHelp': 'Force users to set up 2FA. OIDC users are exempt.',
+	'page.admin.require2faNoKey': 'Set TWOFA_ENC_KEY to enable two-factor enforcement.',
 	'page.admin.resetTwofa': 'Reset two-factor',
 	'page.admin.twofaReset': '✓ Two-factor reset for this user.',
 

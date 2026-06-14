@@ -151,7 +151,7 @@
 					</Select>
 					<p class="text-xs text-muted-foreground">
 						{#if !data.twoFactorAvailable}
-							Set <code class="font-mono">TWOFA_ENC_KEY</code> to enable two-factor enforcement.
+							{t(locale, 'page.admin.require2faNoKey')}
 						{:else}
 							{t(locale, 'page.admin.require2faHelp')}
 						{/if}
