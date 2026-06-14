@@ -2,12 +2,7 @@
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import Ein from '$lib/components/Ein.svelte';
 
-	let {
-		tagline,
-		subtext,
-		footer,
-		homeLabel
-	}: { tagline: string; subtext: string; footer: string; homeLabel: string } = $props();
+	let { tagline, subtext, footer }: { tagline: string; subtext: string; footer: string } = $props();
 </script>
 
 <div
@@ -25,7 +20,7 @@
 		aria-hidden="true"
 	></div>
 
-	<a href="/" aria-label={homeLabel} class="relative z-10 flex items-center gap-2.5 self-start">
+	<div class="relative z-10 flex items-center gap-2.5 self-start">
 		<div
 			class="bg-brand-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg"
 			aria-hidden="true"
@@ -33,7 +28,7 @@
 			<PawLogo class="h-5 w-5 text-white" />
 		</div>
 		<span class="font-display text-xl font-extrabold tracking-tight text-white">EinVault</span>
-	</a>
+	</div>
 
 	<div class="relative z-10 hidden justify-center md:flex" aria-hidden="true">
 		<Ein pose="welcome" class="h-36 w-36 drop-shadow-lg" />

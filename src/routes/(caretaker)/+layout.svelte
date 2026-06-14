@@ -121,7 +121,7 @@
 					>
 						<PawLogo class="h-4 w-4 text-white" />
 					</div>
-					<span class="font-display font-bold text-lg text-primary">EinVault</span>
+					<span class="font-display font-bold text-lg text-foreground">EinVault</span>
 					<Badge variant="teal" class="text-xs">{t(locale, 'enum.role.caretaker')}</Badge>
 				</a>
 

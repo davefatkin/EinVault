@@ -130,7 +130,11 @@
 	aria-label={t(locale, 'aria.mainNav')}
 >
 	<!-- Brand -->
-	<div class="flex items-center gap-2.5 px-4 py-5 shrink-0">
+	<a
+		href="/"
+		aria-label={t(locale, 'aria.einvaultHome')}
+		class="flex items-center gap-2.5 px-4 py-5 shrink-0 transition-opacity hover:opacity-80"
+	>
 		<div
 			class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
 			style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
@@ -139,7 +143,7 @@
 			<PawLogo class="w-4 h-4 text-white" />
 		</div>
 		<span class="font-display font-bold text-base text-foreground">EinVault</span>
-	</div>
+	</a>
 
 	<!-- Context control -->
 	<div class="px-3 shrink-0">
