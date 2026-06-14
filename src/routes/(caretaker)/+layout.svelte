@@ -118,7 +118,7 @@
 						class="logo-paw w-7 h-7 text-muted-foreground transition-[color,transform] duration-200"
 					/>
 					<span class="font-display font-bold text-lg text-primary">EinVault</span>
-					<Badge variant="secondary" class="text-xs">{t(locale, 'enum.role.caretaker')}</Badge>
+					<Badge variant="teal" class="text-xs">{t(locale, 'enum.role.caretaker')}</Badge>
 				</a>
 
 				<!-- Companion switcher -->

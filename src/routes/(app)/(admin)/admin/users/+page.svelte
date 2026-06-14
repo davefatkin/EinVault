@@ -23,7 +23,7 @@
 
 	let manageUser = $derived(data.users.find((u) => u.id === manageUserId) ?? null);
 
-	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'secondary' } as const;
+	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'gold' } as const;
 </script>
 
 <svelte:head>

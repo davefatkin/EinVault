@@ -199,7 +199,7 @@
 			{:else if user.role === 'caretaker'}
 				<Badge variant="teal">{t(locale, 'enum.role.caretaker')}</Badge>
 			{:else}
-				<Badge variant="secondary">{t(locale, 'enum.role.member')}</Badge>
+				<Badge variant="gold">{t(locale, 'enum.role.member')}</Badge>
 			{/if}
 		</div>
 	</CardContent>

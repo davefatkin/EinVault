@@ -75,7 +75,7 @@
 		selectedCompanionIds = [...assignedIds];
 	});
 
-	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'secondary' } as const;
+	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'gold' } as const;
 
 	function localDatetimeISO(d: Date | string) {
 		const dt = new Date(d);
