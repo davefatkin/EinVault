@@ -45,6 +45,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const calUser = await db.query.users.findFirst({ where: eq(schema.users.id, locals.user.id) });
 
+	const { isTwoFactorConfigured } = await import('$lib/server/auth/totp-crypto');
+	const { getAppSettings } = await import('$lib/server/app-settings');
+	const { requiresTwoFactor } = await import('$lib/server/auth/two-factor');
+	const { require2fa } = await getAppSettings();
+	const twoFactorAvailable = isTwoFactorConfigured();
+	const twoFactorEnforced = requiresTwoFactor(
+		{ role: locals.user.role, isOidc: locals.user.isOidc, totpEnabled: false },
+		require2fa
+	);
+
 	return {
 		user: locals.user,
 		companions,
@@ -53,7 +63,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		mailEnabled: isMailEnabled(),
 		ntfyEnabled: isNtfyEnabled(),
 		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
-		calendarFeedEnabled: calUser?.calendarFeedToken != null
+		calendarFeedEnabled: calUser?.calendarFeedToken != null,
+		twoFactorAvailable,
+		twoFactorEnforced
 	};
 };
 
