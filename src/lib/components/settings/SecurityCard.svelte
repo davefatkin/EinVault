@@ -156,7 +156,22 @@
 					use:enhance={() =>
 						async ({ update }) =>
 							update({ reset: false })}
+					class="space-y-3"
 				>
+					<div class="space-y-1.5">
+						<Label for="totp-regen-code">{t(locale, 'page.settings.confirmCode')}</Label>
+						<Input
+							id="totp-regen-code"
+							name="code"
+							type="text"
+							inputmode="numeric"
+							pattern="[0-9]*"
+							maxlength={6}
+							autocomplete="one-time-code"
+							aria-label={t(locale, 'page.settings.confirmCode')}
+							class="max-w-[180px]"
+						/>
+					</div>
 					<Button variant="outline" size="sm" type="submit">
 						{t(locale, 'page.settings.regenBackup')}
 					</Button>

@@ -299,6 +299,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.twofaUnavailable':
 		"L'autenticazione a due fattori non è disponibile. Imposta TWOFA_ENC_KEY per attivarla.",
 	'page.settings.twofaUpdated': '✓ Impostazioni a due fattori aggiornate.',
+	'page.settings.reenrollNote':
+		"Disattiva prima l'autenticazione a due fattori per configurare un nuovo dispositivo.",
 	'page.settings.testEmail': 'Invia e-mail di prova',
 	'page.settings.testNtfy': 'Invia push di prova',
 	'page.settings.testSent': 'Notifica di prova inviata.',

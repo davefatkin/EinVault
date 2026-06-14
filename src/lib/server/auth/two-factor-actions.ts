@@ -1,7 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { Locale } from '$lib/i18n';
 import { t } from '$lib/i18n';
-import { isTwoFactorConfigured } from './totp-crypto';
+import { isTwoFactorConfigured, decryptSecret } from './totp-crypto';
+import { verifyCode } from './totp';
 import {
 	beginEnrollment,
 	confirmEnrollment,
@@ -10,6 +11,8 @@ import {
 } from './enrollment';
 import { getAppSettings } from '$lib/server/app-settings';
 import { requiresTwoFactor } from './two-factor';
+import { db, schema } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
 
 interface TwoFactorActionContext {
 	user: {
@@ -17,6 +20,7 @@ interface TwoFactorActionContext {
 		username: string;
 		role: 'admin' | 'member' | 'caretaker';
 		isOidc: boolean;
+		totpEnabled: boolean;
 	};
 	request: Request;
 	locale: Locale;
@@ -25,6 +29,9 @@ interface TwoFactorActionContext {
 export async function totpBegin({ user, locale }: TwoFactorActionContext) {
 	if (!isTwoFactorConfigured()) {
 		return fail(400, { totpError: t(locale, 'page.settings.twofaUnavailable') });
+	}
+	if (user.totpEnabled) {
+		return fail(400, { totpError: t(locale, 'page.settings.reenrollNote') });
 	}
 	const { qr, manualKey } = await beginEnrollment(user.id, user.username);
 	return { totpQr: qr, totpManualKey: manualKey };
@@ -40,7 +47,19 @@ export async function totpConfirm({ user, request, locale }: TwoFactorActionCont
 	return { totpBackupCodes: codes, totpSuccess: true };
 }
 
-export async function totpRegenerate({ user }: TwoFactorActionContext) {
+export async function totpRegenerate({ user, request, locale }: TwoFactorActionContext) {
+	const data = await request.formData();
+	const code = String(data.get('code') ?? '');
+	const row = await db.query.users.findFirst({ where: eq(schema.users.id, user.id) });
+	if (!row?.totpSecret) {
+		return fail(400, { totpError: t(locale, 'page.twofa.invalidCode') });
+	}
+	const result = verifyCode(decryptSecret(row.totpSecret), code, {
+		lastStep: row.totpLastStep ?? undefined
+	});
+	if (!result.valid) {
+		return fail(400, { totpError: t(locale, 'page.twofa.invalidCode') });
+	}
 	const codes = await regenerateBackupCodes(user.id);
 	return { totpBackupCodes: codes };
 }

@@ -287,6 +287,7 @@ const messages = {
 	'page.settings.twofaUnavailable':
 		'Two-factor authentication is unavailable. Set TWOFA_ENC_KEY to enable it.',
 	'page.settings.twofaUpdated': '✓ Two-factor settings updated.',
+	'page.settings.reenrollNote': 'Turn off two-factor authentication first to set up a new device.',
 	'page.settings.testEmail': 'Send test email',
 	'page.settings.testNtfy': 'Send test push',
 	'page.settings.testSent': 'Test notification sent.',

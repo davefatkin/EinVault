@@ -12,18 +12,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		redirect(302, '/');
 	}
 
-	const { getAppSettings } = await import('$lib/server/app-settings');
-	const { requiresTwoFactor } = await import('$lib/server/auth/two-factor');
-	const { require2fa } = await getAppSettings();
-	if (
-		requiresTwoFactor(
-			{ role: locals.user.role, isOidc: locals.user.isOidc, totpEnabled: locals.user.totpEnabled },
-			require2fa
-		)
-	) {
-		redirect(302, '/2fa-setup');
-	}
-
 	const assignments = await db.query.companionCaretakers.findMany({
 		where: eq(schema.companionCaretakers.userId, locals.user.id)
 	});

@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth } from '$server/auth';
@@ -17,6 +18,8 @@ import {
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
+import { getAppSettings } from '$lib/server/app-settings';
+import { requiresTwoFactor } from '$lib/server/auth/two-factor';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -122,6 +125,30 @@ const authContext: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
+const twoFactorGate: Handle = async ({ event, resolve }) => {
+	const user = event.locals.user;
+	if (user) {
+		const path = event.url.pathname;
+		const allowed =
+			path === '/2fa-setup' || path.startsWith('/2fa-setup/') || path.startsWith('/auth/');
+		if (!allowed) {
+			const { require2fa } = await getAppSettings();
+			if (
+				requiresTwoFactor(
+					{ role: user.role, isOidc: user.isOidc, totpEnabled: user.totpEnabled },
+					require2fa
+				)
+			) {
+				if (path.startsWith('/api/')) {
+					return new Response('Two-factor authentication required', { status: 403 });
+				}
+				redirect(303, '/2fa-setup');
+			}
+		}
+	}
+	return resolve(event);
+};
+
 const localeDetect: Handle = async ({ event, resolve }) => {
 	// Priority: user preference > cookie > Accept-Language > default
 	const cookieRaw = event.cookies.get('einvault_locale');
@@ -149,4 +176,4 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(securityHeaders, authContext, localeDetect);
+export const handle = sequence(securityHeaders, authContext, twoFactorGate, localeDetect);
