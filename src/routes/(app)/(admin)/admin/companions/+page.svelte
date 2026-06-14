@@ -52,7 +52,7 @@
 	<Card class="divide-y divide-border">
 		{#if data.companions.length === 0}
 			<EmptyState
-				tint="primary"
+				tint="teal"
 				title={t(locale, 'page.settings.noCompanions')}
 				body={t(locale, 'page.settings.companionsEmptyBody')}
 			>

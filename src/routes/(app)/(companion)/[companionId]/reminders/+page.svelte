@@ -473,7 +473,7 @@
 		<Card>
 			<CardContent class="py-4">
 				<EmptyState
-					tint="primary"
+					tint="coral"
 					title={t(locale, 'page.reminders.noUpcoming')}
 					body={t(locale, 'page.reminders.emptyBody')}
 				>

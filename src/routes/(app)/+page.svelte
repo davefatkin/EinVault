@@ -456,6 +456,7 @@
 		<section class="rounded-2xl border bg-card">
 			<EmptyState
 				size="lg"
+				tint="primary"
 				title={t(locale, 'overview.firstRun.title')}
 				body={t(locale, 'overview.firstRun.body')}
 			>

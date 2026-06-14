@@ -234,7 +234,7 @@
 
 		{#if filtered.length === 0}
 			<EmptyState
-				tint="coral"
+				tint="muted"
 				title={t(locale, 'page.documents.empty')}
 				body={t(locale, 'page.documents.emptyBody')}
 			>

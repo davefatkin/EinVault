@@ -20,8 +20,7 @@
 		FileText,
 		X,
 		CheckCheck,
-		Activity,
-		TrendingUp
+		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -777,8 +776,8 @@
 			</CardHeader>
 			<CardContent class="pt-0">
 				{#if recentWeights.length === 0}
-					<EmptyState tint="muted" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
-						{#snippet icon()}<TrendingUp class="h-5 w-5" />{/snippet}
+					<EmptyState tint="teal" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
+						{#snippet icon()}<Scale class="h-5 w-5" />{/snippet}
 					</EmptyState>
 				{:else}
 					{@const latest = recentWeights[0]}
