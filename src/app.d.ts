@@ -20,6 +20,8 @@ declare global {
 				notifyShiftEmail: boolean;
 				ntfyTopic: string | null;
 				avatarPath: string | null;
+				totpEnabled: boolean;
+				isOidc: boolean;
 			} | null;
 			session: {
 				id: string;
