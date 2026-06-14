@@ -172,7 +172,7 @@ const messages = {
 	'nav.caretaker.addJournal': 'Add journal entry',
 	'nav.search': 'Search',
 	'nav.you': 'You',
-	'nav.members': 'Members',
+	'nav.members': 'Users',
 	'nav.fab.quickAdd': 'Quick add',
 	'nav.fab.addJournal': 'Add journal entry',
 	'nav.fab.logHealth': 'Log health event',
@@ -779,6 +779,8 @@ const messages = {
 	'page.admin.addShiftSubmit': 'Add Shift',
 	'page.admin.newPasswordPlaceholder': 'New password',
 	'page.admin.setPassword': 'Set password',
+	'page.admin.saveProfile': 'Save profile',
+	'page.admin.saveCompanions': 'Save companions',
 
 	// Page: Caretaker log
 	'page.log.title': 'Log activity',

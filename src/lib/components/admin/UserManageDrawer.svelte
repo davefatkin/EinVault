@@ -67,6 +67,14 @@
 	);
 	let userShifts = $derived(shifts.filter((s) => s.userId === user.id));
 
+	let selectedCompanionIds = $state<string[]>([]);
+	$effect(() => {
+		// Track user.id so the effect re-runs when the drawer opens for a different user.
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		user.id;
+		selectedCompanionIds = [...assignedIds];
+	});
+
 	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'secondary' } as const;
 
 	function localDatetimeISO(d: Date | string) {
@@ -251,7 +259,7 @@
 							>
 						</Select>
 					</div>
-					<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
+					<Button type="submit" size="sm">{t(locale, 'page.admin.saveProfile')}</Button>
 				</form>
 			</section>
 
@@ -280,7 +288,7 @@
 											type="checkbox"
 											name="companionId"
 											value={companion.id}
-											checked={assignedIds.includes(companion.id)}
+											bind:group={selectedCompanionIds}
 											class="rounded border-border"
 										/>
 										<span class="text-sm text-foreground">{companion.name}</span>
@@ -291,7 +299,7 @@
 								{/each}
 							</div>
 						{/if}
-						<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
+						<Button type="submit" size="sm">{t(locale, 'page.admin.saveCompanions')}</Button>
 					</form>
 				</section>
 

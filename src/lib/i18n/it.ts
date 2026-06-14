@@ -181,7 +181,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.caretaker.addJournal': 'Aggiungi voce di diario',
 	'nav.search': 'Cerca',
 	'nav.you': 'Tu',
-	'nav.members': 'Membri',
+	'nav.members': 'Utenti',
 	'nav.fab.quickAdd': 'Aggiunta rapida',
 	'nav.fab.addJournal': 'Aggiungi voce di diario',
 	'nav.fab.logHealth': 'Registra evento sanitario',
@@ -785,6 +785,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.addShiftSubmit': 'Aggiungi turno',
 	'page.admin.newPasswordPlaceholder': 'Nuova password',
 	'page.admin.setPassword': 'Imposta password',
+	'page.admin.saveProfile': 'Salva profilo',
+	'page.admin.saveCompanions': 'Salva compagni',
 
 	// Page: Caretaker log
 	'page.log.title': 'Registra attività',
