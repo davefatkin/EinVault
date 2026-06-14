@@ -50,32 +50,15 @@
 			: t(locale, 'page.admin.accountCount', { count: data.users.length })}
 	</p>
 
-	{#if form?.createError || form?.toggleError || form?.resetError || form?.assignError || form?.shiftError || form?.editError}
+	{#if form?.createError}
 		<Alert variant="coral">
-			<AlertDescription>
-				{form.createError ??
-					form.toggleError ??
-					form.resetError ??
-					form.assignError ??
-					form.shiftError ??
-					form.editError}
-			</AlertDescription>
+			<AlertDescription>{form.createError}</AlertDescription>
 		</Alert>
 	{/if}
 
-	{#if form?.createSuccess || form?.editSuccess}
+	{#if form?.createSuccess}
 		<Alert variant="success">
-			<AlertDescription>
-				{form.createSuccess
-					? t(locale, 'page.admin.userCreated')
-					: t(locale, 'page.admin.userUpdated')}
-			</AlertDescription>
-		</Alert>
-	{/if}
-
-	{#if form?.assignSuccess}
-		<Alert variant="success">
-			<AlertDescription>{t(locale, 'page.admin.assignmentsUpdated')}</AlertDescription>
+			<AlertDescription>{t(locale, 'page.admin.userCreated')}</AlertDescription>
 		</Alert>
 	{/if}
 

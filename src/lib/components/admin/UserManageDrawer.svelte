@@ -7,6 +7,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
+	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Trash2, X } from '@lucide/svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -61,6 +62,18 @@
 	let deleteShiftId = $state('');
 	let deleteShiftForm = $state<HTMLFormElement | null>(null);
 
+	let feedback = $state<{ kind: 'success' | 'error'; text: string } | null>(null);
+	let feedbackTimer: ReturnType<typeof setTimeout> | null = null;
+	function notify(kind: 'success' | 'error', text: string) {
+		feedback = { kind, text };
+		if (feedbackTimer) clearTimeout(feedbackTimer);
+		feedbackTimer = kind === 'success' ? setTimeout(() => (feedback = null), 3500) : null;
+	}
+	function errorText(data: unknown, key: string): string | null {
+		const d = data as Record<string, unknown> | undefined;
+		return typeof d?.[key] === 'string' ? (d[key] as string) : null;
+	}
+
 	let dialogEl = $state<HTMLElement | null>(null);
 	let assignedIds = $derived(
 		assignments.filter((a) => a.userId === user.id).map((a) => a.companionId)
@@ -95,6 +108,7 @@
 	$effect(() => {
 		return () => {
 			triggerEl?.focus();
+			if (feedbackTimer) clearTimeout(feedbackTimer);
 		};
 	});
 
@@ -165,6 +179,14 @@
 			</button>
 		</div>
 
+		{#if feedback}
+			<div class="px-5 pt-4">
+				<Alert variant={feedback.kind === 'success' ? 'success' : 'coral'}>
+					<AlertDescription>{feedback.text}</AlertDescription>
+				</Alert>
+			</div>
+		{/if}
+
 		<div class="flex-1 overflow-y-auto px-5 py-5 space-y-7">
 			<!-- Profile (name/username/email/phone/role) -->
 			<section>
@@ -173,8 +195,14 @@
 					method="POST"
 					action="?/editUser"
 					use:enhance={() =>
-						({ update }) =>
-							update({ reset: false })}
+						({ result, update }) => {
+							update({ reset: false });
+							if (result.type === 'success') notify('success', t(locale, 'page.admin.userUpdated'));
+							else if (result.type === 'failure') {
+								const e = errorText(result.data, 'editError');
+								if (e) notify('error', e);
+							}
+						}}
 					class="space-y-3"
 				>
 					<input type="hidden" name="userId" value={user.id} />
@@ -269,8 +297,15 @@
 						method="POST"
 						action="?/assignCompanions"
 						use:enhance={() =>
-							({ update }) =>
-								update({ reset: false })}
+							({ result, update }) => {
+								update({ reset: false });
+								if (result.type === 'success')
+									notify('success', t(locale, 'page.admin.assignmentsUpdated'));
+								else if (result.type === 'failure') {
+									const e = errorText(result.data, 'assignError');
+									if (e) notify('error', e);
+								}
+							}}
 						class="space-y-3"
 					>
 						<input type="hidden" name="userId" value={user.id} />
@@ -317,9 +352,14 @@
 										action="?/updateShift"
 										use:localDatetimes
 										use:enhance={() =>
-											({ update }) => {
+											({ result, update }) => {
 												update();
 												editingShiftId = null;
+												if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+												else if (result.type === 'failure') {
+													const e = errorText(result.data, 'shiftError');
+													if (e) notify('error', e);
+												}
 											}}
 										class="space-y-3 rounded-lg border border-border bg-background px-3 py-3"
 									>
@@ -432,8 +472,14 @@
 						action="?/addShift"
 						use:localDatetimes
 						use:enhance={() =>
-							({ update }) =>
-								update()}
+							({ result, update }) => {
+								update();
+								if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+								else if (result.type === 'failure') {
+									const e = errorText(result.data, 'shiftError');
+									if (e) notify('error', e);
+								}
+							}}
 						class="space-y-3 pt-3 border-t border-border"
 					>
 						<input type="hidden" name="userId" value={user.id} />
@@ -496,8 +542,14 @@
 					method="POST"
 					action="?/resetPassword"
 					use:enhance={() =>
-						({ update }) =>
-							update()}
+						({ result, update }) => {
+							update();
+							if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+							else if (result.type === 'failure') {
+								const e = errorText(result.data, 'resetError');
+								if (e) notify('error', e);
+							}
+						}}
 					class="flex gap-2"
 				>
 					<input type="hidden" name="userId" value={user.id} />
@@ -523,8 +575,14 @@
 						method="POST"
 						action="?/toggleActive"
 						use:enhance={() =>
-							({ update }) =>
-								update()}
+							({ result, update }) => {
+								update();
+								if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+								else if (result.type === 'failure') {
+									const e = errorText(result.data, 'toggleError');
+									if (e) notify('error', e);
+								}
+							}}
 					>
 						<input type="hidden" name="userId" value={user.id} />
 						<Button type="submit" variant="softDestructive" size="sm">
@@ -537,7 +595,21 @@
 			{/if}
 		</div>
 	</div>
-	<form bind:this={deleteShiftForm} method="POST" action="?/deleteShift" use:enhance class="hidden">
+	<form
+		bind:this={deleteShiftForm}
+		method="POST"
+		action="?/deleteShift"
+		use:enhance={() =>
+			({ result, update }) => {
+				update();
+				if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+				else if (result.type === 'failure') {
+					const e = errorText(result.data, 'shiftError');
+					if (e) notify('error', e);
+				}
+			}}
+		class="hidden"
+	>
 		<input type="hidden" name="shiftId" value={deleteShiftId} />
 	</form>
 	<ConfirmDialog

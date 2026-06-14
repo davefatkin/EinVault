@@ -2,6 +2,7 @@ const messages = {
 	// Common
 	'common.save': 'Save',
 	'common.saving': 'Saving…',
+	'common.saved': 'Saved.',
 	'common.cancel': 'Cancel',
 	'common.delete': 'Delete',
 	'common.edit': 'Edit',

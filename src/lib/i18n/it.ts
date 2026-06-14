@@ -4,6 +4,7 @@ const messages: Record<keyof Messages, string> = {
 	// Common
 	'common.save': 'Salva',
 	'common.saving': 'Salvataggio…',
+	'common.saved': 'Salvato.',
 	'common.cancel': 'Annulla',
 	'common.delete': 'Elimina',
 	'common.edit': 'Modifica',
