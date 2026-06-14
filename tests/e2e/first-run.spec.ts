@@ -41,4 +41,6 @@ test('dashboard shows the first-run welcome at zero companions', async ({ pristi
 	await expect(
 		page.getByRole('link', { name: 'Add your first companion', exact: true })
 	).toBeVisible();
+	await expect(page.getByTestId('ein')).toBeVisible();
+	await expect(page.getByTestId('ein')).toHaveAttribute('data-pose', 'welcome');
 });
