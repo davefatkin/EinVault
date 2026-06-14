@@ -53,7 +53,11 @@ export const users = sqliteTable(
 		// Profile photo — mirrors the companion avatar columns.
 		avatarPath: text('avatar_path'),
 		avatarProvider: text('avatar_provider'),
-		avatarStorageKey: text('avatar_storage_key')
+		avatarStorageKey: text('avatar_storage_key'),
+		// --- 2FA (TOTP) ---
+		totpSecret: text('totp_secret'),
+		totpEnabledAt: integer('totp_enabled_at', { mode: 'timestamp' }),
+		totpLastStep: integer('totp_last_step')
 	},
 	(t) => [
 		uniqueIndex('users_oidc_idx').on(t.oidcIssuer, t.oidcSubject),
@@ -61,6 +65,27 @@ export const users = sqliteTable(
 		uniqueIndex('users_calendar_feed_token_idx').on(t.calendarFeedToken)
 	]
 );
+
+export const totpBackupCodes = sqliteTable('totp_backup_codes', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	codeHash: text('code_hash').notNull(),
+	usedAt: integer('used_at', { mode: 'timestamp' }),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`)
+});
+
+export const appSettings = sqliteTable('app_settings', {
+	id: text('id').primaryKey().default('singleton'),
+	require2fa: text('require_2fa', { enum: ['off', 'admins', 'everyone'] })
+		.notNull()
+		.default('off'),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }),
+	updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
+});
 
 export const sessions = sqliteTable(
 	'sessions',
@@ -449,6 +474,8 @@ export const caretakerShifts = sqliteTable(
 // type exports
 
 export type User = typeof users.$inferSelect;
+export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
+export type AppSettings = typeof appSettings.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NotificationOutboxRow = typeof notificationOutbox.$inferSelect;
@@ -481,6 +508,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
 	passwordResetTokens: many(passwordResetTokens),
 	notificationOutbox: many(notificationOutbox),
+	totpBackupCodes: many(totpBackupCodes),
 	companionCaretakers: many(companionCaretakers),
 	shifts: many(caretakerShifts),
 	loggedJournalEntries: many(journalEntries, { relationName: 'journalLogger' }),
@@ -491,6 +519,10 @@ export const usersRelations = relations(users, ({ many }) => ({
 	loggedWeightEntries: many(weightEntries),
 	loggedReminders: many(reminders, { relationName: 'reminderLogger' }),
 	completedReminders: many(reminders, { relationName: 'reminderCompleter' })
+}));
+
+export const totpBackupCodesRelations = relations(totpBackupCodes, ({ one }) => ({
+	user: one(users, { fields: [totpBackupCodes.userId], references: [users.id] })
 }));
 
 export const companionCaretakersRelations = relations(companionCaretakers, ({ one }) => ({
