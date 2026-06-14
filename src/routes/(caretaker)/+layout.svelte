@@ -114,9 +114,13 @@
 					href="/care/{activeCompanion?.id ?? ''}"
 					class="logo-link hidden sm:flex items-center gap-2 shrink-0"
 				>
-					<PawLogo
-						class="logo-paw w-7 h-7 text-muted-foreground transition-[color,transform] duration-200"
-					/>
+					<div
+						class="logo-chip flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-transform duration-200"
+						style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
+						aria-hidden="true"
+					>
+						<PawLogo class="h-4 w-4 text-white" />
+					</div>
 					<span class="font-display font-bold text-lg text-primary">EinVault</span>
 					<Badge variant="teal" class="text-xs">{t(locale, 'enum.role.caretaker')}</Badge>
 				</a>
@@ -398,8 +402,7 @@
 </div>
 
 <style>
-	.logo-link:hover :global(.logo-paw) {
-		color: hsl(var(--primary));
-		transform: scale(1.1) rotate(-12deg);
+	.logo-link:hover :global(.logo-chip) {
+		transform: scale(1.05) rotate(-6deg);
 	}
 </style>
