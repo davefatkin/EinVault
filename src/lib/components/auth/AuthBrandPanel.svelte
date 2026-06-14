@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PawLogo from '$lib/components/PawLogo.svelte';
+	import Ein from '$lib/components/Ein.svelte';
 
 	let {
 		tagline,
@@ -33,6 +34,10 @@
 		</div>
 		<span class="font-display text-xl font-extrabold tracking-tight text-white">EinVault</span>
 	</a>
+
+	<div class="relative z-10 hidden justify-center md:flex" aria-hidden="true">
+		<Ein pose="welcome" class="h-36 w-36 drop-shadow-lg" />
+	</div>
 
 	<div class="relative z-10 hidden md:block">
 		<p class="font-display text-4xl font-extrabold leading-[1.03] tracking-tight">{tagline}</p>
