@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
 	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { PawPrint } from '@lucide/svelte';
+	import Ein from '$lib/components/Ein.svelte';
 	const locale = getLocale();
 </script>
 
@@ -16,6 +16,6 @@
 		title={t(locale, 'page.caretaker.home.noCompanionsHeading')}
 		body={t(locale, 'page.caretaker.home.noCompanionsBody')}
 	>
-		{#snippet icon()}<PawPrint class="h-6 w-6" />{/snippet}
+		{#snippet illustration()}<Ein pose="happy" tint="primary" class="h-32 w-32" />{/snippet}
 	</EmptyState>
 </div>
