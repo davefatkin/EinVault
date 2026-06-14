@@ -5,7 +5,9 @@
 	import { canModifyMedia } from '$lib/permissions';
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
-	import { Trash2, ImageIcon, Plus } from '@lucide/svelte';
+	import { Trash2, ImageIcon, Plus, NotebookPen, Lock } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { untrack } from 'svelte';
@@ -233,32 +235,30 @@
 </svelte:head>
 
 <div class="space-y-5">
+	<PageHeader title={t(locale, 'page.journal.title')} subtitle={formatDate(data.today)} tint="gold">
+		{#snippet icon()}<NotebookPen class="h-5 w-5" />{/snippet}
+	</PageHeader>
+
 	{#if !data.isOnShift}
-		<div>
-			<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
-		</div>
 		<Card>
-			<CardContent class="text-center py-12">
-				<p class="text-4xl mb-3">🔒</p>
-				<p class="font-medium mb-1">{t(locale, 'page.journal.caretaker.noActiveShift')}</p>
+			<CardContent class="py-4">
+				<EmptyState tint="muted" title={t(locale, 'page.journal.caretaker.noActiveShift')}>
+					{#snippet icon()}<Lock class="h-5 w-5" />{/snippet}
+				</EmptyState>
 				{#if data.nextShift}
-					<p class="text-sm text-muted-foreground">
+					<p class="text-sm text-center text-muted-foreground pb-4">
 						{t(locale, 'page.journal.caretaker.nextShiftStarts')}
 						<LocalTime date={data.nextShift.startAt} format="datetime" />.
 					</p>
 				{:else}
-					<p class="text-sm text-muted-foreground">
+					<p class="text-sm text-center text-muted-foreground pb-4">
 						{t(locale, 'page.journal.caretaker.noUpcomingShifts')}
 					</p>
 				{/if}
 			</CardContent>
 		</Card>
 	{:else}
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="font-display text-2xl font-bold">{t(locale, 'page.journal.title')}</h1>
-				<p class="text-muted-foreground text-sm mt-0.5">{formatDate(data.today)}</p>
-			</div>
+		<div class="flex items-center justify-end gap-2">
 			<span class="text-sm">
 				{#if saveStatus === 'saving'}<span class="text-muted-foreground animate-pulse"
 						>{t(locale, 'page.journal.caretaker.savingStatus')}</span
