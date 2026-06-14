@@ -212,6 +212,265 @@ export function createSeededDb(dir: string): string {
 		])
 		.run();
 
+	// --- Demo history across both companions (richer dashboards / screenshots) ---
+	const ein = SEED.companions.ein.id;
+	const edward = SEED.companions.edward.id;
+	const jet = SEED.member.id;
+	const faye = SEED.caretaker.id;
+	const hour = 60 * 60 * 1000;
+
+	// Activity log: today + the last couple of days.
+	db.insert(schema.dailyEvents)
+		.values([
+			{
+				id: 'seed-act-1',
+				companionId: ein,
+				type: 'walk',
+				durationMinutes: 30,
+				notes: 'Long loop around the block.',
+				loggedAt: new Date(now - 2 * hour),
+				loggedBy: faye
+			},
+			{
+				id: 'seed-act-2',
+				companionId: ein,
+				type: 'meal',
+				loggedAt: new Date(now - 5 * hour),
+				loggedBy: faye
+			},
+			{
+				id: 'seed-act-3',
+				companionId: ein,
+				type: 'bathroom',
+				loggedAt: new Date(now - 6 * hour),
+				loggedBy: faye
+			},
+			{
+				id: 'seed-act-4',
+				companionId: ein,
+				type: 'play',
+				durationMinutes: 15,
+				notes: 'Tug of war. He won.',
+				loggedAt: new Date(now - 1 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-5',
+				companionId: ein,
+				type: 'walk',
+				durationMinutes: 25,
+				loggedAt: new Date(now - 1 * day - 3 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-6',
+				companionId: ein,
+				type: 'meal',
+				loggedAt: new Date(now - 1 * day - 8 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-7',
+				companionId: ein,
+				type: 'grooming',
+				notes: 'Quick brush.',
+				loggedAt: new Date(now - 2 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-8',
+				companionId: edward,
+				type: 'meal',
+				loggedAt: new Date(now - 4 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-9',
+				companionId: edward,
+				type: 'walk',
+				durationMinutes: 20,
+				notes: 'Off-leash, eventually.',
+				loggedAt: new Date(now - 3 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-10',
+				companionId: edward,
+				type: 'treat',
+				loggedAt: new Date(now - 1 * day - 2 * hour),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-act-11',
+				companionId: edward,
+				type: 'play',
+				durationMinutes: 20,
+				loggedAt: new Date(now - 1 * day - 5 * hour),
+				loggedBy: jet
+			}
+		])
+		.run();
+
+	// More journal entries on distinct past dates (uniquePerDay).
+	db.insert(schema.journalEntries)
+		.values([
+			{
+				id: 'seed-journal-2',
+				companionId: ein,
+				date: '2026-04-18',
+				body: 'Met a very serious cat on the morning walk. A long standoff was had. No clear winner.',
+				mood: 'great',
+				loggedBy: faye
+			},
+			{
+				id: 'seed-journal-3',
+				companionId: ein,
+				date: '2026-04-02',
+				body: 'Slept through the entire afternoon in a single sunbeam. Productivity zero, contentment maximal.',
+				mood: 'good',
+				loggedBy: jet
+			},
+			{
+				id: 'seed-journal-4',
+				companionId: edward,
+				date: '2026-05-18',
+				body: 'Dismantled the couch cushions hunting for a toy that was in plain sight the whole time. Triumphant regardless.',
+				mood: 'great',
+				loggedBy: jet
+			},
+			{
+				id: 'seed-journal-5',
+				companionId: edward,
+				date: '2026-03-22',
+				body: 'Refused the leash for twenty minutes, then walked perfectly. On her terms, as always.',
+				mood: 'meh',
+				loggedBy: jet
+			}
+		])
+		.run();
+
+	// More health events (past dates; titles avoid the search-test tokens).
+	db.insert(schema.healthEvents)
+		.values([
+			{
+				id: 'seed-health-2',
+				companionId: ein,
+				type: 'vaccination',
+				title: 'Rabies vaccination',
+				occurredAt: new Date('2025-12-10T15:00:00Z'),
+				vetName: 'Dr. Bacchus',
+				vetClinic: 'Animal Treasure Veterinary',
+				loggedBy: jet
+			},
+			{
+				id: 'seed-health-3',
+				companionId: ein,
+				type: 'procedure',
+				title: 'Dental cleaning',
+				occurredAt: new Date('2026-02-14T15:00:00Z'),
+				vetName: 'Dr. Bacchus',
+				vetClinic: 'Animal Treasure Veterinary',
+				loggedBy: jet
+			},
+			{
+				id: 'seed-health-4',
+				companionId: edward,
+				type: 'procedure',
+				title: 'Spay surgery',
+				occurredAt: new Date('2025-11-05T15:00:00Z'),
+				vetName: 'Dr. Bacchus',
+				vetClinic: 'Animal Treasure Veterinary',
+				loggedBy: jet
+			},
+			{
+				id: 'seed-health-5',
+				companionId: edward,
+				type: 'medication',
+				title: 'Ear infection treatment',
+				notes: 'Two-week course of ear drops.',
+				occurredAt: new Date('2026-04-10T15:00:00Z'),
+				loggedBy: jet
+			}
+		])
+		.run();
+
+	// More reminders. All far-future so the boot notify scan stays quiet and both
+	// companions read "up to date".
+	db.insert(schema.reminders)
+		.values([
+			{
+				id: 'seed-reminder-2',
+				companionId: ein,
+				title: 'Grooming appointment',
+				type: 'grooming',
+				dueAt: new Date(now + 28 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-reminder-3',
+				companionId: ein,
+				title: 'Rabies booster',
+				type: 'vaccination',
+				dueAt: new Date(now + 60 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-reminder-4',
+				companionId: edward,
+				title: 'Flea and tick dose',
+				type: 'medication',
+				dueAt: new Date(now + 25 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-reminder-5',
+				companionId: edward,
+				title: 'Spay follow-up',
+				type: 'vet',
+				dueAt: new Date(now + 45 * day),
+				loggedBy: jet
+			}
+		])
+		.run();
+
+	// Edward weight history.
+	db.insert(schema.weightEntries)
+		.values([
+			{
+				id: 'seed-weight-e1',
+				companionId: edward,
+				weight: 17.8,
+				unit: 'lbs',
+				recordedAt: new Date(now - 120 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-e2',
+				companionId: edward,
+				weight: 18.6,
+				unit: 'lbs',
+				recordedAt: new Date(now - 80 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-e3',
+				companionId: edward,
+				weight: 19.2,
+				unit: 'lbs',
+				recordedAt: new Date(now - 40 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-e4',
+				companionId: edward,
+				weight: 19.0,
+				unit: 'lbs',
+				recordedAt: new Date(now - 8 * day),
+				loggedBy: jet
+			}
+		])
+		.run();
+
 	sqlite.close(); // clean WAL handoff before the server opens the file
 	return dbPath;
 }
