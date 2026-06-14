@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
-	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -26,7 +25,22 @@
 			{t(locale, 'page.twofa.setupRequiredBody')}
 		</p>
 
-		{#if form?.totpQr}
+		{#if (form as Record<string, unknown>)?.totpBackupCodes}
+			<!-- Enrolled: show the one-time backup codes once -->
+			{@const backupCodes = (form as Record<string, unknown>).totpBackupCodes as string[]}
+			<p class="text-sm font-medium text-foreground mb-1">
+				{t(locale, 'page.settings.backupCodesTitle')}
+			</p>
+			<p class="text-xs text-muted-foreground mb-3">
+				{t(locale, 'page.settings.backupCodesIntro')}
+			</p>
+			<ul class="grid grid-cols-2 gap-1.5 rounded-md bg-muted p-3 mb-4 font-mono text-sm">
+				{#each backupCodes as code (code)}
+					<li class="text-center">{code}</li>
+				{/each}
+			</ul>
+			<Button href="/" class="w-full">{t(locale, 'page.settings.backupCodesSaved')}</Button>
+		{:else if form?.totpQr}
 			<!-- Mid-enroll: QR shown, awaiting confirmation -->
 			<p class="text-sm text-muted-foreground mb-3">{t(locale, 'page.settings.scanQr')}</p>
 			<img
@@ -45,14 +59,7 @@
 				</Alert>
 			{/if}
 
-			<form
-				method="POST"
-				action="?/totpConfirm"
-				use:enhance={() =>
-					async ({ update }) =>
-						update({ reset: false })}
-				class="space-y-3"
-			>
+			<form method="POST" action="?/totpConfirm" class="space-y-3">
 				<div class="space-y-1.5">
 					<Label for="totp-confirm-code">{t(locale, 'page.settings.confirmCode')}</Label>
 					<Input
@@ -77,21 +84,17 @@
 				</Alert>
 			{/if}
 
-			<form
-				method="POST"
-				action="?/totpBegin"
-				use:enhance={() =>
-					async ({ update }) =>
-						update({ reset: false })}
-			>
+			<form method="POST" action="?/totpBegin">
 				<Button type="submit" class="w-full">{t(locale, 'page.settings.enable2fa')}</Button>
 			</form>
 		{/if}
 
 		<div class="mt-6 text-center">
-			<a href="/auth/logout" class="text-xs text-muted-foreground hover:text-primary underline">
-				{t(locale, 'nav.signOut')}
-			</a>
+			<form method="POST" action="/auth/logout">
+				<button type="submit" class="text-xs text-muted-foreground underline hover:text-primary">
+					{t(locale, 'nav.signOut')}
+				</button>
+			</form>
 		</div>
 	</div>
 </AuthBackdrop>

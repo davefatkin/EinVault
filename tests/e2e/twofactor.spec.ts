@@ -296,8 +296,9 @@ test.describe('2FA @desktop', () => {
 		await confirmInput.fill(deriveCode(careKey));
 		await carePage.getByRole('button', { name: /^Confirm$/i }).click();
 
-		// After successful enrollment at /2fa-setup the server redirects to /
-		// Caretakers redirect to /care
+		// Enrollment shows the one-time backup codes; acknowledge to continue.
+		await expect(carePage.getByText(/save your backup codes/i)).toBeVisible({ timeout: 10_000 });
+		await carePage.getByRole('link', { name: /saved my backup codes/i }).click();
 		await expect(carePage).not.toHaveURL(/\/2fa-setup/, { timeout: 15_000 });
 		await expect(carePage).not.toHaveURL(/\/auth\//, { timeout: 10_000 });
 
@@ -326,6 +327,8 @@ test.describe('2FA @desktop', () => {
 		await adminConfirm.scrollIntoViewIfNeeded();
 		await adminConfirm.fill(deriveCode(adminKey));
 		await adminPage.getByRole('button', { name: /^Confirm$/i }).click();
+		await expect(adminPage.getByText(/save your backup codes/i)).toBeVisible({ timeout: 10_000 });
+		await adminPage.getByRole('link', { name: /saved my backup codes/i }).click();
 		await expect(adminPage).not.toHaveURL(/\/2fa-setup/, { timeout: 10_000 });
 
 		// Now navigate to /admin/users and open the member (Jet) drawer.

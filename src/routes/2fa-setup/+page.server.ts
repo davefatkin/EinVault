@@ -31,12 +31,9 @@ export const actions: Actions = {
 
 	totpConfirm: async ({ locals, request }) => {
 		if (!locals.user) redirect(302, '/auth/login');
-		const result = await totpConfirm({ user: locals.user, request, locale: locals.locale });
-		// totpConfirm returns { totpSuccess: true, totpBackupCodes } on success, or fail() on error.
-		// On success, redirect away — the user is now enrolled and the gate won't fire again.
-		if (result && typeof result === 'object' && 'totpSuccess' in result && result.totpSuccess) {
-			redirect(302, '/');
-		}
-		return result;
+		// Return the result (including the one-time backup codes) so the page can
+		// show them. The user is now enrolled; the central gate clears on their
+		// next request, so the "Continue" link to / works.
+		return totpConfirm({ user: locals.user, request, locale: locals.locale });
 	}
 };
