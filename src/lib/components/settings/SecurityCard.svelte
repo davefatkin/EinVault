@@ -5,6 +5,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import BackupCodes from '$lib/components/BackupCodes.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let {
@@ -24,30 +25,6 @@
 	const backupCodes = $derived(
 		Array.isArray(form?.totpBackupCodes) ? (form.totpBackupCodes as string[]) : null
 	);
-
-	let codesCopied = $state(false);
-
-	function copyCodesText(): string {
-		return backupCodes?.join('\n') ?? '';
-	}
-
-	async function handleCopy() {
-		if (!backupCodes) return;
-		await navigator.clipboard.writeText(copyCodesText());
-		codesCopied = true;
-		setTimeout(() => (codesCopied = false), 2000);
-	}
-
-	function handleDownload() {
-		if (!backupCodes) return;
-		const blob = new Blob([copyCodesText()], { type: 'text/plain' });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'einvault-backup-codes.txt';
-		a.click();
-		URL.revokeObjectURL(url);
-	}
 </script>
 
 <Card>
@@ -59,24 +36,8 @@
 			<p class="text-sm text-muted-foreground">{t(locale, 'page.settings.twofaUnavailable')}</p>
 		{:else if backupCodes}
 			<!-- State 4: backup codes just generated (after confirm or regen) -->
-			<h3 class="text-sm font-semibold mb-1">{t(locale, 'page.settings.backupCodesTitle')}</h3>
-			<p class="text-sm text-muted-foreground mb-3">
-				{t(locale, 'page.settings.backupCodesIntro')}
-			</p>
-			<div
-				class="grid grid-cols-2 gap-1.5 font-mono text-sm bg-muted rounded-md p-3 mb-3 select-all"
-			>
-				{#each backupCodes as code (code)}
-					<span>{code}</span>
-				{/each}
-			</div>
-			<div class="flex gap-2 mb-4">
-				<Button variant="outline" size="sm" onclick={handleCopy}>
-					{codesCopied ? '✓ Copied' : 'Copy'}
-				</Button>
-				<Button variant="outline" size="sm" onclick={handleDownload}>Download</Button>
-			</div>
-			<Button variant="secondary" size="sm" onclick={() => location.reload()}>
+			<BackupCodes codes={backupCodes} />
+			<Button variant="secondary" size="sm" class="mt-4" onclick={() => location.reload()}>
 				{t(locale, 'page.settings.backupCodesSaved')}
 			</Button>
 		{:else if form?.totpQr && !form?.totpSuccess}

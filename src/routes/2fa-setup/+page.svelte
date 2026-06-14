@@ -4,11 +4,16 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import BackupCodes from '$lib/components/BackupCodes.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import AuthBackdrop from '$lib/components/auth/AuthBackdrop.svelte';
 
 	let { form }: { form: ActionData } = $props();
 	const locale = getLocale();
+
+	const backupCodes = $derived(
+		(form as Record<string, unknown> | null)?.totpBackupCodes as string[] | undefined
+	);
 </script>
 
 <svelte:head>
@@ -25,21 +30,10 @@
 			{t(locale, 'page.twofa.setupRequiredBody')}
 		</p>
 
-		{#if (form as Record<string, unknown>)?.totpBackupCodes}
+		{#if backupCodes}
 			<!-- Enrolled: show the one-time backup codes once -->
-			{@const backupCodes = (form as Record<string, unknown>).totpBackupCodes as string[]}
-			<p class="text-sm font-medium text-foreground mb-1">
-				{t(locale, 'page.settings.backupCodesTitle')}
-			</p>
-			<p class="text-xs text-muted-foreground mb-3">
-				{t(locale, 'page.settings.backupCodesIntro')}
-			</p>
-			<ul class="grid grid-cols-2 gap-1.5 rounded-md bg-muted p-3 mb-4 font-mono text-sm">
-				{#each backupCodes as code (code)}
-					<li class="text-center">{code}</li>
-				{/each}
-			</ul>
-			<Button href="/" class="w-full">{t(locale, 'page.settings.backupCodesSaved')}</Button>
+			<BackupCodes codes={backupCodes} />
+			<Button href="/" class="w-full mt-4">{t(locale, 'page.settings.backupCodesSaved')}</Button>
 		{:else if form?.totpQr}
 			<!-- Mid-enroll: QR shown, awaiting confirmation -->
 			<p class="text-sm text-muted-foreground mb-3">{t(locale, 'page.settings.scanQr')}</p>
