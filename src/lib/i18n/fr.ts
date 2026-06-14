@@ -635,7 +635,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savingStatus': 'Enregistrement…',
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
 	'page.journal.caretaker.media': 'Photos et vidéos',
-	'page.journal.caretaker.addMedia': '+ Ajouter un média',
+	'page.journal.caretaker.addMedia': 'Ajouter un média',
 	'page.journal.caretaker.dropMedia':
 		'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
 	'page.journal.caretaker.noCaption': 'Pas de légende',

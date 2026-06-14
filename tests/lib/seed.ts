@@ -429,6 +429,17 @@ export function createSeededDb(dir: string): string {
 				type: 'vet',
 				dueAt: new Date(now + 45 * day),
 				loggedBy: jet
+			},
+			{
+				// Due during the active caretaker shift so the care dashboard surfaces it.
+				// Still in the future, so the boot notify scan (which only emits for
+				// already-due reminders) stays quiet.
+				id: 'seed-reminder-6',
+				companionId: ein,
+				title: 'Evening medication',
+				type: 'medication',
+				dueAt: new Date(now + 4 * hour),
+				loggedBy: jet
 			}
 		])
 		.run();

@@ -632,7 +632,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savingStatus': 'A guardar…',
 	'page.journal.caretaker.saveFailedStatus': 'Falha ao guardar',
 	'page.journal.caretaker.media': 'Fotos e vídeos',
-	'page.journal.caretaker.addMedia': '+ Adicionar conteúdo',
+	'page.journal.caretaker.addMedia': 'Adicionar conteúdo',
 	'page.journal.caretaker.dropMedia': 'Arraste fotos ou vídeos para aqui ou clique para enviar',
 	'page.journal.caretaker.noCaption': 'Sem legenda',
 	'page.journal.caretaker.addCaption': 'Adicionar legenda…',

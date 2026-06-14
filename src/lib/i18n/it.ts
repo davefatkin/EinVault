@@ -629,7 +629,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savingStatus': 'Salvataggio…',
 	'page.journal.caretaker.saveFailedStatus': 'Salvataggio non riuscito',
 	'page.journal.caretaker.media': 'Foto e video',
-	'page.journal.caretaker.addMedia': '+ Aggiungi contenuti',
+	'page.journal.caretaker.addMedia': 'Aggiungi contenuti',
 	'page.journal.caretaker.dropMedia': 'Trascina foto o video qui o clicca per caricare',
 	'page.journal.caretaker.noCaption': 'Nessuna didascalia',
 	'page.journal.caretaker.addCaption': 'Aggiungi una didascalia…',

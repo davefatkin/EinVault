@@ -634,7 +634,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savingStatus': 'Guardando…',
 	'page.journal.caretaker.saveFailedStatus': 'Error al guardar',
 	'page.journal.caretaker.media': 'Fotos y vídeos',
-	'page.journal.caretaker.addMedia': '+ Añadir contenido',
+	'page.journal.caretaker.addMedia': 'Añadir contenido',
 	'page.journal.caretaker.dropMedia': 'Arrastra fotos o vídeos aquí o haz clic para subir',
 	'page.journal.caretaker.noCaption': 'Sin pie de foto',
 	'page.journal.caretaker.addCaption': 'Añadir un pie de foto…',

@@ -5,6 +5,11 @@ import { SEED, type Role } from '../lib/seed';
 
 // Regenerates docs/screenshots/*.png from the seeded e2e fixture. Run via the
 // dedicated config (see playwright.screenshots.config.ts) — not part of CI.
+//
+// Emoji note: install a colour emoji font (Noto Color Emoji) and make
+// fontconfig prefer it over DejaVu, otherwise the headless browser renders
+// some emoji as monochrome outlines. See README/contributing notes if a
+// regenerated capture shows grey emoji.
 
 const OUT = path.resolve(import.meta.dirname, '../../docs/screenshots');
 const EIN = SEED.companions.ein.id;
