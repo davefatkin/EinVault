@@ -21,6 +21,7 @@
 		phone: string | null;
 		role: 'admin' | 'member' | 'caretaker';
 		isActive: boolean;
+		totpEnabled: boolean;
 	}
 	interface CompanionRow {
 		id: string;
@@ -567,6 +568,32 @@
 					<Button type="submit" size="sm">{t(locale, 'page.admin.setPassword')}</Button>
 				</form>
 			</section>
+
+			<!-- Security / 2FA reset -->
+			{#if user.totpEnabled}
+				<section>
+					<h2 class={sectionLabel}>{t(locale, 'page.admin.securitySection')}</h2>
+					<form
+						method="POST"
+						action="?/resetTwoFactor"
+						use:enhance={() =>
+							({ result, update }) => {
+								update({ reset: false });
+								if (result.type === 'success')
+									notify('success', t(locale, 'page.admin.twofaReset'));
+								else if (result.type === 'failure') {
+									const e = errorText(result.data, 'twofaResetError');
+									if (e) notify('error', e);
+								}
+							}}
+					>
+						<input type="hidden" name="userId" value={user.id} />
+						<Button type="submit" variant="softDestructive" size="sm">
+							{t(locale, 'page.admin.resetTwofa')}
+						</Button>
+					</form>
+				</section>
+			{/if}
 
 			<!-- Deactivate / Activate -->
 			{#if user.id !== currentUserId}
