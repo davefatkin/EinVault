@@ -606,10 +606,11 @@
 				</div>
 			</div>
 
-			<!-- Quick stats row -->
-			<div class="mt-5 flex flex-wrap gap-4">
+			<!-- Quick stats row: 2-col grid on mobile (weight spans the top row so the
+			     sparkline has room), single flex row on sm+ -->
+			<div class="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:gap-4">
 				<!-- Latest weight + trend -->
-				<div class="flex flex-col gap-0.5">
+				<div class="col-span-2 flex flex-col gap-0.5 sm:col-span-1">
 					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
 						>{t(locale, 'page.dashboard.cardWeight')}</span
 					>
@@ -636,7 +637,7 @@
 				</div>
 
 				<!-- Next reminder -->
-				<div class="flex flex-col gap-0.5 min-w-0 flex-1">
+				<div class="flex flex-col gap-0.5 min-w-0 sm:flex-1">
 					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
 						>{t(locale, 'page.dashboard.nextVet')}</span
 					>
@@ -648,7 +649,7 @@
 				</div>
 
 				<!-- Activity count -->
-				<div class="flex flex-col gap-0.5">
+				<div class="flex flex-col gap-0.5 min-w-0">
 					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
 						>{t(locale, 'page.dashboard.cardActivity')}</span
 					>
