@@ -117,6 +117,49 @@
 		</Card>
 	{/if}
 
+	<!-- Security section -->
+	{#if form?.require2faSuccess}
+		<Alert variant="success">
+			<AlertDescription>{t(locale, 'common.saved')}</AlertDescription>
+		</Alert>
+	{/if}
+
+	<Card>
+		<CardHeader>
+			<CardTitle>{t(locale, 'page.admin.securitySection')}</CardTitle>
+		</CardHeader>
+		<CardContent class="pt-0">
+			<form method="POST" action="?/setRequire2fa" use:enhance class="space-y-3">
+				<div class="space-y-1.5">
+					<Label for="require2fa">{t(locale, 'page.admin.require2faLabel')}</Label>
+					<Select
+						id="require2fa"
+						name="value"
+						disabled={!data.twoFactorAvailable}
+						onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}
+					>
+						<option value="off" selected={data.require2fa === 'off'}
+							>{t(locale, 'page.admin.require2faOff')}</option
+						>
+						<option value="admins" selected={data.require2fa === 'admins'}
+							>{t(locale, 'page.admin.require2faAdmins')}</option
+						>
+						<option value="everyone" selected={data.require2fa === 'everyone'}
+							>{t(locale, 'page.admin.require2faEveryone')}</option
+						>
+					</Select>
+					<p class="text-xs text-muted-foreground">
+						{#if !data.twoFactorAvailable}
+							{t(locale, 'page.admin.require2faNoKey')}
+						{:else}
+							{t(locale, 'page.admin.require2faHelp')}
+						{/if}
+					</p>
+				</div>
+			</form>
+		</CardContent>
+	</Card>
+
 	<!-- User list -->
 	<Card class="divide-y divide-border">
 		{#each data.users as user (user.id)}

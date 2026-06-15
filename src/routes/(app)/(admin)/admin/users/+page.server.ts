@@ -7,17 +7,26 @@ import { generateId } from '$lib/server/utils';
 import bcrypt from 'bcryptjs';
 import { invalidateAllUserSessions } from '$lib/server/auth/session';
 import { parseRole, EMAIL_RE } from '$lib/server/validation';
+import { getAppSettings, setRequire2fa } from '$lib/server/app-settings';
+import type { Require2fa } from '$lib/server/app-settings';
+import { adminResetTwoFactor } from '$lib/server/auth/enrollment';
+import { isTwoFactorConfigured } from '$lib/server/auth/totp-crypto';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	if (locals.user.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
 
-	const users = await db.query.users.findMany({
+	const rawUsers = await db.query.users.findMany({
 		orderBy: (u, { asc }) => [asc(u.createdAt)],
 		columns: {
 			passwordHash: false
 		}
 	});
+
+	const users = rawUsers.map((u) => ({
+		...u,
+		totpEnabled: u.totpEnabledAt != null
+	}));
 
 	const companions = await db.query.companions.findMany({
 		where: eq(schema.companions.isActive, true),
@@ -30,7 +39,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		orderBy: (s, { asc }) => [asc(s.startAt)]
 	});
 
-	return { users, companions, assignments, shifts, currentUserId: locals.user.id };
+	const { require2fa } = await getAppSettings();
+	const twoFactorAvailable = isTwoFactorConfigured();
+
+	return {
+		users,
+		companions,
+		assignments,
+		shifts,
+		currentUserId: locals.user.id,
+		require2fa,
+		twoFactorAvailable
+	};
 };
 
 export const actions: Actions = {
@@ -285,6 +305,32 @@ export const actions: Actions = {
 		}
 
 		return { editSuccess: true };
+	},
+
+	setRequire2fa: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
+
+		const data = await request.formData();
+		const value = String(data.get('value') ?? '');
+
+		if (value !== 'off' && value !== 'admins' && value !== 'everyone') {
+			return fail(400, { require2faError: 'Invalid value.' });
+		}
+
+		await setRequire2fa(value as Require2fa, locals.user.id);
+		return { require2faSuccess: true };
+	},
+
+	resetTwoFactor: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
+
+		const data = await request.formData();
+		const userId = String(data.get('userId') ?? '');
+
+		if (!userId) return fail(400, { twofaResetError: t(locals.locale, 'error.missingUserId') });
+
+		await adminResetTwoFactor(userId);
+		return { twofaResetSuccess: true };
 	},
 
 	assignCompanions: async ({ request, locals }) => {

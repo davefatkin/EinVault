@@ -29,6 +29,7 @@
 		"@types/mailparser": "^3.4.6",
 		"@types/node": "^25.9.0",
 		"@types/nodemailer": "^8.0.0",
+		"@types/qrcode": "^1.5.6",
 		"@types/smtp-server": "^3.5.13",
 		"@typescript-eslint/parser": "^8.57.2",
 		"drizzle-kit": "^0.31.10",
@@ -68,7 +69,9 @@
 		"marked": "^18.0.3",
 		"nodemailer": "^8.0.10",
 		"openid-client": "^6.8.4",
+		"otpauth": "^9.5.1",
 		"pdfjs-dist": "^6.0.227",
+		"qrcode": "^1.5.4",
 		"sharp": "^0.34.5",
 		"tailwind-merge": "^3.5.0"
 	},

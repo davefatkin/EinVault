@@ -17,6 +17,12 @@ import { t, SUPPORTED_LOCALES } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
 import { REMINDER_UNDO_SECONDS_DEFAULT, CALENDAR_FEED_ENABLED } from '$lib/server/env';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
+import {
+	totpBegin,
+	totpConfirm,
+	totpRegenerate,
+	totpDisable
+} from '$lib/server/auth/two-factor-actions';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -39,6 +45,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const calUser = await db.query.users.findFirst({ where: eq(schema.users.id, locals.user.id) });
 
+	const { isTwoFactorConfigured } = await import('$lib/server/auth/totp-crypto');
+	const { getAppSettings } = await import('$lib/server/app-settings');
+	const { requiresTwoFactor } = await import('$lib/server/auth/two-factor');
+	const { require2fa } = await getAppSettings();
+	const twoFactorAvailable = isTwoFactorConfigured();
+	const twoFactorEnforced = requiresTwoFactor(
+		{ role: locals.user.role, isOidc: locals.user.isOidc, totpEnabled: false },
+		require2fa
+	);
+
 	return {
 		user: locals.user,
 		companions,
@@ -47,7 +63,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		mailEnabled: isMailEnabled(),
 		ntfyEnabled: isNtfyEnabled(),
 		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
-		calendarFeedEnabled: calUser?.calendarFeedToken != null
+		calendarFeedEnabled: calUser?.calendarFeedToken != null,
+		twoFactorAvailable,
+		twoFactorEnforced
 	};
 };
 
@@ -158,5 +176,25 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		await disableFeedToken(locals.user.id);
 		return { calendarDisabled: true };
+	},
+
+	totpBegin: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpBegin({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpConfirm: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpConfirm({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpRegenerate: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpRegenerate({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpDisable: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpDisable({ user: locals.user, request, locale: locals.locale });
 	}
 };

@@ -368,6 +368,16 @@ function readSmtpConfig(): { config: SmtpConfig | null; missing: string[] } {
 const smtpResult = readSmtpConfig();
 export const SMTP_CONFIG = smtpResult.config;
 
+export function logTwoFactorBootStatus(): void {
+	import('$lib/server/auth/totp-crypto').then(({ isTwoFactorConfigured }) => {
+		console.info(
+			isTwoFactorConfigured()
+				? '[einvault] 2FA available (TWOFA_ENC_KEY set)'
+				: '[einvault] 2FA unavailable: set TWOFA_ENC_KEY to enable two-factor authentication'
+		);
+	});
+}
+
 export function logSmtpBootStatus(): void {
 	if (smtpResult.missing.length > 0 && smtpResult.missing.length < SMTP_REQUIRED_VARS.length) {
 		console.warn(

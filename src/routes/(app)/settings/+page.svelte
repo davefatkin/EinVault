@@ -8,6 +8,7 @@
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
+	import SecurityCard from '$lib/components/settings/SecurityCard.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { Theme } from '$lib/theme';
@@ -83,4 +84,11 @@
 			calendarFeedEnabled={data.calendarFeedEnabled}
 		/>
 	{/if}
+
+	<SecurityCard
+		totpEnabled={data.user?.totpEnabled ?? false}
+		available={data.twoFactorAvailable}
+		enforced={data.twoFactorEnforced}
+		{form}
+	/>
 </div>

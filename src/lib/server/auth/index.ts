@@ -54,7 +54,9 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			notifyReminderEmail: user.notifyReminderEmail ?? false,
 			notifyShiftEmail: user.notifyShiftEmail ?? false,
 			ntfyTopic: user.ntfyTopic ?? null,
-			avatarPath: user.avatarPath ?? null
+			avatarPath: user.avatarPath ?? null,
+			totpEnabled: user.totpEnabledAt != null,
+			isOidc: user.oidcSubject != null
 		}
 	};
 }

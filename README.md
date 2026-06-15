@@ -34,6 +34,7 @@ EinVault is a private, self-hosted companion health and care tracker built for h
   - [Admin role mapping](#admin-role-mapping)
   - [Logout](#logout)
   - [Provider notes](#provider-notes)
+- [Two-factor authentication (2FA)](#two-factor-authentication-2fa)
 - [Adding a new locale](#adding-a-new-locale)
 - [Stack](#stack)
 - [License](#license)
@@ -111,6 +112,7 @@ Everything else in the compose file can be edited directly:
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
 | `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
+| `TWOFA_ENC_KEY`               | —                   | 32-byte base64 key (`openssl rand -base64 32`) that encrypts stored TOTP secrets. Required to enable two-factor authentication.                            |
 
 The calendar feed URL contains a secret token that authenticates the subscriber. Avoid logging full `/api/calendar/` request URLs at the reverse proxy, as the token would appear in plain text in your access logs.
 
@@ -386,6 +388,38 @@ By default, logout destroys the local EinVault session and returns the user to `
 | **Authentik** | Create an OAuth2/OIDC provider; scope mapping for `groups` is built-in. `OIDC_ADMIN_GROUPS` matches the `groups` claim directly.                                                                    |
 | **Keycloak**  | Add a "Group Membership" mapper to the client with token claim name `groups` and "Full group path" off. EinVault does not read `realm_access.roles`. Add the redirect URI to "Valid Redirect URIs". |
 | **PocketID**  | Public-client first; omit `OIDC_CLIENT_SECRET`. Register the redirect URI in the client settings.                                                                                                   |
+
+---
+
+## Two-factor authentication (2FA)
+
+EinVault supports per-user TOTP-based two-factor authentication. Users can enable it under Settings → Security: scan the QR code with any TOTP app (Aegis, Bitwarden Authenticator, Google Authenticator, etc.), enter the confirmation code, and download the 10 one-time backup codes. Each backup code works once and is not shown again.
+
+**Requirements.** 2FA requires `TWOFA_ENC_KEY` to be set. This is a 32-byte base64 key used to encrypt stored TOTP secrets at rest. Without it, 2FA is unavailable and the enforcement setting in the admin panel is locked.
+
+Generate a key:
+
+```bash
+openssl rand -base64 32
+```
+
+Add it to your compose file or `.env`:
+
+```
+TWOFA_ENC_KEY=<the generated value>
+```
+
+**Admin enforcement.** Admins can require 2FA at Admin → Users → Security. Three levels are available:
+
+- **Off** — 2FA is optional. Users can enable it but are not required to.
+- **Admins only** — Admin accounts must enroll before they can use the app.
+- **Everyone** — All non-OIDC accounts must enroll.
+
+When enforcement is active, un-enrolled users are redirected to `/2fa-setup` after login and cannot access the rest of the app until they complete enrollment.
+
+**OIDC users are exempt.** Accounts that sign in via OIDC are never required to enroll. MFA for those accounts is handled by the identity provider.
+
+**Recovery.** If a user loses their authenticator app, they can sign in using one of their backup codes instead. If backup codes are also lost, an admin can reset the user's two-factor enrollment from the Manage drawer (Admin → Users → Manage → Reset two-factor). The user will be prompted to re-enroll on next login.
 
 ---
 
