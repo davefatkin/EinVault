@@ -784,6 +784,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Wiederherstellen',
 	'page.reminders.completedCount': '{count} erledigte Erinnerung',
 	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',
+	'page.reminders.sortBy': 'Sortieren nach',
+	'page.reminders.sortCreated': 'Erstellt',
+	'page.reminders.sortDue': 'Fälligkeitsdatum',
+	'page.reminders.sortCompleted': 'Erledigt',
+	'page.reminders.sortAscending': 'Aufsteigend sortieren',
+	'page.reminders.sortDescending': 'Absteigend sortieren',
 	'page.reminders.emptyBody':
 		'Lege Tierarzttermine, Medikamente oder Pflege fest, damit nichts vergessen wird.',
 

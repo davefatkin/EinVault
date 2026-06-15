@@ -38,9 +38,11 @@
 	}}
 />
 
-<div class="min-h-screen md:flex bg-background">
-	<!-- Desktop sidebar (hidden on mobile) -->
-	<div class="hidden md:flex h-screen sticky top-0 shrink-0">
+<div class="min-h-screen bg-background">
+	<!-- Desktop sidebar: fixed full-height so it never scroll-couples with the
+	     page (a sticky h-screen sidebar stutters when it detaches at the bottom
+	     of tall pages like the journal and health log). Hidden on mobile. -->
+	<div class="hidden md:flex fixed inset-y-0 left-0 w-60 z-30">
 		<AppSidebar
 			companions={data.companions}
 			{activeCompanion}
@@ -50,8 +52,8 @@
 		/>
 	</div>
 
-	<!-- Main content column -->
-	<div class="flex-1 flex flex-col min-w-0">
+	<!-- Main content column, offset past the fixed sidebar on desktop -->
+	<div class="flex min-h-screen flex-col min-w-0 md:pl-60">
 		<!-- Mobile top bar + bottom tab bar (hidden on desktop) -->
 		<AppMobileNav
 			class="md:hidden"

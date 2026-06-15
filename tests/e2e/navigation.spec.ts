@@ -25,6 +25,20 @@ test('bottom tab bar shows Overview, Search, You but not Users @mobile', async (
 	await expect(nav.getByRole('link', { name: 'Users' })).toHaveCount(0);
 });
 
+test('mobile overview header is a companion dropdown that can jump into a companion @mobile', async ({
+	asMember
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asMember.goto('/');
+	const trigger = asMember.getByRole('button', { name: 'Switch companion' });
+	await expect(trigger).toBeVisible({ timeout: 8_000 });
+	await expect(trigger).toContainText('Overview');
+	await trigger.click();
+	const listbox = asMember.getByRole('listbox', { name: 'Switch companion' });
+	await listbox.getByRole('button', { name: 'Ein' }).first().click();
+	await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
+});
+
 test('member You tab opens account sheet with Settings + Sign Out only @mobile', async ({
 	asMember
 }, testInfo) => {

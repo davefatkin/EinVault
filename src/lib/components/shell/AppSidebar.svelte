@@ -133,10 +133,10 @@
 	<a
 		href="/"
 		aria-label={t(locale, 'aria.einvaultHome')}
-		class="flex items-center gap-2.5 px-4 py-5 shrink-0 transition-opacity hover:opacity-80"
+		class="group flex items-center gap-2.5 px-4 py-5 shrink-0"
 	>
 		<div
-			class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+			class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-6"
 			style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
 			aria-hidden="true"
 		>

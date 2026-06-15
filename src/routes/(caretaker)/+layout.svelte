@@ -112,10 +112,10 @@
 				<!-- Logo (linked) -->
 				<a
 					href="/care/{activeCompanion?.id ?? ''}"
-					class="logo-link hidden sm:flex items-center gap-2 shrink-0"
+					class="group hidden sm:flex items-center gap-2 shrink-0"
 				>
 					<div
-						class="logo-chip flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-transform duration-200"
+						class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-6"
 						style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))"
 						aria-hidden="true"
 					>
@@ -266,7 +266,7 @@
 				<a
 					href={overviewHref}
 					aria-current={overviewActive ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors min-h-[56px] justify-end pb-2
+					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
 						{overviewActive ? 'text-primary' : 'text-muted-foreground'}"
 				>
 					<Home class="h-5 w-5 mb-0.5" />
@@ -277,7 +277,7 @@
 				{#if !data.isOnShift}
 					<span
 						aria-label="{journalLabel} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
+						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
 					>
 						<NotebookPen class="h-5 w-5 mb-0.5" />
 						{journalLabel}
@@ -286,7 +286,7 @@
 					<a
 						href={journalHref}
 						aria-current={journalActive ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors min-h-[56px] justify-end pb-2
+						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
 							{journalActive ? 'text-primary' : 'text-muted-foreground'}"
 					>
 						<NotebookPen class="h-5 w-5 mb-0.5" />
@@ -349,7 +349,7 @@
 				{#if !data.isOnShift}
 					<span
 						aria-label="{logLabel} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
+						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
 					>
 						<ClipboardList class="h-5 w-5 mb-0.5" />
 						{logLabel}
@@ -358,7 +358,7 @@
 					<a
 						href={logHref}
 						aria-current={logActive ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors min-h-[56px] justify-end pb-2
+						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
 							{logActive ? 'text-primary' : 'text-muted-foreground'}"
 					>
 						<ClipboardList class="h-5 w-5 mb-0.5" />
@@ -370,7 +370,7 @@
 				<a
 					href="/care/settings"
 					aria-current={page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors min-h-[56px] justify-end pb-2
+					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
 						{page.url.pathname.startsWith('/care/settings') ? 'text-primary' : 'text-muted-foreground'}"
 				>
 					<Settings class="h-5 w-5 mb-0.5" />
@@ -400,9 +400,3 @@
 		</nav>
 	{/if}
 </div>
-
-<style>
-	.logo-link:hover :global(.logo-chip) {
-		transform: scale(1.05) rotate(-6deg);
-	}
-</style>

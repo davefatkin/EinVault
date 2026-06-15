@@ -1,5 +1,5 @@
 import { t, type Locale } from '$lib/i18n';
-import { addToast, removeToast } from '$lib/components/ui/toast';
+import { addToast, removeToast, suppressNextPause } from '$lib/components/ui/toast';
 
 export const DISMISS_DELAY_MS = 7000;
 
@@ -140,10 +140,17 @@ export function createPendingDismissals(
 					// keeps their place; the toast is still reachable via Tab.
 					const active = document.activeElement;
 					if (active && active !== document.body && active.tagName !== 'HTML') return;
-					const btn = document.querySelector<HTMLButtonElement>(
-						`[data-toast-id="${toastId}"] button[data-toast-action="undo"]`
-					);
-					btn?.focus();
+					const root = document.querySelector<HTMLElement>(`[data-toast-id="${toastId}"]`);
+					const btn = root?.querySelector<HTMLButtonElement>('button[data-toast-action="undo"]');
+					if (!btn) return;
+					// Stealing focus into the toast would otherwise pause the countdown two
+					// ways: the JS timer via `focusin` and the CSS bar via `:focus-within`.
+					// Neither should happen for a programmatic focus — the window should
+					// keep ticking. Suppress the JS pause and exempt this toast from the
+					// CSS focus pause (genuine hover still pauses both).
+					suppressNextPause(toastId);
+					root?.classList.add('no-focus-pause');
+					btn.focus();
 				});
 			});
 		}

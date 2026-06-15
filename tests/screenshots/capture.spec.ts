@@ -41,7 +41,7 @@ const SHOTS: Shot[] = [
 ];
 
 const DESKTOP = { width: 1280, height: 900 };
-const MOBILE = { width: 412, height: 915 };
+const MOBILE = { width: 500, height: 915 };
 const THEMES = ['light', 'dark'] as const;
 
 test('capture screenshots', async ({ app, browser }) => {

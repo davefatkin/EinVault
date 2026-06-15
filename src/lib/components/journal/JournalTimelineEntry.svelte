@@ -186,7 +186,7 @@
 					<button
 						type="button"
 						onclick={() => onOpenActivity(event)}
-						class="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						class="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
 						{ACTIVITY_ICONS[event.type] ?? '📝'}
 						<span class="capitalize">{event.type}</span>

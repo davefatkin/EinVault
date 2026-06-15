@@ -13,7 +13,18 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Plus, Pencil, Trash2, CheckCheck, RotateCcw, X, HeartPulse, Bell } from '@lucide/svelte';
+	import {
+		Plus,
+		Pencil,
+		Trash2,
+		CheckCheck,
+		RotateCcw,
+		X,
+		HeartPulse,
+		Bell,
+		ArrowUp,
+		ArrowDown
+	} from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -59,6 +70,28 @@
 
 	let active = $derived(data.reminders.filter((r) => !r.completedAt));
 	let completed = $derived(data.reminders.filter((r) => r.completedAt));
+
+	// Completed reminders sort. Defaults to most-recently-completed first; the
+	// server loads reminders by due date, which is rarely the order you want when
+	// reviewing what was just done.
+	type CompletedSort = 'created' | 'due' | 'completed';
+	let completedSort = $state<CompletedSort>('completed');
+	let completedSortDir = $state<'asc' | 'desc'>('desc');
+	let completedSorted = $derived(
+		[...completed].sort((a, b) => {
+			const at = (r: (typeof completed)[number]) => {
+				const d =
+					completedSort === 'due'
+						? r.dueAt
+						: completedSort === 'completed'
+							? r.completedAt
+							: r.createdAt;
+				return d ? new Date(d).getTime() : 0;
+			};
+			const diff = at(a) - at(b);
+			return completedSortDir === 'asc' ? diff : -diff;
+		})
+	);
 	let buckets = $derived(
 		reminderBuckets(
 			active.map((r) => ({ ...r, dueAt: new Date(r.dueAt) })),
@@ -251,7 +284,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.reminders.detailType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
+					<Badge variant="coral" class="capitalize">{r.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -572,12 +605,14 @@
 						</form>
 					</CardContent>
 				{:else}
-					<CardContent class="pt-4 pb-4">
-						<div class="flex items-start justify-between gap-4">
+					<CardContent class="p-0">
+						<div
+							class="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+						>
 							<button
 								type="button"
 								onclick={() => openDetail(reminder)}
-								class="flex-1 flex items-start gap-3 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
+								class="flex flex-1 items-start gap-3 text-left rounded-md min-w-0"
 							>
 								<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
 								<div class="min-w-0">
@@ -607,7 +642,7 @@
 								</div>
 							</button>
 							{#if data.companion.isActive !== false}
-								<div class="flex items-center gap-1 shrink-0">
+								<div class="flex items-center gap-1 shrink-0 self-end sm:self-auto">
 									<Button
 										type="button"
 										variant="soft"
@@ -715,8 +750,41 @@
 					? t(locale, 'page.reminders.completedCountPlural', { count: completed.length })
 					: t(locale, 'page.reminders.completedCount', { count: completed.length })}
 			</summary>
+			<div class="mt-3 flex items-center justify-end gap-2">
+				<label for="completed-sort" class="text-xs text-muted-foreground"
+					>{t(locale, 'page.reminders.sortBy')}</label
+				>
+				<Select
+					id="completed-sort"
+					value={completedSort}
+					onchange={(e) => (completedSort = e.currentTarget.value as CompletedSort)}
+					class="h-8 w-auto py-0 text-xs"
+				>
+					<option value="created">{t(locale, 'page.reminders.sortCreated')}</option>
+					<option value="due">{t(locale, 'page.reminders.sortDue')}</option>
+					<option value="completed">{t(locale, 'page.reminders.sortCompleted')}</option>
+				</Select>
+				<Button
+					type="button"
+					variant="soft"
+					size="icon-sm"
+					onclick={() => (completedSortDir = completedSortDir === 'asc' ? 'desc' : 'asc')}
+					aria-label={completedSortDir === 'asc'
+						? t(locale, 'page.reminders.sortAscending')
+						: t(locale, 'page.reminders.sortDescending')}
+					title={completedSortDir === 'asc'
+						? t(locale, 'page.reminders.sortAscending')
+						: t(locale, 'page.reminders.sortDescending')}
+				>
+					{#if completedSortDir === 'asc'}
+						<ArrowUp class="h-4 w-4" />
+					{:else}
+						<ArrowDown class="h-4 w-4" />
+					{/if}
+				</Button>
+			</div>
 			<div class="mt-3 space-y-2">
-				{#each completed as reminder (reminder.id)}
+				{#each completedSorted as reminder (reminder.id)}
 					<Card class={editingId !== reminder.id ? 'opacity-60' : ''}>
 						{#if editingId === reminder.id}
 							<CardContent class="pt-6">

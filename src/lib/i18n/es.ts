@@ -783,6 +783,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} recordatorio completado',
 	'page.reminders.completedCountPlural': '{count} recordatorios completados',
+	'page.reminders.sortBy': 'Ordenar por',
+	'page.reminders.sortCreated': 'Creado',
+	'page.reminders.sortDue': 'Fecha de vencimiento',
+	'page.reminders.sortCompleted': 'Completado',
+	'page.reminders.sortAscending': 'Orden ascendente',
+	'page.reminders.sortDescending': 'Orden descendente',
 	'page.reminders.emptyBody':
 		'Programa visitas al veterinario, medicación o aseo para que no se escape nada.',
 

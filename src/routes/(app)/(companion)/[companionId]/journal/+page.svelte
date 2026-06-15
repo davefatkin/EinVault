@@ -176,7 +176,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.journal.activityDetailType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{detailEvent.type}</Badge>
+					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"

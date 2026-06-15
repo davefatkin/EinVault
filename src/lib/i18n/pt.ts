@@ -782,6 +782,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} lembrete completado',
 	'page.reminders.completedCountPlural': '{count} lembretes completados',
+	'page.reminders.sortBy': 'Ordenar por',
+	'page.reminders.sortCreated': 'Criado',
+	'page.reminders.sortDue': 'Data de vencimento',
+	'page.reminders.sortCompleted': 'Concluído',
+	'page.reminders.sortAscending': 'Ordem crescente',
+	'page.reminders.sortDescending': 'Ordem decrescente',
 	'page.reminders.emptyBody':
 		'Define visitas ao veterinário, medicação ou higiene para não te esqueceres de nada.',
 

@@ -10,7 +10,8 @@
 
 	interface Props {
 		companions: Companion[];
-		activeCompanion: Companion;
+		/** Null when rendered on the Overview page — the trigger shows "Overview". */
+		activeCompanion: Companion | null;
 		/** Status dots in the dropdown. Pass {} to omit dot coloring (defaults to up-to-date). */
 		companionStatus?: Record<string, CareStatus>;
 		/** Owner switcher offers an "Overview" entry; caretaker does not. */
@@ -30,6 +31,7 @@
 	const locale = getLocale();
 	const OVERVIEW_VALUE = '__overview__';
 	let open = $state(false);
+	let isOverview = $derived(activeCompanion == null);
 
 	function statusDotClass(id: string): string {
 		const s = companionStatus[id] ?? 'up-to-date';
@@ -53,7 +55,7 @@
 		}
 		const parts = page.url.pathname.split('/');
 		const idIndex = basePath === '/care' ? 2 : 1;
-		if (parts[idIndex] === activeCompanion.id) {
+		if (activeCompanion && parts[idIndex] === activeCompanion.id) {
 			const section = parts.slice(idIndex + 1).join('/');
 			goto(`${basePath}/${id}${section ? `/${section}` : ''}`);
 		} else {
@@ -68,7 +70,7 @@
 	let isOnOverview = $derived(page.url.pathname === (basePath || '/'));
 </script>
 
-{#if companions.length > 1}
+{#if companions.length > 1 || isOverview}
 	<div class="relative flex-1 min-w-0" role="none">
 		<button
 			type="button"
@@ -79,15 +81,26 @@
 			aria-haspopup="listbox"
 			class="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-accent min-w-0"
 		>
-			<CompanionAvatar
-				companionId={activeCompanion.id}
-				avatarPath={activeCompanion.avatarPath}
-				name={activeCompanion.name}
-				size="sm"
-			/>
-			<span class="flex-1 min-w-0 font-semibold text-sm text-foreground truncate">
-				{activeCompanion.name}
-			</span>
+			{#if activeCompanion}
+				<CompanionAvatar
+					companionId={activeCompanion.id}
+					avatarPath={activeCompanion.avatarPath}
+					name={activeCompanion.name}
+					size="sm"
+				/>
+				<span class="flex-1 min-w-0 font-semibold text-sm text-foreground truncate">
+					{activeCompanion.name}
+				</span>
+			{:else}
+				<span
+					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground"
+				>
+					<LayoutGrid class="h-4 w-4" />
+				</span>
+				<span class="flex-1 min-w-0 font-semibold text-sm text-foreground truncate">
+					{t(locale, 'nav.overview')}
+				</span>
+			{/if}
 			<ChevronDown
 				class="h-4 w-4 shrink-0 text-muted-foreground transition-transform {open
 					? 'rotate-180'
@@ -123,12 +136,12 @@
 					</li>
 				{/if}
 				{#each companions as c (c.id)}
-					<li role="option" aria-selected={c.id === activeCompanion.id}>
+					<li role="option" aria-selected={c.id === activeCompanion?.id}>
 						<button
 							type="button"
 							onclick={() => switchTo(c.id)}
 							class="flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-foreground {c.id ===
-							activeCompanion.id
+							activeCompanion?.id
 								? 'bg-accent text-foreground font-medium'
 								: 'text-muted-foreground'}"
 						>
@@ -149,7 +162,7 @@
 			</ul>
 		{/if}
 	</div>
-{:else}
+{:else if activeCompanion}
 	<!-- Single companion — static display -->
 	<div class="flex items-center gap-2.5 flex-1 min-w-0">
 		<CompanionAvatar

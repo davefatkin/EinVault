@@ -42,6 +42,11 @@ export const toasts = $state<Toast[]>([]);
 // reactivity. Consumers read `toasts` (the reactive `$state`) for rendering.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const timers = new Map<string, ToastTimerState>();
+// Toast ids whose next `pauseToast` should be ignored. Set when focus is moved
+// into a toast programmatically (e.g. auto-focusing Undo) so the synchronous
+// `focusin` doesn't freeze the countdown the moment the toast appears.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const skipNextPause = new Set<string>();
 let counter = 0;
 
 function nextId(): string {
@@ -123,7 +128,18 @@ export function removeToast(id: string) {
 	if (idx !== -1) toasts.splice(idx, 1);
 }
 
+/**
+ * Suppress the next `pauseToast(id)` call. Used before programmatically moving
+ * focus into a toast: the resulting `focusin` would otherwise pause the timer
+ * indefinitely (it only resumes on `focusout`), so a freshly shown toast would
+ * never auto-commit.
+ */
+export function suppressNextPause(id: string) {
+	skipNextPause.add(id);
+}
+
 export function pauseToast(id: string) {
+	if (skipNextPause.delete(id)) return;
 	const entry = timers.get(id);
 	if (!entry || entry.paused) return;
 	clearTimeout(entry.timer);

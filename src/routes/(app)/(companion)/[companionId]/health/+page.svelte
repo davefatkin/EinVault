@@ -294,7 +294,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailType')}</span
 						>
-						<Badge variant="secondary" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
+						<Badge variant="teal" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -763,11 +763,13 @@
 							</form>
 						</div>
 					{:else}
-						<div class="flex items-center gap-4 px-6 py-3 text-sm group">
+						<div
+							class="flex flex-col gap-3 px-6 py-3 text-sm transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:gap-4"
+						>
 							<button
 								type="button"
 								onclick={() => openDetail({ kind: 'weight', item: entry })}
-								class="flex-1 flex items-center gap-4 text-sm text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
+								class="flex flex-1 items-center gap-4 text-sm text-left rounded-md min-w-0"
 							>
 								<span class="w-24 shrink-0 text-xs whitespace-nowrap text-muted-foreground"
 									><LocalTime date={entry.recordedAt} /></span
@@ -782,7 +784,7 @@
 								</div>
 							</button>
 							{#if data.companion.isActive !== false}
-								<div class="flex gap-1 shrink-0">
+								<div class="flex gap-1 shrink-0 self-end sm:self-auto">
 									<Button
 										type="button"
 										variant="soft"
@@ -939,11 +941,13 @@
 								</form>
 							</div>
 						{:else}
-							<div class="flex items-start gap-4 py-2 border-b border-border last:border-0">
+							<div
+								class="flex flex-col gap-3 py-2 border-b border-border last:border-0 transition-colors hover:bg-accent/40 sm:flex-row sm:items-start sm:gap-4"
+							>
 								<button
 									type="button"
 									onclick={() => openDetail({ kind: 'health', item: event })}
-									class="flex-1 flex items-start gap-4 text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors min-w-0"
+									class="flex flex-1 items-start gap-4 text-left rounded-md min-w-0"
 								>
 									<div class="shrink-0 text-right w-20">
 										<span class="text-xs text-muted-foreground"
@@ -952,7 +956,7 @@
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="secondary" class="capitalize"
+											<Badge variant="teal" class="capitalize"
 												>{healthTypeLabel(locale, event.type)}</Badge
 											>
 											<span class="font-medium text-sm text-foreground">{event.title}</span>
@@ -982,7 +986,7 @@
 									</div>
 								</button>
 								{#if data.companion.isActive !== false}
-									<div class="flex gap-1 shrink-0">
+									<div class="flex gap-1 shrink-0 self-end sm:self-auto">
 										<Button
 											type="button"
 											variant="soft"
