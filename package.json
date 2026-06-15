@@ -61,7 +61,7 @@
 		"@touch4it/ical-timezones": "^1.9.0",
 		"aws4fetch": "^1.0.20",
 		"bcryptjs": "^3.0.3",
-		"better-sqlite3": "^12.8.0",
+		"better-sqlite3": "^12.10.1",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.2",
