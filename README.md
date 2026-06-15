@@ -64,15 +64,15 @@ EinVault is a private, self-hosted companion health and care tracker built for h
 
 ### Companion overview
 
-![Companion overview](docs/screenshots/member_companion_light.png)
+![Companion overview](docs/screenshots/member_companion_dark.png)
 
 ### Caretaker dashboard
 
-![Caretaker dashboard](docs/screenshots/caretaker_dashboard_light.png)
+![Caretaker dashboard](docs/screenshots/caretaker_dashboard_dark.png)
 
-| Member dashboard (mobile)                                                      | Caretaker dashboard (mobile)                                                         |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_light.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_light.png) |
+| Member dashboard (mobile)                                                     | Caretaker dashboard (mobile)                                                        |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ![Member dashboard mobile](docs/screenshots/member_dashboard_mobile_dark.png) | ![Caretaker dashboard mobile](docs/screenshots/caretaker_dashboard_mobile_dark.png) |
 
 [More screenshots](docs/SCREENSHOTS.md)
 
