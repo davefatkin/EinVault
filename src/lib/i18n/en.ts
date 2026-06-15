@@ -771,6 +771,12 @@ const messages = {
 	'page.reminders.restore': 'Restore',
 	'page.reminders.completedCount': '{count} completed reminder',
 	'page.reminders.completedCountPlural': '{count} completed reminders',
+	'page.reminders.sortBy': 'Sort by',
+	'page.reminders.sortCreated': 'Created',
+	'page.reminders.sortDue': 'Due date',
+	'page.reminders.sortCompleted': 'Completed',
+	'page.reminders.sortAscending': 'Sort ascending',
+	'page.reminders.sortDescending': 'Sort descending',
 	'page.reminders.emptyBody': 'Set vet visits, medications, or grooming so nothing slips.',
 
 	// Page: Admin users

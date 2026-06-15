@@ -1,7 +1,11 @@
-# 🐾 EinVault
+<p align="center">
+  <img src="docs/ein.svg" alt="Ein, the EinVault mascot" width="120" />
+</p>
+
+# EinVault
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 

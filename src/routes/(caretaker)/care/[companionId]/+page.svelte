@@ -240,7 +240,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{selected.type}</Badge>
+					<Badge variant="gold" class="capitalize">{selected.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -312,7 +312,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{selectedReminder.type}</Badge>
+					<Badge variant="coral" class="capitalize">{selectedReminder.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -670,8 +670,11 @@
 							class="w-full rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left"
 						>
 							<div class="flex items-center gap-3 text-sm">
-								<span class="text-base shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
-								<Badge variant="secondary" class="capitalize shrink-0">{event.type}</Badge>
+								<span
+									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-base"
+									>{ACTIVITY_ICONS[event.type] ?? '📝'}</span
+								>
+								<Badge variant="gold" class="capitalize shrink-0">{event.type}</Badge>
 								{#if event.durationMinutes}
 									<span class="text-xs text-muted-foreground shrink-0"
 										>{event.durationMinutes} min</span

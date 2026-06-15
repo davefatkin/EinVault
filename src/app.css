@@ -227,6 +227,10 @@
 		-moz-osx-font-smoothing: grayscale;
 		background-color: hsl(var(--background));
 		color: hsl(var(--foreground));
+		/* Always reserve the scrollbar gutter so pages whose content crosses the
+		   viewport height (e.g. the journal day view) don't shift the centered
+		   layout and sidebar sideways when the scrollbar appears. */
+		scrollbar-gutter: stable;
 		transition:
 			background-color 0.2s ease,
 			color 0.2s ease;
@@ -399,7 +403,7 @@
 	animation: toast-dismiss-countdown var(--dismiss-ms, 7000ms) linear forwards;
 }
 .toast-item:hover .toast-dismiss-countdown,
-.toast-item:focus-within .toast-dismiss-countdown {
+.toast-item:focus-within:not(.no-focus-pause) .toast-dismiss-countdown {
 	animation-play-state: paused;
 }
 @keyframes toast-dismiss-countdown {

@@ -786,6 +786,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurer',
 	'page.reminders.completedCount': '{count} rappel terminé',
 	'page.reminders.completedCountPlural': '{count} rappels terminés',
+	'page.reminders.sortBy': 'Trier par',
+	'page.reminders.sortCreated': 'Créé',
+	'page.reminders.sortDue': "Date d'échéance",
+	'page.reminders.sortCompleted': 'Terminé',
+	'page.reminders.sortAscending': 'Tri croissant',
+	'page.reminders.sortDescending': 'Tri décroissant',
 	'page.reminders.emptyBody':
 		'Planifiez visites vétérinaires, médicaments ou toilettage pour ne rien oublier.',
 

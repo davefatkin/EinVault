@@ -5,6 +5,7 @@ export {
 	removeToast,
 	pauseToast,
 	resumeToast,
+	suppressNextPause,
 	undoToast,
 	toasts,
 	type Toast as ToastData

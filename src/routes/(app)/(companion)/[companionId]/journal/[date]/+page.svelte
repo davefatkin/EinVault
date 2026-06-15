@@ -475,7 +475,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.journal.day.detailType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{detailEvent.type}</Badge>
+					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -1229,10 +1229,13 @@
 									onclick={() => openActivityDetail(event)}
 									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors -mx-2"
 								>
-									<span class="text-xl shrink-0">{EVENT_ICONS[event.type] ?? '📝'}</span>
+									<span
+										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
+										>{EVENT_ICONS[event.type] ?? '📝'}</span
+									>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="secondary" class="capitalize">{event.type}</Badge>
+											<Badge variant="gold" class="capitalize">{event.type}</Badge>
 											{#if event.durationMinutes}
 												<span class="text-xs text-muted-foreground"
 													>{event.durationMinutes} min</span

@@ -779,6 +779,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Ripristina',
 	'page.reminders.completedCount': '{count} promemoria completato',
 	'page.reminders.completedCountPlural': '{count} promemoria completati',
+	'page.reminders.sortBy': 'Ordina per',
+	'page.reminders.sortCreated': 'Creato',
+	'page.reminders.sortDue': 'Data di scadenza',
+	'page.reminders.sortCompleted': 'Completato',
+	'page.reminders.sortAscending': 'Ordine crescente',
+	'page.reminders.sortDescending': 'Ordine decrescente',
 	'page.reminders.emptyBody':
 		'Imposta visite veterinarie, farmaci o toelettatura per non dimenticare nulla.',
 

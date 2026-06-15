@@ -173,8 +173,13 @@
 			<div class="flex-1 min-w-0">
 				<CompanionSwitcher {companions} {activeCompanion} {companionStatus} includeOverview />
 			</div>
+		{:else if companions.length > 0}
+			<!-- Overview: companion dropdown with "Overview" selected -->
+			<div class="flex-1 min-w-0">
+				<CompanionSwitcher {companions} activeCompanion={null} {companionStatus} includeOverview />
+			</div>
 		{:else}
-			<!-- Overview / no companion: brand greeting -->
+			<!-- No companions yet: brand greeting -->
 			<div class="flex items-center gap-2.5 flex-1 min-w-0">
 				{#if user}
 					<UserAvatar

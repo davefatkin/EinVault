@@ -267,10 +267,13 @@
 					<div class="space-y-2">
 						{#each data.todayEvents as event (event.id)}
 							<div class="flex items-center gap-3 py-2 border-b last:border-0">
-								<span class="text-xl shrink-0">{ACTIVITY_ICONS[event.type] ?? '📝'}</span>
+								<span
+									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
+									>{ACTIVITY_ICONS[event.type] ?? '📝'}</span
+								>
 								<div class="flex-1 min-w-0">
 									<div class="flex items-center gap-2">
-										<Badge variant="secondary" class="capitalize">{event.type}</Badge>
+										<Badge variant="gold" class="capitalize">{event.type}</Badge>
 										{#if event.durationMinutes}
 											<span class="text-xs text-muted-foreground">{event.durationMinutes} min</span>
 										{/if}

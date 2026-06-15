@@ -10,7 +10,6 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import {
-		Scale,
 		ClipboardList,
 		Bell,
 		HeartPulse,
@@ -76,7 +75,11 @@
 
 	// Quick stats derived from loaded data
 	let latestWeight = $derived(recentWeights.length > 0 ? recentWeights[0] : null);
-	let nextReminder = $derived(upcomingReminders.length > 0 ? upcomingReminders[0] : null);
+	// "Next Vet" surfaces the soonest vet or vaccination reminder only, not just
+	// the next reminder of any type (medication, grooming, etc.).
+	let nextReminder = $derived(
+		upcomingReminders.find((r) => r.type === 'vet' || r.type === 'vaccination') ?? null
+	);
 	let activityCount = $derived(recentDaily.length);
 
 	// Weight sparkline points — map weight+recordedAt to {date, kg}
@@ -323,7 +326,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="secondary" class="capitalize">{r.type}</Badge>
+						<Badge variant="coral" class="capitalize">{r.type}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -388,7 +391,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="secondary" class="capitalize">{e.type}</Badge>
+						<Badge variant="gold" class="capitalize">{e.type}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -425,7 +428,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="gold" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+						<Badge variant="teal" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -605,31 +608,40 @@
 
 			<!-- Quick stats row -->
 			<div class="mt-5 flex flex-wrap gap-4">
-				<!-- Latest weight -->
+				<!-- Latest weight + trend -->
 				<div class="flex flex-col gap-0.5">
 					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
 						>{t(locale, 'page.dashboard.cardWeight')}</span
 					>
 					{#if latestWeight}
-						<span class="text-base font-bold text-foreground"
-							>{latestWeight.weight}
-							<span class="text-xs font-normal text-muted-foreground">{latestWeight.unit}</span
-							></span
+						<button
+							type="button"
+							onclick={() => latestWeight && openDetail({ kind: 'weight', item: latestWeight })}
+							class="flex items-end gap-3 text-left rounded-md px-1 py-0.5 -mx-1 hover:bg-accent transition-colors"
 						>
+							<span class="text-base font-bold text-foreground"
+								>{latestWeight.weight}
+								<span class="text-xs font-normal text-muted-foreground">{latestWeight.unit}</span
+								></span
+							>
+							{#if sparklinePoints.length >= 2}
+								<span class="text-teal shrink-0">
+									<WeightSparkline points={sparklinePoints} width={88} height={28} />
+								</span>
+							{/if}
+						</button>
 					{:else}
 						<span class="text-sm text-muted-foreground italic">—</span>
 					{/if}
 				</div>
 
 				<!-- Next reminder -->
-				<div class="flex flex-col gap-0.5">
+				<div class="flex flex-col gap-0.5 min-w-0 flex-1">
 					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
 						>{t(locale, 'page.dashboard.nextVet')}</span
 					>
 					{#if nextReminder}
-						<span class="text-base font-bold text-foreground truncate max-w-[140px]"
-							>{nextReminder.title}</span
-						>
+						<span class="text-base font-bold text-foreground truncate">{nextReminder.title}</span>
 					{:else}
 						<span class="text-base font-bold text-muted-foreground italic">—</span>
 					{/if}
@@ -650,165 +662,104 @@
 		</div>
 	</Card>
 
-	<!-- Main grid: single col on mobile, 2-col on md+ -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		<!-- Upcoming reminders card -->
-		<Card>
-			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
-					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<Bell class="h-4 w-4" />
-						{t(locale, 'page.dashboard.cardUpcomingReminders')}
-					</CardTitle>
-					<Button
-						href="/{companion.id}/reminders"
-						variant="ghost"
-						size="sm"
-						class="h-7 text-xs text-primary px-2"
-					>
-						{t(locale, 'page.dashboard.remindersViewAll')}
-					</Button>
-				</div>
-			</CardHeader>
-			<CardContent class="pt-0">
-				{#if upcomingReminders.length === 0}
-					<EmptyState tint="coral" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
-						{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
-					</EmptyState>
-				{:else}
-					<div class="space-y-1">
-						{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
-							{@const urgency = reminderUrgency(reminder.dueAt)}
-							{@const allowLogEvent =
-								REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
-								null}
-							<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
-								<button
-									type="button"
-									onclick={() => openDetail({ kind: 'reminder', item: reminder })}
-									class="flex-1 flex items-center gap-3 text-sm rounded-md px-2 py-2
-										hover:bg-accent transition-colors text-left min-w-0"
-								>
-									<!-- type icon -->
-									<span
-										class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm
-										{urgency === 'overdue'
-											? 'bg-coral/15 text-coral'
-											: urgency === 'today'
-												? 'bg-gold/15 text-gold'
-												: 'bg-teal/10 text-teal'}"
-									>
-										{REMINDER_ICONS[reminder.type] ?? '📌'}
-									</span>
-									<div class="flex-1 min-w-0">
-										<p class="truncate text-foreground font-medium text-xs">
-											{reminder.title}
-										</p>
-										{#if reminder.isRecurring}
-											<p class="text-xs text-muted-foreground truncate">
-												{formatRecurrence(reminder, locale, 'short')}
-											</p>
-										{/if}
-									</div>
-									<!-- due chip -->
-									<Badge
-										variant={urgency === 'overdue'
-											? 'coral'
-											: urgency === 'today'
-												? 'gold'
-												: 'secondary'}
-										class="shrink-0 text-xs"
-									>
-										{#if urgency === 'overdue'}
-											{t(locale, 'page.dashboard.reminderOverdue')}
-										{:else if urgency === 'today'}
-											{t(locale, 'page.dashboard.reminderToday')}
-										{:else}
-											<LocalTime date={reminder.dueAt} />
-										{/if}
-									</Badge>
-								</button>
-								<ReminderCompleteButtons
-									onDone={() => {
-										const form = dismissFormRegistry.get(reminder.id);
-										if (form)
-											pendingDismiss.queue(reminder.id, form, reminder.title, { allowLogEvent });
-									}}
-									onDoneAndLog={() => submitWithAndEvent(reminder.id)}
-									{allowLogEvent}
-								/>
-							</div>
-						{/each}
-					</div>
-					<!-- Hidden dismiss forms -->
-					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id + '-form')}
-						<form
-							method="POST"
-							action="?/complete"
-							use:enhance={clearSubmittingFlag}
-							use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
-							class="hidden"
-						>
-							<input type="hidden" name="id" value={reminder.id} />
-						</form>
-					{/each}
-				{/if}
-			</CardContent>
-		</Card>
-
-		<!-- Weight trend card -->
-		<Card>
-			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
-					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<Scale class="h-4 w-4" />
-						{t(locale, 'page.dashboard.cardWeightTrend')}
-					</CardTitle>
-					<Button
-						href="/{companion.id}/health"
-						variant="ghost"
-						size="sm"
-						class="h-7 text-xs text-primary px-2"
-					>
-						{t(locale, 'page.dashboard.weightTrendViewHealth')}
-					</Button>
-				</div>
-			</CardHeader>
-			<CardContent class="pt-0">
-				{#if recentWeights.length === 0}
-					<EmptyState tint="teal" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
-						{#snippet icon()}<Scale class="h-5 w-5" />{/snippet}
-					</EmptyState>
-				{:else}
-					{@const latest = recentWeights[0]}
-					<div class="flex items-end justify-between gap-4">
-						<div>
+	<!-- Upcoming reminders card -->
+	<Card>
+		<CardHeader class="pb-3">
+			<div class="flex items-center justify-between">
+				<CardTitle class="text-sm font-semibold flex items-center gap-2">
+					<Bell class="h-4 w-4" />
+					{t(locale, 'page.dashboard.cardUpcomingReminders')}
+				</CardTitle>
+				<Button
+					href="/{companion.id}/reminders"
+					variant="ghost"
+					size="sm"
+					class="h-7 text-xs text-primary px-2"
+				>
+					{t(locale, 'page.dashboard.remindersViewAll')}
+				</Button>
+			</div>
+		</CardHeader>
+		<CardContent class="pt-0">
+			{#if upcomingReminders.length === 0}
+				<EmptyState tint="coral" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
+					{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+				</EmptyState>
+			{:else}
+				<div class="space-y-1">
+					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
+						{@const urgency = reminderUrgency(reminder.dueAt)}
+						{@const allowLogEvent =
+							REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
+							null}
+						<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
 							<button
 								type="button"
-								onclick={() => openDetail({ kind: 'weight', item: latest })}
-								class="text-left rounded-md hover:bg-accent transition-colors px-1 py-0.5 -ml-1"
+								onclick={() => openDetail({ kind: 'reminder', item: reminder })}
+								class="flex-1 flex items-center gap-3 text-sm rounded-md px-2 py-2
+										hover:bg-accent transition-colors text-left min-w-0"
 							>
-								<p class="text-2xl font-bold text-foreground leading-none">
-									{latest.weight}<span class="text-sm font-normal ml-1 text-muted-foreground"
-										>{latest.unit}</span
-									>
-								</p>
-								<p class="text-xs mt-1 text-muted-foreground">
-									{t(locale, 'page.dashboard.weightAsOf')}
-									<LocalTime date={latest.recordedAt} />
-								</p>
+								<!-- type icon: reminders are coral; urgency lives in the due badge -->
+								<span
+									class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm bg-coral/15 text-coral"
+								>
+									{REMINDER_ICONS[reminder.type] ?? '📌'}
+								</span>
+								<div class="flex-1 min-w-0">
+									<p class="truncate text-foreground font-medium text-xs">
+										{reminder.title}
+									</p>
+									{#if reminder.isRecurring}
+										<p class="text-xs text-muted-foreground truncate">
+											{formatRecurrence(reminder, locale, 'short')}
+										</p>
+									{/if}
+								</div>
+								<!-- due chip -->
+								<Badge
+									variant={urgency === 'overdue'
+										? 'coral'
+										: urgency === 'today'
+											? 'gold'
+											: 'secondary'}
+									class="shrink-0 text-xs"
+								>
+									{#if urgency === 'overdue'}
+										{t(locale, 'page.dashboard.reminderOverdue')}
+									{:else if urgency === 'today'}
+										{t(locale, 'page.dashboard.reminderToday')}
+									{:else}
+										<LocalTime date={reminder.dueAt} />
+									{/if}
+								</Badge>
 							</button>
+							<ReminderCompleteButtons
+								onDone={() => {
+									const form = dismissFormRegistry.get(reminder.id);
+									if (form)
+										pendingDismiss.queue(reminder.id, form, reminder.title, { allowLogEvent });
+								}}
+								onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+								{allowLogEvent}
+							/>
 						</div>
-						{#if sparklinePoints.length >= 2}
-							<div class="text-teal shrink-0">
-								<WeightSparkline points={sparklinePoints} width={120} height={40} />
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</CardContent>
-		</Card>
-	</div>
+					{/each}
+				</div>
+				<!-- Hidden dismiss forms -->
+				{#each upcomingReminders.slice(0, 5) as reminder (reminder.id + '-form')}
+					<form
+						method="POST"
+						action="?/complete"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={reminder.id} />
+					</form>
+				{/each}
+			{/if}
+		</CardContent>
+	</Card>
 
 	<!-- Recent activity timeline (full width) -->
 	<Card>
@@ -847,13 +798,13 @@
 							>
 								<div class="flex items-center gap-3 text-sm">
 									<span
-										class="w-7 h-7 shrink-0 rounded-lg bg-secondary flex items-center justify-center text-base"
+										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
 										{ACTIVITY_ICON[event.type] ?? '📝'}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="secondary" class="capitalize text-xs">{event.type}</Badge>
+											<Badge variant="gold" class="capitalize text-xs">{event.type}</Badge>
 											{#if event.notes}
 												<span class="truncate text-xs text-muted-foreground">
 													{stripMarkdown(event.notes)}
@@ -880,13 +831,13 @@
 							>
 								<div class="flex items-center gap-3 text-sm">
 									<span
-										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
+										class="w-7 h-7 shrink-0 rounded-lg bg-teal/10 flex items-center justify-center text-base"
 									>
-										<HeartPulse class="h-3.5 w-3.5 text-gold" />
+										<HeartPulse class="h-3.5 w-3.5 text-teal" />
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="gold" class="capitalize text-xs"
+											<Badge variant="teal" class="capitalize text-xs"
 												>{event.type.replace('_', ' ')}</Badge
 											>
 											<span class="truncate text-xs text-foreground">{event.title}</span>
@@ -938,7 +889,7 @@
 						>
 							<div class="flex items-center justify-between gap-3 text-sm">
 								<span class="truncate text-foreground text-sm">{doc.title}</span>
-								<Badge variant="gold" class="capitalize shrink-0"
+								<Badge variant="secondary" class="capitalize shrink-0"
 									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
 								>
 							</div>
