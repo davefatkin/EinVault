@@ -1,9 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
-	import { bustAvatarCache } from '$lib/avatarCache.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import WeightSparkline from '$lib/components/WeightSparkline.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { localDateISO } from '$lib/date';
@@ -21,18 +19,24 @@
 		NotebookPen,
 		FileText,
 		X,
-		CheckCheck
+		CheckCheck,
+		Activity
 	} from '@lucide/svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { ACTIVITY_ICONS, REMINDER_ICONS } from '$lib/i18n/labels';
+	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import type { MessageKey } from '$lib/i18n/en';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import { careStatus } from '$lib/careStatus';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let {
@@ -41,7 +45,6 @@
 		recentDaily,
 		upcomingReminders,
 		recentWeights,
-		todayJournal,
 		activeCaretakerShift,
 		recentDocuments
 	} = $derived(data);
@@ -62,8 +65,70 @@
 
 	let today = localDateISO();
 
-	const MOOD_LABEL = MOOD_ICONS;
 	const ACTIVITY_ICON = ACTIVITY_ICONS;
+
+	// Care status derived from outstanding reminders
+	let status = $derived(
+		careStatus(
+			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null }))
+		)
+	);
+
+	// Quick stats derived from loaded data
+	let latestWeight = $derived(recentWeights.length > 0 ? recentWeights[0] : null);
+	let nextReminder = $derived(upcomingReminders.length > 0 ? upcomingReminders[0] : null);
+	let activityCount = $derived(recentDaily.length);
+
+	// Weight sparkline points — map weight+recordedAt to {date, kg}
+	// We show in whatever unit is stored; the sparkline uses raw numeric values
+	let sparklinePoints = $derived(
+		[...recentWeights].reverse().map((w) => ({ date: w.recordedAt, kg: w.weight }))
+	);
+
+	// Merged activity timeline: recentDaily + recentHealth, newest first, capped at 8
+	type ActivityItem =
+		| { kind: 'activity'; ts: Date; item: (typeof recentDaily)[0] }
+		| { kind: 'health'; ts: Date; item: (typeof recentHealth)[0] };
+
+	let activityTimeline = $derived(
+		(
+			[
+				...recentDaily.map((e) => ({
+					kind: 'activity' as const,
+					ts: new Date(e.loggedAt),
+					item: e
+				})),
+				...recentHealth.map((e) => ({
+					kind: 'health' as const,
+					ts: new Date(e.occurredAt),
+					item: e
+				}))
+			] as ActivityItem[]
+		)
+			.filter((e) => e.ts.getTime() <= Date.now())
+			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
+			.slice(0, 8)
+	);
+
+	// Reminder urgency
+	function reminderUrgency(dueAt: Date | string): 'overdue' | 'today' | 'upcoming' {
+		const dueMs = new Date(dueAt).getTime();
+		const nowMs = Date.now();
+		if (dueMs < nowMs) return 'overdue';
+		// compute end-of-today in local time by extracting date parts
+		const d = new Date(nowMs);
+		const todayEndMs = new Date(
+			d.getFullYear(),
+			d.getMonth(),
+			d.getDate(),
+			23,
+			59,
+			59,
+			999
+		).getTime();
+		if (dueMs <= todayEndMs) return 'today';
+		return 'upcoming';
+	}
 
 	// Detail modal
 	type SelectedItem =
@@ -79,47 +144,17 @@
 	let avatarLightboxOpen = $state(false);
 	let avatarUrl = $derived(companion.avatarPath ? `/api/avatars/${companion.id}` : null);
 
+	// Document preview
+	type RecentDoc = (typeof recentDocuments)[0];
+	let previewDoc = $state<RecentDoc | null>(null);
+	function docUrl(doc: RecentDoc) {
+		return `/api/documents/${companion.id}/${doc.filename}`;
+	}
+
 	function closeAvatarLightbox() {
 		avatarLightboxOpen = false;
 		(document.activeElement as HTMLElement)?.blur();
 	}
-
-	// Immich avatar picker
-	let immichAvatarPickerOpen = $state(false);
-	let immichAvatarError = $state('');
-	let immichAvatarErrorTimer: ReturnType<typeof setTimeout>;
-
-	function setImmichAvatarError(msg: string) {
-		immichAvatarError = msg;
-		clearTimeout(immichAvatarErrorTimer);
-		immichAvatarErrorTimer = setTimeout(() => (immichAvatarError = ''), 5000);
-	}
-
-	async function pickAvatarFromImmich(assetId: string) {
-		try {
-			const res = await fetch(`/api/companions/${companion.id}/avatar/from-immich`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ assetId })
-			});
-			if (!res.ok) {
-				const err = await res
-					.json()
-					.catch(() => ({ message: t(locale, 'immich.picker.pickFailed') }));
-				setImmichAvatarError(err.message ?? t(locale, 'immich.picker.pickFailed'));
-				return;
-			}
-			bustAvatarCache(companion.id);
-			immichAvatarPickerOpen = false;
-			// Refresh the loader so the new avatar metadata flows in without a
-			// full page reload (which would drop any unsaved form state).
-			await invalidateAll();
-		} catch {
-			setImmichAvatarError(t(locale, 'immich.picker.pickFailed'));
-		}
-	}
-
-	$effect(() => () => clearTimeout(immichAvatarErrorTimer));
 
 	// Pending reminder dismissals
 	const undoDelayMs = $derived((data.reminderUndoSeconds ?? 0) * 1000);
@@ -144,6 +179,10 @@
 		if (e.key === 'Escape') {
 			if (avatarLightboxOpen) {
 				closeAvatarLightbox();
+				return;
+			}
+			if (previewDoc) {
+				previewDoc = null;
 				return;
 			}
 			if (selected) {
@@ -386,7 +425,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="bark" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+						<Badge variant="gold" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -429,15 +468,16 @@
 					{#if selected.kind === 'reminder'}
 						<Button
 							href="/{companion.id}/reminders?edit={selected.item.id}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
 							<Pencil class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'page.dashboard.modalEditReminders')}
 						</Button>
-						<button
-							type="button"
+						<Button
+							variant="softSuccess"
+							size="sm"
 							onclick={() => {
 								if (selected?.kind !== 'reminder') return;
 								const item = selected.item;
@@ -446,13 +486,13 @@
 								closeDetail();
 								pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
 							}}
-							class="inline-flex items-center gap-1.5 justify-center rounded-md bg-primary text-primary-foreground h-9 px-3 text-sm font-medium shadow hover:bg-primary/90 transition-colors"
 						>
-							<CheckCheck class="h-3.5 w-3.5" />
+							<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
 							{t(locale, 'common.reminder.done')}
-						</button>
-						<button
-							type="button"
+						</Button>
+						<Button
+							variant="softPrimary"
+							size="sm"
 							aria-label={t(locale, 'common.reminder.logEventAria')}
 							onclick={() => {
 								if (selected?.kind !== 'reminder') return;
@@ -460,15 +500,14 @@
 								closeDetail();
 								submitWithAndEvent(item.id);
 							}}
-							class="inline-flex items-center gap-1.5 justify-center rounded-md border border-input bg-background h-9 px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
 						>
-							<HeartPulse class="h-3.5 w-3.5" />
-							{t(locale, 'common.reminder.logEvent')}
-						</button>
+							<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'common.reminder.logEventShort')}
+						</Button>
 					{:else if selected.kind === 'weight' || selected.kind === 'health'}
 						<Button
 							href="/{companion.id}/health?edit={selected.item.id}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
@@ -478,7 +517,7 @@
 					{:else if selected.kind === 'activity'}
 						<Button
 							href="/{companion.id}/journal/{eventDate(selected.item.loggedAt)}"
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={closeDetail}
 						>
@@ -492,144 +531,134 @@
 	</div>
 {/if}
 
-<div class="space-y-6 pb-20 md:pb-0">
+<div class="space-y-4 pb-20 md:pb-0">
 	{#if !companion.isActive}
-		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
+		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground">
 			{t(locale, 'page.dashboard.archivedBanner', { name: companion.name })}
 		</div>
 	{/if}
 
-	<!-- Companion hero -->
+	<!-- Hero card: gradient wash, avatar, name, quick stats -->
 	<Card class="overflow-hidden">
-		<div class="bg-gradient-to-r from-bark-600 to-bark-700 px-6 py-5 text-white">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-4">
-					<CompanionAvatar
-						companionId={companion.id}
-						avatarPath={companion.avatarPath}
-						name={companion.name}
-						size="lg"
-						editable={companion.isActive}
-						onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
-						immichEnabled={data.immichEnabled}
-						onpickImmich={() => (immichAvatarPickerOpen = true)}
-					/>
-					<div>
-						<h1 class="font-display text-2xl font-bold">{companion.name}</h1>
-						<p class="text-bark-100 text-sm">
-							{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
-								companion.dob
-							)}{companion.sex ? ` · ${companion.sex}` : ''}
-						</p>
+		<div
+			class="relative px-5 py-6"
+			style="background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--color-teal) 25%, transparent), transparent 55%), radial-gradient(120% 140% at 0% 120%, color-mix(in srgb, var(--color-coral) 20%, transparent), transparent 55%), var(--color-card);"
+		>
+			<!-- Caretaker on shift indicator -->
+			{#if activeCaretakerShift}
+				<div class="flex items-center gap-1.5 mb-4 text-xs font-medium text-teal">
+					<UserCheck class="h-3.5 w-3.5 shrink-0" />
+					<span
+						>{t(locale, 'page.dashboard.caretakerOnShift')} — {activeCaretakerShift.displayName},
+						{t(locale, 'page.dashboard.shiftEnds')}
+						<LocalTime date={activeCaretakerShift.endAt} /></span
+					>
+				</div>
+			{/if}
+
+			<!-- Avatar + name row -->
+			<div class="flex items-start gap-4">
+				<CompanionAvatar
+					companionId={companion.id}
+					avatarPath={companion.avatarPath}
+					name={companion.name}
+					size="lg"
+					onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
+				/>
+				<div class="flex-1 min-w-0">
+					<div class="flex items-start justify-between gap-2">
+						<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
+							{companion.name}
+						</h1>
+						{#if companion.isActive !== false}
+							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+								<Pencil class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'common.edit')}
+							</Button>
+						{/if}
+					</div>
+					<p class="text-sm text-muted-foreground mt-0.5">
+						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
+							companion.dob
+						)}{companion.sex ? ` · ${companion.sex}` : ''}
+					</p>
+					<div class="mt-2">
+						{#if status === 'up-to-date'}
+							<Badge variant="teal" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.upToDate')}
+							</Badge>
+						{:else if status === 'due-today'}
+							<Badge variant="gold" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.dueToday')}
+							</Badge>
+						{:else}
+							<Badge variant="coral" class="text-xs">
+								<HeartPulse class="h-3 w-3 mr-1" />
+								{t(locale, 'overview.careStatus.needsAttention')}
+							</Badge>
+						{/if}
 					</div>
 				</div>
-				{#if companion.isActive !== false}
-					<Button
-						href="/companions/{companion.id}/edit"
-						variant="outline"
-						size="sm"
-						class="border-white/20 text-white bg-white/10 hover:bg-white/20 hover:text-white"
+			</div>
+
+			<!-- Quick stats row -->
+			<div class="mt-5 flex flex-wrap gap-4">
+				<!-- Latest weight -->
+				<div class="flex flex-col gap-0.5">
+					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
+						>{t(locale, 'page.dashboard.cardWeight')}</span
 					>
-						<Pencil class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'common.edit')}
-					</Button>
-				{/if}
+					{#if latestWeight}
+						<span class="text-base font-bold text-foreground"
+							>{latestWeight.weight}
+							<span class="text-xs font-normal text-muted-foreground">{latestWeight.unit}</span
+							></span
+						>
+					{:else}
+						<span class="text-sm text-muted-foreground italic">—</span>
+					{/if}
+				</div>
+
+				<!-- Next reminder -->
+				<div class="flex flex-col gap-0.5">
+					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
+						>{t(locale, 'page.dashboard.nextVet')}</span
+					>
+					{#if nextReminder}
+						<span class="text-base font-bold text-foreground truncate max-w-[140px]"
+							>{nextReminder.title}</span
+						>
+					{:else}
+						<span class="text-base font-bold text-muted-foreground italic">—</span>
+					{/if}
+				</div>
+
+				<!-- Activity count -->
+				<div class="flex flex-col gap-0.5">
+					<span class="text-xs text-muted-foreground font-medium uppercase tracking-wide"
+						>{t(locale, 'page.dashboard.cardActivity')}</span
+					>
+					<span class="text-base font-bold text-foreground"
+						>{t(locale, 'page.dashboard.heroRecentActivity', {
+							count: String(activityCount)
+						})}</span
+					>
+				</div>
 			</div>
 		</div>
 	</Card>
 
-	<!-- Caretaker on shift -->
-	{#if activeCaretakerShift}
-		<Card class="border-l-4 border-l-moss-500">
-			<CardContent class="pt-4 pb-4">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex items-start gap-3">
-						<UserCheck class="h-5 w-5 mt-0.5 text-moss-600 dark:text-moss-400 shrink-0" />
-						<div>
-							<p
-								class="text-xs font-semibold uppercase tracking-wide text-moss-600 dark:text-moss-400 mb-0.5"
-							>
-								{t(locale, 'page.dashboard.caretakerOnShift')}
-							</p>
-							<p class="font-semibold text-foreground">{activeCaretakerShift.displayName}</p>
-							<p class="text-sm text-muted-foreground">
-								{t(locale, 'page.dashboard.shiftEnds')}
-								<LocalTime date={activeCaretakerShift.endAt} />
-							</p>
-							{#if activeCaretakerShift.notes}
-								<p class="text-sm text-foreground mt-1">{activeCaretakerShift.notes}</p>
-							{/if}
-						</div>
-					</div>
-					<div class="flex flex-col items-end gap-1 shrink-0 text-sm">
-						{#if activeCaretakerShift.phone}
-							<a
-								href="tel:{activeCaretakerShift.phone}"
-								class="text-primary hover:underline font-medium"
-							>
-								{activeCaretakerShift.phone}
-							</a>
-						{/if}
-						{#if activeCaretakerShift.email}
-							<a
-								href="mailto:{activeCaretakerShift.email}"
-								class="text-xs text-muted-foreground hover:underline"
-							>
-								{activeCaretakerShift.email}
-							</a>
-						{/if}
-					</div>
-				</div>
-			</CardContent>
-		</Card>
-	{/if}
-
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-		<!-- Journal card -->
-		<Card>
-			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
-					<CardTitle class="text-sm font-semibold flex items-center gap-2">
-						<NotebookPen class="h-4 w-4" />
-						{t(locale, 'page.dashboard.cardJournal')}
-					</CardTitle>
-					{#if companion.isActive !== false}
-						<Button
-							href="/{companion.id}/journal/{today}"
-							variant="ghost"
-							size="sm"
-							class="h-7 text-xs text-primary px-2"
-						>
-							{todayJournal
-								? t(locale, 'page.dashboard.journalEditEntry')
-								: t(locale, 'page.dashboard.journalWriteEntry')}
-						</Button>
-					{/if}
-				</div>
-			</CardHeader>
-			<CardContent class="pt-0">
-				{#if todayJournal?.body}
-					<p class="text-sm line-clamp-3 text-muted-foreground">
-						{stripMarkdown(todayJournal.body)}
-					</p>
-					{#if todayJournal.mood}
-						<p class="mt-2 text-lg">{MOOD_LABEL[todayJournal.mood] ?? ''}</p>
-					{/if}
-				{:else}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.journalEmpty')}
-					</p>
-				{/if}
-			</CardContent>
-		</Card>
-
-		<!-- Reminders -->
+	<!-- Main grid: single col on mobile, 2-col on md+ -->
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<!-- Upcoming reminders card -->
 		<Card>
 			<CardHeader class="pb-3">
 				<div class="flex items-center justify-between">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<Bell class="h-4 w-4" />
-						{t(locale, 'page.dashboard.cardReminders')}
+						{t(locale, 'page.dashboard.cardUpcomingReminders')}
 					</CardTitle>
 					<Button
 						href="/{companion.id}/reminders"
@@ -641,126 +670,153 @@
 					</Button>
 				</div>
 			</CardHeader>
-			<CardContent class="pt-0 space-y-1">
+			<CardContent class="pt-0">
 				{#if upcomingReminders.length === 0}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.remindersEmpty')}
-					</p>
+					<EmptyState tint="coral" title={t(locale, 'page.dashboard.noUpcomingReminders')}>
+						{#snippet icon()}<Bell class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
-					{#each upcomingReminders.slice(0, 3) as reminder (reminder.id)}
-						<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
-							<button
-								type="button"
-								onclick={() => openDetail({ kind: 'reminder', item: reminder })}
-								class="flex-1 flex items-center justify-between text-sm rounded-md px-2 py-1.5
-									hover:bg-accent transition-colors text-left min-w-0"
-							>
-								<span class="truncate text-foreground">{reminder.title}</span>
-								<span class="shrink-0 ml-2 text-xs text-muted-foreground">
-									<LocalTime date={reminder.dueAt} />
-								</span>
-							</button>
-							<form
-								method="POST"
-								action="?/complete"
-								use:enhance={clearSubmittingFlag}
-								use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
-								class="flex items-center gap-1 shrink-0"
-							>
-								<input type="hidden" name="id" value={reminder.id} />
+					<div class="space-y-1">
+						{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
+							{@const urgency = reminderUrgency(reminder.dueAt)}
+							{@const allowLogEvent =
+								REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
+								null}
+							<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
 								<button
 									type="button"
-									onclick={(e: MouseEvent) => {
-										const btn = e.currentTarget as HTMLButtonElement;
-										if (btn.form)
-											pendingDismiss.queue(reminder.id, btn.form, reminder.title, {
-												allowLogEvent: true
-											});
-									}}
-									title={t(locale, 'page.dashboard.reminderMarkDone')}
-									aria-label={t(locale, 'page.dashboard.reminderMarkDone')}
-									class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
+									onclick={() => openDetail({ kind: 'reminder', item: reminder })}
+									class="flex-1 flex items-center gap-3 text-sm rounded-md px-2 py-2
+										hover:bg-accent transition-colors text-left min-w-0"
 								>
-									<CheckCheck class="h-3.5 w-3.5" />
+									<!-- type icon -->
+									<span
+										class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm
+										{urgency === 'overdue'
+											? 'bg-coral/15 text-coral'
+											: urgency === 'today'
+												? 'bg-gold/15 text-gold'
+												: 'bg-teal/10 text-teal'}"
+									>
+										{REMINDER_ICONS[reminder.type] ?? '📌'}
+									</span>
+									<div class="flex-1 min-w-0">
+										<p class="truncate text-foreground font-medium text-xs">
+											{reminder.title}
+										</p>
+										{#if reminder.isRecurring}
+											<p class="text-xs text-muted-foreground truncate">
+												{formatRecurrence(reminder, locale, 'short')}
+											</p>
+										{/if}
+									</div>
+									<!-- due chip -->
+									<Badge
+										variant={urgency === 'overdue'
+											? 'coral'
+											: urgency === 'today'
+												? 'gold'
+												: 'secondary'}
+										class="shrink-0 text-xs"
+									>
+										{#if urgency === 'overdue'}
+											{t(locale, 'page.dashboard.reminderOverdue')}
+										{:else if urgency === 'today'}
+											{t(locale, 'page.dashboard.reminderToday')}
+										{:else}
+											<LocalTime date={reminder.dueAt} />
+										{/if}
+									</Badge>
 								</button>
-							</form>
-						</div>
+								<ReminderCompleteButtons
+									onDone={() => {
+										const form = dismissFormRegistry.get(reminder.id);
+										if (form)
+											pendingDismiss.queue(reminder.id, form, reminder.title, { allowLogEvent });
+									}}
+									onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+									{allowLogEvent}
+								/>
+							</div>
+						{/each}
+					</div>
+					<!-- Hidden dismiss forms -->
+					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id + '-form')}
+						<form
+							method="POST"
+							action="?/complete"
+							use:enhance={clearSubmittingFlag}
+							use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+							class="hidden"
+						>
+							<input type="hidden" name="id" value={reminder.id} />
+						</form>
 					{/each}
 				{/if}
 			</CardContent>
 		</Card>
 
-		<!-- Weight -->
+		<!-- Weight trend card -->
 		<Card>
 			<CardHeader class="pb-3">
 				<div class="flex items-center justify-between">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<Scale class="h-4 w-4" />
-						{t(locale, 'page.dashboard.cardWeight')}
+						{t(locale, 'page.dashboard.cardWeightTrend')}
 					</CardTitle>
-					{#if companion.isActive !== false}
-						<Button
-							href="/{companion.id}/health"
-							variant="ghost"
-							size="sm"
-							class="h-7 text-xs text-primary px-2"
-						>
-							{t(locale, 'page.dashboard.weightLog')}
-						</Button>
-					{/if}
+					<Button
+						href="/{companion.id}/health"
+						variant="ghost"
+						size="sm"
+						class="h-7 text-xs text-primary px-2"
+					>
+						{t(locale, 'page.dashboard.weightTrendViewHealth')}
+					</Button>
 				</div>
 			</CardHeader>
 			<CardContent class="pt-0">
-				{#if recentWeights.length > 0}
-					{@const latest = recentWeights[0]}
-					<button
-						type="button"
-						onclick={() => openDetail({ kind: 'weight', item: latest })}
-						class="block w-full text-left rounded-md px-2 py-1 -mx-2 hover:bg-accent transition-colors"
-					>
-						<p class="text-2xl font-bold text-foreground">
-							{latest.weight}<span class="text-sm font-normal ml-1 text-muted-foreground"
-								>{latest.unit}</span
-							>
-						</p>
-						<p class="text-xs mt-1 text-muted-foreground">
-							{t(locale, 'page.dashboard.weightAsOf')}
-							<LocalTime date={latest.recordedAt} />
-						</p>
-					</button>
-					{#if recentWeights.length > 1}
-						<div class="mt-3 space-y-1">
-							{#each recentWeights.slice(1, 4) as w (w.id)}
-								<button
-									type="button"
-									onclick={() => openDetail({ kind: 'weight', item: w })}
-									class="w-full flex items-center justify-between text-sm rounded-md px-2 py-1 -mx-2
-										hover:bg-accent transition-colors"
-								>
-									<span class="text-muted-foreground">{w.weight} {w.unit}</span>
-									<span class="text-xs text-muted-foreground"
-										><LocalTime date={w.recordedAt} /></span
-									>
-								</button>
-							{/each}
-						</div>
-					{/if}
+				{#if recentWeights.length === 0}
+					<EmptyState tint="teal" title={t(locale, 'page.dashboard.weightTrendEmpty')}>
+						{#snippet icon()}<Scale class="h-5 w-5" />{/snippet}
+					</EmptyState>
 				{:else}
-					<p class="text-sm italic text-muted-foreground">
-						{t(locale, 'page.dashboard.weightEmpty')}
-					</p>
+					{@const latest = recentWeights[0]}
+					<div class="flex items-end justify-between gap-4">
+						<div>
+							<button
+								type="button"
+								onclick={() => openDetail({ kind: 'weight', item: latest })}
+								class="text-left rounded-md hover:bg-accent transition-colors px-1 py-0.5 -ml-1"
+							>
+								<p class="text-2xl font-bold text-foreground leading-none">
+									{latest.weight}<span class="text-sm font-normal ml-1 text-muted-foreground"
+										>{latest.unit}</span
+									>
+								</p>
+								<p class="text-xs mt-1 text-muted-foreground">
+									{t(locale, 'page.dashboard.weightAsOf')}
+									<LocalTime date={latest.recordedAt} />
+								</p>
+							</button>
+						</div>
+						{#if sparklinePoints.length >= 2}
+							<div class="text-teal shrink-0">
+								<WeightSparkline points={sparklinePoints} width={120} height={40} />
+							</div>
+						{/if}
+					</div>
 				{/if}
 			</CardContent>
 		</Card>
 	</div>
 
-	<!-- Recent activity -->
+	<!-- Recent activity timeline (full width) -->
 	<Card>
 		<CardHeader class="pb-3">
 			<div class="flex items-center justify-between">
 				<CardTitle class="text-sm font-semibold flex items-center gap-2">
 					<ClipboardList class="h-4 w-4" />
-					{t(locale, 'page.dashboard.cardActivity')}
+					{t(locale, 'page.dashboard.cardRecentActivity')}
 				</CardTitle>
 				{#if companion.isActive !== false}
 					<Button
@@ -775,153 +831,131 @@
 			</div>
 		</CardHeader>
 		<CardContent class="pt-0">
-			{#if recentDaily.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.activityEmpty')}
-				</p>
+			{#if activityTimeline.length === 0}
+				<EmptyState tint="gold" title={t(locale, 'page.dashboard.activityEmpty')}>
+					{#snippet icon()}<Activity class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else}
-				<div class="space-y-1">
-					{#each recentDaily as event (event.id)}
-						<button
-							type="button"
-							onclick={() => openDetail({ kind: 'activity', item: event })}
-							class="w-full rounded-md px-2 py-1.5 -mx-2
-								hover:bg-accent transition-colors text-left"
-						>
-							<div class="flex items-center gap-3 text-sm">
-								<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-									<LocalTime date={event.loggedAt} format="date" />
-								</span>
-								<span class="text-base shrink-0">{ACTIVITY_ICON[event.type] ?? '📝'}</span>
-								<Badge variant="secondary" class="capitalize">{event.type}</Badge>
-								{#if event.notes}
-									<span class="truncate text-muted-foreground">
-										{stripMarkdown(event.notes)}
+				<div class="space-y-0.5">
+					{#each activityTimeline as entry (entry.item.id)}
+						{#if entry.kind === 'activity'}
+							{@const event = entry.item}
+							<button
+								type="button"
+								onclick={() => openDetail({ kind: 'activity', item: event })}
+								class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+							>
+								<div class="flex items-center gap-3 text-sm">
+									<span
+										class="w-7 h-7 shrink-0 rounded-lg bg-secondary flex items-center justify-center text-base"
+									>
+										{ACTIVITY_ICON[event.type] ?? '📝'}
 									</span>
-								{/if}
-							</div>
-							{#if event.logger}
-								<div class="flex items-center gap-3 text-sm">
-									<span class="w-24 shrink-0"></span>
-									<ByLine user={event.logger} />
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center gap-2">
+											<Badge variant="secondary" class="capitalize text-xs">{event.type}</Badge>
+											{#if event.notes}
+												<span class="truncate text-xs text-muted-foreground">
+													{stripMarkdown(event.notes)}
+												</span>
+											{/if}
+										</div>
+										<div class="flex items-center gap-1 mt-0.5">
+											<span class="text-xs text-muted-foreground">
+												<LocalTime date={event.loggedAt} format="relative" />
+											</span>
+											{#if event.logger}
+												<ByLine user={event.logger} variant="inline" />
+											{/if}
+										</div>
+									</div>
 								</div>
-							{/if}
-						</button>
+							</button>
+						{:else if entry.kind === 'health'}
+							{@const event = entry.item}
+							<button
+								type="button"
+								onclick={() => openDetail({ kind: 'health', item: event })}
+								class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+							>
+								<div class="flex items-center gap-3 text-sm">
+									<span
+										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
+									>
+										<HeartPulse class="h-3.5 w-3.5 text-gold" />
+									</span>
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center gap-2">
+											<Badge variant="gold" class="capitalize text-xs"
+												>{event.type.replace('_', ' ')}</Badge
+											>
+											<span class="truncate text-xs text-foreground">{event.title}</span>
+										</div>
+										<div class="flex items-center gap-1 mt-0.5">
+											<span class="text-xs text-muted-foreground">
+												<LocalTime date={event.occurredAt} format="relative" />
+											</span>
+											{#if event.logger}
+												<ByLine user={event.logger} variant="inline" />
+											{/if}
+										</div>
+									</div>
+								</div>
+							</button>
+						{/if}
 					{/each}
 				</div>
 			{/if}
 		</CardContent>
 	</Card>
 
-	<!-- Recent health -->
-	<Card>
-		<CardHeader class="pb-3">
-			<div class="flex items-center justify-between">
-				<CardTitle class="text-sm font-semibold flex items-center gap-2">
-					<HeartPulse class="h-4 w-4" />
-					{t(locale, 'page.dashboard.cardHealth')}
-				</CardTitle>
-				<Button
-					href="/{companion.id}/health"
-					variant="ghost"
-					size="sm"
-					class="h-7 text-xs text-primary px-2"
-				>
-					{t(locale, 'page.dashboard.healthViewAll')}
-				</Button>
-			</div>
-		</CardHeader>
-		<CardContent class="pt-0">
-			{#if recentHealth.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.dashboard.healthEmpty')}
-				</p>
-			{:else}
-				<div class="space-y-1">
-					{#each recentHealth as event (event.id)}
-						<button
-							type="button"
-							onclick={() => openDetail({ kind: 'health', item: event })}
-							class="w-full rounded-md px-2 py-1.5 -mx-2
-								hover:bg-accent transition-colors text-left"
-						>
-							<div class="flex items-center gap-3 text-sm">
-								<span class="w-24 shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-									<LocalTime date={event.occurredAt} />
-								</span>
-								<Badge variant="bark" class="capitalize">{event.type.replace('_', ' ')}</Badge>
-								<span class="truncate text-foreground">{event.title}</span>
-							</div>
-							{#if event.logger}
-								<div class="flex items-center gap-3 text-sm">
-									<span class="w-24 shrink-0"></span>
-									<ByLine user={event.logger} />
-								</div>
-							{/if}
-						</button>
-					{/each}
+	<!-- Recent documents (if any) -->
+	{#if recentDocuments.length > 0}
+		<Card>
+			<CardHeader class="pb-3">
+				<div class="flex items-center justify-between">
+					<CardTitle class="text-sm font-semibold flex items-center gap-2">
+						<FileText class="h-4 w-4" />
+						{t(locale, 'page.documents.title')}
+					</CardTitle>
+					<Button
+						href="/{companion.id}/documents"
+						variant="ghost"
+						size="sm"
+						class="h-7 text-xs text-primary px-2"
+					>
+						{t(locale, 'page.dashboard.healthViewAll')}
+					</Button>
 				</div>
-			{/if}
-		</CardContent>
-	</Card>
-
-	<!-- Recent documents -->
-	<Card>
-		<CardHeader class="pb-3">
-			<div class="flex items-center justify-between">
-				<CardTitle class="text-sm font-semibold flex items-center gap-2">
-					<FileText class="h-4 w-4" />
-					{t(locale, 'page.documents.title')}
-				</CardTitle>
-				<Button
-					href="/{companion.id}/documents"
-					variant="ghost"
-					size="sm"
-					class="h-7 text-xs text-primary px-2"
-				>
-					{t(locale, 'page.dashboard.healthViewAll')}
-				</Button>
-			</div>
-		</CardHeader>
-		<CardContent class="pt-0">
-			{#if recentDocuments.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.documents.empty')}
-				</p>
-			{:else}
+			</CardHeader>
+			<CardContent class="pt-0">
 				<div class="space-y-1">
 					{#each recentDocuments as doc (doc.id)}
-						<a
-							href="/{companion.id}/documents"
+						<button
+							type="button"
+							onclick={() => (previewDoc = doc)}
 							class="block w-full rounded-md px-2 py-1.5 -mx-2 hover:bg-accent transition-colors text-left"
 						>
 							<div class="flex items-center justify-between gap-3 text-sm">
 								<span class="truncate text-foreground text-sm">{doc.title}</span>
-								<Badge variant="bark" class="capitalize"
+								<Badge variant="gold" class="capitalize shrink-0"
 									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
 								>
 							</div>
-						</a>
+						</button>
 					{/each}
 				</div>
-			{/if}
-		</CardContent>
-	</Card>
+			</CardContent>
+		</Card>
+	{/if}
 </div>
 
-{#if data.immichEnabled}
-	<ImmichPicker
-		open={immichAvatarPickerOpen}
-		onpick={pickAvatarFromImmich}
-		onclose={() => (immichAvatarPickerOpen = false)}
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={docUrl(previewDoc)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
 	/>
-{/if}
-
-{#if immichAvatarError}
-	<div
-		role="alert"
-		class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-destructive text-destructive-foreground px-4 py-2 text-sm shadow-lg"
-	>
-		{immichAvatarError}
-	</div>
 {/if}

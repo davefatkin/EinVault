@@ -166,7 +166,7 @@
 			{#if isPdf && pageCount > 1}
 				<div class="flex items-center justify-center gap-3 px-5 py-2.5 border-t border-border">
 					<Button
-						variant="outline"
+						variant="soft"
 						size="sm"
 						disabled={pageNum <= 1}
 						onclick={() => renderPage(pageNum - 1)}
@@ -178,7 +178,7 @@
 						{t(locale, 'page.documents.pageOf', { page: pageNum, total: pageCount })}
 					</span>
 					<Button
-						variant="outline"
+						variant="soft"
 						size="sm"
 						disabled={pageNum >= pageCount}
 						onclick={() => renderPage(pageNum + 1)}

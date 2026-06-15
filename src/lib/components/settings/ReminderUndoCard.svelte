@@ -45,7 +45,7 @@
 			</Alert>
 		{/if}
 		{#if errorMessage}
-			<Alert variant="destructive" class="mb-3">
+			<Alert variant="coral" class="mb-3">
 				<AlertDescription>{errorMessage}</AlertDescription>
 			</Alert>
 		{/if}

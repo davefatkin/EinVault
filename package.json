@@ -1,6 +1,6 @@
 {
 	"name": "einvault",
-	"version": "0.15.1",
+	"version": "1.0.0",
 	"private": true,
 	"scripts": {
 		"dev": "svelte-kit sync && vite dev",
@@ -29,6 +29,7 @@
 		"@types/mailparser": "^3.4.6",
 		"@types/node": "^25.9.0",
 		"@types/nodemailer": "^8.0.0",
+		"@types/qrcode": "^1.5.6",
 		"@types/smtp-server": "^3.5.13",
 		"@typescript-eslint/parser": "^8.57.2",
 		"drizzle-kit": "^0.31.10",
@@ -50,9 +51,9 @@
 		"vitest": "^4.1.8"
 	},
 	"dependencies": {
-		"@fontsource-variable/fraunces": "5.2.9",
-		"@fontsource-variable/geist": "5.2.9",
+		"@fontsource-variable/bricolage-grotesque": "^5.2.10",
 		"@fontsource-variable/geist-mono": "5.2.8",
+		"@fontsource-variable/sora": "^5.2.8",
 		"@lucide/svelte": "^1.0.1",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
@@ -68,13 +69,15 @@
 		"marked": "^18.0.3",
 		"nodemailer": "^8.0.10",
 		"openid-client": "^6.8.4",
+		"otpauth": "^9.5.1",
 		"pdfjs-dist": "^6.0.227",
+		"qrcode": "^1.5.4",
 		"sharp": "^0.34.5",
 		"tailwind-merge": "^3.5.0"
 	},
 	"type": "module",
 	"overrides": {
 		"cookie": "^0.7.0",
-		"esbuild": "^0.25.0"
+		"esbuild": "^0.28.1"
 	}
 }

@@ -1,6 +1,7 @@
 import { test, expect } from '../lib/fixtures';
+import { pdfUpload } from '../lib/files';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 
 test.describe('health events and weight log', () => {
 	test('add health event', async ({ asMember }) => {
@@ -74,8 +75,44 @@ test.describe('health events and weight log', () => {
 		await asMember.locator('#weight').fill('13.7');
 		await asMember.getByRole('button', { name: 'Log Weight' }).last().click();
 
-		// Weight history card should now show the recorded value
-		await expect(asMember.getByText(/13\.7/)).toBeVisible({ timeout: 8_000 });
+		// Weight history section should now show the recorded value
+		await expect(
+			asMember.locator('section').filter({ hasText: 'Weight History' }).getByText(/13\.7/)
+		).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('health page shows the weight trend section', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/health`);
+		// The featured weight-trend section renders (its label is always present).
+		// Don't assert a count-dependent state here: the `log weight` test shares
+		// this worker's DB and may have added an entry, changing the chart state.
+		await expect(asMember.getByText('Weight trend')).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('a document attached to a health event is previewable from the event modal', async ({
+		asMember
+	}) => {
+		// Upload a document and link it to the seeded "Wellness checkup" health event.
+		await asMember.goto(`/${COMP}/documents`);
+		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-health-attach.pdf'));
+		await expect(asMember.getByText('e2e-health-attach.pdf')).toBeVisible({ timeout: 15_000 });
+		const li = asMember.locator('li').filter({ hasText: 'e2e-health-attach.pdf' }).first();
+		await li.getByRole('button', { name: 'Edit document' }).click();
+		await asMember.locator('select[id^="doc-event-"]').selectOption('seed-health-1');
+		await asMember.getByRole('button', { name: 'Save' }).first().click();
+		await expect(asMember.getByText('Wellness checkup')).toBeVisible({ timeout: 8_000 });
+
+		// On the health page, open the "Wellness checkup" event detail modal.
+		await asMember.goto(`/${COMP}/health`);
+		await asMember.getByText('Wellness checkup').first().click();
+		const dialog = asMember.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+
+		// The linked document appears in the modal and opens a preview when clicked.
+		await dialog.getByRole('button', { name: /e2e-health-attach\.pdf/ }).click();
+		await expect(asMember.getByRole('dialog', { name: 'e2e-health-attach.pdf' })).toBeVisible({
+			timeout: 8_000
+		});
 	});
 
 	test('title required', async ({ asMember }) => {

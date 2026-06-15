@@ -52,11 +52,11 @@ test.describe('forgot password', () => {
 		const page = await ctx.newPage();
 
 		await page.goto('/auth/forgot');
-		await page.getByLabel('Email').fill('seed-reset@example.com');
+		await page.getByLabel('Email').fill('vicious@reddragon.club');
 		await page.getByRole('button', { name: 'Send reset link' }).click();
 
 		const mail = await app.smtp.waitForMail((m) =>
-			[m.to ?? []].flat().some((addr) => addr.text.includes('seed-reset@example.com'))
+			[m.to ?? []].flat().some((addr) => addr.text.includes('vicious@reddragon.club'))
 		);
 		const link = (mail.text ?? '').match(/https?:\/\/\S+/)?.[0];
 		expect(link).toBeTruthy();
@@ -73,5 +73,13 @@ test.describe('forgot password', () => {
 		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page).not.toHaveURL(/auth\/login/);
 		await ctx.close();
+	});
+});
+
+test.describe('auth brand', () => {
+	test('login brand panel shows Ein', async ({ app, page }, testInfo) => {
+		test.skip(testInfo.project.name !== 'desktop', 'brand panel is desktop-only');
+		await page.goto(app.server.baseURL + '/auth/login');
+		await expect(page.getByTestId('ein')).toBeVisible({ timeout: 8_000 });
 	});
 });

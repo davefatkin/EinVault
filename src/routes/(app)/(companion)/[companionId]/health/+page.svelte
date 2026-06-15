@@ -12,7 +12,11 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Scale, Plus, Pencil, Trash2, X, FileText } from '@lucide/svelte';
+	import { Scale, Plus, Pencil, Trash2, X, FileText, HeartPulse } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import WeightChart from '$lib/components/WeightChart.svelte';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
@@ -24,6 +28,27 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+
+	let weightPoints = $derived(
+		[...data.weightEntries]
+			.map((w) => ({
+				recordedAt: new Date(w.recordedAt),
+				weight: w.weight,
+				unit: w.unit as 'lbs' | 'kg'
+			}))
+			.sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime())
+	);
+
+	// Document preview (documents attached to a health event)
+	type LinkedDoc = (typeof data.linkedDocuments)[0];
+	let previewDoc = $state<LinkedDoc | null>(null);
+	function docsForEvent(eventId: string): LinkedDoc[] {
+		return data.linkedDocuments.filter((d) => d.healthEventId === eventId);
+	}
+	function docUrl(doc: LinkedDoc) {
+		return `/api/documents/${data.companion.id}/${doc.filename}`;
+	}
+
 	let showHealthForm = $state(false);
 	let showWeightForm = $state(false);
 	let submittingHealth = $state(false);
@@ -91,18 +116,24 @@
 	$effect(() => {
 		if (prefillApplied) return;
 		const params = page.url.searchParams;
-		if (params.get('new') !== '1') return;
+		const newParam = params.get('new');
+		if (!newParam) return;
 		if (params.get('edit')) return;
 
-		prefillTitle = (params.get('title') ?? '').slice(0, 200);
-		const rawType = params.get('type') ?? '';
-		prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
-			? (rawType as HealthEventType)
-			: '';
-		prefillDescription = (params.get('description') ?? '').slice(0, 2000);
+		if (newParam === 'weight') {
+			showWeightForm = true;
+			showHealthForm = false;
+		} else {
+			prefillTitle = (params.get('title') ?? '').slice(0, 200);
+			const rawType = params.get('type') ?? '';
+			prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
+				? (rawType as HealthEventType)
+				: '';
+			prefillDescription = (params.get('description') ?? '').slice(0, 2000);
 
-		showHealthForm = true;
-		showWeightForm = false;
+			showHealthForm = true;
+			showWeightForm = false;
+		}
 		prefillApplied = true;
 		tick().then(() => {
 			const url = new URL(page.url);
@@ -199,13 +230,14 @@
 			bind:this={dialogEl}
 			role="dialog"
 			aria-modal="true"
+			aria-labelledby="health-detail-title"
 			tabindex="-1"
 			onkeydown={trapFocus}
 			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
 				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
+				<h2 id="health-detail-title" class="font-semibold text-base text-foreground">
 					{#if selected.kind === 'weight'}
 						{t(locale, 'page.health.detailWeightEntry')}
 					{:else if selected.kind === 'health'}
@@ -262,7 +294,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.health.detailType')}</span
 						>
-						<Badge variant="bark" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
+						<Badge variant="secondary" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -295,6 +327,28 @@
 							</div>
 						</div>
 					{/if}
+					{#if docsForEvent(h.id).length > 0}
+						<div class="pt-1">
+							<p class="text-xs font-medium text-muted-foreground mb-1">
+								{t(locale, 'nav.documents')}
+							</p>
+							<div class="flex flex-col gap-1.5">
+								{#each docsForEvent(h.id) as doc (doc.id)}
+									<button
+										type="button"
+										onclick={() => {
+											closeDetail();
+											previewDoc = doc;
+										}}
+										class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
+									>
+										<FileText class="h-4 w-4 shrink-0 text-muted-foreground" />
+										<span class="truncate">{doc.title}</span>
+									</button>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				{/if}
 			</div>
 
@@ -304,7 +358,7 @@
 				<div class="flex gap-2 px-5 py-4">
 					{#if selected.kind === 'weight'}
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'weight') {
@@ -318,7 +372,7 @@
 							{t(locale, 'common.edit')}
 						</Button>
 						<Button
-							variant="destructive"
+							variant="softDestructive"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'weight') {
@@ -334,7 +388,7 @@
 						</Button>
 					{:else if selected.kind === 'health'}
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'health') {
@@ -348,7 +402,7 @@
 							{t(locale, 'common.edit')}
 						</Button>
 						<Button
-							variant="outline"
+							variant="soft"
 							size="sm"
 							href={reminderPrefillUrl(
 								data.companion.id,
@@ -361,7 +415,7 @@
 							{t(locale, 'page.reminders.addReminder')}
 						</Button>
 						<Button
-							variant="destructive"
+							variant="softDestructive"
 							size="sm"
 							onclick={() => {
 								if (selected?.kind === 'health') {
@@ -389,12 +443,10 @@
 		</div>
 	{/if}
 
-	<div class="flex items-center justify-between">
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.health.title')}
-		</h1>
-		{#if data.companion.isActive !== false}
-			<div class="flex gap-2">
+	<PageHeader title={t(locale, 'page.health.title')} tint="teal">
+		{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
+		{#snippet actions()}
+			{#if data.companion.isActive !== false}
 				<Button
 					variant="outline"
 					size="sm"
@@ -417,12 +469,12 @@
 					<Plus class="h-4 w-4 mr-1.5" />
 					{t(locale, 'page.health.addEvent')}
 				</Button>
-			</div>
-		{/if}
-	</div>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	{#if form?.healthError || form?.weightError}
-		<Alert variant="destructive">
+		<Alert variant="coral">
 			<AlertDescription>{form.healthError ?? form.weightError}</AlertDescription>
 		</Alert>
 	{/if}
@@ -620,12 +672,22 @@
 		</Card>
 	{/if}
 
+	<section>
+		<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+			{t(locale, 'page.health.weightTrend')}
+		</p>
+		<WeightChart
+			entries={weightPoints}
+			onAddWeight={data.companion.isActive !== false ? () => (showWeightForm = true) : undefined}
+		/>
+	</section>
+
 	{#if data.weightEntries.length > 0}
-		<Card>
-			<CardHeader>
-				<CardTitle>{t(locale, 'page.health.weightHistoryTitle')}</CardTitle>
-			</CardHeader>
-			<div class="divide-y divide-border">
+		<section>
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.health.weightHistoryTitle')}
+			</p>
+			<div class="rounded-2xl border bg-card divide-y divide-border">
 				{#each data.weightEntries as entry (entry.id)}
 					{#if editingWeightId === entry.id}
 						<div class="px-6 py-4">
@@ -723,7 +785,7 @@
 								<div class="flex gap-1 shrink-0">
 									<Button
 										type="button"
-										variant="ghost"
+										variant="soft"
 										size="sm"
 										onclick={() => startEditWeight(entry)}
 										class="h-7 gap-1.5 px-2 text-xs"
@@ -733,9 +795,9 @@
 									</Button>
 									<Button
 										type="button"
-										variant="ghost"
+										variant="softDestructive"
 										size="sm"
-										class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+										class="h-7 gap-1.5 px-2 text-xs"
 										onclick={() => {
 											deleteWeightId = entry.id;
 											openConfirm(() => deleteWeightForm?.requestSubmit());
@@ -750,18 +812,29 @@
 					{/if}
 				{/each}
 			</div>
-		</Card>
+		</section>
 	{/if}
 
-	<Card>
-		<CardHeader>
-			<CardTitle>{t(locale, 'page.health.healthEventsTitle')}</CardTitle>
-		</CardHeader>
-		<CardContent>
+	<section>
+		<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+			{t(locale, 'page.health.healthEventsTitle')}
+		</p>
+		<div class="rounded-2xl border bg-card px-5 py-4">
 			{#if data.healthEvents.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.health.noHealthEvents')}
-				</p>
+				<EmptyState
+					tint="teal"
+					title={t(locale, 'page.health.noHealthEvents')}
+					body={t(locale, 'page.health.emptyBody')}
+				>
+					{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
+					{#snippet action()}
+						{#if data.companion.isActive !== false}
+							<Button onclick={() => (showHealthForm = true)}
+								>{t(locale, 'nav.fab.logHealth')}</Button
+							>
+						{/if}
+					{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-3">
 					{#each data.healthEvents as event (event.id)}
@@ -879,7 +952,7 @@
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="bark" class="capitalize"
+											<Badge variant="secondary" class="capitalize"
 												>{healthTypeLabel(locale, event.type)}</Badge
 											>
 											<span class="font-medium text-sm text-foreground">{event.title}</span>
@@ -912,7 +985,7 @@
 									<div class="flex gap-1 shrink-0">
 										<Button
 											type="button"
-											variant="ghost"
+											variant="soft"
 											size="sm"
 											onclick={() => startEditHealth(event)}
 											class="h-7 gap-1.5 px-2 text-xs"
@@ -922,9 +995,9 @@
 										</Button>
 										<Button
 											type="button"
-											variant="ghost"
+											variant="softDestructive"
 											size="sm"
-											class="h-7 gap-1.5 px-2 text-xs hover:text-red-500 dark:hover:text-red-400"
+											class="h-7 gap-1.5 px-2 text-xs"
 											onclick={() => {
 												deleteHealthId = event.id;
 												openConfirm(() => deleteHealthForm?.requestSubmit());
@@ -940,8 +1013,8 @@
 					{/each}
 				</div>
 			{/if}
-		</CardContent>
-	</Card>
+		</div>
+	</section>
 </div>
 
 <form bind:this={deleteWeightForm} method="POST" action="?/deleteWeight" use:enhance class="hidden">
@@ -960,3 +1033,13 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={docUrl(previewDoc)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
+	/>
+{/if}

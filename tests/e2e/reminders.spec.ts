@@ -1,6 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 const BASE = `/${COMP}/reminders`;
 
 /**
@@ -64,11 +64,10 @@ function justPast(): string {
 // with one Card per active reminder. We scope lookups to the whole page and
 // rely on the title text being unique per test (enforced by UNIQUE names).
 function activeSection(page: import('@playwright/test').Page) {
-	// The active section is the sibling space-y-3 div before the <details> element.
-	// Simplest robust locator: a div that does NOT sit inside <details>.
-	// In practice we just use the page and narrow by the card's position above
-	// the completed summary line.
-	return page.locator('div.space-y-3').first();
+	// Active reminders live in one container per urgency group, each marked
+	// data-active-group. Completed rows (in <details>) and the detail modal's
+	// inner lists are never marked, so this excludes them unambiguously.
+	return page.locator('[data-active-group]');
 }
 
 function completedSection(page: import('@playwright/test').Page) {
@@ -214,5 +213,24 @@ test.describe('reminders', () => {
 
 		// Save button still visible — no redirect/close
 		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toBeVisible();
+	});
+
+	test('overdue and upcoming reminders sort into their urgency groups', async ({ asMember }) => {
+		await asMember.goto(BASE);
+		await addReminder(asMember, { title: 'e2e-overdue-grp', type: 'other', dueAt: justPast() });
+		await addReminder(asMember, { title: 'e2e-upcoming-grp', type: 'other', dueAt: tomorrow() });
+
+		// The group container is the data-active-group div immediately after each header <p>.
+		const groupAfter = (label: string) =>
+			asMember.locator('p').filter({ hasText: label }).locator('xpath=following-sibling::div[1]');
+
+		await expect(groupAfter('Overdue').getByText('e2e-overdue-grp')).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(groupAfter('Upcoming').getByText('e2e-upcoming-grp')).toBeVisible({
+			timeout: 8_000
+		});
+		// Cross-check: the overdue item is NOT in the upcoming group.
+		await expect(groupAfter('Overdue').getByText('e2e-upcoming-grp')).toHaveCount(0);
 	});
 });

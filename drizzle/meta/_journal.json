@@ -169,6 +169,27 @@
       "when": 1781200861564,
       "tag": "0023_wandering_caretaker",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1781234564792,
+      "tag": "0024_overrated_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1781349969352,
+      "tag": "0025_stormy_king_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1781466019317,
+      "tag": "0026_warm_iron_monger",
+      "breakpoints": true
     }
   ]
 }

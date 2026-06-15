@@ -1,28 +1,26 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
+	import { SvelteDate } from 'svelte/reactivity';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { CalendarClock, Settings } from '@lucide/svelte';
+	import AccountCard from '$lib/components/settings/AccountCard.svelte';
+	import LanguageCard from '$lib/components/settings/LanguageCard.svelte';
+	import AppearanceCard from '$lib/components/settings/AppearanceCard.svelte';
+	import CalendarFeedCard from '$lib/components/settings/CalendarFeedCard.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
-	import { Calendar } from '@lucide/svelte';
-	import { SvelteDate } from 'svelte/reactivity';
-	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS, type MessageKey } from '$lib/i18n';
+	import SecurityCard from '$lib/components/settings/SecurityCard.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { t, getLocale, type MessageKey } from '$lib/i18n';
+	import type { Theme } from '$lib/theme';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const locale = getLocale();
-	let showPasswordFields = $state(false);
-	let localeForm: HTMLFormElement;
 	let expandedShiftId = $state<string | null>(null);
-
-	const browserOrigin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
 
 	const now = new SvelteDate();
 
@@ -33,7 +31,7 @@
 		const msPerDay = 86_400_000;
 		const startOfToday = new SvelteDate(now);
 		startOfToday.setHours(0, 0, 0, 0);
-		const dayOfWeek = startOfToday.getDay(); // 0 = Sun
+		const dayOfWeek = startOfToday.getDay();
 		const startOfWeek = new SvelteDate(startOfToday.getTime() - dayOfWeek * msPerDay);
 		const endOfWeek = new SvelteDate(startOfWeek.getTime() + 7 * msPerDay);
 		const endOfNextWeek = new SvelteDate(startOfWeek.getTime() + 14 * msPerDay);
@@ -59,7 +57,7 @@
 		later: 'page.settings.shiftGroupLater'
 	};
 
-	const grouped = $derived(() => {
+	const grouped = $derived.by(() => {
 		const groups: { key: string; label: string; shifts: Shift[] }[] = [];
 		for (const shift of data.upcomingShifts) {
 			const key = shiftGroup(shift);
@@ -75,192 +73,28 @@
 	<title>{t(locale, 'page.settings.title')} | EinVault</title>
 </svelte:head>
 
-<div class="max-w-lg mx-auto space-y-6">
-	<div>
-		<h1 class="font-display text-2xl font-bold text-foreground">
-			{t(locale, 'page.settings.title')}
-		</h1>
-		<p class="text-sm mt-1 text-muted-foreground">{t(locale, 'page.settings.subtitle')}</p>
-	</div>
+<div class="max-w-3xl mx-auto space-y-6">
+	<PageHeader
+		title={t(locale, 'page.settings.title')}
+		subtitle={t(locale, 'page.settings.subtitle')}
+		tint="muted"
+	>
+		{#snippet icon()}<Settings class="h-5 w-5" />{/snippet}
+	</PageHeader>
 
-	<Card>
-		<CardHeader>
-			<CardTitle>{t(locale, 'page.settings.accountCard')}</CardTitle>
-		</CardHeader>
-		<CardContent>
-			{#if form?.accountSuccess}
-				<Alert variant="success" class="mb-4">
-					<AlertDescription>{t(locale, 'page.settings.accountUpdated')}</AlertDescription>
-				</Alert>
-			{/if}
-			{#if form?.accountError}
-				<Alert variant="destructive" class="mb-4">
-					<AlertDescription>{form.accountError}</AlertDescription>
-				</Alert>
-			{/if}
+	<AccountCard
+		user={data.user}
+		immichEnabled={data.immichEnabled ?? false}
+		successMessage={form?.accountSuccess ? t(locale, 'page.settings.accountUpdated') : undefined}
+		errorMessage={form?.accountError}
+	/>
 
-			<form
-				method="POST"
-				action="?/account"
-				use:enhance={() =>
-					async ({ update }) =>
-						update({ reset: false })}
-				class="space-y-4"
-			>
-				<div class="space-y-1.5">
-					<Label for="displayName">{t(locale, 'page.settings.labelDisplayName')}</Label>
-					<Input
-						id="displayName"
-						name="displayName"
-						type="text"
-						autocomplete="name"
-						value={data.user?.displayName ?? ''}
-						required
-					/>
-				</div>
+	<LanguageCard currentLocale={data.user?.locale ?? 'en'} />
 
-				<div class="space-y-1.5">
-					<Label for="username">{t(locale, 'page.settings.labelUsername')}</Label>
-					<Input
-						id="username"
-						name="username"
-						type="text"
-						value={data.user?.username ?? ''}
-						required
-						autocomplete="username"
-					/>
-				</div>
-
-				<div class="space-y-1.5">
-					<Label for="email">
-						{t(locale, 'page.settings.labelEmail')}
-						<span class="text-muted-foreground font-normal"
-							>{t(locale, 'page.settings.optional')}</span
-						>
-					</Label>
-					<Input
-						id="email"
-						name="email"
-						type="email"
-						value={data.user?.email ?? ''}
-						autocomplete="email"
-						placeholder="jet@black.com"
-					/>
-				</div>
-
-				<div class="space-y-1.5">
-					<Label for="phone">
-						{t(locale, 'page.settings.labelPhone')}
-						<span class="text-muted-foreground font-normal"
-							>{t(locale, 'page.settings.optional')}</span
-						>
-					</Label>
-					<Input
-						id="phone"
-						name="phone"
-						type="tel"
-						value={data.user?.phone ?? ''}
-						autocomplete="tel"
-						placeholder={t(locale, 'common.placeholderPhone')}
-					/>
-				</div>
-
-				<div>
-					<button
-						type="button"
-						onclick={() => (showPasswordFields = !showPasswordFields)}
-						class="text-sm text-primary hover:underline"
-					>
-						{showPasswordFields
-							? t(locale, 'page.settings.cancelPasswordChange')
-							: t(locale, 'page.settings.changePassword')}
-					</button>
-				</div>
-
-				{#if showPasswordFields}
-					<input
-						type="text"
-						autocomplete="username"
-						value={data.user?.username ?? ''}
-						readonly
-						tabindex="-1"
-						aria-hidden="true"
-						class="sr-only"
-					/>
-					<div class="space-y-4 animate-slide-up border-t border-border pt-4">
-						<div class="space-y-1.5">
-							<Label for="currentPassword">{t(locale, 'page.settings.labelCurrentPassword')}</Label>
-							<Input
-								id="currentPassword"
-								name="currentPassword"
-								type="password"
-								placeholder="••••••••"
-								autocomplete="current-password"
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="newPassword">{t(locale, 'page.settings.labelNewPassword')}</Label>
-							<Input
-								id="newPassword"
-								name="newPassword"
-								type="password"
-								placeholder="••••••••"
-								minlength={8}
-								autocomplete="new-password"
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="confirmPassword">{t(locale, 'page.settings.labelConfirmPassword')}</Label>
-							<Input
-								id="confirmPassword"
-								name="confirmPassword"
-								type="password"
-								placeholder="••••••••"
-								minlength={8}
-								autocomplete="new-password"
-							/>
-						</div>
-					</div>
-				{/if}
-
-				<Button type="submit">{t(locale, 'page.settings.saveChanges')}</Button>
-			</form>
-		</CardContent>
-	</Card>
-
-	<!-- Language -->
-	<Card>
-		<CardHeader>
-			<CardTitle>{t(locale, 'page.settings.languageCard')}</CardTitle>
-		</CardHeader>
-		<CardContent>
-			<p class="text-sm text-muted-foreground mb-3">
-				{t(locale, 'page.settings.languageDescription')}
-			</p>
-			<form
-				method="POST"
-				action="?/locale"
-				bind:this={localeForm}
-				use:enhance={() => {
-					return async () => {
-						window.location.reload();
-					};
-				}}
-			>
-				<div class="max-w-[200px]">
-					<Select
-						name="locale"
-						value={data.user?.locale ?? 'en'}
-						onchange={() => localeForm.requestSubmit()}
-					>
-						{#each SUPPORTED_LOCALES as loc (loc)}
-							<option value={loc}>{LOCALE_LABELS[loc]}</option>
-						{/each}
-					</Select>
-				</div>
-			</form>
-		</CardContent>
-	</Card>
+	<AppearanceCard
+		currentTheme={(data.user?.theme as Theme) ?? 'system'}
+		redirectPath="/care/settings"
+	/>
 
 	<ReminderUndoCard
 		currentValue={data.user?.reminderUndoSeconds ?? null}
@@ -290,25 +124,23 @@
 		/>
 	{/if}
 
-	<!-- My Shifts -->
 	<Card id="shifts">
-		<CardHeader class="pb-3">
-			<CardTitle class="font-semibold flex items-center gap-2">
-				<Calendar class="h-4 w-4" />
-				{t(locale, 'page.settings.shiftsCard')}
+		<CardHeader>
+			<div class="flex items-center gap-2">
+				<CardTitle>{t(locale, 'page.settings.shiftsCard')}</CardTitle>
 				{#if data.upcomingShifts.length > 0}
-					<Badge variant="secondary" class="ml-auto">{data.upcomingShifts.length}</Badge>
+					<Badge variant="secondary" class="tabular-nums">{data.upcomingShifts.length}</Badge>
 				{/if}
-			</CardTitle>
+			</div>
 		</CardHeader>
-		<CardContent class="pt-0">
+		<CardContent>
 			{#if data.upcomingShifts.length === 0}
-				<p class="text-sm italic text-muted-foreground">
-					{t(locale, 'page.settings.noUpcomingShifts')}
-				</p>
+				<EmptyState tint="muted" title={t(locale, 'page.settings.noUpcomingShifts')}>
+					{#snippet icon()}<CalendarClock class="h-5 w-5" />{/snippet}
+				</EmptyState>
 			{:else}
 				<div class="space-y-4">
-					{#each grouped() as group (group.key)}
+					{#each grouped as group (group.key)}
 						<div>
 							<h3
 								class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
@@ -322,7 +154,7 @@
 										!isActive && shift.id === data.upcomingShifts.find((s) => s.startAt > now)?.id}
 									<div
 										class="rounded-lg overflow-hidden {isActive
-											? 'bg-green-50 dark:bg-green-950 ring-1 ring-green-200 dark:ring-green-800'
+											? 'bg-teal/10 ring-1 ring-teal/30'
 											: isNext
 												? 'ring-1 ring-primary/20'
 												: ''}"
@@ -337,16 +169,12 @@
 										>
 											{#if isActive}
 												<span
-													class="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0"
+													class="inline-block w-2 h-2 rounded-full bg-teal shrink-0"
 													aria-hidden="true"
 												></span>
 											{/if}
 											<div class="flex-1 min-w-0">
-												<span
-													class={isActive
-														? 'text-green-700 dark:text-green-300 font-medium'
-														: 'text-foreground'}
-												>
+												<span class={isActive ? 'text-teal font-medium' : 'text-foreground'}>
 													<LocalTime date={shift.startAt} format="datetime" />
 												</span>
 												<span class="text-muted-foreground mx-1">–</span>
@@ -380,88 +208,16 @@
 	</Card>
 
 	{#if data.calendarFeedAvailable}
-		<Card>
-			<CardHeader>
-				<CardTitle>{t(locale, 'settings.calendar.title')}</CardTitle>
-			</CardHeader>
-			<CardContent class="space-y-4">
-				<p class="text-sm text-muted-foreground">{t(locale, 'settings.calendar.description')}</p>
-
-				{#if form?.calendarToken}
-					<div class="space-y-2">
-						<p class="text-xs text-muted-foreground font-medium">
-							{t(locale, 'settings.calendar.url')}
-						</p>
-						<div class="flex items-center gap-2">
-							<Input
-								type="text"
-								readonly
-								value="{browserOrigin}/api/calendar/{form.calendarToken}/feed.ics"
-								class="font-mono text-xs"
-							/>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onclick={() =>
-									navigator.clipboard.writeText(
-										`${browserOrigin}/api/calendar/${form?.calendarToken}/feed.ics`
-									)}
-							>
-								{t(locale, 'settings.calendar.copy')}
-							</Button>
-						</div>
-						<Alert>
-							<AlertDescription class="text-xs"
-								>{t(locale, 'settings.calendar.revealOnce')}</AlertDescription
-							>
-						</Alert>
-					</div>
-					<div class="flex gap-2">
-						<form method="POST" action="?/calendarEnable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.regenerate')}
-							</Button>
-						</form>
-						<form method="POST" action="?/calendarDisable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.disable')}
-							</Button>
-						</form>
-					</div>
-				{:else if data.calendarFeedEnabled}
-					<p class="text-sm text-foreground">{t(locale, 'settings.calendar.enabled')}</p>
-					<div class="flex gap-2">
-						<form method="POST" action="?/calendarEnable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.regenerate')}
-							</Button>
-						</form>
-						<form method="POST" action="?/calendarDisable">
-							<Button type="submit" variant="outline" size="sm">
-								{t(locale, 'settings.calendar.disable')}
-							</Button>
-						</form>
-					</div>
-				{:else}
-					<form method="POST" action="?/calendarEnable">
-						<Button type="submit" size="sm">
-							{t(locale, 'settings.calendar.enable')}
-						</Button>
-					</form>
-				{/if}
-
-				<p class="text-xs text-muted-foreground">{t(locale, 'settings.calendar.help')}</p>
-			</CardContent>
-		</Card>
+		<CalendarFeedCard
+			calendarToken={form?.calendarToken}
+			calendarFeedEnabled={data.calendarFeedEnabled}
+		/>
 	{/if}
 
-	<Card>
-		<CardContent class="pt-4">
-			<div class="flex items-center justify-between text-sm">
-				<span class="text-muted-foreground">{t(locale, 'page.settings.roleLabel')}</span>
-				<Badge variant="moss">{t(locale, 'enum.role.caretaker')}</Badge>
-			</div>
-		</CardContent>
-	</Card>
+	<SecurityCard
+		totpEnabled={data.user?.totpEnabled ?? false}
+		available={data.twoFactorAvailable}
+		enforced={data.twoFactorEnforced}
+		{form}
+	/>
 </div>

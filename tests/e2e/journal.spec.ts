@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import { pngUpload } from '../lib/files';
 
-const COMP = 'seed-comp-biscuit';
+const COMP = 'seed-comp-ein';
 
 test.describe('journal day editor', () => {
 	test('write entry with autosave', async ({ asMember }) => {
@@ -119,12 +119,39 @@ test.describe('journal day editor', () => {
 		});
 	});
 
+	test('journal timeline marks today and opens media in the lightbox', async ({ asMember }) => {
+		const today = (() => {
+			const n = new Date();
+			const p = (x: number) => String(x).padStart(2, '0');
+			return `${n.getUTCFullYear()}-${p(n.getUTCMonth() + 1)}-${p(n.getUTCDate())}`;
+		})();
+
+		// Create today's entry with a photo.
+		await asMember.goto(`/${COMP}/journal/${today}`);
+		await asMember.locator('textarea').first().fill('timeline e2e body');
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
+		const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
+		await fileInput.setInputFiles(pngUpload());
+		await expect(asMember.locator('img[src*="/api/photos/journal/"]').first()).toBeVisible({
+			timeout: 15_000
+		});
+
+		// On the list, today's row shows the "Today" marker and the thumbnail opens the lightbox.
+		await asMember.goto(`/${COMP}/journal`);
+		await expect(asMember.getByText('Today', { exact: true }).first()).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.locator('img[src*="/api/photos/journal/"]').first().click();
+		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
+	});
+
 	test('journal list shows entries', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal`);
 
 		// The seed entry body is rendered as markdown HTML; the raw text will appear
 		// inside the prose container
-		await expect(asMember.getByText('Seed journal entry')).toBeVisible({ timeout: 8_000 });
+		await expect(asMember.getByText('Clean bill of health')).toBeVisible({ timeout: 8_000 });
 	});
 
 	test('edit shows the editor alongside the original author', async ({ asMember, asAdmin }) => {
@@ -144,16 +171,16 @@ test.describe('journal day editor', () => {
 
 		// List shows both attributions on that entry's card.
 		await asMember.goto(`/${COMP}/journal`);
-		// Scope to the card containing the edited body text (each entry is a rounded-lg border card).
+		// Scope to the card containing the edited body text (each entry is a rounded-2xl border card).
 		const card = asMember
-			.locator('div.rounded-lg.border.bg-card')
+			.locator('div.rounded-2xl.border.bg-card')
 			.filter({ hasText: 'edited by admin' });
-		await expect(card.getByText(/by Seed Member/)).toBeVisible({ timeout: 8_000 });
-		await expect(card.getByText(/edited by Seed Admin/)).toBeVisible({ timeout: 8_000 });
+		await expect(card.getByText(/by Jet/)).toBeVisible({ timeout: 8_000 });
+		await expect(card.getByText(/edited by Spike/)).toBeVisible({ timeout: 8_000 });
 
 		// The day editor page shows the same attribution in its header.
 		await asMember.goto(`/${COMP}/journal/${date}`);
-		await expect(asMember.getByText(/edited by Seed Admin/).first()).toBeVisible({
+		await expect(asMember.getByText(/edited by Spike/).first()).toBeVisible({
 			timeout: 8_000
 		});
 	});

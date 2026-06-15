@@ -2,8 +2,8 @@ import { test, expect } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { pngUpload } from '../lib/files';
 
-const BISCUIT = SEED.companions.biscuit.id;
-const WAFFLES = SEED.companions.waffles.id;
+const EIN = SEED.companions.ein.id;
+const EDWARD = SEED.companions.edward.id;
 
 test.describe('security headers', () => {
 	test('page response carries required security headers', async ({ app, browser }) => {
@@ -49,7 +49,7 @@ test.describe('api authz', () => {
 	});
 
 	test('caretaker cannot access companion documents', async ({ asCaretaker }) => {
-		const res = await asCaretaker.request.get(`/api/companions/${BISCUIT}/documents`);
+		const res = await asCaretaker.request.get(`/api/companions/${EIN}/documents`);
 		expect(res.status()).toBe(403);
 	});
 
@@ -57,8 +57,8 @@ test.describe('api authz', () => {
 		asMember,
 		asCaretaker
 	}) => {
-		// Upload a photo to Waffles (caretaker is only assigned to Biscuit)
-		await asMember.goto(`/${WAFFLES}/journal/2026-06-03`);
+		// Upload a photo to Edward (caretaker is only assigned to Ein)
+		await asMember.goto(`/${EDWARD}/journal/2026-06-03`);
 		const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
 		await fileInput.setInputFiles(pngUpload());
 
@@ -68,7 +68,7 @@ test.describe('api authz', () => {
 		const src = await photoImg.getAttribute('src');
 		expect(src).toBeTruthy();
 
-		// asCaretaker is not assigned to Waffles → 403
+		// asCaretaker is not assigned to Edward → 403
 		const res = await asCaretaker.request.get(src!);
 		expect(res.status()).toBe(403);
 	});
@@ -80,7 +80,7 @@ test.describe('api authz', () => {
 		// Regression: POST used to skip the assignment check the GET enforces,
 		// letting any caretaker write into any companion's journal.
 		const res = await asCaretaker.request.post(
-			`/api/companions/${WAFFLES}/journal/2026-06-04/photos`,
+			`/api/companions/${EDWARD}/journal/2026-06-04/photos`,
 			{
 				headers: { Origin: app.server.baseURL }, // SvelteKit CSRF check
 				multipart: { photo: pngUpload() }
@@ -90,20 +90,17 @@ test.describe('api authz', () => {
 	});
 
 	test('assigned caretaker can still upload a journal photo', async ({ app, asCaretaker }) => {
-		// Guard must not over-tighten: caretaker IS assigned to Biscuit.
-		const res = await asCaretaker.request.post(
-			`/api/companions/${BISCUIT}/journal/2026-06-04/photos`,
-			{
-				headers: { Origin: app.server.baseURL },
-				multipart: { photo: pngUpload() }
-			}
-		);
+		// Guard must not over-tighten: caretaker IS assigned to Ein.
+		const res = await asCaretaker.request.post(`/api/companions/${EIN}/journal/2026-06-04/photos`, {
+			headers: { Origin: app.server.baseURL },
+			multipart: { photo: pngUpload() }
+		});
 		expect(res.status()).toBe(200);
 	});
 
 	test('anonymous request to avatar endpoint returns 401', async ({ app, browser }) => {
 		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
-		const res = await ctx.request.get(`/api/avatars/${BISCUIT}`);
+		const res = await ctx.request.get(`/api/avatars/${EIN}`);
 		// Handler: if (!locals.user) error(401, ...)
 		expect(res.status()).toBe(401);
 		await ctx.close();

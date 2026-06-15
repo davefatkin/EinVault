@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import Ein from '$lib/components/Ein.svelte';
 	const locale = getLocale();
 </script>
 
@@ -7,12 +9,13 @@
 	<title>{t(locale, 'page.care.title')} | EinVault</title>
 </svelte:head>
 
-<div class="flex flex-col items-center justify-center py-20 text-center px-4">
-	<p class="text-4xl mb-4">🐾</p>
-	<h1 class="text-xl font-semibold text-foreground mb-2">
-		{t(locale, 'page.caretaker.home.noCompanionsHeading')}
-	</h1>
-	<p class="text-sm text-muted-foreground max-w-xs">
-		{t(locale, 'page.caretaker.home.noCompanionsBody')}
-	</p>
+<div class="py-20">
+	<EmptyState
+		size="lg"
+		tint="primary"
+		title={t(locale, 'page.caretaker.home.noCompanionsHeading')}
+		body={t(locale, 'page.caretaker.home.noCompanionsBody')}
+	>
+		{#snippet illustration()}<Ein pose="happy" tint="primary" class="h-32 w-32" />{/snippet}
+	</EmptyState>
 </div>

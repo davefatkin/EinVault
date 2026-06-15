@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth } from '$server/auth';
@@ -12,10 +13,13 @@ import {
 	logDeprecatedEnvWarnings,
 	logVideoTranscodeBootStatus,
 	logSmtpBootStatus,
-	logNtfyBootStatus
+	logNtfyBootStatus,
+	logTwoFactorBootStatus
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
+import { getAppSettings } from '$lib/server/app-settings';
+import { requiresTwoFactor } from '$lib/server/auth/two-factor';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -25,6 +29,7 @@ logDeprecatedEnvWarnings();
 logVideoTranscodeBootStatus();
 logSmtpBootStatus();
 logNtfyBootStatus();
+logTwoFactorBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
@@ -104,13 +109,43 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 };
 
 // asset routes skip cookie refresh so responses stay cacheable
-const ASSET_PATHS = ['/api/avatars/', '/api/photos/', '/api/documents/', '/api/calendar/'];
+const ASSET_PATHS = [
+	'/api/avatars/',
+	'/api/photos/',
+	'/api/documents/',
+	'/api/calendar/',
+	'/api/users/'
+];
 
 const authContext: Handle = async ({ event, resolve }) => {
 	const isAsset = ASSET_PATHS.some((p) => event.url.pathname.startsWith(p));
 	const { session, user } = await validateAuth(event, { refreshCookie: !isAsset });
 	event.locals.session = session;
 	event.locals.user = user;
+	return resolve(event);
+};
+
+const twoFactorGate: Handle = async ({ event, resolve }) => {
+	const user = event.locals.user;
+	if (user) {
+		const path = event.url.pathname;
+		const allowed =
+			path === '/2fa-setup' || path.startsWith('/2fa-setup/') || path.startsWith('/auth/');
+		if (!allowed) {
+			const { require2fa } = await getAppSettings();
+			if (
+				requiresTwoFactor(
+					{ role: user.role, isOidc: user.isOidc, totpEnabled: user.totpEnabled },
+					require2fa
+				)
+			) {
+				if (path.startsWith('/api/')) {
+					return new Response('Two-factor authentication required', { status: 403 });
+				}
+				redirect(303, '/2fa-setup');
+			}
+		}
+	}
 	return resolve(event);
 };
 
@@ -141,4 +176,4 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(securityHeaders, authContext, localeDetect);
+export const handle = sequence(securityHeaders, authContext, twoFactorGate, localeDetect);

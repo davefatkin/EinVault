@@ -11,42 +11,9 @@ import {
 	makeSessionCookieOptions
 } from '$lib/server/auth/session';
 import { isSecureRequest } from '$lib/server/auth';
+import { checkRateLimit, clearRateLimit } from '$lib/server/auth/rate-limit';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-
-// NOTE: This rate limiter is in-process memory only. State resets on server restart and
-// does not coordinate across multiple processes. It is intentional for a single-instance
-// deployment; revisit before horizontal scaling.
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 10;
-const WINDOW_MS = 15 * 60 * 1000;
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-
-let lastCleanup = Date.now();
-
-function checkRateLimit(ip: string): boolean {
-	const now = Date.now();
-
-	if (now - lastCleanup > CLEANUP_INTERVAL_MS) {
-		for (const [key, val] of loginAttempts) {
-			if (now > val.resetAt) loginAttempts.delete(key);
-		}
-		lastCleanup = now;
-	}
-
-	const record = loginAttempts.get(ip);
-	if (!record || now > record.resetAt) {
-		loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-		return true;
-	}
-	if (record.count >= MAX_ATTEMPTS) return false;
-	record.count++;
-	return true;
-}
-
-function clearRateLimit(ip: string) {
-	loginAttempts.delete(ip);
-}
 
 const OIDC_ERROR_KEYS = {
 	oidc_not_provisioned: 'error.oidc.notProvisioned',
@@ -80,7 +47,7 @@ export const actions: Actions = {
 		const ip = getClientAddress();
 		const locale = locals.locale;
 
-		if (!checkRateLimit(ip)) {
+		if (!checkRateLimit(ip, 10)) {
 			return fail(429, { error: t(locale, 'error.tooManyLoginAttempts') });
 		}
 
@@ -115,6 +82,12 @@ export const actions: Actions = {
 			.update(schema.users)
 			.set({ lastLoginAt: new Date() })
 			.where(eq(schema.users.id, user.id));
+
+		if (user.totpEnabledAt) {
+			const { setPendingMfaCookie } = await import('$lib/server/auth/two-factor');
+			await setPendingMfaCookie(cookies, user.id, isSecureRequest(request));
+			redirect(302, '/auth/2fa');
+		}
 
 		const token = generateSessionToken();
 		const session = await createSession(token, user.id);

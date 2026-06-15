@@ -6,7 +6,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { PNG_BYTES } from '../lib/files';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
-const COMP = SEED.companions.biscuit.id;
+const COMP = SEED.companions.ein.id;
 
 interface LimitsWorld {
 	server: AppServer;

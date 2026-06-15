@@ -39,7 +39,9 @@ export function stripMarkdown(text: string): string {
 }
 
 export function renderMarkdown(text: string): string {
-	const raw = marked.parse(text, { async: false }) as string;
+	// `breaks: true` turns single newlines into <br> so users' line breaks in
+	// journal/notes show up as written (CommonMark would otherwise collapse them).
+	const raw = marked.parse(text, { async: false, gfm: true, breaks: true }) as string;
 	return DOMPurify.sanitize(raw, {
 		ALLOWED_TAGS,
 		ALLOWED_ATTR: ['href', 'rel'],

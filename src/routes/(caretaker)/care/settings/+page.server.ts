@@ -17,11 +17,28 @@ import { REMINDER_UNDO_SECONDS_DEFAULT, CALENDAR_FEED_ENABLED } from '$lib/serve
 import { isMailEnabled } from '$lib/server/mail';
 import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
+import {
+	totpBegin,
+	totpConfirm,
+	totpRegenerate,
+	totpDisable
+} from '$lib/server/auth/two-factor-actions';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const upcomingShifts = await getUpcomingShifts(locals.user.id);
 	const calUser = await db.query.users.findFirst({ where: eq(schema.users.id, locals.user.id) });
+
+	const { isTwoFactorConfigured } = await import('$lib/server/auth/totp-crypto');
+	const { getAppSettings } = await import('$lib/server/app-settings');
+	const { requiresTwoFactor } = await import('$lib/server/auth/two-factor');
+	const { require2fa } = await getAppSettings();
+	const twoFactorAvailable = isTwoFactorConfigured();
+	const twoFactorEnforced = requiresTwoFactor(
+		{ role: locals.user.role, isOidc: locals.user.isOidc, totpEnabled: false },
+		require2fa
+	);
+
 	return {
 		user: locals.user,
 		upcomingShifts,
@@ -29,11 +46,38 @@ export const load: PageServerLoad = async ({ locals }) => {
 		mailEnabled: isMailEnabled(),
 		ntfyEnabled: isNtfyEnabled(),
 		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
-		calendarFeedEnabled: calUser?.calendarFeedToken != null
+		calendarFeedEnabled: calUser?.calendarFeedToken != null,
+		twoFactorAvailable,
+		twoFactorEnforced
 	};
 };
 
 export const actions: Actions = {
+	theme: async ({ request, locals, cookies }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+
+		const data = await request.formData();
+		const theme = String(data.get('theme') ?? 'system');
+		if (!['light', 'dark', 'system'].includes(theme)) {
+			return fail(400, { themeError: t(locals.locale, 'error.invalidTheme') });
+		}
+
+		await db
+			.update(schema.users)
+			.set({ theme: theme as 'light' | 'dark' | 'system' })
+			.where(eq(schema.users.id, locals.user.id));
+
+		cookies.set('einvault_theme', theme, {
+			path: '/',
+			httpOnly: false,
+			secure: isSecureRequest(request),
+			sameSite: 'strict',
+			maxAge: 60 * 60 * 24 * 365
+		});
+
+		return { themeSuccess: true };
+	},
+
 	locale: async ({ request, locals, cookies }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 
@@ -95,5 +139,25 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		await disableFeedToken(locals.user.id);
 		return { calendarDisabled: true };
+	},
+
+	totpBegin: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpBegin({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpConfirm: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpConfirm({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpRegenerate: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpRegenerate({ user: locals.user, request, locale: locals.locale });
+	},
+
+	totpDisable: async ({ locals, request }) => {
+		if (!locals.user) return fail(401);
+		return totpDisable({ user: locals.user, request, locale: locals.locale });
 	}
 };

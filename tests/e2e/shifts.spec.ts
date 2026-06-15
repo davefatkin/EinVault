@@ -26,55 +26,41 @@ test.describe('shifts', () => {
 		await asAdmin.goto('/admin/users');
 		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
 
-		// Find the seed-caretaker row and open the overflow menu.
-		// The row contains both the displayName and the username badge.
+		// Find the seed-caretaker row and open the Manage drawer.
 		const caretakerRow = asAdmin
 			.locator('div.px-6.py-4')
 			.filter({ hasText: SEED.caretaker.displayName });
 		await expect(caretakerRow).toBeVisible({ timeout: 8_000 });
 
-		const menuButton = caretakerRow.getByRole('button', { name: /more actions/i });
-		await menuButton.click();
+		await caretakerRow.getByRole('button', { name: /manage/i }).click();
+		const dialog = asAdmin.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 4_000 });
 
-		// Overflow menu is now open; click "Shifts".
-		const shiftsMenuItem = asAdmin.getByRole('menuitem', { name: /shifts/i });
-		await expect(shiftsMenuItem).toBeVisible({ timeout: 4_000 });
-		await shiftsMenuItem.click();
-
-		// The shifts management panel should now be visible for this user.
-		// "Add shift" form is rendered inside the panel.
-		// The startAt / endAt inputs have ids like shift-start-{userId}.
-		// Use name attributes which are unique within the visible panel.
-		const panel = caretakerRow.locator('div.rounded-lg.border.border-border.bg-muted\\/30');
-		await expect(panel).toBeVisible({ timeout: 4_000 });
-
-		const startInput = panel.locator('input[name="startAt"]');
-		const endInput = panel.locator('input[name="endAt"]');
-		const notesInput = panel.locator('input[name="notes"]');
+		// The Shifts section's add-shift form lives inside the drawer.
+		// (Scope to the addShift form so the inputs don't collide with an
+		// edit-shift form if one were open.)
+		const addForm = dialog.locator('form[action="?/addShift"]');
+		await expect(addForm).toBeVisible({ timeout: 4_000 });
 
 		// Fill tomorrow 09:00–17:00. The form uses use:localDatetimes which converts
-		// datetime-local values to ISO on formdata event (triggered by enhance).
-		// Playwright fills the <input type="datetime-local"> directly; the action
-		// fires when the form submits via enhance.
-		await startInput.fill(tomorrowDatetimeLocal(9));
-		await endInput.fill(tomorrowDatetimeLocal(17));
-		await notesInput.fill('e2e-shift-note');
+		// datetime-local values to ISO on the formdata event (triggered by enhance).
+		await addForm.locator('input[name="startAt"]').fill(tomorrowDatetimeLocal(9));
+		await addForm.locator('input[name="endAt"]').fill(tomorrowDatetimeLocal(17));
+		await addForm.locator('input[name="notes"]').fill('e2e-shift-note');
 
-		await panel.getByRole('button', { name: /add shift/i }).click();
+		await addForm.getByRole('button', { name: /add shift/i }).click();
 
-		// After submission the page re-loads (SvelteKit enhance invalidates loader).
-		// The new shift should appear in the shifts list for the caretaker.
-		// The panel re-opens because managingShiftsUserId stays set until "Close".
-		// The shift is rendered as a row inside the same panel showing LocalTime dates.
-		// We assert the note is visible (rendered as a muted text span next to the times).
-		await expect(panel.getByText('e2e-shift-note')).toBeVisible({ timeout: 10_000 });
+		// After submission the page re-loads (enhance invalidates the loader) and the
+		// drawer stays open; the new shift appears as a row inside the Shifts section,
+		// showing the note next to the times.
+		await expect(dialog.getByText('e2e-shift-note')).toBeVisible({ timeout: 10_000 });
 	});
 
 	test('caretaker sees the upcoming shift on the settings page', async ({
 		asAdmin,
 		asCaretaker
 	}) => {
-		// First, ensure the shift exists — add it as admin.
+		// First, ensure the shift exists — add it as admin via the Manage drawer.
 		await asAdmin.goto('/admin/users');
 		await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
 
@@ -83,20 +69,19 @@ test.describe('shifts', () => {
 			.filter({ hasText: SEED.caretaker.displayName });
 		await expect(caretakerRow).toBeVisible({ timeout: 8_000 });
 
-		await caretakerRow.getByRole('button', { name: /more actions/i }).click();
-		await asAdmin.getByRole('menuitem', { name: /shifts/i }).click();
-
-		const panel = caretakerRow.locator('div.rounded-lg.border.border-border.bg-muted\\/30');
-		await expect(panel).toBeVisible({ timeout: 4_000 });
+		await caretakerRow.getByRole('button', { name: /manage/i }).click();
+		const dialog = asAdmin.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 4_000 });
 
 		// Only add if the note isn't already there (idempotent guard).
-		const alreadyPresent = await panel.getByText('e2e-shift-note').isVisible();
+		const alreadyPresent = await dialog.getByText('e2e-shift-note').isVisible();
 		if (!alreadyPresent) {
-			await panel.locator('input[name="startAt"]').fill(tomorrowDatetimeLocal(9));
-			await panel.locator('input[name="endAt"]').fill(tomorrowDatetimeLocal(17));
-			await panel.locator('input[name="notes"]').fill('e2e-shift-note');
-			await panel.getByRole('button', { name: /add shift/i }).click();
-			await expect(panel.getByText('e2e-shift-note')).toBeVisible({ timeout: 10_000 });
+			const addForm = dialog.locator('form[action="?/addShift"]');
+			await addForm.locator('input[name="startAt"]').fill(tomorrowDatetimeLocal(9));
+			await addForm.locator('input[name="endAt"]').fill(tomorrowDatetimeLocal(17));
+			await addForm.locator('input[name="notes"]').fill('e2e-shift-note');
+			await addForm.getByRole('button', { name: /add shift/i }).click();
+			await expect(dialog.getByText('e2e-shift-note')).toBeVisible({ timeout: 10_000 });
 		}
 
 		// Now check the caretaker's settings "My Shifts" card.
@@ -114,8 +99,6 @@ test.describe('shifts', () => {
 
 		// The card header badge shows the total count of upcoming shifts (≥ 2).
 		// Badge renders as a <div> with CVA classes containing "rounded-full".
-		// The badge is `<Badge variant="secondary" class="ml-auto">{count}</Badge>`.
-		// Locate by the rounded-full class which is unique to Badge components.
 		// The seed active shift + new shift = 2 total upcoming.
 		const countBadge = shiftsCard.locator('div[class*="rounded-full"]').first();
 		const countText = await countBadge.textContent({ timeout: 8_000 });

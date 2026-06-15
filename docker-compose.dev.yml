@@ -93,8 +93,13 @@ services:
       NTFY_TOKEN: ${NTFY_TOKEN:-}
 
       # Calendar feed: past-event window in days (0 = full history); set ENABLED=false to disable the feed
-      # CALENDAR_FEED_HISTORY_DAYS: 90
-      # CALENDAR_FEED_ENABLED: 'true'
+      CALENDAR_FEED_HISTORY_DAYS: ${CALENDAR_FEED_HISTORY_DAYS:-90}
+      CALENDAR_FEED_ENABLED: ${CALENDAR_FEED_ENABLED:-true}
+
+      # Optional: two-factor authentication (2FA). 32-byte base64 key that
+      # encrypts stored TOTP secrets. Required to enable 2FA.
+      # Generate with: openssl rand -base64 32
+      TWOFA_ENC_KEY: ${TWOFA_ENC_KEY:-}
 
     security_opt:
       - no-new-privileges:true
