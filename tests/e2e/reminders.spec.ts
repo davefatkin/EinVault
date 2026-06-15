@@ -233,4 +233,24 @@ test.describe('reminders', () => {
 		// Cross-check: the overdue item is NOT in the upcoming group.
 		await expect(groupAfter('Overdue').getByText('e2e-upcoming-grp')).toHaveCount(0);
 	});
+
+	test('editing a reminder via the ?edit deep link does not reopen after saving (#133)', async ({
+		asMember
+	}) => {
+		// The dashboard reminder modal's "Edit in Reminders" button links here.
+		await asMember.goto(`${BASE}?edit=seed-reminder-1`);
+
+		const titleInput = asMember.locator('#edit-title-seed-reminder-1');
+		await expect(titleInput).toBeVisible({ timeout: 8_000 });
+
+		// Save without changing anything so other specs that read this seed
+		// reminder's title are unaffected.
+		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+
+		// The inline edit form must close and stay closed. It used to pop right
+		// back open because the post-save reload re-fired the ?edit effect.
+		await expect(titleInput).toHaveCount(0, { timeout: 8_000 });
+		await asMember.waitForTimeout(800);
+		await expect(titleInput).toHaveCount(0);
+	});
 });

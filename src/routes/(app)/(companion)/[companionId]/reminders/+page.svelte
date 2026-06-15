@@ -111,13 +111,24 @@
 
 	let editingId = $state<string | null>(null);
 
+	// Open the edit form once per `?edit=` deep link. The guard is load-bearing:
+	// without it, saving re-runs the load (new `data.reminders`), the effect
+	// re-fires while `edit` is still in the URL, and the form pops back open.
+	// Stripping the param keeps a reload from reopening it too.
+	let lastEditDeepLink = '';
 	$effect(() => {
 		const editId = page.url.searchParams.get('edit');
-		if (!editId || !data.reminders.length) return;
+		if (!editId || editId === lastEditDeepLink || !data.reminders.length) return;
+		lastEditDeepLink = editId;
 		const match = data.reminders.find((r) => r.id === editId);
 		if (match) {
 			tick().then(() => startEdit(match));
 		}
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('edit');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
 	});
 
 	$effect(() => {
