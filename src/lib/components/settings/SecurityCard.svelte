@@ -81,7 +81,7 @@
 						class="max-w-[180px]"
 					/>
 				</div>
-				<Button type="submit">{t(locale, 'page.settings.confirmEnable')}</Button>
+				<Button type="submit" size="sm">{t(locale, 'page.settings.confirmEnable')}</Button>
 			</form>
 		{:else if !totpEnabled}
 			<!-- State 2: 2FA off, not mid-enroll -->
@@ -93,7 +93,7 @@
 					async ({ update }) =>
 						update({ reset: false })}
 			>
-				<Button type="submit">{t(locale, 'page.settings.enable2fa')}</Button>
+				<Button type="submit" size="sm">{t(locale, 'page.settings.enable2fa')}</Button>
 			</form>
 		{:else}
 			<!-- State 5: 2FA on -->
