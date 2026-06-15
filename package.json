@@ -78,6 +78,6 @@
 	"type": "module",
 	"overrides": {
 		"cookie": "^0.7.0",
-		"esbuild": "^0.25.0"
+		"esbuild": "^0.28.1"
 	}
 }
