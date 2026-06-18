@@ -99,18 +99,30 @@
 	let deleteHealthId = $state('');
 	let deleteHealthForm = $state<HTMLFormElement | null>(null);
 
+	// Open the edit form once per `?edit=` deep link (from the dashboard
+	// weight/health detail modal). The guard is load-bearing: without it,
+	// saving re-runs the load (new `data`), the effect re-fires while `edit`
+	// is still in the URL, and the form pops back open. Stripping the param
+	// keeps a reload from reopening it too.
+	let lastEditDeepLink = '';
 	$effect(() => {
 		const editId = page.url.searchParams.get('edit');
-		if (!editId) return;
+		if (!editId || editId === lastEditDeepLink) return;
+		lastEditDeepLink = editId;
 		const weightMatch = data.weightEntries.find((e) => e.id === editId);
 		if (weightMatch) {
 			editingWeightId = editId;
-			return;
+		} else {
+			const healthMatch = data.healthEvents.find((e) => e.id === editId);
+			if (healthMatch) {
+				editingHealthId = editId;
+			}
 		}
-		const healthMatch = data.healthEvents.find((e) => e.id === editId);
-		if (healthMatch) {
-			editingHealthId = editId;
-		}
+		tick().then(() => {
+			const url = new URL(page.url);
+			url.searchParams.delete('edit');
+			history.replaceState(history.state, '', url.pathname + url.search);
+		});
 	});
 
 	$effect(() => {

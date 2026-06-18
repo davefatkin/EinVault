@@ -130,4 +130,24 @@ test.describe('health events and weight log', () => {
 		// Form should still be visible — no redirect/close occurred
 		await expect(asMember.getByRole('button', { name: 'Save Event' })).toBeVisible();
 	});
+
+	test('editing a weight entry via the ?edit deep link does not reopen after saving (#142)', async ({
+		asMember
+	}) => {
+		// The dashboard weight detail modal's "Edit" button links here.
+		await asMember.goto(`/${COMP}/health?edit=seed-weight-1`);
+
+		const weightInput = asMember.locator('#edit-weight-seed-weight-1');
+		await expect(weightInput).toBeVisible({ timeout: 8_000 });
+
+		// Save without changing anything so other specs that read this seed
+		// weight entry are unaffected.
+		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+
+		// The inline edit form must close and stay closed. It used to pop right
+		// back open because the post-save reload re-fired the ?edit effect.
+		await expect(weightInput).toHaveCount(0, { timeout: 8_000 });
+		await asMember.waitForTimeout(800);
+		await expect(weightInput).toHaveCount(0);
+	});
 });
