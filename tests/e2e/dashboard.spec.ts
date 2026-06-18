@@ -54,3 +54,18 @@ test('mobile exposes Documents on a companion page @mobile', async ({ asMember }
 	await docs.first().click();
 	await expect(asMember).toHaveURL(`/${COMP}/documents`, { timeout: 8_000 });
 });
+
+// The "Next vet" hero stat surfaces the soonest vet/vaccination reminder.
+// It should open that reminder's detail modal, like the sibling weight stat.
+test('Next vet stat opens the reminder detail modal (#143)', async ({ asMember }) => {
+	await asMember.goto(`/${COMP}`);
+
+	// seed-reminder-1: the soonest vet reminder for Ein.
+	const nextVet = asMember.getByRole('button', { name: 'Annual checkup', exact: true });
+	await expect(nextVet).toBeVisible({ timeout: 8_000 });
+	await nextVet.click();
+
+	const dialog = asMember.getByRole('dialog');
+	await expect(dialog).toBeVisible();
+	await expect(dialog.getByRole('heading', { name: 'Annual checkup' })).toBeVisible();
+});
