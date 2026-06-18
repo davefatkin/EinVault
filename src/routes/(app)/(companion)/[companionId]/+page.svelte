@@ -642,7 +642,13 @@
 						>{t(locale, 'page.dashboard.nextVet')}</span
 					>
 					{#if nextReminder}
-						<span class="text-base font-bold text-foreground truncate">{nextReminder.title}</span>
+						<button
+							type="button"
+							onclick={() => nextReminder && openDetail({ kind: 'reminder', item: nextReminder })}
+							class="text-base font-bold text-foreground truncate text-left rounded-md px-1 py-0.5 -mx-1 hover:bg-accent transition-colors"
+						>
+							{nextReminder.title}
+						</button>
 					{:else}
 						<span class="text-base font-bold text-muted-foreground italic">—</span>
 					{/if}
