@@ -1,10 +1,9 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import { db, schema } from '$server/db';
-import { DATA_DIR } from '$lib/server/paths';
 
 // One hash for all seed users; computed once per process (bcrypt cost 12 ~100ms).
 export const SEED_PASSWORD_HASH = bcrypt.hashSync('test-password-123', 12);
@@ -816,7 +815,10 @@ export function refreshDemoContent(): void {
 		tx.delete(schema.companions).run();
 		seedContent(tx as never, { now });
 	});
-	copyDemoPhotoFiles(join(DATA_DIR, 'uploads'), now);
+	// Resolve DATA_DIR at call time so this module does not import $env at the
+	// top level (which breaks the Playwright test runner that loads seed.ts).
+	const dataDir = process.env.DATABASE_URL ? dirname(process.env.DATABASE_URL) : resolve('./data');
+	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }
 
 let demoRefreshTimer: ReturnType<typeof setInterval> | null = null;
