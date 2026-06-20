@@ -3,7 +3,8 @@ import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
-import { schema } from '$server/db';
+import { db, schema } from '$server/db';
+import { DATA_DIR } from '$lib/server/paths';
 
 // One hash for all seed users; computed once per process (bcrypt cost 12 ~100ms).
 export const SEED_PASSWORD_HASH = bcrypt.hashSync('test-password-123', 12);
@@ -779,6 +780,21 @@ export function seedContent(db: BetterSQLite3Database<typeof schema>, opts: { no
 export function seedRows(db: BetterSQLite3Database<typeof schema>, opts: { now: number }): void {
 	seedUsers(db);
 	seedContent(db, opts);
+}
+
+/**
+ * Idempotent: inserts the four demo user rows if they don't already exist.
+ * Safe to call multiple times; skips rows that are already present.
+ * Returns the number of rows inserted (0 if already seeded).
+ */
+export async function ensureDemoUsers(): Promise<number> {
+	// Check if spike already exists
+	const existing = await db.query.users.findFirst({
+		where: (u, { eq }) => eq(u.id, SEED.admin.id)
+	});
+	if (existing) return 0;
+	seedUsers(db as never);
+	return 4;
 }
 
 /**

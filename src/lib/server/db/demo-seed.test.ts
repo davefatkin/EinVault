@@ -67,3 +67,27 @@ describe('seedRows', () => {
 		}
 	});
 });
+
+describe('ensureDemoUsers', () => {
+	beforeEach(async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	it('inserts four demo users on first call', async () => {
+		const { ensureDemoUsers } = await import('$server/db/demo-seed');
+		const inserted = await ensureDemoUsers();
+		expect(inserted).toBe(4);
+		const users = await db.query.users.findMany();
+		expect(users.map((u) => u.id)).toContain(SEED.admin.id);
+	});
+
+	it('is idempotent — second call inserts 0', async () => {
+		const { ensureDemoUsers } = await import('$server/db/demo-seed');
+		await ensureDemoUsers();
+		const inserted = await ensureDemoUsers();
+		expect(inserted).toBe(0);
+	});
+});

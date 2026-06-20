@@ -20,6 +20,7 @@ import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
 import { requiresTwoFactor } from '$lib/server/auth/two-factor';
+import { DEMO_MODE } from '$lib/server/env';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -35,6 +36,12 @@ logTwoFactorBootStatus();
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
 recoverAndStart();
 startNotifyScheduler();
+
+if (DEMO_MODE) {
+	import('./lib/server/db/demo-seed').then(({ ensureDemoUsers }) => {
+		ensureDemoUsers().catch((err) => console.error('[demo] ensureDemoUsers failed:', err));
+	});
+}
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
 // host. CSP is enforced on the final navigation target after redirects, so the
