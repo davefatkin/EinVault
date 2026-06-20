@@ -9,7 +9,7 @@
 	let toast = $state(untrack(() => showNotice));
 
 	function submitRole(e: Event) {
-		(e.currentTarget as HTMLFormElement).submit();
+		(e.currentTarget as HTMLSelectElement).form?.requestSubmit();
 	}
 </script>
 
