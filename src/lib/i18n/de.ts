@@ -1010,7 +1010,16 @@ const messages: Record<keyof Messages, string> = {
 	'documents.category.medical': 'Medizinisch',
 	'documents.category.insurance': 'Versicherung',
 	'documents.category.ownership': 'Eigentum',
-	'documents.category.other': 'Sonstiges'
+	'documents.category.other': 'Sonstiges',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Schreibgeschützte Demo',
+	'demo.viewingAs': 'Angemeldet als',
+	'demo.roleAdmin': 'Administrator',
+	'demo.roleMember': 'Mitglied',
+	'demo.roleCaretaker': 'Betreuer',
+	'demo.sourceLink': 'Quellcode',
+	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.'
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

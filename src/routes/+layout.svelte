@@ -5,6 +5,7 @@
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { applyTheme } from '$lib/theme';
+	import DemoBar from '$components/demo/DemoBar.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -37,5 +38,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="description" content="EinVault: private dog health &amp; care tracker" />
 </svelte:head>
+
+{#if data.demoMode && data.user}
+	<DemoBar currentRole={data.user.role} showNotice={data.demoNotice ?? false} />
+{/if}
 
 {@render children()}

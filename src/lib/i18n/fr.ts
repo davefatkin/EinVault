@@ -1011,7 +1011,17 @@ const messages: Record<keyof Messages, string> = {
 	'documents.category.medical': 'Médical',
 	'documents.category.insurance': 'Assurance',
 	'documents.category.ownership': 'Propriété',
-	'documents.category.other': 'Autre'
+	'documents.category.other': 'Autre',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Démo en lecture seule',
+	'demo.viewingAs': 'Connecté en tant que',
+	'demo.roleAdmin': 'Administrateur',
+	'demo.roleMember': 'Membre',
+	'demo.roleCaretaker': 'Gardien',
+	'demo.sourceLink': 'Source',
+	'demo.writeBlocked':
+		"Cette démo est en lecture seule — votre modification n'a pas été enregistrée."
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

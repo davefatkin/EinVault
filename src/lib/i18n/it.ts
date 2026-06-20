@@ -1004,7 +1004,16 @@ const messages: Record<keyof Messages, string> = {
 	'documents.category.medical': 'Medico',
 	'documents.category.insurance': 'Assicurazione',
 	'documents.category.ownership': 'Proprietà',
-	'documents.category.other': 'Altro'
+	'documents.category.other': 'Altro',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Demo in sola lettura',
+	'demo.viewingAs': 'Connesso come',
+	'demo.roleAdmin': 'Amministratore',
+	'demo.roleMember': 'Membro',
+	'demo.roleCaretaker': 'Assistente',
+	'demo.sourceLink': 'Sorgente',
+	'demo.writeBlocked': 'Questa demo è in sola lettura — la tua modifica non è stata salvata.'
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

@@ -993,7 +993,16 @@ const messages = {
 	'documents.category.medical': 'Medical',
 	'documents.category.insurance': 'Insurance',
 	'documents.category.ownership': 'Ownership',
-	'documents.category.other': 'Other'
+	'documents.category.other': 'Other',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Read-only demo',
+	'demo.viewingAs': 'Viewing as',
+	'demo.roleAdmin': 'Admin',
+	'demo.roleMember': 'Member',
+	'demo.roleCaretaker': 'Caretaker',
+	'demo.sourceLink': 'Source',
+	'demo.writeBlocked': "This demo is read-only — your change wasn't saved."
 
 	// Meta
 } as const;
