@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, json } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth } from '$server/auth';
@@ -18,6 +18,7 @@ import {
 	logTwoFactorBootStatus,
 	logDemoBootStatus
 } from '$lib/server/env';
+import { isDemoBlockedRequest } from '$lib/server/demo';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
@@ -163,6 +164,37 @@ const twoFactorGate: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
+const demoReadOnly: Handle = async ({ event, resolve }) => {
+	if (DEMO_MODE && isDemoBlockedRequest(event.request.method, event.url.pathname)) {
+		if (event.url.pathname.startsWith('/api')) {
+			return json({ error: 'This is a read-only demo.', demo: true }, { status: 403 });
+		}
+		event.cookies.set('einvault_demo_notice', '1', {
+			path: '/',
+			httpOnly: false,
+			sameSite: 'strict',
+			secure: event.url.protocol === 'https:',
+			maxAge: 30
+		});
+		const referer = event.request.headers.get('referer');
+		const back =
+			referer && URL.canParse(referer) ? new URL(referer).pathname + new URL(referer).search : '/';
+		redirect(303, back);
+	}
+	// Read path: prevent any CDN/proxy from caching authenticated HTML, so one
+	// visitor's session-rendered page can never be served to another. This
+	// is enforced server-side and does not depend on Cloudflare config.
+	const response = await resolve(event);
+	if (DEMO_MODE) {
+		const ct = response.headers.get('content-type') ?? '';
+		if (ct.includes('text/html')) {
+			response.headers.set('Cache-Control', 'private, no-store');
+			response.headers.append('Vary', 'Cookie');
+		}
+	}
+	return response;
+};
+
 const localeDetect: Handle = async ({ event, resolve }) => {
 	// Priority: user preference > cookie > Accept-Language > default
 	const cookieRaw = event.cookies.get('einvault_locale');
@@ -190,4 +222,10 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(securityHeaders, authContext, twoFactorGate, localeDetect);
+export const handle = sequence(
+	securityHeaders,
+	authContext,
+	twoFactorGate,
+	demoReadOnly,
+	localeDetect
+);
