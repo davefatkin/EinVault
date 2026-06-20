@@ -67,7 +67,7 @@
 		"drizzle-orm": "^0.45.2",
 		"isomorphic-dompurify": "^3.9.0",
 		"marked": "^18.0.3",
-		"nodemailer": "^8.0.10",
+		"nodemailer": "^9.0.1",
 		"openid-client": "^6.8.4",
 		"otpauth": "^9.5.1",
 		"pdfjs-dist": "^6.0.227",
