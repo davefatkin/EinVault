@@ -334,6 +334,11 @@ const messages = {
 	'page.login.taglineSubtext':
 		"The self-hosted vault for your companion's health, journal, and daily care.",
 	'page.login.brandFooter': 'Your data. Your server. Your companions.',
+	'page.login.demoIntro': 'Choose a role to explore the demo.',
+	'page.login.demoAdmin': 'Explore as Admin',
+	'page.login.demoMember': 'Explore as Member',
+	'page.login.demoCaretaker': 'Explore as Caretaker',
+	'page.login.demoReadOnly': "This is a read-only demo. Changes won't be saved.",
 
 	// Page: Forgot password
 	'page.forgot.title': 'Reset your password',

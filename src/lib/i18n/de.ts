@@ -344,6 +344,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'Der selbst gehostete Tresor für Gesundheit, Tagebuch und tägliche Pflege deines Begleiters.',
 	'page.login.brandFooter': 'Deine Daten. Dein Server. Deine Begleiter.',
+	'page.login.demoIntro': 'Wähle eine Rolle, um die Demo zu erkunden.',
+	'page.login.demoAdmin': 'Als Admin erkunden',
+	'page.login.demoMember': 'Als Mitglied erkunden',
+	'page.login.demoCaretaker': 'Als Betreuer erkunden',
+	'page.login.demoReadOnly':
+		'Dies ist eine schreibgeschützte Demo. Änderungen werden nicht gespeichert.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Passwort zurücksetzen',

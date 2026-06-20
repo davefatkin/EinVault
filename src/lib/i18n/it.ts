@@ -340,6 +340,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'Il forziere self-hosted per la salute, il diario e la cura quotidiana del tuo compagno.',
 	'page.login.brandFooter': 'I tuoi dati. Il tuo server. I tuoi compagni.',
+	'page.login.demoIntro': 'Scegli un ruolo per esplorare la demo.',
+	'page.login.demoAdmin': 'Esplora come amministratore',
+	'page.login.demoMember': 'Esplora come membro',
+	'page.login.demoCaretaker': 'Esplora come assistente',
+	'page.login.demoReadOnly':
+		'Questa è una demo di sola lettura. Le modifiche non verranno salvate.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Reimposta la tua password',

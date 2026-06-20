@@ -342,6 +342,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'O cofre auto-hospedado para a saúde, o diário e os cuidados diários do seu companheiro.',
 	'page.login.brandFooter': 'Os teus dados. O teu servidor. Os teus companheiros.',
+	'page.login.demoIntro': 'Escolhe um papel para explorar a demonstração.',
+	'page.login.demoAdmin': 'Explorar como administrador',
+	'page.login.demoMember': 'Explorar como membro',
+	'page.login.demoCaretaker': 'Explorar como cuidador',
+	'page.login.demoReadOnly':
+		'Esta é uma demonstração de leitura apenas. As alterações não serão guardadas.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Redefinir sua senha',

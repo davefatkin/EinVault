@@ -343,6 +343,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'El baúl autoalojado para la salud, el diario y el cuidado diario de tu compañero.',
 	'page.login.brandFooter': 'Tus datos. Tu servidor. Tus compañeros.',
+	'page.login.demoIntro': 'Elige un rol para explorar la demo.',
+	'page.login.demoAdmin': 'Explorar como administrador',
+	'page.login.demoMember': 'Explorar como miembro',
+	'page.login.demoCaretaker': 'Explorar como cuidador',
+	'page.login.demoReadOnly': 'Esta es una demo de solo lectura. Los cambios no se guardarán.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Restablecer tu contraseña',
