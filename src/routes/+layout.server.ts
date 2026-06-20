@@ -41,7 +41,9 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 		user: locals.user,
 		locale: locals.locale,
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-		version,
+		// Don't leak the running version on the public demo; footer falls back to
+		// the source-code link.
+		version: DEMO_MODE ? undefined : version,
 		year: new Date().getFullYear(),
 		reminderUndoSeconds: resolveReminderUndoSeconds(locals.user?.reminderUndoSeconds ?? null),
 		// Caretakers don't get the picker — the underlying endpoints reject them.

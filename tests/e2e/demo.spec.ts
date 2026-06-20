@@ -169,6 +169,16 @@ test('admin role lands on /', async ({ world, page }) => {
 	await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/, { timeout: 10_000 });
 });
 
+test('demo hides the app version in the footer', async ({ world, page }) => {
+	await page.goto(world.server.baseURL + '/auth/login');
+	await page.getByRole('button', { name: /Explore as Admin/i }).click();
+	await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/, { timeout: 10_000 });
+	const footer = page.locator('footer');
+	// No vX.Y.Z version string; footer falls back to the source-code link.
+	await expect(footer).not.toContainText(/v\d+\.\d+\.\d+/);
+	await expect(footer.getByText('Source Code', { exact: true })).toBeVisible();
+});
+
 test('caretaker role lands on /care', async ({ world, page }) => {
 	await page.goto(world.server.baseURL + '/auth/login');
 	await page.getByRole('button', { name: /Explore as Caretaker/i }).click();
