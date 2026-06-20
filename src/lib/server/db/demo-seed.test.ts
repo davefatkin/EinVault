@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { db, schema } from '$server/db';
 import { seedRows, SEED } from '$server/db/demo-seed';
 
@@ -107,10 +107,22 @@ describe('ensureDemoUsers', () => {
 
 describe('refreshDemoContent', () => {
 	beforeEach(async () => {
+		// refreshDemoContent fails closed unless DEMO_MODE is set.
+		process.env.DEMO_MODE = 'true';
 		await db.delete(schema.caretakerShifts);
 		await db.delete(schema.companionCaretakers);
 		await db.delete(schema.companions);
 		await db.delete(schema.users);
+	});
+
+	afterEach(() => {
+		delete process.env.DEMO_MODE;
+	});
+
+	it('refuses to run when DEMO_MODE is not set', async () => {
+		const { refreshDemoContent } = await import('$server/db/demo-seed');
+		delete process.env.DEMO_MODE;
+		expect(() => refreshDemoContent()).toThrow(/DEMO_MODE/);
 	});
 
 	it('re-seeds content anchored to now after wiping old rows', async () => {

@@ -804,6 +804,13 @@ export async function ensureDemoUsers(): Promise<number> {
  * Called at boot and every 24h by startDemoRefreshScheduler.
  */
 export function refreshDemoContent(): void {
+	// Fail closed: this is destructive (wipes every companion + rmSync of the
+	// journal uploads dir). It must never run against a real instance. Guard on
+	// the raw env (not the resolved const) so this module avoids importing $env,
+	// which would break the Playwright test runner that loads it.
+	if (process.env.DEMO_MODE?.trim().toLowerCase() !== 'true') {
+		throw new Error('refreshDemoContent must only run with DEMO_MODE enabled');
+	}
 	const now = Date.now();
 	db.transaction((tx) => {
 		// Explicit deletes for tables that reference both users and companions
