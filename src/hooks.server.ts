@@ -41,8 +41,10 @@ if (DEMO_MODE) {
 	import('./lib/server/db/demo-seed').then(
 		({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
 			ensureDemoUsers()
-				.then(() => refreshDemoContent())
-				.then(() => startDemoRefreshScheduler())
+				.then(() => {
+					refreshDemoContent();
+					startDemoRefreshScheduler();
+				})
 				.catch((err) => console.error('[demo] boot setup failed:', err));
 		}
 	);

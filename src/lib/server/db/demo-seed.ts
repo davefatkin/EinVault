@@ -804,9 +804,9 @@ export async function ensureDemoUsers(): Promise<number> {
  *
  * Called at boot and every 24h by startDemoRefreshScheduler.
  */
-export async function refreshDemoContent(): Promise<void> {
+export function refreshDemoContent(): void {
 	const now = Date.now();
-	await db.transaction((tx) => {
+	db.transaction((tx) => {
 		// Explicit deletes for tables that reference both users and companions
 		// (cascade from companions alone would leave orphan rows if user deleted first)
 		tx.delete(schema.caretakerShifts).run();
@@ -830,7 +830,11 @@ const DEMO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 export function startDemoRefreshScheduler(): void {
 	if (demoRefreshTimer) return;
 	demoRefreshTimer = setInterval(() => {
-		refreshDemoContent().catch((err) => console.error('[demo] refresh failed:', err));
+		try {
+			refreshDemoContent();
+		} catch (err) {
+			console.error('[demo] refresh failed:', err);
+		}
 	}, DEMO_REFRESH_INTERVAL_MS);
 	demoRefreshTimer.unref();
 	console.info('[demo] demo refresh scheduler started (24h interval)');
