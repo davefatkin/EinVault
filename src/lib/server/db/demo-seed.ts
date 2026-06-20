@@ -798,6 +798,45 @@ export async function ensureDemoUsers(): Promise<number> {
 }
 
 /**
+ * Wipes all demo content rows (companions + their cascade children,
+ * plus explicit deletes for tables with user FK), then re-seeds
+ * anchored to `now`. Also copies photo files.
+ *
+ * Called at boot and every 24h by startDemoRefreshScheduler.
+ */
+export async function refreshDemoContent(): Promise<void> {
+	const now = Date.now();
+	await db.transaction((tx) => {
+		// Explicit deletes for tables that reference both users and companions
+		// (cascade from companions alone would leave orphan rows if user deleted first)
+		tx.delete(schema.caretakerShifts).run();
+		tx.delete(schema.companionCaretakers).run();
+		// companions cascade to: journalEntries -> journalPhotos, healthEvents,
+		// weightEntries, dailyEvents, reminders
+		tx.delete(schema.companions).run();
+		seedContent(tx as never, { now });
+	});
+	copyDemoPhotoFiles(join(DATA_DIR, 'uploads'), now);
+}
+
+let demoRefreshTimer: ReturnType<typeof setInterval> | null = null;
+
+const DEMO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Starts the 24-hour demo content refresh timer. Idempotent — calling twice
+ * is a no-op. The timer is unref'd so it never keeps the process alive.
+ */
+export function startDemoRefreshScheduler(): void {
+	if (demoRefreshTimer) return;
+	demoRefreshTimer = setInterval(() => {
+		refreshDemoContent().catch((err) => console.error('[demo] refresh failed:', err));
+	}, DEMO_REFRESH_INTERVAL_MS);
+	demoRefreshTimer.unref();
+	console.info('[demo] demo refresh scheduler started (24h interval)');
+}
+
+/**
  * Copies bundled demo asset JPEGs to the uploads directory, keyed by storageKey
  * derived from `now`. Clears stale dated dirs first so re-anchoring is clean.
  */

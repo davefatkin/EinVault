@@ -7,6 +7,7 @@ import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
 import {
 	S3_CONFIG,
+	DEMO_MODE,
 	logImmichBootStatus,
 	logPaperlessBootStatus,
 	logStorageBootStatus,
@@ -20,7 +21,6 @@ import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
 import { requiresTwoFactor } from '$lib/server/auth/two-factor';
-import { DEMO_MODE } from '$lib/server/env';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -38,9 +38,14 @@ recoverAndStart();
 startNotifyScheduler();
 
 if (DEMO_MODE) {
-	import('./lib/server/db/demo-seed').then(({ ensureDemoUsers }) => {
-		ensureDemoUsers().catch((err) => console.error('[demo] ensureDemoUsers failed:', err));
-	});
+	import('./lib/server/db/demo-seed').then(
+		({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
+			ensureDemoUsers()
+				.then(() => refreshDemoContent())
+				.then(() => startDemoRefreshScheduler())
+				.catch((err) => console.error('[demo] boot setup failed:', err));
+		}
+	);
 }
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3

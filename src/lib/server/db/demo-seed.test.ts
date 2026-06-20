@@ -91,3 +91,51 @@ describe('ensureDemoUsers', () => {
 		expect(inserted).toBe(0);
 	});
 });
+
+describe('refreshDemoContent', () => {
+	beforeEach(async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	it('re-seeds content anchored to now after wiping old rows', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		// Seed users first (refreshDemoContent only touches content, not users)
+		await ensureDemoUsers();
+		await refreshDemoContent();
+
+		const entries = await db.query.journalEntries.findMany();
+		expect(entries.length).toBeGreaterThan(0);
+
+		// All journal entries should have dates within the last 60 days
+		const now = Date.now();
+		const sixtyDaysAgo = now - 60 * 24 * 60 * 60 * 1000;
+		for (const entry of entries) {
+			const entryMs = new Date(entry.date).getTime();
+			expect(entryMs).toBeGreaterThan(sixtyDaysAgo);
+		}
+	});
+
+	it('is idempotent — calling twice leaves one set of content rows', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		await ensureDemoUsers();
+		await refreshDemoContent();
+		await refreshDemoContent();
+
+		const companions = await db.query.companions.findMany();
+		expect(companions.length).toBe(2); // only Ein and Edward, not doubled
+	});
+});
+
+describe('startDemoRefreshScheduler', () => {
+	it('can be called multiple times without throwing', async () => {
+		// Just verify idempotency — don't wait for the 24h timer to fire
+		const { startDemoRefreshScheduler } = await import('$server/db/demo-seed');
+		expect(() => {
+			startDemoRefreshScheduler();
+			startDemoRefreshScheduler(); // second call is no-op
+		}).not.toThrow();
+	});
+});
