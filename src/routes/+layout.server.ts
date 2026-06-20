@@ -33,7 +33,7 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	}
 
 	const demoNotice = DEMO_MODE && cookies.get('einvault_demo_notice') === '1';
-	if (DEMO_MODE && cookies.get('einvault_demo_notice') === '1') {
+	if (demoNotice) {
 		cookies.delete('einvault_demo_notice', { path: '/' });
 	}
 

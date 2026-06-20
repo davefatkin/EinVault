@@ -15,7 +15,8 @@ import {
 	logVideoTranscodeBootStatus,
 	logSmtpBootStatus,
 	logNtfyBootStatus,
-	logTwoFactorBootStatus
+	logTwoFactorBootStatus,
+	logDemoBootStatus
 } from '$lib/server/env';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
@@ -30,6 +31,7 @@ logDeprecatedEnvWarnings();
 logVideoTranscodeBootStatus();
 logSmtpBootStatus();
 logNtfyBootStatus();
+logDemoBootStatus();
 logTwoFactorBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op

@@ -1,6 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { db, schema } from '$server/db';
 import { seedRows, SEED } from '$server/db/demo-seed';
+
+// copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
+// a developer's journal photos in the ./data directory. Stub the fs operations
+// it relies on so tests only exercise DB state.
+vi.mock('node:fs', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('node:fs')>();
+	return {
+		...actual,
+		rmSync: vi.fn(),
+		copyFileSync: vi.fn(),
+		mkdirSync: vi.fn()
+	};
+});
 
 describe('seedRows', () => {
 	beforeEach(async () => {

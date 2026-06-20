@@ -457,7 +457,9 @@ export const DEMO_MODE = envBool(env.DEMO_MODE, false);
 
 export function logDemoBootStatus(): void {
 	if (DEMO_MODE) {
-		console.log('[demo] DEMO_MODE is ON — instance is read-only, login uses the role picker.');
+		// TODO: write guard not yet enforced — DEMO_MODE currently provisions demo
+		// content and enables the role picker; blocking writes is a future step.
+		console.log('[demo] DEMO_MODE is ON — demo content active, login uses the role picker.');
 	}
 }
 
