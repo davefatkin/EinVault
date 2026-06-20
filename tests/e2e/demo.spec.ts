@@ -164,10 +164,9 @@ test('login page shows role picker not credential form', async ({ world, page })
 test('admin role lands on /', async ({ world, page }) => {
 	await page.goto(world.server.baseURL + '/auth/login');
 	await page.getByRole('button', { name: /Explore as Admin/i }).click();
-	await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
-	await expect(page).not.toHaveURL(/\/care/, { timeout: 10_000 });
-	// Should be on / or a companion page (not in /care, not in /auth)
-	await expect(page).not.toHaveURL(/\/auth\//, { timeout: 5_000 });
+	// Positively assert the admin landed on the app root '/', not just "somewhere
+	// that isn't login" — a redirect to a 500 page or /settings would otherwise pass.
+	await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/, { timeout: 10_000 });
 });
 
 test('caretaker role lands on /care', async ({ world, page }) => {
