@@ -11,9 +11,9 @@ test('overview renders companion cards and needs-attention @mobile', async ({ as
 
 test('overview shows care-status badge @mobile', async ({ asMember }) => {
 	await asMember.goto('/');
-	// Seed reminder for Ein is 30 days in the future → "Up to date"
-	// Edward has no reminders → also "Up to date"
-	await expect(asMember.getByText(/up to date/i).first()).toBeVisible({ timeout: 8_000 });
+	// Enriched seed has overdue reminders for both Ein ("Dental check", -5d) and
+	// Edward ("Nail trim", -3d) → both companions show "Needs attention".
+	await expect(asMember.getByText(/needs attention/i).first()).toBeVisible({ timeout: 8_000 });
 });
 
 test('overview companion cards have care-status for all companions @mobile', async ({
@@ -21,7 +21,7 @@ test('overview companion cards have care-status for all companions @mobile', asy
 }) => {
 	await asMember.goto('/');
 	// Both Ein and Edward should have care-status badges rendered.
-	// Seed reminder for Ein is 30 days in the future, Edward has none — both are "Up to date".
-	const badges = asMember.getByText(/up to date/i);
+	// Both have overdue reminders in the enriched seed → both show "Needs attention".
+	const badges = asMember.getByText(/needs attention/i);
 	await expect(badges.first()).toBeVisible({ timeout: 8_000 });
 });

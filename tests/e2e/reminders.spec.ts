@@ -122,7 +122,10 @@ test.describe('reminders', () => {
 		await expect(activeSection(asMember).getByText('e2e-rem-undo')).toBeVisible({ timeout: 5_000 });
 
 		// Should not have moved to the completed section
-		await expect(completedSection(asMember)).toHaveCount(0);
+		// (The seed has a pre-existing completed reminder so <details> is always present;
+		// check that this specific reminder is absent from it instead.)
+		await completedSection(asMember).locator('summary').click();
+		await expect(completedSection(asMember).getByText('e2e-rem-undo')).toHaveCount(0);
 	});
 
 	test('complete without undo commits to completed section', async ({ asMember }) => {
@@ -145,15 +148,14 @@ test.describe('reminders', () => {
 			.first();
 		await reminderCard.getByRole('button', { name: 'Done' }).click();
 
-		// Wait for it to appear in the completed section — timeout must outlast the 7s undo window
+		// Wait for it to appear in the completed section — timeout must outlast the 7s undo window.
+		// The seed has a pre-existing completed reminder so <details> is always present;
+		// open it immediately and wait for the specific text to appear inside.
 		const completed = completedSection(asMember);
-		await expect(completed).toBeVisible({ timeout: 15_000 });
-
-		// Open the <details> summary to see the completed list
 		await completed.locator('summary').click();
 
 		// Reminder should be listed as completed (line-through text)
-		await expect(completed.getByText('e2e-rem-commit')).toBeVisible({ timeout: 5_000 });
+		await expect(completed.getByText('e2e-rem-commit')).toBeVisible({ timeout: 15_000 });
 
 		// Must be gone from the active section
 		await expect(activeSection(asMember).getByText('e2e-rem-commit')).toHaveCount(0);
@@ -181,15 +183,14 @@ test.describe('reminders', () => {
 			.first();
 		await reminderCard.getByRole('button', { name: 'Done' }).click();
 
-		// Wait past the undo window for the completed instance to appear
+		// Wait past the undo window for the completed instance to appear.
+		// The seed has a pre-existing completed reminder so <details> is always present;
+		// open it immediately and wait for the specific text to appear inside.
 		const completed = completedSection(asMember);
-		await expect(completed).toBeVisible({ timeout: 15_000 });
-
-		// Open the completed <details>
 		await completed.locator('summary').click();
 
 		// One completed instance
-		await expect(completed.getByText('e2e-rem-rec')).toBeVisible({ timeout: 5_000 });
+		await expect(completed.getByText('e2e-rem-rec')).toBeVisible({ timeout: 15_000 });
 
 		// One new active instance (the next occurrence, due tomorrow)
 		const activeInstances = activeSection(asMember).getByText('e2e-rem-rec');
