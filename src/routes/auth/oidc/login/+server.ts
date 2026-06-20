@@ -4,8 +4,10 @@ import * as client from 'openid-client';
 import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '$lib/server/auth/oidc';
 import { setOidcStateCookie, isValidReturnTo } from '$lib/server/auth/oidc-state';
 import { isSecureRequest } from '$lib/server/auth';
+import { DEMO_MODE } from '$lib/server/env';
 
 export const GET: RequestHandler = async ({ url, cookies, locals, request }) => {
+	if (DEMO_MODE) error(404, 'Not found');
 	if (!isOidcEnabled()) error(404);
 
 	if (locals.user) {

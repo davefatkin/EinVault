@@ -32,6 +32,7 @@ export function getOidcProviderName(): string {
 }
 
 export function isOidcEnabled(): boolean {
+	if (env.DEMO_MODE?.trim().toLowerCase() === 'true') return false;
 	return getOidcConfig() !== null;
 }
 

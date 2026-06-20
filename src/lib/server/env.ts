@@ -456,10 +456,20 @@ export function logNtfyBootStatus(): void {
 export const DEMO_MODE = envBool(env.DEMO_MODE, false);
 
 export function logDemoBootStatus(): void {
-	if (DEMO_MODE) {
-		// TODO: write guard not yet enforced — DEMO_MODE currently provisions demo
-		// content and enables the role picker; blocking writes is a future step.
-		console.log('[demo] DEMO_MODE is ON — demo content active, login uses the role picker.');
+	if (!DEMO_MODE) return;
+	console.log('[demo] DEMO_MODE is ON — read-only; OIDC and password login disabled.');
+	const leaks = [
+		'OIDC_ISSUER_URL',
+		'S3_ENDPOINT',
+		'IMMICH_URL',
+		'PAPERLESS_URL',
+		'SMTP_HOST',
+		'NTFY_URL'
+	].filter((k) => env[k]?.trim());
+	if (leaks.length) {
+		console.warn(
+			`[demo] WARNING: DEMO_MODE is on but these integration vars are set and should be unset: ${leaks.join(', ')}`
+		);
 	}
 }
 
