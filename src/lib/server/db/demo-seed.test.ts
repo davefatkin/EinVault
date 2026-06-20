@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db, schema } from '$server/db';
 import { seedRows, SEED } from '$server/db/demo-seed';
-import { eq } from 'drizzle-orm';
 
 describe('seedRows', () => {
 	beforeEach(async () => {
@@ -57,7 +56,10 @@ describe('seedRows', () => {
 
 		for (const photo of photos) {
 			const entry = entryById.get(photo.entryId);
-			expect(entry, `no journal entry found for photo ${photo.id} (entryId=${photo.entryId})`).toBeDefined();
+			expect(
+				entry,
+				`no journal entry found for photo ${photo.id} (entryId=${photo.entryId})`
+			).toBeDefined();
 			expect(
 				photo.storageKey,
 				`storageKey for photo ${photo.id} must contain its entry's date (${entry!.date})`

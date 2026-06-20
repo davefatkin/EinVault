@@ -167,10 +167,7 @@ export function seedUsers(db: BetterSQLite3Database<typeof schema>): void {
  * weight entries, daily events, and reminders. All date-sensitive rows
  * are anchored to `now` so re-anchoring works cleanly.
  */
-export function seedContent(
-	db: BetterSQLite3Database<typeof schema>,
-	opts: { now: number }
-): void {
+export function seedContent(db: BetterSQLite3Database<typeof schema>, opts: { now: number }): void {
 	const now = opts.now;
 	const day = 24 * 60 * 60 * 1000;
 	const hour = 60 * 60 * 1000;
@@ -185,9 +182,7 @@ export function seedContent(
 		.values([{ ...SEED.companions.ein }, { ...SEED.companions.edward }])
 		.run();
 
-	db.insert(schema.companionCaretakers)
-		.values({ companionId: ein, userId: faye })
-		.run();
+	db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye }).run();
 
 	// Active shift so the caretaker can see their companion.
 	db.insert(schema.caretakerShifts)
@@ -781,10 +776,7 @@ export function seedContent(
 }
 
 /** Inserts all seed rows (users + content). Convenience wrapper for existing callers. */
-export function seedRows(
-	db: BetterSQLite3Database<typeof schema>,
-	opts: { now: number }
-): void {
+export function seedRows(db: BetterSQLite3Database<typeof schema>, opts: { now: number }): void {
 	seedUsers(db);
 	seedContent(db, opts);
 }

@@ -4,10 +4,7 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from '../../src/lib/server/db/schema';
-import {
-	seedRows,
-	copyDemoPhotoFiles
-} from '../../src/lib/server/db/demo-seed';
+import { seedRows, copyDemoPhotoFiles } from '../../src/lib/server/db/demo-seed';
 
 export { SEED } from '../../src/lib/server/db/demo-seed';
 
