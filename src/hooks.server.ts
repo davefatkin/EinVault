@@ -1,7 +1,7 @@
 import { redirect, json } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { validateAuth } from '$server/auth';
+import { validateAuth, isSecureRequest } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
@@ -173,7 +173,7 @@ const demoReadOnly: Handle = async ({ event, resolve }) => {
 			path: '/',
 			httpOnly: false,
 			sameSite: 'strict',
-			secure: event.url.protocol === 'https:',
+			secure: isSecureRequest(event.request),
 			maxAge: 30
 		});
 		const referer = event.request.headers.get('referer');
