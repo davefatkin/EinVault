@@ -38,9 +38,9 @@
 		errorMessage={form?.accountError}
 	/>
 
-	<LanguageCard currentLocale={data.user?.locale ?? 'en'} />
+	<LanguageCard currentLocale={data.user?.locale ?? 'en'} demoMode={data.demoMode} />
 
-	<AppearanceCard currentTheme={(data.user?.theme as Theme) ?? 'system'} />
+	<AppearanceCard currentTheme={(data.user?.theme as Theme) ?? 'system'} demoMode={data.demoMode} />
 
 	<ReminderUndoCard
 		currentValue={data.user?.reminderUndoSeconds ?? null}

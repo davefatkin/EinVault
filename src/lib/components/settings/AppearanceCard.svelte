@@ -5,10 +5,12 @@
 
 	let {
 		currentTheme: initialTheme,
-		redirectPath
+		redirectPath,
+		demoMode = false
 	}: {
 		currentTheme: Theme;
 		redirectPath?: string;
+		demoMode?: boolean;
 	} = $props();
 
 	const locale = getLocale();
@@ -25,7 +27,11 @@
 	async function setTheme(theme: Theme) {
 		themeOverride = theme;
 		applyTheme(theme);
-		await saveTheme(theme, redirectPath);
+		if (demoMode) {
+			document.cookie = `einvault_theme=${theme};path=/;max-age=31536000;SameSite=Strict`;
+		} else {
+			await saveTheme(theme, redirectPath);
+		}
 	}
 </script>
 

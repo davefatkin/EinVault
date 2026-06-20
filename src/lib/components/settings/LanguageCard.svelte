@@ -4,10 +4,16 @@
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
 
-	let { currentLocale }: { currentLocale: string } = $props();
+	let { currentLocale, demoMode = false }: { currentLocale: string; demoMode?: boolean } = $props();
 
 	const locale = getLocale();
-	let localeForm: HTMLFormElement;
+	let localeForm = $state<HTMLFormElement | undefined>(undefined);
+
+	function changeDemoLocale(e: Event) {
+		const value = (e.currentTarget as HTMLSelectElement).value;
+		document.cookie = `einvault_locale=${value};path=/;max-age=31536000;SameSite=Lax`;
+		window.location.reload();
+	}
 </script>
 
 <Card>
@@ -18,23 +24,33 @@
 		<p class="text-sm text-muted-foreground mb-3">
 			{t(locale, 'page.settings.languageDescription')}
 		</p>
-		<form
-			method="POST"
-			action="?/locale"
-			bind:this={localeForm}
-			use:enhance={() => {
-				return async () => {
-					window.location.reload();
-				};
-			}}
-		>
+		{#if demoMode}
 			<div class="max-w-[200px]">
-				<Select name="locale" value={currentLocale} onchange={() => localeForm.requestSubmit()}>
+				<Select name="locale" value={currentLocale} onchange={changeDemoLocale}>
 					{#each SUPPORTED_LOCALES as loc (loc)}
 						<option value={loc}>{LOCALE_LABELS[loc]}</option>
 					{/each}
 				</Select>
 			</div>
-		</form>
+		{:else}
+			<form
+				method="POST"
+				action="?/locale"
+				bind:this={localeForm}
+				use:enhance={() => {
+					return async () => {
+						window.location.reload();
+					};
+				}}
+			>
+				<div class="max-w-[200px]">
+					<Select name="locale" value={currentLocale} onchange={() => localeForm?.requestSubmit()}>
+						{#each SUPPORTED_LOCALES as loc (loc)}
+							<option value={loc}>{LOCALE_LABELS[loc]}</option>
+						{/each}
+					</Select>
+				</div>
+			</form>
+		{/if}
 	</CardContent>
 </Card>
