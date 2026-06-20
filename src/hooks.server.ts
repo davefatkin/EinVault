@@ -40,16 +40,14 @@ recoverAndStart();
 startNotifyScheduler();
 
 if (DEMO_MODE) {
-	import('./lib/server/db/demo-seed').then(
-		({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
-			ensureDemoUsers()
-				.then(() => {
-					refreshDemoContent();
-					startDemoRefreshScheduler();
-				})
-				.catch((err) => console.error('[demo] boot setup failed:', err));
-		}
-	);
+	import('./lib/server/db/demo-seed')
+		.then(({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
+			return ensureDemoUsers().then(() => {
+				refreshDemoContent();
+				startDemoRefreshScheduler();
+			});
+		})
+		.catch((err) => console.error('[demo] boot setup failed:', err));
 }
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
