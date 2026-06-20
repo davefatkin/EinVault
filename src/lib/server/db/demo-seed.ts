@@ -1,6 +1,5 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { copyFileSync, mkdirSync, existsSync, rmSync } from 'fs';
-import { statSync } from 'node:fs';
+import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
@@ -64,9 +63,23 @@ export const SEED = {
 const ASSETS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'demo-assets');
 
 /**
+ * Day-offset (relative to `now`) for each journal entry that has linked photos.
+ * Kept here so `buildPhotoManifest` and `seedContent` share the same source of
+ * truth — changing a journal entry's date in seedContent means updating it here
+ * too, and the compiler will catch any ID typos.
+ */
+const JOURNAL_ENTRY_DAY_OFFSETS: Record<string, { companionId: string; dayOffset: number }> = {
+	'seed-journal-ein-d2': { companionId: SEED.companions.ein.id, dayOffset: 3 },
+	'seed-journal-ein-d7': { companionId: SEED.companions.ein.id, dayOffset: 17 },
+	'seed-journal-edward-d4': { companionId: SEED.companions.edward.id, dayOffset: 8 },
+	'seed-journal-edward-d10': { companionId: SEED.companions.edward.id, dayOffset: 36 }
+} as const;
+
+/**
  * Single source of truth for demo photo rows AND files.
- * `date` is derived from `now` so storageKeys always match the journal entries
- * they belong to. companionId + date + filename → storageKey.
+ * `date` is derived from `now` via JOURNAL_ENTRY_DAY_OFFSETS so storageKeys
+ * always match the journal entries they belong to.
+ * companionId + date + filename → storageKey.
  */
 export function buildPhotoManifest(now: number): Array<{
 	id: string;
@@ -78,28 +91,37 @@ export function buildPhotoManifest(now: number): Array<{
 }> {
 	const day = 24 * 60 * 60 * 1000;
 
-	// Derive dates relative to `now`, matching the dates used in seedContent.
-	// These must stay in sync with the journal entry ids + dates in seedContent.
-	function toDateStr(offset: number): string {
-		return new Date(now - offset * day).toISOString().slice(0, 10);
+	function toDateStr(entryId: string): string {
+		const info = JOURNAL_ENTRY_DAY_OFFSETS[entryId];
+		if (!info) throw new Error(`No day offset registered for journal entry: ${entryId}`);
+		return new Date(now - info.dayOffset * day).toISOString().slice(0, 10);
 	}
 
-	const einId = SEED.companions.ein.id;
-	const edwardId = SEED.companions.edward.id;
+	function companionFor(entryId: string): string {
+		const info = JOURNAL_ENTRY_DAY_OFFSETS[entryId];
+		if (!info) throw new Error(`No companion registered for journal entry: ${entryId}`);
+		return info.companionId;
+	}
 
-	const entries = [
-		{ id: 'seed-photo-ein-01', entryId: 'seed-journal-ein-d2', filename: 'ein-01.jpg', companionId: einId, date: toDateStr(3) },
-		{ id: 'seed-photo-ein-02', entryId: 'seed-journal-ein-d2', filename: 'ein-02.jpg', companionId: einId, date: toDateStr(3) },
-		{ id: 'seed-photo-ein-03', entryId: 'seed-journal-ein-d7', filename: 'ein-03.jpg', companionId: einId, date: toDateStr(7) },
-		{ id: 'seed-photo-edward-01', entryId: 'seed-journal-edward-d4', filename: 'edward-01.jpg', companionId: edwardId, date: toDateStr(4) },
-		{ id: 'seed-photo-edward-02', entryId: 'seed-journal-edward-d4', filename: 'edward-02.jpg', companionId: edwardId, date: toDateStr(4) },
-		{ id: 'seed-photo-edward-03', entryId: 'seed-journal-edward-d10', filename: 'edward-03.jpg', companionId: edwardId, date: toDateStr(10) },
+	const photos = [
+		{ id: 'seed-photo-ein-01', entryId: 'seed-journal-ein-d2', filename: 'ein-01.jpg' },
+		{ id: 'seed-photo-ein-02', entryId: 'seed-journal-ein-d2', filename: 'ein-02.jpg' },
+		{ id: 'seed-photo-ein-03', entryId: 'seed-journal-ein-d7', filename: 'ein-03.jpg' },
+		{ id: 'seed-photo-edward-01', entryId: 'seed-journal-edward-d4', filename: 'edward-01.jpg' },
+		{ id: 'seed-photo-edward-02', entryId: 'seed-journal-edward-d4', filename: 'edward-02.jpg' },
+		{ id: 'seed-photo-edward-03', entryId: 'seed-journal-edward-d10', filename: 'edward-03.jpg' }
 	];
 
-	return entries.map((p) => ({
-		...p,
-		storageKey: `journal/${p.companionId}/${p.date}/${p.filename}`
-	}));
+	return photos.map((p) => {
+		const companionId = companionFor(p.entryId);
+		const date = toDateStr(p.entryId);
+		return {
+			...p,
+			companionId,
+			date,
+			storageKey: `journal/${companionId}/${date}/${p.filename}`
+		};
+	});
 }
 
 /** Inserts the 4 user rows. Date-independent; safe to call separately. */
@@ -287,11 +309,11 @@ export function seedContent(
 	// ---- Weight history ----
 	db.insert(schema.weightEntries)
 		.values([
-			// Ein: gentle realistic trend ~24-28 lbs
+			// Ein: gentle realistic trend for a Pembroke Welsh Corgi (~24-26 lbs)
 			{
 				id: 'seed-weight-1',
 				companionId: ein,
-				weight: 27.6,
+				weight: 24.2,
 				unit: 'lbs',
 				recordedAt: new Date(now - 150 * day),
 				loggedBy: jet
@@ -299,7 +321,7 @@ export function seedContent(
 			{
 				id: 'seed-weight-2',
 				companionId: ein,
-				weight: 28.1,
+				weight: 24.8,
 				unit: 'lbs',
 				recordedAt: new Date(now - 110 * day),
 				loggedBy: jet
@@ -307,7 +329,7 @@ export function seedContent(
 			{
 				id: 'seed-weight-3',
 				companionId: ein,
-				weight: 28.5,
+				weight: 25.3,
 				unit: 'lbs',
 				recordedAt: new Date(now - 70 * day),
 				loggedBy: jet
@@ -315,7 +337,7 @@ export function seedContent(
 			{
 				id: 'seed-weight-4',
 				companionId: ein,
-				weight: 28.3,
+				weight: 25.1,
 				unit: 'lbs',
 				recordedAt: new Date(now - 35 * day),
 				loggedBy: jet
@@ -323,7 +345,7 @@ export function seedContent(
 			{
 				id: 'seed-weight-5',
 				companionId: ein,
-				weight: 28.7,
+				weight: 25.6,
 				unit: 'lbs',
 				recordedAt: new Date(now - 5 * day),
 				loggedBy: jet
@@ -729,36 +751,33 @@ export function seedContent(
 
 	// ---- Journal photos ----
 	const photoManifest = buildPhotoManifest(now);
-	const assetDir = ASSETS_DIR;
 
-	for (const { id, entryId, filename, storageKey } of photoManifest) {
+	const photoRows = photoManifest.map(({ id, entryId, filename, storageKey }) => {
 		let sizeBytes = 84000; // plausible placeholder
 		try {
-			const assetPath = join(assetDir, filename);
+			const assetPath = join(ASSETS_DIR, filename);
 			if (existsSync(assetPath)) {
-				const stat = statSync(assetPath);
-				sizeBytes = stat.size;
+				sizeBytes = statSync(assetPath).size;
 			}
 		} catch {
 			// fall back to placeholder
 		}
+		return {
+			id,
+			entryId,
+			filename,
+			provider: 'local' as const,
+			storageKey,
+			originalName: filename,
+			mediaType: 'photo' as const,
+			mimeType: 'image/jpeg',
+			sizeBytes,
+			status: 'ready' as const,
+			loggedBy: jet
+		};
+	});
 
-		db.insert(schema.journalPhotos)
-			.values({
-				id,
-				entryId,
-				filename,
-				provider: 'local',
-				storageKey,
-				originalName: filename,
-				mediaType: 'photo',
-				mimeType: 'image/jpeg',
-				sizeBytes,
-				status: 'ready',
-				loggedBy: jet
-			})
-			.run();
-	}
+	db.insert(schema.journalPhotos).values(photoRows).run();
 }
 
 /** Inserts all seed rows (users + content). Convenience wrapper for existing callers. */

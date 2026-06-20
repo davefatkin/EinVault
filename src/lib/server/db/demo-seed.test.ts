@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db, schema } from '$server/db';
 import { seedRows, SEED } from '$server/db/demo-seed';
+import { eq } from 'drizzle-orm';
 
 describe('seedRows', () => {
 	beforeEach(async () => {
@@ -44,5 +45,23 @@ describe('seedRows', () => {
 
 		const events = await db.query.dailyEvents.findMany();
 		expect(new Set(events.map((e) => e.type)).size).toBeGreaterThanOrEqual(4);
+	});
+
+	it('photo storageKeys contain the date of their linked journal entry', async () => {
+		const now = 1_700_000_000_000;
+		seedRows(db as never, { now });
+
+		const photos = await db.query.journalPhotos.findMany();
+		const entries = await db.query.journalEntries.findMany();
+		const entryById = new Map(entries.map((e) => [e.id, e]));
+
+		for (const photo of photos) {
+			const entry = entryById.get(photo.entryId);
+			expect(entry, `no journal entry found for photo ${photo.id} (entryId=${photo.entryId})`).toBeDefined();
+			expect(
+				photo.storageKey,
+				`storageKey for photo ${photo.id} must contain its entry's date (${entry!.date})`
+			).toContain(entry!.date);
+		}
 	});
 });
