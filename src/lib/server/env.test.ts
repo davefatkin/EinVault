@@ -7,3 +7,10 @@ describe('calendar feed env', () => {
 		expect(env.CALENDAR_FEED_ENABLED).toBe(true);
 	});
 });
+
+describe('demo mode env', () => {
+	it('defaults DEMO_MODE to false', async () => {
+		const env = await import('./env');
+		expect(env.DEMO_MODE).toBe(false);
+	});
+});

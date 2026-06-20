@@ -113,6 +113,7 @@ Everything else in the compose file can be edited directly:
 | `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
 | `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
 | `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
+| `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                |
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
 | `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
@@ -223,6 +224,22 @@ docker compose -f docker-compose.prod.yml stop einvault
 cp -r ./data ./data.bak
 docker compose -f docker-compose.prod.yml start einvault
 ```
+
+### Running a demo instance
+
+Set `DEMO_MODE=true` and start with a fresh data volume. On boot the app self-provisions a sample dataset and re-anchors all dates to "now" daily, so the demo always looks recent. The login page becomes a role picker (admin / member / caretaker) that bypasses password auth; all write endpoints are blocked.
+
+Leave all integration and mail variables unset (`OIDC_*`, `S3_*`, `IMMICH_*`, `PAPERLESS_*`, `SMTP_*`, `NTFY_*`). `DEMO_MODE` disables OIDC at the source, but the others are independent outbound-fetch or SSRF-adjacent surface that the read-only guard does not cover.
+
+Behind Cloudflare, set the adapter-node client-IP header so the `/auth/demo` rate limiter sees the real visitor IP rather than the Cloudflare edge IP:
+
+```
+ADDRESS_HEADER=CF-Connecting-IP
+```
+
+If your setup uses `X-Forwarded-For` with multiple hops, also set `XFF_DEPTH` to the correct depth. Without the right header, the rate limit collapses all visitors into one bucket.
+
+Cloudflare caching: the app emits `Cache-Control: private, no-store` on authenticated HTML in demo mode, so do not add page rules that cache HTML. Hashed `/_app/immutable/*` assets are safe to cache aggressively — that is where the bandwidth saving comes from.
 
 ### Container hardening
 

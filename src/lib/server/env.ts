@@ -450,6 +450,17 @@ export function logNtfyBootStatus(): void {
 	}
 }
 
+// Read-only public demo mode. When true, the DB self-provisions a sample
+// dataset, the login page becomes a role picker, all writes are blocked, and
+// OIDC + password login are disabled.
+export const DEMO_MODE = envBool(env.DEMO_MODE, false);
+
+export function logDemoBootStatus(): void {
+	if (DEMO_MODE) {
+		console.log('[demo] DEMO_MODE is ON — instance is read-only, login uses the role picker.');
+	}
+}
+
 // Calendar feed: how many days of past events to include (0 = full history).
 export const CALENDAR_FEED_HISTORY_DAYS = envNonNegativeInt(env.CALENDAR_FEED_HISTORY_DAYS, 90);
 
