@@ -11,7 +11,7 @@
 
 	function changeDemoLocale(e: Event) {
 		const value = (e.currentTarget as HTMLSelectElement).value;
-		document.cookie = `einvault_locale=${value};path=/;max-age=31536000;SameSite=Lax`;
+		document.cookie = `einvault_locale=${value};path=/;max-age=31536000;SameSite=Strict`;
 		window.location.reload();
 	}
 </script>
