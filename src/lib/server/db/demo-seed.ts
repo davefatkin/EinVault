@@ -1,6 +1,6 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 // Import schema via a relative leaf path, NOT the `$server/db` alias. This module
@@ -68,7 +68,21 @@ export const SEED = {
 	}
 } as const;
 
-const ASSETS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'demo-assets');
+// The demo photo source files live in `static/demo-assets/`, which SvelteKit
+// copies into `build/client/demo-assets/` at build time. Resolve at runtime
+// from cwd-relative candidates so it works in every context: `npm run dev`
+// (static/), a built server / `node build` / Docker (build/client/, shipped
+// because the whole build/ dir is copied), and the Playwright runner. Falls
+// back to the path next to this module for safety. Resolved at call time so
+// process.cwd() and existence reflect the running process.
+function resolveAssetsDir(): string {
+	const candidates = [
+		resolve(process.cwd(), 'build/client/demo-assets'),
+		resolve(process.cwd(), 'static/demo-assets'),
+		join(dirname(fileURLToPath(import.meta.url)), 'demo-assets')
+	];
+	return candidates.find((d) => existsSync(d)) ?? candidates[1];
+}
 
 /**
  * Day-offset (relative to `now`) for each journal entry that has linked photos.
@@ -758,7 +772,7 @@ export function seedContent(db: BetterSQLite3Database<typeof schema>, opts: { no
 	const photoRows = photoManifest.map(({ id, entryId, filename, storageKey }) => {
 		let sizeBytes = 84000; // plausible placeholder
 		try {
-			const assetPath = join(ASSETS_DIR, filename);
+			const assetPath = join(resolveAssetsDir(), filename);
 			if (existsSync(assetPath)) {
 				sizeBytes = statSync(assetPath).size;
 			}
@@ -862,10 +876,11 @@ export function startDemoRefreshScheduler(db: SeedDb, demoMode: boolean, dataDir
  * derived from `now`. Clears stale dated dirs first so re-anchoring is clean.
  */
 export function copyDemoPhotoFiles(uploadsRoot: string, now: number): void {
+	const assetsDir = resolveAssetsDir();
 	const journalRoot = join(uploadsRoot, 'journal');
 	rmSync(journalRoot, { recursive: true, force: true });
 	for (const { filename, storageKey } of buildPhotoManifest(now)) {
-		const src = join(ASSETS_DIR, filename);
+		const src = join(assetsDir, filename);
 		const dest = join(uploadsRoot, storageKey);
 		if (!existsSync(src)) continue;
 		mkdirSync(dirname(dest), { recursive: true });

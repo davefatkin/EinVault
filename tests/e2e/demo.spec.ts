@@ -4,7 +4,6 @@ import path from 'node:path';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
 import { SEED } from '../lib/seed';
-import { copyDemoPhotoFiles } from '../../src/lib/server/db/demo-seed';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -126,14 +125,10 @@ const test = base.extend<{ world: DemoWorld }>({
 			);
 		}
 
-		// The production build does not bundle the demo photo assets
-		// (they live in src/lib/server/db/demo-assets/ which vite bundles via
-		// import.meta.url at source level but the adapter-node build doesn't
-		// copy the containing directory). Copy the source assets now so the
-		// /api/photos/journal/* routes can serve them during the spec.
-		// We use Date.now() which matches the server's seeding `now` within a
-		// few seconds — day-granularity dates are identical unless crossing UTC midnight.
-		copyDemoPhotoFiles(path.join(dir, 'uploads'), Date.now());
+		// Photo files are copied by the server's own boot (refreshDemoContent ->
+		// copyDemoPhotoFiles, resolving build/client/demo-assets). We intentionally
+		// do NOT copy them here, so the photo-rendering assertions exercise — and
+		// regression-guard — that the assets actually ship with the build.
 
 		await use({ server });
 		await server.stop();
