@@ -19,6 +19,7 @@ import {
 	logDemoBootStatus
 } from '$lib/server/env';
 import { isDemoBlockedRequest } from '$lib/server/demo';
+import { DATA_DIR } from '$lib/server/paths';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
@@ -44,8 +45,8 @@ if (DEMO_MODE) {
 	import('./lib/server/db/demo-seed')
 		.then(({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
 			return ensureDemoUsers().then(() => {
-				refreshDemoContent();
-				startDemoRefreshScheduler();
+				refreshDemoContent(DEMO_MODE, DATA_DIR);
+				startDemoRefreshScheduler(DEMO_MODE, DATA_DIR);
 			});
 		})
 		.catch((err) => console.error('[demo] boot setup failed:', err));
@@ -141,6 +142,10 @@ const authContext: Handle = async ({ event, resolve }) => {
 };
 
 const twoFactorGate: Handle = async ({ event, resolve }) => {
+	// Demo is read-only and uses shared passwordless accounts: 2FA is meaningless
+	// and enrollment (a write) is blocked anyway, so never trap demo users at
+	// /2fa-setup regardless of the app's require2fa setting.
+	if (DEMO_MODE) return resolve(event);
 	const user = event.locals.user;
 	if (user) {
 		const path = event.url.pathname;

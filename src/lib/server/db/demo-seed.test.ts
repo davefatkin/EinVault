@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { db, schema } from '$server/db';
 import { seedRows, SEED } from '$server/db/demo-seed';
 
@@ -106,30 +106,27 @@ describe('ensureDemoUsers', () => {
 });
 
 describe('refreshDemoContent', () => {
+	// node:fs is mocked at the top of this file, so the dataDir arg is never
+	// written to; any path is safe.
+	const DATA_DIR = '/tmp/einvault-demo-test';
+
 	beforeEach(async () => {
-		// refreshDemoContent fails closed unless DEMO_MODE is set.
-		process.env.DEMO_MODE = 'true';
 		await db.delete(schema.caretakerShifts);
 		await db.delete(schema.companionCaretakers);
 		await db.delete(schema.companions);
 		await db.delete(schema.users);
 	});
 
-	afterEach(() => {
-		delete process.env.DEMO_MODE;
-	});
-
-	it('refuses to run when DEMO_MODE is not set', async () => {
+	it('refuses to run when demoMode is false (fail closed)', async () => {
 		const { refreshDemoContent } = await import('$server/db/demo-seed');
-		delete process.env.DEMO_MODE;
-		expect(() => refreshDemoContent()).toThrow(/DEMO_MODE/);
+		expect(() => refreshDemoContent(false, DATA_DIR)).toThrow(/DEMO_MODE/);
 	});
 
 	it('re-seeds content anchored to now after wiping old rows', async () => {
 		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
 		// Seed users first (refreshDemoContent only touches content, not users)
 		await ensureDemoUsers();
-		await refreshDemoContent();
+		refreshDemoContent(true, DATA_DIR);
 
 		const entries = await db.query.journalEntries.findMany();
 		expect(entries.length).toBeGreaterThan(0);
@@ -146,8 +143,8 @@ describe('refreshDemoContent', () => {
 	it('is idempotent — calling twice leaves one set of content rows', async () => {
 		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
 		await ensureDemoUsers();
-		await refreshDemoContent();
-		await refreshDemoContent();
+		refreshDemoContent(true, DATA_DIR);
+		refreshDemoContent(true, DATA_DIR);
 
 		const companions = await db.query.companions.findMany();
 		expect(companions.length).toBe(2); // only Ein and Edward, not doubled
@@ -159,8 +156,8 @@ describe('startDemoRefreshScheduler', () => {
 		// Just verify idempotency — don't wait for the 24h timer to fire
 		const { startDemoRefreshScheduler } = await import('$server/db/demo-seed');
 		expect(() => {
-			startDemoRefreshScheduler();
-			startDemoRefreshScheduler(); // second call is no-op
+			startDemoRefreshScheduler(true, '/tmp/einvault-demo-test');
+			startDemoRefreshScheduler(true, '/tmp/einvault-demo-test'); // second call is no-op
 		}).not.toThrow();
 	});
 });

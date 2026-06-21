@@ -1,6 +1,6 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
-import { join, dirname, resolve } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import { db, schema } from '$server/db';
@@ -803,12 +803,15 @@ export async function ensureDemoUsers(): Promise<number> {
  *
  * Called at boot and every 24h by startDemoRefreshScheduler.
  */
-export function refreshDemoContent(): void {
+export function refreshDemoContent(demoMode: boolean, dataDir: string): void {
 	// Fail closed: this is destructive (wipes every companion + rmSync of the
-	// journal uploads dir). It must never run against a real instance. Guard on
-	// the raw env (not the resolved const) so this module avoids importing $env,
-	// which would break the Playwright test runner that loads it.
-	if (process.env.DEMO_MODE?.trim().toLowerCase() !== 'true') {
+	// journal uploads dir). It must never run against a real instance. The caller
+	// passes the RESOLVED DEMO_MODE flag and DATA_DIR — this module must not
+	// import $env itself, because the Playwright test runner loads it outside
+	// Vite (where $env is unresolvable). The flag is resolved the same way the
+	// rest of the app resolves it, so it is correct under both `vite dev` (.env)
+	// and production (process.env).
+	if (!demoMode) {
 		throw new Error('refreshDemoContent must only run with DEMO_MODE enabled');
 	}
 	const now = Date.now();
@@ -822,9 +825,6 @@ export function refreshDemoContent(): void {
 		tx.delete(schema.companions).run();
 		seedContent(tx as never, { now });
 	});
-	// Resolve DATA_DIR at call time so this module does not import $env at the
-	// top level (which breaks the Playwright test runner that loads seed.ts).
-	const dataDir = process.env.DATABASE_URL ? dirname(process.env.DATABASE_URL) : resolve('./data');
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }
 
@@ -836,11 +836,11 @@ const DEMO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
  * Starts the 24-hour demo content refresh timer. Idempotent — calling twice
  * is a no-op. The timer is unref'd so it never keeps the process alive.
  */
-export function startDemoRefreshScheduler(): void {
+export function startDemoRefreshScheduler(demoMode: boolean, dataDir: string): void {
 	if (demoRefreshTimer) return;
 	demoRefreshTimer = setInterval(() => {
 		try {
-			refreshDemoContent();
+			refreshDemoContent(demoMode, dataDir);
 		} catch (err) {
 			console.error('[demo] refresh failed:', err);
 		}
