@@ -105,7 +105,8 @@
 
 <div class="min-h-screen flex flex-col bg-background">
 	<header
-		class="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
+		class="sticky z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
+		style="top: var(--demo-bar-h, 0px)"
 	>
 		<div class="mx-auto max-w-3xl px-4 sm:px-6">
 			<div class="flex h-16 items-center justify-between gap-4">

@@ -19,9 +19,16 @@
 		untrack(() => data.locale)
 	);
 
+	function demoThemeCookie(): 'light' | 'dark' | 'system' | null {
+		const m = document.cookie.match(/(?:^|;\s*)einvault_theme=(light|dark|system)/);
+		return (m?.[1] as 'light' | 'dark' | 'system') ?? null;
+	}
+
 	$effect(() => {
 		if (!browser) return;
-		const theme = data?.user?.theme ?? 'system';
+		// In demo the seed account's stored theme ('system') can't be changed
+		// (read-only), so honor the per-visitor cookie set by the settings card.
+		const theme = data.demoMode ? (demoThemeCookie() ?? 'system') : (data?.user?.theme ?? 'system');
 		applyTheme(theme);
 
 		if (theme === 'system') {
@@ -43,4 +50,9 @@
 	<DemoBar currentRole={data.user.role} showNotice={data.demoNotice ?? false} />
 {/if}
 
-{@render children()}
+<!-- Expose the demo bar height so fixed/sticky layout chrome (sidebar, headers)
+     can offset below it. display:contents keeps layout identical; the custom
+     property still inherits to descendants. Defaults to 0 outside demo. -->
+<div style:display="contents" style:--demo-bar-h={data.demoMode ? '2.5rem' : null}>
+	{@render children()}
+</div>

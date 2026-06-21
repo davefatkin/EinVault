@@ -1,12 +1,20 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { currentRole, showNotice }: { currentRole: string; showNotice: boolean } = $props();
 
 	const locale = getLocale();
-	// Snapshot the initial prop value via untrack — the toast is a one-shot the user can dismiss.
-	let toast = $state(untrack(() => showNotice));
+	let toast = $state(false);
+
+	// DemoBar persists across SPA navigations, so a one-time snapshot of showNotice
+	// never re-fires. React to it instead: each time the server flags a blocked
+	// write (one-shot demoNotice cookie), surface the toast and auto-dismiss it.
+	$effect(() => {
+		if (!showNotice) return;
+		toast = true;
+		const id = setTimeout(() => (toast = false), 5000);
+		return () => clearTimeout(id);
+	});
 
 	function submitRole(e: Event) {
 		(e.currentTarget as HTMLSelectElement).form?.requestSubmit();
@@ -14,7 +22,7 @@
 </script>
 
 <div
-	class="sticky top-0 z-50 flex items-center justify-between gap-3 bg-primary px-4 py-2 text-sm text-primary-foreground"
+	class="sticky top-0 z-50 flex h-10 items-center justify-between gap-3 bg-primary px-4 text-sm text-primary-foreground"
 >
 	<span>{t(locale, 'demo.readOnlyBanner')}</span>
 	<div class="flex items-center gap-3">

@@ -348,6 +348,28 @@ test('theme switch to dark works in demo without read-only toast', async ({ worl
 	const themeCookie = cookies.find((c) => c.name === 'einvault_theme');
 	expect(themeCookie).toBeDefined();
 	expect(themeCookie?.value).toBe('dark');
+
+	// And it must STICK across a reload — the layout must honor the cookie in demo,
+	// not re-apply the shared seed account's stored theme ('system').
+	await page.reload();
+	await expect(page.locator('html')).toHaveClass(/dark/, { timeout: 6_000 });
+});
+
+test('language change sticks across reload in demo', async ({ world, page }) => {
+	await page.goto(world.server.baseURL + '/auth/login');
+	await page.getByRole('button', { name: /Explore as Admin/i }).click();
+	await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
+
+	await page.goto(world.server.baseURL + '/settings');
+	await expect(page).toHaveURL(/settings/, { timeout: 10_000 });
+
+	// Switch to German via the demo language select (client cookie + reload).
+	await page.selectOption('select[name="locale"]', 'de');
+	// Cookie set and locale resolved server-side: <html lang> must follow the cookie,
+	// not the seed account's stored 'en'.
+	await expect(page.locator('html')).toHaveAttribute('lang', 'de', { timeout: 10_000 });
+	await page.reload();
+	await expect(page.locator('html')).toHaveAttribute('lang', 'de', { timeout: 6_000 });
 });
 
 // ─── 9. Auth attack surface closed ────────────────────────────────────────────

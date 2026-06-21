@@ -201,12 +201,16 @@ const demoReadOnly: Handle = async ({ event, resolve }) => {
 };
 
 const localeDetect: Handle = async ({ event, resolve }) => {
-	// Priority: user preference > cookie > Accept-Language > default
+	// Priority: user preference > cookie > Accept-Language > default.
+	// In demo mode the visitor shares a seed account whose stored locale ('en')
+	// can't be changed (read-only), so the per-visitor cookie must win instead.
 	const cookieRaw = event.cookies.get('einvault_locale');
-	const locale =
-		event.locals.user?.locale ??
-		(cookieRaw ? resolveLocale(cookieRaw) : null) ??
-		parseAcceptLanguage(event.request.headers.get('accept-language'));
+	const cookieLocale = cookieRaw ? resolveLocale(cookieRaw) : null;
+	const locale = DEMO_MODE
+		? (cookieLocale ?? parseAcceptLanguage(event.request.headers.get('accept-language')))
+		: (event.locals.user?.locale ??
+			cookieLocale ??
+			parseAcceptLanguage(event.request.headers.get('accept-language')));
 
 	event.locals.locale = locale;
 
