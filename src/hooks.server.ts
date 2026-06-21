@@ -42,11 +42,11 @@ recoverAndStart();
 startNotifyScheduler();
 
 if (DEMO_MODE) {
-	import('./lib/server/db/demo-seed')
-		.then(({ ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }) => {
-			return ensureDemoUsers().then(() => {
-				refreshDemoContent(DEMO_MODE, DATA_DIR);
-				startDemoRefreshScheduler(DEMO_MODE, DATA_DIR);
+	Promise.all([import('./lib/server/db'), import('./lib/server/db/demo-seed')])
+		.then(([{ db }, { ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }]) => {
+			return ensureDemoUsers(db).then(() => {
+				refreshDemoContent(db, DEMO_MODE, DATA_DIR);
+				startDemoRefreshScheduler(db, DEMO_MODE, DATA_DIR);
 			});
 		})
 		.catch((err) => console.error('[demo] boot setup failed:', err));

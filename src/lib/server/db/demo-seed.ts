@@ -3,7 +3,15 @@ import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
-import { db, schema } from '$server/db';
+// Import schema via a relative leaf path, NOT the `$server/db` alias. This module
+// is loaded by the Playwright test runner (through tests/lib/seed.ts) outside
+// Vite, where `$server` and `$env` do not resolve. The live `db` instance is
+// passed in by the boot caller instead, so this module pulls in no alias/$env.
+import * as schema from './schema';
+
+// Drizzle handle type accepted by the seed functions and the boot-only helpers.
+// The app's db (passed in) and per-test sqlite dbs both satisfy it.
+type SeedDb = BetterSQLite3Database<typeof schema>;
 
 // One hash for all seed users; computed once per process (bcrypt cost 12 ~100ms).
 export const SEED_PASSWORD_HASH = bcrypt.hashSync('test-password-123', 12);
@@ -786,13 +794,13 @@ export function seedRows(db: BetterSQLite3Database<typeof schema>, opts: { now: 
  * Safe to call multiple times; skips rows that are already present.
  * Returns the number of rows inserted (0 if already seeded).
  */
-export async function ensureDemoUsers(): Promise<number> {
+export async function ensureDemoUsers(db: SeedDb): Promise<number> {
 	// Check if spike already exists
 	const existing = await db.query.users.findFirst({
 		where: (u, { eq }) => eq(u.id, SEED.admin.id)
 	});
 	if (existing) return 0;
-	seedUsers(db as never);
+	seedUsers(db);
 	return 4;
 }
 
@@ -803,14 +811,14 @@ export async function ensureDemoUsers(): Promise<number> {
  *
  * Called at boot and every 24h by startDemoRefreshScheduler.
  */
-export function refreshDemoContent(demoMode: boolean, dataDir: string): void {
+export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: string): void {
 	// Fail closed: this is destructive (wipes every companion + rmSync of the
 	// journal uploads dir). It must never run against a real instance. The caller
-	// passes the RESOLVED DEMO_MODE flag and DATA_DIR — this module must not
-	// import $env itself, because the Playwright test runner loads it outside
-	// Vite (where $env is unresolvable). The flag is resolved the same way the
-	// rest of the app resolves it, so it is correct under both `vite dev` (.env)
-	// and production (process.env).
+	// passes the live db, the RESOLVED DEMO_MODE flag, and DATA_DIR — this module
+	// must not import the db/$env itself, because the Playwright test runner loads
+	// it (via tests/lib/seed.ts) outside Vite, where those do not resolve. The flag
+	// is resolved the same way the rest of the app resolves it, so it is correct
+	// under both `vite dev` (.env) and production (process.env).
 	if (!demoMode) {
 		throw new Error('refreshDemoContent must only run with DEMO_MODE enabled');
 	}
@@ -836,11 +844,11 @@ const DEMO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
  * Starts the 24-hour demo content refresh timer. Idempotent — calling twice
  * is a no-op. The timer is unref'd so it never keeps the process alive.
  */
-export function startDemoRefreshScheduler(demoMode: boolean, dataDir: string): void {
+export function startDemoRefreshScheduler(db: SeedDb, demoMode: boolean, dataDir: string): void {
 	if (demoRefreshTimer) return;
 	demoRefreshTimer = setInterval(() => {
 		try {
-			refreshDemoContent(demoMode, dataDir);
+			refreshDemoContent(db, demoMode, dataDir);
 		} catch (err) {
 			console.error('[demo] refresh failed:', err);
 		}
