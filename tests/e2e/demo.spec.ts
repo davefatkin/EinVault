@@ -370,6 +370,15 @@ test('language change sticks across reload in demo', async ({ world, page }) => 
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de', { timeout: 10_000 });
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de', { timeout: 6_000 });
+
+	// The dropdown must reflect the ACTIVE locale (de), not the frozen seed pref —
+	// otherwise re-selecting English fires no change event and you're stuck.
+	await expect(page.locator('select[name="locale"]')).toHaveValue('de');
+
+	// Round-trip back to English must work.
+	await page.selectOption('select[name="locale"]', 'en');
+	await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: 10_000 });
+	await expect(page.locator('select[name="locale"]')).toHaveValue('en');
 });
 
 // ─── 9. Auth attack surface closed ────────────────────────────────────────────

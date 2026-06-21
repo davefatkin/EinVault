@@ -21,8 +21,18 @@
 		system: 'theme.system'
 	};
 
+	function demoThemeCookie(): Theme | null {
+		if (typeof document === 'undefined') return null;
+		const m = document.cookie.match(/(?:^|;\s*)einvault_theme=(light|dark|system)/);
+		return (m?.[1] as Theme) ?? null;
+	}
+
 	let themeOverride = $state<Theme | null>(null);
-	let currentTheme = $derived<Theme>(themeOverride ?? initialTheme);
+	// In demo the seed account's stored theme is frozen, so the active theme lives
+	// in the cookie — reflect it so the selected button matches what's applied.
+	let currentTheme = $derived<Theme>(
+		themeOverride ?? (demoMode ? (demoThemeCookie() ?? initialTheme) : initialTheme)
+	);
 
 	async function setTheme(theme: Theme) {
 		themeOverride = theme;
