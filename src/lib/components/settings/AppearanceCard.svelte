@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale, type MessageKey } from '$lib/i18n';
-	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
+	import {
+		applyTheme,
+		saveTheme,
+		readThemeCookie,
+		writeThemeCookie,
+		THEMES,
+		THEME_ICONS,
+		type Theme
+	} from '$lib/theme';
 
 	let {
 		currentTheme: initialTheme,
@@ -21,24 +29,18 @@
 		system: 'theme.system'
 	};
 
-	function demoThemeCookie(): Theme | null {
-		if (typeof document === 'undefined') return null;
-		const m = document.cookie.match(/(?:^|;\s*)einvault_theme=(light|dark|system)/);
-		return (m?.[1] as Theme) ?? null;
-	}
-
 	let themeOverride = $state<Theme | null>(null);
 	// In demo the seed account's stored theme is frozen, so the active theme lives
 	// in the cookie — reflect it so the selected button matches what's applied.
 	let currentTheme = $derived<Theme>(
-		themeOverride ?? (demoMode ? (demoThemeCookie() ?? initialTheme) : initialTheme)
+		themeOverride ?? (demoMode ? (readThemeCookie() ?? initialTheme) : initialTheme)
 	);
 
 	async function setTheme(theme: Theme) {
 		themeOverride = theme;
 		applyTheme(theme);
 		if (demoMode) {
-			document.cookie = `einvault_theme=${theme};path=/;max-age=31536000;SameSite=Strict`;
+			writeThemeCookie(theme);
 		} else {
 			await saveTheme(theme, redirectPath);
 		}

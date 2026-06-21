@@ -237,6 +237,30 @@ test('write attempt is blocked with read-only notice', async ({ world, page }) =
 	await expect(userRow).toHaveCount(0, { timeout: 6_000 });
 });
 
+test('demo bar pins to the top and does not overlap top chrome @mobile', async ({
+	world,
+	page
+}) => {
+	await page.goto(world.server.baseURL + '/auth/login');
+	await page.getByRole('button', { name: /Explore as Member/i }).click();
+	await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
+
+	const bar = page.getByTestId('demo-bar');
+	await expect(bar).toBeVisible();
+	const barBox = await bar.boundingBox();
+	expect(barBox).not.toBeNull();
+	// Pinned to the very top.
+	expect(barBox!.y).toBeLessThan(2);
+
+	// The page's top chrome (mobile header on @mobile, otherwise the desktop
+	// sidebar) must start at or below the bar's bottom — not under it.
+	const header = page.locator('header').first();
+	if (await header.count()) {
+		const hb = await header.boundingBox();
+		if (hb) expect(hb.y).toBeGreaterThanOrEqual(barBox!.height - 1);
+	}
+});
+
 // ─── 5. Caretaker sees on-shift assigned companion ────────────────────────────
 
 test('caretaker sees assigned companion on shift', async ({ world, page }) => {

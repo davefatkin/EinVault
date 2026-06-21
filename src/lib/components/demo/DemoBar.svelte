@@ -22,6 +22,7 @@
 </script>
 
 <div
+	data-testid="demo-bar"
 	class="sticky top-0 z-50 flex h-10 items-center justify-between gap-3 bg-primary px-4 text-sm text-primary-foreground"
 >
 	<span>{t(locale, 'demo.readOnlyBanner')}</span>

@@ -4,7 +4,7 @@
 	import { setContext, untrack } from 'svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { applyTheme } from '$lib/theme';
+	import { applyTheme, readThemeCookie } from '$lib/theme';
 	import DemoBar from '$components/demo/DemoBar.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -19,16 +19,11 @@
 		untrack(() => data.locale)
 	);
 
-	function demoThemeCookie(): 'light' | 'dark' | 'system' | null {
-		const m = document.cookie.match(/(?:^|;\s*)einvault_theme=(light|dark|system)/);
-		return (m?.[1] as 'light' | 'dark' | 'system') ?? null;
-	}
-
 	$effect(() => {
 		if (!browser) return;
 		// In demo the seed account's stored theme ('system') can't be changed
 		// (read-only), so honor the per-visitor cookie set by the settings card.
-		const theme = data.demoMode ? (demoThemeCookie() ?? 'system') : (data?.user?.theme ?? 'system');
+		const theme = data.demoMode ? (readThemeCookie() ?? 'system') : (data?.user?.theme ?? 'system');
 		applyTheme(theme);
 
 		if (theme === 'system') {

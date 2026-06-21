@@ -5,6 +5,8 @@ import { demoUserIdForRole } from '$lib/server/demo';
 import {
 	generateSessionToken,
 	createSession,
+	validateSessionToken,
+	invalidateSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
 } from '$lib/server/auth/session';
@@ -21,6 +23,14 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	const role = String(form.get('role') ?? '');
 	const userId = demoUserIdForRole(role);
 	if (!userId) error(400, 'Invalid role');
+
+	// Switching roles: drop the caller's previous session so role-hopping doesn't
+	// accumulate orphan session rows over the life of the demo.
+	const prevToken = cookies.get(SESSION_COOKIE_NAME);
+	if (prevToken) {
+		const existing = await validateSessionToken(prevToken);
+		if (existing) await invalidateSession(existing.session.id);
+	}
 
 	const token = generateSessionToken();
 	const session = await createSession(token, userId);

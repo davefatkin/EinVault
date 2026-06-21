@@ -25,3 +25,5 @@ Thumbs.db
 test-results/
 playwright-report/
 blob-report/
+data.bak/
+*.bak/
