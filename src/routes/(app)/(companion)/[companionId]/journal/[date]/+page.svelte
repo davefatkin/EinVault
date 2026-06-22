@@ -766,8 +766,7 @@
 						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 						dir="ltr"
 						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-background text-foreground placeholder:text-muted-foreground focus:outline-none"
-						spellcheck="true"
-					></textarea>
+						spellcheck="true"></textarea>
 				{:else}
 					<div
 						class="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[360px] text-foreground"
