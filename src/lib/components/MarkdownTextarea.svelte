@@ -67,8 +67,7 @@
 		{oninput}
 		bind:value
 		class="{fieldClass} resize-none font-mono {className}"
-		style={mode === 'preview' ? 'display:none' : ''}
-	></textarea>
+		style={mode === 'preview' ? 'display:none' : ''}></textarea>
 
 	{#if mode === 'preview'}
 		<div
