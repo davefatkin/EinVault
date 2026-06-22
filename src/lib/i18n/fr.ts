@@ -342,6 +342,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'Le coffre auto-hébergé pour la santé, le journal et les soins quotidiens de votre compagnon.',
 	'page.login.brandFooter': 'Vos données. Votre serveur. Vos compagnons.',
+	'page.login.demoIntro': 'Choisissez un rôle pour explorer la démo.',
+	'page.login.demoAdmin': "Explorer en tant qu'administrateur",
+	'page.login.demoMember': 'Explorer en tant que membre',
+	'page.login.demoCaretaker': 'Explorer en tant que gardien',
+	'page.login.demoReadOnly':
+		'Ceci est une démo en lecture seule. Les modifications ne seront pas enregistrées.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Réinitialiser votre mot de passe',
@@ -1005,7 +1011,17 @@ const messages: Record<keyof Messages, string> = {
 	'documents.category.medical': 'Médical',
 	'documents.category.insurance': 'Assurance',
 	'documents.category.ownership': 'Propriété',
-	'documents.category.other': 'Autre'
+	'documents.category.other': 'Autre',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Démo en lecture seule',
+	'demo.viewingAs': 'Connecté en tant que',
+	'demo.roleAdmin': 'Administrateur',
+	'demo.roleMember': 'Membre',
+	'demo.roleCaretaker': 'Gardien',
+	'demo.sourceLink': 'Source',
+	'demo.writeBlocked':
+		"Cette démo est en lecture seule — votre modification n'a pas été enregistrée."
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

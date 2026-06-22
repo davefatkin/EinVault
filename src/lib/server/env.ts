@@ -450,6 +450,29 @@ export function logNtfyBootStatus(): void {
 	}
 }
 
+// Read-only public demo mode. When true, the DB self-provisions a sample
+// dataset, the login page becomes a role picker, all writes are blocked, and
+// OIDC + password login are disabled.
+export const DEMO_MODE = envBool(env.DEMO_MODE, false);
+
+export function logDemoBootStatus(): void {
+	if (!DEMO_MODE) return;
+	console.log('[demo] DEMO_MODE is ON — read-only; OIDC and password login disabled.');
+	const leaks = [
+		'OIDC_ISSUER_URL',
+		'S3_ENDPOINT',
+		'IMMICH_URL',
+		'PAPERLESS_URL',
+		'SMTP_HOST',
+		'NTFY_URL'
+	].filter((k) => env[k]?.trim());
+	if (leaks.length) {
+		console.warn(
+			`[demo] WARNING: DEMO_MODE is on but these integration vars are set and should be unset: ${leaks.join(', ')}`
+		);
+	}
+}
+
 // Calendar feed: how many days of past events to include (0 = full history).
 export const CALENDAR_FEED_HISTORY_DAYS = envNonNegativeInt(env.CALENDAR_FEED_HISTORY_DAYS, 90);
 

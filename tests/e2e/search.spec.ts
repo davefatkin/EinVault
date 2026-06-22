@@ -45,7 +45,11 @@ test.describe('global search palette', () => {
 		await asMember.keyboard.press('ArrowDown');
 		await asMember.keyboard.press('Enter');
 
-		await expect(asMember).toHaveURL(`/${COMP}/journal/2026-01-15`, { timeout: 8_000 });
+		// seed-journal-ein-d9: "Clean bill of health" is at now-28d; the exact date
+		// varies with the test run, so match the pattern rather than a hardcoded date.
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/\\d{4}-\\d{2}-\\d{2}$`), {
+			timeout: 8_000
+		});
 	});
 
 	test('button click opens palette and finds seed health event', async ({ asMember }) => {

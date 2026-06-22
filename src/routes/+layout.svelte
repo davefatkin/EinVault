@@ -4,7 +4,8 @@
 	import { setContext, untrack } from 'svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { applyTheme } from '$lib/theme';
+	import { applyTheme, readThemeCookie } from '$lib/theme';
+	import DemoBar from '$components/demo/DemoBar.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -20,7 +21,9 @@
 
 	$effect(() => {
 		if (!browser) return;
-		const theme = data?.user?.theme ?? 'system';
+		// In demo the seed account's stored theme ('system') can't be changed
+		// (read-only), so honor the per-visitor cookie set by the settings card.
+		const theme = data.demoMode ? (readThemeCookie() ?? 'system') : (data?.user?.theme ?? 'system');
 		applyTheme(theme);
 
 		if (theme === 'system') {
@@ -38,4 +41,13 @@
 	<meta name="description" content="EinVault: private dog health &amp; care tracker" />
 </svelte:head>
 
-{@render children()}
+{#if data.demoMode && data.user}
+	<DemoBar currentRole={data.user.role} showNotice={data.demoNotice ?? false} />
+{/if}
+
+<!-- Expose the demo bar height so fixed/sticky layout chrome (sidebar, headers)
+     can offset below it. display:contents keeps layout identical; the custom
+     property still inherits to descendants. Defaults to 0 outside demo. -->
+<div style:display="contents" style:--demo-bar-h={data.demoMode ? '2.5rem' : null}>
+	{@render children()}
+</div>

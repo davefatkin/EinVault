@@ -96,6 +96,10 @@ services:
       CALENDAR_FEED_HISTORY_DAYS: ${CALENDAR_FEED_HISTORY_DAYS:-90}
       CALENDAR_FEED_ENABLED: ${CALENDAR_FEED_ENABLED:-true}
 
+      # Read-only public demo mode. When true, login becomes a role picker and
+      # all writes are blocked. Leave unset/false for real instances.
+      DEMO_MODE: ${DEMO_MODE:-false}
+
       # Optional: two-factor authentication (2FA). 32-byte base64 key that
       # encrypts stored TOTP secrets. Required to enable 2FA.
       # Generate with: openssl rand -base64 32

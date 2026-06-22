@@ -8,7 +8,7 @@ vi.mock('$env/dynamic/private', () => ({
 	})
 }));
 
-const { evaluateRole, isAdminGroupsConfigured } = await import('./oidc');
+const { evaluateRole, isAdminGroupsConfigured, isOidcEnabled } = await import('./oidc');
 
 type Claims = Parameters<typeof evaluateRole>[0];
 
@@ -18,6 +18,31 @@ function claims(groups?: unknown): Claims {
 
 afterEach(() => {
 	delete process.env.OIDC_ADMIN_GROUPS;
+	delete process.env.DEMO_MODE;
+	delete process.env.OIDC_ISSUER_URL;
+	delete process.env.OIDC_CLIENT_ID;
+	delete process.env.OIDC_REDIRECT_URI;
+});
+
+describe('isOidcEnabled', () => {
+	it('returns false when DEMO_MODE is set, even if all OIDC vars are present', () => {
+		process.env.DEMO_MODE = 'true';
+		process.env.OIDC_ISSUER_URL = 'https://idp.example.com';
+		process.env.OIDC_CLIENT_ID = 'client-id';
+		process.env.OIDC_REDIRECT_URI = 'https://app.example.com/auth/oidc/callback';
+		expect(isOidcEnabled()).toBe(false);
+	});
+
+	it('returns false when OIDC vars are absent and DEMO_MODE is off', () => {
+		expect(isOidcEnabled()).toBe(false);
+	});
+
+	it('returns true when all OIDC vars are set and DEMO_MODE is off', () => {
+		process.env.OIDC_ISSUER_URL = 'https://idp.example.com';
+		process.env.OIDC_CLIENT_ID = 'client-id';
+		process.env.OIDC_REDIRECT_URI = 'https://app.example.com/auth/oidc/callback';
+		expect(isOidcEnabled()).toBe(true);
+	});
 });
 
 describe('isAdminGroupsConfigured', () => {

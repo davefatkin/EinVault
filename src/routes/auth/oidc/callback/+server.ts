@@ -21,6 +21,7 @@ import { eq, and } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { t } from '$lib/i18n';
 import { env } from '$env/dynamic/private';
+import { DEMO_MODE } from '$lib/server/env';
 
 // Same in-process rate limiter pattern as the password login route.
 const callbackAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -57,6 +58,7 @@ function sanitizeUsername(raw: string): string {
 }
 
 export const GET: RequestHandler = async ({ url, cookies, locals, request, getClientAddress }) => {
+	if (DEMO_MODE) error(404, 'Not found');
 	if (!isOidcEnabled()) error(404);
 
 	const ip = getClientAddress();

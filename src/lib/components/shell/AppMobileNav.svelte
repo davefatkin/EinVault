@@ -166,7 +166,8 @@
 
 <!-- Top bar -->
 <header
-	class="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 {className}"
+	class="sticky z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 {className}"
+	style="top: var(--demo-bar-h, 0px)"
 >
 	<div class="flex h-14 items-center gap-3 px-4">
 		{#if isCompanionContext && activeCompanion}

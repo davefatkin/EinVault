@@ -334,6 +334,11 @@ const messages = {
 	'page.login.taglineSubtext':
 		"The self-hosted vault for your companion's health, journal, and daily care.",
 	'page.login.brandFooter': 'Your data. Your server. Your companions.',
+	'page.login.demoIntro': 'Choose a role to explore the demo.',
+	'page.login.demoAdmin': 'Explore as Admin',
+	'page.login.demoMember': 'Explore as Member',
+	'page.login.demoCaretaker': 'Explore as Caretaker',
+	'page.login.demoReadOnly': "This is a read-only demo. Changes won't be saved.",
 
 	// Page: Forgot password
 	'page.forgot.title': 'Reset your password',
@@ -988,7 +993,16 @@ const messages = {
 	'documents.category.medical': 'Medical',
 	'documents.category.insurance': 'Insurance',
 	'documents.category.ownership': 'Ownership',
-	'documents.category.other': 'Other'
+	'documents.category.other': 'Other',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Read-only demo',
+	'demo.viewingAs': 'Viewing as',
+	'demo.roleAdmin': 'Admin',
+	'demo.roleMember': 'Member',
+	'demo.roleCaretaker': 'Caretaker',
+	'demo.sourceLink': 'Source',
+	'demo.writeBlocked': "This demo is read-only — your change wasn't saved."
 
 	// Meta
 } as const;

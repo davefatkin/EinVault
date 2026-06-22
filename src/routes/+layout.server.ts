@@ -3,10 +3,10 @@ import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
 import { version } from '../../package.json';
 import { t } from '$lib/i18n';
-import { resolveReminderUndoSeconds } from '$lib/server/env';
+import { resolveReminderUndoSeconds, DEMO_MODE } from '$lib/server/env';
 import { isImmichEnabled, isPaperlessEnabled } from '$lib/server/storage';
 
-export const load: LayoutServerLoad = async ({ locals, url }) => {
+export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
 	if (isApiRoute) return {};
 
@@ -32,15 +32,24 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		redirect(302, '/');
 	}
 
+	const demoNotice = DEMO_MODE && cookies.get('einvault_demo_notice') === '1';
+	if (demoNotice) {
+		cookies.delete('einvault_demo_notice', { path: '/' });
+	}
+
 	return {
 		user: locals.user,
 		locale: locals.locale,
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-		version,
+		// Don't leak the running version on the public demo; footer falls back to
+		// the source-code link.
+		version: DEMO_MODE ? undefined : version,
 		year: new Date().getFullYear(),
 		reminderUndoSeconds: resolveReminderUndoSeconds(locals.user?.reminderUndoSeconds ?? null),
 		// Caretakers don't get the picker — the underlying endpoints reject them.
 		immichEnabled: isImmichEnabled() && locals.user?.role !== 'caretaker',
-		paperlessEnabled: isPaperlessEnabled() && locals.user?.role !== 'caretaker'
+		paperlessEnabled: isPaperlessEnabled() && locals.user?.role !== 'caretaker',
+		demoMode: DEMO_MODE,
+		demoNotice
 	};
 };

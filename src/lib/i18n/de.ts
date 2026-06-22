@@ -344,6 +344,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.login.taglineSubtext':
 		'Der selbst gehostete Tresor für Gesundheit, Tagebuch und tägliche Pflege deines Begleiters.',
 	'page.login.brandFooter': 'Deine Daten. Dein Server. Deine Begleiter.',
+	'page.login.demoIntro': 'Wähle eine Rolle, um die Demo zu erkunden.',
+	'page.login.demoAdmin': 'Als Admin erkunden',
+	'page.login.demoMember': 'Als Mitglied erkunden',
+	'page.login.demoCaretaker': 'Als Betreuer erkunden',
+	'page.login.demoReadOnly':
+		'Dies ist eine schreibgeschützte Demo. Änderungen werden nicht gespeichert.',
 
 	// Page: Forgot password
 	'page.forgot.title': 'Passwort zurücksetzen',
@@ -1004,7 +1010,16 @@ const messages: Record<keyof Messages, string> = {
 	'documents.category.medical': 'Medizinisch',
 	'documents.category.insurance': 'Versicherung',
 	'documents.category.ownership': 'Eigentum',
-	'documents.category.other': 'Sonstiges'
+	'documents.category.other': 'Sonstiges',
+
+	// Demo bar
+	'demo.readOnlyBanner': 'Schreibgeschützte Demo',
+	'demo.viewingAs': 'Angemeldet als',
+	'demo.roleAdmin': 'Administrator',
+	'demo.roleMember': 'Mitglied',
+	'demo.roleCaretaker': 'Betreuer',
+	'demo.sourceLink': 'Quellcode',
+	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.'
 
 	// Meta
 } satisfies Record<keyof Messages, string>;

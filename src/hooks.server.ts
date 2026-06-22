@@ -1,12 +1,13 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, json } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { validateAuth } from '$server/auth';
+import { validateAuth, isSecureRequest } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
 import {
 	S3_CONFIG,
+	DEMO_MODE,
 	logImmichBootStatus,
 	logPaperlessBootStatus,
 	logStorageBootStatus,
@@ -14,8 +15,11 @@ import {
 	logVideoTranscodeBootStatus,
 	logSmtpBootStatus,
 	logNtfyBootStatus,
-	logTwoFactorBootStatus
+	logTwoFactorBootStatus,
+	logDemoBootStatus
 } from '$lib/server/env';
+import { isDemoBlockedRequest } from '$lib/server/demo';
+import { DATA_DIR } from '$lib/server/paths';
 import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
@@ -29,12 +33,24 @@ logDeprecatedEnvWarnings();
 logVideoTranscodeBootStatus();
 logSmtpBootStatus();
 logNtfyBootStatus();
+logDemoBootStatus();
 logTwoFactorBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
 recoverAndStart();
 startNotifyScheduler();
+
+if (DEMO_MODE) {
+	Promise.all([import('./lib/server/db'), import('./lib/server/db/demo-seed')])
+		.then(([{ db }, { ensureDemoUsers, refreshDemoContent, startDemoRefreshScheduler }]) => {
+			return ensureDemoUsers(db).then(() => {
+				refreshDemoContent(db, DEMO_MODE, DATA_DIR);
+				startDemoRefreshScheduler(db, DEMO_MODE, DATA_DIR);
+			});
+		})
+		.catch((err) => console.error('[demo] boot setup failed:', err));
+}
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3
 // host. CSP is enforced on the final navigation target after redirects, so the
@@ -126,6 +142,10 @@ const authContext: Handle = async ({ event, resolve }) => {
 };
 
 const twoFactorGate: Handle = async ({ event, resolve }) => {
+	// Demo is read-only and uses shared passwordless accounts: 2FA is meaningless
+	// and enrollment (a write) is blocked anyway, so never trap demo users at
+	// /2fa-setup regardless of the app's require2fa setting.
+	if (DEMO_MODE) return resolve(event);
 	const user = event.locals.user;
 	if (user) {
 		const path = event.url.pathname;
@@ -149,13 +169,48 @@ const twoFactorGate: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
+const demoReadOnly: Handle = async ({ event, resolve }) => {
+	if (DEMO_MODE && isDemoBlockedRequest(event.request.method, event.url.pathname)) {
+		if (event.url.pathname.startsWith('/api')) {
+			return json({ error: 'This is a read-only demo.', demo: true }, { status: 403 });
+		}
+		event.cookies.set('einvault_demo_notice', '1', {
+			path: '/',
+			httpOnly: false,
+			sameSite: 'strict',
+			secure: isSecureRequest(event.request),
+			maxAge: 30
+		});
+		const referer = event.request.headers.get('referer');
+		const back =
+			referer && URL.canParse(referer) ? new URL(referer).pathname + new URL(referer).search : '/';
+		redirect(303, back);
+	}
+	// Read path: prevent any CDN/proxy from caching authenticated HTML, so one
+	// visitor's session-rendered page can never be served to another. This
+	// is enforced server-side and does not depend on Cloudflare config.
+	const response = await resolve(event);
+	if (DEMO_MODE) {
+		const ct = response.headers.get('content-type') ?? '';
+		if (ct.includes('text/html')) {
+			response.headers.set('Cache-Control', 'private, no-store');
+			response.headers.append('Vary', 'Cookie');
+		}
+	}
+	return response;
+};
+
 const localeDetect: Handle = async ({ event, resolve }) => {
-	// Priority: user preference > cookie > Accept-Language > default
+	// Priority: user preference > cookie > Accept-Language > default.
+	// In demo mode the visitor shares a seed account whose stored locale ('en')
+	// can't be changed (read-only), so the per-visitor cookie must win instead.
 	const cookieRaw = event.cookies.get('einvault_locale');
-	const locale =
-		event.locals.user?.locale ??
-		(cookieRaw ? resolveLocale(cookieRaw) : null) ??
-		parseAcceptLanguage(event.request.headers.get('accept-language'));
+	const cookieLocale = cookieRaw ? resolveLocale(cookieRaw) : null;
+	const locale = DEMO_MODE
+		? (cookieLocale ?? parseAcceptLanguage(event.request.headers.get('accept-language')))
+		: (event.locals.user?.locale ??
+			cookieLocale ??
+			parseAcceptLanguage(event.request.headers.get('accept-language')));
 
 	event.locals.locale = locale;
 
@@ -176,4 +231,10 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(securityHeaders, authContext, twoFactorGate, localeDetect);
+export const handle = sequence(
+	securityHeaders,
+	authContext,
+	twoFactorGate,
+	demoReadOnly,
+	localeDetect
+);

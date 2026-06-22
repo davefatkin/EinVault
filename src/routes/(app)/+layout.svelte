@@ -42,7 +42,7 @@
 	<!-- Desktop sidebar: fixed full-height so it never scroll-couples with the
 	     page (a sticky h-screen sidebar stutters when it detaches at the bottom
 	     of tall pages like the journal and health log). Hidden on mobile. -->
-	<div class="hidden md:flex fixed inset-y-0 left-0 w-60 z-30">
+	<div class="hidden md:flex fixed bottom-0 left-0 w-60 z-30" style="top: var(--demo-bar-h, 0px)">
 		<AppSidebar
 			companions={data.companions}
 			{activeCompanion}

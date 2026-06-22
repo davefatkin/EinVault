@@ -1,14 +1,24 @@
 <script lang="ts">
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale, type MessageKey } from '$lib/i18n';
-	import { applyTheme, saveTheme, THEMES, THEME_ICONS, type Theme } from '$lib/theme';
+	import {
+		applyTheme,
+		saveTheme,
+		readThemeCookie,
+		writeThemeCookie,
+		THEMES,
+		THEME_ICONS,
+		type Theme
+	} from '$lib/theme';
 
 	let {
 		currentTheme: initialTheme,
-		redirectPath
+		redirectPath,
+		demoMode = false
 	}: {
 		currentTheme: Theme;
 		redirectPath?: string;
+		demoMode?: boolean;
 	} = $props();
 
 	const locale = getLocale();
@@ -20,12 +30,20 @@
 	};
 
 	let themeOverride = $state<Theme | null>(null);
-	let currentTheme = $derived<Theme>(themeOverride ?? initialTheme);
+	// In demo the seed account's stored theme is frozen, so the active theme lives
+	// in the cookie — reflect it so the selected button matches what's applied.
+	let currentTheme = $derived<Theme>(
+		themeOverride ?? (demoMode ? (readThemeCookie() ?? initialTheme) : initialTheme)
+	);
 
 	async function setTheme(theme: Theme) {
 		themeOverride = theme;
 		applyTheme(theme);
-		await saveTheme(theme, redirectPath);
+		if (demoMode) {
+			writeThemeCookie(theme);
+		} else {
+			await saveTheme(theme, redirectPath);
+		}
 	}
 </script>
 

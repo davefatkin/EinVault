@@ -47,71 +47,84 @@
 			</h2>
 			<p class="text-sm text-muted-foreground mb-7">{t(locale, 'page.login.welcomeSubtext')}</p>
 
-			{#if data.oidcError}
-				<Alert variant="coral" class="mb-5 animate-slide-up">
-					<AlertDescription>{data.oidcError}</AlertDescription>
-				</Alert>
-			{/if}
-
-			{#if data.oidcEnabled}
-				<a href="/auth/oidc/login" class="w-full mb-4 block">
-					<Button variant="outline" class="w-full" type="button">
-						{t(locale, 'page.login.signInWith', { provider: data.oidcProviderName })}
-					</Button>
-				</a>
-
-				<div class="relative flex items-center gap-3 mb-5">
-					<div class="flex-1 border-t border-border"></div>
-					<span class="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
-					<div class="flex-1 border-t border-border"></div>
+			{#if data.demoMode}
+				<div class="space-y-3">
+					<p class="text-sm text-muted-foreground">{t(locale, 'page.login.demoIntro')}</p>
+					{#each [['admin', 'page.login.demoAdmin'], ['member', 'page.login.demoMember'], ['caretaker', 'page.login.demoCaretaker']] as const as [role, key] (role)}
+						<form method="POST" action="/auth/demo">
+							<input type="hidden" name="role" value={role} />
+							<Button type="submit" class="w-full">{t(locale, key)}</Button>
+						</form>
+					{/each}
+					<p class="text-xs text-muted-foreground">{t(locale, 'page.login.demoReadOnly')}</p>
 				</div>
-			{/if}
-
-			<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
-				{#if form?.error}
-					<Alert variant="coral" class="animate-slide-up">
-						<AlertDescription>{form.error}</AlertDescription>
+			{:else}
+				{#if data.oidcError}
+					<Alert variant="coral" class="mb-5 animate-slide-up">
+						<AlertDescription>{data.oidcError}</AlertDescription>
 					</Alert>
 				{/if}
 
-				<div class="space-y-1.5">
-					<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
-					<Input
-						id="username"
-						name="username"
-						type="text"
-						placeholder={t(locale, 'page.login.usernamePlaceholder')}
-						required
-						autocomplete="username"
-					/>
-				</div>
+				{#if data.oidcEnabled}
+					<a href="/auth/oidc/login" class="w-full mb-4 block">
+						<Button variant="outline" class="w-full" type="button">
+							{t(locale, 'page.login.signInWith', { provider: data.oidcProviderName })}
+						</Button>
+					</a>
 
-				<div class="space-y-1.5">
-					<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
-					<Input
-						id="password"
-						name="password"
-						type="password"
-						placeholder="••••••••"
-						required
-						autocomplete="current-password"
-					/>
-					{#if data.mailEnabled}
-						<div class="text-right">
-							<a
-								href="/auth/forgot"
-								class="text-xs text-primary hover:underline underline-offset-4"
-							>
-								{t(locale, 'page.login.forgotPassword')}
-							</a>
-						</div>
+					<div class="relative flex items-center gap-3 mb-5">
+						<div class="flex-1 border-t border-border"></div>
+						<span class="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
+						<div class="flex-1 border-t border-border"></div>
+					</div>
+				{/if}
+
+				<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
+					{#if form?.error}
+						<Alert variant="coral" class="animate-slide-up">
+							<AlertDescription>{form.error}</AlertDescription>
+						</Alert>
 					{/if}
-				</div>
 
-				<Button type="submit" class="w-full" size="lg" disabled={loading}>
-					{loading ? t(locale, 'page.login.signingIn') : t(locale, 'page.login.signIn')}
-				</Button>
-			</form>
+					<div class="space-y-1.5">
+						<Label for="username">{t(locale, 'page.login.usernameLabel')}</Label>
+						<Input
+							id="username"
+							name="username"
+							type="text"
+							placeholder={t(locale, 'page.login.usernamePlaceholder')}
+							required
+							autocomplete="username"
+						/>
+					</div>
+
+					<div class="space-y-1.5">
+						<Label for="password">{t(locale, 'page.login.passwordLabel')}</Label>
+						<Input
+							id="password"
+							name="password"
+							type="password"
+							placeholder="••••••••"
+							required
+							autocomplete="current-password"
+						/>
+						{#if data.mailEnabled}
+							<div class="text-right">
+								<a
+									href="/auth/forgot"
+									class="text-xs text-primary hover:underline underline-offset-4"
+								>
+									{t(locale, 'page.login.forgotPassword')}
+								</a>
+							</div>
+						{/if}
+					</div>
+
+					<Button type="submit" class="w-full" size="lg" disabled={loading}>
+						{loading ? t(locale, 'page.login.signingIn') : t(locale, 'page.login.signIn')}
+					</Button>
+				</form>
+			{/if}
 
 			<div class="flex justify-center mt-6">
 				<div class="w-44">

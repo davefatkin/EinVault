@@ -1,8 +1,9 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { isOidcEnabled, getOidcProviderName } from '$lib/server/auth/oidc';
 import { isMailEnabled } from '$lib/server/mail';
+import { DEMO_MODE } from '$lib/server/env';
 import { db, schema } from '$lib/server/db';
 import {
 	generateSessionToken,
@@ -35,15 +36,17 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const oidcError = oidcErrorKey ? t(locals.locale, oidcErrorKey) : null;
 
 	return {
-		oidcEnabled: isOidcEnabled(),
+		demoMode: DEMO_MODE,
+		oidcEnabled: DEMO_MODE ? false : isOidcEnabled(),
 		oidcProviderName: getOidcProviderName(),
 		oidcError,
-		mailEnabled: isMailEnabled()
+		mailEnabled: DEMO_MODE ? false : isMailEnabled()
 	};
 };
 
 export const actions: Actions = {
 	default: async ({ request, cookies, getClientAddress, locals }) => {
+		if (DEMO_MODE) error(404, 'Not found');
 		const ip = getClientAddress();
 		const locale = locals.locale;
 
