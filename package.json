@@ -72,7 +72,7 @@
 		"otpauth": "^9.5.1",
 		"pdfjs-dist": "^6.0.227",
 		"qrcode": "^1.5.4",
-		"sharp": "^0.34.5",
+		"sharp": "^0.35.1",
 		"tailwind-merge": "^3.5.0"
 	},
 	"type": "module",
