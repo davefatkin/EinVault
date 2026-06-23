@@ -206,13 +206,14 @@ export function seedContent(db: BetterSQLite3Database<typeof schema>, opts: { no
 
 	db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye }).run();
 
-	// Active shift so the caretaker can see their companion.
+	// Active shift so the caretaker can see their companion. Runs past the 24h
+	// demo refresh interval so visitors always land on the on-shift experience.
 	db.insert(schema.caretakerShifts)
 		.values({
 			id: 'seed-shift-active',
 			userId: faye,
 			startAt: new Date(now - 1 * hour),
-			endAt: new Date(now + 8 * hour)
+			endAt: new Date(now + 25 * hour)
 		})
 		.run();
 
