@@ -38,7 +38,7 @@
 		"eslint-plugin-svelte": "^3.16.0",
 		"ical.js": "^2.2.1",
 		"mailparser": "^3.9.9",
-		"oauth2-mock-server": "^8.2.3",
+		"oauth2-mock-server": "^9.0.0",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^4.0.1",
 		"smtp-server": "^3.18.5",
