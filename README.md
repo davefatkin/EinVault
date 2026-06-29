@@ -5,7 +5,7 @@
 # EinVault
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.5-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
+[![Version](https://img.shields.io/badge/version-1.0.6-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
@@ -54,7 +54,6 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
 - **Search:** full-text search across journals, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
 - **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
-- **Caretaker shifts:** schedule work shifts and export to calendar via iCalendar (.ics)
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
 - **Localization:** English, German, Spanish, French, Italian, and Portuguese (non-English translations are AI-generated and may contain errors)
