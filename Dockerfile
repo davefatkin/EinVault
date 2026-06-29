@@ -64,9 +64,13 @@ RUN apk add --no-cache ffmpeg
 
 # Pull in OS security fixes published after the pinned base digest. Covers
 # CVE-2026-45447 (libcrypto3/libssl3 3.5.7-r0) and CVE-2026-8461 (ffmpeg
-# 8.1.2-r0); each no-ops once the node base image catches up. Keep targeted so
-# the layer stays deterministic-ish.
-RUN apk upgrade --no-cache libcrypto3 libssl3 ffmpeg
+# 8.1.2-r0); each no-ops once the node base image catches up. The ffmpeg sub-
+# libraries are separate packages with shared-object deps, so each must be
+# named explicitly. Keep targeted so the layer stays deterministic-ish.
+RUN apk upgrade --no-cache \
+	libcrypto3 libssl3 \
+	ffmpeg ffmpeg-libavcodec ffmpeg-libavdevice ffmpeg-libavfilter \
+	ffmpeg-libavformat ffmpeg-libavutil ffmpeg-libswresample ffmpeg-libswscale
 
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
 # app starts with `node build` and never invokes a package manager at runtime;
