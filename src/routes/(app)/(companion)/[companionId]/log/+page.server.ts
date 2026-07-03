@@ -1,27 +1,13 @@
-import { error, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, gte } from 'drizzle-orm';
 import { parseDailyEventType, parseDurationMinutes, parseLoggedAt } from '$lib/server/validation';
-import { getShiftStatus } from '$lib/server/shifts';
 import { logDailyEvent } from '$lib/server/daily-events';
 
-export const load: PageServerLoad = async ({ params, parent, locals }) => {
-	const { companions, isOnShift } = await parent();
-	if (!companions.find((c) => c.id === params.companionId)) {
-		error(403, t(locals.locale, 'error.notAssignedToCompanion'));
-	}
-
-	const companion = await db.query.companions.findFirst({
-		where: eq(schema.companions.id, params.companionId)
-	});
-	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
-
-	if (!isOnShift) {
-		return { companion, todayEvents: [] };
-	}
-
+export const load: PageServerLoad = async ({ params }) => {
+	// Companion existence is guaranteed by the (companion) layout (404s otherwise).
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
 
@@ -34,23 +20,12 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		with: { logger: { columns: { displayName: true } } }
 	});
 
-	return { companion, todayEvents };
+	return { todayEvents };
 };
 
 export const actions: Actions = {
 	add: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
-		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.noActiveShift') });
-
-		// Verify caretaker is assigned to this companion
-		const assigned = await db.query.companionCaretakers.findFirst({
-			where: and(
-				eq(schema.companionCaretakers.userId, locals.user.id),
-				eq(schema.companionCaretakers.companionId, params.companionId)
-			)
-		});
-		if (!assigned) return fail(403, { error: t(locals.locale, 'error.notAssignedToCompanion') });
 
 		const data = await request.formData();
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
@@ -60,7 +35,6 @@ export const actions: Actions = {
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
-		// "Also log for" — unassigned/archived extras are dropped by logDailyEvent.
 		const additionalIds = data
 			.getAll('additionalCompanionIds')
 			.map((v) => String(v))
@@ -72,9 +46,7 @@ export const actions: Actions = {
 			{ type, notes, durationMinutes, loggedAt }
 		);
 		if (!result.ok) {
-			const key =
-				result.code === 'noActiveShift' ? 'error.noActiveShift' : 'error.notAssignedToCompanion';
-			return fail(403, { error: t(locals.locale, key) });
+			return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
 		}
 
 		return { success: true };
@@ -82,14 +54,11 @@ export const actions: Actions = {
 
 	delete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
-		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.noActiveShift') });
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '').trim();
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 
-		// Verify the entry belongs to this companion and was logged by this caretaker
 		const entry = await db.query.dailyEvents.findFirst({
 			where: and(
 				eq(schema.dailyEvents.id, id),
@@ -98,7 +67,8 @@ export const actions: Actions = {
 		});
 
 		if (!entry) return fail(404, { error: t(locals.locale, 'error.entryNotFound') });
-		if (entry.loggedBy !== locals.user.id)
+		// Members may delete their own entries; admins may delete any.
+		if (locals.user.role !== 'admin' && entry.loggedBy !== locals.user.id)
 			return fail(403, { error: t(locals.locale, 'error.canOnlyDeleteOwnEntries') });
 
 		await db.delete(schema.dailyEvents).where(eq(schema.dailyEvents.id, id));

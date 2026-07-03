@@ -523,6 +523,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.last7Days': 'Ultimi 7 giorni',
 	'overview.companionCount.one': '{count} compagno',
 	'overview.companionCount.other': '{count} compagni',
+	'overview.quickLog.title': 'Registro rapido',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} è archiviato. Visualizzazione in sola lettura.',
@@ -864,6 +865,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.logButton': 'Registra {activity}',
 	'page.log.todaySoFar': 'Oggi finora',
 	'page.log.nothingLoggedYet': 'Nessuna attività registrata oggi.',
+	'page.log.selectCompanions': 'Registra per',
+	'page.log.selectAtLeastOne': 'Seleziona almeno un compagno.',
+	'page.companion.sectionQuickLog': 'Registro rapido',
+	'page.companion.logActivity': 'Registra attività',
 
 	// Page titles (used in <title> tags)
 	'page.care.title': 'Cura',

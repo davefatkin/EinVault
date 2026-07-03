@@ -35,6 +35,22 @@ export function parseDailyEventType(value: string): DailyEventType | null {
 	return parseEnum(value, DAILY_EVENT_TYPES);
 }
 
+// Daily event duration: positive whole minutes, capped at the form's 480 max.
+export function parseDurationMinutes(value: unknown): number | null {
+	if (value === null || value === undefined || value === '') return null;
+	const n = typeof value === 'number' ? value : parseInt(String(value), 10);
+	if (!Number.isInteger(n) || n < 1) return null;
+	return Math.min(n, 480);
+}
+
+// Logged-at timestamp from a datetime-local field or an ISO string. Null when
+// absent or unparseable (callers default to "now").
+export function parseLoggedAt(value: unknown): Date | null {
+	if (typeof value !== 'string' || !value.trim()) return null;
+	const d = new Date(value);
+	return Number.isNaN(d.getTime()) ? null : d;
+}
+
 // Health event type
 
 export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';

@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell, X, House } from '@lucide/svelte';
+	import { Plus, Zap, Check, Pencil, Bell, X, House, Activity, ChevronDown } from '@lucide/svelte';
+	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import Ein from '$lib/components/Ein.svelte';
@@ -28,7 +29,7 @@
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
 
 	// Use the server's notion of today so journal links don't drift on timezone boundary.
@@ -653,6 +654,31 @@
 					<p class="text-xs">{t(locale, 'overview.companions.addStart')}</p>
 				</a>
 			</div>
+		</section>
+	{/if}
+
+	<!-- 3b. Quick log across the household -->
+	{#if data.companions.length > 0}
+		<section>
+			<details class="group rounded-xl border bg-card">
+				<summary
+					class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground list-none [&::-webkit-details-marker]:hidden"
+				>
+					<Activity class="h-4 w-4 text-primary" />
+					{t(locale, 'overview.quickLog.title')}
+					<ChevronDown
+						class="ml-auto h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180"
+					/>
+				</summary>
+				<div class="border-t px-4 py-4">
+					<DailyLogForm
+						companions={data.companions}
+						primaryCompanion={null}
+						action="?/quickLog"
+						{form}
+					/>
+				</div>
+			</details>
 		</section>
 	{/if}
 

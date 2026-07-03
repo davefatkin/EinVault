@@ -516,6 +516,7 @@ const messages = {
 	'overview.last7Days': 'Last 7 days',
 	'overview.companionCount.one': '{count} companion',
 	'overview.companionCount.other': '{count} companions',
+	'overview.quickLog.title': 'Quick log',
 
 	// Page: dashboard (app companion dashboard)
 	'page.dashboard.archivedBanner': '{name} is archived. Viewing in read-only mode.',
@@ -852,6 +853,10 @@ const messages = {
 	'page.log.logButton': 'Log {activity}',
 	'page.log.todaySoFar': 'Today so far',
 	'page.log.nothingLoggedYet': 'Nothing logged yet today.',
+	'page.log.selectCompanions': 'Log for',
+	'page.log.selectAtLeastOne': 'Select at least one companion.',
+	'page.companion.sectionQuickLog': 'Quick log',
+	'page.companion.logActivity': 'Log activity',
 
 	// Page titles (used in <title> tags)
 	'page.care.title': 'Care',

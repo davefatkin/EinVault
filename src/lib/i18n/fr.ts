@@ -527,6 +527,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.last7Days': '7 derniers jours',
 	'overview.companionCount.one': '{count} compagnon',
 	'overview.companionCount.other': '{count} compagnons',
+	'overview.quickLog.title': 'Saisie rapide',
 
 	// Page: dashboard
 	'page.dashboard.archivedBanner': '{name} est archivé. Mode lecture seule.',
@@ -871,6 +872,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.log.logButton': 'Enregistrer {activity}',
 	'page.log.todaySoFar': "Aujourd'hui jusqu'ici",
 	'page.log.nothingLoggedYet': "Rien d'enregistré aujourd'hui.",
+	'page.log.selectCompanions': 'Enregistrer pour',
+	'page.log.selectAtLeastOne': 'Sélectionnez au moins un compagnon.',
+	'page.companion.sectionQuickLog': 'Saisie rapide',
+	'page.companion.logActivity': 'Enregistrer une activité',
 
 	// Page titles
 	'page.care.title': 'Soins',
