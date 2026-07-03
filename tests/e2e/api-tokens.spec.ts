@@ -124,11 +124,12 @@ test.describe('api tokens', () => {
 		// Full profile is returned…
 		expect(ein.name).toBeTruthy();
 		expect(ein).toHaveProperty('vetName');
-		expect(ein).toHaveProperty('avatarUrl');
-		// …but internal storage plumbing is not leaked.
+		// …but internal avatar storage plumbing is not leaked (and /api/avatars
+		// is session-gated, so a token holder couldn't fetch it anyway).
 		expect(ein).not.toHaveProperty('avatarStorageKey');
 		expect(ein).not.toHaveProperty('avatarPath');
 		expect(ein).not.toHaveProperty('avatarProvider');
+		expect(ein).not.toHaveProperty('avatarUrl');
 	});
 
 	test('journal endpoint upserts the day entry', async ({ asMember, app }) => {

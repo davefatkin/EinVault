@@ -5,8 +5,9 @@ type CompanionRow = typeof companions.$inferSelect;
 // Public JSON shape for a companion over the Bearer-token API. Every API
 // endpoint returning companion data goes through here so the payload is
 // default-deny: a new column on the companions table is NOT exposed until it
-// is added below. The three avatar* storage columns are deliberately collapsed
-// into a fetchable avatarUrl (or null) rather than leaking internal keys.
+// is added below. The avatar* storage columns are omitted entirely: they are
+// internal storage plumbing, and /api/avatars is session-gated so a token
+// holder can't fetch the image anyway.
 export function toApiCompanion(row: CompanionRow) {
 	return {
 		id: row.id,
@@ -17,7 +18,6 @@ export function toApiCompanion(row: CompanionRow) {
 		sex: row.sex,
 		weightUnit: row.weightUnit,
 		microchip: row.microchip,
-		avatarUrl: row.avatarPath ? `/api/avatars/${row.id}` : null,
 		bio: row.bio,
 		feedingSchedule: row.feedingSchedule,
 		walkSchedule: row.walkSchedule,
