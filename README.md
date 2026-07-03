@@ -41,6 +41,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
   - [Logout](#logout)
   - [Provider notes](#provider-notes)
 - [Two-factor authentication (2FA)](#two-factor-authentication-2fa)
+- [Bearer-token API (optional)](#bearer-token-api-optional)
 - [Adding a new locale](#adding-a-new-locale)
 - [Stack](#stack)
 - [License](#license)
@@ -51,6 +52,8 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Daily journal:** per-companion entries with mood tracking, photo and video uploads, and a configurable daily media limit (default 5)
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
 - **Activity logging:** walks, meals, bathroom trips, treats, play sessions, and grooming
+- **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users
+- **Bearer-token API:** log activities and journal entries headlessly from smart buttons, scripts, and devices
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
 - **Search:** full-text search across journals, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
 - **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
@@ -114,6 +117,7 @@ Everything else in the compose file can be edited directly:
 | `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
 | `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
 | `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
+| `API_TOKENS_ENABLED`          | `true`              | Set `false` to disable the Bearer-token API (token creation and the `/api/logs`, `/api/journal`, `/api/quick-logs` endpoints) entirely.                    |
 | `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                |
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
@@ -442,6 +446,34 @@ When enforcement is active, un-enrolled users are redirected to `/2fa-setup` aft
 **OIDC users are exempt.** Accounts that sign in via OIDC are never required to enroll. MFA for those accounts is handled by the identity provider.
 
 **Recovery.** If a user loses their authenticator app, they can sign in using one of their backup codes instead. If backup codes are also lost, an admin can reset the user's two-factor enrollment from the Manage drawer (Admin → Users → Manage → Reset two-factor). The user will be prompted to re-enroll on next login.
+
+---
+
+## Bearer-token API (optional)
+
+EinVault exposes a small HTTP API so smart buttons, scripts, and other devices can log events without a browser session. It is enabled by default; set `API_TOKENS_ENABLED=false` to turn off token creation and every endpoint below.
+
+**Creating a token.** Go to Settings → API tokens, create a token, and copy it. The raw token is shown only once. A token acts as the user who created it and inherits their permissions, so a caretaker's token still requires an active shift and only reaches assigned companions. Admins can revoke a user's API access from Admin → Users → Manage, which disables all of that user's tokens at once without deleting them.
+
+**Authenticating.** Send the token in an `Authorization: Bearer <token>` header on every request.
+
+```bash
+curl -X POST https://einvault.example.com/api/logs \
+  -H "Authorization: Bearer $EINVAULT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"companionId": "abc123", "type": "walk", "durationMinutes": 30}'
+```
+
+**Endpoints.**
+
+| Method & path                    | Body                                                                         | Purpose                                                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `POST /api/logs`                 | `{ companionId or companionIds, type, notes?, durationMinutes?, loggedAt? }` | Log a daily event. `type` is one of `walk`, `meal`, `bathroom`, `treat`, `play`, `grooming`, `other`. Returns `201 { ids, eventGroupId }`. |
+| `POST /api/journal`              | `{ companionId, date?, body?, mood? }`                                       | Upsert the journal entry for a day (`date` defaults to today). This **replaces** the day's text and mood. Returns `201 { companionId, date }`. |
+| `GET /api/quick-logs`            | —                                                                            | List the token user's enabled quick logs so a device can discover their ids. Returns `{ quickLogs: [...] }`.  |
+| `POST /api/quick-logs/{id}/execute` | `{ companionIds?, loggedAt? }` (optional)                                 | Run a configured quick log. With no body it uses the quick log's remembered/assigned companions, so a physical button only needs the URL and token. Returns `200 { ids }`. |
+
+Quick logs are the customizable one-tap buttons you set up under Settings → Quick logs; pairing one with `POST /api/quick-logs/{id}/execute` keeps all configuration (event type, note, companions) in the app so the device stays a dumb trigger.
 
 ---
 

@@ -118,6 +118,9 @@ services:
       # CALENDAR_FEED_HISTORY_DAYS: 90
       # CALENDAR_FEED_ENABLED: 'true'
 
+      # Bearer-token API (token creation + /api endpoints); set false to disable
+      # API_TOKENS_ENABLED: 'true'
+
       # Read-only public demo mode. When true, login becomes a role picker and
       # all writes are blocked. Leave unset/false for real instances.
       # DEMO_MODE: 'true'
