@@ -44,7 +44,7 @@ export async function revokeApiToken(userId: string, id: string): Promise<boolea
 
 // Resolve a raw token to its owning user, or null. Lookup is by hash, so match
 // timing leaks nothing about a valid raw token (same reasoning as session.ts).
-// Requires the user to be active AND to hold API access — the admin-controlled
+// Requires the user to be active AND to hold API access; the admin-controlled
 // apiAccessEnabled flag disables every token immediately without deleting them.
 export async function resolveApiToken(
 	raw: string

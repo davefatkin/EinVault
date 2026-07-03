@@ -43,20 +43,20 @@ test.describe('custom quick logs', () => {
 		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(asMember.getByText('Breakfast')).toBeVisible();
 
-		// Move "Breakfast" up — it should now precede "Evening walk".
+		// Move "Breakfast" up so it precedes "Evening walk".
 		const rows = asMember.locator('div.divide-y > div');
 		await expect(rows.first()).toContainText('Evening walk');
 		await rows.nth(1).getByRole('button', { name: 'Move up' }).click();
 		await expect(rows.first()).toContainText('Breakfast');
 
-		// Disable "Breakfast" — its button disappears from the dashboard.
+		// Disable "Breakfast"; its button disappears from the dashboard.
 		await rows.first().getByRole('button', { name: 'Disable' }).click();
 		await expect(rows.first().getByText('Disabled')).toBeVisible();
 		await asMember.goto('/');
 		await expect(asMember.getByRole('button', { name: /Breakfast/ })).toHaveCount(0);
 		await expect(asMember.getByRole('button', { name: /Evening walk/ })).toBeVisible();
 
-		// Share "Evening walk" with the admin — copy semantics.
+		// Share "Evening walk" with the admin; copy semantics.
 		await asMember.goto('/settings/quick-logs');
 		await asMember
 			.locator('div.divide-y > div')

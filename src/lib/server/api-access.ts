@@ -6,7 +6,7 @@ import { t } from '$lib/i18n';
 
 // Best-effort notification when an admin grants/revokes a user's API access.
 // Rendered in the recipient's stored locale. Failures are logged, never
-// surfaced — the toggle itself must not depend on SMTP/ntfy health.
+// surfaced; the toggle itself must not depend on SMTP/ntfy health.
 export async function notifyApiAccessChanged(user: User, granted: boolean): Promise<void> {
 	if (isMailEnabled() && user.email) {
 		try {

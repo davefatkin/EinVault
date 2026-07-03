@@ -12,7 +12,7 @@ import {
 
 // Bearer-token endpoint (never reads locals.user): create one or more daily
 // events headlessly. Body: { companionIds|companionId, type, notes?,
-// durationMinutes?, loggedAt? (ISO) }. The token acts as its user — caretaker
+// durationMinutes?, loggedAt? (ISO) }. The token acts as its user, so caretaker
 // tokens keep the shift + assignment rules.
 export const POST: RequestHandler = async (event) => {
 	const { user } = await requireApiToken(event);

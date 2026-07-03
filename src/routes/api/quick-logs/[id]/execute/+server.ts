@@ -6,7 +6,7 @@ import { executeQuickLog } from '$lib/server/quick-logs';
 import { parseIdArray, parseLoggedAt } from '$lib/server/validation';
 
 // Bearer-token endpoint: run one of the token user's configured quick logs.
-// Body optional: { companionIds?, loggedAt? } — with no body the remembered/
+// Body optional: { companionIds?, loggedAt? }. With no body the remembered/
 // assigned target set is used, so a physical button only stores URL + token
 // and all configuration lives in the app. API execution never rewrites the
 // remembered UI preference.

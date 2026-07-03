@@ -60,7 +60,7 @@ export const actions: Actions = {
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
-		// "Also log for" — unassigned/archived extras are dropped by logDailyEvent.
+		// "Also log for": unassigned/archived extras are dropped by logDailyEvent.
 		const additionalIds = data
 			.getAll('additionalCompanionIds')
 			.map((v) => String(v))

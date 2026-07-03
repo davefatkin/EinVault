@@ -94,7 +94,7 @@
 	class="space-y-4"
 >
 	<!-- Activity type pills -->
-	<fieldset class="space-y-2 border-0 p-0 m-0">
+	<fieldset class="space-y-2">
 		<legend class="text-sm font-medium text-foreground"
 			>{t(locale, 'page.log.activityLabel')}</legend
 		>
@@ -124,7 +124,7 @@
 	</fieldset>
 
 	{#if !primaryCompanion}
-		<fieldset class="space-y-1.5 border-0 p-0 m-0">
+		<fieldset class="space-y-1.5">
 			<legend class="text-sm font-medium text-foreground"
 				>{t(locale, 'page.log.selectCompanions')}</legend
 			>
@@ -153,7 +153,7 @@
 			</div>
 		</fieldset>
 	{:else if siblingCompanions.length > 0}
-		<fieldset class="space-y-1.5 border-0 p-0 m-0">
+		<fieldset class="space-y-1.5">
 			<legend class="text-sm font-medium text-foreground">{t(locale, 'page.log.alsoLogFor')}</legend
 			>
 			<p class="text-xs text-muted-foreground">

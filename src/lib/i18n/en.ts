@@ -872,7 +872,7 @@ const messages = {
 	'quickLogs.enabledLabel': 'Enabled',
 	'quickLogs.empty': 'No quick logs yet',
 	'quickLogs.emptyBody':
-		'Create a button for a repetitive event — like an evening walk — and log it with one tap.',
+		'Create a button for a repetitive event, like an evening walk, and log it with one tap.',
 	'quickLogs.addButton': 'Add quick log',
 	'quickLogs.disabledBadge': 'Disabled',
 	'quickLogs.companionCount': '{count} companion(s)',
@@ -885,7 +885,7 @@ const messages = {
 	'quickLogs.share': 'Share',
 	'quickLogs.shareTitle': 'Share a copy',
 	'quickLogs.shareHint':
-		"Recipients get their own independent copy — later edits here won't affect them.",
+		"Recipients get their own independent copy. Later edits here won't affect them.",
 	'quickLogs.shareButton': 'Share copy',
 	'quickLogs.shareSuccess': 'Copied to {count} user(s).',
 	'quickLog.execute.targets': 'Log for',
@@ -898,7 +898,7 @@ const messages = {
 		'An administrator has revoked your API access. Existing tokens stop working until access is granted again.',
 	'settings.apiTokens.newToken': 'New token',
 	'settings.apiTokens.copy': 'Copy',
-	'settings.apiTokens.revealOnce': 'Copy this token now — it is shown only once.',
+	'settings.apiTokens.revealOnce': 'Copy this token now. It is shown only once.',
 	'settings.apiTokens.namePlaceholder': 'e.g. Door button',
 	'settings.apiTokens.create': 'Create token',
 	'settings.apiTokens.created': 'Created',

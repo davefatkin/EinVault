@@ -101,7 +101,7 @@
 				>
 					<input type="hidden" name="quickLogId" value={button.id} />
 
-					<fieldset class="space-y-1.5 border-0 p-0 m-0">
+					<fieldset class="space-y-1.5">
 						<legend class="text-xs font-medium text-muted-foreground"
 							>{t(locale, 'quickLog.execute.targets')}</legend
 						>

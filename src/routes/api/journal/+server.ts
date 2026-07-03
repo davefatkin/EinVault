@@ -9,7 +9,7 @@ import { isValidDate, parseMood } from '$lib/server/validation';
 
 // Bearer-token endpoint: write a journal entry. Body: { companionId, date?
 // (YYYY-MM-DD, default today), body?, mood? }. NOTE: journal entries are
-// unique per (companion, date) — this REPLACES the day's body/mood, matching
+// unique per (companion, date); this REPLACES the day's body/mood, matching
 // the web editor's upsert semantics. Devices appending discrete events should
 // use POST /api/logs instead.
 export const POST: RequestHandler = async (event) => {

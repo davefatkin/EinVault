@@ -891,7 +891,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.enabledLabel': 'Aktiviert',
 	'quickLogs.empty': 'Noch keine Schnell-Logs',
 	'quickLogs.emptyBody':
-		'Erstelle einen Button für ein wiederkehrendes Ereignis — z. B. den Abendspaziergang — und erfasse es mit einem Tipp.',
+		'Erstelle einen Button für ein wiederkehrendes Ereignis, z. B. den Abendspaziergang, und erfasse es mit einem Tipp.',
 	'quickLogs.addButton': 'Schnell-Log hinzufügen',
 	'quickLogs.disabledBadge': 'Deaktiviert',
 	'quickLogs.companionCount': '{count} Begleiter',
@@ -904,7 +904,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.share': 'Teilen',
 	'quickLogs.shareTitle': 'Kopie teilen',
 	'quickLogs.shareHint':
-		'Empfänger erhalten eine eigene, unabhängige Kopie — spätere Änderungen hier wirken sich nicht auf sie aus.',
+		'Empfänger erhalten eine eigene, unabhängige Kopie. Spätere Änderungen hier wirken sich nicht auf sie aus.',
 	'quickLogs.shareButton': 'Kopie teilen',
 	'quickLogs.shareSuccess': 'An {count} Benutzer kopiert.',
 	'quickLog.execute.targets': 'Erfassen für',
@@ -917,7 +917,7 @@ const messages: Record<keyof Messages, string> = {
 		'Ein Administrator hat deinen API-Zugriff entzogen. Bestehende Tokens funktionieren erst wieder, wenn der Zugriff erneut gewährt wird.',
 	'settings.apiTokens.newToken': 'Neues Token',
 	'settings.apiTokens.copy': 'Kopieren',
-	'settings.apiTokens.revealOnce': 'Kopiere dieses Token jetzt — es wird nur einmal angezeigt.',
+	'settings.apiTokens.revealOnce': 'Kopiere dieses Token jetzt. Es wird nur einmal angezeigt.',
 	'settings.apiTokens.namePlaceholder': 'z. B. Türknopf',
 	'settings.apiTokens.create': 'Token erstellen',
 	'settings.apiTokens.created': 'Erstellt',

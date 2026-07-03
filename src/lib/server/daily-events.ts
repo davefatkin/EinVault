@@ -20,7 +20,7 @@ type ResolveResult = { ok: true; ids: string[] } | { ok: false; code: LogDailyEv
 // - member/admin: any existing active companion
 // - caretaker: must be on shift, and every id must be an assigned companion
 //   (mirrors the original caretaker quick-log action; unassigned or archived
-//   ids are silently dropped, matching the old "also log for" behavior — but
+//   ids are silently dropped, matching the old "also log for" behavior, but
 //   an empty result is an error so a bad primary target can't no-op).
 export async function resolveLoggableCompanions(
 	user: { id: string; role: UserRole },

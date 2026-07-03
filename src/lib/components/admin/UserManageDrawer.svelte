@@ -594,7 +594,7 @@
 				</section>
 			{/if}
 
-			<!-- API access (members/caretakers only — admins always have it) -->
+			<!-- API access (members/caretakers only; admins always have it) -->
 			{#if user.role !== 'admin'}
 				<section>
 					<h2 class={sectionLabel}>{t(locale, 'page.admin.apiAccessSection')}</h2>

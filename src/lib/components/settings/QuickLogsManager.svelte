@@ -6,7 +6,17 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { ArrowDown, ArrowUp, Pencil, Plus, Share2, Trash2, Zap } from '@lucide/svelte';
+	import {
+		ArrowDown,
+		ArrowUp,
+		Pencil,
+		Plus,
+		Power,
+		PowerOff,
+		Share2,
+		Trash2,
+		Zap
+	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -164,7 +174,7 @@
 			/>
 		</div>
 
-		<fieldset class="space-y-1.5 border-0 p-0 m-0">
+		<fieldset class="space-y-1.5">
 			<legend class="text-sm font-medium text-foreground"
 				>{t(locale, 'quickLogs.companionsLabel')}</legend
 			>
@@ -300,8 +310,20 @@
 							<form method="POST" action="?/toggle" use:enhance>
 								<input type="hidden" name="id" value={row.id} />
 								<input type="hidden" name="enabled" value={row.isEnabled ? 'false' : 'true'} />
-								<Button type="submit" variant="ghost" size="sm" class="h-7 text-xs px-2">
-									{row.isEnabled ? t(locale, 'quickLogs.disable') : t(locale, 'quickLogs.enable')}
+								<Button
+									type="submit"
+									variant="ghost"
+									size="sm"
+									class="h-7 w-7 p-0 {row.isEnabled ? '' : 'text-muted-foreground'}"
+									aria-label={row.isEnabled
+										? t(locale, 'quickLogs.disable')
+										: t(locale, 'quickLogs.enable')}
+								>
+									{#if row.isEnabled}
+										<Power class="h-3.5 w-3.5" />
+									{:else}
+										<PowerOff class="h-3.5 w-3.5" />
+									{/if}
 								</Button>
 							</form>
 							{#if shareableUsers.length > 0}

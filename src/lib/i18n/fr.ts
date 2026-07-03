@@ -892,7 +892,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.enabledLabel': 'Activé',
 	'quickLogs.empty': 'Aucune saisie rapide pour le moment',
 	'quickLogs.emptyBody':
-		'Créez un bouton pour un événement répétitif — comme la promenade du soir — et enregistrez-le en une touche.',
+		'Créez un bouton pour un événement répétitif, comme la promenade du soir, et enregistrez-le en une touche.',
 	'quickLogs.addButton': 'Ajouter une saisie rapide',
 	'quickLogs.disabledBadge': 'Désactivé',
 	'quickLogs.companionCount': '{count} compagnon(s)',
@@ -905,7 +905,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.share': 'Partager',
 	'quickLogs.shareTitle': 'Partager une copie',
 	'quickLogs.shareHint':
-		'Les destinataires reçoivent leur propre copie indépendante — vos modifications ultérieures ne les affecteront pas.',
+		'Les destinataires reçoivent leur propre copie indépendante. Vos modifications ultérieures ne les affecteront pas.',
 	'quickLogs.shareButton': 'Partager la copie',
 	'quickLogs.shareSuccess': 'Copié vers {count} utilisateur(s).',
 	'quickLog.execute.targets': 'Enregistrer pour',
@@ -918,8 +918,7 @@ const messages: Record<keyof Messages, string> = {
 		'Un administrateur a révoqué votre accès à l’API. Les jetons existants ne fonctionneront plus tant que l’accès n’est pas rétabli.',
 	'settings.apiTokens.newToken': 'Nouveau jeton',
 	'settings.apiTokens.copy': 'Copier',
-	'settings.apiTokens.revealOnce':
-		'Copiez ce jeton maintenant — il ne s’affiche qu’une seule fois.',
+	'settings.apiTokens.revealOnce': 'Copiez ce jeton maintenant. Il ne s’affiche qu’une seule fois.',
 	'settings.apiTokens.namePlaceholder': 'p. ex. Bouton de la porte',
 	'settings.apiTokens.create': 'Créer un jeton',
 	'settings.apiTokens.created': 'Créé',

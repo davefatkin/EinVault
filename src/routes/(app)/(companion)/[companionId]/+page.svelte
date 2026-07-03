@@ -67,7 +67,7 @@
 
 	const ACTIVITY_ICON = ACTIVITY_ICONS;
 
-	// Quick log shortcuts — same trio the caretaker view offers.
+	// Quick log shortcuts, the same trio the caretaker view offers.
 	const quickLogTypes = activityTypeOptions(locale).filter((o) =>
 		['walk', 'meal', 'bathroom'].includes(o.value)
 	);

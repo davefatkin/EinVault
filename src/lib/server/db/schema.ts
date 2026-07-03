@@ -47,7 +47,7 @@ export const users = sqliteTable(
 		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
 		// Admin-controlled switch for the token API. Enforced at token resolution,
 		// so revoking disables every existing token immediately without deleting
-		// them — re-granting brings the user's tokens back intact.
+		// them, and re-granting brings the user's tokens back intact.
 		apiAccessEnabled: integer('api_access_enabled', { mode: 'boolean' }).notNull().default(true),
 		// ntfy topic name on the site-configured server (env NTFY_URL). A
 		// non-empty topic is the opt-in for push notifications; the user
@@ -534,7 +534,7 @@ export const apiTokens = sqliteTable(
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
 		name: text('name').notNull(),
-		// sha256 hex of the raw token — same storage pattern as sessions.id, so a
+		// sha256 hex of the raw token, same storage pattern as sessions.id, so a
 		// DB leak never exposes a usable token.
 		tokenHash: text('token_hash').notNull(),
 		createdAt: integer('created_at', { mode: 'timestamp' })

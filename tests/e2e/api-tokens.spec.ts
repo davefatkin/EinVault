@@ -90,7 +90,7 @@ test.describe('api tokens', () => {
 		const target = quickLogs.find((q: { name: string }) => q.name === 'Api treat');
 		expect(target).toBeTruthy();
 
-		// Fire it with no body — all config lives in the app.
+		// Fire it with no body; all config lives in the app.
 		const exec = await asMember.request.post(
 			app.server.baseURL + `/api/quick-logs/${target.id}/execute`,
 			{ headers: { Authorization: `Bearer ${raw}` } }

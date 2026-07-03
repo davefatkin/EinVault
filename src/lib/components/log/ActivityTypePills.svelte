@@ -16,7 +16,7 @@
 	const EVENT_TYPES = activityTypeOptions(locale);
 </script>
 
-<fieldset class="space-y-2 border-0 p-0 m-0">
+<fieldset class="space-y-2">
 	<legend class="text-sm font-medium text-foreground"
 		>{legend ?? t(locale, 'page.log.activityLabel')}</legend
 	>

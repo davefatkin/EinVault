@@ -888,7 +888,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.enabledLabel': 'Activado',
 	'quickLogs.empty': 'Aún no hay registros rápidos',
 	'quickLogs.emptyBody':
-		'Crea un botón para un evento repetitivo — como el paseo nocturno — y regístralo con un toque.',
+		'Crea un botón para un evento repetitivo, como el paseo nocturno, y regístralo con un toque.',
 	'quickLogs.addButton': 'Añadir registro rápido',
 	'quickLogs.disabledBadge': 'Desactivado',
 	'quickLogs.companionCount': '{count} compañero(s)',
@@ -901,7 +901,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.share': 'Compartir',
 	'quickLogs.shareTitle': 'Compartir una copia',
 	'quickLogs.shareHint':
-		'Los destinatarios reciben su propia copia independiente — los cambios posteriores aquí no les afectarán.',
+		'Los destinatarios reciben su propia copia independiente. Los cambios posteriores aquí no les afectarán.',
 	'quickLogs.shareButton': 'Compartir copia',
 	'quickLogs.shareSuccess': 'Copiado a {count} usuario(s).',
 	'quickLog.execute.targets': 'Registrar para',
@@ -914,7 +914,7 @@ const messages: Record<keyof Messages, string> = {
 		'Un administrador ha revocado tu acceso a la API. Los tokens existentes dejarán de funcionar hasta que se conceda de nuevo el acceso.',
 	'settings.apiTokens.newToken': 'Nuevo token',
 	'settings.apiTokens.copy': 'Copiar',
-	'settings.apiTokens.revealOnce': 'Copia este token ahora — solo se muestra una vez.',
+	'settings.apiTokens.revealOnce': 'Copia este token ahora. Solo se muestra una vez.',
 	'settings.apiTokens.namePlaceholder': 'p. ej. Botón de la puerta',
 	'settings.apiTokens.create': 'Crear token',
 	'settings.apiTokens.created': 'Creado',
