@@ -640,8 +640,6 @@ const messages = {
 	'page.journal.day.activityTime': 'Time',
 	'page.journal.day.activityDuration': 'Duration (min)',
 	'page.journal.day.activityNotes': 'Any notes…',
-	'page.journal.day.alsoLogFor': 'Also Log For…',
-	'page.journal.day.alsoLogForHint': 'Select other companions to record the same activity for.',
 	'page.journal.day.logIt': 'Log it',
 	'page.journal.day.noActivities': 'No activities logged yet.',
 	'page.journal.day.detailType': 'Type',

@@ -649,9 +649,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.activityTime': 'Hora',
 	'page.journal.day.activityDuration': 'Duração (min)',
 	'page.journal.day.activityNotes': 'Notas…',
-	'page.journal.day.alsoLogFor': 'Registar também para…',
-	'page.journal.day.alsoLogForHint':
-		'Selecione outros companheiros para registar a mesma atividade.',
 	'page.journal.day.logIt': 'Registar',
 	'page.journal.day.noActivities': 'Sem atividades registadas.',
 	'page.journal.day.detailType': 'Tipo',

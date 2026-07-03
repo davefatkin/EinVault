@@ -1012,10 +1012,10 @@
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
 								<legend class="text-sm font-medium text-foreground">
-									{t(locale, 'page.journal.day.alsoLogFor')}
+									{t(locale, 'page.log.alsoLogFor')}
 								</legend>
 								<p class="text-xs text-muted-foreground">
-									{t(locale, 'page.journal.day.alsoLogForHint')}
+									{t(locale, 'page.log.alsoLogForHint')}
 								</p>
 								<div class="flex flex-wrap gap-2">
 									{#each siblingCompanions as sibling (sibling.id)}
