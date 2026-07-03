@@ -107,6 +107,30 @@ test.describe('api tokens', () => {
 		expect(nope.status()).toBe(404);
 	});
 
+	test('companions endpoint lists targetable companions with a safe shape', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Discovery bot');
+
+		const res = await asMember.request.get(app.server.baseURL + '/api/companions', {
+			headers: { Authorization: `Bearer ${raw}` }
+		});
+		expect(res.status()).toBe(200);
+		const { companions } = await res.json();
+
+		const ein = companions.find((c: { id: string }) => c.id === EIN);
+		expect(ein).toBeTruthy();
+		// Full profile is returned…
+		expect(ein.name).toBeTruthy();
+		expect(ein).toHaveProperty('vetName');
+		expect(ein).toHaveProperty('avatarUrl');
+		// …but internal storage plumbing is not leaked.
+		expect(ein).not.toHaveProperty('avatarStorageKey');
+		expect(ein).not.toHaveProperty('avatarPath');
+		expect(ein).not.toHaveProperty('avatarProvider');
+	});
+
 	test('journal endpoint upserts the day entry', async ({ asMember, app }) => {
 		const raw = await createToken(asMember, 'Journal bot');
 
