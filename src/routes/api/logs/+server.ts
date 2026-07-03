@@ -1,13 +1,13 @@
 import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
-import { requireApiToken } from '$lib/server/auth/api-request';
+import { apiRouteJson } from '$lib/server/auth/api-request';
 import { throwCareError } from '$lib/server/care-errors';
 import { logDailyEvent } from '$lib/server/daily-events';
 import {
+	isJsonObject,
+	parseCompanionTargets,
 	parseDailyEventType,
 	parseDurationMinutes,
-	parseIdArray,
 	parseLoggedAt
 } from '$lib/server/validation';
 
@@ -15,22 +15,14 @@ import {
 // events headlessly. Body: { companionIds|companionId, type, notes?,
 // durationMinutes?, loggedAt? (ISO) }. The token acts as its user, so caretaker
 // tokens keep the shift + assignment rules.
-export const POST: RequestHandler = async (event) => {
-	const { user } = await requireApiToken(event);
-	const locale = event.locals.locale;
-
-	const body = await event.request.json().catch(() => null);
-	if (!body || typeof body !== 'object') {
-		error(400, t(locale, 'error.invalidRequestBody'));
-	}
-
+export const POST = apiRouteJson(isJsonObject, async ({ user, locale, body }) => {
 	const type = parseDailyEventType(String(body.type ?? ''));
-	if (!type) error(400, t(locale, 'error.typeRequired'));
+	if (!type) error(400, { code: 'invalidType', message: t(locale, 'error.typeRequired') });
 
-	const companionIds = parseIdArray(
-		Array.isArray(body.companionIds) ? body.companionIds : [body.companionId]
-	);
-	if (companionIds.length === 0) error(400, t(locale, 'error.noCompanionsSelected'));
+	const companionIds = parseCompanionTargets(body);
+	if (companionIds.length === 0) {
+		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+	}
 
 	const result = await logDailyEvent({ id: user.id, role: user.role }, companionIds, {
 		type,
@@ -42,4 +34,4 @@ export const POST: RequestHandler = async (event) => {
 	if (!result.ok) throwCareError(result.code, locale);
 
 	return json({ ids: result.ids, eventGroupId: result.eventGroupId }, { status: 201 });
-};
+});

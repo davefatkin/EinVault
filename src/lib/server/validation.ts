@@ -70,6 +70,17 @@ export function parseIdArray(value: unknown, max = 50): string[] {
 	];
 }
 
+// Type guard for a JSON request body that is a non-null object.
+export function isJsonObject(b: unknown): b is Record<string, unknown> {
+	return typeof b === 'object' && b !== null && !Array.isArray(b);
+}
+
+// Companion target ids from an API body accepting either `companionIds` (array)
+// or a singular `companionId`. Same cap as parseIdArray.
+export function parseCompanionTargets(body: { companionIds?: unknown; companionId?: unknown }): string[] {
+	return parseIdArray(Array.isArray(body.companionIds) ? body.companionIds : [body.companionId]);
+}
+
 // Health event type
 
 export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';

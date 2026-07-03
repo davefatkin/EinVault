@@ -1,6 +1,23 @@
 import type { companions } from '$lib/server/db/schema';
+import type { QuickLogButton } from '$lib/server/quick-logs';
 
 type CompanionRow = typeof companions.$inferSelect;
+
+// Convention: every /api/* handler that returns a model builds its JSON here,
+// never inline, so each model has one default-deny serializer.
+
+// Public shape for a quick log over the API (discovery for the execute route).
+// Drops the UI-only fields (rememberAlso, prefillCompanionIds).
+export function toApiQuickLog(b: QuickLogButton) {
+	return {
+		id: b.id,
+		name: b.name,
+		type: b.type,
+		durationMinutes: b.durationMinutes,
+		note: b.note,
+		companionIds: b.companionIds
+	};
+}
 
 // Public JSON shape for a companion over the Bearer-token API. Every API
 // endpoint returning companion data goes through here so the payload is

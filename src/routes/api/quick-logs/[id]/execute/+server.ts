@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { requireApiToken } from '$lib/server/auth/api-request';
+import { apiRoute } from '$lib/server/auth/api-request';
 import { throwCareError } from '$lib/server/care-errors';
 import { executeQuickLog } from '$lib/server/quick-logs';
 import { parseIdArray, parseLoggedAt } from '$lib/server/validation';
@@ -10,16 +9,13 @@ import { parseIdArray, parseLoggedAt } from '$lib/server/validation';
 // assigned target set is used, so a physical button only stores URL + token
 // and all configuration lives in the app. API execution never rewrites the
 // remembered UI preference.
-export const POST: RequestHandler = async (event) => {
-	const { user } = await requireApiToken(event);
-	const locale = event.locals.locale;
-
+export const POST = apiRoute(async ({ event, user, locale }) => {
 	const body = await event.request.json().catch(() => null);
 	const companionIds = body ? parseIdArray(body.companionIds) : [];
 
 	const result = await executeQuickLog({
 		user: { id: user.id, role: user.role },
-		quickLogId: event.params.id,
+		quickLogId: event.params.id!,
 		companionIds: companionIds.length > 0 ? companionIds : undefined,
 		loggedAt: body ? (parseLoggedAt(body.loggedAt) ?? undefined) : undefined
 	});
@@ -28,4 +24,4 @@ export const POST: RequestHandler = async (event) => {
 	if (!result.ok) throwCareError(result.code, locale);
 
 	return json({ ids: result.ids });
-};
+});

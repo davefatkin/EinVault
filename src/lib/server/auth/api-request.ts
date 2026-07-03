@@ -1,5 +1,5 @@
-import { error, type RequestEvent } from '@sveltejs/kit';
-import { t } from '$lib/i18n';
+import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
+import { t, type Locale } from '$lib/i18n';
 import { API_TOKENS_ENABLED } from '$lib/server/env';
 import { resolveApiToken, touchApiToken } from '$lib/server/api-tokens';
 import { checkRateLimit } from '$lib/server/auth/rate-limit';
@@ -41,4 +41,30 @@ export async function requireApiToken(
 
 	await touchApiToken(resolved.tokenId);
 	return resolved;
+}
+
+export type ApiContext = { event: RequestEvent; user: User; locale: Locale };
+
+// Wrap a Bearer-API handler: resolves + rate-limits the token (so the killswitch
+// and limiter can't be forgotten on a new endpoint) and injects the locale.
+export function apiRoute(handler: (ctx: ApiContext) => Promise<Response>): RequestHandler {
+	return async (event) => {
+		const { user } = await requireApiToken(event);
+		return handler({ event, user, locale: event.locals.locale });
+	};
+}
+
+// apiRoute + JSON body parse guarded by a type predicate; 400s with a stable
+// `code` on a malformed or non-matching body before the handler runs.
+export function apiRouteJson<B>(
+	guard: (b: unknown) => b is B,
+	handler: (ctx: ApiContext & { body: B }) => Promise<Response>
+): RequestHandler {
+	return apiRoute(async (ctx) => {
+		const raw = await ctx.event.request.json().catch(() => null);
+		if (!guard(raw)) {
+			error(400, { code: 'invalidBody', message: t(ctx.locale, 'error.invalidRequestBody') });
+		}
+		return handler({ ...ctx, body: raw });
+	});
 }

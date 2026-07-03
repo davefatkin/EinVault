@@ -1,8 +1,7 @@
 import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import { inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { requireApiToken } from '$lib/server/auth/api-request';
+import { apiRoute } from '$lib/server/auth/api-request';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import { toApiCompanion } from '$lib/server/api-serializers';
 
@@ -10,9 +9,7 @@ import { toApiCompanion } from '$lib/server/api-serializers';
 // device can discover ids for /api/logs and /api/journal. Scope matches the
 // write boundary (members/admins: all active; caretakers: assigned active),
 // but is shift-independent: listing ids off-shift grants no write capability.
-export const GET: RequestHandler = async (event) => {
-	const { user } = await requireApiToken(event);
-
+export const GET = apiRoute(async ({ user }) => {
 	const ids = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (ids.length === 0) return json({ companions: [] });
 
@@ -22,4 +19,4 @@ export const GET: RequestHandler = async (event) => {
 	});
 
 	return json({ companions: rows.map(toApiCompanion) });
-};
+});
