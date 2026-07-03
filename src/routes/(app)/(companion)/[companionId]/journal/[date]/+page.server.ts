@@ -9,6 +9,8 @@ import {
 	parseDailyEventType,
 	isValidDate,
 	parseIdArray,
+	parseDurationMinutes,
+	parseLoggedAt,
 	exceedsLen
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
@@ -119,9 +121,8 @@ export const actions: Actions = {
 		if (exceedsLen(rawNotes, MAX_NOTE_LEN))
 			return fail(400, { error: t(locals.locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }) });
 		const notes = rawNotes.trim() || null;
-		const durationRaw = data.get('durationMinutes');
-		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
-		const loggedAt = data.get('loggedAt') ? new Date(String(data.get('loggedAt'))) : new Date();
+		const durationMinutes = parseDurationMinutes(data.get('durationMinutes'));
+		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
 
@@ -168,10 +169,12 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
-		const durationRaw = data.get('durationMinutes');
-		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
-		const loggedAt = new Date(String(data.get('loggedAt') ?? ''));
+		const rawNotes = String(data.get('notes') ?? '');
+		if (exceedsLen(rawNotes, MAX_NOTE_LEN))
+			return fail(400, { error: t(locals.locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }) });
+		const notes = rawNotes.trim() || null;
+		const durationMinutes = parseDurationMinutes(data.get('durationMinutes'));
+		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });

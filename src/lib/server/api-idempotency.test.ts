@@ -86,4 +86,41 @@ describe('withIdempotency', () => {
 		await withIdempotency({ request: req(), tokenId: TOKEN, endpoint: 'logs', body: {} }, produce);
 		expect(calls).toBe(2);
 	});
+
+	it('rolls back the reservation when produce throws, so a retry can run', async () => {
+		let calls = 0;
+		const boom = async (): Promise<{ status: number; data: unknown }> => {
+			calls++;
+			throw new Error('boom');
+		};
+		await expect(
+			withIdempotency({ request: req('k4'), tokenId: TOKEN, endpoint: 'logs', body: {} }, boom)
+		).rejects.toThrow('boom');
+
+		// The failed reservation must not block a genuine retry of the same key.
+		const ok = await withIdempotency(
+			{ request: req('k4'), tokenId: TOKEN, endpoint: 'logs', body: {} },
+			async () => {
+				calls++;
+				return { status: 201, data: { retried: true } };
+			}
+		);
+		expect(calls).toBe(2);
+		expect(ok.status).toBe(201);
+		expect(await ok.json()).toEqual({ retried: true });
+	});
+
+	it('rejects an oversized Idempotency-Key without running produce', async () => {
+		let calls = 0;
+		const res = await withIdempotency(
+			{ request: req('x'.repeat(201)), tokenId: TOKEN, endpoint: 'logs', body: {} },
+			async () => {
+				calls++;
+				return { status: 201, data: {} };
+			}
+		);
+		expect(res.status).toBe(400);
+		expect((await res.json()).code).toBe('idempotencyKeyTooLong');
+		expect(calls).toBe(0);
+	});
 });

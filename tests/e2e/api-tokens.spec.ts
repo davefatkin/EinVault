@@ -8,10 +8,12 @@ const EIN = 'seed-comp-ein';
 async function createToken(
 	page: import('@playwright/test').Page,
 	name: string,
-	settingsPath = '/settings'
+	settingsPath = '/settings',
+	scope: 'full' | 'write' = 'full'
 ): Promise<string> {
 	await page.goto(settingsPath);
 	await page.getByPlaceholder('e.g. Door button').fill(name);
+	if (scope === 'write') await page.locator('#api-token-scope').selectOption('write');
 	await page.getByRole('button', { name: 'Create token' }).click();
 	await expect(page.getByText(/Copy this token now/)).toBeVisible({ timeout: 8_000 });
 	const raw = await page.evaluate(() => {
@@ -188,6 +190,45 @@ test.describe('api tokens', () => {
 		const { date } = await res.json();
 		await asMember.goto(`/${EIN}/journal/${date}`);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e api journal');
+	});
+
+	test('write-only token: minimal companion shape, writes but cannot read back', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Write only bot', '/settings', 'write');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Companion discovery returns the minimal shape (no PII).
+		const comps = await asMember.request.get(app.server.baseURL + '/api/companions', { headers });
+		expect(comps.status()).toBe(200);
+		const ein = (await comps.json()).companions.find((c: { id: string }) => c.id === EIN);
+		expect(ein).toBeTruthy();
+		expect(ein.name).toBeTruthy();
+		expect(ein).not.toHaveProperty('vetName');
+		expect(ein).not.toHaveProperty('microchip');
+
+		// It can still write.
+		const post = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', notes: 'write-scope walk' }
+		});
+		expect(post.status()).toBe(201);
+
+		// But read-back of notes and journal bodies is forbidden.
+		const getLogs = await asMember.request.get(
+			app.server.baseURL + `/api/logs?companionId=${EIN}`,
+			{ headers }
+		);
+		expect(getLogs.status()).toBe(403);
+		expect((await getLogs.json()).code).toBe('writeScopeReadOnly');
+
+		const getJournal = await asMember.request.get(
+			app.server.baseURL + `/api/journal?companionId=${EIN}`,
+			{ headers }
+		);
+		expect(getJournal.status()).toBe(403);
+		expect((await getJournal.json()).code).toBe('writeScopeReadOnly');
 	});
 
 	test('oversized note and journal body are rejected before storage', async ({ asMember, app }) => {

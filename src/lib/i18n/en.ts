@@ -946,6 +946,7 @@ const messages = {
 	'error.tokenLimitReached': 'Token limit reached (max {max}). Revoke one first.',
 	'error.noteTooLong': 'Note is too long (max {max} characters).',
 	'error.journalTooLong': 'Journal entry is too long (max {max} characters).',
+	'error.invalidBody': 'Journal body and mood must be text.',
 	'error.cannotRevokeAdminApiAccess': 'Administrators always have API access.',
 
 	// Page titles (used in <title> tags)

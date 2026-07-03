@@ -964,6 +964,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.tokenLimitReached': 'Limite de tokens atingido (máx. {max}). Revoga um primeiro.',
 	'error.noteTooLong': 'A nota é demasiado longa (máx. {max} caracteres).',
 	'error.journalTooLong': 'A entrada do diário é demasiado longa (máx. {max} caracteres).',
+	'error.invalidBody': 'O texto e o humor do diário devem ser texto.',
 	'error.cannotRevokeAdminApiAccess': 'Os administradores têm sempre acesso à API.',
 
 	// Page titles

@@ -21,7 +21,11 @@ import { MAX_NOTE_LEN } from '$lib/server/env';
 
 // Read-back: GET /api/logs?companionId=&date=YYYY-MM-DD (date optional). Returns
 // the token user's readable daily events for that companion, newest first.
-export const GET = apiRoute(async ({ event, user, locale }) => {
+export const GET = apiRoute(async ({ event, user, scope, locale }) => {
+	// Write-only tokens (log-only devices) must not read back event notes.
+	if (scope === 'write') {
+		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+	}
 	const companionId = event.url.searchParams.get('companionId');
 	if (!companionId) {
 		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });

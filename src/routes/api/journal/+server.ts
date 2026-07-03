@@ -14,7 +14,11 @@ import { MAX_JOURNAL_BODY_LEN } from '$lib/server/env';
 
 // Read-back: GET /api/journal?companionId=&date=YYYY-MM-DD (date defaults to
 // today). Returns the day's entry or { entry: null }.
-export const GET = apiRoute(async ({ event, user, locale }) => {
+export const GET = apiRoute(async ({ event, user, scope, locale }) => {
+	// Write-only tokens (log-only devices) must not read back private journal text.
+	if (scope === 'write') {
+		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+	}
 	const companionId = event.url.searchParams.get('companionId');
 	if (!companionId) {
 		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
@@ -55,17 +59,25 @@ export const POST = apiRouteJson(isJournalBody, async ({ event, user, tokenId, l
 		error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
 	}
 
+	// A present-but-non-string body or mood is a client bug; reject it rather
+	// than silently coercing to '' / null, which would wipe the stored value.
+	if ('body' in body && typeof body.body !== 'string') {
+		error(400, { code: 'invalidBody', message: t(locale, 'error.invalidBody') });
+	}
+	if ('mood' in body && typeof body.mood !== 'string') {
+		error(400, { code: 'invalidBody', message: t(locale, 'error.invalidBody') });
+	}
+
 	// Absent body/mood keys preserve the stored value (partial update), so a
 	// mood-only POST can't wipe the day's text and vice versa.
-	const text = 'body' in body ? (typeof body.body === 'string' ? body.body : '') : undefined;
+	const text = 'body' in body ? (body.body as string) : undefined;
 	if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
 		error(400, {
 			code: 'journalTooLong',
 			message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
 		});
 	}
-	const mood =
-		'mood' in body ? parseMood(typeof body.mood === 'string' ? body.mood : null) : undefined;
+	const mood = 'mood' in body ? parseMood(body.mood as string) : undefined;
 
 	return withIdempotency(
 		{ request: event.request, tokenId, endpoint: 'journal', body },
