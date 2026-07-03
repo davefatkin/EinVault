@@ -8,19 +8,27 @@ import { test, expect } from '../lib/fixtures';
 // hidden, so the first visible one is always the feed URL.
 async function enableAndGetUrl(page: Page, settingsPath: string): Promise<string> {
 	await page.goto(settingsPath);
-	await page.getByRole('button', { name: 'Enable calendar feed' }).click();
-	// After the form POST the page reloads. The readonly calendar URL input
-	// appears inside the revealed card section.
+	// With fullyParallel scheduling, an earlier calendar test in the same
+	// worker may have left the feed enabled — the card then shows the feed URL
+	// instead of the Enable button. The two states are mutually exclusive, so
+	// wait until either renders (isVisible alone would race hydration), then
+	// click Enable only when the feed is still disabled.
+	const enableButton = page.getByRole('button', { name: 'Enable calendar feed' });
 	const urlInput = page.locator('input[readonly].font-mono');
+	await expect(enableButton.or(urlInput)).toBeVisible({ timeout: 15_000 });
+	if (await enableButton.isVisible()) {
+		// After the form POST the page reloads and reveals the URL card.
+		await enableButton.click();
+	}
 	await expect(urlInput).toBeVisible({ timeout: 8_000 });
 	return await urlInput.inputValue();
 }
 
 // These tests mutate the shared asMember / asCaretaker user's calendar feed
-// token (enable/regenerate/disable). Playwright runs a single spec file's tests
-// serially in one worker by default, so they don't collide. Do NOT add
-// describe parallel mode or run this file with --repeat-each across workers:
-// duplicate copies would clobber each other's token on the same user.
+// token (enable/regenerate/disable). Tests from this file may run in any
+// order across workers (fullyParallel), but each worker has its own database,
+// so the only shared state is within a worker — which enableAndGetUrl
+// tolerates. Do NOT assume the feed is disabled at the start of a test.
 test.describe('calendar feed', () => {
 	test('member enable + fetch: 200 text/calendar with VCALENDAR wrapper', async ({
 		asMember,

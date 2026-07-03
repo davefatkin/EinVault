@@ -62,8 +62,10 @@ test.describe('global search palette', () => {
 
 		await asMember.keyboard.type('Wellness checkup');
 
-		// Wait for the Health group heading to appear
-		await expect(asMember.getByText('Health')).toBeVisible({ timeout: 8_000 });
+		// Wait for the Health group heading inside the dialog. Scoped and exact:
+		// a bare getByText('Health') substring-matches rows like
+		// 'e2e-health-edit' that other specs leave in this worker's database.
+		await expect(dialog.getByText('Health', { exact: true })).toBeVisible({ timeout: 8_000 });
 
 		// The result should be visible
 		await expect(dialog.getByText('Wellness checkup')).toBeVisible({ timeout: 8_000 });
