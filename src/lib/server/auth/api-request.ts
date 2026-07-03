@@ -17,7 +17,9 @@ export async function requireApiToken(
 	event: RequestEvent
 ): Promise<{ user: ApiTokenUser; tokenId: string; scope: ApiTokenScope }> {
 	// Killswitch off → the route doesn't exist (same posture as the calendar feed).
-	if (!API_TOKENS_ENABLED) error(404, 'Not found');
+	if (!API_TOKENS_ENABLED) {
+		error(404, { code: 'notFound', message: t(event.locals.locale, 'error.notFound') });
+	}
 
 	// Pre-auth limiter by client IP so unknown-token spray stays cheap to shrug off.
 	let ip = 'unknown';
@@ -27,20 +29,20 @@ export async function requireApiToken(
 		// adapter can throw when the address is unavailable; fall back to a shared bucket
 	}
 	if (!checkRateLimit(`api-ip:${ip}`, 30, 60 * 1000)) {
-		error(429, t(event.locals.locale, 'error.rateLimited'));
+		error(429, { code: 'rateLimited', message: t(event.locals.locale, 'error.rateLimited') });
 	}
 
 	const header = event.request.headers.get('authorization') ?? '';
 	const match = /^Bearer\s+(.+)$/i.exec(header.trim());
 	const resolved = match ? await resolveApiToken(match[1].trim()) : null;
 	if (!resolved) {
-		error(401, t(event.locals.locale, 'error.invalidToken'));
+		error(401, { code: 'invalidToken', message: t(event.locals.locale, 'error.invalidToken') });
 	}
 
 	// Per-token limiter: generous enough for any sane device, tight enough to
 	// keep a runaway loop from flooding the log tables.
 	if (!checkRateLimit(`api-token:${resolved.tokenId}`, 120, 60 * 1000)) {
-		error(429, t(event.locals.locale, 'error.rateLimited'));
+		error(429, { code: 'rateLimited', message: t(event.locals.locale, 'error.rateLimited') });
 	}
 
 	await touchApiToken(resolved.tokenId);

@@ -55,6 +55,8 @@ test.describe('api tokens', () => {
 			data: { companionId: EIN, type: 'walk' }
 		});
 		expect(bad.status()).toBe(401);
+		// Auth failures carry the stable envelope code, same as validation errors.
+		expect((await bad.json()).code).toBe('invalidToken');
 
 		// Revoke via UI → token stops working.
 		await asMember.goto('/settings');

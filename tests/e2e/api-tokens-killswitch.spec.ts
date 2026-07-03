@@ -50,6 +50,8 @@ test('API_TOKENS_ENABLED=false hides the settings card and 404s the endpoints', 
 		data: { companionId: 'seed-comp-ein', type: 'walk' }
 	});
 	expect(res.status()).toBe(404);
+	// Killswitch 404 still carries the stable envelope so devices can branch on it.
+	expect((await res.json()).code).toBe('notFound');
 
 	const list = await page.request.get(server.baseURL + '/api/quick-logs', {
 		headers: { Authorization: 'Bearer evk_whatever' }
