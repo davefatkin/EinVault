@@ -966,6 +966,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.rateLimited': 'Zu viele Anfragen. Versuche es gleich noch einmal.',
 	'error.apiAccessRevoked': 'Ein Administrator hat deinen API-Zugriff entzogen.',
 	'error.tokenLimitReached': 'Token-Limit erreicht (max. {max}). Widerrufe zuerst eines.',
+	'error.noteTooLong': 'Notiz ist zu lang (max. {max} Zeichen).',
+	'error.journalTooLong': 'Tagebucheintrag ist zu lang (max. {max} Zeichen).',
 	'error.cannotRevokeAdminApiAccess': 'Administratoren haben immer API-Zugriff.',
 
 	// Page titles

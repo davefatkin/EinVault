@@ -140,8 +140,11 @@ export const actions: Actions = {
 			.set({ apiAccessEnabled: granted })
 			.where(eq(schema.users.id, userId));
 
-		// Best-effort, recipient-locale notification; never blocks the toggle.
-		await notifyApiAccessChanged(user, granted);
+		// Best-effort, recipient-locale notification; fire-and-forget so a slow or
+		// unreachable SMTP/ntfy host can't stall the admin's toggle response.
+		notifyApiAccessChanged(user, granted).catch((err) =>
+			console.error(`[api-access] notification for user ${user.id} failed:`, err)
+		);
 
 		return { toggleSuccess: true };
 	},

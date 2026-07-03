@@ -14,8 +14,10 @@ import {
 	parseCompanionTargets,
 	parseDailyEventType,
 	parseDurationMinutes,
-	parseLoggedAt
+	parseLoggedAt,
+	exceedsLen
 } from '$lib/server/validation';
+import { MAX_NOTE_LEN } from '$lib/server/env';
 
 // Read-back: GET /api/logs?companionId=&date=YYYY-MM-DD (date optional). Returns
 // the token user's readable daily events for that companion, newest first.
@@ -56,6 +58,13 @@ export const POST = apiRouteJson(isJsonObject, async ({ event, user, tokenId, lo
 	const companionIds = parseCompanionTargets(body);
 	if (companionIds.length === 0) {
 		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+	}
+
+	if (exceedsLen(body.notes, MAX_NOTE_LEN)) {
+		error(400, {
+			code: 'noteTooLong',
+			message: t(locale, 'error.noteTooLong', { max: MAX_NOTE_LEN })
+		});
 	}
 
 	return withIdempotency({ request: event.request, tokenId, endpoint: 'logs', body }, async () => {

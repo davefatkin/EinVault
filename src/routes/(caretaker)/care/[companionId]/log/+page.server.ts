@@ -3,7 +3,14 @@ import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, gte } from 'drizzle-orm';
-import { parseDailyEventType, parseDurationMinutes, parseLoggedAt } from '$lib/server/validation';
+import {
+	parseDailyEventType,
+	parseDurationMinutes,
+	parseLoggedAt,
+	parseIdArray,
+	exceedsLen
+} from '$lib/server/validation';
+import { MAX_NOTE_LEN } from '$lib/server/env';
 import { getShiftStatus } from '$lib/server/shifts';
 import { logDailyEvent } from '$lib/server/daily-events';
 import { failCareError } from '$lib/server/care-errors';
@@ -55,17 +62,19 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
+		const rawNotes = String(data.get('notes') ?? '');
+		if (exceedsLen(rawNotes, MAX_NOTE_LEN))
+			return fail(400, { error: t(locals.locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }) });
+		const notes = rawNotes.trim() || null;
 		const durationMinutes = parseDurationMinutes(data.get('durationMinutes'));
 		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
 		// "Also log for": unassigned/archived extras are dropped by logDailyEvent.
-		const additionalIds = data
-			.getAll('additionalCompanionIds')
-			.map((v) => String(v))
-			.filter((v) => v && v !== params.companionId);
+		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
+			(v) => v !== params.companionId
+		);
 
 		const result = await logDailyEvent(
 			{ id: locals.user.id, role: locals.user.role },

@@ -5,8 +5,12 @@ const EIN = 'seed-comp-ein';
 // Creates a token via the settings UI and returns the raw value. Svelte sets
 // input values as DOM properties (not attributes), so read via evaluate after
 // the reveal-once alert renders.
-async function createToken(page: import('@playwright/test').Page, name: string): Promise<string> {
-	await page.goto('/settings');
+async function createToken(
+	page: import('@playwright/test').Page,
+	name: string,
+	settingsPath = '/settings'
+): Promise<string> {
+	await page.goto(settingsPath);
 	await page.getByPlaceholder('e.g. Door button').fill(name);
 	await page.getByRole('button', { name: 'Create token' }).click();
 	await expect(page.getByText(/Copy this token now/)).toBeVisible({ timeout: 8_000 });
@@ -184,6 +188,50 @@ test.describe('api tokens', () => {
 		const { date } = await res.json();
 		await asMember.goto(`/${EIN}/journal/${date}`);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e api journal');
+	});
+
+	test('oversized note and journal body are rejected before storage', async ({ asMember, app }) => {
+		const raw = await createToken(asMember, 'Length bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		const longNote = 'x'.repeat(5001);
+		const noteRes = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', notes: longNote }
+		});
+		expect(noteRes.status()).toBe(400);
+		expect((await noteRes.json()).code).toBe('noteTooLong');
+
+		const longBody = 'y'.repeat(20001);
+		const journalRes = await asMember.request.post(app.server.baseURL + '/api/journal', {
+			headers,
+			data: { companionId: EIN, body: longBody }
+		});
+		expect(journalRes.status()).toBe(400);
+		expect((await journalRes.json()).code).toBe('journalTooLong');
+	});
+
+	test('caretaker token may write today’s journal but not a past date', async ({
+		asCaretaker,
+		app
+	}) => {
+		const raw = await createToken(asCaretaker, 'Care journal bot', '/care/settings');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Today's entry is allowed (caretaker is on shift and assigned to Ein).
+		const today = await asCaretaker.request.post(app.server.baseURL + '/api/journal', {
+			headers,
+			data: { companionId: EIN, body: 'care journal today' }
+		});
+		expect(today.status()).toBe(201);
+
+		// A past date is forbidden, matching the web editor's today-only lock.
+		const past = await asCaretaker.request.post(app.server.baseURL + '/api/journal', {
+			headers,
+			data: { companionId: EIN, date: '2020-01-01', body: 'backdated' }
+		});
+		expect(past.status()).toBe(403);
+		expect((await past.json()).code).toBe('forbidden');
 	});
 
 	test('admin revokes a member’s API access; tokens 401 until re-granted', async ({

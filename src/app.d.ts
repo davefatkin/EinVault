@@ -22,6 +22,7 @@ declare global {
 				avatarPath: string | null;
 				totpEnabled: boolean;
 				isOidc: boolean;
+				apiAccessEnabled: boolean;
 			} | null;
 			session: {
 				id: string;

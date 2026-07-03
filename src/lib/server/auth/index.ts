@@ -56,7 +56,8 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			ntfyTopic: user.ntfyTopic ?? null,
 			avatarPath: user.avatarPath ?? null,
 			totpEnabled: user.totpEnabledAt != null,
-			isOidc: user.oidcSubject != null
+			isOidc: user.oidcSubject != null,
+			apiAccessEnabled: user.apiAccessEnabled ?? true
 		}
 	};
 }

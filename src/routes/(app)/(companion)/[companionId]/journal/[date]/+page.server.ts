@@ -4,10 +4,22 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, gte, lt, inArray } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
-import { parseMood, parseDailyEventType, isValidDate } from '$lib/server/validation';
+import {
+	parseMood,
+	parseDailyEventType,
+	isValidDate,
+	parseIdArray,
+	exceedsLen
+} from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
-import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
+import {
+	MAX_DAILY_MEDIA,
+	UPLOAD_MAX_MB,
+	VIDEO_MAX_MB,
+	MAX_NOTE_LEN,
+	MAX_JOURNAL_BODY_LEN
+} from '$lib/server/env';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -83,6 +95,10 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const body = String(data.get('body') ?? '');
+		if (exceedsLen(body, MAX_JOURNAL_BODY_LEN))
+			return fail(400, {
+				error: t(locals.locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
+			});
 		const moodValue = parseMood(data.get('mood') as string | null);
 
 		await upsertJournalEntry(companionId, date, body, moodValue, locals.user.id);
@@ -99,17 +115,19 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const type = parseDailyEventType(String(data.get('type') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
+		const rawNotes = String(data.get('notes') ?? '');
+		if (exceedsLen(rawNotes, MAX_NOTE_LEN))
+			return fail(400, { error: t(locals.locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }) });
+		const notes = rawNotes.trim() || null;
 		const durationRaw = data.get('durationMinutes');
 		const durationMinutes = durationRaw ? parseInt(String(durationRaw)) : null;
 		const loggedAt = data.get('loggedAt') ? new Date(String(data.get('loggedAt'))) : new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
 
-		const additionalIds = data
-			.getAll('additionalCompanionIds')
-			.map((v) => String(v))
-			.filter((v) => v && v !== companionId);
+		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
+			(v) => v !== companionId
+		);
 
 		let validAdditionalIds: string[] = [];
 		if (additionalIds.length > 0) {

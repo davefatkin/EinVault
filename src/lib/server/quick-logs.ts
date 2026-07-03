@@ -230,6 +230,10 @@ export async function shareQuickLog(
 		const companionIds = source.companions
 			.map((c) => c.companionId)
 			.filter((cid) => allowed.has(cid));
+		// A recipient who can target none of the source's companions would get a
+		// dead, unusable copy — skip them (and don't inflate the "copied to N"
+		// count) rather than inserting an empty quick log.
+		if (companionIds.length === 0) continue;
 		const existing = await listQuickLogs(recipient.id);
 		const sortOrder = existing.length > 0 ? Math.max(...existing.map((q) => q.sortOrder)) + 1 : 0;
 		const copyId = generateId(15);
@@ -244,14 +248,15 @@ export async function shareQuickLog(
 					durationMinutes: source.durationMinutes,
 					note: source.note,
 					sortOrder,
-					isEnabled: source.isEnabled
+					// Shared copies arrive disabled: the recipient must opt in from their
+					// own list before it renders as a tappable button. Prevents a peer
+					// silently injecting a live logging button into someone else's UI.
+					isEnabled: false
 				})
 				.run();
-			if (companionIds.length > 0) {
-				tx.insert(schema.quickLogCompanions)
-					.values(companionIds.map((companionId) => ({ quickLogId: copyId, companionId })))
-					.run();
-			}
+			tx.insert(schema.quickLogCompanions)
+				.values(companionIds.map((companionId) => ({ quickLogId: copyId, companionId })))
+				.run();
 		});
 		copied++;
 	}

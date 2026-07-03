@@ -10,6 +10,8 @@ export {
 	REMINDER_UNDO_DEFAULT_SENTINEL
 } from '$lib/reminderUndo';
 
+export { MAX_NOTE_LEN, MAX_JOURNAL_BODY_LEN } from '$lib/textLimits';
+
 /**
  * Parse an env var as a positive integer (n > 0). Falls back to
  * `defaultValue` when the value is missing, non-numeric, or not positive.

@@ -75,7 +75,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
 		calendarFeedEnabled: calUser?.calendarFeedToken != null,
 		apiTokensAvailable: API_TOKENS_ENABLED,
-		apiAccessEnabled: calUser?.apiAccessEnabled ?? true,
+		apiAccessEnabled: locals.user.apiAccessEnabled,
 		apiTokens: API_TOKENS_ENABLED ? await listApiTokens(locals.user.id) : [],
 		twoFactorAvailable,
 		twoFactorEnforced

@@ -944,6 +944,8 @@ const messages = {
 	'error.rateLimited': 'Too many requests. Try again shortly.',
 	'error.apiAccessRevoked': 'An administrator has revoked your API access.',
 	'error.tokenLimitReached': 'Token limit reached (max {max}). Revoke one first.',
+	'error.noteTooLong': 'Note is too long (max {max} characters).',
+	'error.journalTooLong': 'Journal entry is too long (max {max} characters).',
 	'error.cannotRevokeAdminApiAccess': 'Administrators always have API access.',
 
 	// Page titles (used in <title> tags)

@@ -67,6 +67,13 @@ export function parseShortName(value: unknown): string | null {
 	return name.length >= 1 && name.length <= 60 ? name : null;
 }
 
+// True when a string exceeds a hard character cap (see $lib/textLimits). Shared
+// by the API and form write paths so oversized free-text is rejected before it
+// reaches storage.
+export function exceedsLen(value: unknown, max: number): boolean {
+	return typeof value === 'string' && value.length > max;
+}
+
 // Array of non-empty string ids from a JSON body or FormData.getAll, capped so
 // a hostile payload can't fan out unbounded work.
 export function parseIdArray(value: unknown, max = 50): string[] {

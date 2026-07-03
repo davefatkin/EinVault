@@ -9,7 +9,8 @@ import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companio
 import { throwCareError } from '$lib/server/care-errors';
 import { upsertJournalEntry } from '$lib/server/journal';
 import { toApiJournalEntry } from '$lib/server/api-serializers';
-import { isValidDate, parseMood } from '$lib/server/validation';
+import { isValidDate, parseMood, exceedsLen } from '$lib/server/validation';
+import { MAX_JOURNAL_BODY_LEN } from '$lib/server/env';
 
 // Read-back: GET /api/journal?companionId=&date=YYYY-MM-DD (date defaults to
 // today). Returns the day's entry or { entry: null }.
@@ -48,9 +49,21 @@ export const POST = apiRouteJson(isJournalBody, async ({ event, user, tokenId, l
 	if (!isValidDate(date))
 		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
 
+	// Caretakers may only write today's journal via the API, matching the web UI
+	// (their editor is locked to the current day while on shift).
+	if (user.role === 'caretaker' && date !== localDateISO()) {
+		error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
+	}
+
 	// Absent body/mood keys preserve the stored value (partial update), so a
 	// mood-only POST can't wipe the day's text and vice versa.
 	const text = 'body' in body ? (typeof body.body === 'string' ? body.body : '') : undefined;
+	if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
+		error(400, {
+			code: 'journalTooLong',
+			message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
+		});
+	}
 	const mood =
 		'mood' in body ? parseMood(typeof body.mood === 'string' ? body.mood : null) : undefined;
 

@@ -116,15 +116,33 @@ describe('quick logs', () => {
 		const otherCopy = (await listQuickLogs(OTHER.id)).find((q) => q.name === 'Shared walk')!;
 		expect(otherCopy.id).not.toBe(id);
 		expect(otherCopy.companions.map((c) => c.companionId).sort()).toEqual(['ql-c1', 'ql-c2']);
+		// Shared copies land disabled; the recipient must opt in before use.
+		expect(otherCopy.isEnabled).toBe(false);
 
 		const ctCopy = (await listQuickLogs(CT.id)).find((q) => q.name === 'Shared walk')!;
 		expect(ctCopy.companions.map((c) => c.companionId)).toEqual(['ql-c1']);
+		expect(ctCopy.isEnabled).toBe(false);
 
 		// Copies are independent: editing the original doesn't touch them.
 		await updateQuickLog(OWNER, id, { ...baseInput, name: 'Shared walk v2' });
 		expect((await listQuickLogs(OTHER.id)).find((q) => q.id === otherCopy.id)!.name).toBe(
 			'Shared walk'
 		);
+		await deleteQuickLog(OWNER.id, id);
+	});
+
+	it('recipients who can target none of the companions are skipped, not counted', async () => {
+		// Only ql-c2, which the caretaker (assigned to ql-c1) cannot target.
+		const id = await createQuickLog(OWNER, {
+			...baseInput,
+			name: 'C2 only',
+			companionIds: ['ql-c2']
+		});
+
+		// Member OTHER can target ql-c2 (1 copy); caretaker CT gets zero targets → skipped.
+		expect(await shareQuickLog(OWNER.id, id, [OTHER.id, CT.id])).toBe(1);
+		expect((await listQuickLogs(CT.id)).find((q) => q.name === 'C2 only')).toBeUndefined();
+
 		await deleteQuickLog(OWNER.id, id);
 	});
 
