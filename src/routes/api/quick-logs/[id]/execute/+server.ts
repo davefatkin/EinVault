@@ -1,7 +1,7 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
 import { requireApiToken } from '$lib/server/auth/api-request';
+import { throwCareError } from '$lib/server/care-errors';
 import { executeQuickLog } from '$lib/server/quick-logs';
 import { parseIdArray, parseLoggedAt } from '$lib/server/validation';
 
@@ -24,14 +24,8 @@ export const POST: RequestHandler = async (event) => {
 		loggedAt: body ? (parseLoggedAt(body.loggedAt) ?? undefined) : undefined
 	});
 
-	if (!result.ok) {
-		// Not-owned reads as not-found so token holders can't probe other users' ids.
-		if (result.code === 'notFound') error(404, t(locale, 'error.quickLogNotFound'));
-		if (result.code === 'disabled') error(403, t(locale, 'error.quickLogDisabled'));
-		if (result.code === 'noActiveShift') error(403, t(locale, 'error.noActiveShift'));
-		if (result.code === 'notAssigned') error(403, t(locale, 'error.notAssignedToCompanion'));
-		error(404, t(locale, 'error.companionNotFound'));
-	}
+	// Not-owned reads as notFound (404) so token holders can't probe other users' ids.
+	if (!result.ok) throwCareError(result.code, locale);
 
 	return json({ ids: result.ids });
 };

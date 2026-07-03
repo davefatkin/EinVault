@@ -4,6 +4,7 @@ import { t } from '$lib/i18n';
 import { localDateISO } from '$lib/date';
 import { requireApiToken } from '$lib/server/auth/api-request';
 import { authorizeCompanions } from '$lib/server/companion-scope';
+import { throwCareError } from '$lib/server/care-errors';
 import { upsertJournalEntry } from '$lib/server/journal';
 import { isValidDate, parseMood } from '$lib/server/validation';
 
@@ -30,11 +31,7 @@ export const POST: RequestHandler = async (event) => {
 	const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
 		body.companionId
 	]);
-	if (!resolved.ok) {
-		if (resolved.code === 'noActiveShift') error(403, t(locale, 'error.noActiveShift'));
-		if (resolved.code === 'notAssigned') error(403, t(locale, 'error.notAssignedToCompanion'));
-		error(404, t(locale, 'error.companionNotFound'));
-	}
+	if (!resolved.ok) throwCareError(resolved.code, locale);
 
 	await upsertJournalEntry(body.companionId, date, text, mood, user.id);
 	return json({ companionId: body.companionId, date }, { status: 201 });

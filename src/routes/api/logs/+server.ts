@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { requireApiToken } from '$lib/server/auth/api-request';
+import { throwCareError } from '$lib/server/care-errors';
 import { logDailyEvent } from '$lib/server/daily-events';
 import {
 	parseDailyEventType,
@@ -38,11 +39,7 @@ export const POST: RequestHandler = async (event) => {
 		loggedAt: parseLoggedAt(body.loggedAt) ?? new Date()
 	});
 
-	if (!result.ok) {
-		if (result.code === 'noActiveShift') error(403, t(locale, 'error.noActiveShift'));
-		if (result.code === 'notAssigned') error(403, t(locale, 'error.notAssignedToCompanion'));
-		error(404, t(locale, 'error.companionNotFound'));
-	}
+	if (!result.ok) throwCareError(result.code, locale);
 
 	return json({ ids: result.ids, eventGroupId: result.eventGroupId }, { status: 201 });
 };

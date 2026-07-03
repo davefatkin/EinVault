@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import type { Locale } from '$lib/i18n';
+import { failCareError } from '$lib/server/care-errors';
 import {
 	parseDailyEventType,
 	parseDurationMinutes,
@@ -127,17 +128,6 @@ export async function handleQuickLogExecute(user: ActionUser, request: Request, 
 		companionIds,
 		rememberSelection: data.get('remember') === 'on'
 	});
-	if (!result.ok) {
-		const status = result.code === 'notFound' ? 404 : result.code === 'disabled' ? 403 : 403;
-		const key =
-			result.code === 'notFound'
-				? 'error.quickLogNotFound'
-				: result.code === 'disabled'
-					? 'error.quickLogDisabled'
-					: result.code === 'noActiveShift'
-						? 'error.noActiveShift'
-						: 'error.notAssignedToCompanion';
-		return fail(status, { quickLogError: t(locale, key) });
-	}
+	if (!result.ok) return failCareError(result.code, locale, 'quickLogError');
 	return { quickLogExecuted: id };
 }

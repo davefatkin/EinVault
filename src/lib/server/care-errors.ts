@@ -25,8 +25,10 @@ export function throwCareError(code: CareErrorCode, locale: Locale): never {
 }
 
 // Form-action path: returns a fail() with the localized message under the
-// caller-supplied form key (templates read e.g. form?.quickLogError).
-export function failCareError(code: CareErrorCode, locale: Locale, formKey: string) {
+// caller-supplied form key (templates read e.g. form?.quickLogError). Generic
+// over the key so the ActionData shape stays narrow (Record<K, string>) rather
+// than collapsing to a wide index signature.
+export function failCareError<K extends string>(code: CareErrorCode, locale: Locale, formKey: K) {
 	const { status, key } = CARE_ERROR[code];
-	return fail(status, { [formKey]: t(locale, key) });
+	return fail(status, { [formKey]: t(locale, key) } as Record<K, string>);
 }
