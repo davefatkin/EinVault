@@ -944,6 +944,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noRecipientsSelected': 'Sélectionnez au moins un utilisateur.',
 	'error.quickLogNotFound': 'Saisie rapide introuvable.',
 	'error.quickLogDisabled': 'Cette saisie rapide est désactivée.',
+	'error.noValidTargets': 'Cette saisie rapide n’a aucun compagnon pour lequel vous pouvez enregistrer pour le moment.',
 	'error.invalidToken': 'Jeton d’API invalide ou révoqué.',
 	'error.rateLimited': 'Trop de requêtes. Réessayez dans un instant.',
 	'error.apiAccessRevoked': 'Un administrateur a révoqué votre accès à l’API.',

@@ -34,6 +34,12 @@ declare global {
 		interface PageData {
 			user?: App.Locals['user'];
 		}
+		// Bearer-API error bodies carry a stable machine-parseable `code` alongside
+		// the localized message (see $server/care-errors).
+		interface Error {
+			message: string;
+			code?: string;
+		}
 	}
 }
 export {};

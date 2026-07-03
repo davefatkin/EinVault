@@ -922,6 +922,7 @@ const messages = {
 	'error.noRecipientsSelected': 'Select at least one user.',
 	'error.quickLogNotFound': 'Quick log not found.',
 	'error.quickLogDisabled': 'This quick log is disabled.',
+	'error.noValidTargets': 'This quick log has no companions you can log for right now.',
 	'error.invalidToken': 'Invalid or revoked API token.',
 	'error.rateLimited': 'Too many requests. Try again shortly.',
 	'error.apiAccessRevoked': 'An administrator has revoked your API access.',
