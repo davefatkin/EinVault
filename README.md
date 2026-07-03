@@ -232,7 +232,7 @@ docker compose -f docker-compose.prod.yml start einvault
 
 ### Running a demo instance
 
-Set `DEMO_MODE=true` and start with a fresh data volume. On boot the app self-provisions a sample dataset and re-anchors all dates to "now" daily, so the demo always looks recent. The login page becomes a role picker (admin / member / caretaker) that bypasses password auth; all write endpoints are blocked.
+Set `DEMO_MODE=true` and start with a fresh data volume. On boot the app self-provisions a sample dataset and re-anchors all dates to "now" daily, so the demo always looks recent. The login page becomes a role picker (admin / member / caretaker) that bypasses password auth; all write endpoints are blocked. The Bearer-token API is forced off (`API_TOKENS_ENABLED` is ignored), since a read-only public demo has no reason to mint write-capable tokens.
 
 Leave all integration and mail variables unset (`OIDC_*`, `S3_*`, `IMMICH_*`, `PAPERLESS_*`, `SMTP_*`, `NTFY_*`). `DEMO_MODE` disables OIDC at the source, but the others are independent outbound-fetch or SSRF-adjacent surface that the read-only guard does not cover.
 

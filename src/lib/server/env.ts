@@ -459,7 +459,9 @@ export const DEMO_MODE = envBool(env.DEMO_MODE, false);
 
 export function logDemoBootStatus(): void {
 	if (!DEMO_MODE) return;
-	console.log('[demo] DEMO_MODE is ON — read-only; OIDC and password login disabled.');
+	console.log(
+		'[demo] DEMO_MODE is ON — read-only; OIDC, password login, and the Bearer-token API disabled.'
+	);
 	const leaks = [
 		'OIDC_ISSUER_URL',
 		'S3_ENDPOINT',
@@ -482,7 +484,9 @@ export const CALENDAR_FEED_HISTORY_DAYS = envNonNegativeInt(env.CALENDAR_FEED_HI
 export const CALENDAR_FEED_ENABLED = envBool(env.CALENDAR_FEED_ENABLED, true);
 
 // Global kill-switch for the Bearer-token API (token creation + endpoints).
-export const API_TOKENS_ENABLED = envBool(env.API_TOKENS_ENABLED, true);
+// Always off in demo mode: the demo is read-only, and a public demo has no
+// business minting write-capable tokens regardless of how the var is set.
+export const API_TOKENS_ENABLED = !DEMO_MODE && envBool(env.API_TOKENS_ENABLED, true);
 
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(

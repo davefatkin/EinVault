@@ -37,4 +37,25 @@ describe('demo mode env', () => {
 			delete process.env.DEMO_MODE;
 		}
 	});
+
+	it('forces the Bearer-token API off in demo mode, even if API_TOKENS_ENABLED=true', async () => {
+		process.env.DEMO_MODE = 'true';
+		process.env.API_TOKENS_ENABLED = 'true';
+		vi.resetModules();
+		try {
+			const env = await import('./env');
+			expect(env.API_TOKENS_ENABLED).toBe(false);
+		} finally {
+			delete process.env.DEMO_MODE;
+			delete process.env.API_TOKENS_ENABLED;
+		}
+	});
+
+	it('leaves the API enabled by default outside demo mode', async () => {
+		delete process.env.DEMO_MODE;
+		delete process.env.API_TOKENS_ENABLED;
+		vi.resetModules();
+		const env = await import('./env');
+		expect(env.API_TOKENS_ENABLED).toBe(true);
+	});
 });

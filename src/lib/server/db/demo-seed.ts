@@ -804,6 +804,42 @@ export function seedContent(
 	});
 
 	db.insert(schema.journalPhotos).values(photoRows).run();
+
+	// ---- Quick logs: one-tap buttons on the dashboard and log pages. The member
+	// gets a few across both companions; the caretaker gets one for their
+	// assigned companion so the care views show the feature too. ----
+	db.insert(schema.quickLogs)
+		.values([
+			{
+				id: 'seed-ql-walk',
+				userId: jet,
+				name: 'Morning walk',
+				type: 'walk',
+				durationMinutes: 30,
+				sortOrder: 0
+			},
+			{ id: 'seed-ql-dinner', userId: jet, name: 'Dinner', type: 'meal', sortOrder: 1 },
+			{
+				id: 'seed-ql-play',
+				userId: jet,
+				name: 'Play time',
+				type: 'play',
+				durationMinutes: 15,
+				sortOrder: 2
+			},
+			{ id: 'seed-ql-care', userId: faye, name: 'Potty break', type: 'bathroom', sortOrder: 0 }
+		])
+		.run();
+	db.insert(schema.quickLogCompanions)
+		.values([
+			{ quickLogId: 'seed-ql-walk', companionId: ein },
+			{ quickLogId: 'seed-ql-walk', companionId: edward },
+			{ quickLogId: 'seed-ql-dinner', companionId: ein },
+			{ quickLogId: 'seed-ql-dinner', companionId: edward },
+			{ quickLogId: 'seed-ql-play', companionId: ein },
+			{ quickLogId: 'seed-ql-care', companionId: ein }
+		])
+		.run();
 }
 
 /** Inserts all seed rows (users + content). Convenience wrapper for existing callers. */
@@ -851,6 +887,9 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// (cascade from companions alone would leave orphan rows if user deleted first)
 		tx.delete(schema.caretakerShifts).run();
 		tx.delete(schema.companionCaretakers).run();
+		// quick_logs hangs off users, so the companion cascade below doesn't reach
+		// it; delete explicitly (this cascades to quick_log_companions).
+		tx.delete(schema.quickLogs).run();
 		// companions cascade to: journalEntries -> journalPhotos, healthEvents,
 		// weightEntries, dailyEvents, reminders
 		tx.delete(schema.companions).run();

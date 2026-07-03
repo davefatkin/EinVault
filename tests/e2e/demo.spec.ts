@@ -290,6 +290,24 @@ test('direct API write returns 403 json with demo flag', async ({ world, page })
 	expect(body).toHaveProperty('demo', true);
 });
 
+test('Bearer-token API write routes are blocked in demo', async ({ world, page }) => {
+	await page.goto(world.server.baseURL + '/auth/login');
+	await page.getByRole('button', { name: /Explore as Admin/i }).click();
+	await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
+
+	const ein = SEED.companions.ein.id;
+	// The demo read-only hook intercepts before routing/auth, so these 403 even
+	// though the token API is also force-disabled in demo. No write can land.
+	for (const path of ['/api/logs', '/api/journal', `/api/quick-logs/${ein}/execute`]) {
+		const res = await page.request.post(world.server.baseURL + path, {
+			data: { companionId: ein, type: 'walk' },
+			headers: { 'Content-Type': 'application/json' }
+		});
+		expect(res.status(), `${path} must be blocked`).toBe(403);
+		expect(await res.json()).toHaveProperty('demo', true);
+	}
+});
+
 // ─── 7. Enriched content renders ─────────────────────────────────────────────
 
 test('journal shows seeded photos and mood indicator', async ({ world, page }) => {

@@ -32,6 +32,12 @@ describe('isDemoBlockedRequest', () => {
 		expect(isDemoBlockedRequest('DELETE', '/api/photos/x')).toBe(true);
 		expect(isDemoBlockedRequest('PATCH', '/settings')).toBe(true);
 	});
+	it('blocks the Bearer-token API write routes (default-deny covers new routes)', () => {
+		expect(isDemoBlockedRequest('POST', '/api/logs')).toBe(true);
+		expect(isDemoBlockedRequest('POST', '/api/journal')).toBe(true);
+		expect(isDemoBlockedRequest('POST', '/api/quick-logs/abc123/execute')).toBe(true);
+		expect(isDemoBlockedRequest('POST', '/settings/quick-logs')).toBe(true);
+	});
 	it('fails closed on near-miss allowlist paths (no fail-open)', () => {
 		// Exact-match allowlist: trailing slash / case variants must NOT pass.
 		expect(isDemoBlockedRequest('POST', '/auth/demo/')).toBe(true);
