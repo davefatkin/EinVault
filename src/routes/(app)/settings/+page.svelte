@@ -5,6 +5,8 @@
 	import LanguageCard from '$lib/components/settings/LanguageCard.svelte';
 	import AppearanceCard from '$lib/components/settings/AppearanceCard.svelte';
 	import CalendarFeedCard from '$lib/components/settings/CalendarFeedCard.svelte';
+	import ApiTokensCard from '$lib/components/settings/ApiTokensCard.svelte';
+	import QuickLogsLinkCard from '$lib/components/settings/QuickLogsLinkCard.svelte';
 	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
 	import DefaultRecurrenceCard from '$lib/components/settings/DefaultRecurrenceCard.svelte';
@@ -81,11 +83,17 @@
 		errorMessage={form?.defaultRecurrenceError}
 	/>
 
+	<QuickLogsLinkCard href="/settings/quick-logs" />
+
 	{#if data.calendarFeedAvailable}
 		<CalendarFeedCard
 			calendarToken={form?.calendarToken}
 			calendarFeedEnabled={data.calendarFeedEnabled}
 		/>
+	{/if}
+
+	{#if data.apiTokensAvailable}
+		<ApiTokensCard tokens={data.apiTokens} apiAccessEnabled={data.apiAccessEnabled} {form} />
 	{/if}
 
 	<SecurityCard

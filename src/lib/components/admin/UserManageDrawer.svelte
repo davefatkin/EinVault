@@ -22,6 +22,7 @@
 		role: 'admin' | 'member' | 'caretaker';
 		isActive: boolean;
 		totpEnabled: boolean;
+		apiAccessEnabled: boolean;
 	}
 	interface CompanionRow {
 		id: string;
@@ -588,6 +589,42 @@
 						<input type="hidden" name="userId" value={user.id} />
 						<Button type="submit" variant="softDestructive" size="sm">
 							{t(locale, 'page.admin.resetTwofa')}
+						</Button>
+					</form>
+				</section>
+			{/if}
+
+			<!-- API access (members/caretakers only — admins always have it) -->
+			{#if user.role !== 'admin'}
+				<section>
+					<h2 class={sectionLabel}>{t(locale, 'page.admin.apiAccessSection')}</h2>
+					<p class="text-xs text-muted-foreground mb-2">
+						{user.apiAccessEnabled
+							? t(locale, 'page.admin.apiAccessOnHint')
+							: t(locale, 'page.admin.apiAccessOffHint')}
+					</p>
+					<form
+						method="POST"
+						action="?/toggleApiAccess"
+						use:enhance={() =>
+							({ result, update }) => {
+								update();
+								if (result.type === 'success') notify('success', t(locale, 'common.saved'));
+								else if (result.type === 'failure') {
+									const e = errorText(result.data, 'toggleError');
+									if (e) notify('error', e);
+								}
+							}}
+					>
+						<input type="hidden" name="userId" value={user.id} />
+						<Button
+							type="submit"
+							variant={user.apiAccessEnabled ? 'softDestructive' : 'outline'}
+							size="sm"
+						>
+							{user.apiAccessEnabled
+								? t(locale, 'page.admin.apiAccessRevoke')
+								: t(locale, 'page.admin.apiAccessGrant')}
 						</Button>
 					</form>
 				</section>

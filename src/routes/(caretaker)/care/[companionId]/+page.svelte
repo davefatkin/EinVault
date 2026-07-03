@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
+	import QuickLogButtons from '$lib/components/log/QuickLogButtons.svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
@@ -18,7 +19,7 @@
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
@@ -496,6 +497,14 @@
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
 				{t(locale, 'page.dashboard.caretaker.sectionQuickLog')}
 			</h2>
+			<div class="mb-2">
+				<QuickLogButtons
+					buttons={data.quickLogButtons}
+					companions={data.companions ?? []}
+					primaryCompanionId={companion.id}
+					{form}
+				/>
+			</div>
 			<div class="flex gap-2">
 				{#each quickLogTypes as opt (opt.value)}
 					<a

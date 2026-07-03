@@ -5,6 +5,8 @@ import { db, schema } from '$lib/server/db';
 import { eq, and, ne, gte, isNull } from 'drizzle-orm';
 import { getShiftStatus } from '$lib/server/shifts';
 import { completeReminder } from '$lib/server/reminders';
+import { listQuickLogButtons } from '$lib/server/quick-logs';
+import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -72,12 +74,18 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		.filter((r) => upcomingShifts.some((s) => r.dueAt >= s.startAt && r.dueAt <= s.endAt))
 		.slice(0, 5);
 
+	// Custom quick log buttons render only inside the shift gate.
+	const quickLogButtons = isOnShift
+		? await listQuickLogButtons({ id: locals.user.id, role: locals.user.role }, params.companionId)
+		: [];
+
 	return {
 		companion,
 		todayActivity,
 		latestWeight: latestWeight ?? null,
 		owners,
-		upcomingReminders
+		upcomingReminders,
+		quickLogButtons
 	};
 };
 
@@ -99,5 +107,10 @@ export const actions: Actions = {
 		completeReminder(existing, locals.user.id);
 
 		return { completeSuccess: true };
+	},
+
+	executeQuickLog: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		return handleQuickLogExecute(locals.user, request, locals.locale);
 	}
 };

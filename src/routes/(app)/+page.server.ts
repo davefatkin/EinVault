@@ -8,6 +8,8 @@ import { t } from '$lib/i18n';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import { parseDailyEventType, parseDurationMinutes, parseLoggedAt } from '$lib/server/validation';
 import { logDailyEvent } from '$lib/server/daily-events';
+import { listQuickLogButtons } from '$lib/server/quick-logs';
+import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
@@ -65,11 +67,17 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 	const todayJournalByCompanion = Object.fromEntries(todayJournal.map((j) => [j.companionId, j]));
 
+	const quickLogButtons = await listQuickLogButtons({
+		id: locals.user.id,
+		role: locals.user.role
+	});
+
 	return {
 		upcomingReminders,
 		recentDaily,
 		recentHealth,
-		todayJournalByCompanion
+		todayJournalByCompanion,
+		quickLogButtons
 	};
 };
 
@@ -143,5 +151,10 @@ export const actions: Actions = {
 		}
 
 		return { success: true };
+	},
+
+	executeQuickLog: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		return handleQuickLogExecute(locals.user, request, locals.locale);
 	}
 };

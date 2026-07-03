@@ -479,6 +479,9 @@ export const CALENDAR_FEED_HISTORY_DAYS = envNonNegativeInt(env.CALENDAR_FEED_HI
 // Global kill-switch for the unauthenticated calendar feed endpoint.
 export const CALENDAR_FEED_ENABLED = envBool(env.CALENDAR_FEED_ENABLED, true);
 
+// Global kill-switch for the Bearer-token API (token creation + endpoints).
+export const API_TOKENS_ENABLED = envBool(env.API_TOKENS_ENABLED, true);
+
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(
 	envNonNegativeInt(env.REMINDER_UNDO_SECONDS, 7),

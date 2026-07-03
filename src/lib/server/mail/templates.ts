@@ -185,3 +185,30 @@ export function buildShiftEmail(
 		html
 	};
 }
+
+export function buildApiAccessChangedEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	granted: boolean
+): MailMessage {
+	const subjectKey = granted ? 'email.apiAccess.grantedSubject' : 'email.apiAccess.revokedSubject';
+	const bodyKey = granted ? 'email.apiAccess.grantedBody' : 'email.apiAccess.revokedBody';
+
+	const greeting = t(locale, 'email.reminder.greeting', { name: user.displayName });
+	const body = t(locale, bodyKey);
+
+	const html = `<!doctype html>
+<html>
+	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
+		<p>${tHtml(locale, 'email.reminder.greeting', { name: user.displayName })}</p>
+		<p>${escapeHtml(body)}</p>
+	</body>
+</html>`;
+
+	return {
+		to: user.email,
+		subject: t(locale, subjectKey),
+		text: `${greeting}\n\n${body}`,
+		html
+	};
+}

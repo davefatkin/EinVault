@@ -13,10 +13,16 @@ import type { Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isSecureRequest } from '$lib/server/auth';
-import { REMINDER_UNDO_SECONDS_DEFAULT, CALENDAR_FEED_ENABLED } from '$lib/server/env';
+import {
+	REMINDER_UNDO_SECONDS_DEFAULT,
+	CALENDAR_FEED_ENABLED,
+	API_TOKENS_ENABLED
+} from '$lib/server/env';
 import { isMailEnabled } from '$lib/server/mail';
 import { isNtfyEnabled } from '$lib/server/notify/ntfy';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
+import { createApiToken, listApiTokens, revokeApiToken } from '$lib/server/api-tokens';
+import { parseShortName } from '$lib/server/validation';
 import {
 	totpBegin,
 	totpConfirm,
@@ -47,6 +53,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		ntfyEnabled: isNtfyEnabled(),
 		calendarFeedAvailable: CALENDAR_FEED_ENABLED,
 		calendarFeedEnabled: calUser?.calendarFeedToken != null,
+		apiTokensAvailable: API_TOKENS_ENABLED,
+		apiAccessEnabled: calUser?.apiAccessEnabled ?? true,
+		apiTokens: API_TOKENS_ENABLED ? await listApiTokens(locals.user.id) : [],
 		twoFactorAvailable,
 		twoFactorEnforced
 	};
@@ -139,6 +148,32 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 		await disableFeedToken(locals.user.id);
 		return { calendarDisabled: true };
+	},
+
+	apiTokenCreate: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		if (!API_TOKENS_ENABLED) return fail(403);
+		const freshUser = await db.query.users.findFirst({
+			where: eq(schema.users.id, locals.user.id)
+		});
+		if (!freshUser?.apiAccessEnabled) {
+			return fail(403, { apiTokenError: t(locals.locale, 'error.apiAccessRevoked') });
+		}
+		const data = await request.formData();
+		const name = parseShortName(data.get('name'));
+		if (!name) return fail(400, { apiTokenError: t(locals.locale, 'error.nameRequired') });
+		const { id, raw } = await createApiToken(locals.user.id, name);
+		return { apiTokenRaw: raw, apiTokenId: id };
+	},
+
+	apiTokenRevoke: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '').trim();
+		if (!id) return fail(400, { apiTokenError: t(locals.locale, 'error.missingId') });
+		const ok = await revokeApiToken(locals.user.id, id);
+		if (!ok) return fail(404, { apiTokenError: t(locals.locale, 'error.entryNotFound') });
+		return { apiTokenRevoked: true };
 	},
 
 	totpBegin: async ({ locals, request }) => {

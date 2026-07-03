@@ -45,6 +45,10 @@ export const users = sqliteTable(
 			.notNull()
 			.default(false),
 		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
+		// Admin-controlled switch for the token API. Enforced at token resolution,
+		// so revoking disables every existing token immediately without deleting
+		// them — re-granting brings the user's tokens back intact.
+		apiAccessEnabled: integer('api_access_enabled', { mode: 'boolean' }).notNull().default(true),
 		// ntfy topic name on the site-configured server (env NTFY_URL). A
 		// non-empty topic is the opt-in for push notifications; the user
 		// receives both categories (reminders, shift alerts) within their
@@ -471,6 +475,79 @@ export const caretakerShifts = sqliteTable(
 	})
 );
 
+// user-defined quick log buttons (issue #173)
+
+export const quickLogs = sqliteTable(
+	'quick_logs',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		// Button label shown in the UI, chosen by the owner (e.g. "Evening walk").
+		name: text('name').notNull(),
+		type: text('type', {
+			enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other']
+		}).notNull(),
+		durationMinutes: integer('duration_minutes'),
+		note: text('note'),
+		sortOrder: integer('sort_order').notNull().default(0),
+		isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(true),
+		// Remembered "also log for" targets: JSON string[] of companion ids from the
+		// last execution. Re-validated against permissions/archival on every read,
+		// so stale ids are harmless. rememberAlso=false freezes the memory.
+		rememberAlso: integer('remember_also', { mode: 'boolean' }).notNull().default(true),
+		lastCompanionIds: text('last_companion_ids'),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => ({
+		userIdx: index('quick_log_user_idx').on(t.userId, t.sortOrder)
+	})
+);
+
+// quick log <-> companion assignments
+
+export const quickLogCompanions = sqliteTable(
+	'quick_log_companions',
+	{
+		quickLogId: text('quick_log_id')
+			.notNull()
+			.references(() => quickLogs.id, { onDelete: 'cascade' }),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' })
+	},
+	(t) => ({
+		pk: primaryKey({ columns: [t.quickLogId, t.companionId] })
+	})
+);
+
+// personal access tokens for the headless logging API (issue #173)
+
+export const apiTokens = sqliteTable(
+	'api_tokens',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		// sha256 hex of the raw token — same storage pattern as sessions.id, so a
+		// DB leak never exposes a usable token.
+		tokenHash: text('token_hash').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		lastUsedAt: integer('last_used_at', { mode: 'timestamp' })
+	},
+	(t) => ({
+		hashIdx: uniqueIndex('api_token_hash_idx').on(t.tokenHash),
+		userIdx: index('api_token_user_idx').on(t.userId)
+	})
+);
+
 // type exports
 
 export type User = typeof users.$inferSelect;
@@ -489,6 +566,9 @@ export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type CompanionCaretaker = typeof companionCaretakers.$inferSelect;
 export type CaretakerShift = typeof caretakerShifts.$inferSelect;
+export type QuickLog = typeof quickLogs.$inferSelect;
+export type QuickLogCompanion = typeof quickLogCompanions.$inferSelect;
+export type ApiToken = typeof apiTokens.$inferSelect;
 
 // relations
 
@@ -518,7 +598,9 @@ export const usersRelations = relations(users, ({ many }) => ({
 	loggedHealthEvents: many(healthEvents),
 	loggedWeightEntries: many(weightEntries),
 	loggedReminders: many(reminders, { relationName: 'reminderLogger' }),
-	completedReminders: many(reminders, { relationName: 'reminderCompleter' })
+	completedReminders: many(reminders, { relationName: 'reminderCompleter' }),
+	quickLogs: many(quickLogs),
+	apiTokens: many(apiTokens)
 }));
 
 export const totpBackupCodesRelations = relations(totpBackupCodes, ({ one }) => ({
@@ -535,6 +617,26 @@ export const companionCaretakersRelations = relations(companionCaretakers, ({ on
 
 export const caretakerShiftsRelations = relations(caretakerShifts, ({ one }) => ({
 	user: one(users, { fields: [caretakerShifts.userId], references: [users.id] })
+}));
+
+export const quickLogsRelations = relations(quickLogs, ({ one, many }) => ({
+	owner: one(users, { fields: [quickLogs.userId], references: [users.id] }),
+	companions: many(quickLogCompanions)
+}));
+
+export const quickLogCompanionsRelations = relations(quickLogCompanions, ({ one }) => ({
+	quickLog: one(quickLogs, {
+		fields: [quickLogCompanions.quickLogId],
+		references: [quickLogs.id]
+	}),
+	companion: one(companions, {
+		fields: [quickLogCompanions.companionId],
+		references: [companions.id]
+	})
+}));
+
+export const apiTokensRelations = relations(apiTokens, ({ one }) => ({
+	user: one(users, { fields: [apiTokens.userId], references: [users.id] })
 }));
 
 export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({

@@ -190,6 +190,13 @@
       "when": 1781466019317,
       "tag": "0026_warm_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1783086182833,
+      "tag": "0027_mean_spitfire",
+      "breakpoints": true
     }
   ]
 }

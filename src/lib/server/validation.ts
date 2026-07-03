@@ -51,6 +51,25 @@ export function parseLoggedAt(value: unknown): Date | null {
 	return Number.isNaN(d.getTime()) ? null : d;
 }
 
+// Short user-facing names (quick log buttons, API token labels)
+
+export function parseShortName(value: unknown): string | null {
+	if (typeof value !== 'string') return null;
+	const name = value.trim();
+	return name.length >= 1 && name.length <= 60 ? name : null;
+}
+
+// Array of non-empty string ids from a JSON body or FormData.getAll, capped so
+// a hostile payload can't fan out unbounded work.
+export function parseIdArray(value: unknown, max = 50): string[] {
+	if (!Array.isArray(value)) return [];
+	return [
+		...new Set(
+			value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0).slice(0, max)
+		)
+	];
+}
+
 // Health event type
 
 export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';

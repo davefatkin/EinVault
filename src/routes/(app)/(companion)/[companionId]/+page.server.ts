@@ -6,6 +6,8 @@ import { eq, gte, and, lte, isNull } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { completeReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { listQuickLogButtons } from '$lib/server/quick-logs';
+import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -85,6 +87,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		})
 	]);
 
+	const quickLogButtons = await listQuickLogButtons(
+		{ id: locals.user.id, role: locals.user.role },
+		params.companionId
+	);
+
 	return {
 		companion,
 		recentHealth,
@@ -93,7 +100,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		recentWeights,
 		todayJournal,
 		activeCaretakerShift,
-		recentDocuments
+		recentDocuments,
+		quickLogButtons
 	};
 };
 
@@ -125,5 +133,10 @@ export const actions: Actions = {
 		}
 
 		return { completeSuccess: true };
+	},
+
+	executeQuickLog: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		return handleQuickLogExecute(locals.user, request, locals.locale);
 	}
 };
