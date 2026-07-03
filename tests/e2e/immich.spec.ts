@@ -12,9 +12,10 @@ interface ImmichWorld {
 	fake: ImmichFake;
 }
 
-const test = base.extend<{ world: ImmichWorld }>({
-	// eslint-disable-next-line no-empty-pattern
-	world: async ({}, use, testInfo) => {
+const test = base.extend<{ albumId: string | undefined; world: ImmichWorld }>({
+	// Set via test.use({ albumId }) to boot the app in album mode.
+	albumId: [undefined, { option: true }],
+	world: async ({ albumId }, use, testInfo) => {
 		const dir = path.join(
 			REPO_ROOT,
 			'.test-data',
@@ -28,8 +29,9 @@ const test = base.extend<{ world: ImmichWorld }>({
 				dbPath,
 				env: {
 					IMMICH_URL: fake.url,
-					IMMICH_API_KEY: fake.apiKey
+					IMMICH_API_KEY: fake.apiKey,
 					// No IMMICH_ALBUM_ID → recent-assets (search/metadata) path
+					...(albumId ? { IMMICH_ALBUM_ID: albumId } : {})
 				}
 			});
 		} catch (err) {
@@ -129,6 +131,33 @@ test('journal photo from Immich', async ({ world, page }) => {
 	await page.reload();
 	const photoImgAfterReload = page.locator('img[src*="/api/photos/journal/"]');
 	await expect(photoImgAfterReload).toBeVisible({ timeout: 10_000 });
+});
+
+test.describe('album mode', () => {
+	const ALBUM_ID = '00000000-0000-0000-0000-00000000a1b0';
+	test.use({ albumId: ALBUM_ID });
+
+	test('picker lists only assets from the configured album', async ({ world, page }) => {
+		world.fake.setAssets(ASSETS);
+		world.fake.setAlbum(ALBUM_ID, [ASSET_ID_1, ASSET_ID_2]);
+
+		await login(page, world.server.baseURL, SEED.member.username);
+		await page.goto(world.server.baseURL + `/companions/${EIN_ID}/edit`);
+		await page
+			.getByRole('button', { name: /pick from immich/i })
+			.first()
+			.click();
+
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 10_000 });
+
+		// Album members appear; the out-of-album asset must not.
+		await expect(dialog.locator(`img[src*="/api/immich/thumbnail/${ASSET_ID_1}"]`)).toBeVisible({
+			timeout: 10_000
+		});
+		await expect(dialog.locator(`img[src*="/api/immich/thumbnail/${ASSET_ID_2}"]`)).toBeVisible();
+		await expect(dialog.locator(`img[src*="/api/immich/thumbnail/${ASSET_ID_3}"]`)).toHaveCount(0);
+	});
 });
 
 test('caretaker is blocked from the Immich assets API', async ({ world, browser }) => {

@@ -10,10 +10,6 @@ export const ASSET_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 // should reply in well under a second; a hung Immich must not stall workers.
 const DEFAULT_TIMEOUT_MS = 8_000;
 
-// Soft cap for album-mode listAssets. Immich's /albums/{id} returns every
-// asset in one shot, so a very large album would blow up memory.
-const ALBUM_ASSET_CAP = 5_000;
-
 export function immichKey(assetId: string): string {
 	return `${KEY_PREFIX}${assetId}`;
 }
@@ -138,10 +134,6 @@ interface ImmichSearchResponse {
 	};
 }
 
-interface ImmichAlbumResponse {
-	assets?: ImmichAssetResponse[];
-}
-
 function summarize(a: ImmichAssetResponse): ImmichAssetSummary {
 	return {
 		id: a.id,
@@ -161,36 +153,11 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 
 	return {
 		async listAssets({ page, pageSize, albumId }) {
-			// Album mode: fetch the album once, then page client-side. Immich's
-			// /albums/{id} endpoint returns all assets in one response, which is
-			// fine for typical homelab album sizes but capped here as a guard
-			// against giant albums.
-			if (albumId) {
-				const res = await fetch(`${config.url}/api/albums/${albumId}`, {
-					headers: headers(),
-					signal: timeoutSignal()
-				});
-				if (!res.ok) {
-					throw await logAndSanitize(`album=${albumId}`, res, 'Immich album fetch failed');
-				}
-				const body = (await res.json()) as ImmichAlbumResponse;
-				const raw = body.assets ?? [];
-				if (raw.length > ALBUM_ASSET_CAP) {
-					console.warn(
-						`[immich] album ${albumId} has ${raw.length} assets; capping picker to first ${ALBUM_ASSET_CAP}`
-					);
-				}
-				const all = raw
-					.slice(0, ALBUM_ASSET_CAP)
-					.filter((a) => a.type !== 'VIDEO')
-					.map(summarize);
-				const start = (page - 1) * pageSize;
-				const items = all.slice(start, start + pageSize);
-				return { items, hasNextPage: start + pageSize < all.length };
-			}
-
-			// No album: use the search endpoint, newest first. Pagination is
-			// handled by Immich.
+			// Single code path for Immich v2 and v3. v3 removed assets[] from
+			// /albums/{id}, but /search/metadata accepts an albumIds filter on
+			// both versions, so album mode is just a filtered search. visibility
+			// is pinned to 'timeline' because v3's search default widened to all
+			// visibilities and would otherwise surface archived assets.
 			const res = await fetch(`${config.url}/api/search/metadata`, {
 				method: 'POST',
 				headers: { ...headers(), 'Content-Type': 'application/json' },
@@ -198,12 +165,18 @@ export function createImmichClient(config: ImmichConfig): ImmichClient {
 					page,
 					size: pageSize,
 					type: 'IMAGE',
-					order: 'desc'
+					order: 'desc',
+					visibility: 'timeline',
+					...(albumId ? { albumIds: [albumId] } : {})
 				}),
 				signal: timeoutSignal()
 			});
 			if (!res.ok) {
-				throw await logAndSanitize('search', res, 'Immich search failed');
+				throw await logAndSanitize(
+					albumId ? `search album=${albumId}` : 'search',
+					res,
+					'Immich search failed'
+				);
 			}
 			const body = (await res.json()) as ImmichSearchResponse;
 			const items = (body.assets?.items ?? []).map(summarize);
