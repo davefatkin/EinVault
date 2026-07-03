@@ -44,11 +44,19 @@ export function parseDurationMinutes(value: unknown): number | null {
 }
 
 // Logged-at timestamp from a datetime-local field or an ISO string. Null when
-// absent or unparseable (callers default to "now").
+// absent, unparseable, or outside a sane window (later than tomorrow to allow
+// for clock skew, or older than 5 years) — callers default to "now", so a
+// device can't date an event to the year 9999 and pollute the timeline/feed.
+const LOGGED_AT_SKEW_MS = 24 * 60 * 60 * 1000;
+const LOGGED_AT_MAX_AGE_MS = 5 * 365 * 24 * 60 * 60 * 1000;
 export function parseLoggedAt(value: unknown): Date | null {
 	if (typeof value !== 'string' || !value.trim()) return null;
 	const d = new Date(value);
-	return Number.isNaN(d.getTime()) ? null : d;
+	const t = d.getTime();
+	if (Number.isNaN(t)) return null;
+	const now = Date.now();
+	if (t > now + LOGGED_AT_SKEW_MS || t < now - LOGGED_AT_MAX_AGE_MS) return null;
+	return d;
 }
 
 // Short user-facing names (quick log buttons, API token labels)

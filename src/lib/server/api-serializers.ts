@@ -78,3 +78,15 @@ export function toApiCompanion(row: CompanionRow) {
 		createdAt: row.createdAt
 	};
 }
+
+// Minimal companion shape for `write`-scoped tokens (log-only devices): just
+// enough to target a log, WITHOUT the PII (microchip, emergency/vet contacts,
+// notesForSitter) that a lifted button token has no need to read.
+export function toApiCompanionMinimal(row: CompanionRow) {
+	return {
+		id: row.id,
+		name: row.name,
+		species: row.species,
+		isActive: row.isActive
+	};
+}

@@ -1,9 +1,13 @@
 import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import { t, type Locale } from '$lib/i18n';
 import { API_TOKENS_ENABLED } from '$lib/server/env';
-import { resolveApiToken, touchApiToken } from '$lib/server/api-tokens';
+import {
+	resolveApiToken,
+	touchApiToken,
+	type ApiTokenUser,
+	type ApiTokenScope
+} from '$lib/server/api-tokens';
 import { checkRateLimit } from '$lib/server/auth/rate-limit';
-import type { User } from '$lib/server/db/schema';
 
 // Per-endpoint Bearer resolution, deliberately NOT a hooks handle: token
 // requests never populate locals.user, so the twoFactorGate (which only acts
@@ -11,7 +15,7 @@ import type { User } from '$lib/server/db/schema';
 // cookie machinery stays untouched.
 export async function requireApiToken(
 	event: RequestEvent
-): Promise<{ user: User; tokenId: string }> {
+): Promise<{ user: ApiTokenUser; tokenId: string; scope: ApiTokenScope }> {
 	// Killswitch off → the route doesn't exist (same posture as the calendar feed).
 	if (!API_TOKENS_ENABLED) error(404, 'Not found');
 
@@ -43,14 +47,20 @@ export async function requireApiToken(
 	return resolved;
 }
 
-export type ApiContext = { event: RequestEvent; user: User; tokenId: string; locale: Locale };
+export type ApiContext = {
+	event: RequestEvent;
+	user: ApiTokenUser;
+	tokenId: string;
+	scope: ApiTokenScope;
+	locale: Locale;
+};
 
 // Wrap a Bearer-API handler: resolves + rate-limits the token (so the killswitch
 // and limiter can't be forgotten on a new endpoint) and injects the locale.
 export function apiRoute(handler: (ctx: ApiContext) => Promise<Response>): RequestHandler {
 	return async (event) => {
-		const { user, tokenId } = await requireApiToken(event);
-		return handler({ event, user, tokenId, locale: event.locals.locale });
+		const { user, tokenId, scope } = await requireApiToken(event);
+		return handler({ event, user, tokenId, scope, locale: event.locals.locale });
 	};
 }
 
