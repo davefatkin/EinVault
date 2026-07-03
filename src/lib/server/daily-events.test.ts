@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { logDailyEvent, resolveLoggableCompanions } from './daily-events';
+import { logDailyEvent } from './daily-events';
+import { authorizeCompanions } from './companion-scope';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -63,7 +64,7 @@ describe('daily-events', () => {
 		const res = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c3'], input);
 		expect(res).toEqual({ ok: false, code: 'noTargets' });
 
-		const mixed = await resolveLoggableCompanions({ id: 'de-mem', role: 'member' }, [
+		const mixed = await authorizeCompanions({ id: 'de-mem', role: 'member' }, [
 			'de-c2',
 			'de-c3'
 		]);
@@ -71,7 +72,7 @@ describe('daily-events', () => {
 	});
 
 	it('empty target list → noTargets', async () => {
-		expect(await resolveLoggableCompanions({ id: 'de-mem', role: 'member' }, [])).toEqual({
+		expect(await authorizeCompanions({ id: 'de-mem', role: 'member' }, [])).toEqual({
 			ok: false,
 			code: 'noTargets'
 		});
@@ -83,7 +84,7 @@ describe('daily-events', () => {
 	});
 
 	it('caretaker on shift logs assigned companions, unassigned filtered', async () => {
-		const res = await resolveLoggableCompanions({ id: 'de-ct-on', role: 'caretaker' }, [
+		const res = await authorizeCompanions({ id: 'de-ct-on', role: 'caretaker' }, [
 			'de-c1',
 			'de-c2'
 		]);
@@ -93,6 +94,15 @@ describe('daily-events', () => {
 	it('caretaker on shift with only unassigned targets → notAssigned', async () => {
 		const res = await logDailyEvent({ id: 'de-ct-on', role: 'caretaker' }, ['de-c2'], input);
 		expect(res).toEqual({ ok: false, code: 'notAssigned' });
+	});
+
+	it('caretaker gets notAssigned for an unknown id (no enumeration oracle)', async () => {
+		// A nonexistent companion id is indistinguishable from an existing but
+		// unassigned one — both return notAssigned, so a token can't probe.
+		const unknown = await authorizeCompanions({ id: 'de-ct-on', role: 'caretaker' }, ['de-nope']);
+		const unassigned = await authorizeCompanions({ id: 'de-ct-on', role: 'caretaker' }, ['de-c2']);
+		expect(unknown).toEqual({ ok: false, code: 'notAssigned' });
+		expect(unassigned).toEqual({ ok: false, code: 'notAssigned' });
 	});
 
 	it('duration is nulled for types without duration', async () => {

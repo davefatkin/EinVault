@@ -6,6 +6,7 @@ import { eq, and, gte } from 'drizzle-orm';
 import { parseDailyEventType, parseDurationMinutes, parseLoggedAt } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 import { logDailyEvent } from '$lib/server/daily-events';
+import { failCareError } from '$lib/server/care-errors';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -71,11 +72,7 @@ export const actions: Actions = {
 			[params.companionId, ...additionalIds],
 			{ type, notes, durationMinutes, loggedAt }
 		);
-		if (!result.ok) {
-			const key =
-				result.code === 'noActiveShift' ? 'error.noActiveShift' : 'error.notAssignedToCompanion';
-			return fail(403, { error: t(locals.locale, key) });
-		}
+		if (!result.ok) return failCareError(result.code, locals.locale, 'error');
 
 		return { success: true };
 	},

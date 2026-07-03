@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { localDateISO } from '$lib/date';
 import { requireApiToken } from '$lib/server/auth/api-request';
-import { resolveLoggableCompanions } from '$lib/server/daily-events';
+import { authorizeCompanions } from '$lib/server/companion-scope';
 import { upsertJournalEntry } from '$lib/server/journal';
 import { isValidDate, parseMood } from '$lib/server/validation';
 
@@ -27,7 +27,7 @@ export const POST: RequestHandler = async (event) => {
 	const mood = parseMood(typeof body.mood === 'string' ? body.mood : null);
 	const text = typeof body.body === 'string' ? body.body : '';
 
-	const resolved = await resolveLoggableCompanions({ id: user.id, role: user.role }, [
+	const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
 		body.companionId
 	]);
 	if (!resolved.ok) {

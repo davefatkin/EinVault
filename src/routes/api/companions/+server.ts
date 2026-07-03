@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { requireApiToken } from '$lib/server/auth/api-request';
-import { allowedCompanionIds } from '$lib/server/quick-logs';
+import { listAllowedCompanions } from '$lib/server/companion-scope';
 import { toApiCompanion } from '$lib/server/api-serializers';
 
 // Bearer-token endpoint: list the companions the token user may target, so a
@@ -13,7 +13,7 @@ import { toApiCompanion } from '$lib/server/api-serializers';
 export const GET: RequestHandler = async (event) => {
 	const { user } = await requireApiToken(event);
 
-	const ids = await allowedCompanionIds({ id: user.id, role: user.role });
+	const ids = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (ids.length === 0) return json({ companions: [] });
 
 	const rows = await db.query.companions.findMany({

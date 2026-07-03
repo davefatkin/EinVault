@@ -2,7 +2,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '$lib/server/db';
 import { and, eq, ne } from 'drizzle-orm';
-import { listQuickLogs, allowedCompanionIds } from '$lib/server/quick-logs';
+import { listQuickLogs } from '$lib/server/quick-logs';
+import { listAllowedCompanions } from '$lib/server/companion-scope';
 import {
 	handleQuickLogCreate,
 	handleQuickLogUpdate,
@@ -17,7 +18,7 @@ import {
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 
-	const assignedIds = await allowedCompanionIds({ id: locals.user.id, role: locals.user.role });
+	const assignedIds = await listAllowedCompanions({ id: locals.user.id, role: locals.user.role });
 	const [quickLogs, companions, shareableUsers] = await Promise.all([
 		listQuickLogs(locals.user.id),
 		assignedIds.length > 0

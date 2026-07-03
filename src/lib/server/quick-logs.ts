@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
 import { logDailyEvent } from '$lib/server/daily-events';
+import { listAllowedCompanions } from '$lib/server/companion-scope';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
 
@@ -28,33 +29,6 @@ function parseLastCompanionIds(raw: string | null): string[] {
 	}
 }
 
-// Companions a user may target: members/admins all active companions,
-// caretakers their assigned active companions.
-export async function allowedCompanionIds(user: { id: string; role: UserRole }): Promise<string[]> {
-	if (user.role === 'caretaker') {
-		const assigned = await db.query.companionCaretakers.findMany({
-			where: eq(schema.companionCaretakers.userId, user.id),
-			columns: { companionId: true }
-		});
-		if (assigned.length === 0) return [];
-		const active = await db.query.companions.findMany({
-			where: and(
-				inArray(
-					schema.companions.id,
-					assigned.map((r) => r.companionId)
-				),
-				eq(schema.companions.isActive, true)
-			),
-			columns: { id: true }
-		});
-		return active.map((c) => c.id);
-	}
-	const active = await db.query.companions.findMany({
-		where: eq(schema.companions.isActive, true),
-		columns: { id: true }
-	});
-	return active.map((c) => c.id);
-}
 
 // Full list for the management page, assignments included.
 export async function listQuickLogs(userId: string) {
@@ -90,7 +64,7 @@ export async function listQuickLogButtons(
 		with: { companions: { columns: { companionId: true } } },
 		orderBy: (q, { asc }) => [asc(q.sortOrder), asc(q.createdAt)]
 	});
-	const allowed = new Set(await allowedCompanionIds(user));
+	const allowed = new Set(await listAllowedCompanions(user));
 
 	return rows
 		.map((row) => {
@@ -122,7 +96,7 @@ export async function createQuickLog(
 	user: { id: string; role: UserRole },
 	input: QuickLogInput
 ): Promise<string> {
-	const allowed = new Set(await allowedCompanionIds(user));
+	const allowed = new Set(await listAllowedCompanions(user));
 	const companionIds = input.companionIds.filter((id) => allowed.has(id));
 	const existing = await listQuickLogs(user.id);
 	const sortOrder = existing.length > 0 ? Math.max(...existing.map((q) => q.sortOrder)) + 1 : 0;
@@ -160,7 +134,7 @@ export async function updateQuickLog(
 	});
 	if (!existing) return false;
 
-	const allowed = new Set(await allowedCompanionIds(user));
+	const allowed = new Set(await listAllowedCompanions(user));
 	const companionIds = input.companionIds.filter((idc) => allowed.has(idc));
 
 	db.transaction((tx) => {
@@ -251,7 +225,7 @@ export async function shareQuickLog(
 	let copied = 0;
 	for (const recipient of recipients) {
 		if (recipient.id === ownerId) continue;
-		const allowed = new Set(await allowedCompanionIds({ id: recipient.id, role: recipient.role }));
+		const allowed = new Set(await listAllowedCompanions({ id: recipient.id, role: recipient.role }));
 		const companionIds = source.companions
 			.map((c) => c.companionId)
 			.filter((cid) => allowed.has(cid));
@@ -312,7 +286,7 @@ export async function executeQuickLog(opts: {
 	if (opts.companionIds && opts.companionIds.length > 0) {
 		targets = opts.companionIds.filter((id) => assigned.has(id));
 	} else {
-		const allowed = new Set(await allowedCompanionIds(opts.user));
+		const allowed = new Set(await listAllowedCompanions(opts.user));
 		const assignedAllowed = [...assigned].filter((id) => allowed.has(id));
 		const remembered = parseLastCompanionIds(quickLog.lastCompanionIds).filter((id) =>
 			assignedAllowed.includes(id)

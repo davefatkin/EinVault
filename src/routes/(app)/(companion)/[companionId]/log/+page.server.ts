@@ -5,6 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, and, gte } from 'drizzle-orm';
 import { parseDailyEventType, parseDurationMinutes, parseLoggedAt } from '$lib/server/validation';
 import { logDailyEvent } from '$lib/server/daily-events';
+import { failCareError } from '$lib/server/care-errors';
 
 export const load: PageServerLoad = async ({ params }) => {
 	// Companion existence is guaranteed by the (companion) layout (404s otherwise).
@@ -45,9 +46,7 @@ export const actions: Actions = {
 			[params.companionId, ...additionalIds],
 			{ type, notes, durationMinutes, loggedAt }
 		);
-		if (!result.ok) {
-			return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
-		}
+		if (!result.ok) return failCareError(result.code, locals.locale, 'error');
 
 		return { success: true };
 	},

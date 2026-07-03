@@ -43,15 +43,21 @@ test.describe('custom quick logs', () => {
 		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(asMember.getByText('Breakfast')).toBeVisible();
 
-		// Move "Breakfast" up so it precedes "Evening walk".
-		const rows = asMember.locator('div.divide-y > div');
-		await expect(rows.first()).toContainText('Evening walk');
-		await rows.nth(1).getByRole('button', { name: 'Move up' }).click();
-		await expect(rows.first()).toContainText('Breakfast');
+		// Move "Breakfast" up so it precedes "Evening walk". Assert relative order
+		// by row position (not absolute index) so unrelated quick logs the member
+		// may already own don't matter.
+		const walkRow = asMember.locator('div.divide-y > div').filter({ hasText: 'Evening walk' });
+		const breakfastRow = asMember.locator('div.divide-y > div').filter({ hasText: 'Breakfast' });
+		const rowY = async (l: typeof walkRow) => (await l.boundingBox())!.y;
+		expect(await rowY(walkRow)).toBeLessThan(await rowY(breakfastRow));
+		await breakfastRow.getByRole('button', { name: 'Move up' }).click();
+		await expect(async () => {
+			expect(await rowY(breakfastRow)).toBeLessThan(await rowY(walkRow));
+		}).toPass();
 
 		// Disable "Breakfast"; its button disappears from the dashboard.
-		await rows.first().getByRole('button', { name: 'Disable' }).click();
-		await expect(rows.first().getByText('Disabled')).toBeVisible();
+		await breakfastRow.getByRole('button', { name: 'Disable' }).click();
+		await expect(breakfastRow.getByText('Disabled')).toBeVisible();
 		await asMember.goto('/');
 		await expect(asMember.getByRole('button', { name: /Breakfast/ })).toHaveCount(0);
 		await expect(asMember.getByRole('button', { name: /Evening walk/ })).toBeVisible();
