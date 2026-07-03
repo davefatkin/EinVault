@@ -25,6 +25,37 @@
 	} = $props();
 
 	const locale = getLocale();
+
+	let copied = $state(false);
+
+	// Reset the confirmation whenever a freshly created token is shown.
+	$effect(() => {
+		form?.apiTokenRaw;
+		copied = false;
+	});
+
+	async function copyToken() {
+		const value = form?.apiTokenRaw ?? '';
+		if (!value) return;
+		try {
+			await navigator.clipboard.writeText(value);
+			copied = true;
+			return;
+		} catch {
+			// Clipboard API is undefined over plain http:// (non-secure LAN contexts).
+			// Fall back to selecting the field and the legacy copy command.
+			const input = document.getElementById('api-token-raw') as HTMLInputElement | null;
+			if (input) {
+				input.focus();
+				input.select();
+				try {
+					copied = document.execCommand('copy');
+				} catch {
+					copied = false;
+				}
+			}
+		}
+	}
 </script>
 
 <Card>
@@ -47,16 +78,23 @@
 						{t(locale, 'settings.apiTokens.newToken')}
 					</p>
 					<div class="flex items-center gap-2">
-						<Input type="text" readonly value={form.apiTokenRaw} class="font-mono text-xs" />
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onclick={() => navigator.clipboard.writeText(form?.apiTokenRaw ?? '')}
-						>
+						<Input
+							id="api-token-raw"
+							type="text"
+							readonly
+							value={form.apiTokenRaw}
+							aria-label={t(locale, 'settings.apiTokens.tokenFieldLabel')}
+							class="font-mono text-xs"
+						/>
+						<Button type="button" variant="outline" size="sm" onclick={copyToken}>
 							{t(locale, 'settings.apiTokens.copy')}
 						</Button>
 					</div>
+					<p aria-live="polite" class="text-xs text-teal">
+						{#if copied}
+							{t(locale, 'settings.apiTokens.copied')}
+						{/if}
+					</p>
 					<Alert>
 						<AlertDescription class="text-xs"
 							>{t(locale, 'settings.apiTokens.revealOnce')}</AlertDescription
@@ -75,6 +113,7 @@
 					name="name"
 					maxlength={60}
 					required
+					aria-label={t(locale, 'settings.apiTokens.nameLabel')}
 					placeholder={t(locale, 'settings.apiTokens.namePlaceholder')}
 					class="max-w-[240px] h-9 text-sm"
 				/>

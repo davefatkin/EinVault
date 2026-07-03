@@ -894,6 +894,8 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.companionCount': '{count} companheiro(s)',
 	'quickLogs.moveUp': 'Mover para cima',
 	'quickLogs.moveDown': 'Mover para baixo',
+	'quickLogs.moveUpPosition': 'Mover para cima ({name}, item {position} de {total})',
+	'quickLogs.moveDownPosition': 'Mover para baixo ({name}, item {position} de {total})',
 	'quickLogs.enable': 'Ativar',
 	'quickLogs.disable': 'Desativar',
 	'quickLogs.edit': 'Editar',
@@ -906,6 +908,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.shareSuccess': 'Copiado para {count} utilizador(es).',
 	'quickLog.execute.targets': 'Registar para',
 	'quickLog.execute.remember': 'Lembrar esta seleção',
+	'quickLog.execute.alwaysIncluded': 'Sempre incluído',
 	'quickLog.execute.logNow': 'Registar {name}',
 	'settings.apiTokens.title': 'Tokens de API',
 	'settings.apiTokens.description':
@@ -913,7 +916,10 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.accessRevoked':
 		'Um administrador revogou o teu acesso à API. Os tokens existentes deixam de funcionar até o acesso ser concedido novamente.',
 	'settings.apiTokens.newToken': 'Novo token',
+	'settings.apiTokens.tokenFieldLabel': 'Novo token de API',
+	'settings.apiTokens.nameLabel': 'Nome do token',
 	'settings.apiTokens.copy': 'Copiar',
+	'settings.apiTokens.copied': 'Copiado',
 	'settings.apiTokens.revealOnce': 'Copia este token agora. É mostrado apenas uma vez.',
 	'settings.apiTokens.namePlaceholder': 'p. ex. Botão da porta',
 	'settings.apiTokens.create': 'Criar token',
@@ -939,7 +945,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noRecipientsSelected': 'Seleciona pelo menos um utilizador.',
 	'error.quickLogNotFound': 'Registo rápido não encontrado.',
 	'error.quickLogDisabled': 'Este registo rápido está desativado.',
-	'error.noValidTargets': 'Este registo rápido não tem companheiros para os quais possas registar de momento.',
+	'error.noValidTargets':
+		'Este registo rápido não tem companheiros para os quais possas registar de momento.',
 	'error.invalidToken': 'Token de API inválido ou revogado.',
 	'error.rateLimited': 'Demasiados pedidos. Tenta novamente em breve.',
 	'error.apiAccessRevoked': 'Um administrador revogou o teu acesso à API.',

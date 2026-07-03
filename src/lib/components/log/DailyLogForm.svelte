@@ -3,6 +3,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Check } from '@lucide/svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions } from '$lib/i18n/labels';
@@ -62,6 +63,7 @@
 
 {#if form?.success}
 	<div
+		role="status"
 		class="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal animate-fade-in"
 	>
 		{t(locale, 'page.log.activityLogged')}
@@ -113,9 +115,12 @@
 					text-sm font-medium transition-all text-center
 					peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 					{selectedType === t.value
-							? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
+							? 'bg-primary/10 border-primary ring-2 ring-inset ring-primary/40 text-primary shadow-sm'
 							: 'border-border text-muted-foreground hover:border-border hover:bg-accent hover:text-accent-foreground'}"
 					>
+						{#if selectedType === t.value}
+							<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+						{/if}
 						{TYPE_PILL_LABELS[t.value] ?? t.label}
 					</span>
 				</label>
@@ -143,9 +148,12 @@
 							class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
 							peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 							{checked
-								? 'bg-primary/10 border-primary/30 text-primary'
+								? 'bg-primary/10 border-primary ring-1 ring-inset ring-primary/40 text-primary'
 								: 'border-border text-muted-foreground hover:text-foreground'}"
 						>
+							{#if checked}
+								<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+							{/if}
 							{companion.name}
 						</span>
 					</label>
@@ -174,9 +182,12 @@
 							class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
 							peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 							{checked
-								? 'bg-primary/10 border-primary/30 text-primary'
+								? 'bg-primary/10 border-primary ring-1 ring-inset ring-primary/40 text-primary'
 								: 'border-border text-muted-foreground hover:text-foreground'}"
 						>
+							{#if checked}
+								<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+							{/if}
 							{sibling.name}
 						</span>
 					</label>

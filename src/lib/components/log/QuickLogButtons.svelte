@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Check } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
 
@@ -63,7 +64,10 @@
 			</div>
 		{/if}
 		{#if executedId && form?.quickLogExecuted === executedId}
-			<div class="rounded-lg border border-teal/30 bg-teal/10 px-3 py-2 text-sm text-teal">
+			<div
+				role="status"
+				class="rounded-lg border border-teal/30 bg-teal/10 px-3 py-2 text-sm text-teal"
+			>
 				{t(locale, 'page.log.activityLogged')}
 			</div>
 		{/if}
@@ -126,10 +130,16 @@
 										class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
 										peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 										{checked || locked
-											? 'bg-primary/10 border-primary/30 text-primary'
+											? 'bg-primary/10 border-primary ring-1 ring-inset ring-primary/40 text-primary'
 											: 'border-border text-muted-foreground hover:text-foreground'}"
 									>
+										{#if checked || locked}
+											<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+										{/if}
 										{companionName.get(cid) ?? cid}
+										{#if locked}
+											<span class="sr-only">{t(locale, 'quickLog.execute.alwaysIncluded')}</span>
+										{/if}
 									</span>
 								</label>
 							{/each}

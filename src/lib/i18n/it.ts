@@ -891,6 +891,8 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.companionCount': '{count} compagno/i',
 	'quickLogs.moveUp': 'Sposta su',
 	'quickLogs.moveDown': 'Sposta giù',
+	'quickLogs.moveUpPosition': 'Sposta su ({name}, elemento {position} di {total})',
+	'quickLogs.moveDownPosition': 'Sposta giù ({name}, elemento {position} di {total})',
 	'quickLogs.enable': 'Attiva',
 	'quickLogs.disable': 'Disattiva',
 	'quickLogs.edit': 'Modifica',
@@ -903,6 +905,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.shareSuccess': 'Copiato a {count} utente/i.',
 	'quickLog.execute.targets': 'Registra per',
 	'quickLog.execute.remember': 'Ricorda questa selezione',
+	'quickLog.execute.alwaysIncluded': 'Sempre incluso',
 	'quickLog.execute.logNow': 'Registra {name}',
 	'settings.apiTokens.title': 'Token API',
 	'settings.apiTokens.description':
@@ -910,7 +913,10 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.accessRevoked':
 		'Un amministratore ha revocato il tuo accesso all’API. I token esistenti smettono di funzionare finché l’accesso non viene concesso di nuovo.',
 	'settings.apiTokens.newToken': 'Nuovo token',
+	'settings.apiTokens.tokenFieldLabel': 'Nuovo token API',
+	'settings.apiTokens.nameLabel': 'Nome del token',
 	'settings.apiTokens.copy': 'Copia',
+	'settings.apiTokens.copied': 'Copiato',
 	'settings.apiTokens.revealOnce': 'Copia questo token ora. Viene mostrato una sola volta.',
 	'settings.apiTokens.namePlaceholder': 'es. Pulsante della porta',
 	'settings.apiTokens.create': 'Crea token',
@@ -937,7 +943,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noRecipientsSelected': 'Seleziona almeno un utente.',
 	'error.quickLogNotFound': 'Registro rapido non trovato.',
 	'error.quickLogDisabled': 'Questo registro rapido è disattivato.',
-	'error.noValidTargets': 'Questo registro rapido non ha compagni per cui puoi registrare al momento.',
+	'error.noValidTargets':
+		'Questo registro rapido non ha compagni per cui puoi registrare al momento.',
 	'error.invalidToken': 'Token API non valido o revocato.',
 	'error.rateLimited': 'Troppe richieste. Riprova tra poco.',
 	'error.apiAccessRevoked': 'Un amministratore ha revocato il tuo accesso all’API.',
