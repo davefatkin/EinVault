@@ -77,7 +77,10 @@ export function isJsonObject(b: unknown): b is Record<string, unknown> {
 
 // Companion target ids from an API body accepting either `companionIds` (array)
 // or a singular `companionId`. Same cap as parseIdArray.
-export function parseCompanionTargets(body: { companionIds?: unknown; companionId?: unknown }): string[] {
+export function parseCompanionTargets(body: {
+	companionIds?: unknown;
+	companionId?: unknown;
+}): string[] {
 	return parseIdArray(Array.isArray(body.companionIds) ? body.companionIds : [body.companionId]);
 }
 

@@ -111,13 +111,18 @@ export async function getEnrichedJournalEntries(
 	};
 }
 
+// Upsert the (companion, date) journal entry and return its id. Passing
+// `undefined` for body or mood PRESERVES the stored value (partial update);
+// pass `null`/`''` to explicitly clear. The web form always sends both fields
+// (full replace); the API uses undefined so a mood-only POST can't wipe the
+// day's text and vice versa.
 export async function upsertJournalEntry(
 	companionId: string,
 	date: string,
-	body: string | null,
-	mood: Mood | null,
+	body: string | null | undefined,
+	mood: Mood | null | undefined,
 	userId: string
-) {
+): Promise<string> {
 	const existing = await db.query.journalEntries.findFirst({
 		where: and(
 			eq(schema.journalEntries.companionId, companionId),
@@ -126,18 +131,29 @@ export async function upsertJournalEntry(
 	});
 
 	if (existing) {
+		const patch: {
+			mood?: Mood | null;
+			body?: string;
+			updatedAt: Date;
+			updatedBy: string;
+		} = { updatedAt: new Date(), updatedBy: userId };
+		if (body !== undefined) patch.body = body ?? '';
+		if (mood !== undefined) patch.mood = mood;
 		await db
 			.update(schema.journalEntries)
-			.set({ body: body ?? '', mood, updatedAt: new Date(), updatedBy: userId })
+			.set(patch)
 			.where(eq(schema.journalEntries.id, existing.id));
-	} else {
-		await db.insert(schema.journalEntries).values({
-			id: generateId(15),
-			companionId,
-			date,
-			body: body ?? '',
-			mood,
-			loggedBy: userId
-		});
+		return existing.id;
 	}
+
+	const id = generateId(15);
+	await db.insert(schema.journalEntries).values({
+		id,
+		companionId,
+		date,
+		body: body ?? '',
+		mood: mood ?? null,
+		loggedBy: userId
+	});
+	return id;
 }

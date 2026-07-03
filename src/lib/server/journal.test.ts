@@ -53,6 +53,30 @@ describe('journal', () => {
 		expect(row!.mood).toBeNull();
 	});
 
+	it('returns the entry id and preserves fields left undefined', async () => {
+		const readBody = async (date: string) =>
+			(await db.query.journalEntries.findFirst({
+				where: and(
+					eq(schema.journalEntries.companionId, 'c-j'),
+					eq(schema.journalEntries.date, date)
+				)
+			}))!;
+
+		const id1 = await upsertJournalEntry('c-j', '2026-05-01', 'the text', 'good', 'u-j');
+		// Mood-only update (body undefined) must NOT wipe the text.
+		const id2 = await upsertJournalEntry('c-j', '2026-05-01', undefined, 'meh', 'u-j');
+		expect(id2).toBe(id1);
+		let row = await readBody('2026-05-01');
+		expect(row.body).toBe('the text');
+		expect(row.mood).toBe('meh');
+
+		// Body-only update (mood undefined) must NOT wipe the mood.
+		await upsertJournalEntry('c-j', '2026-05-01', 'new text', undefined, 'u-j');
+		row = await readBody('2026-05-01');
+		expect(row.body).toBe('new text');
+		expect(row.mood).toBe('meh');
+	});
+
 	it('paginates with hasMore and oldestDate', async () => {
 		for (let d = 1; d <= 5; d++) {
 			await upsertJournalEntry('c-j', `2026-04-0${d}`, `day ${d}`, null, 'u-j');

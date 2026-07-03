@@ -40,9 +40,7 @@ export async function listAllowedCompanions(user: {
 	return active.map((c) => c.id);
 }
 
-export type AuthorizeResult =
-	| { ok: true; ids: string[] }
-	| { ok: false; code: CareErrorCode };
+export type AuthorizeResult = { ok: true; ids: string[] } | { ok: false; code: CareErrorCode };
 
 // WRITE scope — given requested companion ids, return the authorized subset or
 // a typed CareErrorCode. Caretakers must be on shift and every id must be an

@@ -943,7 +943,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noRecipientsSelected': 'Wähle mindestens einen Benutzer aus.',
 	'error.quickLogNotFound': 'Schnell-Log nicht gefunden.',
 	'error.quickLogDisabled': 'Dieses Schnell-Log ist deaktiviert.',
-	'error.noValidTargets': 'Für dieses Schnell-Log gibt es derzeit keine Begleiter, die du erfassen kannst.',
+	'error.noValidTargets':
+		'Für dieses Schnell-Log gibt es derzeit keine Begleiter, die du erfassen kannst.',
 	'error.invalidToken': 'Ungültiges oder widerrufenes API-Token.',
 	'error.rateLimited': 'Zu viele Anfragen. Versuche es gleich noch einmal.',
 	'error.apiAccessRevoked': 'Ein Administrator hat deinen API-Zugriff entzogen.',

@@ -29,7 +29,6 @@ function parseLastCompanionIds(raw: string | null): string[] {
 	}
 }
 
-
 // Full list for the management page, assignments included.
 export async function listQuickLogs(userId: string) {
 	return db.query.quickLogs.findMany({
@@ -225,7 +224,9 @@ export async function shareQuickLog(
 	let copied = 0;
 	for (const recipient of recipients) {
 		if (recipient.id === ownerId) continue;
-		const allowed = new Set(await listAllowedCompanions({ id: recipient.id, role: recipient.role }));
+		const allowed = new Set(
+			await listAllowedCompanions({ id: recipient.id, role: recipient.role })
+		);
 		const companionIds = source.companions
 			.map((c) => c.companionId)
 			.filter((cid) => allowed.has(cid));

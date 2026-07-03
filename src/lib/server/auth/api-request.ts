@@ -43,14 +43,14 @@ export async function requireApiToken(
 	return resolved;
 }
 
-export type ApiContext = { event: RequestEvent; user: User; locale: Locale };
+export type ApiContext = { event: RequestEvent; user: User; tokenId: string; locale: Locale };
 
 // Wrap a Bearer-API handler: resolves + rate-limits the token (so the killswitch
 // and limiter can't be forgotten on a new endpoint) and injects the locale.
 export function apiRoute(handler: (ctx: ApiContext) => Promise<Response>): RequestHandler {
 	return async (event) => {
-		const { user } = await requireApiToken(event);
-		return handler({ event, user, locale: event.locals.locale });
+		const { user, tokenId } = await requireApiToken(event);
+		return handler({ event, user, tokenId, locale: event.locals.locale });
 	};
 }
 

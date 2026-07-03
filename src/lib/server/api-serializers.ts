@@ -1,7 +1,9 @@
-import type { companions } from '$lib/server/db/schema';
+import type { companions, dailyEvents, journalEntries } from '$lib/server/db/schema';
 import type { QuickLogButton } from '$lib/server/quick-logs';
 
 type CompanionRow = typeof companions.$inferSelect;
+type DailyEventRow = typeof dailyEvents.$inferSelect;
+type JournalEntryRow = typeof journalEntries.$inferSelect;
 
 // Convention: every /api/* handler that returns a model builds its JSON here,
 // never inline, so each model has one default-deny serializer.
@@ -16,6 +18,31 @@ export function toApiQuickLog(b: QuickLogButton) {
 		durationMinutes: b.durationMinutes,
 		note: b.note,
 		companionIds: b.companionIds
+	};
+}
+
+// Public shape for a logged daily event (read-back via GET /api/logs).
+export function toApiDailyEvent(row: DailyEventRow) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		type: row.type,
+		notes: row.notes,
+		durationMinutes: row.durationMinutes,
+		loggedAt: row.loggedAt,
+		eventGroupId: row.eventGroupId
+	};
+}
+
+// Public shape for a journal entry (read-back via GET /api/journal).
+export function toApiJournalEntry(row: JournalEntryRow) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		date: row.date,
+		body: row.body,
+		mood: row.mood,
+		updatedAt: row.updatedAt
 	};
 }
 

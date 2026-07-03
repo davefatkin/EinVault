@@ -1,11 +1,38 @@
-import { json, error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
+import { and, eq } from 'drizzle-orm';
 import { t } from '$lib/i18n';
 import { localDateISO } from '$lib/date';
-import { apiRouteJson } from '$lib/server/auth/api-request';
-import { authorizeCompanions } from '$lib/server/companion-scope';
+import { db, schema } from '$lib/server/db';
+import { apiRoute, apiRouteJson } from '$lib/server/auth/api-request';
+import { withIdempotency } from '$lib/server/api-idempotency';
+import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
 import { throwCareError } from '$lib/server/care-errors';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { toApiJournalEntry } from '$lib/server/api-serializers';
 import { isValidDate, parseMood } from '$lib/server/validation';
+
+// Read-back: GET /api/journal?companionId=&date=YYYY-MM-DD (date defaults to
+// today). Returns the day's entry or { entry: null }.
+export const GET = apiRoute(async ({ event, user, locale }) => {
+	const companionId = event.url.searchParams.get('companionId');
+	if (!companionId) {
+		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+	}
+	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
+	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
+
+	const date = event.url.searchParams.get('date') ?? localDateISO();
+	if (!isValidDate(date))
+		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+
+	const row = await db.query.journalEntries.findFirst({
+		where: and(
+			eq(schema.journalEntries.companionId, companionId),
+			eq(schema.journalEntries.date, date)
+		)
+	});
+	return json({ entry: row ? toApiJournalEntry(row) : null });
+});
 
 type JournalBody = { companionId: string; date?: unknown; body?: unknown; mood?: unknown };
 const isJournalBody = (b: unknown): b is JournalBody =>
@@ -16,16 +43,26 @@ const isJournalBody = (b: unknown): b is JournalBody =>
 // unique per (companion, date); this REPLACES the day's body/mood, matching
 // the web editor's upsert semantics. Devices appending discrete events should
 // use POST /api/logs instead.
-export const POST = apiRouteJson(isJournalBody, async ({ user, locale, body }) => {
+export const POST = apiRouteJson(isJournalBody, async ({ event, user, tokenId, locale, body }) => {
 	const date = typeof body.date === 'string' ? body.date : localDateISO();
-	if (!isValidDate(date)) error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+	if (!isValidDate(date))
+		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
 
-	const mood = parseMood(typeof body.mood === 'string' ? body.mood : null);
-	const text = typeof body.body === 'string' ? body.body : '';
+	// Absent body/mood keys preserve the stored value (partial update), so a
+	// mood-only POST can't wipe the day's text and vice versa.
+	const text = 'body' in body ? (typeof body.body === 'string' ? body.body : '') : undefined;
+	const mood =
+		'mood' in body ? parseMood(typeof body.mood === 'string' ? body.mood : null) : undefined;
 
-	const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [body.companionId]);
-	if (!resolved.ok) throwCareError(resolved.code, locale);
-
-	await upsertJournalEntry(body.companionId, date, text, mood, user.id);
-	return json({ companionId: body.companionId, date }, { status: 201 });
+	return withIdempotency(
+		{ request: event.request, tokenId, endpoint: 'journal', body },
+		async () => {
+			const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
+				body.companionId
+			]);
+			if (!resolved.ok) throwCareError(resolved.code, locale);
+			const id = await upsertJournalEntry(body.companionId, date, text, mood, user.id);
+			return { status: 201, data: { id, companionId: body.companionId, date } };
+		}
+	);
 });

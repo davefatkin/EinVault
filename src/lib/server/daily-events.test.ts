@@ -64,10 +64,7 @@ describe('daily-events', () => {
 		const res = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c3'], input);
 		expect(res).toEqual({ ok: false, code: 'noTargets' });
 
-		const mixed = await authorizeCompanions({ id: 'de-mem', role: 'member' }, [
-			'de-c2',
-			'de-c3'
-		]);
+		const mixed = await authorizeCompanions({ id: 'de-mem', role: 'member' }, ['de-c2', 'de-c3']);
 		expect(mixed).toEqual({ ok: true, ids: ['de-c2'] });
 	});
 

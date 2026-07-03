@@ -939,7 +939,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noRecipientsSelected': 'Seleciona pelo menos um utilizador.',
 	'error.quickLogNotFound': 'Registo rápido não encontrado.',
 	'error.quickLogDisabled': 'Este registo rápido está desativado.',
-	'error.noValidTargets': 'Este registo rápido não tem companheiros para os quais possas registar de momento.',
+	'error.noValidTargets':
+		'Este registo rápido não tem companheiros para os quais possas registar de momento.',
 	'error.invalidToken': 'Token de API inválido ou revogado.',
 	'error.rateLimited': 'Demasiados pedidos. Tenta novamente em breve.',
 	'error.apiAccessRevoked': 'Um administrador revogou o teu acesso à API.',

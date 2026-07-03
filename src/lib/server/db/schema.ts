@@ -537,14 +537,45 @@ export const apiTokens = sqliteTable(
 		// sha256 hex of the raw token, same storage pattern as sessions.id, so a
 		// DB leak never exposes a usable token.
 		tokenHash: text('token_hash').notNull(),
+		// 'full' tokens can read companion PII via GET /api/companions; 'write'
+		// tokens are for log-only devices and get a minimal companion projection.
+		scope: text('scope', { enum: ['full', 'write'] })
+			.notNull()
+			.default('full'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
+		// Optional expiry; null = never expires. Enforced at resolution time.
+		expiresAt: integer('expires_at', { mode: 'timestamp' }),
 		lastUsedAt: integer('last_used_at', { mode: 'timestamp' })
 	},
 	(t) => ({
 		hashIdx: uniqueIndex('api_token_hash_idx').on(t.tokenHash),
 		userIdx: index('api_token_user_idx').on(t.userId)
+	})
+);
+
+// Idempotency records for the write API: a device may send an Idempotency-Key
+// header so a retried POST replays the first response instead of duplicating.
+export const apiIdempotencyKeys = sqliteTable(
+	'api_idempotency_keys',
+	{
+		id: text('id').primaryKey(),
+		tokenId: text('token_id')
+			.notNull()
+			.references(() => apiTokens.id, { onDelete: 'cascade' }),
+		endpoint: text('endpoint').notNull(),
+		key: text('key').notNull(),
+		// sha256 of the request body; a reused key with a different body is a 409.
+		requestHash: text('request_hash').notNull(),
+		responseJson: text('response_json').notNull(),
+		status: integer('status').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => ({
+		uniq: uniqueIndex('api_idem_token_endpoint_key_idx').on(t.tokenId, t.endpoint, t.key)
 	})
 );
 

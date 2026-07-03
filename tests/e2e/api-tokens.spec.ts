@@ -95,7 +95,7 @@ test.describe('api tokens', () => {
 			app.server.baseURL + `/api/quick-logs/${target.id}/execute`,
 			{ headers: { Authorization: `Bearer ${raw}` } }
 		);
-		expect(exec.status()).toBe(200);
+		expect(exec.status()).toBe(201);
 		const { ids } = await exec.json();
 		expect(ids.length).toBeGreaterThan(0);
 
@@ -130,6 +130,46 @@ test.describe('api tokens', () => {
 		expect(ein).not.toHaveProperty('avatarPath');
 		expect(ein).not.toHaveProperty('avatarProvider');
 		expect(ein).not.toHaveProperty('avatarUrl');
+	});
+
+	test('idempotency key makes a retried log a no-op; read-back returns events', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Idem bot');
+		const headers = { Authorization: `Bearer ${raw}`, 'Idempotency-Key': 'walk-2026-07-03-08' };
+
+		const first = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', notes: 'idem walk' }
+		});
+		expect(first.status()).toBe(201);
+		const firstBody = await first.json();
+
+		// Same key + same body → replayed, no second event.
+		const retry = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', notes: 'idem walk' }
+		});
+		expect(retry.status()).toBe(201);
+		expect(await retry.json()).toEqual(firstBody);
+
+		// Same key + different body → 409.
+		const clash = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'meal' }
+		});
+		expect(clash.status()).toBe(409);
+		expect((await clash.json()).code).toBe('idempotencyKeyReused');
+
+		// Read-back returns exactly one 'idem walk' event for the companion.
+		const readBack = await asMember.request.get(
+			app.server.baseURL + `/api/logs?companionId=${EIN}`,
+			{ headers: { Authorization: `Bearer ${raw}` } }
+		);
+		expect(readBack.status()).toBe(200);
+		const { events } = await readBack.json();
+		expect(events.filter((e: { notes: string | null }) => e.notes === 'idem walk')).toHaveLength(1);
 	});
 
 	test('journal endpoint upserts the day entry', async ({ asMember, app }) => {
