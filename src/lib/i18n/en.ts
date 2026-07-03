@@ -878,6 +878,8 @@ const messages = {
 	'quickLogs.companionCount': '{count} companion(s)',
 	'quickLogs.moveUp': 'Move up',
 	'quickLogs.moveDown': 'Move down',
+	'quickLogs.moveUpPosition': 'Move up ({name}, item {position} of {total})',
+	'quickLogs.moveDownPosition': 'Move down ({name}, item {position} of {total})',
 	'quickLogs.enable': 'Enable',
 	'quickLogs.disable': 'Disable',
 	'quickLogs.edit': 'Edit',
@@ -890,6 +892,7 @@ const messages = {
 	'quickLogs.shareSuccess': 'Copied to {count} user(s).',
 	'quickLog.execute.targets': 'Log for',
 	'quickLog.execute.remember': 'Remember this selection',
+	'quickLog.execute.alwaysIncluded': 'Always included',
 	'quickLog.execute.logNow': 'Log {name}',
 	'settings.apiTokens.title': 'API tokens',
 	'settings.apiTokens.description':
@@ -897,7 +900,10 @@ const messages = {
 	'settings.apiTokens.accessRevoked':
 		'An administrator has revoked your API access. Existing tokens stop working until access is granted again.',
 	'settings.apiTokens.newToken': 'New token',
+	'settings.apiTokens.tokenFieldLabel': 'New API token',
+	'settings.apiTokens.nameLabel': 'Token name',
 	'settings.apiTokens.copy': 'Copy',
+	'settings.apiTokens.copied': 'Copied',
 	'settings.apiTokens.revealOnce': 'Copy this token now. It is shown only once.',
 	'settings.apiTokens.namePlaceholder': 'e.g. Door button',
 	'settings.apiTokens.create': 'Create token',

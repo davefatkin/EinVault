@@ -898,6 +898,8 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.companionCount': '{count} compagnon(s)',
 	'quickLogs.moveUp': 'Monter',
 	'quickLogs.moveDown': 'Descendre',
+	'quickLogs.moveUpPosition': 'Monter ({name}, élément {position} sur {total})',
+	'quickLogs.moveDownPosition': 'Descendre ({name}, élément {position} sur {total})',
 	'quickLogs.enable': 'Activer',
 	'quickLogs.disable': 'Désactiver',
 	'quickLogs.edit': 'Modifier',
@@ -910,6 +912,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.shareSuccess': 'Copié vers {count} utilisateur(s).',
 	'quickLog.execute.targets': 'Enregistrer pour',
 	'quickLog.execute.remember': 'Mémoriser cette sélection',
+	'quickLog.execute.alwaysIncluded': 'Toujours inclus',
 	'quickLog.execute.logNow': 'Enregistrer {name}',
 	'settings.apiTokens.title': 'Jetons d’API',
 	'settings.apiTokens.description':
@@ -917,7 +920,10 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.accessRevoked':
 		'Un administrateur a révoqué votre accès à l’API. Les jetons existants ne fonctionneront plus tant que l’accès n’est pas rétabli.',
 	'settings.apiTokens.newToken': 'Nouveau jeton',
+	'settings.apiTokens.tokenFieldLabel': 'Nouveau jeton API',
+	'settings.apiTokens.nameLabel': 'Nom du jeton',
 	'settings.apiTokens.copy': 'Copier',
+	'settings.apiTokens.copied': 'Copié',
 	'settings.apiTokens.revealOnce': 'Copiez ce jeton maintenant. Il ne s’affiche qu’une seule fois.',
 	'settings.apiTokens.namePlaceholder': 'p. ex. Bouton de la porte',
 	'settings.apiTokens.create': 'Créer un jeton',

@@ -9,6 +9,7 @@
 	import {
 		ArrowDown,
 		ArrowUp,
+		Check,
 		Pencil,
 		Plus,
 		Power,
@@ -102,6 +103,25 @@
 		shareRecipientIds = [];
 	}
 
+	// After a ?/move re-render, focus drops to <body>. Restore focus to the moved
+	// row's reorder control so keyboard/AT users keep their place (WCAG 2.4.3).
+	function restoreMoveFocus(id: string, dir: 'up' | 'down') {
+		const primary = document.querySelector<HTMLButtonElement>(`[data-move="${id}:${dir}"]`);
+		if (primary && !primary.disabled) {
+			primary.focus();
+			return;
+		}
+		const other = dir === 'up' ? 'down' : 'up';
+		document.querySelector<HTMLButtonElement>(`[data-move="${id}:${other}"]`)?.focus();
+	}
+
+	const moveEnhance = (id: string, dir: 'up' | 'down') => {
+		return async ({ update }: { update: (opts?: { reset?: boolean }) => Promise<void> }) => {
+			await update({ reset: false });
+			restoreMoveFocus(id, dir);
+		};
+	};
+
 	const closeOnSuccess = () => {
 		return async ({
 			result,
@@ -193,9 +213,12 @@
 							class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
 							peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 							{checked
-								? 'bg-primary/10 border-primary/30 text-primary'
+								? 'bg-primary/10 border-primary ring-1 ring-inset ring-primary/40 text-primary'
 								: 'border-border text-muted-foreground hover:text-foreground'}"
 						>
+							{#if checked}
+								<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+							{/if}
 							{companion.name}
 						</span>
 					</label>
@@ -227,7 +250,10 @@
 		</div>
 	{/if}
 	{#if form?.quickLogShared}
-		<div class="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal">
+		<div
+			role="status"
+			class="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal"
+		>
 			{t(locale, 'quickLogs.shareSuccess', { count: String(form.quickLogShared) })}
 		</div>
 	{/if}
@@ -253,58 +279,68 @@
 		<div class="divide-y divide-border rounded-xl border bg-card">
 			{#each quickLogs as row, i (row.id)}
 				<div class="px-4 py-3">
-					<div class="flex items-center gap-3">
-						<span
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-							>{ACTIVITY_ICONS[row.type] ?? '📝'}</span
-						>
-						<div class="flex-1 min-w-0">
-							<p class="font-medium truncate {row.isEnabled ? '' : 'text-muted-foreground'}">
-								{row.name}
-								{#if !row.isEnabled}
-									<Badge variant="outline" class="ml-1 align-middle">
-										{t(locale, 'quickLogs.disabledBadge')}
-									</Badge>
-								{/if}
-							</p>
-							<p class="text-xs text-muted-foreground truncate">
-								{activityLabel(locale, row.type)}
-								{#if row.durationMinutes}
-									· {row.durationMinutes} min
-								{/if}
-								· {t(locale, 'quickLogs.companionCount', {
-									count: String(row.companions.length)
-								})}
-							</p>
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+						<div class="flex min-w-0 items-center gap-3 sm:flex-1">
+							<span
+								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
+								>{ACTIVITY_ICONS[row.type] ?? '📝'}</span
+							>
+							<div class="flex-1 min-w-0">
+								<p class="font-medium truncate {row.isEnabled ? '' : 'text-muted-foreground'}">
+									{row.name}
+									{#if !row.isEnabled}
+										<Badge variant="outline" class="ml-1 align-middle">
+											{t(locale, 'quickLogs.disabledBadge')}
+										</Badge>
+									{/if}
+								</p>
+								<p class="text-xs text-muted-foreground truncate">
+									{activityLabel(locale, row.type)}
+									{#if row.durationMinutes}
+										· {row.durationMinutes} min
+									{/if}
+									· {t(locale, 'quickLogs.companionCount', {
+										count: String(row.companions.length)
+									})}
+								</p>
+							</div>
 						</div>
 
-						<div class="flex items-center gap-1 shrink-0">
-							<form method="POST" action="?/move" use:enhance>
+						<div class="flex flex-wrap items-center gap-1 sm:shrink-0">
+							<form method="POST" action="?/move" use:enhance={() => moveEnhance(row.id, 'up')}>
 								<input type="hidden" name="id" value={row.id} />
 								<input type="hidden" name="dir" value="up" />
 								<Button
 									type="submit"
 									variant="ghost"
-									size="sm"
-									class="h-7 w-7 p-0"
+									size="icon"
+									data-move="{row.id}:up"
 									disabled={i === 0}
-									aria-label={t(locale, 'quickLogs.moveUp')}
+									aria-label={t(locale, 'quickLogs.moveUpPosition', {
+										name: row.name,
+										position: i + 1,
+										total: quickLogs.length
+									})}
 								>
-									<ArrowUp class="h-3.5 w-3.5" />
+									<ArrowUp class="h-4 w-4" />
 								</Button>
 							</form>
-							<form method="POST" action="?/move" use:enhance>
+							<form method="POST" action="?/move" use:enhance={() => moveEnhance(row.id, 'down')}>
 								<input type="hidden" name="id" value={row.id} />
 								<input type="hidden" name="dir" value="down" />
 								<Button
 									type="submit"
 									variant="ghost"
-									size="sm"
-									class="h-7 w-7 p-0"
+									size="icon"
+									data-move="{row.id}:down"
 									disabled={i === quickLogs.length - 1}
-									aria-label={t(locale, 'quickLogs.moveDown')}
+									aria-label={t(locale, 'quickLogs.moveDownPosition', {
+										name: row.name,
+										position: i + 1,
+										total: quickLogs.length
+									})}
 								>
-									<ArrowDown class="h-3.5 w-3.5" />
+									<ArrowDown class="h-4 w-4" />
 								</Button>
 							</form>
 							<form method="POST" action="?/toggle" use:enhance>
@@ -313,16 +349,16 @@
 								<Button
 									type="submit"
 									variant="ghost"
-									size="sm"
-									class="h-7 w-7 p-0 {row.isEnabled ? '' : 'text-muted-foreground'}"
+									size="icon"
+									class={row.isEnabled ? '' : 'text-muted-foreground'}
 									aria-label={row.isEnabled
 										? t(locale, 'quickLogs.disable')
 										: t(locale, 'quickLogs.enable')}
 								>
 									{#if row.isEnabled}
-										<Power class="h-3.5 w-3.5" />
+										<Power class="h-4 w-4" />
 									{:else}
-										<PowerOff class="h-3.5 w-3.5" />
+										<PowerOff class="h-4 w-4" />
 									{/if}
 								</Button>
 							</form>
@@ -330,34 +366,32 @@
 								<Button
 									type="button"
 									variant="ghost"
-									size="sm"
-									class="h-7 w-7 p-0"
+									size="icon"
 									aria-label={t(locale, 'quickLogs.share')}
 									onclick={() => openShare(row.id)}
 								>
-									<Share2 class="h-3.5 w-3.5" />
+									<Share2 class="h-4 w-4" />
 								</Button>
 							{/if}
 							<Button
 								type="button"
 								variant="ghost"
-								size="sm"
-								class="h-7 w-7 p-0"
+								size="icon"
 								aria-label={t(locale, 'quickLogs.edit')}
 								onclick={() => (editorOpen === row.id ? (editorOpen = null) : openEdit(row))}
 							>
-								<Pencil class="h-3.5 w-3.5" />
+								<Pencil class="h-4 w-4" />
 							</Button>
 							<form method="POST" action="?/delete" use:enhance>
 								<input type="hidden" name="id" value={row.id} />
 								<Button
 									type="submit"
 									variant="ghost"
-									size="sm"
-									class="h-7 w-7 p-0 text-muted-foreground hover:text-coral"
+									size="icon"
+									class="text-muted-foreground hover:text-coral"
 									aria-label={t(locale, 'quickLogs.delete')}
 								>
-									<Trash2 class="h-3.5 w-3.5" />
+									<Trash2 class="h-4 w-4" />
 								</Button>
 							</form>
 						</div>
@@ -392,9 +426,12 @@
 											class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
 											peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
 											{checked
-												? 'bg-primary/10 border-primary/30 text-primary'
+												? 'bg-primary/10 border-primary ring-1 ring-inset ring-primary/40 text-primary'
 												: 'border-border text-muted-foreground hover:text-foreground'}"
 										>
+											{#if checked}
+												<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+											{/if}
 											{u.displayName}
 										</span>
 									</label>

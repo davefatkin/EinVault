@@ -894,6 +894,8 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.companionCount': '{count} compañero(s)',
 	'quickLogs.moveUp': 'Subir',
 	'quickLogs.moveDown': 'Bajar',
+	'quickLogs.moveUpPosition': 'Subir ({name}, elemento {position} de {total})',
+	'quickLogs.moveDownPosition': 'Bajar ({name}, elemento {position} de {total})',
 	'quickLogs.enable': 'Activar',
 	'quickLogs.disable': 'Desactivar',
 	'quickLogs.edit': 'Editar',
@@ -906,6 +908,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLogs.shareSuccess': 'Copiado a {count} usuario(s).',
 	'quickLog.execute.targets': 'Registrar para',
 	'quickLog.execute.remember': 'Recordar esta selección',
+	'quickLog.execute.alwaysIncluded': 'Siempre incluido',
 	'quickLog.execute.logNow': 'Registrar {name}',
 	'settings.apiTokens.title': 'Tokens de API',
 	'settings.apiTokens.description':
@@ -913,7 +916,10 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.accessRevoked':
 		'Un administrador ha revocado tu acceso a la API. Los tokens existentes dejarán de funcionar hasta que se conceda de nuevo el acceso.',
 	'settings.apiTokens.newToken': 'Nuevo token',
+	'settings.apiTokens.tokenFieldLabel': 'Nuevo token de API',
+	'settings.apiTokens.nameLabel': 'Nombre del token',
 	'settings.apiTokens.copy': 'Copiar',
+	'settings.apiTokens.copied': 'Copiado',
 	'settings.apiTokens.revealOnce': 'Copia este token ahora. Solo se muestra una vez.',
 	'settings.apiTokens.namePlaceholder': 'p. ej. Botón de la puerta',
 	'settings.apiTokens.create': 'Crear token',
