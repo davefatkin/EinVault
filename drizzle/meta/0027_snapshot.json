@@ -1,9 +1,100 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8eff541c-0b0a-48ad-9f34-e91ba5b6818b",
+  "id": "63d6a47e-d2fe-4474-8e38-68ac5965483f",
   "prevId": "9b8179c7-8a72-44f4-b2e4-a1ecae47e9af",
   "tables": {
+    "api_idempotency_keys": {
+      "name": "api_idempotency_keys",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "endpoint": {
+          "name": "endpoint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request_hash": {
+          "name": "request_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "response_json": {
+          "name": "response_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "api_idem_token_endpoint_key_idx": {
+          "name": "api_idem_token_endpoint_key_idx",
+          "columns": [
+            "token_id",
+            "endpoint",
+            "key"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "api_idempotency_keys_token_id_api_tokens_id_fk": {
+          "name": "api_idempotency_keys_token_id_api_tokens_id_fk",
+          "tableFrom": "api_idempotency_keys",
+          "tableTo": "api_tokens",
+          "columnsFrom": [
+            "token_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "api_tokens": {
       "name": "api_tokens",
       "columns": {
@@ -35,6 +126,14 @@
           "notNull": true,
           "autoincrement": false
         },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'full'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -42,6 +141,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(unixepoch())"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "last_used_at": {
           "name": "last_used_at",
