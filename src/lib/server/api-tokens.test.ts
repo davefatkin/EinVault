@@ -6,7 +6,9 @@ import {
 	createApiToken,
 	listApiTokens,
 	revokeApiToken,
-	resolveApiToken
+	resolveApiToken,
+	countApiTokens,
+	MAX_API_TOKENS_PER_USER
 } from './api-tokens';
 
 describe('api tokens', () => {
@@ -81,5 +83,47 @@ describe('api tokens', () => {
 			.set({ apiAccessEnabled: false })
 			.where(eq(schema.users.id, 'at-revoked'));
 		expect(await resolveApiToken(raw)).toBeNull();
+	});
+
+	it('scope defaults to full and round-trips through resolve and list', async () => {
+		const { id: fullId, raw: fullRaw } = await createApiToken('at-u1', 'Full');
+		expect((await resolveApiToken(fullRaw))?.scope).toBe('full');
+
+		const { id: writeId, raw: writeRaw } = await createApiToken('at-u1', 'Write', {
+			scope: 'write'
+		});
+		expect((await resolveApiToken(writeRaw))?.scope).toBe('write');
+
+		const listed = await listApiTokens('at-u1');
+		expect(listed.find((t) => t.id === fullId)?.scope).toBe('full');
+		expect(listed.find((t) => t.id === writeId)?.scope).toBe('write');
+	});
+
+	it('expired tokens resolve to null; future expiry still resolves', async () => {
+		const { raw: expiredRaw } = await createApiToken('at-u1', 'Expired', {
+			expiresAt: new Date(Date.now() - 1000)
+		});
+		expect(await resolveApiToken(expiredRaw)).toBeNull();
+
+		const { raw: liveRaw } = await createApiToken('at-u1', 'Live', {
+			expiresAt: new Date(Date.now() + 60_000)
+		});
+		expect((await resolveApiToken(liveRaw))?.user.id).toBe('at-u1');
+	});
+
+	it('countApiTokens reflects live token count for the owner', async () => {
+		const before = await countApiTokens('at-count');
+		expect(before).toBe(0);
+
+		await db
+			.insert(schema.users)
+			.values({ id: 'at-count', username: 'at-count', displayName: 'C', role: 'member' });
+		const { id } = await createApiToken('at-count', 'One');
+		expect(await countApiTokens('at-count')).toBe(1);
+
+		await revokeApiToken('at-count', id);
+		expect(await countApiTokens('at-count')).toBe(0);
+
+		expect(MAX_API_TOKENS_PER_USER).toBeGreaterThan(0);
 	});
 });

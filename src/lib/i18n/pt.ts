@@ -927,7 +927,18 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.lastUsed': 'Última utilização',
 	'settings.apiTokens.never': 'nunca',
 	'settings.apiTokens.revoke': 'Revogar',
+	'settings.apiTokens.rotate': 'Renovar',
 	'settings.apiTokens.empty': 'Ainda sem tokens.',
+	'settings.apiTokens.scopeLabel': 'Acesso',
+	'settings.apiTokens.scopeFull': 'Acesso total',
+	'settings.apiTokens.scopeWrite': 'Apenas escrita',
+	'settings.apiTokens.expiryLabel': 'Expira',
+	'settings.apiTokens.expiryNever': 'Nunca',
+	'settings.apiTokens.expiry30': '30 dias',
+	'settings.apiTokens.expiry90': '90 dias',
+	'settings.apiTokens.expiry365': '1 ano',
+	'settings.apiTokens.expires': 'Expira',
+	'settings.apiTokens.expired': 'Expirado',
 	'page.admin.apiAccessSection': 'Acesso à API',
 	'page.admin.apiAccessOnHint': 'Este utilizador pode criar tokens de API e usar a API de registo.',
 	'page.admin.apiAccessOffHint':
@@ -950,6 +961,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidToken': 'Token de API inválido ou revogado.',
 	'error.rateLimited': 'Demasiados pedidos. Tenta novamente em breve.',
 	'error.apiAccessRevoked': 'Um administrador revogou o teu acesso à API.',
+	'error.tokenLimitReached': 'Limite de tokens atingido (máx. {max}). Revoga um primeiro.',
 	'error.cannotRevokeAdminApiAccess': 'Os administradores têm sempre acesso à API.',
 
 	// Page titles

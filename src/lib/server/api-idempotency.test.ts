@@ -13,14 +13,12 @@ function req(key?: string): Request {
 
 describe('withIdempotency', () => {
 	beforeAll(async () => {
-		await db
-			.insert(schema.users)
-			.values({
-				id: 'idem-u',
-				username: 'idem-u',
-				displayName: 'I',
-				role: 'member'
-			} as typeof schema.users.$inferInsert);
+		await db.insert(schema.users).values({
+			id: 'idem-u',
+			username: 'idem-u',
+			displayName: 'I',
+			role: 'member'
+		} as typeof schema.users.$inferInsert);
 		await db.insert(schema.apiTokens).values({
 			id: TOKEN,
 			userId: 'idem-u',

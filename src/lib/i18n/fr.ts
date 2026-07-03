@@ -931,7 +931,18 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.lastUsed': 'Dernière utilisation',
 	'settings.apiTokens.never': 'jamais',
 	'settings.apiTokens.revoke': 'Révoquer',
+	'settings.apiTokens.rotate': 'Renouveler',
 	'settings.apiTokens.empty': 'Aucun jeton pour le moment.',
+	'settings.apiTokens.scopeLabel': 'Accès',
+	'settings.apiTokens.scopeFull': 'Accès complet',
+	'settings.apiTokens.scopeWrite': 'Écriture seule',
+	'settings.apiTokens.expiryLabel': 'Expire',
+	'settings.apiTokens.expiryNever': 'Jamais',
+	'settings.apiTokens.expiry30': '30 jours',
+	'settings.apiTokens.expiry90': '90 jours',
+	'settings.apiTokens.expiry365': '1 an',
+	'settings.apiTokens.expires': 'Expire',
+	'settings.apiTokens.expired': 'Expiré',
 	'page.admin.apiAccessSection': 'Accès à l’API',
 	'page.admin.apiAccessOnHint':
 		'Cet utilisateur peut créer des jetons d’API et utiliser l’API d’enregistrement.',
@@ -955,6 +966,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidToken': 'Jeton d’API invalide ou révoqué.',
 	'error.rateLimited': 'Trop de requêtes. Réessayez dans un instant.',
 	'error.apiAccessRevoked': 'Un administrateur a révoqué votre accès à l’API.',
+	'error.tokenLimitReached': 'Limite de jetons atteinte (max {max}). Révoquez-en un d’abord.',
 	'error.cannotRevokeAdminApiAccess': 'Les administrateurs ont toujours accès à l’API.',
 
 	// Page titles

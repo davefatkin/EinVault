@@ -924,7 +924,18 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.lastUsed': 'Ultimo utilizzo',
 	'settings.apiTokens.never': 'mai',
 	'settings.apiTokens.revoke': 'Revoca',
+	'settings.apiTokens.rotate': 'Rinnova',
 	'settings.apiTokens.empty': 'Ancora nessun token.',
+	'settings.apiTokens.scopeLabel': 'Accesso',
+	'settings.apiTokens.scopeFull': 'Accesso completo',
+	'settings.apiTokens.scopeWrite': 'Solo scrittura',
+	'settings.apiTokens.expiryLabel': 'Scade',
+	'settings.apiTokens.expiryNever': 'Mai',
+	'settings.apiTokens.expiry30': '30 giorni',
+	'settings.apiTokens.expiry90': '90 giorni',
+	'settings.apiTokens.expiry365': '1 anno',
+	'settings.apiTokens.expires': 'Scade',
+	'settings.apiTokens.expired': 'Scaduto',
 	'page.admin.apiAccessSection': 'Accesso API',
 	'page.admin.apiAccessOnHint':
 		'Questo utente può creare token API e usare l’API di registrazione.',
@@ -948,6 +959,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidToken': 'Token API non valido o revocato.',
 	'error.rateLimited': 'Troppe richieste. Riprova tra poco.',
 	'error.apiAccessRevoked': 'Un amministratore ha revocato il tuo accesso all’API.',
+	'error.tokenLimitReached': 'Limite di token raggiunto (max {max}). Revocane uno prima.',
 	'error.cannotRevokeAdminApiAccess': 'Gli amministratori hanno sempre accesso all’API.',
 
 	// Page titles (used in <title> tags)

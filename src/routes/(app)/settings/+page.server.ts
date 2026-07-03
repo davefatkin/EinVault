@@ -21,8 +21,12 @@ import {
 	API_TOKENS_ENABLED
 } from '$lib/server/env';
 import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
-import { createApiToken, listApiTokens, revokeApiToken } from '$lib/server/api-tokens';
-import { parseShortName } from '$lib/server/validation';
+import { listApiTokens } from '$lib/server/api-tokens';
+import {
+	handleApiTokenCreate,
+	handleApiTokenRevoke,
+	handleApiTokenRotate
+} from '$lib/server/api-token-actions';
 import {
 	totpBegin,
 	totpConfirm,
@@ -189,29 +193,17 @@ export const actions: Actions = {
 
 	apiTokenCreate: async ({ request, locals }) => {
 		if (!locals.user) return fail(401);
-		if (!API_TOKENS_ENABLED) return fail(403);
-		const freshUser = await db.query.users.findFirst({
-			where: eq(schema.users.id, locals.user.id)
-		});
-		if (!freshUser?.apiAccessEnabled) {
-			return fail(403, { apiTokenError: t(locals.locale, 'error.apiAccessRevoked') });
-		}
-		const data = await request.formData();
-		const name = parseShortName(data.get('name'));
-		if (!name) return fail(400, { apiTokenError: t(locals.locale, 'error.nameRequired') });
-		const { id, raw } = await createApiToken(locals.user.id, name);
-		// Raw token is returned exactly once for display; only the hash is stored.
-		return { apiTokenRaw: raw, apiTokenId: id };
+		return handleApiTokenCreate(locals.user.id, request, locals.locale);
 	},
 
 	apiTokenRevoke: async ({ request, locals }) => {
 		if (!locals.user) return fail(401);
-		const data = await request.formData();
-		const id = String(data.get('id') ?? '').trim();
-		if (!id) return fail(400, { apiTokenError: t(locals.locale, 'error.missingId') });
-		const ok = await revokeApiToken(locals.user.id, id);
-		if (!ok) return fail(404, { apiTokenError: t(locals.locale, 'error.entryNotFound') });
-		return { apiTokenRevoked: true };
+		return handleApiTokenRevoke(locals.user.id, request, locals.locale);
+	},
+
+	apiTokenRotate: async ({ request, locals }) => {
+		if (!locals.user) return fail(401);
+		return handleApiTokenRotate(locals.user.id, request, locals.locale);
 	},
 
 	totpBegin: async ({ locals, request }) => {

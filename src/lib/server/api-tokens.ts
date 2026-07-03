@@ -69,7 +69,14 @@ export async function createApiToken(
 export async function listApiTokens(userId: string) {
 	return db.query.apiTokens.findMany({
 		where: eq(schema.apiTokens.userId, userId),
-		columns: { id: true, name: true, scope: true, createdAt: true, expiresAt: true, lastUsedAt: true },
+		columns: {
+			id: true,
+			name: true,
+			scope: true,
+			createdAt: true,
+			expiresAt: true,
+			lastUsedAt: true
+		},
 		orderBy: (t, { desc }) => [desc(t.createdAt)]
 	});
 }

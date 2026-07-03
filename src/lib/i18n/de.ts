@@ -930,7 +930,18 @@ const messages: Record<keyof Messages, string> = {
 	'settings.apiTokens.lastUsed': 'Zuletzt verwendet',
 	'settings.apiTokens.never': 'nie',
 	'settings.apiTokens.revoke': 'Widerrufen',
+	'settings.apiTokens.rotate': 'Erneuern',
 	'settings.apiTokens.empty': 'Noch keine Tokens.',
+	'settings.apiTokens.scopeLabel': 'Zugriff',
+	'settings.apiTokens.scopeFull': 'Vollzugriff',
+	'settings.apiTokens.scopeWrite': 'Nur Schreiben',
+	'settings.apiTokens.expiryLabel': 'Läuft ab',
+	'settings.apiTokens.expiryNever': 'Nie',
+	'settings.apiTokens.expiry30': '30 Tage',
+	'settings.apiTokens.expiry90': '90 Tage',
+	'settings.apiTokens.expiry365': '1 Jahr',
+	'settings.apiTokens.expires': 'Läuft ab',
+	'settings.apiTokens.expired': 'Abgelaufen',
 	'page.admin.apiAccessSection': 'API-Zugriff',
 	'page.admin.apiAccessOnHint':
 		'Dieser Benutzer kann API-Tokens erstellen und die Logging-API verwenden.',
@@ -954,6 +965,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidToken': 'Ungültiges oder widerrufenes API-Token.',
 	'error.rateLimited': 'Zu viele Anfragen. Versuche es gleich noch einmal.',
 	'error.apiAccessRevoked': 'Ein Administrator hat deinen API-Zugriff entzogen.',
+	'error.tokenLimitReached': 'Token-Limit erreicht (max. {max}). Widerrufe zuerst eines.',
 	'error.cannotRevokeAdminApiAccess': 'Administratoren haben immer API-Zugriff.',
 
 	// Page titles
