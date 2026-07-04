@@ -174,3 +174,15 @@ export function toApiUser(row: UserRow) {
 		isActive: row.isActive
 	};
 }
+
+// Reduced user shape for member-scoped tokens: drops `username` (the login
+// identifier) so a member can't harvest logins. Admins/caretaker-self use the
+// full toApiUser. Default-deny like every serializer here.
+export function toApiUserPublic(row: UserRow) {
+	return {
+		id: row.id,
+		displayName: row.displayName,
+		role: row.role,
+		isActive: row.isActive
+	};
+}

@@ -44,7 +44,7 @@ export function buildOpenApiDocument() {
 
 	const paginationQuery = {
 		limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-		offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+		offset: z.number().int().optional().openapi({ description: 'Default 0, max 100000.' })
 	};
 
 	registry.registerPath({

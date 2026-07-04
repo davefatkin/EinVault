@@ -1,16 +1,17 @@
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { eq, ne } from 'drizzle-orm';
-import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { apiRoute } from '$lib/server/auth/api-request';
-import { toApiUser } from '$lib/server/api-serializers';
+import { requireFullScope } from '$lib/server/api-guards';
+import { toApiUser, toApiUserPublic } from '$lib/server/api-serializers';
 import { paginate } from '$lib/server/pagination';
 
 // GET /api/users. Full-scope only. Role-scoped visibility: admin sees everyone;
-// member sees everyone except admins; caretaker sees only themselves.
+// member sees everyone except admins; caretaker sees only themselves. A
+// member-role requester gets the reduced toApiUserPublic shape (no
+// `username`, the login identifier); admin and caretaker-self keep it.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
-	if (scope === 'write')
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+	requireFullScope(scope, locale);
 
 	const where =
 		user.role === 'admin'
@@ -27,5 +28,6 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			offset
 		})
 	);
-	return json({ users: page.map(toApiUser), hasMore });
+	const serialize = user.role === 'member' ? toApiUserPublic : toApiUser;
+	return json({ users: page.map(serialize), hasMore });
 });

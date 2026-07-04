@@ -5,6 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { apiRoute } from '$lib/server/auth/api-request';
 import { throwCareError } from '$lib/server/care-errors';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
+import { requireFullScope } from '$lib/server/api-guards';
 import { toApiReminder } from '$lib/server/api-serializers';
 import { parsePagination, paginate } from '$lib/server/pagination';
 
@@ -12,8 +13,7 @@ import { parsePagination, paginate } from '$lib/server/pagination';
 // companionId, lists across every companion the token user may access.
 // status defaults to `due` (not yet completed); `status=all` includes completed.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
-	if (scope === 'write')
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+	requireFullScope(scope, locale);
 
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	const companionId = event.url.searchParams.get('companionId');

@@ -468,6 +468,15 @@ test.describe('api tokens', () => {
 		expect(badRecordedAt.status()).toBe(400);
 		expect((await badRecordedAt.json()).code).toBe('invalidRecordedAt');
 
+		// An otherwise-valid body carrying an unknown key is rejected outright
+		// (schema is .strict()), not silently accepted with the extra key ignored.
+		const bogusKey = await asMember.request.post(app.server.baseURL + '/api/weight', {
+			headers,
+			data: { companionId: EIN, weight: 5, unit: 'kg', bogusField: 1 }
+		});
+		expect(bogusKey.status()).toBe(400);
+		expect((await bogusKey.json()).code).toBe('invalidBody');
+
 		const writeRaw = await createToken(asMember, 'Scale write bot', '/settings', 'write');
 		const writeGet = await asMember.request.get(
 			app.server.baseURL + `/api/weight?companionId=${EIN}`,
@@ -716,8 +725,14 @@ test.describe('api tokens', () => {
 			expect(u).not.toHaveProperty('totpSecret');
 			expect(u).not.toHaveProperty('phone');
 		}
+		// Admin keeps the full roster, including usernames.
+		expect(adminUsers.every((u: { username?: string }) => typeof u.username === 'string')).toBe(
+			true
+		);
 
-		// Member (full scope): everyone except admins.
+		// Member (full scope): everyone except admins, and no `username` (the
+		// login identifier) on any row — a member gets the reduced
+		// toApiUserPublic shape.
 		const memberRaw = await createToken(asMember, 'Users member bot', '/settings');
 		const memberRes = await asMember.request.get(app.server.baseURL + '/api/users', {
 			headers: { Authorization: `Bearer ${memberRaw}` }
@@ -727,8 +742,13 @@ test.describe('api tokens', () => {
 		expect(Array.isArray(memberUsers)).toBe(true);
 		expect(memberUsers.length).toBeGreaterThan(0);
 		expect(memberUsers.some((u: { role: string }) => u.role === 'admin')).toBe(false);
+		for (const u of memberUsers) {
+			expect(u.username).toBeUndefined();
+			expect(typeof u.displayName).toBe('string');
+		}
 
-		// Caretaker (full scope): exactly one entry, themselves.
+		// Caretaker (full scope): exactly one entry, themselves, and their own
+		// username is still present (only members lose it).
 		const careRaw = await createToken(asCaretaker, 'Users care bot', '/care/settings');
 		const careRes = await asCaretaker.request.get(app.server.baseURL + '/api/users', {
 			headers: { Authorization: `Bearer ${careRaw}` }
@@ -737,6 +757,7 @@ test.describe('api tokens', () => {
 		const { users: careUsers } = await careRes.json();
 		expect(careUsers).toHaveLength(1);
 		expect(careUsers[0].id).toBe(SEED.caretaker.id);
+		expect(typeof careUsers[0].username).toBe('string');
 
 		// Write-scope token cannot read users back.
 		const writeRaw = await createToken(asAdmin, 'Users write bot', '/settings', 'write');

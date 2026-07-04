@@ -9,7 +9,8 @@ import {
 	toApiWeightEntry,
 	toApiReminder,
 	toApiShift,
-	toApiUser
+	toApiUser,
+	toApiUserPublic
 } from '$lib/server/api-serializers';
 import {
 	LoggedEvent,
@@ -20,7 +21,8 @@ import {
 	WeightEntry,
 	Reminder,
 	Shift,
-	User
+	User,
+	UserPublic
 } from './schemas';
 
 // Drift guard: the OpenAPI response schemas above are hand-maintained, not
@@ -250,5 +252,42 @@ describe('response schemas match their serializers', () => {
 		};
 		const result = toApiUser(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(User.shape).sort());
+	});
+
+	// Security-critical: member-scoped tokens get this reduced shape instead of
+	// toApiUser, specifically to drop `username` (the login identifier).
+	it('toApiUserPublic output keys match UserPublic.shape and omit username', () => {
+		const row = {
+			id: 'user-1',
+			username: 'jdoe',
+			displayName: 'Jane Doe',
+			passwordHash: 'hashed-password',
+			calendarFeedToken: 'feed-token-abc',
+			role: 'caretaker' as const,
+			isActive: true,
+			createdAt: new Date(),
+			lastLoginAt: new Date(),
+			theme: 'dark' as const,
+			locale: 'en' as const,
+			email: 'jane@example.com',
+			phone: '555-0100',
+			oidcSubject: 'oidc-subject-1',
+			oidcIssuer: 'https://idp.example.com',
+			reminderUndoSeconds: 30,
+			defaultRecurrenceUnit: 'month' as const,
+			notifyReminderEmail: true,
+			notifyShiftEmail: true,
+			apiAccessEnabled: true,
+			ntfyTopic: 'ntfy-topic-1',
+			avatarPath: '/avatars/user-1.jpg',
+			avatarProvider: 'local' as const,
+			avatarStorageKey: 'avatar-storage-key-1',
+			totpSecret: 'totp-secret-1',
+			totpEnabledAt: new Date(),
+			totpLastStep: 42
+		};
+		const result = toApiUserPublic(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(UserPublic.shape).sort());
+		expect(Object.keys(result)).not.toContain('username');
 	});
 });

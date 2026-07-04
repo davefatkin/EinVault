@@ -25,6 +25,7 @@ export const LogRequest = z
 			description: 'ISO 8601. Defaults to now; bounded to now-5y..now+1d.'
 		})
 	})
+	.strict()
 	.openapi('LogRequest');
 
 export type LogRequestBody = z.infer<typeof LogRequest>;
@@ -119,6 +120,7 @@ export const JournalRequest = z
 		body: z.string().optional().openapi({ description: 'Absent preserves stored text.' }),
 		mood: z.enum(['great', 'good', 'meh', 'off', 'sick']).optional()
 	})
+	.strict()
 	.openapi('JournalRequest');
 
 export const QuickLog = z
@@ -153,6 +155,7 @@ export const HealthRequest = z
 		vetName: z.string().max(MAX_NOTE_LEN).optional(),
 		vetClinic: z.string().max(MAX_NOTE_LEN).optional()
 	})
+	.strict()
 	.openapi('HealthRequest');
 
 export const HealthEvent = z
@@ -188,6 +191,7 @@ export const WeightRequest = z
 			description: 'ISO 8601. Defaults to now; may be old, not far future.'
 		})
 	})
+	.strict()
 	.openapi('WeightRequest');
 
 export const WeightEntry = z
@@ -255,7 +259,7 @@ export const ShiftList = z
 export const User = z
 	.object({
 		id: z.string(),
-		username: z.string(),
+		username: z.string().optional().openapi({ description: 'Omitted for member-scoped tokens.' }),
 		displayName: z.string(),
 		role: z.enum(['admin', 'member', 'caretaker']),
 		isActive: z.boolean()
@@ -265,3 +269,14 @@ export const User = z
 export const UserList = z
 	.object({ users: z.array(User), hasMore: z.boolean() })
 	.openapi('UserList');
+
+// Drift-guard only: mirrors toApiUserPublic's reduced shape (no `username`),
+// returned to member-scoped tokens from GET /api/users.
+export const UserPublic = z
+	.object({
+		id: z.string(),
+		displayName: z.string(),
+		role: z.enum(['admin', 'member', 'caretaker']),
+		isActive: z.boolean()
+	})
+	.openapi('UserPublic');

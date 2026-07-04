@@ -5,7 +5,8 @@ import { db, schema } from '$lib/server/db';
 import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
+import { authorizeCompanions } from '$lib/server/companion-scope';
+import { requireFullScope, requireAllowedCompanion } from '$lib/server/api-guards';
 import { createWeightEntry } from '$lib/server/weight';
 import { toApiWeightEntry } from '$lib/server/api-serializers';
 import { parseRecordTimestamp } from '$lib/server/validation';
@@ -15,13 +16,8 @@ import { paginate } from '$lib/server/pagination';
 
 // GET /api/weight?companionId=. Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
-	if (scope === 'write')
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
-	const companionId = event.url.searchParams.get('companionId');
-	if (!companionId)
-		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
-	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
-	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
+	requireFullScope(scope, locale);
+	const companionId = await requireAllowedCompanion(event.url, user, locale);
 
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
 		db.query.weightEntries.findMany({

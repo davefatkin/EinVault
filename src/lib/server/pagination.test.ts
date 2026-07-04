@@ -19,6 +19,12 @@ describe('parsePagination', () => {
 	it('rejects a negative offset', () => {
 		expect(() => parsePagination(u('?offset=-1'), 'en')).toThrow();
 	});
+	it('accepts the max offset', () => {
+		expect(parsePagination(u('?offset=100000'), 'en')).toEqual({ limit: 50, offset: 100000 });
+	});
+	it('rejects an offset past the max', () => {
+		expect(() => parsePagination(u('?offset=100001'), 'en')).toThrow();
+	});
 });
 
 describe('paginate', () => {
