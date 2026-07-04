@@ -25,8 +25,11 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 		reminder.companionId
 	]);
 	if (!resolved.ok) {
-		// Not assigned at all → hide existence as 404; assigned-but-off-shift → real 403.
-		if (resolved.code === 'notAssigned')
+		// Hide existence as 404 when the token simply can't act on this reminder's
+		// companion (not assigned, or the companion is archived → noTargets), so an
+		// id-scoped write can't be used to probe reminder ids. An assigned caretaker
+		// who is merely off-shift gets the real 403 noActiveShift.
+		if (resolved.code === 'notAssigned' || resolved.code === 'noTargets')
 			error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
 		throwCareError(resolved.code, locale);
 	}
