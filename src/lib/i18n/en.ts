@@ -100,6 +100,7 @@ const messages = {
 	'error.invalidRecurrence': 'Invalid recurrence configuration.',
 	'error.invalidDefaultRecurrence': 'Invalid default recurrence unit.',
 	'error.invalidRole': 'Invalid role.',
+	'error.invalidStatus': 'status must be "due" or "all".',
 	'error.invalidNtfyTopic':
 		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',
@@ -122,6 +123,7 @@ const messages = {
 	'error.companionNotFound': 'Companion not found',
 	'error.eventNotFound': 'Event not found.',
 	'error.reminderNotFound': 'Reminder not found.',
+	'error.alreadyCompleted': 'This reminder is already completed.',
 	'error.entryNotFound': 'Entry not found.',
 	'error.shiftNotFound': 'Shift not found.',
 	'error.photoNotFound': 'Photo not found',

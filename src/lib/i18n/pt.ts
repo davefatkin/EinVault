@@ -103,6 +103,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configuração de recorrência inválida.',
 	'error.invalidDefaultRecurrence': 'Unidade de recorrência padrão inválida.',
 	'error.invalidRole': 'Função inválida.',
+	'error.invalidStatus': 'status deve ser "due" ou "all".',
 	'error.invalidNtfyTopic':
 		'O tópico só pode conter letras, números, hífens e sublinhados (máx. 64).',
 	'error.invalidDate': 'Data inválida',
@@ -131,6 +132,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.companionNotFound': 'Companheiro não encontrado',
 	'error.eventNotFound': 'Evento não encontrado.',
 	'error.reminderNotFound': 'Lembrete não encontrado.',
+	'error.alreadyCompleted': 'Este lembrete já foi concluído.',
 	'error.entryNotFound': 'Entrada não encontrada.',
 	'error.shiftNotFound': 'Turno não encontrado.',
 	'error.photoNotFound': 'Foto não encontrada',

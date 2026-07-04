@@ -3,7 +3,8 @@ import type {
 	dailyEvents,
 	journalEntries,
 	healthEvents,
-	weightEntries
+	weightEntries,
+	reminders
 } from '$lib/server/db/schema';
 import type { QuickLogButton } from '$lib/server/quick-logs';
 
@@ -12,6 +13,7 @@ type DailyEventRow = typeof dailyEvents.$inferSelect;
 type JournalEntryRow = typeof journalEntries.$inferSelect;
 type HealthEventRow = typeof healthEvents.$inferSelect;
 type WeightEntryRow = typeof weightEntries.$inferSelect;
+type ReminderRow = typeof reminders.$inferSelect;
 
 // Convention: every /api/* handler that returns a model builds its JSON here,
 // never inline, so each model has one default-deny serializer.
@@ -111,6 +113,22 @@ export function toApiCompanion(row: CompanionRow) {
 		archivedAt: row.archivedAt,
 		archiveNote: row.archiveNote,
 		createdAt: row.createdAt
+	};
+}
+
+// Public shape for a reminder (list via GET /api/reminders). Omits the internal
+// recurrence-engine columns (anchor/interval/unit) and loggedBy/completedBy.
+export function toApiReminder(row: ReminderRow) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		title: row.title,
+		description: row.description,
+		type: row.type,
+		dueAt: row.dueAt,
+		isRecurring: row.isRecurring,
+		completedAt: row.completedAt,
+		seriesId: row.seriesId
 	};
 }
 

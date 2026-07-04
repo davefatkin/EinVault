@@ -203,3 +203,31 @@ export const WeightList = z.object({ entries: z.array(WeightEntry) }).openapi('W
 export const WeightWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('WeightWriteResponse');
+
+export const ReminderType = z
+	.enum(['vet', 'medication', 'vaccination', 'grooming', 'other'])
+	.openapi('ReminderType');
+
+export const Reminder = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		title: z.string(),
+		description: z.string().nullable(),
+		type: ReminderType,
+		dueAt: z.string(),
+		isRecurring: z.boolean(),
+		completedAt: z.string().nullable(),
+		seriesId: z.string().nullable()
+	})
+	.openapi('Reminder');
+
+export const ReminderList = z.object({ reminders: z.array(Reminder) }).openapi('ReminderList');
+
+export const CompleteResponse = z
+	.object({
+		id: z.string(),
+		completedAt: z.string(),
+		nextReminderId: z.string().nullable()
+	})
+	.openapi('CompleteResponse');

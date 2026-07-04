@@ -1,5 +1,5 @@
 import { db, schema } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import {
 	clampDayOfMonth,
@@ -68,19 +68,29 @@ export function computeNextDueAt(reminder: Reminder): Date | null {
 	return next;
 }
 
-export function completeReminder(reminder: Reminder, userId: string): void {
+export function completeReminder(
+	reminder: Reminder,
+	userId: string
+): { completedAt: Date; nextReminderId: string | null } | null {
+	const completedAt = new Date();
+	let nextReminderId: string | null = null;
+	let completed = false;
 	db.transaction((tx) => {
-		tx.update(schema.reminders)
-			.set({ completedAt: new Date(), completedBy: userId })
-			.where(eq(schema.reminders.id, reminder.id))
+		const res = tx
+			.update(schema.reminders)
+			.set({ completedAt, completedBy: userId })
+			.where(and(eq(schema.reminders.id, reminder.id), isNull(schema.reminders.completedAt)))
 			.run();
+		if (res.changes === 0) return; // already completed by a concurrent/prior call — spawn nothing
+		completed = true;
 
 		const nextDueAt = computeNextDueAt(reminder);
 		if (!nextDueAt) return;
 
+		nextReminderId = generateId(15);
 		tx.insert(schema.reminders)
 			.values({
-				id: generateId(15),
+				id: nextReminderId,
 				companionId: reminder.companionId,
 				title: reminder.title,
 				description: reminder.description,
@@ -96,4 +106,5 @@ export function completeReminder(reminder: Reminder, userId: string): void {
 			})
 			.run();
 	});
+	return completed ? { completedAt, nextReminderId } : null;
 }

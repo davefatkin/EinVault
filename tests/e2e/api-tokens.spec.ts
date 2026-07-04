@@ -433,6 +433,182 @@ test.describe('api tokens', () => {
 		expect((await writeGet.json()).code).toBe('writeScopeReadOnly');
 	});
 
+	test('reminders endpoint lists due reminders by default and all with status=all', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Reminder bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Default status=due: every returned reminder is not yet completed.
+		const due = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers }
+		);
+		expect(due.status()).toBe(200);
+		const { reminders: dueReminders } = await due.json();
+		expect(Array.isArray(dueReminders)).toBe(true);
+		for (const reminder of dueReminders) {
+			expect(reminder.completedAt).toBeNull();
+		}
+
+		// status=all may additionally include completed reminders.
+		const all = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}&status=all`,
+			{ headers }
+		);
+		expect(all.status()).toBe(200);
+		expect(Array.isArray((await all.json()).reminders)).toBe(true);
+
+		// No companionId: lists across every companion the token user may access.
+		const allCompanions = await asMember.request.get(app.server.baseURL + '/api/reminders', {
+			headers
+		});
+		expect(allCompanions.status()).toBe(200);
+		expect(Array.isArray((await allCompanions.json()).reminders)).toBe(true);
+
+		// Write-scope token cannot read reminders back.
+		const writeRaw = await createToken(asMember, 'Reminder write bot', '/settings', 'write');
+		const writeGet = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers: { Authorization: `Bearer ${writeRaw}` } }
+		);
+		expect(writeGet.status()).toBe(403);
+		expect((await writeGet.json()).code).toBe('writeScopeReadOnly');
+
+		// Unknown status value is rejected with a stable code (spec declares an enum).
+		const bogusStatus = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}&status=bogus`,
+			{ headers }
+		);
+		expect(bogusStatus.status()).toBe(400);
+		expect((await bogusStatus.json()).code).toBe('invalidStatus');
+	});
+
+	test('complete endpoint marks a reminder done; guards double-complete and unknown ids', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Reminder complete bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// There are no seeded incomplete reminders for EIN, so create one-off
+		// reminders via the app's own form (same UI a member would use), then
+		// discover their ids through the read endpoint under test above.
+		async function addOneOffReminder(title: string) {
+			await asMember.goto(`/${EIN}/reminders`);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#title').fill(title);
+			await asMember.locator('#dueAt').fill('2099-01-15T10:00');
+			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+			await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+				timeout: 8_000
+			});
+		}
+
+		async function findReminderId(title: string): Promise<string> {
+			const res = await asMember.request.get(
+				app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+				{ headers }
+			);
+			const { reminders } = await res.json();
+			const match = reminders.find((r: { title: string }) => r.title === title);
+			expect(match).toBeTruthy();
+			return match.id;
+		}
+
+		await addOneOffReminder('Api complete one-off');
+		const id = await findReminderId('Api complete one-off');
+
+		const complete = await asMember.request.post(
+			app.server.baseURL + `/api/reminders/${id}/complete`,
+			{ headers }
+		);
+		expect(complete.status()).toBe(200);
+		const body = await complete.json();
+		expect(body.id).toBe(id);
+		expect(body.completedAt).toBeTruthy();
+		expect(body.nextReminderId).toBeNull();
+
+		// Completing the same (now-completed) reminder again → 409.
+		const again = await asMember.request.post(
+			app.server.baseURL + `/api/reminders/${id}/complete`,
+			{ headers }
+		);
+		expect(again.status()).toBe(409);
+		expect((await again.json()).code).toBe('alreadyCompleted');
+
+		// Unknown id → 404, same shape as the not-owned case (no enumeration oracle).
+		const unknown = await asMember.request.post(
+			app.server.baseURL + '/api/reminders/does-not-exist/complete',
+			{ headers }
+		);
+		expect(unknown.status()).toBe(404);
+		expect((await unknown.json()).code).toBe('notFound');
+
+		// A write-scope token may still complete — complete is a write. Uses a
+		// fresh reminder since the first is now completed.
+		await addOneOffReminder('Api complete write-scope');
+		const secondId = await findReminderId('Api complete write-scope');
+		const writeRaw = await createToken(
+			asMember,
+			'Reminder complete write bot',
+			'/settings',
+			'write'
+		);
+		const writeComplete = await asMember.request.post(
+			app.server.baseURL + `/api/reminders/${secondId}/complete`,
+			{ headers: { Authorization: `Bearer ${writeRaw}` } }
+		);
+		expect(writeComplete.status()).toBe(200);
+	});
+
+	test('complete endpoint spawns the next occurrence for a recurring reminder', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Reminder recurring bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Create a recurring reminder via the app's own form (same UI a member
+		// would use), then discover its id through the read endpoint.
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api complete recurring');
+		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
+		await asMember.locator('#add-isRecurring').check();
+		await asMember.locator('#add-recurrenceInterval').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		const listRes = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers }
+		);
+		const { reminders } = await listRes.json();
+		const match = reminders.find((r: { title: string }) => r.title === 'Api complete recurring');
+		expect(match).toBeTruthy();
+		const id = match.id;
+
+		const done = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/complete`, {
+			headers
+		});
+		expect(done.status()).toBe(200);
+		const body = await done.json();
+		expect(typeof body.nextReminderId).toBe('string'); // spawned the next occurrence
+
+		// The spawned occurrence shows up in a fresh due-list read.
+		const after = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers }
+		);
+		const ids = (await after.json()).reminders.map((r: { id: string }) => r.id);
+		expect(ids).toContain(body.nextReminderId);
+	});
+
 	test('caretaker token may write today’s journal but not a past date', async ({
 		asCaretaker,
 		app

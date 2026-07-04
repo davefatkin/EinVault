@@ -103,6 +103,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configuration de récurrence invalide.',
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
+	'error.invalidStatus': 'status doit être "due" ou "all".',
 	'error.invalidNtfyTopic':
 		'Le sujet ne peut contenir que des lettres, chiffres, tirets et tirets bas (max. 64).',
 	'error.invalidDate': 'Date invalide',
@@ -133,6 +134,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.companionNotFound': 'Compagnon introuvable',
 	'error.eventNotFound': 'Événement introuvable.',
 	'error.reminderNotFound': 'Rappel introuvable.',
+	'error.alreadyCompleted': 'Ce rappel est déjà terminé.',
 	'error.entryNotFound': 'Entrée introuvable.',
 	'error.shiftNotFound': 'Garde introuvable.',
 	'error.photoNotFound': 'Photo introuvable',

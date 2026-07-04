@@ -159,4 +159,84 @@ describe('completeReminder', () => {
 
 		expect((await db.query.reminders.findMany()).length).toBe(countBefore);
 	});
+
+	it('returns the completedAt and the spawned next id for a recurring reminder', async () => {
+		await db.insert(schema.reminders).values({
+			id: 'r3',
+			companionId: 'c-rem',
+			title: 'Weekly check',
+			type: 'other',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'week',
+			recurrenceInterval: 1,
+			seriesId: 'r3',
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r3') });
+
+		const res = completeReminder(row!, 'u-rem');
+
+		expect(res).not.toBeNull();
+		expect(res!.completedAt).toBeInstanceOf(Date);
+		expect(typeof res!.nextReminderId).toBe('string');
+
+		const next = await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, res!.nextReminderId!)
+		});
+		expect(next).toBeDefined();
+		expect(next!.seriesId).toBe('r3');
+	});
+
+	it('returns nextReminderId null for a one-off reminder', async () => {
+		await db.insert(schema.reminders).values({
+			id: 'r4',
+			companionId: 'c-rem',
+			title: 'One-off 2',
+			type: 'other',
+			dueAt: new Date(2026, 0, 21, 9, 0, 0),
+			isRecurring: false,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r4') });
+
+		const res = completeReminder(row!, 'u-rem');
+
+		expect(res).not.toBeNull();
+		expect(res!.nextReminderId).toBeNull();
+	});
+
+	it('returns null and spawns nothing for a second complete on an already-completed reminder', async () => {
+		await db.insert(schema.reminders).values({
+			id: 'r5',
+			companionId: 'c-rem',
+			title: 'Daily race',
+			type: 'other',
+			dueAt: new Date(2026, 0, 22, 9, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			seriesId: 'r5',
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r5') });
+
+		const first = completeReminder(row!, 'u-rem');
+		expect(first).not.toBeNull();
+		expect(typeof first!.nextReminderId).toBe('string');
+
+		const countAfterFirst = (
+			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, 'r5') })
+		).length;
+
+		// Simulate a concurrent/duplicate complete on the same (stale, pre-completion)
+		// row snapshot — the atomic UPDATE guard should no-op and skip the spawn.
+		const second = completeReminder(row!, 'u-rem');
+		expect(second).toBeNull();
+
+		const countAfterSecond = (
+			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, 'r5') })
+		).length;
+		expect(countAfterSecond).toBe(countAfterFirst);
+	});
 });

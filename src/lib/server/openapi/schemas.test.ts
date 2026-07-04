@@ -6,7 +6,8 @@ import {
 	toApiCompanion,
 	toApiCompanionMinimal,
 	toApiHealthEvent,
-	toApiWeightEntry
+	toApiWeightEntry,
+	toApiReminder
 } from '$lib/server/api-serializers';
 import {
 	LoggedEvent,
@@ -14,7 +15,8 @@ import {
 	QuickLog,
 	Companion,
 	HealthEvent,
-	WeightEntry
+	WeightEntry,
+	Reminder
 } from './schemas';
 
 // Drift guard: the OpenAPI response schemas above are hand-maintained, not
@@ -170,5 +172,28 @@ describe('response schemas match their serializers', () => {
 		};
 		const result = toApiWeightEntry(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(WeightEntry.shape).sort());
+	});
+
+	it('toApiReminder output keys match Reminder.shape', () => {
+		const row = {
+			id: 'rem-1',
+			companionId: 'comp-1',
+			title: 'Annual vaccination',
+			description: 'Rabies booster',
+			type: 'vaccination' as const,
+			dueAt: new Date(),
+			isRecurring: true,
+			recurrenceUnit: 'year' as const,
+			recurrenceInterval: 1,
+			recurrenceAnchor: 'day_of_year' as const,
+			recurrenceAnchorValue: 100,
+			seriesId: 'series-1',
+			completedAt: null,
+			completedBy: null,
+			createdAt: new Date(),
+			loggedBy: 'user-1'
+		};
+		const result = toApiReminder(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(Reminder.shape).sort());
 	});
 });

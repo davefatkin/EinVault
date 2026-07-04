@@ -103,6 +103,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Ungültige Wiederholungskonfiguration.',
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
+	'error.invalidStatus': 'status muss "due" oder "all" sein.',
 	'error.invalidNtfyTopic':
 		'Das Thema darf nur Buchstaben, Zahlen, Binde- und Unterstriche enthalten (max. 64).',
 	'error.invalidDate': 'Ungültiges Datum',
@@ -134,6 +135,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.companionNotFound': 'Begleiter nicht gefunden',
 	'error.eventNotFound': 'Ereignis nicht gefunden.',
 	'error.reminderNotFound': 'Erinnerung nicht gefunden.',
+	'error.alreadyCompleted': 'Diese Erinnerung wurde bereits erledigt.',
 	'error.entryNotFound': 'Eintrag nicht gefunden.',
 	'error.shiftNotFound': 'Schicht nicht gefunden.',
 	'error.photoNotFound': 'Foto nicht gefunden',

@@ -103,6 +103,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configuración de recurrencia no válida.',
 	'error.invalidDefaultRecurrence': 'Unidad de recurrencia predeterminada no válida.',
 	'error.invalidRole': 'Rol no válido.',
+	'error.invalidStatus': 'status debe ser "due" o "all".',
 	'error.invalidNtfyTopic':
 		'El tema solo puede contener letras, números, guiones y guiones bajos (máx. 64).',
 	'error.invalidDate': 'Fecha no válida',
@@ -134,6 +135,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.companionNotFound': 'Compañero no encontrado',
 	'error.eventNotFound': 'Evento no encontrado.',
 	'error.reminderNotFound': 'Recordatorio no encontrado.',
+	'error.alreadyCompleted': 'Este recordatorio ya está completado.',
 	'error.entryNotFound': 'Entrada no encontrada.',
 	'error.shiftNotFound': 'Turno no encontrado.',
 	'error.photoNotFound': 'Foto no encontrada',

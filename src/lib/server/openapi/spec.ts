@@ -16,7 +16,9 @@ import {
 	HealthWriteResponse,
 	WeightRequest,
 	WeightList,
-	WeightWriteResponse
+	WeightWriteResponse,
+	ReminderList,
+	CompleteResponse
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -281,6 +283,60 @@ export function buildOpenApiDocument() {
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/reminders',
+		tags: ['reminders'],
+		summary: "List the token user's reminders",
+		description:
+			'Up to 200. Without companionId, lists across every companion the token user may access. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z
+					.string()
+					.optional()
+					.openapi({ description: 'Omit to list across all allowed companions.' }),
+				status: z
+					.enum(['due', 'all'])
+					.optional()
+					.openapi({ description: 'Defaults to due (not yet completed).' })
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: ReminderList } } },
+			400: errorResponse('invalidStatus'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/reminders/{id}/complete',
+		tags: ['reminders'],
+		summary: 'Mark a reminder done',
+		description:
+			'Completing a recurring reminder spawns its next occurrence (nextReminderId); a one-off reminder returns nextReminderId: null. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			params: z.object({ id: z.string() })
+		},
+		responses: {
+			200: {
+				description: 'OK',
+				content: { 'application/json': { schema: CompleteResponse } }
+			},
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift / notAssigned'),
+			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
+			409: errorResponse('alreadyCompleted / idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
 		}
 	});

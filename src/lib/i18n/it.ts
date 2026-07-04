@@ -102,6 +102,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRecurrence': 'Configurazione ricorrenza non valida.',
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
+	'error.invalidStatus': 'status deve essere "due" oppure "all".',
 	'error.invalidNtfyTopic':
 		"L'argomento può contenere solo lettere, numeri, trattini e trattini bassi (max 64).",
 	'error.invalidDate': 'Data non valida',
@@ -131,6 +132,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.companionNotFound': 'Compagno non trovato',
 	'error.eventNotFound': 'Evento non trovato.',
 	'error.reminderNotFound': 'Promemoria non trovato.',
+	'error.alreadyCompleted': 'Questo promemoria è già stato completato.',
 	'error.entryNotFound': 'Voce non trovata.',
 	'error.shiftNotFound': 'Turno non trovato.',
 	'error.photoNotFound': 'Foto non trovata',
