@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { SEED } from '../lib/seed';
 
 const EIN = 'seed-comp-ein';
 
@@ -138,6 +139,43 @@ test.describe('api tokens', () => {
 		expect(ein).not.toHaveProperty('avatarPath');
 		expect(ein).not.toHaveProperty('avatarProvider');
 		expect(ein).not.toHaveProperty('avatarUrl');
+	});
+
+	test('companion detail endpoint returns full or minimal projection; unknown id is 404', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Detail bot');
+
+		const res = await asMember.request.get(app.server.baseURL + `/api/companions/${EIN}`, {
+			headers: { Authorization: `Bearer ${raw}` }
+		});
+		expect(res.status()).toBe(200);
+		const { companion } = await res.json();
+		expect(companion.id).toBe(EIN);
+		// Full-scope: PII field present (may be null, but the key must exist).
+		expect(companion).toHaveProperty('microchip');
+
+		// Write-scope token gets the minimal projection, same as the list endpoint.
+		const writeRaw = await createToken(asMember, 'Detail write bot', '/settings', 'write');
+		const writeRes = await asMember.request.get(app.server.baseURL + `/api/companions/${EIN}`, {
+			headers: { Authorization: `Bearer ${writeRaw}` }
+		});
+		expect(writeRes.status()).toBe(200);
+		const { companion: minimal } = await writeRes.json();
+		expect(minimal.id).toBe(EIN);
+		expect(minimal.name).toBeTruthy();
+		expect(minimal.species).toBeTruthy();
+		expect(typeof minimal.isActive).toBe('boolean');
+		expect(minimal).not.toHaveProperty('microchip');
+
+		// Unknown id → 404, no enumeration oracle.
+		const missing = await asMember.request.get(
+			app.server.baseURL + '/api/companions/does-not-exist',
+			{ headers: { Authorization: `Bearer ${raw}` } }
+		);
+		expect(missing.status()).toBe(404);
+		expect((await missing.json()).code).toBe('notFound');
 	});
 
 	test('idempotency key makes a retried log a no-op; read-back returns events', async ({
@@ -607,6 +645,100 @@ test.describe('api tokens', () => {
 		);
 		const ids = (await after.json()).reminders.map((r: { id: string }) => r.id);
 		expect(ids).toContain(body.nextReminderId);
+	});
+
+	test('shifts endpoint: admin sees all, caretaker sees only their own, write-scope is forbidden', async ({
+		asAdmin,
+		asCaretaker,
+		app
+	}) => {
+		// Admin (full scope): the caretaker's active seeded shift is visible.
+		const adminRaw = await createToken(asAdmin, 'Shift admin bot', '/settings');
+		const adminRes = await asAdmin.request.get(app.server.baseURL + '/api/shifts', {
+			headers: { Authorization: `Bearer ${adminRaw}` }
+		});
+		expect(adminRes.status()).toBe(200);
+		const { shifts: adminShifts } = await adminRes.json();
+		expect(Array.isArray(adminShifts)).toBe(true);
+		expect(adminShifts.some((s: { userId: string }) => s.userId === SEED.caretaker.id)).toBe(true);
+
+		// Caretaker (full scope): every returned shift belongs to the caretaker
+		// themselves — never another user's shift.
+		const careRaw = await createToken(asCaretaker, 'Shift care bot', '/care/settings');
+		const careRes = await asCaretaker.request.get(app.server.baseURL + '/api/shifts', {
+			headers: { Authorization: `Bearer ${careRaw}` }
+		});
+		expect(careRes.status()).toBe(200);
+		const { shifts: careShifts } = await careRes.json();
+		expect(Array.isArray(careShifts)).toBe(true);
+		expect(careShifts.length).toBeGreaterThan(0);
+		for (const shift of careShifts) {
+			expect(shift.userId).toBe(SEED.caretaker.id);
+		}
+
+		// Write-scope token cannot read shifts back.
+		const writeRaw = await createToken(asAdmin, 'Shift write bot', '/settings', 'write');
+		const writeRes = await asAdmin.request.get(app.server.baseURL + '/api/shifts', {
+			headers: { Authorization: `Bearer ${writeRaw}` }
+		});
+		expect(writeRes.status()).toBe(403);
+		expect((await writeRes.json()).code).toBe('writeScopeReadOnly');
+	});
+
+	test('users endpoint: admin sees everyone, member excludes admins, caretaker sees only self', async ({
+		asAdmin,
+		asMember,
+		asCaretaker,
+		app
+	}) => {
+		// Admin (full scope): the whole roster, including the admin and the caretaker.
+		const adminRaw = await createToken(asAdmin, 'Users admin bot', '/settings');
+		const adminRes = await asAdmin.request.get(app.server.baseURL + '/api/users', {
+			headers: { Authorization: `Bearer ${adminRaw}` }
+		});
+		expect(adminRes.status()).toBe(200);
+		const { users: adminUsers } = await adminRes.json();
+		expect(Array.isArray(adminUsers)).toBe(true);
+		expect(adminUsers.some((u: { role: string }) => u.role === 'admin')).toBe(true);
+		expect(adminUsers.some((u: { role: string }) => u.role === 'caretaker')).toBe(true);
+
+		// Belt-and-suspenders leakage guard: no sensitive column ever reaches the
+		// wire, independent of the toApiUser drift test.
+		for (const u of adminUsers) {
+			expect(u).not.toHaveProperty('passwordHash');
+			expect(u).not.toHaveProperty('email');
+			expect(u).not.toHaveProperty('totpSecret');
+			expect(u).not.toHaveProperty('phone');
+		}
+
+		// Member (full scope): everyone except admins.
+		const memberRaw = await createToken(asMember, 'Users member bot', '/settings');
+		const memberRes = await asMember.request.get(app.server.baseURL + '/api/users', {
+			headers: { Authorization: `Bearer ${memberRaw}` }
+		});
+		expect(memberRes.status()).toBe(200);
+		const { users: memberUsers } = await memberRes.json();
+		expect(Array.isArray(memberUsers)).toBe(true);
+		expect(memberUsers.length).toBeGreaterThan(0);
+		expect(memberUsers.some((u: { role: string }) => u.role === 'admin')).toBe(false);
+
+		// Caretaker (full scope): exactly one entry, themselves.
+		const careRaw = await createToken(asCaretaker, 'Users care bot', '/care/settings');
+		const careRes = await asCaretaker.request.get(app.server.baseURL + '/api/users', {
+			headers: { Authorization: `Bearer ${careRaw}` }
+		});
+		expect(careRes.status()).toBe(200);
+		const { users: careUsers } = await careRes.json();
+		expect(careUsers).toHaveLength(1);
+		expect(careUsers[0].id).toBe(SEED.caretaker.id);
+
+		// Write-scope token cannot read users back.
+		const writeRaw = await createToken(asAdmin, 'Users write bot', '/settings', 'write');
+		const writeRes = await asAdmin.request.get(app.server.baseURL + '/api/users', {
+			headers: { Authorization: `Bearer ${writeRaw}` }
+		});
+		expect(writeRes.status()).toBe(403);
+		expect((await writeRes.json()).code).toBe('writeScopeReadOnly');
 	});
 
 	test('caretaker token may write today’s journal but not a past date', async ({

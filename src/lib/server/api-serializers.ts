@@ -4,7 +4,9 @@ import type {
 	journalEntries,
 	healthEvents,
 	weightEntries,
-	reminders
+	reminders,
+	caretakerShifts,
+	users
 } from '$lib/server/db/schema';
 import type { QuickLogButton } from '$lib/server/quick-logs';
 
@@ -14,6 +16,8 @@ type JournalEntryRow = typeof journalEntries.$inferSelect;
 type HealthEventRow = typeof healthEvents.$inferSelect;
 type WeightEntryRow = typeof weightEntries.$inferSelect;
 type ReminderRow = typeof reminders.$inferSelect;
+type CaretakerShiftRow = typeof caretakerShifts.$inferSelect;
+type UserRow = typeof users.$inferSelect;
 
 // Convention: every /api/* handler that returns a model builds its JSON here,
 // never inline, so each model has one default-deny serializer.
@@ -140,6 +144,33 @@ export function toApiCompanionMinimal(row: CompanionRow) {
 		id: row.id,
 		name: row.name,
 		species: row.species,
+		isActive: row.isActive
+	};
+}
+
+// Public shape for a caretaker shift (GET /api/shifts). Exposes who + when;
+// clients resolve the caretaker's name via GET /api/users.
+export function toApiShift(row: CaretakerShiftRow) {
+	return {
+		id: row.id,
+		userId: row.userId,
+		startAt: row.startAt,
+		endAt: row.endAt,
+		notes: row.notes
+	};
+}
+
+// Public shape for a user (GET /api/users). STRICT default-deny: only the
+// roster fields. Never expose password hash, TOTP secrets, OIDC identifiers,
+// email/phone, calendar-feed token, avatar storage keys, ntfy topic, or any
+// per-user setting. Adding a users column does NOT expose it until it is added
+// here AND the drift test is updated.
+export function toApiUser(row: UserRow) {
+	return {
+		id: row.id,
+		username: row.username,
+		displayName: row.displayName,
+		role: row.role,
 		isActive: row.isActive
 	};
 }

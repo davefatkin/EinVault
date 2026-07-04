@@ -231,3 +231,27 @@ export const CompleteResponse = z
 		nextReminderId: z.string().nullable()
 	})
 	.openapi('CompleteResponse');
+
+export const Shift = z
+	.object({
+		id: z.string(),
+		userId: z.string(),
+		startAt: z.string(),
+		endAt: z.string(),
+		notes: z.string().nullable()
+	})
+	.openapi('Shift');
+
+export const ShiftList = z.object({ shifts: z.array(Shift) }).openapi('ShiftList');
+
+export const User = z
+	.object({
+		id: z.string(),
+		username: z.string(),
+		displayName: z.string(),
+		role: z.enum(['admin', 'member', 'caretaker']),
+		isActive: z.boolean()
+	})
+	.openapi('User');
+
+export const UserList = z.object({ users: z.array(User) }).openapi('UserList');

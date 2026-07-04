@@ -11,6 +11,7 @@ import {
 	QuickLogList,
 	ExecuteResponse,
 	CompanionList,
+	Companion,
 	HealthRequest,
 	HealthList,
 	HealthWriteResponse,
@@ -18,7 +19,9 @@ import {
 	WeightList,
 	WeightWriteResponse,
 	ReminderList,
-	CompleteResponse
+	CompleteResponse,
+	ShiftList,
+	UserList
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -193,6 +196,28 @@ export function buildOpenApiDocument() {
 	});
 
 	registry.registerPath({
+		method: 'get',
+		path: '/api/companions/{companionId}',
+		tags: ['companions'],
+		summary: 'Get one companion the token user may target',
+		description:
+			'Full-scope tokens get the full companion shape; write-scope tokens get a minimal projection without PII. An id the token cannot access reads as 404 (no enumeration); an archived companion also reads as 404, not as a distinguishable "deleted" state.',
+		security: secured,
+		request: {
+			params: z.object({ companionId: z.string() })
+		},
+		responses: {
+			200: {
+				description: 'OK',
+				content: { 'application/json': { schema: z.object({ companion: Companion }) } }
+			},
+			401: errorResponse('Missing or invalid token'),
+			404: errorResponse('Not found (also returned when the id is not owned by the token user)'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
 		method: 'post',
 		path: '/api/health-events',
 		tags: ['health'],
@@ -337,6 +362,47 @@ export function buildOpenApiDocument() {
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
 			409: errorResponse('alreadyCompleted / idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/shifts',
+		tags: ['shifts'],
+		summary: 'List the caretaker shift schedule',
+		description:
+			'Most recent shifts first, up to 200; use from/to to window further back. admin/member see every shift; a caretaker sees only their own. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				from: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift end.' }),
+				to: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift start.' })
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: ShiftList } } },
+			400: errorResponse('invalidDate'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/users',
+		tags: ['users'],
+		summary: 'List the user roster, scoped to what the token user may see',
+		description:
+			'Role-scoped visibility: an admin token sees every user; a member token sees everyone except admins; a caretaker token sees only themselves. Requires a full-scope token.',
+		security: secured,
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: UserList } } },
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly'),
+			404: errorResponse('API disabled'),
 			429: errorResponse('Rate limited')
 		}
 	});

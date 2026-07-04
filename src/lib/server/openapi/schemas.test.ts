@@ -7,7 +7,9 @@ import {
 	toApiCompanionMinimal,
 	toApiHealthEvent,
 	toApiWeightEntry,
-	toApiReminder
+	toApiReminder,
+	toApiShift,
+	toApiUser
 } from '$lib/server/api-serializers';
 import {
 	LoggedEvent,
@@ -16,7 +18,9 @@ import {
 	Companion,
 	HealthEvent,
 	WeightEntry,
-	Reminder
+	Reminder,
+	Shift,
+	User
 } from './schemas';
 
 // Drift guard: the OpenAPI response schemas above are hand-maintained, not
@@ -195,5 +199,56 @@ describe('response schemas match their serializers', () => {
 		};
 		const result = toApiReminder(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Reminder.shape).sort());
+	});
+
+	it('toApiShift output keys match Shift.shape', () => {
+		const row = {
+			id: 'shift-1',
+			userId: 'user-1',
+			startAt: new Date(),
+			endAt: new Date(),
+			notes: 'Evening feeding',
+			createdAt: new Date()
+		};
+		const result = toApiShift(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(Shift.shape).sort());
+	});
+
+	// Security-critical: every column on `users` is populated here, including
+	// the sensitive ones (passwordHash, totpSecret, oidcSubject, email, ntfy
+	// topic, avatar storage keys, per-user settings). If toApiUser ever starts
+	// returning one of those, this exact key-set match fails.
+	it('toApiUser output keys match User.shape (never leaks sensitive columns)', () => {
+		const row = {
+			id: 'user-1',
+			username: 'jdoe',
+			displayName: 'Jane Doe',
+			passwordHash: 'hashed-password',
+			calendarFeedToken: 'feed-token-abc',
+			role: 'caretaker' as const,
+			isActive: true,
+			createdAt: new Date(),
+			lastLoginAt: new Date(),
+			theme: 'dark' as const,
+			locale: 'en' as const,
+			email: 'jane@example.com',
+			phone: '555-0100',
+			oidcSubject: 'oidc-subject-1',
+			oidcIssuer: 'https://idp.example.com',
+			reminderUndoSeconds: 30,
+			defaultRecurrenceUnit: 'month' as const,
+			notifyReminderEmail: true,
+			notifyShiftEmail: true,
+			apiAccessEnabled: true,
+			ntfyTopic: 'ntfy-topic-1',
+			avatarPath: '/avatars/user-1.jpg',
+			avatarProvider: 'local' as const,
+			avatarStorageKey: 'avatar-storage-key-1',
+			totpSecret: 'totp-secret-1',
+			totpEnabledAt: new Date(),
+			totpLastStep: 42
+		};
+		const result = toApiUser(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(User.shape).sort());
 	});
 });
