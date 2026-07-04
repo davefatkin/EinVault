@@ -980,6 +980,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidUnit': 'L’unité doit être kg ou lbs.',
 	'error.invalidRecordedAt':
 		'recordedAt doit être une date-heure ISO 8601 valide dans la plage autorisée.',
+	'error.invalidPagination':
+		'limit doit être compris entre 1 et 200 et offset doit être 0 ou plus.',
 
 	// Page titles
 	'page.care.title': 'Soins',

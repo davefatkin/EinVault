@@ -957,6 +957,7 @@ const messages = {
 	'error.invalidUnit': 'Unit must be kg or lbs.',
 	'error.invalidRecordedAt':
 		'recordedAt must be a valid ISO 8601 date-time within the allowed range.',
+	'error.invalidPagination': 'limit must be 1-200 and offset must be 0 or more.',
 
 	// Page titles (used in <title> tags)
 	'page.care.title': 'Care',
