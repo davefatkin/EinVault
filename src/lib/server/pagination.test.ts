@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsePagination } from './pagination';
+import { parsePagination, paginate } from './pagination';
 
 const u = (qs: string) => new URL(`http://x/api/logs${qs}`);
 
@@ -18,5 +18,22 @@ describe('parsePagination', () => {
 	});
 	it('rejects a negative offset', () => {
 		expect(() => parsePagination(u('?offset=-1'), 'en')).toThrow();
+	});
+});
+
+describe('paginate', () => {
+	it('reports hasMore and trims the over-fetched row when fetch returns limit + 1', async () => {
+		const { page, hasMore } = await paginate(u('?limit=2'), 'en', async (take) => {
+			expect(take).toBe(3);
+			return [1, 2, 3];
+		});
+		expect(hasMore).toBe(true);
+		expect(page).toEqual([1, 2]);
+	});
+
+	it('reports no hasMore and keeps every row when fetch returns <= limit', async () => {
+		const { page, hasMore } = await paginate(u('?limit=2'), 'en', async () => [1]);
+		expect(hasMore).toBe(false);
+		expect(page).toEqual([1]);
 	});
 });

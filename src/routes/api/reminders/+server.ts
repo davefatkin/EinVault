@@ -6,7 +6,7 @@ import { apiRoute } from '$lib/server/auth/api-request';
 import { throwCareError } from '$lib/server/care-errors';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import { toApiReminder } from '$lib/server/api-serializers';
-import { parsePagination } from '$lib/server/pagination';
+import { parsePagination, paginate } from '$lib/server/pagination';
 
 // GET /api/reminders?companionId=&status=due|all. Full-scope only. Without
 // companionId, lists across every companion the token user may access.
@@ -28,20 +28,23 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	if (statusParam !== null && statusParam !== 'due' && statusParam !== 'all')
 		error(400, { code: 'invalidStatus', message: t(locale, 'error.invalidStatus') });
 	const includeCompleted = statusParam === 'all';
-	const { limit, offset } = parsePagination(event.url, locale);
+	// Runs parsePagination once here purely to validate before the empty-scope
+	// short-circuit below (a bad limit/offset must still be a 400, not a silent
+	// empty 200); paginate() below re-parses it for the actual fetch.
+	parsePagination(event.url, locale);
 
 	if (ids.length === 0) return json({ reminders: [], hasMore: false });
 
 	const filters = [inArray(schema.reminders.companionId, ids)];
 	if (!includeCompleted) filters.push(isNull(schema.reminders.completedAt));
 
-	const rows = await db.query.reminders.findMany({
-		where: and(...filters),
-		orderBy: (r, { asc, desc }) => (includeCompleted ? [desc(r.dueAt)] : [asc(r.dueAt)]),
-		limit: limit + 1,
-		offset
-	});
-	const hasMore = rows.length > limit;
-	const page = hasMore ? rows.slice(0, limit) : rows;
+	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
+		db.query.reminders.findMany({
+			where: and(...filters),
+			orderBy: (r, { asc, desc }) => (includeCompleted ? [desc(r.dueAt)] : [asc(r.dueAt)]),
+			limit: take,
+			offset
+		})
+	);
 	return json({ reminders: page.map(toApiReminder), hasMore });
 });

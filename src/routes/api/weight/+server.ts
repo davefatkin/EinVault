@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
@@ -11,7 +11,7 @@ import { toApiWeightEntry } from '$lib/server/api-serializers';
 import { parseRecordTimestamp } from '$lib/server/validation';
 import { WeightRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
-import { parsePagination } from '$lib/server/pagination';
+import { paginate } from '$lib/server/pagination';
 
 // GET /api/weight?companionId=. Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
@@ -23,15 +23,14 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 
-	const { limit, offset } = parsePagination(event.url, locale);
-	const rows = await db.query.weightEntries.findMany({
-		where: and(eq(schema.weightEntries.companionId, companionId)),
-		orderBy: (w, { desc }) => [desc(w.recordedAt)],
-		limit: limit + 1,
-		offset
-	});
-	const hasMore = rows.length > limit;
-	const page = hasMore ? rows.slice(0, limit) : rows;
+	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
+		db.query.weightEntries.findMany({
+			where: eq(schema.weightEntries.companionId, companionId),
+			orderBy: (w, { desc }) => [desc(w.recordedAt)],
+			limit: take,
+			offset
+		})
+	);
 	return json({ entries: page.map(toApiWeightEntry), hasMore });
 });
 
@@ -40,22 +39,29 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 export const POST = apiRouteZod(
 	WeightRequest,
 	async ({ event, user, tokenId, locale, body }) => {
-		const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
-			body.companionId
-		]);
-		if (!resolved.ok) throwCareError(resolved.code, locale);
-
-		let recordedAt = new Date();
-		if (body.recordedAt !== undefined) {
-			const parsed = parseRecordTimestamp(body.recordedAt);
-			if (!parsed)
-				error(400, { code: 'invalidRecordedAt', message: t(locale, 'error.invalidRecordedAt') });
-			recordedAt = parsed;
-		}
-
 		return withIdempotency(
 			{ request: event.request, tokenId, endpoint: 'weight', body },
 			async () => {
+				// Auth + timestamp parse run INSIDE the idempotency callback so a keyed
+				// retry replays the cached response instead of re-checking shift state
+				// (which may have changed, e.g. the caretaker's shift ended since the
+				// original request).
+				const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
+					body.companionId
+				]);
+				if (!resolved.ok) throwCareError(resolved.code, locale);
+
+				let recordedAt = new Date();
+				if (body.recordedAt !== undefined) {
+					const parsed = parseRecordTimestamp(body.recordedAt);
+					if (!parsed)
+						error(400, {
+							code: 'invalidRecordedAt',
+							message: t(locale, 'error.invalidRecordedAt')
+						});
+					recordedAt = parsed;
+				}
+
 				const id = await createWeightEntry(
 					body.companionId,
 					{

@@ -27,3 +27,17 @@ export function parsePagination(url: URL, locale: Locale): { limit: number; offs
 	}
 	return { limit, offset };
 }
+
+// Runs a paginated fetch: parses limit/offset, over-fetches by one to detect a
+// further page, and slices back to the page size. `fetch(take, offset)` should
+// pass `take`/`offset` straight into the query's limit/offset.
+export async function paginate<T>(
+	url: URL,
+	locale: Locale,
+	fetch: (take: number, offset: number) => Promise<T[]>
+): Promise<{ page: T[]; hasMore: boolean }> {
+	const { limit, offset } = parsePagination(url, locale);
+	const rows = await fetch(limit + 1, offset);
+	const hasMore = rows.length > limit;
+	return { page: hasMore ? rows.slice(0, limit) : rows, hasMore };
+}

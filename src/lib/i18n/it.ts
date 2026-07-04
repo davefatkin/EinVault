@@ -965,7 +965,6 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLoggedAt':
 		'loggedAt deve essere una data-ora ISO 8601 valida entro l’intervallo consentito.',
 	'error.journalTooLong': 'La voce del diario è troppo lunga (max {max} caratteri).',
-	'error.invalidBody': 'Il testo e l’umore del diario devono essere testo.',
 	'error.invalidMood': 'L’umore deve essere uno tra: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Gli amministratori hanno sempre accesso all’API.',
 	'error.invalidOccurredAt':

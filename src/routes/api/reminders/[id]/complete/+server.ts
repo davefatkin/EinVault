@@ -5,7 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { apiRoute } from '$lib/server/auth/api-request';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions } from '$lib/server/companion-scope';
+import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
 import { completeReminder } from '$lib/server/reminders';
 
 // POST /api/reminders/{id}/complete: mark a reminder done. Recurring reminders
@@ -20,6 +20,13 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 	// Unknown id → 404. An id for a companion this token can't access ALSO reads
 	// as 404 below, so a token can't enumerate other users' reminder ids.
 	if (!reminder) error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
+
+	// Assignment-only gate first: an id on a companion this token isn't assigned to
+	// (or an archived companion) is a uniform 404 regardless of shift state, so an
+	// off-shift caretaker can't use the 403/404 split to probe reminder existence.
+	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
+	if (!allowed.includes(reminder.companionId))
+		error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
 
 	const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
 		reminder.companionId

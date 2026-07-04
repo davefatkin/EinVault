@@ -1,7 +1,13 @@
+import { test as base } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { test, expect } from '../lib/fixtures';
-import { SEED } from '../lib/seed';
+import { createSeededDbNoShift, SEED } from '../lib/seed';
+import { startAppServer, type AppServer } from '../lib/app-server';
+import { getFreePort } from '../lib/ports';
 
 const EIN = 'seed-comp-ein';
+const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
 // Creates a token via the settings UI and returns the raw value. Svelte sets
 // input values as DOM properties (not attributes), so read via evaluate after
@@ -854,3 +860,76 @@ test.describe('api tokens', () => {
 		expect(restored.status()).toBe(201);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// Off-shift caretaker reminder-complete: dedicated per-test server with no
+// active shift (the shared worker's asCaretaker fixture is always on-shift).
+// ---------------------------------------------------------------------------
+
+interface OffShiftWorld {
+	server: AppServer;
+}
+
+const offShiftTest = base.extend<{ world: OffShiftWorld }>({
+	// eslint-disable-next-line no-empty-pattern
+	world: async ({}, use, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`api-tokens-offshift-${testInfo.workerIndex}-${testInfo.testId}`
+		);
+		const appPort = await getFreePort();
+		const dbPath = createSeededDbNoShift(dir);
+		let server: AppServer;
+		try {
+			server = await startAppServer({ dbPath, env: { PORT: String(appPort) } });
+		} catch (err) {
+			fs.rmSync(dir, { recursive: true, force: true });
+			throw err;
+		}
+		await use({ server });
+		await server.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+offShiftTest(
+	'off-shift caretaker: completing a reminder on an unassigned companion is 404, not 403',
+	async ({ world, browser }) => {
+		const ctx = await browser.newContext({ baseURL: world.server.baseURL });
+		const page = await ctx.newPage();
+		await page.goto('/auth/login');
+		await page.getByLabel('Username').fill(SEED.caretaker.username);
+		await page.getByLabel('Password').fill(SEED.password);
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+
+		const raw = await createToken(page, 'Offshift complete bot', '/care/settings');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// The caretaker (faye) is off-shift on this server and is assigned only to
+		// Ein, never to Edward. seed-reminder-4 belongs to Edward and isn't
+		// completed, so this exercises the assignment-only pre-check: it must read
+		// as 404 (not the 403 noActiveShift an off-shift caretaker would otherwise
+		// get for ANY existing reminder id — which would let a token distinguish
+		// "exists" from "unknown" without ever being assigned to the companion).
+		const unassigned = await page.request.post(
+			world.server.baseURL + '/api/reminders/seed-reminder-4/complete',
+			{ headers }
+		);
+		expect(unassigned.status()).toBe(404);
+		expect((await unassigned.json()).code).toBe('notFound');
+
+		// Defense-in-depth check: a reminder on the companion the caretaker IS
+		// assigned to (Ein) still passes the assignment pre-check and reaches the
+		// real 403 noActiveShift — the fix must not over-mask a genuine shift error.
+		const assigned = await page.request.post(
+			world.server.baseURL + '/api/reminders/seed-reminder-1/complete',
+			{ headers }
+		);
+		expect(assigned.status()).toBe(403);
+		expect((await assigned.json()).code).toBe('noActiveShift');
+
+		await ctx.close();
+	}
+);

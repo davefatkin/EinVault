@@ -42,6 +42,11 @@ export function buildOpenApiDocument() {
 		content: { 'application/json': { schema: ApiError } }
 	});
 
+	const paginationQuery = {
+		limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+		offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+	};
+
 	registry.registerPath({
 		method: 'post',
 		path: '/api/logs',
@@ -60,7 +65,7 @@ export function buildOpenApiDocument() {
 			},
 			400: errorResponse('Invalid body (invalidType, noCompanions, noteTooLong, …)'),
 			401: errorResponse('Missing or invalid token'),
-			403: errorResponse('noActiveShift / notAssigned / writeScopeReadOnly'),
+			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('API disabled'),
 			429: errorResponse('Rate limited')
 		}
@@ -78,8 +83,7 @@ export function buildOpenApiDocument() {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
 				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' }),
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {
@@ -238,7 +242,7 @@ export function buildOpenApiDocument() {
 			},
 			400: errorResponse('invalidType / titleRequired / noteTooLong / invalidOccurredAt'),
 			401: errorResponse('Missing or invalid token'),
-			403: errorResponse('notAssigned / noActiveShift / writeScopeReadOnly'),
+			403: errorResponse('notAssigned / noActiveShift'),
 			404: errorResponse('API disabled'),
 			409: errorResponse('idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
@@ -257,8 +261,7 @@ export function buildOpenApiDocument() {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
 				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' }),
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {
@@ -289,7 +292,7 @@ export function buildOpenApiDocument() {
 			},
 			400: errorResponse('invalidWeight / invalidUnit / noteTooLong / invalidRecordedAt'),
 			401: errorResponse('Missing or invalid token'),
-			403: errorResponse('notAssigned / noActiveShift / writeScopeReadOnly'),
+			403: errorResponse('notAssigned / noActiveShift'),
 			404: errorResponse('API disabled'),
 			409: errorResponse('idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
@@ -307,8 +310,7 @@ export function buildOpenApiDocument() {
 		request: {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {
@@ -339,8 +341,7 @@ export function buildOpenApiDocument() {
 					.enum(['due', 'all'])
 					.optional()
 					.openapi({ description: 'Defaults to due (not yet completed).' }),
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {
@@ -389,8 +390,7 @@ export function buildOpenApiDocument() {
 			query: z.object({
 				from: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift end.' }),
 				to: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift start.' }),
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {
@@ -413,8 +413,7 @@ export function buildOpenApiDocument() {
 		security: secured,
 		request: {
 			query: z.object({
-				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
-				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+				...paginationQuery
 			})
 		},
 		responses: {

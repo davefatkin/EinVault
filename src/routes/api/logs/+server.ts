@@ -11,7 +11,7 @@ import { toApiDailyEvent } from '$lib/server/api-serializers';
 import { isValidDate, parseCompanionTargets, parseLoggedAt } from '$lib/server/validation';
 import { LogRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
-import { parsePagination } from '$lib/server/pagination';
+import { paginate } from '$lib/server/pagination';
 
 // Read-back: GET /api/logs?companionId=&date=YYYY-MM-DD (date optional). Returns
 // the token user's readable daily events for that companion, newest first.
@@ -37,15 +37,14 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 		const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
 		filters.push(gte(schema.dailyEvents.loggedAt, start), lt(schema.dailyEvents.loggedAt, end));
 	}
-	const { limit, offset } = parsePagination(event.url, locale);
-	const rows = await db.query.dailyEvents.findMany({
-		where: and(...filters),
-		orderBy: (d, { desc }) => [desc(d.loggedAt)],
-		limit: limit + 1,
-		offset
-	});
-	const hasMore = rows.length > limit;
-	const page = hasMore ? rows.slice(0, limit) : rows;
+	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
+		db.query.dailyEvents.findMany({
+			where: and(...filters),
+			orderBy: (d, { desc }) => [desc(d.loggedAt)],
+			limit: take,
+			offset
+		})
+	);
 	return json({ events: page.map(toApiDailyEvent), hasMore });
 });
 

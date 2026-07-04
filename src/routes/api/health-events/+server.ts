@@ -11,7 +11,7 @@ import { toApiHealthEvent } from '$lib/server/api-serializers';
 import { isValidDate, parseRecordTimestamp } from '$lib/server/validation';
 import { HealthRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
-import { parsePagination } from '$lib/server/pagination';
+import { paginate } from '$lib/server/pagination';
 
 // GET /api/health-events?companionId=&date=YYYY-MM-DD (date optional). Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
@@ -35,15 +35,14 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			lt(schema.healthEvents.occurredAt, end)
 		);
 	}
-	const { limit, offset } = parsePagination(event.url, locale);
-	const rows = await db.query.healthEvents.findMany({
-		where: and(...filters),
-		orderBy: (h, { desc }) => [desc(h.occurredAt)],
-		limit: limit + 1,
-		offset
-	});
-	const hasMore = rows.length > limit;
-	const page = hasMore ? rows.slice(0, limit) : rows;
+	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
+		db.query.healthEvents.findMany({
+			where: and(...filters),
+			orderBy: (h, { desc }) => [desc(h.occurredAt)],
+			limit: take,
+			offset
+		})
+	);
 	return json({ events: page.map(toApiHealthEvent), hasMore });
 });
 
@@ -52,22 +51,29 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 export const POST = apiRouteZod(
 	HealthRequest,
 	async ({ event, user, tokenId, locale, body }) => {
-		const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
-			body.companionId
-		]);
-		if (!resolved.ok) throwCareError(resolved.code, locale);
-
-		let occurredAt = new Date();
-		if (body.occurredAt !== undefined) {
-			const parsed = parseRecordTimestamp(body.occurredAt);
-			if (!parsed)
-				error(400, { code: 'invalidOccurredAt', message: t(locale, 'error.invalidOccurredAt') });
-			occurredAt = parsed;
-		}
-
 		return withIdempotency(
 			{ request: event.request, tokenId, endpoint: 'health', body },
 			async () => {
+				// Auth + timestamp parse run INSIDE the idempotency callback so a keyed
+				// retry replays the cached response instead of re-checking shift state
+				// (which may have changed, e.g. the caretaker's shift ended since the
+				// original request).
+				const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
+					body.companionId
+				]);
+				if (!resolved.ok) throwCareError(resolved.code, locale);
+
+				let occurredAt = new Date();
+				if (body.occurredAt !== undefined) {
+					const parsed = parseRecordTimestamp(body.occurredAt);
+					if (!parsed)
+						error(400, {
+							code: 'invalidOccurredAt',
+							message: t(locale, 'error.invalidOccurredAt')
+						});
+					occurredAt = parsed;
+				}
+
 				const id = await createHealthEvent(
 					body.companionId,
 					{
