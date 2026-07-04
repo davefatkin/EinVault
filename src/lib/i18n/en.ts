@@ -943,8 +943,11 @@ const messages = {
 	'error.apiAccessRevoked': 'An administrator has revoked your API access.',
 	'error.tokenLimitReached': 'Token limit reached (max {max}). Revoke one first.',
 	'error.noteTooLong': 'Note is too long (max {max} characters).',
+	'error.invalidDuration': 'Duration must be a whole number of minutes, at most 480.',
+	'error.invalidLoggedAt': 'loggedAt must be a valid ISO 8601 date-time within the allowed range.',
 	'error.journalTooLong': 'Journal entry is too long (max {max} characters).',
 	'error.invalidBody': 'Journal body and mood must be text.',
+	'error.invalidMood': 'Mood must be one of: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Administrators always have API access.',
 
 	// Page titles (used in <title> tags)

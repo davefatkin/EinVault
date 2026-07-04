@@ -245,6 +245,13 @@ test.describe('api tokens', () => {
 		expect(noteRes.status()).toBe(400);
 		expect((await noteRes.json()).code).toBe('noteTooLong');
 
+		const durationRes = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', durationMinutes: 600 }
+		});
+		expect(durationRes.status()).toBe(400);
+		expect((await durationRes.json()).code).toBe('invalidDuration');
+
 		const longBody = 'y'.repeat(20001);
 		const journalRes = await asMember.request.post(app.server.baseURL + '/api/journal', {
 			headers,
@@ -252,6 +259,48 @@ test.describe('api tokens', () => {
 		});
 		expect(journalRes.status()).toBe(400);
 		expect((await journalRes.json()).code).toBe('journalTooLong');
+
+		// A present-but-wrong-typed mood is a client bug: still rejected with a stable code.
+		const badMood = await asMember.request.post(app.server.baseURL + '/api/journal', {
+			headers,
+			data: { companionId: EIN, mood: 42 }
+		});
+		expect(badMood.status()).toBe(400);
+		expect((await badMood.json()).code).toBe('invalidMood');
+
+		// A well-typed but unrecognized mood value is also rejected with the same code.
+		const unrecognizedMood = await asMember.request.post(app.server.baseURL + '/api/journal', {
+			headers,
+			data: { companionId: EIN, mood: 'excited' }
+		});
+		expect(unrecognizedMood.status()).toBe(400);
+		expect((await unrecognizedMood.json()).code).toBe('invalidMood');
+	});
+
+	test('loggedAt accepts full ISO 8601 and rejects garbage with a stable code', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Timestamp bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Offset-form ISO 8601 (not the bare `Z`-suffixed form) is accepted —
+		// the schema only checks it's a string; parseLoggedAt is the real judge.
+		const offsetForm = new Date(Date.now() - 3_600_000).toISOString().replace('Z', '+00:00');
+		const okRes = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', loggedAt: offsetForm }
+		});
+		expect(okRes.status()).toBe(201);
+
+		// Garbage is rejected with the stable invalidLoggedAt code, not a 200
+		// silently logged at "now" and not the generic invalidBody code.
+		const badTs = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: EIN, type: 'walk', loggedAt: 'not-a-date' }
+		});
+		expect(badTs.status()).toBe(400);
+		expect((await badTs.json()).code).toBe('invalidLoggedAt');
 	});
 
 	test('caretaker token may write today’s journal but not a past date', async ({

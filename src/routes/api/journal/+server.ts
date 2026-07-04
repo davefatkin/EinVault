@@ -3,7 +3,8 @@ import { and, eq } from 'drizzle-orm';
 import { t } from '$lib/i18n';
 import { localDateISO } from '$lib/date';
 import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteJson } from '$lib/server/auth/api-request';
+import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
+import { JournalRequest } from '$lib/server/openapi/schemas';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
 import { throwCareError } from '$lib/server/care-errors';
@@ -39,55 +40,53 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	return json({ entry: row ? toApiJournalEntry(row) : null });
 });
 
-type JournalBody = { companionId: string; date?: unknown; body?: unknown; mood?: unknown };
-const isJournalBody = (b: unknown): b is JournalBody =>
-	typeof b === 'object' && b !== null && typeof (b as JournalBody).companionId === 'string';
+// Bearer-token endpoint: upsert a journal entry. Body: { companionId, date?
+// (YYYY-MM-DD, default today), body?, mood? }. Journal entries are unique per
+// (companion, date); this REPLACES the day's body/mood, matching the web
+// editor's upsert. Absent body/mood keys preserve the stored value (partial
+// update), so a mood-only POST can't wipe the day's text and vice versa.
+export const POST = apiRouteZod(
+	JournalRequest,
+	async ({ event, user, tokenId, locale, body }) => {
+		const date = body.date ?? localDateISO();
+		if (!isValidDate(date))
+			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
 
-// Bearer-token endpoint: write a journal entry. Body: { companionId, date?
-// (YYYY-MM-DD, default today), body?, mood? }. NOTE: journal entries are
-// unique per (companion, date); this REPLACES the day's body/mood, matching
-// the web editor's upsert semantics. Devices appending discrete events should
-// use POST /api/logs instead.
-export const POST = apiRouteJson(isJournalBody, async ({ event, user, tokenId, locale, body }) => {
-	const date = typeof body.date === 'string' ? body.date : localDateISO();
-	if (!isValidDate(date))
-		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
-
-	// Caretakers may only write today's journal via the API, matching the web UI
-	// (their editor is locked to the current day while on shift).
-	if (user.role === 'caretaker' && date !== localDateISO()) {
-		error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
-	}
-
-	// A present-but-non-string body or mood is a client bug; reject it rather
-	// than silently coercing to '' / null, which would wipe the stored value.
-	if ('body' in body && typeof body.body !== 'string') {
-		error(400, { code: 'invalidBody', message: t(locale, 'error.invalidBody') });
-	}
-	if ('mood' in body && typeof body.mood !== 'string') {
-		error(400, { code: 'invalidBody', message: t(locale, 'error.invalidBody') });
-	}
-
-	// Absent body/mood keys preserve the stored value (partial update), so a
-	// mood-only POST can't wipe the day's text and vice versa.
-	const text = 'body' in body ? (body.body as string) : undefined;
-	if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
-		error(400, {
-			code: 'journalTooLong',
-			message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
-		});
-	}
-	const mood = 'mood' in body ? parseMood(body.mood as string) : undefined;
-
-	return withIdempotency(
-		{ request: event.request, tokenId, endpoint: 'journal', body },
-		async () => {
-			const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
-				body.companionId
-			]);
-			if (!resolved.ok) throwCareError(resolved.code, locale);
-			const id = await upsertJournalEntry(body.companionId, date, text, mood, user.id);
-			return { status: 201, data: { id, companionId: body.companionId, date } };
+		// Caretakers may only write today's journal via the API, matching the web UI.
+		if (user.role === 'caretaker' && date !== localDateISO()) {
+			error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
 		}
-	);
-});
+
+		// Absent keys preserve the stored value (partial update). Zod has already
+		// guaranteed that a PRESENT body is the right type and a PRESENT mood is a
+		// member of the enum, so parseMood below can no longer observe an invalid value.
+		const text = body.body;
+		if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
+			error(400, {
+				code: 'journalTooLong',
+				message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
+			});
+		}
+		const mood = body.mood !== undefined ? parseMood(body.mood) : undefined;
+
+		return withIdempotency(
+			{ request: event.request, tokenId, endpoint: 'journal', body },
+			async () => {
+				const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
+					body.companionId
+				]);
+				if (!resolved.ok) throwCareError(resolved.code, locale);
+				const id = await upsertJournalEntry(body.companionId, date, text, mood, user.id);
+				return { status: 201, data: { id, companionId: body.companionId, date } };
+			}
+		);
+	},
+	(issue, locale) => {
+		// A wrong-type or unrecognized mood is a client bug: give it a stable,
+		// field-specific code instead of the generic invalidBody.
+		if (issue.path[0] === 'mood') {
+			return { code: 'invalidMood', message: t(locale, 'error.invalidMood') };
+		}
+		return undefined; // body/companionId shape errors keep the documented invalidBody
+	}
+);

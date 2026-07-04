@@ -480,6 +480,8 @@ Quick logs are the customizable one-tap buttons you set up under Settings → Qu
 
 **Reliability.** Write endpoints accept an optional `Idempotency-Key` header. A retried request that carries the same key and body replays the original response instead of writing a duplicate (a device on a flaky network can safely retry); reusing a key with a different body returns `409`. Error responses are JSON `{ code, message }` — branch on the stable `code` (e.g. `noActiveShift`, `notAssigned`, `noValidTargets`, `noteTooLong`, `journalTooLong`), not the localized `message`. Free text is bounded: notes cap at 5000 characters and journal bodies at 20000.
 
+**Docs.** `/api/docs` is a self-hosted, zero-dependency reference for every endpoint above — request/response shapes, status codes, and a per-endpoint Try-It panel that fires real requests with a token you paste in. It's generated from the same schemas the server validates against, so it can't drift from what an endpoint actually accepts. The raw document is `/api/openapi.json` (OpenAPI 3.1), for anyone who wants to feed it into their own client or codegen; that endpoint is gated by `API_TOKENS_ENABLED` like the rest of the API, and `/api/docs` shows a load error when it's off.
+
 ---
 
 ## Adding a new locale

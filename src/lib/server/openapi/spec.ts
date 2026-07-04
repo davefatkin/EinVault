@@ -1,0 +1,197 @@
+import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
+import { z } from './z';
+import {
+	LogRequest,
+	LogResponse,
+	LogListResponse,
+	ApiError,
+	JournalRequest,
+	JournalReadResponse,
+	JournalWriteResponse,
+	QuickLogList,
+	ExecuteResponse,
+	CompanionList
+} from './schemas';
+
+// Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
+// registered here (central assembly) rather than as side effects in each
+// +server.ts, since SvelteKit only imports a route module when it is hit.
+export function buildOpenApiDocument() {
+	const registry = new OpenAPIRegistry();
+
+	registry.registerComponent('securitySchemes', 'bearerAuth', {
+		type: 'http',
+		scheme: 'bearer',
+		description: 'An API token from Settings → API tokens.'
+	});
+	const secured = [{ bearerAuth: [] as string[] }];
+
+	const errorResponse = (description: string) => ({
+		description,
+		content: { 'application/json': { schema: ApiError } }
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/logs',
+		tags: ['logs'],
+		summary: 'Log a daily event',
+		description:
+			'Creates one daily event per target companion. The token acts as its user, so caretaker shift/assignment rules still apply. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			body: { content: { 'application/json': { schema: LogRequest } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: LogResponse } }
+			},
+			400: errorResponse('Invalid body (invalidType, noCompanions, noteTooLong, …)'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift / notAssigned / writeScopeReadOnly'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/logs',
+		tags: ['logs'],
+		summary: 'Read back logged daily events',
+		description: 'Newest first, up to 200. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().openapi({ description: 'Required target companion.' }),
+				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' })
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: LogListResponse } } },
+			400: errorResponse('noCompanions / invalidDate'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/journal',
+		tags: ['journal'],
+		summary: "Read back a companion's journal entry for a day",
+		description: 'Returns the entry or { entry: null }. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().openapi({ description: 'Required target companion.' }),
+				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; defaults to today.' })
+			})
+		},
+		responses: {
+			200: {
+				description: 'OK',
+				content: { 'application/json': { schema: JournalReadResponse } }
+			},
+			400: errorResponse('noCompanions / invalidDate'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/journal',
+		tags: ['journal'],
+		summary: 'Upsert a journal entry',
+		description:
+			'Replaces the day’s body/mood (partial: absent keys are preserved). Caretakers may only write today. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			body: { content: { 'application/json': { schema: JournalRequest } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: JournalWriteResponse } }
+			},
+			400: errorResponse('invalidDate / journalTooLong / invalidBody / invalidMood'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('forbidden (caretaker non-today) / notAssigned'),
+			404: errorResponse('API disabled'),
+			409: errorResponse('idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/quick-logs',
+		tags: ['quick-logs'],
+		summary: "List the token user's enabled quick logs",
+		description: 'Discovery for ids used by POST /api/quick-logs/{id}/execute.',
+		security: secured,
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: QuickLogList } } },
+			401: errorResponse('Missing or invalid token'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/quick-logs/{id}/execute',
+		tags: ['quick-logs'],
+		summary: 'Run a configured quick log',
+		description:
+			'Body optional: { companionIds?, loggedAt? }. With no body, the remembered/assigned target set is used. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			params: z.object({ id: z.string() })
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: ExecuteResponse } }
+			},
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift / notAssigned'),
+			404: errorResponse('Not found (also returned when the id is not owned by the token user)'),
+			409: errorResponse('idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/companions',
+		tags: ['companions'],
+		summary: 'List companions the token user may target',
+		description:
+			'Full-scope tokens get the full companion shape; write-scope tokens get a minimal projection without PII.',
+		security: secured,
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: CompanionList } } },
+			401: errorResponse('Missing or invalid token'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	const generator = new OpenApiGeneratorV31(registry.definitions);
+	return generator.generateDocument({
+		openapi: '3.1.0',
+		info: {
+			title: 'EinVault API',
+			version: '0.1.0',
+			description: 'Headless logging API for smart buttons, scripts, and devices.'
+		},
+		servers: [{ url: '/' }]
+	});
+}

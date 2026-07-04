@@ -51,6 +51,7 @@
 		"vitest": "^4.1.8"
 	},
 	"dependencies": {
+		"@asteasolutions/zod-to-openapi": "^8.5.0",
 		"@fontsource-variable/bricolage-grotesque": "^5.2.10",
 		"@fontsource-variable/geist-mono": "5.2.8",
 		"@fontsource-variable/sora": "^5.2.8",
@@ -73,7 +74,8 @@
 		"pdfjs-dist": "^6.0.227",
 		"qrcode": "^1.5.4",
 		"sharp": "^0.35.1",
-		"tailwind-merge": "^3.5.0"
+		"tailwind-merge": "^3.5.0",
+		"zod": "^4.4.3"
 	},
 	"type": "module",
 	"overrides": {

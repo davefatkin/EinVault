@@ -57,4 +57,8 @@ test('API_TOKENS_ENABLED=false hides the settings card and 404s the endpoints', 
 		headers: { Authorization: 'Bearer evk_whatever' }
 	});
 	expect(list.status()).toBe(404);
+
+	const spec = await page.request.get(server.baseURL + '/api/openapi.json');
+	expect(spec.status()).toBe(404);
+	expect((await spec.json()).code).toBe('notFound');
 });

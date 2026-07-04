@@ -960,8 +960,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.apiAccessRevoked': 'Un administrador ha revocado tu acceso a la API.',
 	'error.tokenLimitReached': 'Límite de tokens alcanzado (máx. {max}). Revoca uno primero.',
 	'error.noteTooLong': 'La nota es demasiado larga (máx. {max} caracteres).',
+	'error.invalidDuration': 'La duración debe ser un número entero de minutos, como máximo 480.',
+	'error.invalidLoggedAt':
+		'loggedAt debe ser una fecha y hora ISO 8601 válida dentro del rango permitido.',
 	'error.journalTooLong': 'La entrada del diario es demasiado larga (máx. {max} caracteres).',
 	'error.invalidBody': 'El texto y el estado de ánimo del diario deben ser texto.',
+	'error.invalidMood': 'El estado de ánimo debe ser uno de: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Los administradores siempre tienen acceso a la API.',
 
 	// Page titles

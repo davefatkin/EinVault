@@ -2,21 +2,14 @@ import { error, json } from '@sveltejs/kit';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteJson } from '$lib/server/auth/api-request';
+import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { throwCareError } from '$lib/server/care-errors';
 import { logDailyEvent } from '$lib/server/daily-events';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import { toApiDailyEvent } from '$lib/server/api-serializers';
-import {
-	isJsonObject,
-	isValidDate,
-	parseCompanionTargets,
-	parseDailyEventType,
-	parseDurationMinutes,
-	parseLoggedAt,
-	exceedsLen
-} from '$lib/server/validation';
+import { isValidDate, parseCompanionTargets, parseLoggedAt } from '$lib/server/validation';
+import { LogRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
 
 // Read-back: GET /api/logs?companionId=&date=YYYY-MM-DD (date optional). Returns
@@ -52,33 +45,55 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 });
 
 // Bearer-token endpoint (never reads locals.user): create one or more daily
-// events headlessly. Body: { companionIds|companionId, type, notes?,
-// durationMinutes?, loggedAt? (ISO) }. The token acts as its user, so caretaker
-// tokens keep the shift + assignment rules.
-export const POST = apiRouteJson(isJsonObject, async ({ event, user, tokenId, locale, body }) => {
-	const type = parseDailyEventType(String(body.type ?? ''));
-	if (!type) error(400, { code: 'invalidType', message: t(locale, 'error.typeRequired') });
+// events headlessly. The LogRequest zod schema validates shape, the type enum,
+// and the note-length cap, and drives the OpenAPI spec. The token acts as its
+// user, so caretaker tokens keep the shift + assignment rules.
+export const POST = apiRouteZod(
+	LogRequest,
+	async ({ event, user, tokenId, locale, body }) => {
+		const companionIds = parseCompanionTargets(body);
+		if (companionIds.length === 0) {
+			error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+		}
 
-	const companionIds = parseCompanionTargets(body);
-	if (companionIds.length === 0) {
-		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+		let loggedAt = new Date();
+		if (body.loggedAt !== undefined) {
+			const parsed = parseLoggedAt(body.loggedAt);
+			if (!parsed) {
+				error(400, { code: 'invalidLoggedAt', message: t(locale, 'error.invalidLoggedAt') });
+			}
+			loggedAt = parsed;
+		}
+
+		return withIdempotency(
+			{ request: event.request, tokenId, endpoint: 'logs', body },
+			async () => {
+				const result = await logDailyEvent({ id: user.id, role: user.role }, companionIds, {
+					type: body.type,
+					notes: body.notes?.trim() || null,
+					durationMinutes: body.durationMinutes ?? null,
+					loggedAt
+				});
+				if (!result.ok) throwCareError(result.code, locale);
+				return { status: 201, data: { ids: result.ids, eventGroupId: result.eventGroupId } };
+			}
+		);
+	},
+	(issue, locale) => {
+		// Preserve the stable per-field codes devices branch on, instead of the
+		// generic invalidBody zod would otherwise produce.
+		if (issue.path[0] === 'type') {
+			return { code: 'invalidType', message: t(locale, 'error.typeRequired') };
+		}
+		if (issue.path[0] === 'notes' && issue.code === 'too_big') {
+			return {
+				code: 'noteTooLong',
+				message: t(locale, 'error.noteTooLong', { max: MAX_NOTE_LEN })
+			};
+		}
+		if (issue.path[0] === 'durationMinutes') {
+			return { code: 'invalidDuration', message: t(locale, 'error.invalidDuration') };
+		}
+		return undefined;
 	}
-
-	if (exceedsLen(body.notes, MAX_NOTE_LEN)) {
-		error(400, {
-			code: 'noteTooLong',
-			message: t(locale, 'error.noteTooLong', { max: MAX_NOTE_LEN })
-		});
-	}
-
-	return withIdempotency({ request: event.request, tokenId, endpoint: 'logs', body }, async () => {
-		const result = await logDailyEvent({ id: user.id, role: user.role }, companionIds, {
-			type,
-			notes: typeof body.notes === 'string' ? body.notes.trim() || null : null,
-			durationMinutes: parseDurationMinutes(body.durationMinutes),
-			loggedAt: parseLoggedAt(body.loggedAt) ?? new Date()
-		});
-		if (!result.ok) throwCareError(result.code, locale);
-		return { status: 201, data: { ids: result.ids, eventGroupId: result.eventGroupId } };
-	});
-});
+);

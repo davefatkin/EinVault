@@ -1,4 +1,5 @@
 import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
+import type { z } from 'zod';
 import { t, type Locale } from '$lib/i18n';
 import { API_TOKENS_ENABLED } from '$lib/server/env';
 import {
@@ -78,5 +79,40 @@ export function apiRouteJson<B>(
 			error(400, { code: 'invalidBody', message: t(ctx.locale, 'error.invalidRequestBody') });
 		}
 		return handler({ ...ctx, body: raw });
+	});
+}
+
+// apiRoute + a zod schema: parses and validates the JSON body before the handler
+// runs. The same schema feeds the OpenAPI spec (see $server/openapi), so
+// validation and documentation share one source of truth.
+//
+// Zod on its own would collapse every failure into one generic code. The
+// optional `codeFor` maps a failing issue back to a domain error code
+// (noteTooLong, invalidType, …) so the stable, machine-parseable contract that
+// devices branch on is preserved. Unmapped issues fall back to `invalidBody`.
+export function apiRouteZod<S extends z.ZodType>(
+	schema: S,
+	handler: (ctx: ApiContext & { body: z.output<S> }) => Promise<Response>,
+	codeFor?: (
+		issue: z.core.$ZodIssue,
+		locale: Locale
+	) => { code: string; message: string } | undefined
+): RequestHandler {
+	return apiRoute(async (ctx) => {
+		const raw = await ctx.event.request.json().catch(() => null);
+		const parsed = schema.safeParse(raw);
+		if (!parsed.success) {
+			const issue = parsed.error.issues[0];
+			const mapped = issue && codeFor?.(issue, ctx.locale);
+			const where = issue?.path.join('.') || 'body';
+			error(
+				400,
+				mapped ?? {
+					code: 'invalidBody',
+					message: `${where}: ${issue?.message ?? t(ctx.locale, 'error.invalidRequestBody')}`
+				}
+			);
+		}
+		return handler({ ...ctx, body: parsed.data });
 	});
 }
