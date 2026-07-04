@@ -26,7 +26,12 @@ export const LogRequest = z
 		})
 	})
 	.strict()
-	.openapi('LogRequest');
+	.openapi('LogRequest', {
+		// Concrete example so the docs Try-It seeds a body with a target companion:
+		// companionId/companionIds are both optional in the schema (one or the
+		// other), so the generic example builder would otherwise omit both.
+		example: { companionId: 'companion-id-here', type: 'walk', durationMinutes: 30 }
+	});
 
 export type LogRequestBody = z.infer<typeof LogRequest>;
 

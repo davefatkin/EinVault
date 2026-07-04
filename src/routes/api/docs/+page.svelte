@@ -19,11 +19,19 @@
 		description?: string;
 		example?: unknown;
 	};
+	type Param = {
+		name: string;
+		in: string;
+		required?: boolean;
+		description?: string;
+		schema?: Schema;
+	};
 	type Operation = {
 		tags?: string[];
 		summary?: string;
 		description?: string;
 		security?: unknown[];
+		parameters?: Param[];
 		requestBody?: { required?: boolean; content?: Record<string, { schema?: Schema }> };
 		responses?: Record<
 			string,
@@ -53,6 +61,8 @@
 	let token = $state('');
 	// Per-operation Try-It state, keyed by "METHOD path".
 	let tryBody = $state<Record<string, string>>({});
+	// Per-operation path/query param inputs, keyed by "METHOD path" then param name.
+	let tryParams = $state<Record<string, Record<string, string>>>({});
 	let tryResult = $state<Record<string, { status: number; body: string } | { error: string }>>({});
 	let sending = $state<Record<string, boolean>>({});
 
@@ -145,7 +155,27 @@
 	function bodySchema(op: Operation): Schema | undefined {
 		return op.requestBody?.content?.['application/json']?.schema;
 	}
-	function initBody(o: Op) {
+	// Path + query params a caller supplies; each gets a Try-It input.
+	function tryableParams(op: Operation): Param[] {
+		return (op.parameters ?? []).filter((p) => p.in === 'path' || p.in === 'query');
+	}
+	function paramPlaceholder(p: Param): string {
+		return p.description ?? (p.schema ? typeLabel(p.schema) : p.name);
+	}
+	// Substitute {path} params and append non-empty query params to the URL.
+	function buildUrl(o: Op): string {
+		let url = o.path;
+		const query: string[] = [];
+		for (const p of o.op.parameters ?? []) {
+			const v = (tryParams[o.key]?.[p.name] ?? '').trim();
+			if (p.in === 'path') url = url.replace(`{${p.name}}`, encodeURIComponent(v));
+			else if (p.in === 'query' && v !== '')
+				query.push(`${encodeURIComponent(p.name)}=${encodeURIComponent(v)}`);
+		}
+		return query.length ? `${url}${url.includes('?') ? '&' : '?'}${query.join('&')}` : url;
+	}
+	function initTry(o: Op) {
+		if (tryParams[o.key] === undefined) tryParams[o.key] = {};
 		if (tryBody[o.key] !== undefined) return;
 		const b = bodySchema(o.op);
 		tryBody[o.key] = b ? JSON.stringify(exampleValue(b), null, 2) : '';
@@ -156,7 +186,7 @@
 		delete tryResult[o.key];
 		try {
 			const hasBody = o.method !== 'get' && (tryBody[o.key] ?? '').trim().length > 0;
-			const res = await fetch(o.path, {
+			const res = await fetch(buildUrl(o), {
 				method: o.method.toUpperCase(),
 				headers: {
 					...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -215,6 +245,39 @@
 	{:else}
 		<code class="font-mono text-sm text-muted-foreground">{typeLabel(s)}</code>
 	{/if}
+{/snippet}
+
+{#snippet paramTable(params: Param[])}
+	<table class="w-full text-sm">
+		<thead>
+			<tr class="text-left text-muted-foreground">
+				<th class="py-1 pr-4 font-medium">Param</th>
+				<th class="py-1 pr-4 font-medium">In</th>
+				<th class="py-1 pr-4 font-medium">Type</th>
+				<th class="py-1 font-medium">Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each params as p (p.in + ':' + p.name)}
+				<tr class="border-t border-border align-top">
+					<td class="py-1.5 pr-4 font-mono">
+						{p.name}{#if p.required}<span class="text-destructive" title="required">*</span>{/if}
+					</td>
+					<td class="py-1.5 pr-4 font-mono text-muted-foreground">{p.in}</td>
+					<td class="py-1.5 pr-4 font-mono text-muted-foreground"
+						>{p.schema ? typeLabel(p.schema) : 'string'}</td
+					>
+					<td class="py-1.5 text-muted-foreground">
+						{#if p.description}<div>{p.description}</div>{/if}
+						{#if p.schema}{#each constraints(p.schema) as c (c)}<span
+									class="mr-1 inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
+									>{c}</span
+								>{/each}{/if}
+					</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 {/snippet}
 
 <div class="mx-auto max-w-4xl px-4 py-8 text-foreground">
@@ -282,6 +345,17 @@
 									{o.op.description}
 								</p>{/if}
 
+							{#if o.op.parameters?.length}
+								<div>
+									<h3
+										class="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+									>
+										Parameters
+									</h3>
+									{@render paramTable(o.op.parameters)}
+								</div>
+							{/if}
+
 							{#if reqSchema}
 								<div>
 									<h3
@@ -322,11 +396,29 @@
 							{/if}
 
 							<!-- Try It: fires a real request from the browser using the token above. -->
-							<details class="rounded border border-border" ontoggle={() => initBody(o)}>
+							<details class="rounded border border-border" ontoggle={() => initTry(o)}>
 								<summary class="cursor-pointer px-3 py-2 text-sm font-medium select-none"
 									>Try it</summary
 								>
 								<div class="space-y-3 border-t border-border p-3">
+									{#if tryParams[o.key]}
+										{#each tryableParams(o.op) as p (p.in + ':' + p.name)}
+											<label class="block">
+												<span class="mb-1 block font-mono text-xs text-muted-foreground">
+													{p.name}{#if p.required}<span class="text-destructive">*</span>{/if}
+													<span class="text-muted-foreground/70">({p.in})</span>
+												</span>
+												<input
+													type="text"
+													bind:value={tryParams[o.key][p.name]}
+													placeholder={paramPlaceholder(p)}
+													autocomplete="off"
+													spellcheck="false"
+													class="w-full rounded border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:ring-2 focus:ring-primary"
+												/>
+											</label>
+										{/each}
+									{/if}
 									{#if o.method !== 'get'}
 										<textarea
 											bind:value={tryBody[o.key]}

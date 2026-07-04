@@ -432,7 +432,8 @@ export function buildOpenApiDocument() {
 		info: {
 			title: 'EinVault API',
 			version: '0.1.0',
-			description: 'Headless logging API for smart buttons, scripts, and devices.'
+			description:
+				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, and read companions, shifts, and the user roster.'
 		},
 		servers: [{ url: '/' }]
 	});
