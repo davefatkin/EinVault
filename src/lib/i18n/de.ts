@@ -971,6 +971,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidBody': 'Tagebuchtext und Stimmung müssen Text sein.',
 	'error.invalidMood': 'Stimmung muss einer der folgenden Werte sein: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Administratoren haben immer API-Zugriff.',
+	'error.invalidOccurredAt':
+		'occurredAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',
+	'error.invalidWeight': 'Gewicht muss eine positive Zahl sein.',
+	'error.invalidUnit': 'Einheit muss kg oder lbs sein.',
+	'error.invalidRecordedAt':
+		'recordedAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',
 
 	// Page titles
 	'page.care.title': 'Betreuung',

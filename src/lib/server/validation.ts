@@ -59,6 +59,18 @@ export function parseLoggedAt(value: unknown): Date | null {
 	return d;
 }
 
+// Timestamp parser for historical records (health events, weight entries).
+// Unlike parseLoggedAt it has NO lower bound — a vaccination or adoption record
+// can be years old — but still rejects a value more than a day in the future.
+export function parseRecordTimestamp(value: unknown): Date | null {
+	if (typeof value !== 'string' || !value.trim()) return null;
+	const d = new Date(value);
+	const t = d.getTime();
+	if (Number.isNaN(t)) return null;
+	if (t > Date.now() + LOGGED_AT_SKEW_MS) return null;
+	return d;
+}
+
 // Short user-facing names (quick log buttons, API token labels)
 
 export function parseShortName(value: unknown): string | null {

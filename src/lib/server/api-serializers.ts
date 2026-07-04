@@ -1,9 +1,17 @@
-import type { companions, dailyEvents, journalEntries } from '$lib/server/db/schema';
+import type {
+	companions,
+	dailyEvents,
+	journalEntries,
+	healthEvents,
+	weightEntries
+} from '$lib/server/db/schema';
 import type { QuickLogButton } from '$lib/server/quick-logs';
 
 type CompanionRow = typeof companions.$inferSelect;
 type DailyEventRow = typeof dailyEvents.$inferSelect;
 type JournalEntryRow = typeof journalEntries.$inferSelect;
+type HealthEventRow = typeof healthEvents.$inferSelect;
+type WeightEntryRow = typeof weightEntries.$inferSelect;
 
 // Convention: every /api/* handler that returns a model builds its JSON here,
 // never inline, so each model has one default-deny serializer.
@@ -43,6 +51,33 @@ export function toApiJournalEntry(row: JournalEntryRow) {
 		body: row.body,
 		mood: row.mood,
 		updatedAt: row.updatedAt
+	};
+}
+
+// Public shape for a health event (read-back via GET /api/health-events). Omits the
+// internal loggedBy/createdAt plumbing, matching the daily-event convention.
+export function toApiHealthEvent(row: HealthEventRow) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		type: row.type,
+		title: row.title,
+		notes: row.notes,
+		occurredAt: row.occurredAt,
+		vetName: row.vetName,
+		vetClinic: row.vetClinic
+	};
+}
+
+// Public shape for a weight entry (read-back via GET /api/weight).
+export function toApiWeightEntry(row: WeightEntryRow) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		weight: row.weight,
+		unit: row.unit,
+		notes: row.notes,
+		recordedAt: row.recordedAt
 	};
 }
 

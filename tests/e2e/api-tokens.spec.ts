@@ -303,6 +303,136 @@ test.describe('api tokens', () => {
 		expect((await badTs.json()).code).toBe('invalidLoggedAt');
 	});
 
+	test('health endpoint creates and reads back an event; validates type/title/occurredAt', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Health bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		const res = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: {
+				companionId: EIN,
+				type: 'vet_visit',
+				title: 'Annual',
+				occurredAt: '2019-05-01T09:00:00Z'
+			}
+		});
+		expect(res.status()).toBe(201);
+		const { id } = await res.json();
+		expect(id).toBeTruthy();
+
+		// Read back by date filter rather than events[0]: the seed data already
+		// carries a more recent health event for EIN (see demo-seed.ts), so a
+		// historical 2019 record won't sort first in the unfiltered list.
+		const readBack = await asMember.request.get(
+			app.server.baseURL + `/api/health-events?companionId=${EIN}&date=2019-05-01`,
+			{ headers }
+		);
+		expect(readBack.status()).toBe(200);
+		const { events } = await readBack.json();
+		expect(events).toHaveLength(1);
+		expect(events[0].id).toBe(id);
+		expect(events[0].title).toBe('Annual');
+
+		const badType = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'nope', title: 'x' }
+		});
+		expect(badType.status()).toBe(400);
+		expect((await badType.json()).code).toBe('invalidType');
+
+		const emptyTitle = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'other', title: '' }
+		});
+		expect(emptyTitle.status()).toBe(400);
+		expect((await emptyTitle.json()).code).toBe('titleRequired');
+
+		// An absent title (vs. an empty one) must yield the same stable code,
+		// not fall through to the generic invalidBody.
+		const missingTitle = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'other' }
+		});
+		expect(missingTitle.status()).toBe(400);
+		expect((await missingTitle.json()).code).toBe('titleRequired');
+
+		const badOccurredAt = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'other', title: 'x', occurredAt: 'not-a-date' }
+		});
+		expect(badOccurredAt.status()).toBe(400);
+		expect((await badOccurredAt.json()).code).toBe('invalidOccurredAt');
+
+		const writeRaw = await createToken(asMember, 'Health write bot', '/settings', 'write');
+		const writeGet = await asMember.request.get(
+			app.server.baseURL + `/api/health-events?companionId=${EIN}`,
+			{ headers: { Authorization: `Bearer ${writeRaw}` } }
+		);
+		expect(writeGet.status()).toBe(403);
+		expect((await writeGet.json()).code).toBe('writeScopeReadOnly');
+	});
+
+	test('weight endpoint creates and reads back an entry; validates weight/unit/recordedAt', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Scale bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		const res = await asMember.request.post(app.server.baseURL + '/api/weight', {
+			headers,
+			data: { companionId: EIN, weight: 12.4, unit: 'kg', recordedAt: '2020-01-01T00:00:00Z' }
+		});
+		expect(res.status()).toBe(201);
+		const { id } = await res.json();
+		expect(id).toBeTruthy();
+
+		const readBack = await asMember.request.get(
+			app.server.baseURL + `/api/weight?companionId=${EIN}`,
+			{ headers }
+		);
+		expect(readBack.status()).toBe(200);
+		// Find by id rather than assume entries[0]: /api/weight has no date
+		// filter (unlike /api/health-events), and the seed data already
+		// carries more recent weight entries for EIN (see demo-seed.ts) that
+		// sort ahead of our historical 2020-01-01 record.
+		const { entries } = await readBack.json();
+		const created = entries.find((e: { id: string }) => e.id === id);
+		expect(created?.weight).toBe(12.4);
+
+		const badWeight = await asMember.request.post(app.server.baseURL + '/api/weight', {
+			headers,
+			data: { companionId: EIN, weight: -3, unit: 'kg' }
+		});
+		expect(badWeight.status()).toBe(400);
+		expect((await badWeight.json()).code).toBe('invalidWeight');
+
+		const badUnit = await asMember.request.post(app.server.baseURL + '/api/weight', {
+			headers,
+			data: { companionId: EIN, weight: 5, unit: 'stone' }
+		});
+		expect(badUnit.status()).toBe(400);
+		expect((await badUnit.json()).code).toBe('invalidUnit');
+
+		const badRecordedAt = await asMember.request.post(app.server.baseURL + '/api/weight', {
+			headers,
+			data: { companionId: EIN, weight: 5, unit: 'kg', recordedAt: 'not-a-date' }
+		});
+		expect(badRecordedAt.status()).toBe(400);
+		expect((await badRecordedAt.json()).code).toBe('invalidRecordedAt');
+
+		const writeRaw = await createToken(asMember, 'Scale write bot', '/settings', 'write');
+		const writeGet = await asMember.request.get(
+			app.server.baseURL + `/api/weight?companionId=${EIN}`,
+			{ headers: { Authorization: `Bearer ${writeRaw}` } }
+		);
+		expect(writeGet.status()).toBe(403);
+		expect((await writeGet.json()).code).toBe('writeScopeReadOnly');
+	});
+
 	test('caretaker token may write today’s journal but not a past date', async ({
 		asCaretaker,
 		app
@@ -324,6 +454,19 @@ test.describe('api tokens', () => {
 		});
 		expect(past.status()).toBe(403);
 		expect((await past.json()).code).toBe('forbidden');
+	});
+
+	test('caretaker token may write a health event for an assigned, on-shift companion', async ({
+		asCaretaker,
+		app
+	}) => {
+		const raw = await createToken(asCaretaker, 'Care health bot', '/care/settings');
+
+		const res = await asCaretaker.request.post(app.server.baseURL + '/api/health-events', {
+			headers: { Authorization: `Bearer ${raw}` },
+			data: { companionId: EIN, type: 'vet_visit', title: 'Shift checkup' }
+		});
+		expect(res.status()).toBe(201);
 	});
 
 	test('admin revokes a member’s API access; tokens 401 until re-granted', async ({

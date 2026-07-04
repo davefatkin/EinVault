@@ -3,9 +3,10 @@ import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
 import { parseHealthEventType, parseWeightUnit } from '$lib/server/validation';
 import { reminderPrefillUrl } from '$lib/health';
+import { createHealthEvent } from '$lib/server/health';
+import { createWeightEntry } from '$lib/server/weight';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -48,17 +49,11 @@ export const actions: Actions = {
 		if (!title || !type)
 			return fail(400, { healthError: t(locals.locale, 'error.titleAndTypeRequired') });
 
-		await db.insert(schema.healthEvents).values({
-			id: generateId(15),
-			companionId: params.companionId,
-			type,
-			title,
-			notes,
-			occurredAt,
-			vetName,
-			vetClinic,
-			loggedBy: locals.user.id
-		});
+		await createHealthEvent(
+			params.companionId,
+			{ type, title, notes, occurredAt, vetName, vetClinic },
+			locals.user.id
+		);
 
 		if (andReminder) redirect(303, reminderPrefillUrl(params.companionId, type, title, notes));
 
@@ -78,15 +73,11 @@ export const actions: Actions = {
 		if (isNaN(weight) || weight <= 0)
 			return fail(400, { weightError: t(locals.locale, 'error.validWeightRequired') });
 
-		await db.insert(schema.weightEntries).values({
-			id: generateId(15),
-			companionId: params.companionId,
-			weight,
-			unit,
-			notes,
-			recordedAt,
-			loggedBy: locals.user.id
-		});
+		await createWeightEntry(
+			params.companionId,
+			{ weight, unit, notes, recordedAt },
+			locals.user.id
+		);
 
 		return { weightSuccess: true };
 	},

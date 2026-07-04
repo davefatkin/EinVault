@@ -949,6 +949,12 @@ const messages = {
 	'error.invalidBody': 'Journal body and mood must be text.',
 	'error.invalidMood': 'Mood must be one of: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Administrators always have API access.',
+	'error.invalidOccurredAt':
+		'occurredAt must be a valid ISO 8601 date-time within the allowed range.',
+	'error.invalidWeight': 'Weight must be a positive number.',
+	'error.invalidUnit': 'Unit must be kg or lbs.',
+	'error.invalidRecordedAt':
+		'recordedAt must be a valid ISO 8601 date-time within the allowed range.',
 
 	// Page titles (used in <title> tags)
 	'page.care.title': 'Care',

@@ -967,6 +967,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidBody': 'O texto e o humor do diário devem ser texto.',
 	'error.invalidMood': 'O humor deve ser um dos seguintes: great, good, meh, off, sick.',
 	'error.cannotRevokeAdminApiAccess': 'Os administradores têm sempre acesso à API.',
+	'error.invalidOccurredAt':
+		'occurredAt deve ser uma data-hora ISO 8601 válida dentro do intervalo permitido.',
+	'error.invalidWeight': 'O peso deve ser um número positivo.',
+	'error.invalidUnit': 'A unidade deve ser kg ou lbs.',
+	'error.invalidRecordedAt':
+		'recordedAt deve ser uma data-hora ISO 8601 válida dentro do intervalo permitido.',
 
 	// Page titles
 	'page.care.title': 'Cuidados',

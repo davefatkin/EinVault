@@ -10,7 +10,13 @@ import {
 	JournalWriteResponse,
 	QuickLogList,
 	ExecuteResponse,
-	CompanionList
+	CompanionList,
+	HealthRequest,
+	HealthList,
+	HealthWriteResponse,
+	WeightRequest,
+	WeightList,
+	WeightWriteResponse
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -179,6 +185,101 @@ export function buildOpenApiDocument() {
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: CompanionList } } },
 			401: errorResponse('Missing or invalid token'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/health-events',
+		tags: ['health'],
+		summary: 'Log a health event',
+		description:
+			'Creates one health event for a companion (vet visit, vaccination, medication, procedure, or other). The token acts as its user, so caretaker shift/assignment rules still apply. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			body: { content: { 'application/json': { schema: HealthRequest } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: HealthWriteResponse } }
+			},
+			400: errorResponse('invalidType / titleRequired / noteTooLong / invalidOccurredAt'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('notAssigned / noActiveShift / writeScopeReadOnly'),
+			404: errorResponse('API disabled'),
+			409: errorResponse('idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/health-events',
+		tags: ['health'],
+		summary: "Read back a companion's health events",
+		description: 'Newest first by occurredAt, up to 200. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().openapi({ description: 'Required target companion.' }),
+				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' })
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: HealthList } } },
+			400: errorResponse('noCompanions / invalidDate'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/weight',
+		tags: ['weight'],
+		summary: 'Log a weight entry',
+		description:
+			'Creates one weight entry for a companion. The token acts as its user, so caretaker shift/assignment rules still apply. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			body: { content: { 'application/json': { schema: WeightRequest } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: WeightWriteResponse } }
+			},
+			400: errorResponse('invalidWeight / invalidUnit / noteTooLong / invalidRecordedAt'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('notAssigned / noActiveShift / writeScopeReadOnly'),
+			404: errorResponse('API disabled'),
+			409: errorResponse('idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/weight',
+		tags: ['weight'],
+		summary: "Read back a companion's weight entries",
+		description: 'Newest first by recordedAt, up to 200. Requires a full-scope token.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().openapi({ description: 'Required target companion.' })
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: WeightList } } },
+			400: errorResponse('noCompanions'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
 			429: errorResponse('Rate limited')
 		}

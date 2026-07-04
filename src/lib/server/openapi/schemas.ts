@@ -135,3 +135,71 @@ export const QuickLog = z
 export const QuickLogList = z.object({ quickLogs: z.array(QuickLog) }).openapi('QuickLogList');
 
 export const ExecuteResponse = z.object({ ids: z.array(z.string()) }).openapi('ExecuteResponse');
+
+export const HealthEventType = z
+	.enum(['vet_visit', 'vaccination', 'medication', 'procedure', 'other'])
+	.openapi('HealthEventType');
+
+export const HealthRequest = z
+	.object({
+		companionId: z.string().min(1),
+		type: HealthEventType,
+		title: z.string().min(1).max(MAX_NOTE_LEN),
+		notes: z.string().max(MAX_NOTE_LEN).optional(),
+		occurredAt: z.string().optional().openapi({
+			format: 'date-time',
+			description: 'ISO 8601. Defaults to now; may be old, not far future.'
+		}),
+		vetName: z.string().max(MAX_NOTE_LEN).optional(),
+		vetClinic: z.string().max(MAX_NOTE_LEN).optional()
+	})
+	.openapi('HealthRequest');
+
+export const HealthEvent = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		type: HealthEventType,
+		title: z.string(),
+		notes: z.string().nullable(),
+		occurredAt: z.string(),
+		vetName: z.string().nullable(),
+		vetClinic: z.string().nullable()
+	})
+	.openapi('HealthEvent');
+
+export const HealthList = z.object({ events: z.array(HealthEvent) }).openapi('HealthList');
+export const HealthWriteResponse = z
+	.object({ id: z.string(), companionId: z.string() })
+	.openapi('HealthWriteResponse');
+
+export const WeightUnit = z.enum(['kg', 'lbs']).openapi('WeightUnit');
+
+export const WeightRequest = z
+	.object({
+		companionId: z.string().min(1),
+		weight: z.number().positive(),
+		unit: WeightUnit,
+		notes: z.string().max(MAX_NOTE_LEN).optional(),
+		recordedAt: z.string().optional().openapi({
+			format: 'date-time',
+			description: 'ISO 8601. Defaults to now; may be old, not far future.'
+		})
+	})
+	.openapi('WeightRequest');
+
+export const WeightEntry = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		weight: z.number(),
+		unit: WeightUnit,
+		notes: z.string().nullable(),
+		recordedAt: z.string()
+	})
+	.openapi('WeightEntry');
+
+export const WeightList = z.object({ entries: z.array(WeightEntry) }).openapi('WeightList');
+export const WeightWriteResponse = z
+	.object({ id: z.string(), companionId: z.string() })
+	.openapi('WeightWriteResponse');

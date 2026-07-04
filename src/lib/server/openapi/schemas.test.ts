@@ -4,9 +4,18 @@ import {
 	toApiJournalEntry,
 	toApiQuickLog,
 	toApiCompanion,
-	toApiCompanionMinimal
+	toApiCompanionMinimal,
+	toApiHealthEvent,
+	toApiWeightEntry
 } from '$lib/server/api-serializers';
-import { LoggedEvent, JournalEntry, QuickLog, Companion } from './schemas';
+import {
+	LoggedEvent,
+	JournalEntry,
+	QuickLog,
+	Companion,
+	HealthEvent,
+	WeightEntry
+} from './schemas';
 
 // Drift guard: the OpenAPI response schemas above are hand-maintained, not
 // derived from the serializers, so nothing stops them from diverging from
@@ -129,5 +138,37 @@ describe('response schemas match their serializers', () => {
 		for (const key of Object.keys(result)) {
 			expect(schemaKeys.has(key)).toBe(true);
 		}
+	});
+
+	it('toApiHealthEvent output keys match HealthEvent.shape', () => {
+		const row = {
+			id: 'health-1',
+			companionId: 'comp-1',
+			type: 'vet_visit' as const,
+			title: 'Annual checkup',
+			notes: 'All good',
+			occurredAt: new Date(),
+			vetName: 'Dr. Smith',
+			vetClinic: 'Downtown Vet',
+			createdAt: new Date(),
+			loggedBy: 'user-1'
+		};
+		const result = toApiHealthEvent(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(HealthEvent.shape).sort());
+	});
+
+	it('toApiWeightEntry output keys match WeightEntry.shape', () => {
+		const row = {
+			id: 'weight-1',
+			companionId: 'comp-1',
+			weight: 12.5,
+			unit: 'kg' as const,
+			recordedAt: new Date(),
+			notes: 'After breakfast',
+			createdAt: new Date(),
+			loggedBy: 'user-1'
+		};
+		const result = toApiWeightEntry(row);
+		expect(Object.keys(result).sort()).toEqual(Object.keys(WeightEntry.shape).sort());
 	});
 });
