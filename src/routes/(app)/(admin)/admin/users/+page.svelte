@@ -213,6 +213,7 @@
 		assignments={data.assignments}
 		shifts={data.shifts}
 		currentUserId={data.currentUserId}
+		apiTokensEnabled={data.apiTokensEnabled}
 		onclose={() => (manageUserId = null)}
 	/>
 {/if}

@@ -62,3 +62,26 @@ test('API_TOKENS_ENABLED=false hides the settings card and 404s the endpoints', 
 	expect(spec.status()).toBe(404);
 	expect((await spec.json()).code).toBe('notFound');
 });
+
+test('API_TOKENS_ENABLED=false hides the per-user API access control in the admin manage drawer', async ({
+	server,
+	page
+}) => {
+	await page.goto(server.baseURL + '/auth/login');
+	await page.getByLabel('Username').fill(SEED.admin.username);
+	await page.getByLabel('Password').fill(SEED.password);
+	await page.getByRole('button', { name: 'Sign in' }).click();
+	await expect(page).not.toHaveURL(/auth\/login/, { timeout: 8_000 });
+
+	await page.goto(server.baseURL + '/admin/users');
+	const row = page.locator('div.px-6.py-4').filter({ hasText: SEED.member.username });
+	await expect(row).toBeVisible({ timeout: 8_000 });
+	await row.getByRole('button', { name: /manage/i }).click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog).toBeVisible({ timeout: 4_000 });
+
+	// Drawer opens, but the API access section and its grant/revoke toggle must be
+	// gone while the killswitch is on.
+	await expect(dialog.getByText('API access', { exact: true })).toHaveCount(0);
+	await expect(dialog.getByRole('button', { name: /API access/i })).toHaveCount(0);
+});

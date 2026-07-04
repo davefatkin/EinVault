@@ -47,6 +47,7 @@
 		assignments,
 		shifts,
 		currentUserId,
+		apiTokensEnabled,
 		onclose
 	}: {
 		user: UserRow;
@@ -54,6 +55,7 @@
 		assignments: AssignmentRow[];
 		shifts: ShiftRow[];
 		currentUserId: string;
+		apiTokensEnabled: boolean;
 		onclose: () => void;
 	} = $props();
 
@@ -594,8 +596,9 @@
 				</section>
 			{/if}
 
-			<!-- API access (members/caretakers only; admins always have it) -->
-			{#if user.role !== 'admin'}
+			<!-- API access (members/caretakers only; admins always have it). Hidden
+			     entirely when the API killswitch (API_TOKENS_ENABLED) is off. -->
+			{#if user.role !== 'admin' && apiTokensEnabled}
 				<section>
 					<h2 class={sectionLabel}>{t(locale, 'page.admin.apiAccessSection')}</h2>
 					<p class="text-xs text-muted-foreground mb-2">
