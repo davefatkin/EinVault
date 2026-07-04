@@ -71,17 +71,20 @@ export function buildOpenApiDocument() {
 		path: '/api/logs',
 		tags: ['logs'],
 		summary: 'Read back logged daily events',
-		description: 'Newest first, up to 200. Requires a full-scope token.',
+		description:
+			'Newest first. Paginated with limit/offset; see hasMore. Requires a full-scope token.',
 		security: secured,
 		request: {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
-				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' })
+				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' }),
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: LogListResponse } } },
-			400: errorResponse('noCompanions / invalidDate'),
+			400: errorResponse('noCompanions / invalidDate / invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -247,17 +250,20 @@ export function buildOpenApiDocument() {
 		path: '/api/health-events',
 		tags: ['health'],
 		summary: "Read back a companion's health events",
-		description: 'Newest first by occurredAt, up to 200. Requires a full-scope token.',
+		description:
+			'Newest first by occurredAt. Paginated with limit/offset; see hasMore. Requires a full-scope token.',
 		security: secured,
 		request: {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
-				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' })
+				date: z.string().optional().openapi({ description: 'YYYY-MM-DD; omit for all.' }),
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: HealthList } } },
-			400: errorResponse('noCompanions / invalidDate'),
+			400: errorResponse('noCompanions / invalidDate / invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -295,16 +301,19 @@ export function buildOpenApiDocument() {
 		path: '/api/weight',
 		tags: ['weight'],
 		summary: "Read back a companion's weight entries",
-		description: 'Newest first by recordedAt, up to 200. Requires a full-scope token.',
+		description:
+			'Newest first by recordedAt. Paginated with limit/offset; see hasMore. Requires a full-scope token.',
 		security: secured,
 		request: {
 			query: z.object({
-				companionId: z.string().openapi({ description: 'Required target companion.' })
+				companionId: z.string().openapi({ description: 'Required target companion.' }),
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: WeightList } } },
-			400: errorResponse('noCompanions'),
+			400: errorResponse('noCompanions / invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -318,7 +327,7 @@ export function buildOpenApiDocument() {
 		tags: ['reminders'],
 		summary: "List the token user's reminders",
 		description:
-			'Up to 200. Without companionId, lists across every companion the token user may access. Requires a full-scope token.',
+			'Paginated with limit/offset; see hasMore. Without companionId, lists across every companion the token user may access. Requires a full-scope token.',
 		security: secured,
 		request: {
 			query: z.object({
@@ -329,12 +338,14 @@ export function buildOpenApiDocument() {
 				status: z
 					.enum(['due', 'all'])
 					.optional()
-					.openapi({ description: 'Defaults to due (not yet completed).' })
+					.openapi({ description: 'Defaults to due (not yet completed).' }),
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: ReminderList } } },
-			400: errorResponse('invalidStatus'),
+			400: errorResponse('invalidStatus / invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -372,17 +383,19 @@ export function buildOpenApiDocument() {
 		tags: ['shifts'],
 		summary: 'List the caretaker shift schedule',
 		description:
-			'Most recent shifts first, up to 200; use from/to to window further back. admin/member see every shift; a caretaker sees only their own. Requires a full-scope token.',
+			'Most recent shifts first; use from/to to window further back. Paginated with limit/offset; see hasMore. admin/member see every shift; a caretaker sees only their own. Requires a full-scope token.',
 		security: secured,
 		request: {
 			query: z.object({
 				from: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift end.' }),
-				to: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift start.' })
+				to: z.string().optional().openapi({ description: 'YYYY-MM-DD; filters by shift start.' }),
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: ShiftList } } },
-			400: errorResponse('invalidDate'),
+			400: errorResponse('invalidDate / invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly'),
 			404: errorResponse('API disabled'),
@@ -396,10 +409,17 @@ export function buildOpenApiDocument() {
 		tags: ['users'],
 		summary: 'List the user roster, scoped to what the token user may see',
 		description:
-			'Role-scoped visibility: an admin token sees every user; a member token sees everyone except admins; a caretaker token sees only themselves. Requires a full-scope token.',
+			'Role-scoped visibility: an admin token sees every user; a member token sees everyone except admins; a caretaker token sees only themselves. Paginated with limit/offset; see hasMore. Requires a full-scope token.',
 		security: secured,
+		request: {
+			query: z.object({
+				limit: z.number().int().optional().openapi({ description: '1-200, default 50.' }),
+				offset: z.number().int().optional().openapi({ description: 'Default 0.' })
+			})
+		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: UserList } } },
+			400: errorResponse('invalidPagination'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly'),
 			404: errorResponse('API disabled'),

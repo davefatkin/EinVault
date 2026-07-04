@@ -11,6 +11,7 @@ import { toApiWeightEntry } from '$lib/server/api-serializers';
 import { parseRecordTimestamp } from '$lib/server/validation';
 import { WeightRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
+import { parsePagination } from '$lib/server/pagination';
 
 // GET /api/weight?companionId=. Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
@@ -22,12 +23,16 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 
+	const { limit, offset } = parsePagination(event.url, locale);
 	const rows = await db.query.weightEntries.findMany({
 		where: and(eq(schema.weightEntries.companionId, companionId)),
 		orderBy: (w, { desc }) => [desc(w.recordedAt)],
-		limit: 200
+		limit: limit + 1,
+		offset
 	});
-	return json({ entries: rows.map(toApiWeightEntry) });
+	const hasMore = rows.length > limit;
+	const page = hasMore ? rows.slice(0, limit) : rows;
+	return json({ entries: page.map(toApiWeightEntry), hasMore });
 });
 
 // POST /api/weight: create one weight entry. Token acts as its user, so

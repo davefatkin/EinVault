@@ -741,6 +741,35 @@ test.describe('api tokens', () => {
 		expect((await writeRes.json()).code).toBe('writeScopeReadOnly');
 	});
 
+	test('users endpoint paginates with limit/offset and rejects invalid pagination', async ({
+		asAdmin,
+		app
+	}) => {
+		const adminRaw = await createToken(asAdmin, 'Users pagination bot', '/settings');
+		const get = (query: string) =>
+			asAdmin.request.get(app.server.baseURL + `/api/users${query}`, {
+				headers: { Authorization: `Bearer ${adminRaw}` }
+			});
+
+		const limited = await get('?limit=1');
+		expect(limited.status()).toBe(200);
+		const limitedBody = await limited.json();
+		expect(limitedBody.users).toHaveLength(1);
+		expect(limitedBody.hasMore).toBe(true);
+
+		const full = await get('?limit=200');
+		expect(full.status()).toBe(200);
+		expect((await full.json()).hasMore).toBe(false);
+
+		const zero = await get('?limit=0');
+		expect(zero.status()).toBe(400);
+		expect((await zero.json()).code).toBe('invalidPagination');
+
+		const nonNumeric = await get('?limit=abc');
+		expect(nonNumeric.status()).toBe(400);
+		expect((await nonNumeric.json()).code).toBe('invalidPagination');
+	});
+
 	test('caretaker token may write today’s journal but not a past date', async ({
 		asCaretaker,
 		app

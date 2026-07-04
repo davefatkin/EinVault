@@ -90,7 +90,7 @@ export const LoggedEvent = z
 	.openapi('LoggedEvent');
 
 export const LogListResponse = z
-	.object({ events: z.array(LoggedEvent) })
+	.object({ events: z.array(LoggedEvent), hasMore: z.boolean() })
 	.openapi('LogListResponse');
 
 export const JournalEntry = z
@@ -168,7 +168,9 @@ export const HealthEvent = z
 	})
 	.openapi('HealthEvent');
 
-export const HealthList = z.object({ events: z.array(HealthEvent) }).openapi('HealthList');
+export const HealthList = z
+	.object({ events: z.array(HealthEvent), hasMore: z.boolean() })
+	.openapi('HealthList');
 export const HealthWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('HealthWriteResponse');
@@ -199,7 +201,9 @@ export const WeightEntry = z
 	})
 	.openapi('WeightEntry');
 
-export const WeightList = z.object({ entries: z.array(WeightEntry) }).openapi('WeightList');
+export const WeightList = z
+	.object({ entries: z.array(WeightEntry), hasMore: z.boolean() })
+	.openapi('WeightList');
 export const WeightWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('WeightWriteResponse');
@@ -222,7 +226,9 @@ export const Reminder = z
 	})
 	.openapi('Reminder');
 
-export const ReminderList = z.object({ reminders: z.array(Reminder) }).openapi('ReminderList');
+export const ReminderList = z
+	.object({ reminders: z.array(Reminder), hasMore: z.boolean() })
+	.openapi('ReminderList');
 
 export const CompleteResponse = z
 	.object({
@@ -242,7 +248,9 @@ export const Shift = z
 	})
 	.openapi('Shift');
 
-export const ShiftList = z.object({ shifts: z.array(Shift) }).openapi('ShiftList');
+export const ShiftList = z
+	.object({ shifts: z.array(Shift), hasMore: z.boolean() })
+	.openapi('ShiftList');
 
 export const User = z
 	.object({
@@ -254,4 +262,6 @@ export const User = z
 	})
 	.openapi('User');
 
-export const UserList = z.object({ users: z.array(User) }).openapi('UserList');
+export const UserList = z
+	.object({ users: z.array(User), hasMore: z.boolean() })
+	.openapi('UserList');

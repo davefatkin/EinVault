@@ -11,6 +11,7 @@ import { toApiHealthEvent } from '$lib/server/api-serializers';
 import { isValidDate, parseRecordTimestamp } from '$lib/server/validation';
 import { HealthRequest } from '$lib/server/openapi/schemas';
 import { MAX_NOTE_LEN } from '$lib/server/env';
+import { parsePagination } from '$lib/server/pagination';
 
 // GET /api/health-events?companionId=&date=YYYY-MM-DD (date optional). Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
@@ -34,12 +35,16 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			lt(schema.healthEvents.occurredAt, end)
 		);
 	}
+	const { limit, offset } = parsePagination(event.url, locale);
 	const rows = await db.query.healthEvents.findMany({
 		where: and(...filters),
 		orderBy: (h, { desc }) => [desc(h.occurredAt)],
-		limit: 200
+		limit: limit + 1,
+		offset
 	});
-	return json({ events: rows.map(toApiHealthEvent) });
+	const hasMore = rows.length > limit;
+	const page = hasMore ? rows.slice(0, limit) : rows;
+	return json({ events: page.map(toApiHealthEvent), hasMore });
 });
 
 // POST /api/health-events: create one health event. Token acts as its user, so

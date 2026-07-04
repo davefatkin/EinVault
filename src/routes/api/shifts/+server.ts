@@ -5,6 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { apiRoute } from '$lib/server/auth/api-request';
 import { toApiShift } from '$lib/server/api-serializers';
 import { isValidDate } from '$lib/server/validation';
+import { parsePagination } from '$lib/server/pagination';
 
 // GET /api/shifts?from=YYYY-MM-DD&to=YYYY-MM-DD. Full-scope only. admin/member
 // see all shifts; a caretaker sees only their own.
@@ -28,10 +29,14 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 		filters.push(lte(schema.caretakerShifts.startAt, new Date(`${toParam}T23:59:59`)));
 	}
 
+	const { limit, offset } = parsePagination(event.url, locale);
 	const rows = await db.query.caretakerShifts.findMany({
 		where: filters.length ? and(...filters) : undefined,
 		orderBy: (s, { desc }) => [desc(s.startAt)],
-		limit: 200
+		limit: limit + 1,
+		offset
 	});
-	return json({ shifts: rows.map(toApiShift) });
+	const hasMore = rows.length > limit;
+	const page = hasMore ? rows.slice(0, limit) : rows;
+	return json({ shifts: page.map(toApiShift), hasMore });
 });
