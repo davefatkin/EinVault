@@ -51,7 +51,10 @@ test.describe('member quick log', () => {
 		const submit = asMember.getByRole('button', { name: /^Log / });
 		await expect(submit).toBeDisabled();
 
-		await asMember.locator(`input[name="companionIds"][value="${EIN}"]`).click({ force: true });
+		// Scope to the daily log form: single-target custom quick log pills carry
+		// hidden companionIds inputs of their own elsewhere on the dashboard.
+		const dailyForm = asMember.locator('form', { has: asMember.locator('textarea[name="notes"]') });
+		await dailyForm.locator(`input[name="companionIds"][value="${EIN}"]`).click({ force: true });
 		await asMember.locator('textarea[name="notes"]').fill('e2e dashboard treat');
 		await asMember.locator('input[name="type"][value="treat"]').click({ force: true });
 		await submit.click();

@@ -40,6 +40,7 @@
 	let selectedIds = $state<string[]>([]);
 	let remember = $state(true);
 	let executedId = $state<string | null>(null);
+	let submittingId = $state<string | null>(null);
 
 	function toggle(button: QuickLogButton) {
 		if (openId === button.id) {
@@ -74,17 +75,50 @@
 
 		<div class="flex flex-wrap gap-2">
 			{#each buttons as button (button.id)}
-				<button
-					type="button"
-					onclick={() => toggle(button)}
-					class="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors
-					{openId === button.id
-						? 'bg-primary/10 border-primary/30 text-primary'
-						: 'border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground'}"
-				>
-					<span>{ACTIVITY_ICONS[button.type] ?? '📝'}</span>
-					<span>{button.name}</span>
-				</button>
+				{#if button.companionIds.length === 1}
+					<!-- Single target → nothing to pick; log directly on click (#175). -->
+					<form
+						method="POST"
+						{action}
+						class="contents"
+						use:enhance={() => {
+							submittingId = button.id;
+							executedId = null;
+							return async ({ result, update }) => {
+								submittingId = null;
+								await update({ reset: false });
+								if (result.type === 'success') {
+									executedId = button.id;
+									openId = null;
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="quickLogId" value={button.id} />
+						<input type="hidden" name="companionIds" value={button.companionIds[0]} />
+						<button
+							type="submit"
+							disabled={submittingId === button.id}
+							title={t(locale, 'quickLog.execute.logNow', { name: button.name })}
+							class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60"
+						>
+							<span>{ACTIVITY_ICONS[button.type] ?? '📝'}</span>
+							<span>{button.name}</span>
+						</button>
+					</form>
+				{:else}
+					<button
+						type="button"
+						onclick={() => toggle(button)}
+						class="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors
+						{openId === button.id
+							? 'bg-primary/10 border-primary/30 text-primary'
+							: 'border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground'}"
+					>
+						<span>{ACTIVITY_ICONS[button.type] ?? '📝'}</span>
+						<span>{button.name}</span>
+					</button>
+				{/if}
 			{/each}
 		</div>
 

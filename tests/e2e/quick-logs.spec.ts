@@ -92,6 +92,27 @@ test.describe('custom quick logs', () => {
 		await expect(asAdmin.getByText('Evening walk')).toBeVisible();
 	});
 
+	test('quick log with a single assigned companion logs in one click', async ({ asMember }) => {
+		// Create assigned to Ein only (uncheck Edward).
+		await asMember.goto('/settings/quick-logs');
+		await asMember.getByRole('button', { name: 'Add quick log' }).click();
+		await asMember.locator('input[name="name"]').fill('Sardine snack');
+		await asMember.locator('label').filter({ hasText: /Treat/i }).first().click();
+		await asMember.locator('label').filter({ hasText: 'Edward' }).first().click();
+		await asMember.locator('textarea[name="note"]').fill('ate one sardine');
+		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(asMember.getByText('Sardine snack')).toBeVisible();
+
+		// One click on the companion page logs it — no target picker step.
+		await asMember.goto(`/${EIN}`);
+		await asMember.getByRole('button', { name: /Sardine snack/ }).click();
+		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
+		await expect(asMember.getByRole('button', { name: /Log Sardine snack/ })).toHaveCount(0);
+
+		// Recent activity timeline picks up the entry without a reload.
+		await expect(asMember.getByText('ate one sardine').first()).toBeVisible();
+	});
+
 	test('caretaker manages quick logs scoped to assigned companions', async ({ asCaretaker }) => {
 		await asCaretaker.goto('/care/settings/quick-logs');
 		await asCaretaker.getByRole('button', { name: 'Add quick log' }).click();
@@ -103,13 +124,18 @@ test.describe('custom quick logs', () => {
 		);
 
 		await asCaretaker.locator('input[name="name"]').fill('Care walk');
+		await asCaretaker.locator('textarea[name="note"]').fill('around the park');
 		await asCaretaker.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(asCaretaker.getByText('Care walk')).toBeVisible();
 
-		// The button renders on the care page (seeded caretaker is on shift) and executes.
+		// The button renders on the care page (seeded caretaker is on shift). With a
+		// single assigned companion it logs in one click — no target picker step.
 		await asCaretaker.goto(`/care/${EIN}`);
 		await asCaretaker.getByRole('button', { name: /Care walk/ }).click();
-		await asCaretaker.getByRole('button', { name: /Log Care walk/ }).click();
 		await expect(asCaretaker.getByText(/Activity logged/)).toBeVisible();
+		await expect(asCaretaker.getByRole('button', { name: /Log Care walk/ })).toHaveCount(0);
+
+		// Today's activity refreshes in place (no reload).
+		await expect(asCaretaker.getByText('around the park').first()).toBeVisible();
 	});
 });
