@@ -1013,6 +1013,7 @@ const messages: Record<keyof Messages, string> = {
 	'aria.closeSwitcher': 'Begleiterauswahl schließen',
 	'aria.accountMenu': 'Kontomenü',
 	'aria.closeAccountMenu': 'Kontomenü schließen',
+	'aria.openAccountMenu': 'Kontomenü öffnen',
 	'aria.searchResults': 'Suchergebnisse',
 	'theme.light': 'Hell',
 	'theme.dark': 'Dunkel',

@@ -1008,6 +1008,7 @@ const messages: Record<keyof Messages, string> = {
 	'aria.closeSwitcher': 'Fechar seletor de companheiro',
 	'aria.accountMenu': 'Menu da conta',
 	'aria.closeAccountMenu': 'Fechar menu da conta',
+	'aria.openAccountMenu': 'Abrir menu da conta',
 	'aria.searchResults': 'Resultados da pesquisa',
 	'theme.light': 'Claro',
 	'theme.dark': 'Escuro',

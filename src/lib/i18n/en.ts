@@ -990,6 +990,7 @@ const messages = {
 	'aria.closeSwitcher': 'Close companion switcher',
 	'aria.accountMenu': 'Account menu',
 	'aria.closeAccountMenu': 'Close account menu',
+	'aria.openAccountMenu': 'Open account menu',
 	'aria.searchResults': 'Search results',
 	'theme.light': 'Light',
 	'theme.dark': 'Dark',

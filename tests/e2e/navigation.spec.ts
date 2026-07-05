@@ -56,6 +56,55 @@ test('member You tab opens account sheet with Settings + Sign Out only @mobile',
 	await expect(sheet.getByRole('link', { name: 'Companions' })).toHaveCount(0);
 });
 
+test('companion page top bar avatar opens account sheet @mobile', async ({
+	asMember
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asMember.goto(`/${EIN}`);
+	const avatarButton = asMember.getByRole('button', { name: 'Open account menu' });
+	await expect(avatarButton).toBeVisible({ timeout: 8_000 });
+	await avatarButton.click();
+
+	const sheet = asMember.getByRole('dialog', { name: 'Account menu' });
+	await expect(sheet).toBeVisible({ timeout: 8_000 });
+	await expect(sheet.getByRole('link', { name: 'Settings' })).toBeVisible();
+	await expect(sheet.getByRole('button', { name: 'Sign Out' })).toBeVisible();
+});
+
+test('companion page account sheet Settings link navigates to /settings @mobile', async ({
+	asMember
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asMember.goto(`/${EIN}`);
+	await asMember.getByRole('button', { name: 'Open account menu' }).click();
+	const sheet = asMember.getByRole('dialog', { name: 'Account menu' });
+	await expect(sheet).toBeVisible({ timeout: 8_000 });
+	await sheet.getByRole('link', { name: 'Settings' }).click();
+	await expect(asMember).toHaveURL(/\/settings/, { timeout: 8_000 });
+});
+
+test('admin companion page account sheet shows Users and Companions @mobile', async ({
+	asAdmin
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asAdmin.goto(`/${EIN}`);
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
+	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
+	await expect(sheet).toBeVisible({ timeout: 8_000 });
+	await expect(sheet.getByRole('link', { name: 'Users' })).toBeVisible();
+	await expect(sheet.getByRole('link', { name: 'Companions' })).toBeVisible();
+});
+
+test('overview top bar has no avatar button — You tab is the account entry @mobile', async ({
+	asMember
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asMember.goto('/');
+	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
+	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
+	await expect(asMember.getByRole('button', { name: 'Open account menu' })).toHaveCount(0);
+});
+
 test('admin You tab account sheet shows Users and Companions @mobile', async ({
 	asAdmin
 }, testInfo) => {

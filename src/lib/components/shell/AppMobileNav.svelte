@@ -63,8 +63,11 @@
 
 	let accountOpen = $state(false);
 
+	// Close the sheet on any navigation (e.g. browser back) so it never
+	// lingers over a page it wasn't opened on.
 	$effect(() => {
-		if (isCompanionContext) accountOpen = false;
+		void page.url.pathname;
+		accountOpen = false;
 	});
 
 	// Companion context nav tabs (4 + central FAB)
@@ -229,6 +232,22 @@
 		>
 			<Search class="h-5 w-5" />
 		</button>
+		{#if isCompanionContext && user}
+			<button
+				type="button"
+				onclick={() => (accountOpen = true)}
+				aria-label={t(locale, 'aria.openAccountMenu')}
+				aria-haspopup="dialog"
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-accent"
+			>
+				<UserAvatar
+					userId={user.id}
+					displayName={user.displayName}
+					avatarPath={user.avatarPath}
+					size="sm"
+				/>
+			</button>
+		{/if}
 	</div>
 </header>
 
@@ -351,6 +370,6 @@
 	</div>
 </nav>
 
-{#if user && !isCompanionContext}
+{#if user}
 	<AccountSheet {user} open={accountOpen} onclose={() => (accountOpen = false)} variant="sheet" />
 {/if}
