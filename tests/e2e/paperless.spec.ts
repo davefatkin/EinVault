@@ -120,6 +120,48 @@ test('search filters documents in the picker', async ({ world, page }) => {
 	await expect(page.getByRole('button', { name: /vaccination record/i })).toHaveCount(0);
 });
 
+test('mobile documents header: title and action buttons do not overlap @mobile', async ({
+	world,
+	page
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(world.server.baseURL + EIN_DOCS_URL);
+
+	const title = page.getByRole('heading', { name: 'Documents', exact: true });
+	await expect(title).toBeVisible({ timeout: 10_000 });
+	const paperlessButton = page.getByRole('button', { name: /add from paperless/i });
+	// The empty state repeats "Upload document" further down; the header button is first.
+	const uploadButton = page.getByRole('button', { name: 'Upload document' }).first();
+	await expect(paperlessButton).toBeVisible();
+	await expect(uploadButton).toBeVisible();
+
+	// ~500px was the worst case: both buttons fit beside a 0%-flex-basis title,
+	// which then overflowed its shrunk box and painted over them. The title's
+	// bounding box never intersects the buttons (only the ink does), so assert
+	// on text overflow as well as box separation.
+	for (const width of [393, 500, 620]) {
+		await page.setViewportSize({ width, height: 900 });
+
+		const overflows = await title.evaluate((el) => el.scrollWidth > el.clientWidth);
+		expect(overflows, `title text must not overflow its box at ${width}px`).toBe(false);
+
+		const titleBox = await title.boundingBox();
+		expect(titleBox).toBeTruthy();
+		for (const button of [paperlessButton, uploadButton]) {
+			const box = await button.boundingBox();
+			expect(box).toBeTruthy();
+			const separated =
+				titleBox!.x + titleBox!.width <= box!.x ||
+				box!.x + box!.width <= titleBox!.x ||
+				titleBox!.y + titleBox!.height <= box!.y ||
+				box!.y + box!.height <= titleBox!.y;
+			expect(separated, `header title must not overlap action buttons at ${width}px`).toBe(true);
+		}
+	}
+});
+
 test('caretaker is blocked from the paperless documents API', async ({ world, browser }) => {
 	const ctx = await browser.newContext({ baseURL: world.server.baseURL });
 	const page = await ctx.newPage();
