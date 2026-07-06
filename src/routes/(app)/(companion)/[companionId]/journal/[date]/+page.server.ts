@@ -14,6 +14,7 @@ import {
 	exceedsLen
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
+import { parseSubtype } from '$lib/activitySubtypes';
 import { upsertJournalEntry } from '$lib/server/journal';
 import {
 	MAX_DAILY_MEDIA,
@@ -125,6 +126,7 @@ export const actions: Actions = {
 		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
+		const subtype = parseSubtype(type, data.get('subtype'));
 
 		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
 			(v) => v !== companionId
@@ -152,6 +154,7 @@ export const actions: Actions = {
 			notes,
 			durationMinutes,
 			loggedAt,
+			subtype,
 			loggedBy: locals.user!.id,
 			eventGroupId
 		}));
@@ -178,6 +181,7 @@ export const actions: Actions = {
 
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
+		const subtype = parseSubtype(type, data.get('subtype'));
 
 		const existing = await db.query.dailyEvents.findFirst({
 			where: and(eq(schema.dailyEvents.id, id), eq(schema.dailyEvents.companionId, companionId)),
@@ -187,7 +191,7 @@ export const actions: Actions = {
 
 		await db
 			.update(schema.dailyEvents)
-			.set({ type, notes, durationMinutes, loggedAt })
+			.set({ type, notes, durationMinutes, loggedAt, subtype })
 			.where(eq(schema.dailyEvents.id, id));
 
 		return { updateActivitySuccess: true };
