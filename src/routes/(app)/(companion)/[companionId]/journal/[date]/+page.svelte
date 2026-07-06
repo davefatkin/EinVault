@@ -369,7 +369,7 @@
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
 	let duration = $state('');
-	let addActivitySubtype = $state<string | null>(null);
+	let addActivitySubtypes = $state<string[]>([]);
 	let siblingCompanions = $derived(
 		data.companions.filter((c) => c.id !== data.companion.id && c.isActive)
 	);
@@ -377,7 +377,7 @@
 
 	let editingActivityId = $state<string | null>(null);
 	let editActivityType = $state('walk');
-	let editActivitySubtype = $state<string | null>(null);
+	let editActivitySubtypes = $state<string[]>([]);
 	let editActivityHasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === editActivityType)?.hasDuration ?? false
 	);
@@ -385,7 +385,7 @@
 	function startEditActivity(event: (typeof data.dailyEvents)[0]) {
 		editingActivityId = event.id;
 		editActivityType = event.type;
-		editActivitySubtype = event.subtype;
+		editActivitySubtypes = event.subtypes ?? [];
 	}
 
 	let confirmOpen = $state(false);
@@ -464,8 +464,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{activityDisplayIcon(detailEvent.type, detailEvent.subtype)}
-					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}
+					{activityDisplayIcon(detailEvent.type, detailEvent.subtypes)}
+					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtypes)}
 				</h2>
 				<button
 					onclick={closeActivityDetail}
@@ -484,7 +484,7 @@
 						>{t(locale, 'page.journal.day.detailType')}</span
 					>
 					<Badge variant="gold"
-						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}</Badge
+						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtypes)}</Badge
 					>
 				</div>
 				<div class="flex items-center gap-3">
@@ -987,7 +987,7 @@
 								update();
 								showActivityForm = false;
 								selectedType = 'walk';
-								addActivitySubtype = null;
+								addActivitySubtypes = [];
 								selectedAdditionalIds = [];
 								duration = '';
 							}}
@@ -1020,7 +1020,7 @@
 								{/each}
 							</div>
 						</div>
-						<SubtypePills type={selectedType} bind:selected={addActivitySubtype} />
+						<SubtypePills type={selectedType} bind:selected={addActivitySubtypes} />
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
 								<legend class="text-sm font-medium text-foreground">
@@ -1168,7 +1168,7 @@
 											{/each}
 										</div>
 									</div>
-									<SubtypePills type={editActivityType} bind:selected={editActivitySubtype} />
+									<SubtypePills type={editActivityType} bind:selected={editActivitySubtypes} />
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
 											<label
@@ -1243,12 +1243,12 @@
 								>
 									<span
 										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-										>{activityDisplayIcon(event.type, event.subtype)}</span
+										>{activityDisplayIcon(event.type, event.subtypes)}</span
 									>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
 											<Badge variant="gold"
-												>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+												>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
 											>
 											{#if event.durationMinutes}
 												<span class="text-xs text-muted-foreground"

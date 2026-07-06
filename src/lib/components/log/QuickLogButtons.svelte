@@ -9,7 +9,7 @@
 		id: string;
 		name: string;
 		type: string;
-		subtype: string | null;
+		subtypes: string[] | null;
 		durationMinutes: number | null;
 		rememberAlso: boolean;
 		companionIds: string[];
@@ -103,7 +103,7 @@
 							title={t(locale, 'quickLog.execute.logNow', { name: button.name })}
 							class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60"
 						>
-							<span>{activityDisplayIcon(button.type, button.subtype)}</span>
+							<span>{activityDisplayIcon(button.type, button.subtypes)}</span>
 							<span>{button.name}</span>
 						</button>
 					</form>
@@ -116,7 +116,7 @@
 							? 'bg-primary/10 border-primary/30 text-primary'
 							: 'border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground'}"
 					>
-						<span>{activityDisplayIcon(button.type, button.subtype)}</span>
+						<span>{activityDisplayIcon(button.type, button.subtypes)}</span>
 						<span>{button.name}</span>
 					</button>
 				{/if}

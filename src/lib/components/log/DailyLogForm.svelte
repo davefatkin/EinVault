@@ -41,7 +41,7 @@
 	let selectedType = $state((TYPE_VALUES as string[]).includes(initialType) ? initialType : 'walk');
 	let duration = $state('');
 	let notes = $state('');
-	let subtype = $state<string | null>(null);
+	let subtypes = $state<string[]>([]);
 
 	let siblingCompanions = $derived(
 		primaryCompanion ? companions.filter((c) => c.id !== primaryCompanion!.id) : []
@@ -91,7 +91,7 @@
 			if (result.type === 'success') {
 				duration = '';
 				notes = '';
-				subtype = null;
+				subtypes = [];
 				selectedAdditionalIds = [];
 				selectedCompanionIds = [];
 			}
@@ -131,7 +131,7 @@
 		</div>
 	</fieldset>
 
-	<SubtypePills type={selectedType} bind:selected={subtype} />
+	<SubtypePills type={selectedType} bind:selected={subtypes} />
 
 	{#if !primaryCompanion}
 		<fieldset class="space-y-1.5">

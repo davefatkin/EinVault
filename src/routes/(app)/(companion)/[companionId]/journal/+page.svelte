@@ -157,8 +157,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{activityDisplayIcon(detailEvent.type, detailEvent.subtype)}
-					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}
+					{activityDisplayIcon(detailEvent.type, detailEvent.subtypes)}
+					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtypes)}
 				</h2>
 				<button
 					onclick={closeDetail}
@@ -177,7 +177,7 @@
 						>{t(locale, 'page.journal.activityDetailType')}</span
 					>
 					<Badge variant="gold"
-						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}</Badge
+						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtypes)}</Badge
 					>
 				</div>
 				<div class="flex items-center gap-3">

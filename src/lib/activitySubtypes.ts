@@ -3,7 +3,7 @@
 // Values are globally unique across types so i18n can use a flat
 // enum.activitySubtype.* namespace.
 export const ACTIVITY_SUBTYPES = {
-	bathroom: ['pee', 'poop', 'both'],
+	bathroom: ['pee', 'poop'],
 	walk: ['leash', 'offleash', 'hike'],
 	meal: ['breakfast', 'lunch', 'dinner', 'snack'],
 	play: ['fetch', 'tug', 'puzzle', 'social'],
@@ -18,9 +18,15 @@ export function activitySubtypesFor(type: string): readonly string[] {
 	return (ACTIVITY_SUBTYPES as Record<string, readonly string[]>)[type] ?? [];
 }
 
-// parse* convention (see $server/validation.ts): invalid/empty → null, never
-// throws. The Bearer API layers an explicit 400 on top for machine clients.
-export function parseSubtype(type: string, value: unknown): string | null {
-	if (typeof value !== 'string' || value === '') return null;
-	return activitySubtypesFor(type).includes(value) ? value : null;
+// Normalizes a set of subtype values for a type: keeps only allowed values,
+// dedupes, and returns them in registry order for stable display. Invalid
+// values are dropped silently (parse* convention); the Bearer API layers a
+// hard 400 on top. Accepts an array (FormData.getAll / JSON body) or a
+// single string.
+export function parseSubtypes(type: string, value: unknown): string[] {
+	const allowed = activitySubtypesFor(type);
+	if (allowed.length === 0) return [];
+	const raw = Array.isArray(value) ? value : typeof value === 'string' && value ? [value] : [];
+	const chosen = new Set(raw.filter((v): v is string => typeof v === 'string'));
+	return allowed.filter((v) => chosen.has(v));
 }

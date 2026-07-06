@@ -12,7 +12,7 @@
 	interface TodayEvent {
 		id: string;
 		type: string;
-		subtype: string | null;
+		subtypes: string[] | null;
 		notes: string | null;
 		durationMinutes: number | null;
 		loggedAt: Date;
@@ -45,11 +45,11 @@
 			<div class="flex items-center gap-3 py-2 border-b last:border-0">
 				<span
 					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-					>{activityDisplayIcon(event.type, event.subtype)}</span
+					>{activityDisplayIcon(event.type, event.subtypes)}</span
 				>
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2">
-						<Badge variant="gold">{activityDisplayLabel(locale, event.type, event.subtype)}</Badge>
+						<Badge variant="gold">{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge>
 						{#if event.durationMinutes}
 							<span class="text-xs text-muted-foreground">{event.durationMinutes} min</span>
 						{/if}

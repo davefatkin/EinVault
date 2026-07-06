@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ACTIVITY_SUBTYPES, activitySubtypesFor, parseSubtype } from './activitySubtypes';
+import { ACTIVITY_SUBTYPES, activitySubtypesFor, parseSubtypes } from './activitySubtypes';
 
 describe('activitySubtypes', () => {
 	it('subtype values are globally unique (flat i18n namespace)', () => {
@@ -7,26 +7,34 @@ describe('activitySubtypes', () => {
 		expect(new Set(all).size).toBe(all.length);
 	});
 
-	it('accepts a valid subtype for its type', () => {
-		expect(parseSubtype('bathroom', 'pee')).toBe('pee');
-		expect(parseSubtype('walk', 'hike')).toBe('hike');
-		expect(parseSubtype('grooming', 'trim')).toBe('trim');
+	it('keeps valid values in registry order regardless of input order', () => {
+		expect(parseSubtypes('grooming', ['nails', 'bath'])).toEqual(['bath', 'nails']);
+		expect(parseSubtypes('bathroom', ['poop', 'pee'])).toEqual(['pee', 'poop']);
 	});
 
-	it('nulls empty or absent values', () => {
-		expect(parseSubtype('bathroom', '')).toBeNull();
-		expect(parseSubtype('bathroom', null)).toBeNull();
-		expect(parseSubtype('bathroom', undefined)).toBeNull();
+	it('dedupes repeated values', () => {
+		expect(parseSubtypes('bathroom', ['pee', 'pee'])).toEqual(['pee']);
 	});
 
-	it('rejects a subtype belonging to another type', () => {
-		expect(parseSubtype('walk', 'pee')).toBeNull();
-		expect(parseSubtype('other', 'pee')).toBeNull();
-		expect(parseSubtype('bathroom', 'nope')).toBeNull();
+	it('drops values belonging to another type', () => {
+		expect(parseSubtypes('walk', ['pee', 'leash'])).toEqual(['leash']);
+		expect(parseSubtypes('bathroom', ['nope'])).toEqual([]);
+	});
+
+	it('accepts a single string', () => {
+		expect(parseSubtypes('bathroom', 'pee')).toEqual(['pee']);
+	});
+
+	it('returns empty for empty or absent values', () => {
+		expect(parseSubtypes('bathroom', '')).toEqual([]);
+		expect(parseSubtypes('bathroom', null)).toEqual([]);
+		expect(parseSubtypes('bathroom', undefined)).toEqual([]);
+		expect(parseSubtypes('bathroom', [])).toEqual([]);
 	});
 
 	it('types without entries have no subtypes', () => {
 		expect(activitySubtypesFor('other')).toEqual([]);
 		expect(activitySubtypesFor('bogus')).toEqual([]);
+		expect(parseSubtypes('other', ['pee'])).toEqual([]);
 	});
 });

@@ -222,8 +222,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{activityDisplayIcon(selected.type, selected.subtype)}
-					{activityDisplayLabel(locale, selected.type, selected.subtype)}
+					{activityDisplayIcon(selected.type, selected.subtypes)}
+					{activityDisplayLabel(locale, selected.type, selected.subtypes)}
 				</h2>
 				<button
 					onclick={closeDetail}
@@ -242,7 +242,7 @@
 						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
 					>
 					<Badge variant="gold"
-						>{activityDisplayLabel(locale, selected.type, selected.subtype)}</Badge
+						>{activityDisplayLabel(locale, selected.type, selected.subtypes)}</Badge
 					>
 				</div>
 				<div class="flex items-center gap-3">
@@ -683,10 +683,10 @@
 							<div class="flex items-center gap-3 text-sm">
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-base"
-									>{activityDisplayIcon(event.type, event.subtype)}</span
+									>{activityDisplayIcon(event.type, event.subtypes)}</span
 								>
 								<Badge variant="gold" class="shrink-0"
-									>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+									>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
 								>
 								{#if event.durationMinutes}
 									<span class="text-xs text-muted-foreground shrink-0"

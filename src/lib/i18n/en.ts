@@ -49,7 +49,6 @@ const messages = {
 	// Enum: Activity subtypes
 	'enum.activitySubtype.pee': 'Pee',
 	'enum.activitySubtype.poop': 'Poop',
-	'enum.activitySubtype.both': 'Both',
 	'enum.activitySubtype.leash': 'Leash',
 	'enum.activitySubtype.offleash': 'Off-leash',
 	'enum.activitySubtype.hike': 'Hike',

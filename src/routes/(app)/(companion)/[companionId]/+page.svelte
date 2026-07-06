@@ -313,8 +313,8 @@
 					{:else if selected.kind === 'weight'}
 						{t(locale, 'page.dashboard.modalWeightEntry')}
 					{:else if selected.kind === 'activity'}
-						{activityDisplayIcon(selected.item.type, selected.item.subtype)}
-						{activityDisplayLabel(locale, selected.item.type, selected.item.subtype)}
+						{activityDisplayIcon(selected.item.type, selected.item.subtypes)}
+						{activityDisplayLabel(locale, selected.item.type, selected.item.subtypes)}
 					{:else if selected.kind === 'health'}
 						{selected.item.title}
 					{/if}
@@ -402,7 +402,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="gold">{activityDisplayLabel(locale, e.type, e.subtype)}</Badge>
+						<Badge variant="gold">{activityDisplayLabel(locale, e.type, e.subtypes)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -853,12 +853,12 @@
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										{activityDisplayIcon(event.type, event.subtype)}
+										{activityDisplayIcon(event.type, event.subtypes)}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
 											<Badge variant="gold" class="text-xs"
-												>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+												>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
 											>
 											{#if event.notes}
 												<span class="truncate text-xs text-muted-foreground">

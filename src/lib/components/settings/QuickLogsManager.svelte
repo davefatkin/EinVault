@@ -32,7 +32,7 @@
 		id: string;
 		name: string;
 		type: string;
-		subtype: string | null;
+		subtypes: string[] | null;
 		durationMinutes: number | null;
 		note: string | null;
 		isEnabled: boolean;
@@ -73,7 +73,7 @@
 	// Editor state, seeded when opening.
 	let editName = $state('');
 	let editType = $state('walk');
-	let editSubtype = $state<string | null>(null);
+	let editSubtypes = $state<string[]>([]);
 	let editDuration = $state('');
 	let editNote = $state('');
 	let editEnabled = $state(true);
@@ -87,7 +87,7 @@
 		shareOpen = null;
 		editName = '';
 		editType = 'walk';
-		editSubtype = null;
+		editSubtypes = [];
 		editDuration = '';
 		editNote = '';
 		editEnabled = true;
@@ -99,7 +99,7 @@
 		shareOpen = null;
 		editName = row.name;
 		editType = row.type;
-		editSubtype = row.subtype;
+		editSubtypes = row.subtypes ?? [];
 		editDuration = row.durationMinutes ? String(row.durationMinutes) : '';
 		editNote = row.note ?? '';
 		editEnabled = row.isEnabled;
@@ -170,7 +170,7 @@
 
 		<ActivityTypePills bind:selected={editType} legend={t(locale, 'quickLogs.typeLabel')} />
 
-		<SubtypePills type={editType} bind:selected={editSubtype} />
+		<SubtypePills type={editType} bind:selected={editSubtypes} />
 
 		{#if editHasDuration}
 			<div class="space-y-1.5 animate-slide-up">
@@ -294,7 +294,7 @@
 						<div class="flex min-w-0 items-center gap-3 sm:flex-1">
 							<span
 								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-								>{activityDisplayIcon(row.type, row.subtype)}</span
+								>{activityDisplayIcon(row.type, row.subtypes)}</span
 							>
 							<div class="flex-1 min-w-0">
 								<p class="font-medium truncate {row.isEnabled ? '' : 'text-muted-foreground'}">
@@ -306,7 +306,7 @@
 									{/if}
 								</p>
 								<p class="text-xs text-muted-foreground truncate">
-									{activityDisplayLabel(locale, row.type, row.subtype)}
+									{activityDisplayLabel(locale, row.type, row.subtypes)}
 									{#if row.durationMinutes}
 										· {row.durationMinutes} min
 									{/if}

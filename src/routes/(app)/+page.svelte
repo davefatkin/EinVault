@@ -615,7 +615,7 @@
 									aria-hidden="true"
 								>
 									{#if lastActivity.kind === 'daily'}
-										{activityDisplayIcon(lastActivity.item.type, lastActivity.item.subtype)}
+										{activityDisplayIcon(lastActivity.item.type, lastActivity.item.subtypes)}
 									{:else}
 										{HEALTH_ICONS[lastActivity.item.type] ?? '❤️'}
 									{/if}
@@ -625,7 +625,7 @@
 										{activityDisplayLabel(
 											locale,
 											lastActivity.item.type,
-											lastActivity.item.subtype
+											lastActivity.item.subtypes
 										)}
 									{:else}
 										{lastActivity.item.title}
@@ -708,7 +708,7 @@
 							aria-hidden="true"
 						>
 							{#if entry.kind === 'daily'}
-								{activityDisplayIcon(entry.item.type, entry.item.subtype)}
+								{activityDisplayIcon(entry.item.type, entry.item.subtypes)}
 							{:else}
 								{HEALTH_ICONS[entry.item.type] ?? '❤️'}
 							{/if}
@@ -717,9 +717,9 @@
 							{#if entry.kind === 'daily'}
 								{#if entry.item.logger}
 									<span class="font-semibold text-foreground">{entry.item.logger.displayName}</span>
-									&middot; {activityDisplayLabel(locale, entry.item.type, entry.item.subtype)}
+									&middot; {activityDisplayLabel(locale, entry.item.type, entry.item.subtypes)}
 								{:else}
-									{activityDisplayLabel(locale, entry.item.type, entry.item.subtype)}
+									{activityDisplayLabel(locale, entry.item.type, entry.item.subtypes)}
 								{/if}
 								{#if companion}
 									&middot; <span class="font-semibold text-foreground">{companion.name}</span>

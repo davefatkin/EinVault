@@ -33,7 +33,6 @@ export const REMINDER_ICONS: Record<string, string> = {
 export const ACTIVITY_SUBTYPE_ICONS: Record<string, string> = {
 	pee: '💧',
 	poop: '💩',
-	both: '💧💩',
 	leash: '🐕',
 	offleash: '🌳',
 	hike: '⛰️',
@@ -84,33 +83,23 @@ export function activitySubtypeLabel(locale: Locale, subtype: string): string {
 	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
 }
 
-// Subtypes whose icon is more than one glyph (e.g. 💧💩 for "both") don't fit
-// the circular avatar slots used by activityDisplayIcon; fall back to the type
-// icon there. The picker pills render these fine, so ACTIVITY_SUBTYPE_ICONS
-// keeps the multi-glyph entry.
-const MULTI_GLYPH_SUBTYPES = new Set(['both']);
-
-// Display helpers: a subtype valid for this type wins; null/unknown/mismatched
-// falls back to the type. Mirrors the guard in activityDisplayLabel.
-export function activityDisplayIcon(type: string, subtype?: string | null): string {
-	return (
-		(subtype &&
-			activitySubtypesFor(type).includes(subtype) &&
-			!MULTI_GLYPH_SUBTYPES.has(subtype) &&
-			ACTIVITY_SUBTYPE_ICONS[subtype]) ||
-		ACTIVITY_ICONS[type] ||
-		'📝'
-	);
+// Display helpers: the subtype's emoji shows only when exactly one valid
+// subtype is set; with zero or multiple subtypes, fall back to the type icon.
+export function activityDisplayIcon(type: string, subtypes?: string[] | null): string {
+	const valid = subtypes?.filter((s) => activitySubtypesFor(type).includes(s)) ?? [];
+	if (valid.length === 1) return ACTIVITY_SUBTYPE_ICONS[valid[0]] ?? ACTIVITY_ICONS[type] ?? '📝';
+	return ACTIVITY_ICONS[type] ?? '📝';
 }
 
 export function activityDisplayLabel(
 	locale: Locale,
 	type: string,
-	subtype?: string | null
+	subtypes?: string[] | null
 ): string {
-	return subtype && activitySubtypesFor(type).includes(subtype)
-		? `${activityLabel(locale, type)} · ${activitySubtypeLabel(locale, subtype)}`
-		: activityLabel(locale, type);
+	const base = activityLabel(locale, type);
+	const valid = subtypes?.filter((s) => activitySubtypesFor(type).includes(s)) ?? [];
+	if (valid.length === 0) return base;
+	return `${base} · ${valid.map((s) => activitySubtypeLabel(locale, s)).join(' · ')}`;
 }
 
 export function reminderTypeLabel(locale: Locale, type: string): string {

@@ -51,7 +51,6 @@ const messages: Record<keyof Messages, string> = {
 	// Enum: Activity subtypes
 	'enum.activitySubtype.pee': 'Pipí',
 	'enum.activitySubtype.poop': 'Caca',
-	'enum.activitySubtype.both': 'Ambos',
 	'enum.activitySubtype.leash': 'Con correa',
 	'enum.activitySubtype.offleash': 'Sin correa',
 	'enum.activitySubtype.hike': 'Caminata',

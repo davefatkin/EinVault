@@ -491,7 +491,7 @@ export function seedContent(
 				id: 'seed-act-2',
 				companionId: ein,
 				type: 'meal',
-				subtype: 'breakfast',
+				subtypes: ['breakfast'],
 				loggedAt: new Date(now - 5 * hour),
 				loggedBy: faye
 			},
@@ -499,7 +499,7 @@ export function seedContent(
 				id: 'seed-act-3',
 				companionId: ein,
 				type: 'bathroom',
-				subtype: 'poop',
+				subtypes: ['poop'],
 				loggedAt: new Date(now - 6 * hour),
 				loggedBy: faye
 			},
@@ -516,7 +516,7 @@ export function seedContent(
 				id: 'seed-act-5',
 				companionId: ein,
 				type: 'walk',
-				subtype: 'leash',
+				subtypes: ['leash'],
 				durationMinutes: 25,
 				loggedAt: new Date(now - 1 * day - 3 * hour),
 				loggedBy: jet
@@ -532,8 +532,8 @@ export function seedContent(
 				id: 'seed-act-7',
 				companionId: ein,
 				type: 'grooming',
-				subtype: 'brush',
-				notes: 'Quick brush.',
+				subtypes: ['bath', 'brush'],
+				notes: 'Bath day, brushed after.',
 				loggedAt: new Date(now - 2 * day),
 				loggedBy: jet
 			},
@@ -548,7 +548,7 @@ export function seedContent(
 				id: 'seed-act-9',
 				companionId: edward,
 				type: 'walk',
-				subtype: 'offleash',
+				subtypes: ['offleash'],
 				durationMinutes: 20,
 				notes: 'Off-leash, eventually.',
 				loggedAt: new Date(now - 3 * hour),
@@ -574,7 +574,7 @@ export function seedContent(
 				id: 'seed-act-12',
 				companionId: ein,
 				type: 'treat',
-				subtype: 'training',
+				subtypes: ['training'],
 				notes: 'Dried sardine as reward.',
 				loggedAt: new Date(now - 3 * day - 1 * hour),
 				loggedBy: jet,
@@ -838,7 +838,7 @@ export function seedContent(
 				userId: faye,
 				name: 'Potty break',
 				type: 'bathroom',
-				subtype: 'pee',
+				subtypes: ['pee'],
 				sortOrder: 0
 			}
 		])

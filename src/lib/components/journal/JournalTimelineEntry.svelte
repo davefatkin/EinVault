@@ -188,8 +188,8 @@
 						onclick={() => onOpenActivity(event)}
 						class="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
-						{activityDisplayIcon(event.type, event.subtype)}
-						<span>{activityDisplayLabel(locale, event.type, event.subtype)}</span>
+						{activityDisplayIcon(event.type, event.subtypes)}
+						<span>{activityDisplayLabel(locale, event.type, event.subtypes)}</span>
 						{#if event.durationMinutes}<span class="text-muted-foreground"
 								>· {event.durationMinutes}m</span
 							>{/if}

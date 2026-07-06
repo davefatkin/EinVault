@@ -4,34 +4,36 @@ const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
 
 test.describe('activity subtypes', () => {
-	test('subtype pills appear per type and log with the chosen subtype', async ({ asMember }) => {
+	test('subtype pills appear per type and log with the chosen subtypes', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/log?type=bathroom`);
 
-		// Bathroom offers its three subtypes as aria-pressed pills.
+		// Bathroom offers its subtypes as multi-select aria-pressed pills.
 		await expect(asMember.getByRole('button', { name: /Pee/ })).toBeVisible();
 		await expect(asMember.getByRole('button', { name: /Poop/ })).toBeVisible();
-		await expect(asMember.getByRole('button', { name: /Both/ })).toBeVisible();
 
 		// Switching to Other (no subtypes) hides the row entirely.
 		await asMember.locator('input[name="type"][value="other"]').click({ force: true });
 		await expect(asMember.getByRole('button', { name: /Poop/ })).toHaveCount(0);
 
-		// Back to bathroom, pick Poop, log it. Notes deliberately avoid the
-		// subtype/type words so the row's label assertion can't collide with them.
+		// Back to bathroom, pick BOTH Pee and Poop, log it. Notes deliberately avoid
+		// the subtype/type words so the row's label assertion can't collide with them.
 		await asMember.locator('input[name="type"][value="bathroom"]').click({ force: true });
+		const pee = asMember.getByRole('button', { name: /Pee/ });
 		const poop = asMember.getByRole('button', { name: /Poop/ });
+		await pee.click();
 		await poop.click();
+		await expect(pee).toHaveAttribute('aria-pressed', 'true');
 		await expect(poop).toHaveAttribute('aria-pressed', 'true');
 
 		await asMember.locator('textarea[name="notes"]').fill('e2e subtype selection alpha');
 		await asMember.getByRole('button', { name: /^Log / }).click();
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
 
-		// Today list shows the subtype label instead of the generic type.
+		// Today list joins both subtype labels in registry order.
 		const row = asMember
 			.locator('div.flex.items-center', { hasText: 'e2e subtype selection alpha' })
 			.last();
-		await expect(row.getByText('Bathroom · Poop', { exact: true })).toBeVisible();
+		await expect(row.getByText('Bathroom · Pee · Poop', { exact: true })).toBeVisible();
 	});
 
 	test('subtype is optional — logging without one still works', async ({ asMember }) => {
@@ -73,16 +75,17 @@ test.describe('activity subtypes', () => {
 			timeout: 8_000
 		});
 
-		// Edit it to a different subtype (Both) and confirm the label changes.
+		// Edit it to add Pee alongside Poop. Registry order puts Pee first
+		// regardless of click order, so the label reads "Bathroom · Pee · Poop".
 		await row.getByRole('button', { name: /edit/i }).click();
 		const editForm = asMember.locator('form[action="?/updateActivity"]');
-		await editForm.getByRole('button', { name: /Both/ }).click();
+		await editForm.getByRole('button', { name: /Pee/ }).click();
 		await editForm.getByRole('button', { name: /^Save$/ }).click();
 
 		const editedRow = asMember
 			.locator('div.divide-y > div')
 			.filter({ hasText: 'e2e day-page subtype gamma' });
-		await expect(editedRow.getByText('Bathroom · Both', { exact: true })).toBeVisible({
+		await expect(editedRow.getByText('Bathroom · Pee · Poop', { exact: true })).toBeVisible({
 			timeout: 8_000
 		});
 	});

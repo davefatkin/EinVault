@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "633358c2-e398-4652-a8ae-c627da4cf973",
+  "id": "cf9855aa-cbb3-4ddd-b467-9dc4b8bb8456",
   "prevId": "63d6a47e-d2fe-4474-8e38-68ac5965483f",
   "tables": {
     "api_idempotency_keys": {
@@ -616,8 +616,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "subtype": {
-          "name": "subtype",
+        "subtypes": {
+          "name": "subtypes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1554,8 +1554,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "subtype": {
-          "name": "subtype",
+        "subtypes": {
+          "name": "subtypes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -224,17 +224,17 @@ test.describe('api tokens', () => {
 		expect(events.filter((e: { notes: string | null }) => e.notes === 'idem walk')).toHaveLength(1);
 	});
 
-	test('logs endpoint accepts a valid subtype, rejects a cross-type one, treats empty as none', async ({
+	test('logs endpoint accepts valid subtypes, rejects a cross-type one, treats empty as none', async ({
 		asMember,
 		app
 	}) => {
 		const raw = await createToken(asMember, 'Subtype bot');
 		const headers = { Authorization: `Bearer ${raw}` };
 
-		// A valid subtype for the type is stored and read back verbatim.
+		// Valid subtypes for the type are stored and read back verbatim.
 		const ok = await asMember.request.post(app.server.baseURL + '/api/logs', {
 			headers,
-			data: { companionId: EIN, type: 'bathroom', subtype: 'poop', notes: 'api subtype poop' }
+			data: { companionId: EIN, type: 'bathroom', subtypes: ['poop'], notes: 'api subtype poop' }
 		});
 		expect(ok.status()).toBe(201);
 
@@ -246,20 +246,20 @@ test.describe('api tokens', () => {
 		const stored = (await readBack.json()).events.find(
 			(e: { notes: string | null }) => e.notes === 'api subtype poop'
 		);
-		expect(stored?.subtype).toBe('poop');
+		expect(stored?.subtypes).toEqual(['poop']);
 
 		// A subtype that belongs to a different type is a stable 400, not silent.
 		const cross = await asMember.request.post(app.server.baseURL + '/api/logs', {
 			headers,
-			data: { companionId: EIN, type: 'walk', subtype: 'pee' }
+			data: { companionId: EIN, type: 'walk', subtypes: ['pee'] }
 		});
 		expect(cross.status()).toBe(400);
 		expect((await cross.json()).code).toBe('invalidSubtype');
 
-		// An empty subtype means "none" (forms map an unselected pill to ''), not 400.
+		// An empty subtypes array means "none", not 400. Stored as null.
 		const empty = await asMember.request.post(app.server.baseURL + '/api/logs', {
 			headers,
-			data: { companionId: EIN, type: 'bathroom', subtype: '', notes: 'api subtype empty' }
+			data: { companionId: EIN, type: 'bathroom', subtypes: [], notes: 'api subtype empty' }
 		});
 		expect(empty.status()).toBe(201);
 
@@ -270,7 +270,7 @@ test.describe('api tokens', () => {
 		const emptyStored = (await readBack2.json()).events.find(
 			(e: { notes: string | null }) => e.notes === 'api subtype empty'
 		);
-		expect(emptyStored?.subtype).toBeNull();
+		expect(emptyStored?.subtypes).toBeNull();
 	});
 
 	test('journal endpoint upserts the day entry', async ({ asMember, app }) => {
