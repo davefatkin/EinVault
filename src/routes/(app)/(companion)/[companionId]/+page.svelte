@@ -16,7 +16,6 @@
 		HeartPulse,
 		Pencil,
 		UserCheck,
-		NotebookPen,
 		FileText,
 		X,
 		CheckCheck,
@@ -26,7 +25,12 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS, REMINDER_ICONS, activityTypeOptions } from '$lib/i18n/labels';
+	import {
+		REMINDER_ICONS,
+		activityTypeOptions,
+		activityDisplayIcon,
+		activityDisplayLabel
+	} from '$lib/i18n/labels';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -37,6 +41,7 @@
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import { careStatus } from '$lib/careStatus';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
+	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -64,8 +69,6 @@
 	}
 
 	let today = localDateISO();
-
-	const ACTIVITY_ICON = ACTIVITY_ICONS;
 
 	// Quick log shortcuts, the same trio the caretaker view offers.
 	const quickLogTypes = activityTypeOptions(locale).filter((o) =>
@@ -287,259 +290,219 @@
 
 <!-- Detail modal -->
 {#if selected}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'page.dashboard.closeDialog')}
-			onclick={closeDetail}
-		></button>
-		<div
-			bind:this={dialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={trapFocus}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
+	{#if selected.kind === 'activity'}
+		<ActivityDetailModal
+			event={selected.item}
+			onclose={closeDetail}
+			journalHref={companion.isActive !== false
+				? `/${companion.id}/journal/${eventDate(selected.item.loggedAt)}`
+				: null}
+		/>
+	{:else}
+		<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+			<button
+				tabindex="-1"
+				class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+				aria-label={t(locale, 'page.dashboard.closeDialog')}
+				onclick={closeDetail}
+			></button>
+			<div
+				bind:this={dialogEl}
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+				onkeydown={trapFocus}
+				class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
 				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
+			>
+				<div class="flex items-center justify-between px-5 pt-5 pb-3">
+					<h2 class="font-semibold text-base text-foreground">
+						{#if selected.kind === 'reminder'}
+							{selected.item.title}
+						{:else if selected.kind === 'weight'}
+							{t(locale, 'page.dashboard.modalWeightEntry')}
+						{:else if selected.kind === 'health'}
+							{selected.item.title}
+						{/if}
+					</h2>
+					<button
+						onclick={closeDetail}
+						aria-label={t(locale, 'common.close')}
+						class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+					>
+						<X class="h-4 w-4" />
+					</button>
+				</div>
+
+				<Separator />
+
+				<div class="px-5 py-4 space-y-3 text-sm">
 					{#if selected.kind === 'reminder'}
-						{selected.item.title}
+						{@const r = selected.item}
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelType')}</span
+							>
+							<Badge variant="coral" class="capitalize">{r.type}</Badge>
+						</div>
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelDue')}</span
+							>
+							<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
+						</div>
+						{#if r.isRecurring}
+							<div class="flex items-center gap-3">
+								<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+									>{t(locale, 'page.dashboard.modalLabelRepeats')}</span
+								>
+								<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
+							</div>
+						{/if}
+						{#if r.description}
+							<div class="pt-1">
+								<p class="text-xs font-medium text-muted-foreground mb-1">
+									{t(locale, 'page.dashboard.modalLabelNotes')}
+								</p>
+								<div class="prose prose-sm dark:prose-invert max-w-none">
+									{@html renderMarkdown(r.description)}
+								</div>
+							</div>
+						{/if}
+						<ByLine user={r.logger} />
 					{:else if selected.kind === 'weight'}
-						{t(locale, 'page.dashboard.modalWeightEntry')}
-					{:else if selected.kind === 'activity'}
-						{ACTIVITY_ICON[selected.item.type] ?? '📝'}
-						{selected.item.type.charAt(0).toUpperCase() + selected.item.type.slice(1)}
-					{:else if selected.kind === 'health'}
-						{selected.item.title}
-					{/if}
-				</h2>
-				<button
-					onclick={closeDetail}
-					aria-label={t(locale, 'common.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				{#if selected.kind === 'reminder'}
-					{@const r = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelType')}</span
-						>
-						<Badge variant="coral" class="capitalize">{r.type}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelDue')}</span
-						>
-						<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
-					</div>
-					{#if r.isRecurring}
+						{@const w = selected.item}
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelRepeats')}</span
+								>{t(locale, 'page.dashboard.modalLabelWeight')}</span
 							>
-							<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
-						</div>
-					{/if}
-					{#if r.description}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(r.description)}
-							</div>
-						</div>
-					{/if}
-					<ByLine user={r.logger} />
-				{:else if selected.kind === 'weight'}
-					{@const w = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelWeight')}</span
-						>
-						<span class="text-xl font-bold text-foreground"
-							>{w.weight}
-							<span class="text-sm font-normal text-muted-foreground">{w.unit}</span></span
-						>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={w.recordedAt} format="datetime" /><ByLine
-								user={w.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if w.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(w.notes)}
-							</div>
-						</div>
-					{/if}
-				{:else if selected.kind === 'activity'}
-					{@const e = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelType')}</span
-						>
-						<Badge variant="gold" class="capitalize">{e.type}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelLogged')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={e.loggedAt} format="datetime" /><ByLine
-								user={e.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if e.durationMinutes}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelDuration')}</span
+							<span class="text-xl font-bold text-foreground"
+								>{w.weight}
+								<span class="text-sm font-normal text-muted-foreground">{w.unit}</span></span
 							>
-							<span class="text-foreground">{e.durationMinutes} min</span>
 						</div>
-					{/if}
-					{#if e.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(e.notes)}
-							</div>
-						</div>
-					{/if}
-				{:else if selected.kind === 'health'}
-					{@const h = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelType')}</span
-						>
-						<Badge variant="teal" class="capitalize">{h.type.replace('_', ' ')}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.modalLabelDate')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" /><ByLine
-								user={h.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if h.vetName || h.vetClinic}
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.dashboard.modalLabelVet')}</span
+								>{t(locale, 'page.dashboard.modalLabelRecorded')}</span
 							>
 							<span class="text-foreground"
-								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
+								><LocalTime date={w.recordedAt} format="datetime" /><ByLine
+									user={w.logger}
+									variant="inline"
+								/></span
 							>
 						</div>
-					{/if}
-					{#if h.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.dashboard.modalLabelNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(h.notes)}
+						{#if w.notes}
+							<div class="pt-1">
+								<p class="text-xs font-medium text-muted-foreground mb-1">
+									{t(locale, 'page.dashboard.modalLabelNotes')}
+								</p>
+								<div class="prose prose-sm dark:prose-invert max-w-none">
+									{@html renderMarkdown(w.notes)}
+								</div>
 							</div>
+						{/if}
+					{:else if selected.kind === 'health'}
+						{@const h = selected.item}
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelType')}</span
+							>
+							<Badge variant="teal" class="capitalize">{h.type.replace('_', ' ')}</Badge>
 						</div>
-					{/if}
-				{/if}
-			</div>
-
-			<Separator />
-
-			{#if companion.isActive !== false}
-				<div class="flex gap-2 px-5 py-4">
-					{#if selected.kind === 'reminder'}
-						<Button
-							href="/{companion.id}/reminders?edit={selected.item.id}"
-							variant="soft"
-							size="sm"
-							onclick={closeDetail}
-						>
-							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.dashboard.modalEditReminders')}
-						</Button>
-						<Button
-							variant="softSuccess"
-							size="sm"
-							onclick={() => {
-								if (selected?.kind !== 'reminder') return;
-								const item = selected.item;
-								const form = dismissFormRegistry.get(item.id);
-								if (!form) return;
-								closeDetail();
-								pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
-							}}
-						>
-							<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.reminder.done')}
-						</Button>
-						<Button
-							variant="softPrimary"
-							size="sm"
-							aria-label={t(locale, 'common.reminder.logEventAria')}
-							onclick={() => {
-								if (selected?.kind !== 'reminder') return;
-								const item = selected.item;
-								closeDetail();
-								submitWithAndEvent(item.id);
-							}}
-						>
-							<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.reminder.logEventShort')}
-						</Button>
-					{:else if selected.kind === 'weight' || selected.kind === 'health'}
-						<Button
-							href="/{companion.id}/health?edit={selected.item.id}"
-							variant="soft"
-							size="sm"
-							onclick={closeDetail}
-						>
-							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.dashboard.modalEditHealth')}
-						</Button>
-					{:else if selected.kind === 'activity'}
-						<Button
-							href="/{companion.id}/journal/{eventDate(selected.item.loggedAt)}"
-							variant="soft"
-							size="sm"
-							onclick={closeDetail}
-						>
-							<NotebookPen class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.dashboard.modalOpenJournal')}
-						</Button>
+						<div class="flex items-center gap-3">
+							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+								>{t(locale, 'page.dashboard.modalLabelDate')}</span
+							>
+							<span class="text-foreground"
+								><LocalTime date={h.occurredAt} format="datetime" /><ByLine
+									user={h.logger}
+									variant="inline"
+								/></span
+							>
+						</div>
+						{#if h.vetName || h.vetClinic}
+							<div class="flex items-center gap-3">
+								<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+									>{t(locale, 'page.dashboard.modalLabelVet')}</span
+								>
+								<span class="text-foreground"
+									>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
+								>
+							</div>
+						{/if}
+						{#if h.notes}
+							<div class="pt-1">
+								<p class="text-xs font-medium text-muted-foreground mb-1">
+									{t(locale, 'page.dashboard.modalLabelNotes')}
+								</p>
+								<div class="prose prose-sm dark:prose-invert max-w-none">
+									{@html renderMarkdown(h.notes)}
+								</div>
+							</div>
+						{/if}
 					{/if}
 				</div>
-			{/if}
+
+				<Separator />
+
+				{#if companion.isActive !== false}
+					<div class="flex gap-2 px-5 py-4">
+						{#if selected.kind === 'reminder'}
+							<Button
+								href="/{companion.id}/reminders?edit={selected.item.id}"
+								variant="soft"
+								size="sm"
+								onclick={closeDetail}
+							>
+								<Pencil class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'page.dashboard.modalEditReminders')}
+							</Button>
+							<Button
+								variant="softSuccess"
+								size="sm"
+								onclick={() => {
+									if (selected?.kind !== 'reminder') return;
+									const item = selected.item;
+									const form = dismissFormRegistry.get(item.id);
+									if (!form) return;
+									closeDetail();
+									pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+								}}
+							>
+								<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'common.reminder.done')}
+							</Button>
+							<Button
+								variant="softPrimary"
+								size="sm"
+								aria-label={t(locale, 'common.reminder.logEventAria')}
+								onclick={() => {
+									if (selected?.kind !== 'reminder') return;
+									const item = selected.item;
+									closeDetail();
+									submitWithAndEvent(item.id);
+								}}
+							>
+								<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'common.reminder.logEventShort')}
+							</Button>
+						{:else if selected.kind === 'weight' || selected.kind === 'health'}
+							<Button
+								href="/{companion.id}/health?edit={selected.item.id}"
+								variant="soft"
+								size="sm"
+								onclick={closeDetail}
+							>
+								<Pencil class="h-3.5 w-3.5 mr-1.5" />
+								{t(locale, 'page.dashboard.modalEditHealth')}
+							</Button>
+						{/if}
+					</div>
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 {/if}
 
 <div class="space-y-4 pb-20 md:pb-0">
@@ -850,11 +813,13 @@
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										{ACTIVITY_ICON[event.type] ?? '📝'}
+										{activityDisplayIcon(event.type, event.subtypes)}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="gold" class="capitalize text-xs">{event.type}</Badge>
+											<Badge variant="gold" class="text-xs"
+												>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
+											>
 											{#if event.notes}
 												<span class="truncate text-xs text-muted-foreground">
 													{stripMarkdown(event.notes)}

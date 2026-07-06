@@ -25,19 +25,23 @@
 		Plus,
 		Pencil,
 		NotebookPen,
-		X,
 		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
+	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
-	import { moodOptions, activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import {
+		moodOptions,
+		activityTypeOptions,
+		activityDisplayIcon,
+		activityDisplayLabel
+	} from '$lib/i18n/labels';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
@@ -333,10 +337,6 @@
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && detailEvent) {
-			closeActivityDetail();
-			return;
-		}
 		if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
 			e.preventDefault();
 			viewMode = viewMode === 'write' ? 'preview' : 'write';
@@ -345,7 +345,6 @@
 
 	// Activity log
 	const EVENT_TYPES = activityTypeOptions(locale);
-	const EVENT_ICONS = ACTIVITY_ICONS;
 
 	function localDatetimeISO(d = new Date()) {
 		const p = (n: number) => String(n).padStart(2, '0');
@@ -364,6 +363,7 @@
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
 	let duration = $state('');
+	let addActivitySubtypes = $state<string[]>([]);
 	let siblingCompanions = $derived(
 		data.companions.filter((c) => c.id !== data.companion.id && c.isActive)
 	);
@@ -371,6 +371,7 @@
 
 	let editingActivityId = $state<string | null>(null);
 	let editActivityType = $state('walk');
+	let editActivitySubtypes = $state<string[]>([]);
 	let editActivityHasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === editActivityType)?.hasDuration ?? false
 	);
@@ -378,6 +379,7 @@
 	function startEditActivity(event: (typeof data.dailyEvents)[0]) {
 		editingActivityId = event.id;
 		editActivityType = event.type;
+		editActivitySubtypes = event.subtypes ?? [];
 	}
 
 	let confirmOpen = $state(false);
@@ -390,43 +392,15 @@
 	let deleteActivityId = $state('');
 	let deleteActivityForm = $state<HTMLFormElement | null>(null);
 
-	// Activity detail modal
+	// Activity detail modal (shared component owns focus/escape/backdrop).
 	let detailEvent = $state<(typeof data.dailyEvents)[0] | null>(null);
-	let detailDialogEl = $state<HTMLElement | null>(null);
 
-	async function openActivityDetail(event: (typeof data.dailyEvents)[0]) {
+	function openActivityDetail(event: (typeof data.dailyEvents)[0]) {
 		detailEvent = event;
-		await tick();
-		detailDialogEl?.focus();
 	}
 
 	function closeActivityDetail() {
 		detailEvent = null;
-	}
-
-	function trapDetailFocus(e: KeyboardEvent) {
-		if (!detailDialogEl) return;
-		const focusable = Array.from(
-			detailDialogEl.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			)
-		).filter((el) => !el.hasAttribute('disabled'));
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.key === 'Tab') {
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		}
 	}
 </script>
 
@@ -438,94 +412,22 @@
 
 <!-- Activity detail modal -->
 {#if detailEvent}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'aria.closeDialog')}
-			onclick={closeActivityDetail}
-		></button>
-		<div
-			bind:this={detailDialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={trapDetailFocus}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
-					{EVENT_ICONS[detailEvent.type] ?? '📝'}
-					{detailEvent.type.charAt(0).toUpperCase() + detailEvent.type.slice(1)}
-				</h2>
-				<button
-					onclick={closeActivityDetail}
-					aria-label={t(locale, 'aria.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.journal.day.detailType')}</span
-					>
-					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
-				</div>
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.journal.day.detailLogged')}</span
-					>
-					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /><ByLine
-							user={detailEvent.logger}
-							variant="inline"
-						/></span
-					>
-				</div>
-				{#if detailEvent.durationMinutes}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.journal.day.detailDuration')}</span
-						>
-						<span class="text-foreground">{detailEvent.durationMinutes} min</span>
-					</div>
-				{/if}
-				{#if detailEvent.notes}
-					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">
-							{t(locale, 'page.journal.day.detailNotes')}
-						</p>
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(detailEvent.notes)}
-						</div>
-					</div>
-				{/if}
-			</div>
-
-			<Separator />
-
-			<div class="flex gap-2 px-5 py-4">
-				<Button
-					variant="soft"
-					size="sm"
-					onclick={() => {
-						const ev = detailEvent;
-						closeActivityDetail();
-						if (ev) startEditActivity(ev);
-					}}
-				>
-					<Pencil class="h-3.5 w-3.5 mr-1.5" />
-					{t(locale, 'common.edit')}
-				</Button>
-			</div>
-		</div>
-	</div>
+	<ActivityDetailModal event={detailEvent} onclose={closeActivityDetail}>
+		{#snippet footer()}
+			<Button
+				variant="soft"
+				size="sm"
+				onclick={() => {
+					const ev = detailEvent;
+					closeActivityDetail();
+					if (ev) startEditActivity(ev);
+				}}
+			>
+				<Pencil class="h-3.5 w-3.5 mr-1.5" />
+				{t(locale, 'common.edit')}
+			</Button>
+		{/snippet}
+	</ActivityDetailModal>
 {/if}
 
 <div class="max-w-3xl mx-auto pb-24 md:pb-0">
@@ -977,6 +879,7 @@
 								update();
 								showActivityForm = false;
 								selectedType = 'walk';
+								addActivitySubtypes = [];
 								selectedAdditionalIds = [];
 								duration = '';
 							}}
@@ -1009,6 +912,7 @@
 								{/each}
 							</div>
 						</div>
+						<SubtypePills type={selectedType} bind:selected={addActivitySubtypes} />
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
 								<legend class="text-sm font-medium text-foreground">
@@ -1156,6 +1060,7 @@
 											{/each}
 										</div>
 									</div>
+									<SubtypePills type={editActivityType} bind:selected={editActivitySubtypes} />
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
 											<label
@@ -1226,15 +1131,17 @@
 								<button
 									type="button"
 									onclick={() => openActivityDetail(event)}
-									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors -mx-2"
+									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg pl-2 pr-2 py-1 transition-colors -ml-2"
 								>
 									<span
 										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-										>{EVENT_ICONS[event.type] ?? '📝'}</span
+										>{activityDisplayIcon(event.type, event.subtypes)}</span
 									>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="gold" class="capitalize">{event.type}</Badge>
+											<Badge variant="gold"
+												>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
+											>
 											{#if event.durationMinutes}
 												<span class="text-xs text-muted-foreground"
 													>{event.durationMinutes} min</span

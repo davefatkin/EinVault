@@ -20,6 +20,10 @@ export const LogRequest = z
 		type: DailyEventType,
 		notes: z.string().max(MAX_NOTE_LEN).optional(),
 		durationMinutes: z.number().int().positive().max(480).optional(),
+		subtypes: z.array(z.string()).max(10).optional().openapi({
+			description:
+				'Optional subtype values; allowed values depend on type (e.g. bathroom: pee|poop). Order is not significant.'
+		}),
 		loggedAt: z.string().optional().openapi({
 			format: 'date-time',
 			description: 'ISO 8601. Defaults to now; bounded to now-5y..now+1d.'
@@ -90,6 +94,7 @@ export const LoggedEvent = z
 		type: DailyEventType,
 		notes: z.string().nullable(),
 		durationMinutes: z.number().int().nullable(),
+		subtypes: z.array(z.string()).nullable(),
 		loggedAt: z.string().openapi({ description: 'ISO 8601 timestamp.' }),
 		eventGroupId: z.string().nullable()
 	})
@@ -134,6 +139,7 @@ export const QuickLog = z
 		name: z.string(),
 		type: DailyEventType,
 		durationMinutes: z.number().int().nullable(),
+		subtypes: z.array(z.string()),
 		note: z.string().nullable(),
 		companionIds: z.array(z.string())
 	})

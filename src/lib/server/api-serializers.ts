@@ -30,6 +30,7 @@ export function toApiQuickLog(b: QuickLogButton) {
 		name: b.name,
 		type: b.type,
 		durationMinutes: b.durationMinutes,
+		subtypes: b.subtypes,
 		note: b.note,
 		companionIds: b.companionIds
 	};
@@ -43,6 +44,7 @@ export function toApiDailyEvent(row: DailyEventRow) {
 		type: row.type,
 		notes: row.notes,
 		durationMinutes: row.durationMinutes,
+		subtypes: row.subtypes,
 		loggedAt: row.loggedAt,
 		eventGroupId: row.eventGroupId
 	};

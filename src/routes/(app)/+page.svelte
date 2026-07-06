@@ -20,10 +20,10 @@
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import {
-		ACTIVITY_ICONS,
 		REMINDER_ICONS,
 		MOOD_ICONS,
-		activityLabel,
+		activityDisplayIcon,
+		activityDisplayLabel,
 		healthTypeLabel
 	} from '$lib/i18n/labels';
 	import { careStatus } from '$lib/careStatus';
@@ -615,14 +615,18 @@
 									aria-hidden="true"
 								>
 									{#if lastActivity.kind === 'daily'}
-										{ACTIVITY_ICONS[lastActivity.item.type] ?? '📝'}
+										{activityDisplayIcon(lastActivity.item.type, lastActivity.item.subtypes)}
 									{:else}
 										{HEALTH_ICONS[lastActivity.item.type] ?? '❤️'}
 									{/if}
 								</span>
 								<span class="truncate flex-1">
 									{#if lastActivity.kind === 'daily'}
-										{activityLabel(locale, lastActivity.item.type)}
+										{activityDisplayLabel(
+											locale,
+											lastActivity.item.type,
+											lastActivity.item.subtypes
+										)}
 									{:else}
 										{lastActivity.item.title}
 									{/if}
@@ -704,7 +708,7 @@
 							aria-hidden="true"
 						>
 							{#if entry.kind === 'daily'}
-								{ACTIVITY_ICONS[entry.item.type] ?? '📝'}
+								{activityDisplayIcon(entry.item.type, entry.item.subtypes)}
 							{:else}
 								{HEALTH_ICONS[entry.item.type] ?? '❤️'}
 							{/if}
@@ -713,9 +717,9 @@
 							{#if entry.kind === 'daily'}
 								{#if entry.item.logger}
 									<span class="font-semibold text-foreground">{entry.item.logger.displayName}</span>
-									&middot; {activityLabel(locale, entry.item.type)}
+									&middot; {activityDisplayLabel(locale, entry.item.type, entry.item.subtypes)}
 								{:else}
-									{activityLabel(locale, entry.item.type)}
+									{activityDisplayLabel(locale, entry.item.type, entry.item.subtypes)}
 								{/if}
 								{#if companion}
 									&middot; <span class="font-semibold text-foreground">{companion.name}</span>

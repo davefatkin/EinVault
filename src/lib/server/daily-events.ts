@@ -2,6 +2,7 @@ import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
 import { authorizeCompanions } from '$lib/server/companion-scope';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
+import { parseSubtypes } from '$lib/activitySubtypes';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import type { CareErrorCode } from '$lib/server/care-errors';
 
@@ -10,6 +11,7 @@ export interface DailyEventInput {
 	notes: string | null;
 	durationMinutes: number | null;
 	loggedAt: Date;
+	subtypes?: string[] | null;
 }
 
 // Insert one daily_events row per authorized companion; rows from a single
@@ -25,6 +27,8 @@ export async function logDailyEvent(
 	if (!resolved.ok) return resolved;
 
 	const durationMinutes = ACTIVITY_HAS_DURATION[input.type] ? input.durationMinutes : null;
+	const list = parseSubtypes(input.type, input.subtypes ?? null);
+	const subtypes = list.length ? list : null;
 	const eventGroupId = resolved.ids.length > 1 ? generateId(15) : null;
 	const rows = resolved.ids.map((cid) => ({
 		id: generateId(15),
@@ -32,6 +36,7 @@ export async function logDailyEvent(
 		type: input.type,
 		notes: input.notes,
 		durationMinutes,
+		subtypes,
 		loggedAt: input.loggedAt,
 		loggedBy: user.id,
 		eventGroupId

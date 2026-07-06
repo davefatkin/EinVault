@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { Pencil, NotebookPen, Play } from '@lucide/svelte';
-	import { MOOD_ICONS, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 	import type { JournalEntry, JournalPhoto, DailyEvent } from '$server/db/schema';
 	import type { UserRef } from '$lib/types';
@@ -188,8 +188,8 @@
 						onclick={() => onOpenActivity(event)}
 						class="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
-						{ACTIVITY_ICONS[event.type] ?? '📝'}
-						<span class="capitalize">{event.type}</span>
+						{activityDisplayIcon(event.type, event.subtypes)}
+						<span>{activityDisplayLabel(locale, event.type, event.subtypes)}</span>
 						{#if event.durationMinutes}<span class="text-muted-foreground"
 								>· {event.durationMinutes}m</span
 							>{/if}

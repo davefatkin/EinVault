@@ -141,6 +141,7 @@ export const actions: Actions = {
 		const notes = rawNotes.trim() || null;
 		const durationMinutes = parseDurationMinutes(data.get('durationMinutes'));
 		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
+		const subtypes = data.getAll('subtypes').map(String);
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.typeRequired') });
 
@@ -151,7 +152,7 @@ export const actions: Actions = {
 		const result = await logDailyEvent(
 			{ id: locals.user.id, role: locals.user.role },
 			companionIds,
-			{ type, notes, durationMinutes, loggedAt }
+			{ type, notes, durationMinutes, loggedAt, subtypes }
 		);
 		if (!result.ok) {
 			return fail(404, { error: t(locals.locale, 'error.companionNotFound') });

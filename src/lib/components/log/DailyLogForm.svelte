@@ -7,6 +7,7 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions } from '$lib/i18n/labels';
+	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 
 	interface CompanionOption {
 		id: string;
@@ -40,6 +41,7 @@
 	let selectedType = $state((TYPE_VALUES as string[]).includes(initialType) ? initialType : 'walk');
 	let duration = $state('');
 	let notes = $state('');
+	let subtypes = $state<string[]>([]);
 
 	let siblingCompanions = $derived(
 		primaryCompanion ? companions.filter((c) => c.id !== primaryCompanion!.id) : []
@@ -89,6 +91,7 @@
 			if (result.type === 'success') {
 				duration = '';
 				notes = '';
+				subtypes = [];
 				selectedAdditionalIds = [];
 				selectedCompanionIds = [];
 			}
@@ -127,6 +130,8 @@
 			{/each}
 		</div>
 	</fieldset>
+
+	<SubtypePills type={selectedType} bind:selected={subtypes} />
 
 	{#if !primaryCompanion}
 		<fieldset class="space-y-1.5">
