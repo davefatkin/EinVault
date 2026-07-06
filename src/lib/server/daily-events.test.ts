@@ -114,4 +114,42 @@ describe('daily-events', () => {
 		});
 		expect(row?.durationMinutes).toBeNull();
 	});
+
+	it('stores a valid subtype and nulls a cross-type one', async () => {
+		const ok = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			type: 'bathroom' as const,
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date(),
+			subtype: 'pee'
+		});
+		expect(ok.ok).toBe(true);
+		if (!ok.ok) return;
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, ok.ids[0])
+		});
+		expect(row?.subtype).toBe('pee');
+
+		// 'pee' is not a walk subtype → normalized to null, not an error
+		const bad = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			...input,
+			subtype: 'pee'
+		});
+		expect(bad.ok).toBe(true);
+		if (!bad.ok) return;
+		const badRow = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, bad.ids[0])
+		});
+		expect(badRow?.subtype).toBeNull();
+	});
+
+	it('omitted subtype stays null', async () => {
+		const res = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], input);
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, res.ids[0])
+		});
+		expect(row?.subtype).toBeNull();
+	});
 });
