@@ -29,6 +29,7 @@
 		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -364,6 +365,7 @@
 		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
 	);
 	let duration = $state('');
+	let addActivitySubtype = $state<string | null>(null);
 	let siblingCompanions = $derived(
 		data.companions.filter((c) => c.id !== data.companion.id && c.isActive)
 	);
@@ -371,6 +373,7 @@
 
 	let editingActivityId = $state<string | null>(null);
 	let editActivityType = $state('walk');
+	let editActivitySubtype = $state<string | null>(null);
 	let editActivityHasDuration = $derived(
 		EVENT_TYPES.find((t) => t.value === editActivityType)?.hasDuration ?? false
 	);
@@ -378,6 +381,7 @@
 	function startEditActivity(event: (typeof data.dailyEvents)[0]) {
 		editingActivityId = event.id;
 		editActivityType = event.type;
+		editActivitySubtype = event.subtype;
 	}
 
 	let confirmOpen = $state(false);
@@ -977,6 +981,7 @@
 								update();
 								showActivityForm = false;
 								selectedType = 'walk';
+								addActivitySubtype = null;
 								selectedAdditionalIds = [];
 								duration = '';
 							}}
@@ -1009,6 +1014,7 @@
 								{/each}
 							</div>
 						</div>
+						<SubtypePills type={selectedType} bind:selected={addActivitySubtype} />
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
 								<legend class="text-sm font-medium text-foreground">
@@ -1156,6 +1162,7 @@
 											{/each}
 										</div>
 									</div>
+									<SubtypePills type={editActivityType} bind:selected={editActivitySubtype} />
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
 											<label
