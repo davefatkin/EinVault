@@ -7,19 +7,25 @@ test.describe('activity subtypes', () => {
 	test('subtype pills appear per type and log with the chosen subtypes', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/log?type=bathroom`);
 
+		// Scope to the subtype pills fieldset: the seeded "Today so far" list
+		// always has a Bathroom · Poop entry too, and its row is a real button
+		// (clickable to open the detail modal), so an unscoped role lookup for
+		// "Poop" is ambiguous.
+		const pills = asMember.locator('fieldset', { hasText: 'Which kind?' });
+
 		// Bathroom offers its subtypes as multi-select aria-pressed pills.
-		await expect(asMember.getByRole('button', { name: /Pee/ })).toBeVisible();
-		await expect(asMember.getByRole('button', { name: /Poop/ })).toBeVisible();
+		await expect(pills.getByRole('button', { name: /Pee/ })).toBeVisible();
+		await expect(pills.getByRole('button', { name: /Poop/ })).toBeVisible();
 
 		// Switching to Other (no subtypes) hides the row entirely.
 		await asMember.locator('input[name="type"][value="other"]').click({ force: true });
-		await expect(asMember.getByRole('button', { name: /Poop/ })).toHaveCount(0);
+		await expect(pills.getByRole('button', { name: /Poop/ })).toHaveCount(0);
 
 		// Back to bathroom, pick BOTH Pee and Poop, log it. Notes deliberately avoid
 		// the subtype/type words so the row's label assertion can't collide with them.
 		await asMember.locator('input[name="type"][value="bathroom"]').click({ force: true });
-		const pee = asMember.getByRole('button', { name: /Pee/ });
-		const poop = asMember.getByRole('button', { name: /Poop/ });
+		const pee = pills.getByRole('button', { name: /Pee/ });
+		const poop = pills.getByRole('button', { name: /Poop/ });
 		await pee.click();
 		await poop.click();
 		await expect(pee).toHaveAttribute('aria-pressed', 'true');
