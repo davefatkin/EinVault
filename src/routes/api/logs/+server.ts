@@ -63,7 +63,9 @@ export const POST = apiRouteZod(
 			loggedAt = parsed;
 		}
 
-		if (body.subtype !== undefined && parseSubtype(body.type, body.subtype) === null) {
+		// Treat '' as absent (web forms map an unselected pill to ''); only a
+		// non-empty subtype that fails to parse for this type is a client error.
+		if (body.subtype && parseSubtype(body.type, body.subtype) === null) {
 			error(400, { code: 'invalidSubtype', message: t(locale, 'error.invalidSubtype') });
 		}
 
@@ -74,7 +76,7 @@ export const POST = apiRouteZod(
 					type: body.type,
 					notes: body.notes?.trim() || null,
 					durationMinutes: body.durationMinutes ?? null,
-					subtype: body.subtype ?? null,
+					subtype: body.subtype || null,
 					loggedAt
 				});
 				if (!result.ok) throwCareError(result.code, locale);

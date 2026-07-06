@@ -84,9 +84,14 @@ export function activitySubtypeLabel(locale: Locale, subtype: string): string {
 	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
 }
 
-// Display helpers: a known subtype wins; null/unknown falls back to the type.
+// Display helpers: a subtype valid for this type wins; null/unknown/mismatched
+// falls back to the type. Mirrors the guard in activityDisplayLabel.
 export function activityDisplayIcon(type: string, subtype?: string | null): string {
-	return (subtype && ACTIVITY_SUBTYPE_ICONS[subtype]) || ACTIVITY_ICONS[type] || '📝';
+	return (
+		(subtype && activitySubtypesFor(type).includes(subtype) && ACTIVITY_SUBTYPE_ICONS[subtype]) ||
+		ACTIVITY_ICONS[type] ||
+		'📝'
+	);
 }
 
 export function activityDisplayLabel(
