@@ -264,11 +264,7 @@ export async function shareQuickLog(
 }
 
 export type ExecuteQuickLogError =
-	| 'notFound'
-	| 'disabled'
-	| 'noTargets'
-	| 'noActiveShift'
-	| 'notAssigned';
+	'notFound' | 'disabled' | 'noTargets' | 'noActiveShift' | 'notAssigned';
 
 // Run a quick log: resolve targets, delegate to logDailyEvent, then apply the
 // remember rule. companionIds omitted (API path) → the resolved prefill set.
