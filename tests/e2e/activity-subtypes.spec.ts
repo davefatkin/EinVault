@@ -28,7 +28,9 @@ test.describe('activity subtypes', () => {
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
 
 		// Today list shows the subtype label instead of the generic type.
-		const row = asMember.locator('div', { hasText: 'e2e subtype selection alpha' }).last();
+		const row = asMember
+			.locator('div.flex.items-center', { hasText: 'e2e subtype selection alpha' })
+			.last();
 		await expect(row.getByText('Poop', { exact: true })).toBeVisible();
 	});
 
@@ -39,7 +41,9 @@ test.describe('activity subtypes', () => {
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
 
 		// Untyped event falls back to the generic type label.
-		const row = asMember.locator('div', { hasText: 'e2e optional no kind beta' }).last();
+		const row = asMember
+			.locator('div.flex.items-center', { hasText: 'e2e optional no kind beta' })
+			.last();
 		await expect(row.getByText('Bathroom', { exact: true })).toBeVisible();
 	});
 
@@ -68,5 +72,9 @@ test.describe('activity subtypes', () => {
 		await asMember.goto(`/${EIN}`);
 		await asMember.getByRole('button', { name: /e2e Pee button/ }).click();
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
+
+		// The recent-activity timeline (still on the companion page) picks up the
+		// new entry via invalidateAll and shows the subtype label, not just "Bathroom".
+		await expect(asMember.getByText('Pee', { exact: true }).first()).toBeVisible();
 	});
 });
