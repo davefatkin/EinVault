@@ -84,11 +84,20 @@ export function activitySubtypeLabel(locale: Locale, subtype: string): string {
 	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
 }
 
+// Subtypes whose icon is more than one glyph (e.g. 💧💩 for "both") don't fit
+// the circular avatar slots used by activityDisplayIcon; fall back to the type
+// icon there. The picker pills render these fine, so ACTIVITY_SUBTYPE_ICONS
+// keeps the multi-glyph entry.
+const MULTI_GLYPH_SUBTYPES = new Set(['both']);
+
 // Display helpers: a subtype valid for this type wins; null/unknown/mismatched
 // falls back to the type. Mirrors the guard in activityDisplayLabel.
 export function activityDisplayIcon(type: string, subtype?: string | null): string {
 	return (
-		(subtype && activitySubtypesFor(type).includes(subtype) && ACTIVITY_SUBTYPE_ICONS[subtype]) ||
+		(subtype &&
+			activitySubtypesFor(type).includes(subtype) &&
+			!MULTI_GLYPH_SUBTYPES.has(subtype) &&
+			ACTIVITY_SUBTYPE_ICONS[subtype]) ||
 		ACTIVITY_ICONS[type] ||
 		'📝'
 	);
@@ -100,7 +109,7 @@ export function activityDisplayLabel(
 	subtype?: string | null
 ): string {
 	return subtype && activitySubtypesFor(type).includes(subtype)
-		? activitySubtypeLabel(locale, subtype)
+		? `${activityLabel(locale, type)} · ${activitySubtypeLabel(locale, subtype)}`
 		: activityLabel(locale, type);
 }
 

@@ -31,7 +31,7 @@ test.describe('activity subtypes', () => {
 		const row = asMember
 			.locator('div.flex.items-center', { hasText: 'e2e subtype selection alpha' })
 			.last();
-		await expect(row.getByText('Poop', { exact: true })).toBeVisible();
+		await expect(row.getByText('Bathroom · Poop', { exact: true })).toBeVisible();
 	});
 
 	test('subtype is optional — logging without one still works', async ({ asMember }) => {
@@ -69,7 +69,9 @@ test.describe('activity subtypes', () => {
 		const row = asMember
 			.locator('div.divide-y > div')
 			.filter({ hasText: 'e2e day-page subtype gamma' });
-		await expect(row.getByText('Poop', { exact: true })).toBeVisible({ timeout: 8_000 });
+		await expect(row.getByText('Bathroom · Poop', { exact: true })).toBeVisible({
+			timeout: 8_000
+		});
 
 		// Edit it to a different subtype (Both) and confirm the label changes.
 		await row.getByRole('button', { name: /edit/i }).click();
@@ -80,7 +82,9 @@ test.describe('activity subtypes', () => {
 		const editedRow = asMember
 			.locator('div.divide-y > div')
 			.filter({ hasText: 'e2e day-page subtype gamma' });
-		await expect(editedRow.getByText('Both', { exact: true })).toBeVisible({ timeout: 8_000 });
+		await expect(editedRow.getByText('Bathroom · Both', { exact: true })).toBeVisible({
+			timeout: 8_000
+		});
 	});
 
 	test('quick-log button with a subtype logs it in one tap', async ({ asMember }) => {
@@ -111,6 +115,6 @@ test.describe('activity subtypes', () => {
 
 		// The recent-activity timeline (still on the companion page) picks up the
 		// new entry via invalidateAll and shows the subtype label, not just "Bathroom".
-		await expect(asMember.getByText('Pee', { exact: true }).first()).toBeVisible();
+		await expect(asMember.getByText('Bathroom · Pee', { exact: true }).first()).toBeVisible();
 	});
 });
