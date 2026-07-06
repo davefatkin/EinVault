@@ -1131,7 +1131,7 @@
 								<button
 									type="button"
 									onclick={() => openActivityDetail(event)}
-									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg pl-2 py-1 transition-colors -ml-2"
+									class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-accent rounded-lg pl-2 pr-2 py-1 transition-colors -ml-2"
 								>
 									<span
 										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"

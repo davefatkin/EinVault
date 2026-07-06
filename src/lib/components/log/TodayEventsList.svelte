@@ -115,12 +115,14 @@
 						<input type="hidden" name="id" value={event.id} />
 						<Button
 							type="submit"
-							variant="ghost"
+							variant="softDestructive"
 							size="sm"
-							class="h-7 w-7 p-0 text-muted-foreground hover:text-coral"
+							class="h-7 px-2 text-xs gap-1.5 shrink-0"
 							aria-label={t(locale, 'aria.deleteEntry')}
 						>
-							<Trash2 class="h-3.5 w-3.5" />
+							<Trash2 class="h-3.5 w-3.5" /><span class="hidden sm:inline"
+								>{t(locale, 'common.delete')}</span
+							>
 						</Button>
 					</form>
 				{/if}
