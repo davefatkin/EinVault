@@ -146,6 +146,22 @@ test.describe('journal day editor', () => {
 		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
 	});
 
+	test('timeline shows a day that has activities but no journal entry (#181)', async ({
+		asMember
+	}) => {
+		// Edward's newest seeded journal entry is days old and no spec writes one
+		// for today, so today is an activity-only day on his timeline.
+		await asMember.goto('/seed-comp-edward/log?type=grooming');
+		await asMember.getByRole('button', { name: /^Log / }).click();
+		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
+
+		await asMember.goto('/seed-comp-edward/journal');
+		await expect(asMember.getByText('Today', { exact: true }).first()).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(asMember.getByRole('button', { name: /grooming/i }).first()).toBeVisible();
+	});
+
 	test('journal list shows entries', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal`);
 

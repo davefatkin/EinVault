@@ -142,10 +142,10 @@
 				ts: new Date(item.occurredAt)
 			}))
 		];
-		return items
-			.filter((item) => item.ts.getTime() <= Date.now())
-			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
-			.slice(0, 8);
+		// No client-clock "future" filter here: loggedAt comes from the server
+		// clock, and any skew between the two hides freshly logged items (#179).
+		// The server already rejects far-future timestamps at write time.
+		return items.sort((a, b) => b.ts.getTime() - a.ts.getTime()).slice(0, 8);
 	});
 
 	// Age from DOB string "YYYY-MM-DD"

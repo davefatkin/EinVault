@@ -93,18 +93,29 @@ test.describe('custom quick logs', () => {
 	});
 
 	test('quick log with a single assigned companion logs in one click', async ({ asMember }) => {
-		// Create assigned to Ein only (uncheck Edward).
+		// Create assigned to Ein only. Uncheck every other preselected companion,
+		// not just Edward, since specs sharing this worker's DB may have added more.
 		await asMember.goto('/settings/quick-logs');
 		await asMember.getByRole('button', { name: 'Add quick log' }).click();
 		await asMember.locator('input[name="name"]').fill('Sardine snack');
 		await asMember.locator('label').filter({ hasText: /Treat/i }).first().click();
-		await asMember.locator('label').filter({ hasText: 'Edward' }).first().click();
+		const preselected = await asMember
+			.locator('input[name="companionIds"]:checked')
+			.evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value));
+		for (const value of preselected) {
+			if (value === EIN) continue;
+			await asMember.locator(`input[name="companionIds"][value="${value}"]`).click({ force: true });
+		}
 		await asMember.locator('textarea[name="note"]').fill('ate one sardine');
 		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(asMember.getByText('Sardine snack')).toBeVisible();
 
 		// One click on the companion page logs it — no target picker step.
 		await asMember.goto(`/${EIN}`);
+		// Freeze the browser clock 2 minutes behind the server: the freshly
+		// logged event's server timestamp is then "in the future" client-side.
+		// The recent-activity widget must not hide it (#179).
+		await asMember.clock.setFixedTime(Date.now() - 120_000);
 		await asMember.getByRole('button', { name: /Sardine snack/ }).click();
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
 		await expect(asMember.getByRole('button', { name: /Log Sardine snack/ })).toHaveCount(0);

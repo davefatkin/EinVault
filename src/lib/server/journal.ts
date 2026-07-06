@@ -1,5 +1,5 @@
 import { db, schema } from '$lib/server/db';
-import { eq, lt, gte, and, inArray } from 'drizzle-orm';
+import { eq, lt, gte, and, inArray, sql, desc } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
 import type { Mood } from '$lib/server/validation';
@@ -14,21 +14,48 @@ export async function getEnrichedJournalEntries(
 	const pageSize = opts?.limit ?? PAGE_SIZE;
 	const before = opts?.before;
 
-	const entries = await db.query.journalEntries.findMany({
-		where: and(
-			eq(schema.journalEntries.companionId, companionId),
-			before ? lt(schema.journalEntries.date, before) : undefined
-		),
-		orderBy: (j, { desc }) => [desc(j.date)],
-		limit: pageSize + 1,
-		with: {
-			logger: { columns: { displayName: true } },
-			updater: { columns: { displayName: true } }
-		}
-	});
+	// The timeline paginates over DAYS: a day is shown when it has a journal
+	// entry, a daily event, or both. Fetch pageSize+1 candidate days from each
+	// source; the k newest days of the union are then guaranteed complete
+	// (adding dates from the other source only pushes a source's own dates down
+	// the order, never past its fetch horizon).
+	// loggedAt is stored as unixepoch seconds; 'localtime' matches the process
+	// TZ that localDateISO uses, so both sides bucket days identically.
+	const eventDay = sql<string>`date(${schema.dailyEvents.loggedAt}, 'unixepoch', 'localtime')`;
+	const [entries, eventDayRows] = await Promise.all([
+		db.query.journalEntries.findMany({
+			where: and(
+				eq(schema.journalEntries.companionId, companionId),
+				before ? lt(schema.journalEntries.date, before) : undefined
+			),
+			orderBy: (j, { desc }) => [desc(j.date)],
+			limit: pageSize + 1,
+			with: {
+				logger: { columns: { displayName: true } },
+				updater: { columns: { displayName: true } }
+			}
+		}),
+		db
+			.select({ date: eventDay })
+			.from(schema.dailyEvents)
+			.where(
+				and(
+					eq(schema.dailyEvents.companionId, companionId),
+					before ? sql`${eventDay} < ${before}` : undefined
+				)
+			)
+			.groupBy(eventDay)
+			.orderBy(desc(eventDay))
+			.limit(pageSize + 1)
+	]);
 
-	const hasMore = entries.length > pageSize;
-	const pageEntries = entries.slice(0, pageSize);
+	const dateSet = new Set([...entries.map((e) => e.date), ...eventDayRows.map((r) => r.date)]);
+	// Sort descending (ISO strings sort lexicographically)
+	const sortedDates = [...dateSet].sort((a, b) => (a < b ? 1 : -1));
+	const hasMore = sortedDates.length > pageSize;
+	const allDates = sortedDates.slice(0, pageSize);
+	const shownDates = new Set(allDates);
+	const pageEntries = entries.filter((e) => shownDates.has(e.date));
 
 	type EventWithUserRef = typeof schema.dailyEvents.$inferSelect & {
 		logger: UserRef;
@@ -39,10 +66,10 @@ export async function getEnrichedJournalEntries(
 	let mediaByEntry = new Map<string, MediaWithUserRef[]>();
 	let eventsByDate = new Map<string, EventWithUserRef[]>();
 
-	if (pageEntries.length > 0) {
+	if (allDates.length > 0) {
 		const entryIds = pageEntries.map((e) => e.id);
-		const oldest = pageEntries[pageEntries.length - 1].date;
-		const newest = pageEntries[0].date;
+		const oldest = allDates[allDates.length - 1];
+		const newest = allDates[0];
 		const [oy, om, od] = oldest.split('-').map(Number);
 		const [ny, nm, nd] = newest.split('-').map(Number);
 		const rangeStart = new Date(oy, om - 1, od); // local midnight (respects TZ)
@@ -71,18 +98,13 @@ export async function getEnrichedJournalEntries(
 		}
 		for (const event of allEvents) {
 			const date = localDateISO(new Date(event.loggedAt));
+			// A day inside the range but past a source's fetch horizon can't
+			// exist (see pagination note above), but guard anyway.
+			if (!shownDates.has(date)) continue;
 			if (!eventsByDate.has(date)) eventsByDate.set(date, []);
 			eventsByDate.get(date)!.push(event);
 		}
 	}
-
-	// Collect all dates that have either a journal entry or a daily event
-	const entryDates = new Set(pageEntries.map((e) => e.date));
-	for (const date of eventsByDate.keys()) {
-		entryDates.add(date);
-	}
-	// Sort descending (ISO strings sort lexicographically)
-	const allDates = [...entryDates].sort((a, b) => (a < b ? 1 : -1));
 
 	const entryByDate = new Map(pageEntries.map((e) => [e.date, e]));
 	const enrichedEntries = allDates.map((date) => {
@@ -107,7 +129,7 @@ export async function getEnrichedJournalEntries(
 	return {
 		entries: enrichedEntries,
 		hasMore,
-		oldestDate: pageEntries.length > 0 ? pageEntries[pageEntries.length - 1].date : null
+		oldestDate: allDates.length > 0 ? allDates[allDates.length - 1] : null
 	};
 }
 

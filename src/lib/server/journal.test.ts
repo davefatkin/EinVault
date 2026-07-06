@@ -126,4 +126,70 @@ describe('journal', () => {
 		expect(entry?.updater?.displayName).toBe('J Editor');
 		expect(entry?.logger?.displayName).toBe('J User');
 	});
+
+	// Local noon avoids UTC-midnight boundary flakes regardless of test TZ.
+	const localNoon = (date: string) => {
+		const [y, m, d] = date.split('-').map(Number);
+		return new Date(y, m - 1, d, 12, 0, 0);
+	};
+
+	const insertEvent = (companionId: string, date: string) =>
+		db.insert(schema.dailyEvents).values({
+			id: `ev-${companionId}-${date}`,
+			companionId,
+			type: 'walk',
+			notes: null,
+			durationMinutes: null,
+			loggedAt: localNoon(date),
+			loggedBy: 'u-j'
+		} as typeof schema.dailyEvents.$inferInsert);
+
+	it('shows an activity-only day newer than the newest journal entry (#181)', async () => {
+		// Newest journal entry for c-j is 2026-05-01; log activity on a later day
+		// with no journal entry.
+		await insertEvent('c-j', '2026-06-15');
+		const page = await getEnrichedJournalEntries('c-j', { limit: 50 });
+		const day = page.entries.find((e) => e.date === '2026-06-15');
+		expect(day).toBeDefined();
+		expect(day!.id).toBeNull();
+		expect(day!.events).toHaveLength(1);
+		expect(page.entries[0].date).toBe('2026-06-15'); // newest first
+	});
+
+	it('shows activity-only days when the companion has no journal entries at all', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j2',
+			name: 'Eventful'
+		} as typeof schema.companions.$inferInsert);
+		await insertEvent('c-j2', '2026-06-10');
+		await insertEvent('c-j2', '2026-06-12');
+
+		const page = await getEnrichedJournalEntries('c-j2');
+		expect(page.entries.map((e) => e.date)).toEqual(['2026-06-12', '2026-06-10']);
+		expect(page.entries.every((e) => e.id === null && e.events.length === 1)).toBe(true);
+	});
+
+	it('paginates over days including activity-only days', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j3',
+			name: 'Pager'
+		} as typeof schema.companions.$inferInsert);
+		// Interleaved: journal entries on 01/03, activity-only days on 02/04.
+		await upsertJournalEntry('c-j3', '2026-06-01', 'entry 1', null, 'u-j');
+		await insertEvent('c-j3', '2026-06-02');
+		await upsertJournalEntry('c-j3', '2026-06-03', 'entry 3', null, 'u-j');
+		await insertEvent('c-j3', '2026-06-04');
+
+		const page1 = await getEnrichedJournalEntries('c-j3', { limit: 2 });
+		expect(page1.entries.map((e) => e.date)).toEqual(['2026-06-04', '2026-06-03']);
+		expect(page1.hasMore).toBe(true);
+		expect(page1.oldestDate).toBe('2026-06-03');
+
+		const page2 = await getEnrichedJournalEntries('c-j3', {
+			limit: 2,
+			before: page1.oldestDate!
+		});
+		expect(page2.entries.map((e) => e.date)).toEqual(['2026-06-02', '2026-06-01']);
+		expect(page2.hasMore).toBe(false);
+	});
 });

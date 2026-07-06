@@ -114,7 +114,9 @@
 				}))
 			] as ActivityItem[]
 		)
-			.filter((e) => e.ts.getTime() <= Date.now())
+			// No client-clock "future" filter here: loggedAt comes from the server
+			// clock, and any skew between the two hides freshly logged items (#179).
+			// The server already rejects far-future timestamps at write time.
 			.sort((a, b) => b.ts.getTime() - a.ts.getTime())
 			.slice(0, 8)
 	);
