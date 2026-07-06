@@ -1,18 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { renderMarkdown } from '$lib/markdown';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { X, Pencil, NotebookPen, ArrowRight } from '@lucide/svelte';
+	import { NotebookPen, ArrowRight } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import JournalTimelineEntry from '$lib/components/journal/JournalTimelineEntry.svelte';
-	import { tick } from 'svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
@@ -75,58 +70,22 @@
 		lightboxOpen = true;
 	}
 
-	function handleEscapeForDetail(e: KeyboardEvent) {
-		if (e.key === 'Escape' && !lightboxOpen && detailEvent) {
-			closeDetail();
-		}
-	}
-
-	// Activity detail modal
+	// Activity detail modal (shared component owns focus/escape/backdrop).
 	type EventItem = Entry['events'][0];
 	let detailEvent = $state<EventItem | null>(null);
-	let detailDialogEl = $state<HTMLElement | null>(null);
 
-	async function openDetail(event: EventItem) {
+	function openDetail(event: EventItem) {
 		detailEvent = event;
-		await tick();
-		detailDialogEl?.focus();
 	}
 
 	function closeDetail() {
 		detailEvent = null;
-	}
-
-	function trapFocus(e: KeyboardEvent) {
-		if (!detailDialogEl) return;
-		const focusable = Array.from(
-			detailDialogEl.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			)
-		).filter((el) => !el.hasAttribute('disabled'));
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.key === 'Tab') {
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		}
 	}
 </script>
 
 <svelte:head>
 	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
-
-<svelte:window onkeydown={handleEscapeForDetail} />
 
 <!-- Lightbox -->
 <MediaLightbox
@@ -139,93 +98,13 @@
 
 <!-- Activity detail modal -->
 {#if detailEvent}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'aria.closeDialog')}
-			onclick={closeDetail}
-		></button>
-		<div
-			bind:this={detailDialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={trapFocus}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
-					{ACTIVITY_ICONS[detailEvent.type] ?? '📝'}
-					{detailEvent.type.charAt(0).toUpperCase() + detailEvent.type.slice(1)}
-				</h2>
-				<button
-					onclick={closeDetail}
-					aria-label={t(locale, 'aria.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.journal.activityDetailType')}</span
-					>
-					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
-				</div>
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.journal.activityDetailLogged')}</span
-					>
-					<span class="text-foreground"
-						><LocalTime date={detailEvent.loggedAt} format="datetime" /><ByLine
-							user={detailEvent.logger}
-							variant="inline"
-						/></span
-					>
-				</div>
-				{#if detailEvent.durationMinutes}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.journal.activityDetailDuration')}</span
-						>
-						<span class="text-foreground">{detailEvent.durationMinutes} min</span>
-					</div>
-				{/if}
-				{#if detailEvent.notes}
-					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">
-							{t(locale, 'page.journal.activityDetailNotes')}
-						</p>
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(detailEvent.notes)}
-						</div>
-					</div>
-				{/if}
-			</div>
-
-			{#if companion.isActive !== false}
-				<Separator />
-				<div class="flex gap-2 px-5 py-4">
-					<Button
-						href="/{companion.id}/journal/{new Date(detailEvent.loggedAt)
-							.toISOString()
-							.slice(0, 10)}"
-						variant="soft"
-						size="sm"
-					>
-						<Pencil class="h-3.5 w-3.5 mr-1.5" />
-						{t(locale, 'page.journal.activityDetailOpenInJournal')}
-					</Button>
-				</div>
-			{/if}
-		</div>
-	</div>
+	<ActivityDetailModal
+		event={detailEvent}
+		onclose={closeDetail}
+		journalHref={companion.isActive !== false
+			? `/${companion.id}/journal/${new Date(detailEvent.loggedAt).toISOString().slice(0, 10)}`
+			: null}
+	/>
 {/if}
 
 <div class="max-w-3xl mx-auto space-y-6 pb-24 md:pb-0">

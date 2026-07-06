@@ -59,6 +59,17 @@ describe('seedRows', () => {
 		expect(new Set(events.map((e) => e.type)).size).toBeGreaterThanOrEqual(4);
 	});
 
+	it('seeds daily events with subtypes for the demo', async () => {
+		seedRows(db as never, { now: 1_700_000_000_000 });
+		const events = await db.query.dailyEvents.findMany();
+		expect(events.some((e) => e.subtypes?.includes('poop'))).toBe(true);
+		expect(events.some((e) => e.subtypes?.includes('bath') && e.subtypes?.includes('brush'))).toBe(
+			true
+		);
+		const qls = await db.query.quickLogs.findMany();
+		expect(qls.some((q) => q.subtypes?.includes('pee'))).toBe(true);
+	});
+
 	it('photo storageKeys contain the date of their linked journal entry', async () => {
 		const now = 1_700_000_000_000;
 		seedRows(db as never, { now });

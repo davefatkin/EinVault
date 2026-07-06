@@ -5,11 +5,13 @@ import { logDailyEvent } from '$lib/server/daily-events';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
+import { parseSubtypes } from '$lib/activitySubtypes';
 
 export interface QuickLogInput {
 	name: string;
 	type: DailyEventType;
 	durationMinutes: number | null;
+	subtypes: string[];
 	note: string | null;
 	isEnabled: boolean;
 	companionIds: string[];
@@ -17,6 +19,11 @@ export interface QuickLogInput {
 
 function normalizeDuration(type: DailyEventType, durationMinutes: number | null): number | null {
 	return ACTIVITY_HAS_DURATION[type] ? durationMinutes : null;
+}
+
+function normalizeSubtypes(type: DailyEventType, subtypes: string[]): string[] | null {
+	const list = parseSubtypes(type, subtypes);
+	return list.length ? list : null;
 }
 
 function parseLastCompanionIds(raw: string | null): string[] {
@@ -43,6 +50,7 @@ export interface QuickLogButton {
 	name: string;
 	type: DailyEventType;
 	durationMinutes: number | null;
+	subtypes: string[];
 	note: string | null;
 	rememberAlso: boolean;
 	companionIds: string[];
@@ -80,6 +88,7 @@ export async function listQuickLogButtons(
 				name: row.name,
 				type: row.type,
 				durationMinutes: row.durationMinutes,
+				subtypes: row.subtypes ?? [],
 				note: row.note,
 				rememberAlso: row.rememberAlso,
 				companionIds: assigned,
@@ -109,6 +118,7 @@ export async function createQuickLog(
 				name: input.name,
 				type: input.type,
 				durationMinutes: normalizeDuration(input.type, input.durationMinutes),
+				subtypes: normalizeSubtypes(input.type, input.subtypes),
 				note: input.note,
 				sortOrder,
 				isEnabled: input.isEnabled
@@ -142,6 +152,7 @@ export async function updateQuickLog(
 				name: input.name,
 				type: input.type,
 				durationMinutes: normalizeDuration(input.type, input.durationMinutes),
+				subtypes: normalizeSubtypes(input.type, input.subtypes),
 				note: input.note,
 				isEnabled: input.isEnabled
 			})
@@ -246,6 +257,7 @@ export async function shareQuickLog(
 					name: source.name,
 					type: source.type,
 					durationMinutes: source.durationMinutes,
+					subtypes: source.subtypes,
 					note: source.note,
 					sortOrder,
 					// Shared copies arrive disabled: the recipient must opt in from their
@@ -264,11 +276,7 @@ export async function shareQuickLog(
 }
 
 export type ExecuteQuickLogError =
-	| 'notFound'
-	| 'disabled'
-	| 'noTargets'
-	| 'noActiveShift'
-	| 'notAssigned';
+	'notFound' | 'disabled' | 'noTargets' | 'noActiveShift' | 'notAssigned';
 
 // Run a quick log: resolve targets, delegate to logDailyEvent, then apply the
 // remember rule. companionIds omitted (API path) → the resolved prefill set.
@@ -305,6 +313,7 @@ export async function executeQuickLog(opts: {
 		type: quickLog.type,
 		notes: quickLog.note,
 		durationMinutes: quickLog.durationMinutes,
+		subtypes: quickLog.subtypes,
 		loggedAt: opts.loggedAt ?? new Date()
 	});
 	if (!result.ok) return result;

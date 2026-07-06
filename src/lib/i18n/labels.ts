@@ -1,5 +1,6 @@
 import { t } from './index';
 import type { Locale, MessageKey } from './index';
+import { activitySubtypesFor } from '$lib/activitySubtypes';
 
 // Icons are not translatable — they stay constant across locales.
 
@@ -29,6 +30,31 @@ export const REMINDER_ICONS: Record<string, string> = {
 	other: '📌'
 };
 
+export const ACTIVITY_SUBTYPE_ICONS: Record<string, string> = {
+	pee: '💧',
+	poop: '💩',
+	leash: '🐕',
+	offleash: '🌳',
+	hike: '⛰️',
+	breakfast: '🌅',
+	lunch: '☀️',
+	dinner: '🌙',
+	snack: '🍪',
+	fetch: '🎾',
+	tug: '🪢',
+	puzzle: '🧩',
+	social: '🐶',
+	bath: '🛁',
+	brush: '🪮',
+	trim: '✂️',
+	nails: '💅',
+	teeth: '🦷',
+	ears: '👂',
+	chew: '🦴',
+	dental: '🪥',
+	training: '🎓'
+};
+
 export const ACTIVITY_HAS_DURATION: Record<string, boolean> = {
 	walk: true,
 	meal: false,
@@ -51,6 +77,29 @@ export function healthTypeLabel(locale: Locale, type: string): string {
 
 export function activityLabel(locale: Locale, type: string): string {
 	return t(locale, `enum.activityType.${type}` as MessageKey);
+}
+
+export function activitySubtypeLabel(locale: Locale, subtype: string): string {
+	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
+}
+
+// Display helpers: the subtype's emoji shows only when exactly one valid
+// subtype is set; with zero or multiple subtypes, fall back to the type icon.
+export function activityDisplayIcon(type: string, subtypes?: string[] | null): string {
+	const valid = subtypes?.filter((s) => activitySubtypesFor(type).includes(s)) ?? [];
+	if (valid.length === 1) return ACTIVITY_SUBTYPE_ICONS[valid[0]] ?? ACTIVITY_ICONS[type] ?? '📝';
+	return ACTIVITY_ICONS[type] ?? '📝';
+}
+
+export function activityDisplayLabel(
+	locale: Locale,
+	type: string,
+	subtypes?: string[] | null
+): string {
+	const base = activityLabel(locale, type);
+	const valid = subtypes?.filter((s) => activitySubtypesFor(type).includes(s)) ?? [];
+	if (valid.length === 0) return base;
+	return `${base} · ${valid.map((s) => activitySubtypeLabel(locale, s)).join(' · ')}`;
 }
 
 export function reminderTypeLabel(locale: Locale, type: string): string {
@@ -88,6 +137,14 @@ export function activityTypeOptions(locale: Locale) {
 		icon: ACTIVITY_ICONS[v],
 		label: activityLabel(locale, v),
 		hasDuration: ACTIVITY_HAS_DURATION[v]
+	}));
+}
+
+export function activitySubtypeOptions(locale: Locale, type: string) {
+	return activitySubtypesFor(type).map((v) => ({
+		value: v,
+		icon: ACTIVITY_SUBTYPE_ICONS[v],
+		label: activitySubtypeLabel(locale, v)
 	}));
 }
 

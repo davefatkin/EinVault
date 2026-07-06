@@ -114,4 +114,73 @@ describe('daily-events', () => {
 		});
 		expect(row?.durationMinutes).toBeNull();
 	});
+
+	it('stores valid subtypes and drops cross-type ones', async () => {
+		const ok = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			type: 'bathroom' as const,
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date(),
+			subtypes: ['pee']
+		});
+		expect(ok.ok).toBe(true);
+		if (!ok.ok) return;
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, ok.ids[0])
+		});
+		expect(row?.subtypes).toEqual(['pee']);
+
+		// one valid + one invalid on bathroom keeps only the valid value
+		const mixed = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			type: 'bathroom' as const,
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date(),
+			subtypes: ['pee', 'nope']
+		});
+		expect(mixed.ok).toBe(true);
+		if (!mixed.ok) return;
+		const mixedRow = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, mixed.ids[0])
+		});
+		expect(mixedRow?.subtypes).toEqual(['pee']);
+
+		// all-invalid for the type → null, not an error
+		const bad = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			...input,
+			subtypes: ['pee']
+		});
+		expect(bad.ok).toBe(true);
+		if (!bad.ok) return;
+		const badRow = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, bad.ids[0])
+		});
+		expect(badRow?.subtypes).toBeNull();
+	});
+
+	it('normalizes multi-select subtypes into registry order', async () => {
+		const res = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], {
+			type: 'grooming' as const,
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date(),
+			subtypes: ['nails', 'bath']
+		});
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, res.ids[0])
+		});
+		expect(row?.subtypes).toEqual(['bath', 'nails']);
+	});
+
+	it('omitted subtypes stay null', async () => {
+		const res = await logDailyEvent({ id: 'de-mem', role: 'member' }, ['de-c1'], input);
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, res.ids[0])
+		});
+		expect(row?.subtypes).toBeNull();
+	});
 });

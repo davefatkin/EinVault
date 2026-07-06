@@ -10,7 +10,7 @@
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS, activityTypeOptions } from '$lib/i18n/labels';
+	import { activityTypeOptions, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -18,6 +18,7 @@
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
+	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
@@ -48,43 +49,15 @@
 		(document.activeElement as HTMLElement)?.blur();
 	}
 
-	// Detail modal
+	// Activity detail modal (shared component owns focus/escape/backdrop).
 	let selected = $state<(typeof todayActivity)[0] | null>(null);
-	let dialogEl = $state<HTMLElement | null>(null);
 
-	async function openDetail(event: (typeof todayActivity)[0]) {
+	function openDetail(event: (typeof todayActivity)[0]) {
 		selected = event;
-		await tick();
-		dialogEl?.focus();
 	}
 
 	function closeDetail() {
 		selected = null;
-	}
-
-	function trapFocus(e: KeyboardEvent) {
-		if (!dialogEl) return;
-		const focusable = Array.from(
-			dialogEl.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			)
-		).filter((el) => !el.hasAttribute('disabled'));
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.key === 'Tab') {
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		}
 	}
 
 	// Reminder detail modal
@@ -152,10 +125,6 @@
 				closeReminderDetail();
 				return;
 			}
-			if (selected) {
-				closeDetail();
-				return;
-			}
 		}
 	}
 </script>
@@ -202,79 +171,9 @@
 	</div>
 {/if}
 
-<!-- Activity detail modal -->
+<!-- Activity detail modal (read-only, no journal link) -->
 {#if selected}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'page.dashboard.caretaker.closeDialog')}
-			onclick={closeDetail}
-		></button>
-		<div
-			bind:this={dialogEl}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onkeydown={trapFocus}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 class="font-semibold text-base text-foreground">
-					{ACTIVITY_ICONS[selected.type] ?? '📝'}
-					{selected.type.charAt(0).toUpperCase() + selected.type.slice(1)}
-				</h2>
-				<button
-					onclick={closeDetail}
-					aria-label={t(locale, 'common.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
-					>
-					<Badge variant="gold" class="capitalize">{selected.type}</Badge>
-				</div>
-				<div class="flex items-center gap-3">
-					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-						>{t(locale, 'page.dashboard.caretaker.modalLabelLogged')}</span
-					>
-					<span class="text-foreground"
-						><LocalTime date={selected.loggedAt} format="datetime" /><ByLine
-							user={selected.logger}
-							variant="inline"
-						/></span
-					>
-				</div>
-				{#if selected.durationMinutes}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.dashboard.caretaker.modalLabelDuration')}</span
-						>
-						<span class="text-foreground">{selected.durationMinutes} min</span>
-					</div>
-				{/if}
-				{#if selected.notes}
-					<div class="pt-1">
-						<p class="text-xs font-medium text-muted-foreground mb-1">
-							{t(locale, 'page.dashboard.caretaker.modalLabelNotes')}
-						</p>
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(selected.notes)}
-						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-	</div>
+	<ActivityDetailModal event={selected} onclose={closeDetail} />
 {/if}
 
 <!-- Reminder detail modal -->
@@ -681,9 +580,11 @@
 							<div class="flex items-center gap-3 text-sm">
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-base"
-									>{ACTIVITY_ICONS[event.type] ?? '📝'}</span
+									>{activityDisplayIcon(event.type, event.subtypes)}</span
 								>
-								<Badge variant="gold" class="capitalize shrink-0">{event.type}</Badge>
+								<Badge variant="gold" class="shrink-0"
+									>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge
+								>
 								{#if event.durationMinutes}
 									<span class="text-xs text-muted-foreground shrink-0"
 										>{event.durationMinutes} min</span

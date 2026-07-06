@@ -20,13 +20,19 @@
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
+	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { ACTIVITY_ICONS, ACTIVITY_HAS_DURATION, activityLabel } from '$lib/i18n/labels';
+	import {
+		ACTIVITY_HAS_DURATION,
+		activityDisplayIcon,
+		activityDisplayLabel
+	} from '$lib/i18n/labels';
 
 	interface QuickLogRow {
 		id: string;
 		name: string;
 		type: string;
+		subtypes: string[] | null;
 		durationMinutes: number | null;
 		note: string | null;
 		isEnabled: boolean;
@@ -67,6 +73,7 @@
 	// Editor state, seeded when opening.
 	let editName = $state('');
 	let editType = $state('walk');
+	let editSubtypes = $state<string[]>([]);
 	let editDuration = $state('');
 	let editNote = $state('');
 	let editEnabled = $state(true);
@@ -80,6 +87,7 @@
 		shareOpen = null;
 		editName = '';
 		editType = 'walk';
+		editSubtypes = [];
 		editDuration = '';
 		editNote = '';
 		editEnabled = true;
@@ -91,6 +99,7 @@
 		shareOpen = null;
 		editName = row.name;
 		editType = row.type;
+		editSubtypes = row.subtypes ?? [];
 		editDuration = row.durationMinutes ? String(row.durationMinutes) : '';
 		editNote = row.note ?? '';
 		editEnabled = row.isEnabled;
@@ -160,6 +169,8 @@
 		</div>
 
 		<ActivityTypePills bind:selected={editType} legend={t(locale, 'quickLogs.typeLabel')} />
+
+		<SubtypePills type={editType} bind:selected={editSubtypes} />
 
 		{#if editHasDuration}
 			<div class="space-y-1.5 animate-slide-up">
@@ -283,7 +294,7 @@
 						<div class="flex min-w-0 items-center gap-3 sm:flex-1">
 							<span
 								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-								>{ACTIVITY_ICONS[row.type] ?? '📝'}</span
+								>{activityDisplayIcon(row.type, row.subtypes)}</span
 							>
 							<div class="flex-1 min-w-0">
 								<p class="font-medium truncate {row.isEnabled ? '' : 'text-muted-foreground'}">
@@ -295,7 +306,7 @@
 									{/if}
 								</p>
 								<p class="text-xs text-muted-foreground truncate">
-									{activityLabel(locale, row.type)}
+									{activityDisplayLabel(locale, row.type, row.subtypes)}
 									{#if row.durationMinutes}
 										· {row.durationMinutes} min
 									{/if}

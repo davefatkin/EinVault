@@ -52,7 +52,12 @@
 			<h2 class="font-semibold">{t(locale, 'page.log.todaySoFar')}</h2>
 		</CardHeader>
 		<CardContent>
-			<TodayEventsList events={data.todayEvents} currentUserId={data.user?.id} {canDelete} />
+			<TodayEventsList
+				events={data.todayEvents}
+				currentUserId={data.user?.id}
+				{canDelete}
+				journalHrefBase="/{data.companion.id}/journal"
+			/>
 		</CardContent>
 	</Card>
 </div>

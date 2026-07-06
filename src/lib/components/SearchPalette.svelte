@@ -7,13 +7,7 @@
 	import { stripMarkdown } from '$lib/markdown';
 
 	export type SearchEntityType =
-		| 'journal'
-		| 'health'
-		| 'reminder'
-		| 'document'
-		| 'daily'
-		| 'weight'
-		| 'media';
+		'journal' | 'health' | 'reminder' | 'document' | 'daily' | 'weight' | 'media';
 
 	export interface ClientSearchResult {
 		type: SearchEntityType;
