@@ -30,6 +30,7 @@ export function toApiQuickLog(b: QuickLogButton) {
 		name: b.name,
 		type: b.type,
 		durationMinutes: b.durationMinutes,
+		subtype: b.subtype,
 		note: b.note,
 		companionIds: b.companionIds
 	};

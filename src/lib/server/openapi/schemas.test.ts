@@ -73,6 +73,7 @@ describe('response schemas match their serializers', () => {
 			name: 'Walk',
 			type: 'walk' as const,
 			durationMinutes: 20,
+			subtype: null,
 			note: null,
 			rememberAlso: false,
 			companionIds: ['comp-1'],

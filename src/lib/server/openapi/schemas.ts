@@ -134,6 +134,7 @@ export const QuickLog = z
 		name: z.string(),
 		type: DailyEventType,
 		durationMinutes: z.number().int().nullable(),
+		subtype: z.string().nullable(),
 		note: z.string().nullable(),
 		companionIds: z.array(z.string())
 	})

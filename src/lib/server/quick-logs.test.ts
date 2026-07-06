@@ -47,6 +47,7 @@ describe('quick logs', () => {
 		durationMinutes: 30,
 		note: 'around the block',
 		isEnabled: true,
+		subtype: null,
 		companionIds: ['ql-c1', 'ql-c2']
 	};
 
@@ -249,5 +250,36 @@ describe('quick logs', () => {
 		expect(forC1.find((b) => b.id === id1)!.prefillCompanionIds).toContain('ql-c1');
 
 		for (const id of [id1, id2, id3]) await deleteQuickLog(OWNER.id, id);
+	});
+
+	it('create persists subtype and execute copies it onto the event', async () => {
+		const id = await createQuickLog(OWNER, {
+			...baseInput,
+			name: 'Pee break',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtype: 'pee',
+			companionIds: ['ql-c1']
+		});
+		const list = await listQuickLogs(OWNER.id);
+		expect(list.find((q) => q.id === id)?.subtype).toBe('pee');
+
+		const res = await executeQuickLog({ user: OWNER, quickLogId: id, companionIds: ['ql-c1'] });
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		const event = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, res.ids[0])
+		});
+		expect(event?.subtype).toBe('pee');
+	});
+
+	it('create nulls a subtype that does not belong to the type', async () => {
+		const id = await createQuickLog(OWNER, {
+			...baseInput,
+			name: 'Bad subtype',
+			subtype: 'pee' // walk has no 'pee'
+		});
+		const list = await listQuickLogs(OWNER.id);
+		expect(list.find((q) => q.id === id)?.subtype).toBeNull();
 	});
 });

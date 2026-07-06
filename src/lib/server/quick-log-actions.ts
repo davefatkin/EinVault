@@ -54,6 +54,7 @@ function parseQuickLogForm(
 			name,
 			type,
 			durationMinutes: parseDurationMinutes(data.get('durationMinutes')),
+			subtype: String(data.get('subtype') ?? '') || null,
 			note: rawNote.trim() || null,
 			isEnabled: data.get('isEnabled') !== 'false',
 			companionIds

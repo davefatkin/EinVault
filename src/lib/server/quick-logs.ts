@@ -5,11 +5,13 @@ import { logDailyEvent } from '$lib/server/daily-events';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
+import { parseSubtype } from '$lib/activitySubtypes';
 
 export interface QuickLogInput {
 	name: string;
 	type: DailyEventType;
 	durationMinutes: number | null;
+	subtype: string | null;
 	note: string | null;
 	isEnabled: boolean;
 	companionIds: string[];
@@ -43,6 +45,7 @@ export interface QuickLogButton {
 	name: string;
 	type: DailyEventType;
 	durationMinutes: number | null;
+	subtype: string | null;
 	note: string | null;
 	rememberAlso: boolean;
 	companionIds: string[];
@@ -80,6 +83,7 @@ export async function listQuickLogButtons(
 				name: row.name,
 				type: row.type,
 				durationMinutes: row.durationMinutes,
+				subtype: row.subtype,
 				note: row.note,
 				rememberAlso: row.rememberAlso,
 				companionIds: assigned,
@@ -109,6 +113,7 @@ export async function createQuickLog(
 				name: input.name,
 				type: input.type,
 				durationMinutes: normalizeDuration(input.type, input.durationMinutes),
+				subtype: parseSubtype(input.type, input.subtype),
 				note: input.note,
 				sortOrder,
 				isEnabled: input.isEnabled
@@ -142,6 +147,7 @@ export async function updateQuickLog(
 				name: input.name,
 				type: input.type,
 				durationMinutes: normalizeDuration(input.type, input.durationMinutes),
+				subtype: parseSubtype(input.type, input.subtype),
 				note: input.note,
 				isEnabled: input.isEnabled
 			})
@@ -246,6 +252,7 @@ export async function shareQuickLog(
 					name: source.name,
 					type: source.type,
 					durationMinutes: source.durationMinutes,
+					subtype: source.subtype,
 					note: source.note,
 					sortOrder,
 					// Shared copies arrive disabled: the recipient must opt in from their
@@ -305,6 +312,7 @@ export async function executeQuickLog(opts: {
 		type: quickLog.type,
 		notes: quickLog.note,
 		durationMinutes: quickLog.durationMinutes,
+		subtype: quickLog.subtype,
 		loggedAt: opts.loggedAt ?? new Date()
 	});
 	if (!result.ok) return result;
