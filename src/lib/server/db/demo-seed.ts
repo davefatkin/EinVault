@@ -491,6 +491,7 @@ export function seedContent(
 				id: 'seed-act-2',
 				companionId: ein,
 				type: 'meal',
+				subtype: 'breakfast',
 				loggedAt: new Date(now - 5 * hour),
 				loggedBy: faye
 			},
@@ -498,6 +499,7 @@ export function seedContent(
 				id: 'seed-act-3',
 				companionId: ein,
 				type: 'bathroom',
+				subtype: 'poop',
 				loggedAt: new Date(now - 6 * hour),
 				loggedBy: faye
 			},
@@ -514,6 +516,7 @@ export function seedContent(
 				id: 'seed-act-5',
 				companionId: ein,
 				type: 'walk',
+				subtype: 'leash',
 				durationMinutes: 25,
 				loggedAt: new Date(now - 1 * day - 3 * hour),
 				loggedBy: jet
@@ -529,6 +532,7 @@ export function seedContent(
 				id: 'seed-act-7',
 				companionId: ein,
 				type: 'grooming',
+				subtype: 'brush',
 				notes: 'Quick brush.',
 				loggedAt: new Date(now - 2 * day),
 				loggedBy: jet
@@ -544,6 +548,7 @@ export function seedContent(
 				id: 'seed-act-9',
 				companionId: edward,
 				type: 'walk',
+				subtype: 'offleash',
 				durationMinutes: 20,
 				notes: 'Off-leash, eventually.',
 				loggedAt: new Date(now - 3 * hour),
@@ -569,6 +574,7 @@ export function seedContent(
 				id: 'seed-act-12',
 				companionId: ein,
 				type: 'treat',
+				subtype: 'training',
 				notes: 'Dried sardine as reward.',
 				loggedAt: new Date(now - 3 * day - 1 * hour),
 				loggedBy: jet,
@@ -827,7 +833,14 @@ export function seedContent(
 				durationMinutes: 15,
 				sortOrder: 2
 			},
-			{ id: 'seed-ql-care', userId: faye, name: 'Potty break', type: 'bathroom', sortOrder: 0 }
+			{
+				id: 'seed-ql-care',
+				userId: faye,
+				name: 'Potty break',
+				type: 'bathroom',
+				subtype: 'pee',
+				sortOrder: 0
+			}
 		])
 		.run();
 	db.insert(schema.quickLogCompanions)
