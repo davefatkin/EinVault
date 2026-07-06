@@ -1,5 +1,6 @@
 import { t } from './index';
 import type { Locale, MessageKey } from './index';
+import { activitySubtypesFor } from '$lib/activitySubtypes';
 
 // Icons are not translatable — they stay constant across locales.
 
@@ -29,6 +30,32 @@ export const REMINDER_ICONS: Record<string, string> = {
 	other: '📌'
 };
 
+export const ACTIVITY_SUBTYPE_ICONS: Record<string, string> = {
+	pee: '💧',
+	poop: '💩',
+	both: '💧💩',
+	leash: '🐕',
+	offleash: '🌳',
+	hike: '⛰️',
+	breakfast: '🌅',
+	lunch: '☀️',
+	dinner: '🌙',
+	snack: '🍪',
+	fetch: '🎾',
+	tug: '🪢',
+	puzzle: '🧩',
+	social: '🐶',
+	bath: '🛁',
+	brush: '🪮',
+	trim: '✂️',
+	nails: '💅',
+	teeth: '🦷',
+	ears: '👂',
+	chew: '🦴',
+	dental: '🪥',
+	training: '🎓'
+};
+
 export const ACTIVITY_HAS_DURATION: Record<string, boolean> = {
 	walk: true,
 	meal: false,
@@ -51,6 +78,25 @@ export function healthTypeLabel(locale: Locale, type: string): string {
 
 export function activityLabel(locale: Locale, type: string): string {
 	return t(locale, `enum.activityType.${type}` as MessageKey);
+}
+
+export function activitySubtypeLabel(locale: Locale, subtype: string): string {
+	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
+}
+
+// Display helpers: a known subtype wins; null/unknown falls back to the type.
+export function activityDisplayIcon(type: string, subtype?: string | null): string {
+	return (subtype && ACTIVITY_SUBTYPE_ICONS[subtype]) || ACTIVITY_ICONS[type] || '📝';
+}
+
+export function activityDisplayLabel(
+	locale: Locale,
+	type: string,
+	subtype?: string | null
+): string {
+	return subtype && activitySubtypesFor(type).includes(subtype)
+		? activitySubtypeLabel(locale, subtype)
+		: activityLabel(locale, type);
 }
 
 export function reminderTypeLabel(locale: Locale, type: string): string {
@@ -88,6 +134,14 @@ export function activityTypeOptions(locale: Locale) {
 		icon: ACTIVITY_ICONS[v],
 		label: activityLabel(locale, v),
 		hasDuration: ACTIVITY_HAS_DURATION[v]
+	}));
+}
+
+export function activitySubtypeOptions(locale: Locale, type: string) {
+	return activitySubtypesFor(type).map((v) => ({
+		value: v,
+		icon: ACTIVITY_SUBTYPE_ICONS[v],
+		label: activitySubtypeLabel(locale, v)
 	}));
 }
 
