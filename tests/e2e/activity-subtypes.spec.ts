@@ -47,6 +47,42 @@ test.describe('activity subtypes', () => {
 		await expect(row.getByText('Bathroom', { exact: true })).toBeVisible();
 	});
 
+	test('journal day page adds and edits an activity subtype directly', async ({ asMember }) => {
+		// Server-side "today" is UTC-derived; mirror the journal spec's computation.
+		const today = (() => {
+			const n = new Date();
+			const p = (x: number) => String(x).padStart(2, '0');
+			return `${n.getUTCFullYear()}-${p(n.getUTCMonth() + 1)}-${p(n.getUTCDate())}`;
+		})();
+
+		await asMember.goto(`/${EIN}/journal/${today}`);
+
+		// Open the add-activity form and pick bathroom → Poop.
+		await asMember.getByRole('button', { name: /log activity/i }).click();
+		const addForm = asMember.locator('form[action="?/addActivity"]');
+		await addForm.locator('input[name="type"][value="bathroom"]').click({ force: true });
+		await addForm.getByRole('button', { name: /Poop/ }).click();
+		await addForm.locator('textarea[name="notes"]').fill('e2e day-page subtype gamma');
+		await addForm.getByRole('button', { name: /Log it/i }).click();
+
+		// The new activity row renders the subtype label, not the generic type.
+		const row = asMember
+			.locator('div.divide-y > div')
+			.filter({ hasText: 'e2e day-page subtype gamma' });
+		await expect(row.getByText('Poop', { exact: true })).toBeVisible({ timeout: 8_000 });
+
+		// Edit it to a different subtype (Both) and confirm the label changes.
+		await row.getByRole('button', { name: /edit/i }).click();
+		const editForm = asMember.locator('form[action="?/updateActivity"]');
+		await editForm.getByRole('button', { name: /Both/ }).click();
+		await editForm.getByRole('button', { name: /^Save$/ }).click();
+
+		const editedRow = asMember
+			.locator('div.divide-y > div')
+			.filter({ hasText: 'e2e day-page subtype gamma' });
+		await expect(editedRow.getByText('Both', { exact: true })).toBeVisible({ timeout: 8_000 });
+	});
+
 	test('quick-log button with a subtype logs it in one tap', async ({ asMember }) => {
 		// Create the button in settings. The member already has seeded quick logs,
 		// so the "Add quick log" trigger is the list footer button.
