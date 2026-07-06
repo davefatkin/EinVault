@@ -44,6 +44,7 @@ export function toApiDailyEvent(row: DailyEventRow) {
 		type: row.type,
 		notes: row.notes,
 		durationMinutes: row.durationMinutes,
+		subtype: row.subtype,
 		loggedAt: row.loggedAt,
 		eventGroupId: row.eventGroupId
 	};
