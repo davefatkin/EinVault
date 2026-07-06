@@ -386,6 +386,7 @@ export const dailyEvents = sqliteTable(
 		}).notNull(),
 		notes: text('notes'),
 		durationMinutes: integer('duration_minutes'),
+		subtype: text('subtype'),
 		loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
@@ -490,6 +491,7 @@ export const quickLogs = sqliteTable(
 			enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other']
 		}).notNull(),
 		durationMinutes: integer('duration_minutes'),
+		subtype: text('subtype'),
 		note: text('note'),
 		sortOrder: integer('sort_order').notNull().default(0),
 		isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(true),
