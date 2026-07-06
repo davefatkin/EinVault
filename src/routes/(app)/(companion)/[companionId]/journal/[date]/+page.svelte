@@ -38,7 +38,12 @@
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
-	import { moodOptions, activityTypeOptions, ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import {
+		moodOptions,
+		activityTypeOptions,
+		activityDisplayIcon,
+		activityDisplayLabel
+	} from '$lib/i18n/labels';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
@@ -346,7 +351,6 @@
 
 	// Activity log
 	const EVENT_TYPES = activityTypeOptions(locale);
-	const EVENT_ICONS = ACTIVITY_ICONS;
 
 	function localDatetimeISO(d = new Date()) {
 		const p = (n: number) => String(n).padStart(2, '0');
@@ -460,8 +464,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{EVENT_ICONS[detailEvent.type] ?? '📝'}
-					{detailEvent.type.charAt(0).toUpperCase() + detailEvent.type.slice(1)}
+					{activityDisplayIcon(detailEvent.type, detailEvent.subtype)}
+					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}
 				</h2>
 				<button
 					onclick={closeActivityDetail}
@@ -479,7 +483,9 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.journal.day.detailType')}</span
 					>
-					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
+					<Badge variant="gold"
+						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}</Badge
+					>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -1237,11 +1243,13 @@
 								>
 									<span
 										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-										>{EVENT_ICONS[event.type] ?? '📝'}</span
+										>{activityDisplayIcon(event.type, event.subtype)}</span
 									>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="gold" class="capitalize">{event.type}</Badge>
+											<Badge variant="gold"
+												>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+											>
 											{#if event.durationMinutes}
 												<span class="text-xs text-muted-foreground"
 													>{event.durationMinutes} min</span

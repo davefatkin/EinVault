@@ -12,7 +12,7 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 
 	const locale = getLocale();
@@ -157,8 +157,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{ACTIVITY_ICONS[detailEvent.type] ?? '📝'}
-					{detailEvent.type.charAt(0).toUpperCase() + detailEvent.type.slice(1)}
+					{activityDisplayIcon(detailEvent.type, detailEvent.subtype)}
+					{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}
 				</h2>
 				<button
 					onclick={closeDetail}
@@ -176,7 +176,9 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.journal.activityDetailType')}</span
 					>
-					<Badge variant="gold" class="capitalize">{detailEvent.type}</Badge>
+					<Badge variant="gold"
+						>{activityDisplayLabel(locale, detailEvent.type, detailEvent.subtype)}</Badge
+					>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"

@@ -10,7 +10,7 @@
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS, activityTypeOptions } from '$lib/i18n/labels';
+	import { activityTypeOptions, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -222,8 +222,8 @@
 		>
 			<div class="flex items-center justify-between px-5 pt-5 pb-3">
 				<h2 class="font-semibold text-base text-foreground">
-					{ACTIVITY_ICONS[selected.type] ?? '📝'}
-					{selected.type.charAt(0).toUpperCase() + selected.type.slice(1)}
+					{activityDisplayIcon(selected.type, selected.subtype)}
+					{activityDisplayLabel(locale, selected.type, selected.subtype)}
 				</h2>
 				<button
 					onclick={closeDetail}
@@ -241,7 +241,9 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.dashboard.caretaker.modalLabelType')}</span
 					>
-					<Badge variant="gold" class="capitalize">{selected.type}</Badge>
+					<Badge variant="gold"
+						>{activityDisplayLabel(locale, selected.type, selected.subtype)}</Badge
+					>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -681,9 +683,11 @@
 							<div class="flex items-center gap-3 text-sm">
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-base"
-									>{ACTIVITY_ICONS[event.type] ?? '📝'}</span
+									>{activityDisplayIcon(event.type, event.subtype)}</span
 								>
-								<Badge variant="gold" class="capitalize shrink-0">{event.type}</Badge>
+								<Badge variant="gold" class="shrink-0"
+									>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+								>
 								{#if event.durationMinutes}
 									<span class="text-xs text-muted-foreground shrink-0"
 										>{event.durationMinutes} min</span

@@ -26,7 +26,12 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { ACTIVITY_ICONS, REMINDER_ICONS, activityTypeOptions } from '$lib/i18n/labels';
+	import {
+		REMINDER_ICONS,
+		activityTypeOptions,
+		activityDisplayIcon,
+		activityDisplayLabel
+	} from '$lib/i18n/labels';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -64,8 +69,6 @@
 	}
 
 	let today = localDateISO();
-
-	const ACTIVITY_ICON = ACTIVITY_ICONS;
 
 	// Quick log shortcuts, the same trio the caretaker view offers.
 	const quickLogTypes = activityTypeOptions(locale).filter((o) =>
@@ -310,8 +313,8 @@
 					{:else if selected.kind === 'weight'}
 						{t(locale, 'page.dashboard.modalWeightEntry')}
 					{:else if selected.kind === 'activity'}
-						{ACTIVITY_ICON[selected.item.type] ?? '📝'}
-						{selected.item.type.charAt(0).toUpperCase() + selected.item.type.slice(1)}
+						{activityDisplayIcon(selected.item.type, selected.item.subtype)}
+						{activityDisplayLabel(locale, selected.item.type, selected.item.subtype)}
 					{:else if selected.kind === 'health'}
 						{selected.item.title}
 					{/if}
@@ -399,7 +402,7 @@
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 							>{t(locale, 'page.dashboard.modalLabelType')}</span
 						>
-						<Badge variant="gold" class="capitalize">{e.type}</Badge>
+						<Badge variant="gold">{activityDisplayLabel(locale, e.type, e.subtype)}</Badge>
 					</div>
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -850,11 +853,13 @@
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										{ACTIVITY_ICON[event.type] ?? '📝'}
+										{activityDisplayIcon(event.type, event.subtype)}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
-											<Badge variant="gold" class="capitalize text-xs">{event.type}</Badge>
+											<Badge variant="gold" class="text-xs"
+												>{activityDisplayLabel(locale, event.type, event.subtype)}</Badge
+											>
 											{#if event.notes}
 												<span class="truncate text-xs text-muted-foreground">
 													{stripMarkdown(event.notes)}

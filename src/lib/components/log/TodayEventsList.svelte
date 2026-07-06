@@ -7,11 +7,12 @@
 	import { Trash2, Activity } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { ACTIVITY_ICONS } from '$lib/i18n/labels';
+	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 
 	interface TodayEvent {
 		id: string;
 		type: string;
+		subtype: string | null;
 		notes: string | null;
 		durationMinutes: number | null;
 		loggedAt: Date;
@@ -44,11 +45,11 @@
 			<div class="flex items-center gap-3 py-2 border-b last:border-0">
 				<span
 					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-					>{ACTIVITY_ICONS[event.type] ?? '📝'}</span
+					>{activityDisplayIcon(event.type, event.subtype)}</span
 				>
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2">
-						<Badge variant="gold" class="capitalize">{event.type}</Badge>
+						<Badge variant="gold">{activityDisplayLabel(locale, event.type, event.subtype)}</Badge>
 						{#if event.durationMinutes}
 							<span class="text-xs text-muted-foreground">{event.durationMinutes} min</span>
 						{/if}
