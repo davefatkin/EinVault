@@ -254,4 +254,146 @@ test.describe('reminders', () => {
 		await asMember.waitForTimeout(800);
 		await expect(titleInput).toHaveCount(0);
 	});
+
+	test('skip recurring reminder resolves it and spawns next occurrence', async ({ asMember }) => {
+		await asMember.goto(BASE);
+
+		await addReminder(asMember, {
+			title: 'e2e-rem-skip-commit',
+			type: 'medication',
+			dueAt: justPast(),
+			recurring: { interval: 1, unit: 'month' }
+		});
+
+		await expect(activeSection(asMember).getByText('e2e-rem-skip-commit')).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Click Skip on this specific reminder card
+		const reminderCard = activeSection(asMember)
+			.locator('div')
+			.filter({ hasText: 'e2e-rem-skip-commit' })
+			.first();
+		await reminderCard.getByRole('button', { name: 'Skip this occurrence' }).click();
+
+		// Toast with a commit button (label "Skip") should appear — commit immediately
+		// rather than waiting out the undo window (mirrors the complete-with-undo test).
+		const toast = asMember.locator('[role="status"]');
+		await expect(toast).toBeVisible({ timeout: 5_000 });
+		await toast.getByRole('button', { name: 'Skip' }).click();
+
+		// Skipped occurrence lands in the completed section with the Skipped badge.
+		const completed = completedSection(asMember);
+		await completed.locator('summary').click();
+		await expect(completed.getByText('e2e-rem-skip-commit')).toBeVisible({ timeout: 15_000 });
+		await expect(
+			completed.locator('div', { hasText: 'e2e-rem-skip-commit' }).getByText('Skipped').first()
+		).toBeVisible();
+
+		// The next occurrence is active again (exactly one active instance).
+		const activeInstances = activeSection(asMember).getByText('e2e-rem-skip-commit');
+		await expect(activeInstances).toHaveCount(1, { timeout: 5_000 });
+	});
+
+	test('skip undo restores the reminder without spawning', async ({ asMember }) => {
+		await asMember.goto(BASE);
+
+		await addReminder(asMember, {
+			title: 'e2e-rem-skip-undo',
+			type: 'other',
+			dueAt: justPast(),
+			recurring: { interval: 1, unit: 'week' }
+		});
+
+		await expect(activeSection(asMember).getByText('e2e-rem-skip-undo')).toBeVisible({
+			timeout: 8_000
+		});
+
+		const reminderCard = activeSection(asMember)
+			.locator('div')
+			.filter({ hasText: 'e2e-rem-skip-undo' })
+			.first();
+		await reminderCard.getByRole('button', { name: 'Skip this occurrence' }).click();
+
+		// Toast with Undo button should appear
+		const toast = asMember.locator('[role="status"]');
+		await expect(toast).toBeVisible({ timeout: 5_000 });
+		await expect(toast.getByRole('button', { name: 'Undo' })).toBeVisible();
+
+		// Click Undo
+		await toast.getByRole('button', { name: 'Undo' }).click();
+
+		// Toast should disappear and the reminder should be back in the active list,
+		// with no next occurrence spawned (still exactly one active instance).
+		await expect(toast).toHaveCount(0, { timeout: 5_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-skip-undo')).toBeVisible({
+			timeout: 5_000
+		});
+		await expect(activeSection(asMember).getByText('e2e-rem-skip-undo')).toHaveCount(1);
+
+		// Should not have moved to the completed section.
+		await completedSection(asMember).locator('summary').click();
+		await expect(completedSection(asMember).getByText('e2e-rem-skip-undo')).toHaveCount(0);
+	});
+
+	test('one-off reminder has no skip button', async ({ asMember }) => {
+		await asMember.goto(BASE);
+
+		await addReminder(asMember, { title: 'e2e-rem-skip-none', type: 'other', dueAt: tomorrow() });
+
+		await expect(activeSection(asMember).getByText('e2e-rem-skip-none')).toBeVisible({
+			timeout: 8_000
+		});
+
+		const reminderCard = activeSection(asMember)
+			.locator('div')
+			.filter({ hasText: 'e2e-rem-skip-none' })
+			.first();
+		await expect(reminderCard.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
+	});
+
+	test('caretaker can skip a recurring reminder during their shift', async ({
+		asMember,
+		asCaretaker
+	}) => {
+		// seed-reminder-recurring is due outside the active shift window, and the
+		// only in-shift seed reminder (seed-reminder-6) is non-recurring, so the
+		// care dashboard never surfaces a seeded skippable reminder. Create one
+		// via the member page with a due date inside the shift window instead.
+		await asMember.goto(BASE);
+		await addReminder(asMember, {
+			title: 'e2e-rem-skip-caretaker',
+			type: 'medication',
+			dueAt: justPast(),
+			recurring: { interval: 1, unit: 'month' }
+		});
+
+		await asCaretaker.goto(`/care/${COMP}`);
+
+		const remindersSection = asCaretaker
+			.locator('section')
+			.filter({ hasText: 'Upcoming Reminders' });
+		await expect(remindersSection.getByText('e2e-rem-skip-caretaker')).toBeVisible({
+			timeout: 8_000
+		});
+
+		// Other recurring reminders can be left active in-shift by earlier tests
+		// in this worker (they share one server/DB for the whole spec file), so
+		// scope to this row specifically rather than any Skip button in the
+		// section: title span -> its button -> the row div.
+		const row = remindersSection.getByText('e2e-rem-skip-caretaker').locator('..').locator('..');
+		await row.getByRole('button', { name: 'Skip this occurrence' }).click();
+
+		// Commit immediately via the toast's commit button (label "Skip").
+		const toast = asCaretaker.locator('[role="status"]');
+		await expect(toast).toBeVisible({ timeout: 5_000 });
+		await toast.getByRole('button', { name: 'Skip' }).click();
+
+		// Toast clears and the row leaves the upcoming list (next occurrence is
+		// a month out, well outside the shift window).
+		await expect(toast).toHaveCount(0, { timeout: 5_000 });
+		await expect(remindersSection.getByText('e2e-rem-skip-caretaker')).toHaveCount(0, {
+			timeout: 8_000
+		});
+	});
 });
