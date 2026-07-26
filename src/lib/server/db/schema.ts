@@ -426,6 +426,7 @@ export const reminders = sqliteTable(
 		seriesId: text('series_id'),
 		completedAt: integer('completed_at', { mode: 'timestamp' }),
 		completedBy: text('completed_by').references(() => users.id, { onDelete: 'set null' }),
+		outcome: text('outcome', { enum: ['completed', 'skipped'] }),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
