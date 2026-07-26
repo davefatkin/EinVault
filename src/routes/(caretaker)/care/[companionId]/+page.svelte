@@ -112,6 +112,7 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
 
@@ -251,6 +252,7 @@
 			<div class="flex gap-2 px-5 py-4">
 				<ReminderCompleteButtons
 					allowLogEvent={false}
+					isRecurring={selectedReminder.isRecurring}
 					onDone={() => {
 						if (!selectedReminder) return;
 						const item = selectedReminder;
@@ -258,6 +260,14 @@
 						if (!form) return;
 						closeReminderDetail();
 						pendingDismiss.queue(item.id, form, item.title);
+					}}
+					onSkip={() => {
+						if (!selectedReminder) return;
+						const item = selectedReminder;
+						const form = skipFormRegistry.get(item.id);
+						if (!form) return;
+						closeReminderDetail();
+						pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
 					}}
 				/>
 			</div>
@@ -379,12 +389,31 @@
 								<input type="hidden" name="id" value={reminder.id} />
 								<ReminderCompleteButtons
 									allowLogEvent={false}
+									isRecurring={reminder.isRecurring}
 									onDone={() => {
 										const form = dismissFormRegistry.get(reminder.id);
 										if (form) pendingDismiss.queue(reminder.id, form, reminder.title);
 									}}
+									onSkip={() => {
+										const form = skipFormRegistry.get(reminder.id);
+										if (form)
+											pendingDismiss.queue(`skip-${reminder.id}`, form, reminder.title, {
+												kind: 'skip'
+											});
+									}}
 								/>
 							</form>
+							{#if reminder.isRecurring}
+								<form
+									method="POST"
+									action="?/skip"
+									use:enhance={clearSubmittingFlag}
+									use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
+									class="hidden"
+								>
+									<input type="hidden" name="id" value={reminder.id} />
+								</form>
+							{/if}
 						</div>
 					{/each}
 				</div>
