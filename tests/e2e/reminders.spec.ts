@@ -369,9 +369,9 @@ test.describe('reminders', () => {
 			dueAt: justPast()
 		});
 
-		await expect(
-			activeSection(asMember).getByText('e2e-rem-restore-null-series')
-		).toBeVisible({ timeout: 8_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-restore-null-series')).toBeVisible({
+			timeout: 8_000
+		});
 
 		// Edit it into a recurring reminder (see the ?edit deep-link test above
 		// for the same inline-edit shape).
@@ -389,9 +389,9 @@ test.describe('reminders', () => {
 		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
 
 		// Save closes the edit form; the recurring badge confirms the update landed.
-		await expect(
-			activeSection(asMember).getByText('e2e-rem-restore-null-series')
-		).toBeVisible({ timeout: 8_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-restore-null-series')).toBeVisible({
+			timeout: 8_000
+		});
 
 		// Skip it and commit immediately via the toast (mirrors the skip-commit test).
 		const skipCard = activeSection(asMember)
@@ -410,9 +410,9 @@ test.describe('reminders', () => {
 		await expect(completed.getByText('e2e-rem-restore-null-series')).toBeVisible({
 			timeout: 15_000
 		});
-		await expect(
-			activeSection(asMember).getByText('e2e-rem-restore-null-series')
-		).toHaveCount(1, { timeout: 5_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-restore-null-series')).toHaveCount(1, {
+			timeout: 5_000
+		});
 
 		// Restore the skipped (completed) row — this must delete the spawned
 		// future instance even though the original reminder's seriesId is null.
@@ -427,12 +427,12 @@ test.describe('reminders', () => {
 
 		// Restored row is back in the active section, and the spawned occurrence
 		// is gone — exactly one active instance again.
-		await expect(
-			activeSection(asMember).getByText('e2e-rem-restore-null-series')
-		).toBeVisible({ timeout: 8_000 });
-		await expect(
-			activeSection(asMember).getByText('e2e-rem-restore-null-series')
-		).toHaveCount(1, { timeout: 5_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-restore-null-series')).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(activeSection(asMember).getByText('e2e-rem-restore-null-series')).toHaveCount(1, {
+			timeout: 5_000
+		});
 
 		// No longer listed in the completed section.
 		await expect(completed.getByText('e2e-rem-restore-null-series')).toHaveCount(0, {
