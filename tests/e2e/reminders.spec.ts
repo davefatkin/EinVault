@@ -283,12 +283,16 @@ test.describe('reminders', () => {
 		await toast.getByRole('button', { name: 'Skip' }).click();
 
 		// Skipped occurrence lands in the completed section with the Skipped badge.
+		// The title span and the badge are siblings under the same row div, so go
+		// up from the (unique) title text to that row rather than filtering a
+		// broader ancestor by hasText — the completed list's wrapper div holds
+		// every completed card, and hasText there matches on aggregated subtree
+		// text, so it would not confine the badge lookup to this row.
 		const completed = completedSection(asMember);
 		await completed.locator('summary').click();
 		await expect(completed.getByText('e2e-rem-skip-commit')).toBeVisible({ timeout: 15_000 });
-		await expect(
-			completed.locator('div', { hasText: 'e2e-rem-skip-commit' }).getByText('Skipped').first()
-		).toBeVisible();
+		const skipRow = completed.getByText('e2e-rem-skip-commit').locator('..');
+		await expect(skipRow.getByText('Skipped')).toBeVisible();
 
 		// The next occurrence is active again (exactly one active instance).
 		const activeInstances = activeSection(asMember).getByText('e2e-rem-skip-commit');
