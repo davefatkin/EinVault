@@ -29,6 +29,7 @@
 	import { careStatus } from '$lib/careStatus';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
+	import { formatRecurrence } from '$lib/reminderRecurrence';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -325,6 +326,14 @@
 						<Badge variant="coral" class="ml-1">{t(locale, 'page.reminders.overdue')}</Badge>
 					{/if}
 				</div>
+				{#if r.isRecurring}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.reminders.detailRepeats')}</span
+						>
+						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
+					</div>
+				{/if}
 				{#if r.description}
 					<div class="pt-1">
 						<p class="text-xs font-medium text-muted-foreground mb-1">
@@ -340,6 +349,26 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
+				<ReminderCompleteButtons
+					allowLogEvent={REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
+						null}
+					isRecurring={r.isRecurring}
+					onDone={() => {
+						const item = r;
+						closeReminderDetail();
+						handleComplete(item.id, item.title, item.type);
+					}}
+					onDoneAndLog={() => {
+						const item = r;
+						closeReminderDetail();
+						submitWithAndEvent(item.id);
+					}}
+					onSkip={() => {
+						const item = r;
+						closeReminderDetail();
+						handleSkip(item.id, item.title);
+					}}
+				/>
 				{#if companion}
 					<Button
 						variant="outline"

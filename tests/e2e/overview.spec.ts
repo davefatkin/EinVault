@@ -108,6 +108,41 @@ test('recurring reminder in needs-attention: skip commits via toast and leaves t
 	).toHaveCount(0, { timeout: 8_000 });
 });
 
+test('needs-attention detail modal: skip commits via toast and leaves the list', async ({
+	asMember
+}) => {
+	await addReminder(asMember, {
+		title: 'e2e-overview-modal-skip',
+		type: 'medication',
+		dueAt: justPast(),
+		recurring: { interval: 1, unit: 'month' }
+	});
+
+	await asMember.goto('/');
+
+	const titleButton = asMember
+		.locator('section[aria-label="Needs attention"]')
+		.locator('button')
+		.filter({ hasText: 'e2e-overview-modal-skip' });
+	await expect(titleButton).toBeVisible({ timeout: 8_000 });
+	await titleButton.click();
+
+	const dialog = asMember.getByRole('dialog');
+	await expect(dialog).toBeVisible();
+	await dialog.getByRole('button', { name: 'Skip this occurrence' }).click();
+
+	// Toast with a commit button (label "Skip") — commit immediately rather
+	// than waiting out the undo window, mirroring reminders.spec.ts.
+	const toast = asMember.locator('[role="status"]');
+	await expect(toast).toBeVisible({ timeout: 5_000 });
+	await toast.getByRole('button', { name: 'Skip' }).click();
+
+	await expect(toast).toHaveCount(0, { timeout: 5_000 });
+	await expect(
+		asMember.locator('section[aria-label="Needs attention"]').getByText('e2e-overview-modal-skip')
+	).toHaveCount(0, { timeout: 8_000 });
+});
+
 test('one-off reminder in needs-attention has no skip button', async ({ asMember }) => {
 	await addReminder(asMember, {
 		title: 'e2e-overview-skip-none',
