@@ -134,6 +134,7 @@ export function toApiReminder(row: ReminderRow) {
 		dueAt: row.dueAt,
 		isRecurring: row.isRecurring,
 		completedAt: row.completedAt,
+		outcome: row.outcome,
 		seriesId: row.seriesId
 	};
 }

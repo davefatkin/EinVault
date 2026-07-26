@@ -20,6 +20,7 @@ import {
 	WeightWriteResponse,
 	ReminderList,
 	CompleteResponse,
+	SkipResponse,
 	ShiftList,
 	UserList
 } from './schemas';
@@ -370,6 +371,31 @@ export function buildOpenApiDocument() {
 				description: 'OK',
 				content: { 'application/json': { schema: CompleteResponse } }
 			},
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift / notAssigned'),
+			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
+			409: errorResponse('alreadyCompleted / idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/reminders/{id}/skip',
+		tags: ['reminders'],
+		summary: 'Skip a recurring reminder occurrence',
+		description:
+			'Resolves the current occurrence without a done record and spawns the next occurrence (nextReminderId). Only recurring reminders can be skipped. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			params: z.object({ id: z.string() })
+		},
+		responses: {
+			200: {
+				description: 'OK',
+				content: { 'application/json': { schema: SkipResponse } }
+			},
+			400: errorResponse('notRecurring'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
