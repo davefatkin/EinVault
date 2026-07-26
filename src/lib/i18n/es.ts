@@ -21,6 +21,9 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEvent': 'Hecho y registrar evento',
 	'common.reminder.logEventShort': 'Evento',
 	'common.reminder.logEventAria': 'Marcar como hecho y registrar un evento de salud',
+	'common.reminder.skip': 'Omitir',
+	'common.reminder.skipAria': 'Omitir esta repetición',
+	'common.reminder.skippedAnnounce': '{title} omitido',
 	'common.reminder.toastUndoLabel': 'Deshacer',
 	'common.reminder.toastDismiss': 'Cerrar',
 	'common.reminder.toastAriaRegion': 'Actividad de recordatorios',
@@ -175,6 +178,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.notAssignedToCompanion': 'No asignado a este compañero.',
 	'error.canOnlyDeleteOwnEntries': 'Solo puedes eliminar tus propias entradas.',
 	'error.mustBeOnShiftToComplete': 'Debes estar en turno para completar recordatorios.',
+	'error.cannotSkipNonRecurring': 'Solo se pueden omitir los recordatorios recurrentes.',
+	'error.mustBeOnShiftToSkip': 'Debes estar en turno para omitir recordatorios.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired':
@@ -747,6 +752,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Tipo',
 	'page.reminders.labelDueDate': 'Fecha de vencimiento *',
 	'page.reminders.labelNotes': 'Notas',
+	'page.reminders.skippedBadge': 'Omitido',
 	'page.reminders.labelRecurring': 'Recordatorio recurrente',
 	'page.reminders.labelRepeatEvery': 'Repetir cada',
 	'page.reminders.labelRecurrenceUnit': 'Unidad',

@@ -21,6 +21,9 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEvent': 'Erledigt & Ereignis erfassen',
 	'common.reminder.logEventShort': 'Ereignis',
 	'common.reminder.logEventAria': 'Als erledigt markieren und Gesundheitsereignis erfassen',
+	'common.reminder.skip': 'Überspringen',
+	'common.reminder.skipAria': 'Dieses Vorkommen überspringen',
+	'common.reminder.skippedAnnounce': '{title} übersprungen',
 	'common.reminder.toastUndoLabel': 'Rückgängig',
 	'common.reminder.toastDismiss': 'Schließen',
 	'common.reminder.toastAriaRegion': 'Erinnerungsaktivität',
@@ -176,6 +179,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.notAssignedToCompanion': 'Diesem Begleiter nicht zugewiesen.',
 	'error.canOnlyDeleteOwnEntries': 'Du kannst nur deine eigenen Einträge löschen.',
 	'error.mustBeOnShiftToComplete': 'Du musst in einer Schicht sein, um Erinnerungen abzuschließen.',
+	'error.cannotSkipNonRecurring': 'Nur wiederkehrende Erinnerungen können übersprungen werden.',
+	'error.mustBeOnShiftToSkip': 'Du musst in einer Schicht sein, um Erinnerungen zu überspringen.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Anzeigename und Benutzername sind erforderlich.',
@@ -749,6 +754,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Typ',
 	'page.reminders.labelDueDate': 'Fälligkeitsdatum *',
 	'page.reminders.labelNotes': 'Notizen',
+	'page.reminders.skippedBadge': 'Übersprungen',
 	'page.reminders.labelRecurring': 'Wiederkehrende Erinnerung',
 	'page.reminders.labelRepeatEvery': 'Wiederholen alle',
 	'page.reminders.labelRecurrenceUnit': 'Einheit',

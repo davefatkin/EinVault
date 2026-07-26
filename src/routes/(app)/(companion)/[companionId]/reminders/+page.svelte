@@ -13,18 +13,7 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import {
-		Plus,
-		Pencil,
-		Trash2,
-		CheckCheck,
-		RotateCcw,
-		X,
-		HeartPulse,
-		Bell,
-		ArrowUp,
-		ArrowDown
-	} from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, RotateCcw, X, Bell, ArrowUp, ArrowDown } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -189,6 +178,7 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
 
@@ -332,11 +322,15 @@
 			<Separator />
 
 			{#if data.companion.isActive !== false}
-				<div class="flex gap-1.5 px-5 py-4">
+				{@const allowLogEvent =
+					REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null}
+				<div class="flex gap-2 px-5 py-4">
 					<Button
+						type="button"
 						variant="soft"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
+						size="icon-sm"
+						aria-label={t(locale, 'common.edit')}
+						title={t(locale, 'common.edit')}
 						onclick={() => {
 							if (selected) {
 								const item = selected;
@@ -345,42 +339,37 @@
 							}
 						}}
 					>
-						<Pencil class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.edit')}
+						<Pencil class="h-4 w-4" />
 					</Button>
-					<Button
-						variant="softSuccess"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
-						onclick={() => {
+					<ReminderCompleteButtons
+						{allowLogEvent}
+						isRecurring={r.isRecurring}
+						onDone={() => {
 							const item = r;
 							const form = dismissFormRegistry.get(item.id);
 							if (!form) return;
 							closeDetail();
-							pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+							pendingDismiss.queue(item.id, form, item.title, { allowLogEvent });
 						}}
-					>
-						<CheckCheck class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.reminder.done')}
-					</Button>
-					<Button
-						variant="softPrimary"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
-						aria-label={t(locale, 'common.reminder.logEventAria')}
-						onclick={() => {
+						onDoneAndLog={() => {
 							const item = r;
 							closeDetail();
 							submitWithAndEvent(item.id);
 						}}
-					>
-						<HeartPulse class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.reminder.logEventShort')}
-					</Button>
+						onSkip={() => {
+							const item = r;
+							const form = skipFormRegistry.get(item.id);
+							if (!form) return;
+							closeDetail();
+							pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
+						}}
+					/>
 					<Button
+						type="button"
 						variant="softDestructive"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
+						size="icon-sm"
+						aria-label={t(locale, 'common.delete')}
+						title={t(locale, 'common.delete')}
 						onclick={() => {
 							const item = r;
 							closeDetail();
@@ -388,8 +377,7 @@
 							confirmOpen = true;
 						}}
 					>
-						<Trash2 class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.delete')}
+						<Trash2 class="h-4 w-4" />
 					</Button>
 				</div>
 			{/if}
@@ -676,6 +664,14 @@
 												});
 										}}
 										onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+										onSkip={() => {
+											const form = skipFormRegistry.get(reminder.id);
+											if (form)
+												pendingDismiss.queue(`skip-${reminder.id}`, form, reminder.title, {
+													kind: 'skip'
+												});
+										}}
+										isRecurring={reminder.isRecurring}
 										allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 											reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
 										] !== null}
@@ -747,6 +743,19 @@
 				action="?/complete"
 				use:enhance={clearSubmittingFlag}
 				use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+				class="hidden"
+			>
+				<input type="hidden" name="id" value={reminder.id} />
+			</form>
+		{/each}
+
+		<!-- Hidden skip forms (recurring only) -->
+		{#each active.filter((r) => r.isRecurring) as reminder (reminder.id + '-skip-form')}
+			<form
+				method="POST"
+				action="?/skip"
+				use:enhance={clearSubmittingFlag}
+				use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
 				class="hidden"
 			>
 				<input type="hidden" name="id" value={reminder.id} />
@@ -885,6 +894,9 @@
 									<div class="flex items-center gap-2 text-sm">
 										<span>{TYPE_ICONS[reminder.type] ?? '📌'}</span>
 										<span class="line-through text-muted-foreground">{reminder.title}</span>
+										{#if reminder.outcome === 'skipped'}
+											<Badge variant="secondary">{t(locale, 'page.reminders.skippedBadge')}</Badge>
+										{/if}
 										<span class="text-xs text-muted-foreground"
 											><LocalTime date={reminder.dueAt} /></span
 										>

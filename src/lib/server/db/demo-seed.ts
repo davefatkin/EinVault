@@ -269,6 +269,7 @@ export function seedContent(
 				dueAt: new Date(now - 10 * day),
 				completedAt: new Date(now - 10 * day + 2 * hour),
 				completedBy: jet,
+				outcome: 'completed',
 				loggedBy: jet
 			},
 			{

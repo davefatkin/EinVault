@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
-	import { Check, HeartPulse } from '@lucide/svelte';
+	import { Check, HeartPulse, SkipForward } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 
 	interface Props {
 		onDone: () => void;
 		onDoneAndLog?: () => void;
+		onSkip?: () => void;
 		allowLogEvent: boolean;
+		isRecurring?: boolean;
 	}
 
-	let { onDone, onDoneAndLog, allowLogEvent }: Props = $props();
+	let { onDone, onDoneAndLog, onSkip, allowLogEvent, isRecurring = false }: Props = $props();
 
 	const locale = getLocale();
 </script>
@@ -25,6 +27,18 @@
 	>
 		<Check class="h-4 w-4" />
 	</Button>
+	{#if isRecurring && onSkip}
+		<Button
+			type="button"
+			variant="soft"
+			size="icon-sm"
+			onclick={onSkip}
+			aria-label={t(locale, 'common.reminder.skipAria')}
+			title={t(locale, 'common.reminder.skip')}
+		>
+			<SkipForward class="h-4 w-4" />
+		</Button>
+	{/if}
 	{#if allowLogEvent && onDoneAndLog}
 		<Button
 			type="button"

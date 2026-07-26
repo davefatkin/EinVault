@@ -18,7 +18,6 @@
 		UserCheck,
 		FileText,
 		X,
-		CheckCheck,
 		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -177,8 +176,15 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleSkip(reminderId: string, title: string) {
+		const form = skipFormRegistry.get(reminderId);
+		if (!form) return;
+		pendingDismiss.queue(`skip-${reminderId}`, form, title, { kind: 'skip' });
+	}
 
 	function submitWithAndEvent(reminderId: string) {
 		const form = dismissFormRegistry.get(reminderId);
@@ -449,44 +455,44 @@
 				{#if companion.isActive !== false}
 					<div class="flex gap-2 px-5 py-4">
 						{#if selected.kind === 'reminder'}
+							{@const allowLogEvent =
+								REMINDER_TO_HEALTH_TYPE[
+									selected.item.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+								] !== null}
 							<Button
 								href="/{companion.id}/reminders?edit={selected.item.id}"
 								variant="soft"
-								size="sm"
+								size="icon-sm"
+								aria-label={t(locale, 'page.dashboard.modalEditReminders')}
+								title={t(locale, 'page.dashboard.modalEditReminders')}
 								onclick={closeDetail}
 							>
-								<Pencil class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'page.dashboard.modalEditReminders')}
+								<Pencil class="h-4 w-4" />
 							</Button>
-							<Button
-								variant="softSuccess"
-								size="sm"
-								onclick={() => {
+							<ReminderCompleteButtons
+								{allowLogEvent}
+								isRecurring={selected.item.isRecurring}
+								onDone={() => {
 									if (selected?.kind !== 'reminder') return;
 									const item = selected.item;
 									const form = dismissFormRegistry.get(item.id);
 									if (!form) return;
 									closeDetail();
-									pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+									pendingDismiss.queue(item.id, form, item.title, { allowLogEvent });
 								}}
-							>
-								<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.reminder.done')}
-							</Button>
-							<Button
-								variant="softPrimary"
-								size="sm"
-								aria-label={t(locale, 'common.reminder.logEventAria')}
-								onclick={() => {
+								onDoneAndLog={() => {
 									if (selected?.kind !== 'reminder') return;
 									const item = selected.item;
 									closeDetail();
 									submitWithAndEvent(item.id);
 								}}
-							>
-								<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.reminder.logEventShort')}
-							</Button>
+								onSkip={() => {
+									if (selected?.kind !== 'reminder') return;
+									const item = selected.item;
+									closeDetail();
+									handleSkip(item.id, item.title);
+								}}
+							/>
 						{:else if selected.kind === 'weight' || selected.kind === 'health'}
 							<Button
 								href="/{companion.id}/health?edit={selected.item.id}"
@@ -718,6 +724,8 @@
 										pendingDismiss.queue(reminder.id, form, reminder.title, { allowLogEvent });
 								}}
 								onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+								onSkip={() => handleSkip(reminder.id, reminder.title)}
+								isRecurring={reminder.isRecurring}
 								{allowLogEvent}
 							/>
 						</div>
@@ -730,6 +738,20 @@
 						action="?/complete"
 						use:enhance={clearSubmittingFlag}
 						use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={reminder.id} />
+					</form>
+				{/each}
+				<!-- Hidden skip forms (recurring only) -->
+				{#each upcomingReminders
+					.slice(0, 5)
+					.filter((r) => r.isRecurring) as reminder (reminder.id + '-skip-form')}
+					<form
+						method="POST"
+						action="?/skip"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
 						class="hidden"
 					>
 						<input type="hidden" name="id" value={reminder.id} />

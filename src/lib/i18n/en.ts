@@ -19,6 +19,9 @@ const messages = {
 	'common.reminder.logEvent': 'Done & Log Event',
 	'common.reminder.logEventShort': 'Log Event',
 	'common.reminder.logEventAria': 'Mark done and log a Health Event',
+	'common.reminder.skip': 'Skip',
+	'common.reminder.skipAria': 'Skip this occurrence',
+	'common.reminder.skippedAnnounce': '{title} skipped',
 	'common.reminder.toastUndoLabel': 'Undo',
 	'common.reminder.toastDismiss': 'Dismiss',
 	'common.reminder.toastAriaRegion': 'Reminder activity',
@@ -163,6 +166,8 @@ const messages = {
 	'error.notAssignedToCompanion': 'Not assigned to this companion.',
 	'error.canOnlyDeleteOwnEntries': 'You can only delete your own entries.',
 	'error.mustBeOnShiftToComplete': 'You must be on shift to complete reminders.',
+	'error.cannotSkipNonRecurring': 'Only recurring reminders can be skipped.',
+	'error.mustBeOnShiftToSkip': 'You must be on shift to skip reminders.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Display name and username are required.',
@@ -737,6 +742,7 @@ const messages = {
 	'page.reminders.labelType': 'Type',
 	'page.reminders.labelDueDate': 'Due date *',
 	'page.reminders.labelNotes': 'Notes',
+	'page.reminders.skippedBadge': 'Skipped',
 	'page.reminders.labelRecurring': 'Recurring reminder',
 	'page.reminders.labelRepeatEvery': 'Repeat every',
 	'page.reminders.labelRecurrenceUnit': 'Unit',

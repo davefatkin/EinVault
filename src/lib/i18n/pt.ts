@@ -21,6 +21,9 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEvent': 'Feito e registar evento',
 	'common.reminder.logEventShort': 'Evento',
 	'common.reminder.logEventAria': 'Marcar como feito e registar um evento de saúde',
+	'common.reminder.skip': 'Ignorar',
+	'common.reminder.skipAria': 'Ignorar esta ocorrência',
+	'common.reminder.skippedAnnounce': '{title} ignorado',
 	'common.reminder.toastUndoLabel': 'Desfazer',
 	'common.reminder.toastDismiss': 'Fechar',
 	'common.reminder.toastAriaRegion': 'Atividade dos lembretes',
@@ -172,6 +175,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.notAssignedToCompanion': 'Não atribuído a este companheiro.',
 	'error.canOnlyDeleteOwnEntries': 'Só pode eliminar as suas próprias entradas.',
 	'error.mustBeOnShiftToComplete': 'Deve estar em turno para completar lembretes.',
+	'error.cannotSkipNonRecurring': 'Apenas lembretes recorrentes podem ser ignorados.',
+	'error.mustBeOnShiftToSkip': 'Deve estar em turno para ignorar lembretes.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired':
@@ -747,6 +752,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Tipo',
 	'page.reminders.labelDueDate': 'Data de vencimento *',
 	'page.reminders.labelNotes': 'Notas',
+	'page.reminders.skippedBadge': 'Ignorado',
 	'page.reminders.labelRecurring': 'Lembrete recorrente',
 	'page.reminders.labelRepeatEvery': 'Repetir a cada',
 	'page.reminders.labelRecurrenceUnit': 'Unidade',

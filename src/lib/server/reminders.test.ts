@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { computeNextDueAt, completeReminder } from './reminders';
+import { computeNextDueAt, completeReminder, skipReminder } from './reminders';
 
 type Reminder = typeof schema.reminders.$inferSelect;
 
@@ -238,5 +238,133 @@ describe('completeReminder', () => {
 			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, 'r5') })
 		).length;
 		expect(countAfterSecond).toBe(countAfterFirst);
+	});
+});
+
+describe('skipReminder', () => {
+	it('marks the row skipped and spawns the next occurrence', async () => {
+		const id = 'skip-1';
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Heartworm chew',
+			type: 'medication',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'month',
+			recurrenceInterval: 1,
+			seriesId: id,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+
+		const result = skipReminder(row, 'u-rem');
+		expect(result).not.toBeNull();
+		expect(result!.nextReminderId).not.toBeNull();
+
+		const after = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+		expect(after.completedAt).not.toBeNull();
+		expect(after.completedBy).toBe('u-rem');
+		expect(after.outcome).toBe('skipped');
+
+		const next = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, result!.nextReminderId!)
+		}))!;
+		expect(next.dueAt).toEqual(new Date(2026, 1, 15, 9, 0, 0));
+		expect(next.seriesId).toBe(id);
+		expect(next.completedAt).toBeNull();
+		expect(next.outcome).toBeNull();
+	});
+
+	it('is a no-op returning null when already resolved', async () => {
+		const id = 'skip-2';
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Weekly check',
+			type: 'other',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'week',
+			recurrenceInterval: 1,
+			seriesId: id,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+
+		const first = skipReminder(row, 'u-rem');
+		expect(first).not.toBeNull();
+		expect(typeof first!.nextReminderId).toBe('string');
+
+		const countAfterFirst = (
+			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, id) })
+		).length;
+
+		// Simulate a duplicate skip on the same (stale, pre-resolution) row snapshot
+		// — the atomic UPDATE guard should no-op and skip the spawn.
+		const second = skipReminder(row, 'u-rem');
+		expect(second).toBeNull();
+
+		const countAfterSecond = (
+			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, id) })
+		).length;
+		expect(countAfterSecond).toBe(countAfterFirst);
+	});
+
+	it('returns null and writes nothing for non-recurring reminders', async () => {
+		const id = 'skip-3';
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'One-off',
+			type: 'other',
+			dueAt: new Date(2026, 0, 20, 9, 0, 0),
+			isRecurring: false,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+		const countBefore = (await db.query.reminders.findMany()).length;
+
+		const result = skipReminder(row, 'u-rem');
+		expect(result).toBeNull();
+
+		const after = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+		expect(after.completedAt).toBeNull();
+		expect((await db.query.reminders.findMany()).length).toBe(countBefore);
+	});
+});
+
+describe('completeReminder outcome', () => {
+	it('stamps outcome completed', async () => {
+		const id = 'complete-outcome-1';
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Pill',
+			type: 'medication',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: false,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+
+		completeReminder(row, 'u-rem');
+
+		const after = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		}))!;
+		expect(after.outcome).toBe('completed');
 	});
 });

@@ -68,21 +68,22 @@ export function computeNextDueAt(reminder: Reminder): Date | null {
 	return next;
 }
 
-export function completeReminder(
+function resolveReminder(
 	reminder: Reminder,
-	userId: string
+	userId: string,
+	outcome: 'completed' | 'skipped'
 ): { completedAt: Date; nextReminderId: string | null } | null {
 	const completedAt = new Date();
 	let nextReminderId: string | null = null;
-	let completed = false;
+	let resolved = false;
 	db.transaction((tx) => {
 		const res = tx
 			.update(schema.reminders)
-			.set({ completedAt, completedBy: userId })
+			.set({ completedAt, completedBy: userId, outcome })
 			.where(and(eq(schema.reminders.id, reminder.id), isNull(schema.reminders.completedAt)))
 			.run();
-		if (res.changes === 0) return; // already completed by a concurrent/prior call — spawn nothing
-		completed = true;
+		if (res.changes === 0) return; // already resolved by a concurrent/prior call — spawn nothing
+		resolved = true;
 
 		const nextDueAt = computeNextDueAt(reminder);
 		if (!nextDueAt) return;
@@ -106,5 +107,25 @@ export function completeReminder(
 			})
 			.run();
 	});
-	return completed ? { completedAt, nextReminderId } : null;
+	return resolved ? { completedAt, nextReminderId } : null;
+}
+
+export function completeReminder(
+	reminder: Reminder,
+	userId: string
+): { completedAt: Date; nextReminderId: string | null } | null {
+	return resolveReminder(reminder, userId, 'completed');
+}
+
+/**
+ * Skip the current occurrence of a recurring reminder: resolve it without a
+ * "done" record and spawn the next occurrence. One-off reminders can't be
+ * skipped — returns null without touching the database.
+ */
+export function skipReminder(
+	reminder: Reminder,
+	userId: string
+): { completedAt: Date; nextReminderId: string | null } | null {
+	if (!reminder.isRecurring) return null;
+	return resolveReminder(reminder, userId, 'skipped');
 }

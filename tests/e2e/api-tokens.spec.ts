@@ -711,6 +711,92 @@ test.describe('api tokens', () => {
 		expect(ids).toContain(body.nextReminderId);
 	});
 
+	test('skip endpoint resolves a recurring reminder and spawns the next occurrence', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Reminder skip bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		// Create a recurring reminder via the app's own form, then discover its
+		// id through the read endpoint (mirrors the complete-endpoint recurring test).
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api skip recurring');
+		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
+		await asMember.locator('#add-isRecurring').check();
+		await asMember.locator('#add-recurrenceInterval').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		const listRes = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers }
+		);
+		const { reminders } = await listRes.json();
+		const match = reminders.find((r: { title: string }) => r.title === 'Api skip recurring');
+		expect(match).toBeTruthy();
+		const id = match.id;
+
+		const skip = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/skip`, {
+			headers
+		});
+		expect(skip.status()).toBe(200);
+		const body = await skip.json();
+		expect(body.id).toBe(id);
+		expect(body.skippedAt).toBeTruthy();
+		expect(typeof body.nextReminderId).toBe('string'); // spawned the next occurrence
+
+		// The outcome is visible via a status=all read.
+		const after = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}&status=all`,
+			{ headers }
+		);
+		const afterReminders = (await after.json()).reminders;
+		const skipped = afterReminders.find((r: { id: string }) => r.id === id);
+		expect(skipped).toBeTruthy();
+		expect(skipped.outcome).toBe('skipped');
+
+		// Skipping the same (now-resolved) reminder again → 409.
+		const again = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/skip`, {
+			headers
+		});
+		expect(again.status()).toBe(409);
+		expect((await again.json()).code).toBe('alreadyCompleted');
+	});
+
+	test('skip endpoint rejects a non-recurring reminder with 400', async ({ asMember, app }) => {
+		const raw = await createToken(asMember, 'Reminder skip non-recurring bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api skip one-off');
+		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		const listRes = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}`,
+			{ headers }
+		);
+		const { reminders } = await listRes.json();
+		const match = reminders.find((r: { title: string }) => r.title === 'Api skip one-off');
+		expect(match).toBeTruthy();
+
+		const skip = await asMember.request.post(
+			app.server.baseURL + `/api/reminders/${match.id}/skip`,
+			{ headers }
+		);
+		expect(skip.status()).toBe(400);
+		expect((await skip.json()).code).toBe('notRecurring');
+	});
+
 	test('shifts endpoint: admin sees all, caretaker sees only their own, write-scope is forbidden', async ({
 		asAdmin,
 		asCaretaker,

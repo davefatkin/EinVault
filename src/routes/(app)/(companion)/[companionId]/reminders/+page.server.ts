@@ -5,7 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseReminderType, parseRecurrence } from '$lib/server/validation';
-import { completeReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
@@ -151,6 +151,23 @@ export const actions: Actions = {
 		return { completeSuccess: true };
 	},
 
+	skip: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+		if (!existing.isRecurring)
+			return fail(400, { error: t(locals.locale, 'error.cannotSkipNonRecurring') });
+
+		skipReminder(existing, locals.user.id);
+
+		return { skipSuccess: true };
+	},
+
 	restore: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
@@ -164,16 +181,19 @@ export const actions: Actions = {
 
 		db.transaction((tx) => {
 			tx.update(schema.reminders)
-				.set({ completedAt: null, completedBy: null })
+				.set({ completedAt: null, completedBy: null, outcome: null })
 				.where(eq(schema.reminders.id, id))
 				.run();
 
-			// If recurring, delete all future instances in this series
-			if (existing.isRecurring && existing.seriesId) {
+			// If recurring, delete all future instances in this series. Spawned
+			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
+			// the same fallback: rows whose own seriesId is null still own the
+			// instances their id seeded.
+			if (existing.isRecurring) {
 				tx.delete(schema.reminders)
 					.where(
 						and(
-							eq(schema.reminders.seriesId, existing.seriesId),
+							eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
 							gt(schema.reminders.dueAt, existing.dueAt)
 						)
 					)

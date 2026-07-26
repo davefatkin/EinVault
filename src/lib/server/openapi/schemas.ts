@@ -237,6 +237,7 @@ export const Reminder = z
 		dueAt: z.string(),
 		isRecurring: z.boolean(),
 		completedAt: z.string().nullable(),
+		outcome: z.enum(['completed', 'skipped']).nullable(),
 		seriesId: z.string().nullable()
 	})
 	.openapi('Reminder');
@@ -252,6 +253,14 @@ export const CompleteResponse = z
 		nextReminderId: z.string().nullable()
 	})
 	.openapi('CompleteResponse');
+
+export const SkipResponse = z
+	.object({
+		id: z.string(),
+		skippedAt: z.string(),
+		nextReminderId: z.string().nullable()
+	})
+	.openapi('SkipResponse');
 
 export const Shift = z
 	.object({

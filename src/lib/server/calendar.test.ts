@@ -98,6 +98,43 @@ describe('getCalendarItems', () => {
 		expect(items).toHaveLength(0);
 	});
 
+	it('omits skipped occurrences from past reminder items', async () => {
+		await db.insert(schema.reminders).values([
+			{
+				id: 'rem-skipped',
+				companionId: 'c-active',
+				title: 'Skipped dose',
+				type: 'medication',
+				dueAt: new Date('2026-06-10T13:00:00Z'),
+				isRecurring: true,
+				seriesId: 'series-1',
+				completedAt: new Date('2026-06-10T13:05:00Z'),
+				outcome: 'skipped'
+			},
+			{
+				id: 'rem-completed',
+				companionId: 'c-active',
+				title: 'Completed dose',
+				type: 'medication',
+				dueAt: new Date('2026-06-11T13:00:00Z'),
+				isRecurring: true,
+				seriesId: 'series-1',
+				completedAt: new Date('2026-06-11T13:05:00Z'),
+				outcome: 'completed'
+			}
+		]);
+
+		const items = await getCalendarItems(MEMBER, {
+			types: [],
+			companionIds: [],
+			historyDays: 90,
+			now: NOW
+		});
+		const ids = items.map((i) => i.uid);
+		expect(ids).toContain('reminder-rem-completed@einvault');
+		expect(ids).not.toContain('reminder-rem-skipped@einvault');
+	});
+
 	it('companion filter excludes shifts for a caretaker', async () => {
 		await db
 			.insert(schema.users)

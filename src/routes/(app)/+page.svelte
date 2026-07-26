@@ -29,6 +29,7 @@
 	import { careStatus } from '$lib/careStatus';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
+	import { formatRecurrence } from '$lib/reminderRecurrence';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -182,6 +183,7 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
 
 	function handleComplete(reminderId: string, title: string, reminderType: string) {
@@ -190,6 +192,12 @@
 		const allowLogEvent =
 			REMINDER_TO_HEALTH_TYPE[reminderType as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null;
 		pendingDismiss.queue(reminderId, form, title, { allowLogEvent });
+	}
+
+	function handleSkip(reminderId: string, title: string) {
+		const form = skipFormRegistry.get(reminderId);
+		if (!form) return;
+		pendingDismiss.queue(`skip-${reminderId}`, form, title, { kind: 'skip' });
 	}
 
 	function submitWithAndEvent(reminderId: string) {
@@ -318,6 +326,14 @@
 						<Badge variant="coral" class="ml-1">{t(locale, 'page.reminders.overdue')}</Badge>
 					{/if}
 				</div>
+				{#if r.isRecurring}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.reminders.detailRepeats')}</span
+						>
+						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
+					</div>
+				{/if}
 				{#if r.description}
 					<div class="pt-1">
 						<p class="text-xs font-medium text-muted-foreground mb-1">
@@ -333,6 +349,26 @@
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
+				<ReminderCompleteButtons
+					allowLogEvent={REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
+						null}
+					isRecurring={r.isRecurring}
+					onDone={() => {
+						const item = r;
+						closeReminderDetail();
+						handleComplete(item.id, item.title, item.type);
+					}}
+					onDoneAndLog={() => {
+						const item = r;
+						closeReminderDetail();
+						submitWithAndEvent(item.id);
+					}}
+					onSkip={() => {
+						const item = r;
+						closeReminderDetail();
+						handleSkip(item.id, item.title);
+					}}
+				/>
 				{#if companion}
 					<Button
 						variant="outline"
@@ -425,6 +461,8 @@
 							<ReminderCompleteButtons
 								onDone={() => handleComplete(r.id, r.title, r.type)}
 								onDoneAndLog={() => submitWithAndEvent(r.id)}
+								onSkip={() => handleSkip(r.id, r.title)}
+								isRecurring={r.isRecurring}
 								allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 									r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
 								] !== null}
@@ -440,6 +478,19 @@
 						action="?/complete"
 						use:enhance={clearSubmittingFlag}
 						use:registerDismissForm={{ id: r.id, registry: dismissFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={r.id} />
+					</form>
+				{/each}
+
+				<!-- Hidden skip forms (recurring only) -->
+				{#each attentionItems.filter(({ r }) => r.isRecurring) as { r } (r.id + '-skip-form')}
+					<form
+						method="POST"
+						action="?/skip"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: r.id, registry: skipFormRegistry }}
 						class="hidden"
 					>
 						<input type="hidden" name="id" value={r.id} />

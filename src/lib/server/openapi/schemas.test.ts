@@ -198,6 +198,7 @@ describe('response schemas match their serializers', () => {
 			seriesId: 'series-1',
 			completedAt: null,
 			completedBy: null,
+			outcome: null,
 			createdAt: new Date(),
 			loggedBy: 'user-1'
 		};
