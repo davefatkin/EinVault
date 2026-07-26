@@ -111,6 +111,8 @@ export async function getCalendarItems(
 						recurrence: reminderRecurrence(r, r.dueAt, feedTimezone()) ?? undefined
 					});
 				} else {
+					// A skipped occurrence never happened — keep it off the calendar.
+					if (r.outcome === 'skipped') continue;
 					if (lower && r.dueAt < lower) continue;
 					items.push({
 						kind: 'reminder',
