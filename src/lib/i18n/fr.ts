@@ -756,7 +756,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Type',
 	'page.reminders.labelDueDate': "Date d'échéance *",
 	'page.reminders.labelNotes': 'Notes',
-	'page.reminders.skippedBadge': 'Passé',
+	'page.reminders.skippedBadge': 'Ignoré',
 	'page.reminders.labelRecurring': 'Rappel récurrent',
 	'page.reminders.labelRepeatEvery': 'Répéter tous les',
 	'page.reminders.labelRecurrenceUnit': 'Unité',
