@@ -176,7 +176,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Só pode eliminar as suas próprias entradas.',
 	'error.mustBeOnShiftToComplete': 'Deve estar em turno para completar lembretes.',
 	'error.cannotSkipNonRecurring': 'Apenas lembretes recorrentes podem ser ignorados.',
-	'error.mustBeOnShiftToSkip': 'Você precisa estar de plantão para ignorar lembretes.',
+	'error.mustBeOnShiftToSkip': 'Deve estar em turno para ignorar lembretes.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired':

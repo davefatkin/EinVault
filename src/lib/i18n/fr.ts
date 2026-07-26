@@ -178,7 +178,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Vous ne pouvez supprimer que vos propres entrées.',
 	'error.mustBeOnShiftToComplete': 'Vous devez être de garde pour compléter les rappels.',
 	'error.cannotSkipNonRecurring': 'Seuls les rappels récurrents peuvent être passés.',
-	'error.mustBeOnShiftToSkip': 'Vous devez être de service pour passer des rappels.',
+	'error.mustBeOnShiftToSkip': 'Vous devez être de garde pour passer des rappels.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': "Le nom d'affichage et le nom d'utilisateur sont requis.",

@@ -179,7 +179,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Solo puedes eliminar tus propias entradas.',
 	'error.mustBeOnShiftToComplete': 'Debes estar en turno para completar recordatorios.',
 	'error.cannotSkipNonRecurring': 'Solo se pueden omitir los recordatorios recurrentes.',
-	'error.mustBeOnShiftToSkip': 'Debes estar de turno para omitir recordatorios.',
+	'error.mustBeOnShiftToSkip': 'Debes estar en turno para omitir recordatorios.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired':
