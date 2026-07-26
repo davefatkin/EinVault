@@ -181,7 +181,7 @@ test('skip from the reminder detail modal commits and leaves the card', async ({
 	const dialog = asMember.getByRole('dialog');
 	await expect(dialog).toBeVisible({ timeout: 5_000 });
 	await expect(dialog.getByRole('heading', { name: 'e2e-dash-skip-modal' })).toBeVisible();
-	await dialog.getByRole('button', { name: 'Skip', exact: true }).click();
+	await dialog.getByRole('button', { name: 'Skip this occurrence' }).click();
 
 	const toast = asMember.locator('[role="status"]');
 	await expect(toast).toBeVisible({ timeout: 5_000 });
@@ -210,5 +210,5 @@ test('one-off reminder on the dashboard has no skip button in list or modal', as
 	await row.locator('button').first().click();
 	const dialog = asMember.getByRole('dialog');
 	await expect(dialog).toBeVisible({ timeout: 5_000 });
-	await expect(dialog.getByRole('button', { name: 'Skip', exact: true })).toHaveCount(0);
+	await expect(dialog.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
 });

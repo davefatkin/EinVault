@@ -18,9 +18,7 @@
 		UserCheck,
 		FileText,
 		X,
-		CheckCheck,
-		Activity,
-		SkipForward
+		Activity
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -457,59 +455,44 @@
 				{#if companion.isActive !== false}
 					<div class="flex gap-2 px-5 py-4">
 						{#if selected.kind === 'reminder'}
+							{@const allowLogEvent =
+								REMINDER_TO_HEALTH_TYPE[
+									selected.item.type as keyof typeof REMINDER_TO_HEALTH_TYPE
+								] !== null}
 							<Button
 								href="/{companion.id}/reminders?edit={selected.item.id}"
 								variant="soft"
-								size="sm"
+								size="icon-sm"
+								aria-label={t(locale, 'page.dashboard.modalEditReminders')}
+								title={t(locale, 'page.dashboard.modalEditReminders')}
 								onclick={closeDetail}
 							>
-								<Pencil class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'page.dashboard.modalEditReminders')}
+								<Pencil class="h-4 w-4" />
 							</Button>
-							<Button
-								variant="softSuccess"
-								size="sm"
-								onclick={() => {
+							<ReminderCompleteButtons
+								{allowLogEvent}
+								isRecurring={selected.item.isRecurring}
+								onDone={() => {
 									if (selected?.kind !== 'reminder') return;
 									const item = selected.item;
 									const form = dismissFormRegistry.get(item.id);
 									if (!form) return;
 									closeDetail();
-									pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+									pendingDismiss.queue(item.id, form, item.title, { allowLogEvent });
 								}}
-							>
-								<CheckCheck class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.reminder.done')}
-							</Button>
-							{#if selected.item.isRecurring}
-								<Button
-									variant="soft"
-									size="sm"
-									onclick={() => {
-										if (selected?.kind !== 'reminder') return;
-										const item = selected.item;
-										closeDetail();
-										handleSkip(item.id, item.title);
-									}}
-								>
-									<SkipForward class="h-3.5 w-3.5 mr-1.5" />
-									{t(locale, 'common.reminder.skip')}
-								</Button>
-							{/if}
-							<Button
-								variant="softPrimary"
-								size="sm"
-								aria-label={t(locale, 'common.reminder.logEventAria')}
-								onclick={() => {
+								onDoneAndLog={() => {
 									if (selected?.kind !== 'reminder') return;
 									const item = selected.item;
 									closeDetail();
 									submitWithAndEvent(item.id);
 								}}
-							>
-								<HeartPulse class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.reminder.logEventShort')}
-							</Button>
+								onSkip={() => {
+									if (selected?.kind !== 'reminder') return;
+									const item = selected.item;
+									closeDetail();
+									handleSkip(item.id, item.title);
+								}}
+							/>
 						{:else if selected.kind === 'weight' || selected.kind === 'health'}
 							<Button
 								href="/{companion.id}/health?edit={selected.item.id}"

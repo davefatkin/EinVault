@@ -13,19 +13,7 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import {
-		Plus,
-		Pencil,
-		Trash2,
-		CheckCheck,
-		RotateCcw,
-		X,
-		HeartPulse,
-		Bell,
-		ArrowUp,
-		ArrowDown,
-		SkipForward
-	} from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, RotateCcw, X, Bell, ArrowUp, ArrowDown } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -334,11 +322,15 @@
 			<Separator />
 
 			{#if data.companion.isActive !== false}
-				<div class="flex gap-1.5 px-5 py-4">
+				{@const allowLogEvent =
+					REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null}
+				<div class="flex gap-2 px-5 py-4">
 					<Button
+						type="button"
 						variant="soft"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
+						size="icon-sm"
+						aria-label={t(locale, 'common.edit')}
+						title={t(locale, 'common.edit')}
 						onclick={() => {
 							if (selected) {
 								const item = selected;
@@ -347,59 +339,37 @@
 							}
 						}}
 					>
-						<Pencil class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.edit')}
+						<Pencil class="h-4 w-4" />
 					</Button>
-					<Button
-						variant="softSuccess"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
-						onclick={() => {
+					<ReminderCompleteButtons
+						{allowLogEvent}
+						isRecurring={r.isRecurring}
+						onDone={() => {
 							const item = r;
 							const form = dismissFormRegistry.get(item.id);
 							if (!form) return;
 							closeDetail();
-							pendingDismiss.queue(item.id, form, item.title, { allowLogEvent: true });
+							pendingDismiss.queue(item.id, form, item.title, { allowLogEvent });
 						}}
-					>
-						<CheckCheck class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.reminder.done')}
-					</Button>
-					{#if r.isRecurring}
-						<Button
-							variant="soft"
-							size="sm"
-							class="flex-1 min-w-0 px-2"
-							onclick={() => {
-								const item = r;
-								const form = skipFormRegistry.get(item.id);
-								if (!form) return;
-								closeDetail();
-								pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
-							}}
-						>
-							<SkipForward class="h-3.5 w-3.5 mr-1 shrink-0" />
-							{t(locale, 'common.reminder.skip')}
-						</Button>
-					{/if}
-					<Button
-						variant="softPrimary"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
-						aria-label={t(locale, 'common.reminder.logEventAria')}
-						onclick={() => {
+						onDoneAndLog={() => {
 							const item = r;
 							closeDetail();
 							submitWithAndEvent(item.id);
 						}}
-					>
-						<HeartPulse class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.reminder.logEventShort')}
-					</Button>
+						onSkip={() => {
+							const item = r;
+							const form = skipFormRegistry.get(item.id);
+							if (!form) return;
+							closeDetail();
+							pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
+						}}
+					/>
 					<Button
+						type="button"
 						variant="softDestructive"
-						size="sm"
-						class="flex-1 min-w-0 px-2"
+						size="icon-sm"
+						aria-label={t(locale, 'common.delete')}
+						title={t(locale, 'common.delete')}
 						onclick={() => {
 							const item = r;
 							closeDetail();
@@ -407,8 +377,7 @@
 							confirmOpen = true;
 						}}
 					>
-						<Trash2 class="h-3.5 w-3.5 mr-1 shrink-0" />
-						{t(locale, 'common.delete')}
+						<Trash2 class="h-4 w-4" />
 					</Button>
 				</div>
 			{/if}
