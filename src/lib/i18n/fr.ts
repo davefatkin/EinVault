@@ -21,6 +21,9 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEvent': 'Fait et consigner un événement',
 	'common.reminder.logEventShort': 'Événement',
 	'common.reminder.logEventAria': 'Marquer comme fait et consigner un événement de santé',
+	'common.reminder.skip': 'Passer',
+	'common.reminder.skipAria': 'Passer cette occurrence',
+	'common.reminder.skippedAnnounce': '{title} passé',
 	'common.reminder.toastUndoLabel': 'Annuler',
 	'common.reminder.toastDismiss': 'Fermer',
 	'common.reminder.toastAriaRegion': 'Activité des rappels',
@@ -174,6 +177,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.notAssignedToCompanion': 'Non assigné à ce compagnon.',
 	'error.canOnlyDeleteOwnEntries': 'Vous ne pouvez supprimer que vos propres entrées.',
 	'error.mustBeOnShiftToComplete': 'Vous devez être de garde pour compléter les rappels.',
+	'error.cannotSkipNonRecurring': 'Seuls les rappels récurrents peuvent être passés.',
+	'error.mustBeOnShiftToSkip': 'Vous devez être de service pour passer des rappels.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': "Le nom d'affichage et le nom d'utilisateur sont requis.",
@@ -751,6 +756,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Type',
 	'page.reminders.labelDueDate': "Date d'échéance *",
 	'page.reminders.labelNotes': 'Notes',
+	'page.reminders.skippedBadge': 'Passé',
 	'page.reminders.labelRecurring': 'Rappel récurrent',
 	'page.reminders.labelRepeatEvery': 'Répéter tous les',
 	'page.reminders.labelRecurrenceUnit': 'Unité',

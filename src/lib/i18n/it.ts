@@ -21,6 +21,9 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEvent': 'Fatto e registra evento',
 	'common.reminder.logEventShort': 'Evento',
 	'common.reminder.logEventAria': 'Segna come fatto e registra un evento sanitario',
+	'common.reminder.skip': 'Salta',
+	'common.reminder.skipAria': 'Salta questa occorrenza',
+	'common.reminder.skippedAnnounce': '{title} saltato',
 	'common.reminder.toastUndoLabel': 'Annulla',
 	'common.reminder.toastDismiss': 'Chiudi',
 	'common.reminder.toastAriaRegion': 'Attività dei promemoria',
@@ -172,6 +175,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.notAssignedToCompanion': 'Non assegnato a questo compagno.',
 	'error.canOnlyDeleteOwnEntries': 'Puoi eliminare solo le tue voci.',
 	'error.mustBeOnShiftToComplete': 'Devi essere in turno per completare i promemoria.',
+	'error.cannotSkipNonRecurring': 'Solo i promemoria ricorrenti possono essere saltati.',
+	'error.mustBeOnShiftToSkip': 'Devi essere in turno per saltare i promemoria.',
 
 	// Errors: Account
 	'error.displayNameAndUsernameRequired': 'Nome visualizzato e nome utente sono obbligatori.',
@@ -745,6 +750,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelType': 'Tipo',
 	'page.reminders.labelDueDate': 'Data di scadenza *',
 	'page.reminders.labelNotes': 'Note',
+	'page.reminders.skippedBadge': 'Saltato',
 	'page.reminders.labelRecurring': 'Promemoria ricorrente',
 	'page.reminders.labelRepeatEvery': 'Ripeti ogni',
 	'page.reminders.labelRecurrenceUnit': 'Unità',
