@@ -4,7 +4,7 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, gte, and, lte, isNull } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
-import { completeReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
@@ -133,6 +133,24 @@ export const actions: Actions = {
 		}
 
 		return { completeSuccess: true };
+	},
+
+	skip: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+		if (!existing.isRecurring)
+			return fail(400, { error: t(locals.locale, 'error.cannotSkipNonRecurring') });
+
+		skipReminder(existing, locals.user.id);
+
+		return { skipSuccess: true };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {
