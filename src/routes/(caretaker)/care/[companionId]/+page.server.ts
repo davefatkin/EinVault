@@ -1,12 +1,36 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
+import { t, type Locale } from '$lib/i18n';
+import type { MessageKey } from '$lib/i18n/en';
 import { db, schema } from '$lib/server/db';
 import { eq, and, ne, gte, isNull } from 'drizzle-orm';
 import { getShiftStatus } from '$lib/server/shifts';
-import { completeReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
+
+// Actions need their own assignment + shift gate: the load()'s assignment
+// check does not protect POSTs, so without this an on-shift caretaker could
+// act on companions they are not assigned to.
+async function caretakerActionGuard(
+	userId: string,
+	companionId: string,
+	locale: Locale,
+	shiftErrorKey: MessageKey
+) {
+	const assigned = await db.query.companionCaretakers.findFirst({
+		where: and(
+			eq(schema.companionCaretakers.userId, userId),
+			eq(schema.companionCaretakers.companionId, companionId)
+		)
+	});
+	if (!assigned) return fail(403, { error: t(locale, 'error.notAssignedToCompanion') });
+
+	const { isOnShift } = await getShiftStatus(userId);
+	if (!isOnShift) return fail(403, { error: t(locale, shiftErrorKey) });
+
+	return null;
+}
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -93,8 +117,13 @@ export const actions: Actions = {
 	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 
-		const { isOnShift } = await getShiftStatus(locals.user.id);
-		if (!isOnShift) return fail(403, { error: t(locals.locale, 'error.mustBeOnShiftToComplete') });
+		const guard = await caretakerActionGuard(
+			locals.user.id,
+			params.companionId,
+			locals.locale,
+			'error.mustBeOnShiftToComplete'
+		);
+		if (guard) return guard;
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
@@ -107,6 +136,32 @@ export const actions: Actions = {
 		completeReminder(existing, locals.user.id);
 
 		return { completeSuccess: true };
+	},
+
+	skip: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const guard = await caretakerActionGuard(
+			locals.user.id,
+			params.companionId,
+			locals.locale,
+			'error.mustBeOnShiftToSkip'
+		);
+		if (guard) return guard;
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+		if (!existing.isRecurring)
+			return fail(400, { error: t(locals.locale, 'error.cannotSkipNonRecurring') });
+
+		skipReminder(existing, locals.user.id);
+
+		return { skipSuccess: true };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {
