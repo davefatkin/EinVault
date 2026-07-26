@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '$lib/server/db';
 import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
-import { completeReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { t } from '$lib/i18n';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import {
@@ -126,6 +126,35 @@ export const actions: Actions = {
 		}
 
 		return { completeSuccess: true };
+	},
+
+	skip: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		if (locals.user.role === 'caretaker')
+			return fail(403, { error: t(locals.locale, 'error.forbidden') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const reminder = await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		});
+		if (!reminder) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		const companion = await db.query.companions.findFirst({
+			where: and(
+				eq(schema.companions.id, reminder.companionId),
+				eq(schema.companions.isActive, true)
+			)
+		});
+		if (!companion) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		if (!reminder.isRecurring)
+			return fail(400, { error: t(locals.locale, 'error.cannotSkipNonRecurring') });
+
+		skipReminder(reminder, locals.user.id);
+
+		return { skipSuccess: true };
 	},
 
 	quickLog: async ({ request, locals }) => {

@@ -182,6 +182,7 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
 
 	function handleComplete(reminderId: string, title: string, reminderType: string) {
@@ -190,6 +191,12 @@
 		const allowLogEvent =
 			REMINDER_TO_HEALTH_TYPE[reminderType as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null;
 		pendingDismiss.queue(reminderId, form, title, { allowLogEvent });
+	}
+
+	function handleSkip(reminderId: string, title: string) {
+		const form = skipFormRegistry.get(reminderId);
+		if (!form) return;
+		pendingDismiss.queue(`skip-${reminderId}`, form, title, { kind: 'skip' });
 	}
 
 	function submitWithAndEvent(reminderId: string) {
@@ -425,6 +432,8 @@
 							<ReminderCompleteButtons
 								onDone={() => handleComplete(r.id, r.title, r.type)}
 								onDoneAndLog={() => submitWithAndEvent(r.id)}
+								onSkip={() => handleSkip(r.id, r.title)}
+								isRecurring={r.isRecurring}
 								allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 									r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
 								] !== null}
@@ -440,6 +449,19 @@
 						action="?/complete"
 						use:enhance={clearSubmittingFlag}
 						use:registerDismissForm={{ id: r.id, registry: dismissFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={r.id} />
+					</form>
+				{/each}
+
+				<!-- Hidden skip forms (recurring only) -->
+				{#each attentionItems.filter(({ r }) => r.isRecurring) as { r } (r.id + '-skip-form')}
+					<form
+						method="POST"
+						action="?/skip"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: r.id, registry: skipFormRegistry }}
 						class="hidden"
 					>
 						<input type="hidden" name="id" value={r.id} />
