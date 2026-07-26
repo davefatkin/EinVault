@@ -92,11 +92,15 @@ export function createPendingDismissals(
 		id: string,
 		form: HTMLFormElement,
 		title: string,
-		opts?: { allowLogEvent?: boolean }
+		opts?: { allowLogEvent?: boolean; kind?: 'done' | 'skip' }
 	) {
 		const delayMs = getDelayMs();
 		const locale = getLocale();
-		const announcement = t(locale, 'common.reminder.dismissedAnnounce', { title });
+		const kind = opts?.kind ?? 'done';
+		const announcement =
+			kind === 'skip'
+				? t(locale, 'common.reminder.skippedAnnounce', { title })
+				: t(locale, 'common.reminder.dismissedAnnounce', { title });
 
 		if (delayMs <= 0) {
 			safeSubmit(form);
@@ -117,13 +121,14 @@ export function createPendingDismissals(
 			title: announcement,
 			durationMs: delayMs,
 			undoLabel: t(locale, 'common.reminder.toastUndoLabel'),
-			commitLabel: t(locale, 'common.reminder.done'),
+			commitLabel:
+				kind === 'skip' ? t(locale, 'common.reminder.skip') : t(locale, 'common.reminder.done'),
 			logEventLabel: t(locale, 'common.reminder.logEvent'),
 			dismissLabel: t(locale, 'common.reminder.toastDismiss'),
 			onUndo: () => undo(id),
 			onExpire: () => submitNow(id),
 			onCommit: () => submitNow(id),
-			onLogEvent: opts?.allowLogEvent ? () => submitWithEvent(id) : undefined
+			onLogEvent: opts?.allowLogEvent && kind !== 'skip' ? () => submitWithEvent(id) : undefined
 		});
 		pending[id] = { form, toastId };
 
