@@ -3,6 +3,28 @@ import { test, expect } from '../lib/fixtures';
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
 
+/**
+ * POST a care-page form action and force SvelteKit's JSON action response
+ * (see actions.js `is_action_json_request`) so a fail() surfaces as a JSON
+ * body `{ type: 'failure', status, data }` — form actions always respond
+ * HTTP 200 for `fail()` in this mode, so the real status lives in the body.
+ * Origin must match the server for SvelteKit's CSRF check to pass.
+ */
+async function postCareAction(
+	page: import('@playwright/test').Page,
+	baseURL: string,
+	companionId: string,
+	action: 'complete' | 'skip',
+	id: string
+) {
+	const res = await page.request.post(`/care/${companionId}?/${action}`, {
+		headers: { Origin: baseURL, Accept: 'application/json' },
+		form: { id }
+	});
+	const body = await res.json();
+	return { res, body };
+}
+
 // The server runs with TZ=UTC; localDateISO() uses the process timezone (UTC),
 // so "today" from the server's perspective is the current UTC date.
 function todayUTC(): string {
@@ -34,6 +56,41 @@ test.describe('caretaker', () => {
 		// The URL stays on the requested path (error rendered in-place, no redirect).
 		// Assert a 403-style indicator is visible (status code or the server message).
 		await expect(asCaretaker.getByText(/403|not assigned/i)).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('complete action rejects an unassigned companion even while on shift', async ({
+		app,
+		asCaretaker
+	}) => {
+		// seed-caretaker is on shift (see the dashboard test above) but is only
+		// assigned to Ein, not Edward — the actions' own guard (not just load())
+		// must reject this, otherwise a POST could bypass the page-level 403.
+		const { res, body } = await postCareAction(
+			asCaretaker,
+			app.server.baseURL,
+			EDWARD,
+			'complete',
+			'seed-reminder-edward-overdue'
+		);
+		expect(res.status()).toBe(200); // SvelteKit's JSON action response always 200s a fail()
+		expect(body.type).toBe('failure');
+		expect(body.status).toBe(403);
+	});
+
+	test('skip action rejects an unassigned companion even while on shift', async ({
+		app,
+		asCaretaker
+	}) => {
+		const { res, body } = await postCareAction(
+			asCaretaker,
+			app.server.baseURL,
+			EDWARD,
+			'skip',
+			'seed-reminder-edward-recurring'
+		);
+		expect(res.status()).toBe(200);
+		expect(body.type).toBe('failure');
+		expect(body.status).toBe(403);
 	});
 
 	test('log activity', async ({ asCaretaker }) => {

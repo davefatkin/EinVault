@@ -356,6 +356,90 @@ test.describe('reminders', () => {
 		await expect(reminderCard.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
 	});
 
+	test('restoring a skipped reminder that was edited into recurring (null seriesId)', async ({
+		asMember
+	}) => {
+		await asMember.goto(BASE);
+
+		// Create as a plain one-off — its seriesId stays null even after the
+		// edit below flips isRecurring on, since the update action never sets it.
+		await addReminder(asMember, {
+			title: 'e2e-rem-restore-null-series',
+			type: 'medication',
+			dueAt: justPast()
+		});
+
+		await expect(
+			activeSection(asMember).getByText('e2e-rem-restore-null-series')
+		).toBeVisible({ timeout: 8_000 });
+
+		// Edit it into a recurring reminder (see the ?edit deep-link test above
+		// for the same inline-edit shape).
+		const reminderCard = activeSection(asMember)
+			.locator('div')
+			.filter({ hasText: 'e2e-rem-restore-null-series' })
+			.first();
+		await reminderCard.getByRole('button', { name: 'Edit' }).click();
+
+		// Only one edit form is ever open at a time (editingId is a single
+		// value), so these dynamic-id fields are unambiguous on the page.
+		await asMember.locator('input[id$="-isRecurring"]').check();
+		await asMember.locator('input[id$="-recurrenceInterval"]').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('week');
+		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+
+		// Save closes the edit form; the recurring badge confirms the update landed.
+		await expect(
+			activeSection(asMember).getByText('e2e-rem-restore-null-series')
+		).toBeVisible({ timeout: 8_000 });
+
+		// Skip it and commit immediately via the toast (mirrors the skip-commit test).
+		const skipCard = activeSection(asMember)
+			.locator('div')
+			.filter({ hasText: 'e2e-rem-restore-null-series' })
+			.first();
+		await skipCard.getByRole('button', { name: 'Skip this occurrence' }).click();
+		const toast = asMember.locator('[role="status"]');
+		await expect(toast).toBeVisible({ timeout: 5_000 });
+		await toast.getByRole('button', { name: 'Skip' }).click();
+
+		// Skipped instance lands in the completed section; the spawned next
+		// occurrence is active — exactly one active instance.
+		const completed = completedSection(asMember);
+		await completed.locator('summary').click();
+		await expect(completed.getByText('e2e-rem-restore-null-series')).toBeVisible({
+			timeout: 15_000
+		});
+		await expect(
+			activeSection(asMember).getByText('e2e-rem-restore-null-series')
+		).toHaveCount(1, { timeout: 5_000 });
+
+		// Restore the skipped (completed) row — this must delete the spawned
+		// future instance even though the original reminder's seriesId is null.
+		// The title span and the action buttons are cousins (both children of the
+		// row's outer flex container), so go up two levels from the title text —
+		// one level only reaches the text-row div the badge check above used.
+		const completedRow = completed
+			.getByText('e2e-rem-restore-null-series')
+			.locator('..')
+			.locator('..');
+		await completedRow.getByRole('button', { name: 'Restore' }).click();
+
+		// Restored row is back in the active section, and the spawned occurrence
+		// is gone — exactly one active instance again.
+		await expect(
+			activeSection(asMember).getByText('e2e-rem-restore-null-series')
+		).toBeVisible({ timeout: 8_000 });
+		await expect(
+			activeSection(asMember).getByText('e2e-rem-restore-null-series')
+		).toHaveCount(1, { timeout: 5_000 });
+
+		// No longer listed in the completed section.
+		await expect(completed.getByText('e2e-rem-restore-null-series')).toHaveCount(0, {
+			timeout: 5_000
+		});
+	});
+
 	test('caretaker can skip a recurring reminder during their shift', async ({
 		asMember,
 		asCaretaker
