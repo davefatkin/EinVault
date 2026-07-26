@@ -23,7 +23,8 @@
 		HeartPulse,
 		Bell,
 		ArrowUp,
-		ArrowDown
+		ArrowDown,
+		SkipForward
 	} from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -189,6 +190,7 @@
 		() => undoDelayMs
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
+	const skipFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
 
@@ -363,6 +365,23 @@
 						<CheckCheck class="h-3.5 w-3.5 mr-1 shrink-0" />
 						{t(locale, 'common.reminder.done')}
 					</Button>
+					{#if r.isRecurring}
+						<Button
+							variant="soft"
+							size="sm"
+							class="flex-1 min-w-0 px-2"
+							onclick={() => {
+								const item = r;
+								const form = skipFormRegistry.get(item.id);
+								if (!form) return;
+								closeDetail();
+								pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
+							}}
+						>
+							<SkipForward class="h-3.5 w-3.5 mr-1 shrink-0" />
+							{t(locale, 'common.reminder.skip')}
+						</Button>
+					{/if}
 					<Button
 						variant="softPrimary"
 						size="sm"
@@ -676,6 +695,14 @@
 												});
 										}}
 										onDoneAndLog={() => submitWithAndEvent(reminder.id)}
+										onSkip={() => {
+											const form = skipFormRegistry.get(reminder.id);
+											if (form)
+												pendingDismiss.queue(`skip-${reminder.id}`, form, reminder.title, {
+													kind: 'skip'
+												});
+										}}
+										isRecurring={reminder.isRecurring}
 										allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 											reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
 										] !== null}
@@ -747,6 +774,19 @@
 				action="?/complete"
 				use:enhance={clearSubmittingFlag}
 				use:registerDismissForm={{ id: reminder.id, registry: dismissFormRegistry }}
+				class="hidden"
+			>
+				<input type="hidden" name="id" value={reminder.id} />
+			</form>
+		{/each}
+
+		<!-- Hidden skip forms (recurring only) -->
+		{#each active.filter((r) => r.isRecurring) as reminder (reminder.id + '-skip-form')}
+			<form
+				method="POST"
+				action="?/skip"
+				use:enhance={clearSubmittingFlag}
+				use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
 				class="hidden"
 			>
 				<input type="hidden" name="id" value={reminder.id} />
@@ -885,6 +925,9 @@
 									<div class="flex items-center gap-2 text-sm">
 										<span>{TYPE_ICONS[reminder.type] ?? '📌'}</span>
 										<span class="line-through text-muted-foreground">{reminder.title}</span>
+										{#if reminder.outcome === 'skipped'}
+											<Badge variant="secondary">{t(locale, 'page.reminders.skippedBadge')}</Badge>
+										{/if}
 										<span class="text-xs text-muted-foreground"
 											><LocalTime date={reminder.dueAt} /></span
 										>
