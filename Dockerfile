@@ -63,12 +63,13 @@ WORKDIR /app
 RUN apk add --no-cache ffmpeg
 
 # Pull in OS security fixes published after the pinned base digest. Covers
-# CVE-2026-45447 (libcrypto3/libssl3 3.5.7-r0) and CVE-2026-8461 (ffmpeg
-# 8.1.2-r0); each no-ops once the node base image catches up. The ffmpeg sub-
-# libraries are separate packages with shared-object deps, so each must be
-# named explicitly. Keep targeted so the layer stays deterministic-ish.
+# CVE-2026-45447 (libcrypto3/libssl3 3.5.7-r0), CVE-2026-8461 (ffmpeg
+# 8.1.2-r0), and CVE-2026-15370/-59847/-59849/-59850/-59851 (libssh 0.12.1-r0,
+# an ffmpeg dependency); each no-ops once the node base image catches up. The
+# ffmpeg sub-libraries are separate packages with shared-object deps, so each
+# must be named explicitly. Keep targeted so the layer stays deterministic-ish.
 RUN apk upgrade --no-cache \
-	libcrypto3 libssl3 \
+	libcrypto3 libssl3 libssh \
 	ffmpeg ffmpeg-libavcodec ffmpeg-libavdevice ffmpeg-libavfilter \
 	ffmpeg-libavformat ffmpeg-libavutil ffmpeg-libswresample ffmpeg-libswscale
 
