@@ -15,7 +15,6 @@
 	import { renderMarkdown } from '$lib/markdown';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { localDateISO } from '$lib/date';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -27,6 +26,7 @@
 		healthTypeLabel
 	} from '$lib/i18n/labels';
 	import { careStatus } from '$lib/careStatus';
+	import { reminderUrgency, type ReminderUrgency } from '$lib/reminderBuckets';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
@@ -48,16 +48,8 @@
 	};
 
 	// Urgency classification for reminders
-	type Urgency = 'overdue' | 'today' | 'upcoming';
-
-	function reminderUrgency(dueAt: Date | string | number): Urgency {
-		const now = new Date();
-		const due = new Date(dueAt);
-		const todayISO = localDateISO(now);
-		const dueISO = localDateISO(due);
-		if (due < now) return 'overdue';
-		if (dueISO === todayISO) return 'today';
-		return 'upcoming';
+	function urgencyOf(dueAt: Date | string | number): ReminderUrgency {
+		return reminderUrgency(dueAt, new Date());
 	}
 
 	type Reminder = (typeof data.upcomingReminders)[number];
@@ -65,7 +57,7 @@
 	// Needs-attention: overdue + today reminders, sorted overdue first
 	let attentionItems = $derived.by(() => {
 		return data.upcomingReminders
-			.map((r) => ({ r, urgency: reminderUrgency(r.dueAt) }))
+			.map((r) => ({ r, urgency: urgencyOf(r.dueAt) }))
 			.filter(({ urgency }) => urgency === 'overdue' || urgency === 'today')
 			.sort((a, b) => {
 				if (a.urgency === 'overdue' && b.urgency !== 'overdue') return -1;
@@ -165,9 +157,9 @@
 		return `${adjusted}y`;
 	}
 
-	function urgencyLabel(urgency: Urgency): string {
-		if (urgency === 'overdue') return t(locale, 'page.dashboard.caretaker.reminderOverdue');
-		if (urgency === 'today') return t(locale, 'overview.day.today');
+	function urgencyLabel(u: ReminderUrgency): string {
+		if (u === 'overdue') return t(locale, 'page.dashboard.caretaker.reminderOverdue');
+		if (u === 'today') return t(locale, 'overview.day.today');
 		return t(locale, 'overview.day.tomorrow');
 	}
 
@@ -537,7 +529,7 @@
 						}))
 					)}
 					{@const nextReminder = nextReminderByCompanion[companion.id]}
-					{@const nextUrgency = nextReminder ? reminderUrgency(nextReminder.dueAt) : null}
+					{@const nextUrgency = nextReminder ? urgencyOf(nextReminder.dueAt) : null}
 					{@const journalEntry = data.todayJournalByCompanion[companion.id]}
 					{@const lastActivity = lastActivityByCompanion[companion.id]}
 
@@ -648,7 +640,11 @@
 												: 'teal'}
 										class="shrink-0 text-[10px] py-0 px-1.5"
 									>
-										{urgencyLabel(nextUrgency)}
+										{#if nextUrgency === 'upcoming'}
+											<LocalTime date={nextReminder.dueAt} />
+										{:else}
+											{urgencyLabel(nextUrgency)}
+										{/if}
 									</Badge>
 								{/if}
 							{:else}

@@ -38,6 +38,7 @@
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import { reminderUrgency } from '$lib/reminderBuckets';
 	import { careStatus } from '$lib/careStatus';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
@@ -123,24 +124,9 @@
 			.slice(0, 8)
 	);
 
-	// Reminder urgency
-	function reminderUrgency(dueAt: Date | string): 'overdue' | 'today' | 'upcoming' {
-		const dueMs = new Date(dueAt).getTime();
-		const nowMs = Date.now();
-		if (dueMs < nowMs) return 'overdue';
-		// compute end-of-today in local time by extracting date parts
-		const d = new Date(nowMs);
-		const todayEndMs = new Date(
-			d.getFullYear(),
-			d.getMonth(),
-			d.getDate(),
-			23,
-			59,
-			59,
-			999
-		).getTime();
-		if (dueMs <= todayEndMs) return 'today';
-		return 'upcoming';
+	// Reminder urgency ('tomorrow' renders the same as 'upcoming' here: a date chip)
+	function urgencyOf(dueAt: Date | string) {
+		return reminderUrgency(dueAt, new Date());
 	}
 
 	// Detail modal
@@ -672,7 +658,7 @@
 			{:else}
 				<div class="space-y-1">
 					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
-						{@const urgency = reminderUrgency(reminder.dueAt)}
+						{@const urgency = urgencyOf(reminder.dueAt)}
 						{@const allowLogEvent =
 							REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
 							null}

@@ -9,6 +9,14 @@ function justPast(): string {
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** N local days ahead at noon — noon keeps the date stable across midnight-adjacent runs. */
+function daysAhead(days: number): string {
+	const d = new Date();
+	d.setDate(d.getDate() + days);
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T12:00`;
+}
+
 /**
  * Fill and submit the "Add Reminder" form on the companion reminders page.
  * Mirrors the helper in reminders.spec.ts.
@@ -20,10 +28,12 @@ async function addReminder(
 		type?: string;
 		dueAt: string;
 		recurring?: { interval: number; unit: 'day' | 'week' | 'month' | 'year' };
+		companionId?: string;
 	}
 ) {
-	await page.goto(`/${COMP}/reminders`);
-	await page.getByRole('button', { name: 'Add Reminder' }).click();
+	await page.goto(`/${opts.companionId ?? COMP}/reminders`);
+	// A freshly created companion shows a second "Add Reminder" in the empty state.
+	await page.getByRole('button', { name: 'Add Reminder' }).first().click();
 	await page.locator('#title').fill(opts.title);
 	if (opts.type) {
 		await page.locator('select[name="type"]').selectOption(opts.type);
@@ -141,6 +151,51 @@ test('needs-attention detail modal: skip commits via toast and leaves the list',
 	await expect(
 		asMember.locator('section[aria-label="Needs attention"]').getByText('e2e-overview-modal-skip')
 	).toHaveCount(0, { timeout: 8_000 });
+});
+
+// Companion cards: the next-reminder pill must only say "Tomorrow" for actual
+// next-day reminders; farther-out ones show the due date instead (#228).
+test('companion card pill shows date, not "Tomorrow", for a reminder 5 days out', async ({
+	asMember
+}) => {
+	// Fresh companion so its only reminder is the one we add (seed companions
+	// have overdue reminders that would win the "next reminder" slot).
+	await asMember.goto('/companions/new');
+	await asMember.locator('#name').fill('e2e-228-later');
+	await asMember.getByRole('button', { name: 'Add Companion' }).click();
+	await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+	const companionId = asMember.url().split('/').filter(Boolean).pop()!;
+
+	await addReminder(asMember, {
+		title: 'e2e-228-nexguard',
+		type: 'medication',
+		dueAt: daysAhead(5),
+		companionId
+	});
+
+	await asMember.goto('/');
+	const card = asMember.locator('div[role="link"]').filter({ hasText: 'e2e-228-later' });
+	await expect(card.getByText('e2e-228-nexguard')).toBeVisible({ timeout: 8_000 });
+	await expect(card.getByText('Tomorrow', { exact: true })).toHaveCount(0);
+});
+
+test('companion card pill shows "Tomorrow" for a next-day reminder', async ({ asMember }) => {
+	await asMember.goto('/companions/new');
+	await asMember.locator('#name').fill('e2e-228-nextday');
+	await asMember.getByRole('button', { name: 'Add Companion' }).click();
+	await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+	const companionId = asMember.url().split('/').filter(Boolean).pop()!;
+
+	await addReminder(asMember, {
+		title: 'e2e-228-checkup',
+		type: 'vet',
+		dueAt: daysAhead(1),
+		companionId
+	});
+
+	await asMember.goto('/');
+	const card = asMember.locator('div[role="link"]').filter({ hasText: 'e2e-228-nextday' });
+	await expect(card.getByText('Tomorrow', { exact: true })).toBeVisible({ timeout: 8_000 });
 });
 
 test('one-off reminder in needs-attention has no skip button', async ({ asMember }) => {

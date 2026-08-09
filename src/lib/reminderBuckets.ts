@@ -17,6 +17,24 @@ function isSameLocalDay(a: Date, b: Date): boolean {
 	);
 }
 
+export type ReminderUrgency = 'overdue' | 'today' | 'tomorrow' | 'upcoming';
+
+/**
+ * Classify a single reminder's urgency relative to `now`:
+ * - overdue: dueAt < now
+ * - today: same local calendar day as now AND not yet past
+ * - tomorrow: the next local calendar day
+ * - upcoming: any later day
+ */
+export function reminderUrgency(dueAt: Date | string | number, now: Date): ReminderUrgency {
+	const due = new Date(dueAt);
+	if (due.getTime() < now.getTime()) return 'overdue';
+	if (isSameLocalDay(due, now)) return 'today';
+	const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+	if (isSameLocalDay(due, tomorrow)) return 'tomorrow';
+	return 'upcoming';
+}
+
 /**
  * Bucket active reminders by urgency relative to `now`:
  * - overdue: dueAt < now
