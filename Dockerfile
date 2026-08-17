@@ -7,7 +7,7 @@
 
 # pkgmeta: zero out the version field so version-bump commits don't invalidate
 # the npm ci layer in deps; nothing in the install depends on the real version.
-FROM node:26-alpine@sha256:3ad34ca6292aec4a91d8ddeb9229e29d9c2f689efd0dd242860889ac71842eba AS pkgmeta
+FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS pkgmeta
 
 WORKDIR /meta
 
@@ -22,7 +22,7 @@ RUN node -e "const fs = require('fs'); \
 
 
 # deps
-FROM node:26-alpine@sha256:3ad34ca6292aec4a91d8ddeb9229e29d9c2f689efd0dd242860889ac71842eba AS deps
+FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS deps
 
 WORKDIR /build
 
@@ -36,7 +36,7 @@ RUN npm ci --ignore-scripts \
 
 
 # builder
-FROM node:26-alpine@sha256:3ad34ca6292aec4a91d8ddeb9229e29d9c2f689efd0dd242860889ac71842eba AS builder
+FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS builder
 
 WORKDIR /build
 
@@ -51,7 +51,7 @@ RUN npm prune --omit=dev
 
 
 # runner
-FROM node:26-alpine@sha256:3ad34ca6292aec4a91d8ddeb9229e29d9c2f689efd0dd242860889ac71842eba AS runner
+FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS runner
 
 WORKDIR /app
 
@@ -61,17 +61,6 @@ WORKDIR /app
 # ffmpeg includes the native HEVC decoder (reads Apple-recorded source) and
 # libx264 for H.264 encode. Adds ~100-150MB to the image.
 RUN apk add --no-cache ffmpeg
-
-# Pull in OS security fixes published after the pinned base digest. Covers
-# CVE-2026-45447 (libcrypto3/libssl3 3.5.7-r0), CVE-2026-8461 (ffmpeg
-# 8.1.2-r0), and CVE-2026-15370/-59847/-59849/-59850/-59851 (libssh 0.12.1-r0,
-# an ffmpeg dependency); each no-ops once the node base image catches up. The
-# ffmpeg sub-libraries are separate packages with shared-object deps, so each
-# must be named explicitly. Keep targeted so the layer stays deterministic-ish.
-RUN apk upgrade --no-cache \
-	libcrypto3 libssl3 libssh \
-	ffmpeg ffmpeg-libavcodec ffmpeg-libavdevice ffmpeg-libavfilter \
-	ffmpeg-libavformat ffmpeg-libavutil ffmpeg-libswresample ffmpeg-libswscale
 
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
 # app starts with `node build` and never invokes a package manager at runtime;

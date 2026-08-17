@@ -59,5 +59,6 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
-    cooldown:
-      default-days: 7
+    # No cooldown here: node:26-alpine is rebuilt more often than weekly, so a
+    # 7-day cooldown keeps every new digest perpetually "too fresh" and the
+    # pinned digest never gets bumped.
