@@ -80,6 +80,7 @@
 	"type": "module",
 	"overrides": {
 		"cookie": "^0.7.0",
+		"deepmerge-ts": "^8.0.1",
 		"esbuild": "^0.28.1"
 	}
 }
