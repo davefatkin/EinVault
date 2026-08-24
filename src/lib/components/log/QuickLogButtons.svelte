@@ -57,23 +57,6 @@
 
 {#if buttons.length > 0}
 	<div class="space-y-2">
-		{#if form?.quickLogError}
-			<div
-				role="alert"
-				class="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral"
-			>
-				{form.quickLogError}
-			</div>
-		{/if}
-		{#if executedId && form?.quickLogExecuted === executedId}
-			<div
-				role="status"
-				class="rounded-lg border border-teal/30 bg-teal/10 px-3 py-2 text-sm text-teal"
-			>
-				{t(locale, 'page.log.activityLogged')}
-			</div>
-		{/if}
-
 		<div class="flex flex-wrap gap-2">
 			{#each buttons as button (button.id)}
 				{#if button.companionIds.length === 1}
@@ -201,5 +184,23 @@
 				</form>
 			{/if}
 		{/each}
+
+		<!-- Notices sit below the actions so a result never shifts the buttons (#245). -->
+		{#if form?.quickLogError}
+			<div
+				role="alert"
+				class="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral"
+			>
+				{form.quickLogError}
+			</div>
+		{/if}
+		{#if executedId && form?.quickLogExecuted === executedId}
+			<div
+				role="status"
+				class="rounded-lg border border-teal/30 bg-teal/10 px-3 py-2 text-sm text-teal"
+			>
+				{t(locale, 'page.log.activityLogged')}
+			</div>
+		{/if}
 	</div>
 {/if}
