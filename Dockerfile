@@ -4,10 +4,17 @@
 # (instead of a single ARG) so Dependabot's docker ecosystem can see and bump
 # it — it does not reliably update ARG-indirected references. Dependabot
 # updates all four lines together in one PR; keep them identical.
+#
+# Use the full version tag (26.x.y-alpine), not the floating 26-alpine. For a
+# digest pin Dependabot treats the tag as the "version": closing one of its PRs
+# ignores that version, and with a floating tag the version never changes, so
+# every later digest bump is silently skipped (that is what closed PR #134 did
+# to 26-alpine). A full tag moves with each node release, so a closed PR only
+# blocks that one release.
 
 # pkgmeta: zero out the version field so version-bump commits don't invalidate
 # the npm ci layer in deps; nothing in the install depends on the real version.
-FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS pkgmeta
+FROM node:26.8.1-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS pkgmeta
 
 WORKDIR /meta
 
@@ -22,7 +29,7 @@ RUN node -e "const fs = require('fs'); \
 
 
 # deps
-FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS deps
+FROM node:26.8.1-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS deps
 
 WORKDIR /build
 
@@ -36,7 +43,7 @@ RUN npm ci --ignore-scripts \
 
 
 # builder
-FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS builder
+FROM node:26.8.1-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS builder
 
 WORKDIR /build
 
@@ -51,7 +58,7 @@ RUN npm prune --omit=dev
 
 
 # runner
-FROM node:26-alpine@sha256:aadf416b2cdce311a8811ba3f0608a61b77dbf997500e2eafe781b51f6a0b019 AS runner
+FROM node:26.8.1-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS runner
 
 WORKDIR /app
 
