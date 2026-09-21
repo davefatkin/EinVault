@@ -294,7 +294,7 @@ All the same env vars work here. `ORIGIN` defaults to `http://localhost:3000` so
 
 ## Local development
 
-Requires Node.js 20+, npm 10+, and the native build tools for `better-sqlite3` and `sharp`:
+Requires Node.js 22+, npm 10+, and the native build tools for `better-sqlite3` and `sharp`:
 
 - Debian/Ubuntu: `sudo apt install python3 g++ make`
 - macOS: `brew install python3` (Xcode Command Line Tools provides g++ and make)
