@@ -72,10 +72,10 @@ RUN apk add --no-cache ffmpeg
 # Pull in OS security fixes published after the pinned base digest. The node
 # image only picks these up when the alpine base image itself is rebuilt, which
 # does not happen for every Alpine package release, so a digest bump alone is
-# not enough. Covers CVE-2026-14456 (libcrypto3/libssl3 3.5.8-r0). Keep targeted
-# so the layer stays deterministic-ish; drop entries once the base image catches
-# up.
-RUN apk upgrade --no-cache libcrypto3 libssl3
+# not enough. Covers CVE-2026-14456 (libcrypto3/libssl3 3.5.8-r0) and
+# CVE-2026-93990 (libexpat 2.8.5-r0). Keep targeted so the layer stays
+# deterministic-ish; drop entries once the base image catches up.
+RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat
 
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
 # app starts with `node build` and never invokes a package manager at runtime;
