@@ -101,7 +101,7 @@ export const actions: Actions = {
 			path: '/',
 			httpOnly: false,
 			secure: isSecureRequest(request),
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 60 * 60 * 24 * 365
 		});
 
@@ -126,7 +126,7 @@ export const actions: Actions = {
 			path: '/',
 			httpOnly: false,
 			secure: isSecureRequest(request),
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 60 * 60 * 24 * 365
 		});
 

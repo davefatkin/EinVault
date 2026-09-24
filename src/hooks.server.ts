@@ -177,7 +177,7 @@ const demoReadOnly: Handle = async ({ event, resolve }) => {
 		event.cookies.set('einvault_demo_notice', '1', {
 			path: '/',
 			httpOnly: false,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			secure: isSecureRequest(event.request),
 			maxAge: 30
 		});
@@ -221,7 +221,7 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 			path: '/',
 			httpOnly: false,
 			secure: event.request.headers.get('x-forwarded-proto') === 'https',
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 60 * 60 * 24 * 365
 		});
 	}

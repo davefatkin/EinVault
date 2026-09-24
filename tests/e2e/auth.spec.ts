@@ -8,6 +8,14 @@ test.describe('login @mobile', () => {
 		await page.getByLabel('Password').fill(SEED.password);
 		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page).not.toHaveURL(/auth\/login/);
+
+		// SameSite=Strict is withheld on a homescreen/PWA launch and on links
+		// opened from mail, which made every launch land on login (#287).
+		const session = (await page.context().cookies()).find((c) => c.name === 'einvault_session');
+		expect(session).toBeTruthy();
+		expect(session!.sameSite).toBe('Lax');
+		expect(session!.httpOnly).toBe(true);
+		expect(session!.expires).toBeGreaterThan(Date.now() / 1000 + 29 * 24 * 3600);
 	});
 
 	test('bad password stays on login with an error', async ({ app, page }) => {

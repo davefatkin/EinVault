@@ -7,7 +7,9 @@ import {
 	validateSessionToken,
 	invalidateSession,
 	invalidateAllUserSessions,
-	cleanupExpiredSessions
+	cleanupExpiredSessions,
+	makeSessionCookieOptions,
+	makeBlankCookieOptions
 } from './session';
 
 async function insertUser(id: string, opts: { isActive?: boolean } = {}) {
@@ -123,5 +125,28 @@ describe('cleanupExpiredSessions', () => {
 		const ids = rows.map((r) => r.id);
 		expect(ids).toContain(liveSession.id);
 		expect(ids).not.toContain(deadSession.id);
+	});
+});
+
+describe('session cookie options', () => {
+	// Strict is withheld on the first navigation of a homescreen/PWA launch and
+	// on links opened from mail or ntfy, so a valid session looks logged out.
+	// Lax still blocks the cookie on cross-site POSTs (issue #287).
+	it('uses SameSite=Lax so PWA launches and external links keep the session', () => {
+		const expiresAt = new Date(Date.now() + 1000);
+		expect(makeSessionCookieOptions(expiresAt, true)).toEqual({
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: true,
+			expires: expiresAt,
+			path: '/'
+		});
+		expect(makeBlankCookieOptions(false)).toEqual({
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: false,
+			maxAge: 0,
+			path: '/'
+		});
 	});
 });
