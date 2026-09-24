@@ -84,10 +84,15 @@ export async function invalidateAllUserSessions(userId: string) {
 
 export const SESSION_COOKIE_NAME = 'einvault_session';
 
+// Lax, not Strict: a homescreen/PWA launch and a link opened from mail or
+// ntfy are cross-site top-level navigations, and browsers withhold Strict
+// cookies on those, so a logged-in user lands on the login page (#287).
+// Lax still withholds the cookie on cross-site POSTs, and SvelteKit's origin
+// check covers form submissions, so CSRF protection is unchanged.
 export function makeSessionCookieOptions(expiresAt: Date, secure: boolean) {
-	return { httpOnly: true, sameSite: 'strict' as const, secure, expires: expiresAt, path: '/' };
+	return { httpOnly: true, sameSite: 'lax' as const, secure, expires: expiresAt, path: '/' };
 }
 
 export function makeBlankCookieOptions(secure: boolean) {
-	return { httpOnly: true, sameSite: 'strict' as const, secure, maxAge: 0, path: '/' };
+	return { httpOnly: true, sameSite: 'lax' as const, secure, maxAge: 0, path: '/' };
 }
