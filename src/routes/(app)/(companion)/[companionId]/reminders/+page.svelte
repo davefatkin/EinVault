@@ -21,7 +21,7 @@
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
-	import { reminderTypeOptions } from '$lib/i18n/labels';
+	import { reminderTypeOptions, reminderTypeLabel } from '$lib/i18n/labels';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -285,7 +285,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.reminders.detailType')}</span
 					>
-					<Badge variant="coral" class="capitalize">{r.type}</Badge>
+					<Badge variant="coral" class="capitalize">{reminderTypeLabel(locale, r.type)}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
