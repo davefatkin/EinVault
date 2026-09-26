@@ -12,7 +12,9 @@ import {
 	toApiUser,
 	toApiUserPublic
 } from '$lib/server/api-serializers';
+import { DAILY_EVENT_TYPES } from '$lib/activityTypes';
 import {
+	DailyEventType,
 	LoggedEvent,
 	JournalEntry,
 	QuickLog,
@@ -292,5 +294,11 @@ describe('response schemas match their serializers', () => {
 		const result = toApiUserPublic(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(UserPublic.shape).sort());
 		expect(Object.keys(result)).not.toContain('username');
+	});
+
+	it('species, event type and weight unit enums follow the canonical tuples', () => {
+		expect(DailyEventType.options).toEqual([...DAILY_EVENT_TYPES]);
+		expect(Companion.shape.species.options).toEqual(['dog', 'cat', 'other']);
+		expect(Companion.shape.weightUnit.unwrap().unwrap().options).toEqual(['kg', 'lbs', 'g', 'oz']);
 	});
 });

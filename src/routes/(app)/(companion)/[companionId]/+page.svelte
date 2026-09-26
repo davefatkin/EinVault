@@ -30,7 +30,8 @@
 		activityDisplayIcon,
 		activityDisplayLabel,
 		healthTypeLabel,
-		reminderTypeLabel
+		reminderTypeLabel,
+		speciesLabels
 	} from '$lib/i18n/labels';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
@@ -79,6 +80,7 @@
 	let quickLogTypes = $derived(
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
+	let labels = $derived(speciesLabels(locale, species));
 
 	// Care status derived from outstanding reminders
 	let status = $derived(
@@ -307,6 +309,7 @@
 			journalHref={companion.isActive !== false
 				? `/${companion.id}/journal/${eventDate(selected.item.loggedAt)}`
 				: null}
+			{species}
 		/>
 	{:else}
 		<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
@@ -562,9 +565,10 @@
 						{/if}
 					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
-						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
-							companion.dob
-						)}{companion.sex ? ` · ${companion.sex}` : ''}
+						{labels.icon}
+						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
+							? ` · ${companion.sex}`
+							: ''}
 					</p>
 					<div class="mt-2">
 						{#if status === 'up-to-date'}
@@ -777,6 +781,7 @@
 					companions={data.companions ?? []}
 					primaryCompanionId={companion.id}
 					{form}
+					{species}
 				/>
 			</div>
 			<div class="flex gap-2">
@@ -839,7 +844,7 @@
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										{activityDisplayIcon(event.type, event.subtypes)}
+										{activityDisplayIcon(event.type, event.subtypes, species)}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">

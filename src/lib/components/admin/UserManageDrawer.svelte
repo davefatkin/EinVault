@@ -12,6 +12,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
+	import { SPECIES_ICON, toSpecies } from '$lib/species';
 
 	interface UserRow {
 		id: string;
@@ -28,6 +29,7 @@
 		id: string;
 		name: string;
 		breed: string | null;
+		species: string | null;
 	}
 	interface AssignmentRow {
 		userId: string;
@@ -328,7 +330,7 @@
 										/>
 										<span class="text-sm text-foreground">{companion.name}</span>
 										{#if companion.breed}<span class="text-xs text-muted-foreground"
-												>{companion.breed}</span
+												>{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}</span
 											>{/if}
 									</label>
 								{/each}

@@ -7,9 +7,11 @@
 	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
 	import TodayEventsList from '$lib/components/log/TodayEventsList.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { toSpecies } from '$lib/species';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+	let species = $derived(toSpecies(data.companion.species));
 
 	// DailyLogForm validates this against the species list and falls back to the
 	// species default.
@@ -61,6 +63,7 @@
 				currentUserId={data.user?.id}
 				{canDelete}
 				journalHrefBase="/{data.companion.id}/journal"
+				{species}
 			/>
 		</CardContent>
 	</Card>

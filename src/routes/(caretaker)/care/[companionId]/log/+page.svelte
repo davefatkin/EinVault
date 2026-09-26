@@ -9,11 +9,13 @@
 	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
 	import TodayEventsList from '$lib/components/log/TodayEventsList.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { toSpecies } from '$lib/species';
 
 	// isOnShift and nextShift come from the caretaker layout data
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+	let species = $derived(toSpecies(data.companion.species));
 
 	// DailyLogForm validates this against the species list and falls back to the
 	// species default.
@@ -75,7 +77,7 @@
 				<h2 class="font-semibold">{t(locale, 'page.log.todaySoFar')}</h2>
 			</CardHeader>
 			<CardContent>
-				<TodayEventsList events={data.todayEvents} currentUserId={data.user?.id} />
+				<TodayEventsList events={data.todayEvents} currentUserId={data.user?.id} {species} />
 			</CardContent>
 		</Card>
 	{/if}

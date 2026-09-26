@@ -4,6 +4,7 @@
 	import { Check } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityDisplayIcon } from '$lib/i18n/labels';
+	import type { Species } from '$lib/activityTypes';
 
 	interface QuickLogButton {
 		id: string;
@@ -25,13 +26,15 @@
 		companions,
 		primaryCompanionId = null,
 		action = '?/executeQuickLog',
-		form
+		form,
+		species
 	}: {
 		buttons: QuickLogButton[];
 		companions: CompanionOption[];
 		primaryCompanionId?: string | null;
 		action?: string;
 		form: { quickLogExecuted?: string; quickLogError?: string } | null;
+		species?: Species;
 	} = $props();
 
 	const locale = getLocale();
@@ -86,7 +89,7 @@
 							title={t(locale, 'quickLog.execute.logNow', { name: button.name })}
 							class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60"
 						>
-							<span>{activityDisplayIcon(button.type, button.subtypes)}</span>
+							<span>{activityDisplayIcon(button.type, button.subtypes, species)}</span>
 							<span>{button.name}</span>
 						</button>
 					</form>
@@ -99,7 +102,7 @@
 							? 'bg-primary/10 border-primary/30 text-primary'
 							: 'border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground'}"
 					>
-						<span>{activityDisplayIcon(button.type, button.subtypes)}</span>
+						<span>{activityDisplayIcon(button.type, button.subtypes, species)}</span>
 						<span>{button.name}</span>
 					</button>
 				{/if}

@@ -449,7 +449,7 @@
 
 <!-- Activity detail modal -->
 {#if detailEvent}
-	<ActivityDetailModal event={detailEvent} onclose={closeActivityDetail}>
+	<ActivityDetailModal event={detailEvent} onclose={closeActivityDetail} {species}>
 		{#snippet footer()}
 			<Button
 				variant="soft"
@@ -1178,7 +1178,7 @@
 								>
 									<span
 										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-										>{activityDisplayIcon(event.type, event.subtypes)}</span
+										>{activityDisplayIcon(event.type, event.subtypes, species)}</span
 									>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">

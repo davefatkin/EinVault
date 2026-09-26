@@ -1,14 +1,12 @@
 import { z } from './z';
 import { MAX_NOTE_LEN } from '$lib/textLimits';
-import { WEIGHT_UNITS } from '$lib/activityTypes';
+import { DAILY_EVENT_TYPES, SPECIES, WEIGHT_UNITS } from '$lib/activityTypes';
 
 // Shared zod schemas for the Bearer API. Single source of truth: the route
 // validates against these AND the OpenAPI spec is generated from them, so the
 // docs can't drift from what the endpoint actually accepts.
 
-export const DailyEventType = z
-	.enum(['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other'])
-	.openapi('DailyEventType');
+export const DailyEventType = z.enum(DAILY_EVENT_TYPES).openapi('DailyEventType');
 
 export const LogRequest = z
 	.object({
@@ -23,7 +21,7 @@ export const LogRequest = z
 		durationMinutes: z.number().int().positive().max(480).optional(),
 		subtypes: z.array(z.string()).max(10).optional().openapi({
 			description:
-				'Optional subtype values; allowed values depend on type (e.g. bathroom: pee|poop). Order is not significant.'
+				"Optional subtype values. Allowed values depend on type and the companion's species, e.g. bathroom: pee|poop (dogs), litter: pee|poop|scoop|change (cats). Order is not significant."
 		}),
 		loggedAt: z.string().optional().openapi({
 			format: 'date-time',
@@ -63,12 +61,12 @@ export const Companion = z
 	.object({
 		id: z.string(),
 		name: z.string(),
-		species: z.string().nullable(),
+		species: z.enum(SPECIES),
 		isActive: z.boolean(),
 		breed: z.string().nullable().optional(),
 		dob: z.string().nullable().optional(),
 		sex: z.string().nullable().optional(),
-		weightUnit: z.string().nullable().optional(),
+		weightUnit: z.enum(WEIGHT_UNITS).nullable().optional(),
 		microchip: z.string().nullable().optional(),
 		bio: z.string().nullable().optional(),
 		feedingSchedule: z.string().nullable().optional(),

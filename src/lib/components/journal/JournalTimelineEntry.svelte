@@ -7,6 +7,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import type { JournalEntry, JournalPhoto, DailyEvent } from '$server/db/schema';
 	import type { UserRef } from '$lib/types';
+	import type { Species } from '$lib/activityTypes';
 
 	type Photo = JournalPhoto & { logger: UserRef };
 	type Activity = DailyEvent & { logger: UserRef };
@@ -25,9 +26,11 @@
 		canEdit: boolean;
 		onOpenLightbox: (photos: Photo[], date: string, index: number) => void;
 		onOpenActivity: (event: Activity) => void;
+		species?: Species;
 	}
 
-	let { entry, companionId, today, canEdit, onOpenLightbox, onOpenActivity }: Props = $props();
+	let { entry, companionId, today, canEdit, onOpenLightbox, onOpenActivity, species }: Props =
+		$props();
 
 	const locale = getLocale();
 	let isToday = $derived(entry.date === today);
@@ -188,7 +191,7 @@
 						onclick={() => onOpenActivity(event)}
 						class="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
-						{activityDisplayIcon(event.type, event.subtypes)}
+						{activityDisplayIcon(event.type, event.subtypes, species)}
 						<span>{activityDisplayLabel(locale, event.type, event.subtypes)}</span>
 						{#if event.durationMinutes}<span class="text-muted-foreground"
 								>· {event.durationMinutes}m</span

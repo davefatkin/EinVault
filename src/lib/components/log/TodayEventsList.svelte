@@ -10,6 +10,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { stripMarkdown } from '$lib/markdown';
+	import type { Species } from '$lib/activityTypes';
 
 	interface TodayEvent {
 		id: string;
@@ -27,13 +28,15 @@
 		currentUserId,
 		deleteAction = '?/delete',
 		canDelete = (event: TodayEvent) => event.loggedBy === currentUserId,
-		journalHrefBase = null
+		journalHrefBase = null,
+		species
 	}: {
 		events: TodayEvent[];
 		currentUserId: string | undefined;
 		deleteAction?: string;
 		canDelete?: (event: TodayEvent) => boolean;
 		journalHrefBase?: string | null;
+		species?: Species;
 	} = $props();
 
 	const locale = getLocale();
@@ -59,6 +62,7 @@
 		event={selected}
 		onclose={closeDetail}
 		journalHref={journalHrefBase ? `${journalHrefBase}/${eventDate(selected.loggedAt)}` : null}
+		{species}
 	/>
 {/if}
 
@@ -77,7 +81,7 @@
 				>
 					<span
 						class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-lg"
-						>{activityDisplayIcon(event.type, event.subtypes)}</span
+						>{activityDisplayIcon(event.type, event.subtypes, species)}</span
 					>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2">

@@ -64,7 +64,9 @@ export function buildOpenApiDocument() {
 				description: 'Created',
 				content: { 'application/json': { schema: LogResponse } }
 			},
-			400: errorResponse('Invalid body (invalidType, noCompanions, noteTooLong, …)'),
+			400: errorResponse(
+				"Invalid body (invalidType, noCompanions, noteTooLong, …); typeNotAllowedForSpecies when a target companion's species can't have the activity."
+			),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('API disabled'),
