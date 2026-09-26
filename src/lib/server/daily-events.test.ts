@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { logDailyEvent } from './daily-events';
 import { authorizeCompanions } from './companion-scope';
@@ -182,5 +182,78 @@ describe('daily-events', () => {
 			where: eq(schema.dailyEvents.id, res.ids[0])
 		});
 		expect(row?.subtypes).toBeNull();
+	});
+});
+
+describe('logDailyEvent species rules', () => {
+	const dogId = 'de-sp-dog';
+	const catId = 'de-sp-cat';
+	const admin = { id: 'de-sp-admin', role: 'admin' as const };
+
+	beforeAll(async () => {
+		await db.insert(schema.users).values({
+			id: admin.id,
+			username: admin.id,
+			displayName: 'Admin',
+			role: 'admin'
+		} as typeof schema.users.$inferInsert);
+		await db.insert(schema.companions).values([
+			{ id: dogId, name: 'Rex2', species: 'dog' },
+			{ id: catId, name: 'Whiskers', species: 'cat' }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	it('rejects a type the cat cannot have, writing nothing', async () => {
+		const before = await db.select().from(schema.dailyEvents);
+		const res = await logDailyEvent(admin, [dogId, catId], {
+			type: 'bathroom',
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date()
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+		expect(await db.select().from(schema.dailyEvents)).toHaveLength(before.length);
+	});
+
+	it('rejects litter for a dog', async () => {
+		const res = await logDailyEvent(admin, [dogId], {
+			type: 'litter',
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date()
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+	});
+
+	it('narrows subtypes per row for a mixed walk', async () => {
+		const res = await logDailyEvent(admin, [dogId, catId], {
+			type: 'walk',
+			notes: null,
+			durationMinutes: 20,
+			loggedAt: new Date(),
+			subtypes: ['hike']
+		});
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.find((r) => r.companionId === dogId)?.subtypes).toEqual(['hike']);
+		expect(rows.find((r) => r.companionId === catId)?.subtypes).toBeNull();
+	});
+
+	it('accepts litter for a cat with litter subtypes', async () => {
+		const res = await logDailyEvent(admin, [catId], {
+			type: 'litter',
+			notes: null,
+			durationMinutes: 5,
+			loggedAt: new Date(),
+			subtypes: ['scoop']
+		});
+		expect(res.ok).toBe(true);
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, (res as { ids: string[] }).ids[0])
+		});
+		expect(row?.subtypes).toEqual(['scoop']);
+		expect(row?.durationMinutes).toBeNull(); // litter has no duration
 	});
 });

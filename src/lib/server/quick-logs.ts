@@ -276,7 +276,14 @@ export async function shareQuickLog(
 }
 
 export type ExecuteQuickLogError =
-	'notFound' | 'disabled' | 'noTargets' | 'noActiveShift' | 'notAssigned';
+	// Interim: logDailyEvent can now return this code. Task 5 gives it real
+	// species-skip behavior here; for now it just passes through untouched.
+	| 'notFound'
+	| 'disabled'
+	| 'noTargets'
+	| 'noActiveShift'
+	| 'notAssigned'
+	| 'typeNotAllowedForSpecies';
 
 // Run a quick log: resolve targets, delegate to logDailyEvent, then apply the
 // remember rule. companionIds omitted (API path) → the resolved prefill set.
