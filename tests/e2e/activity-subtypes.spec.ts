@@ -126,4 +126,57 @@ test.describe('activity subtypes', () => {
 		// new entry via invalidateAll and shows the subtype label, not just "Bathroom".
 		await expect(asMember.getByText('Bathroom · Pee', { exact: true }).first()).toBeVisible();
 	});
+
+	test('species change keeps a saved event type and subtypes through a journal edit', async ({
+		asAdmin
+	}) => {
+		const today = (() => {
+			const n = new Date();
+			const p = (x: number) => String(x).padStart(2, '0');
+			return `${n.getUTCFullYear()}-${p(n.getUTCMonth() + 1)}-${p(n.getUTCDate())}`;
+		})();
+
+		// A new companion defaults to dog.
+		await asAdmin.goto('/companions/new');
+		await asAdmin.locator('#name').fill('e2e-species-flip');
+		await asAdmin.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(asAdmin).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+		const id = asAdmin.url().split('/').filter(Boolean).pop()!;
+
+		// Log a Bathroom · Pee on the journal day page.
+		await asAdmin.goto(`/${id}/journal/${today}`);
+		await asAdmin.getByRole('button', { name: /log activity/i }).click();
+		const addForm = asAdmin.locator('form[action="?/addActivity"]');
+		await addForm.locator('input[name="type"][value="bathroom"]').click({ force: true });
+		await addForm.getByRole('button', { name: /Pee/ }).click();
+		await addForm.locator('textarea[name="notes"]').fill('e2e species flip delta');
+		await addForm.getByRole('button', { name: /Log it/i }).click();
+		const row = asAdmin.locator('div.divide-y > div').filter({ hasText: 'e2e species flip delta' });
+		await expect(row.getByText('Bathroom · Pee', { exact: true })).toBeVisible({ timeout: 8_000 });
+
+		// Flip the companion to a cat.
+		await asAdmin.goto(`/companions/${id}/edit`);
+		await asAdmin.getByRole('radio', { name: 'Cat', exact: true }).check({ force: true });
+		await asAdmin.getByRole('button', { name: 'Save Changes' }).click();
+		await expect(asAdmin.getByText('Changes saved.')).toBeVisible({ timeout: 8_000 });
+
+		// Editing the old event without touching its type keeps Bathroom · Pee.
+		await asAdmin.goto(`/${id}/journal/${today}`);
+		await row.getByRole('button', { name: /edit/i }).click();
+		const editForm = asAdmin.locator('form[action="?/updateActivity"]');
+		await expect(editForm.locator('input[name="type"][value="bathroom"]')).toBeChecked();
+		await expect(editForm.getByRole('button', { name: /Pee/ })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+		// Change only the note, so a rejected save can't pass for a kept one.
+		await editForm.locator('textarea').first().fill('e2e species flip edited');
+		await editForm.getByRole('button', { name: /^Save$/ }).click();
+		const edited = asAdmin
+			.locator('div.divide-y > div')
+			.filter({ hasText: 'e2e species flip edited' });
+		await expect(edited.getByText('Bathroom · Pee', { exact: true })).toBeVisible({
+			timeout: 8_000
+		});
+	});
 });

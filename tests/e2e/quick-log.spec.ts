@@ -2,6 +2,7 @@ import { test, expect } from '../lib/fixtures';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
+const JULIA = 'seed-comp-julia';
 
 test.describe('member quick log', () => {
 	test('companion page tiles lead to the log form and log an activity', async ({ asMember }) => {
@@ -89,5 +90,88 @@ test.describe('caretaker quick log still works', () => {
 
 		await expect(asCaretaker.getByText(/Activity logged/)).toBeVisible();
 		await expect(asCaretaker.getByText('e2e caretaker walk')).toBeVisible();
+	});
+});
+
+test.describe('species-aware logging', () => {
+	test('cat log page offers the litter box with its subtypes, not bathroom', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${JULIA}/log`);
+		await expect(asMember.locator('input[name="type"][value="litter"]')).toHaveCount(1);
+		await expect(asMember.locator('input[name="type"][value="bathroom"]')).toHaveCount(0);
+
+		const pills = asMember.locator('fieldset', { hasText: 'Which kind?' });
+		// Retry the pick: a click before hydration doesn't reach the bound state.
+		await expect(async () => {
+			await asMember.getByRole('radio', { name: /Litter box/ }).check({ force: true });
+			await expect(pills.getByRole('button', { name: /Scooped/ })).toBeVisible({ timeout: 1_000 });
+		}).toPass();
+		for (const name of ['Pee', 'Poop', 'Scooped', 'Litter changed']) {
+			await expect(pills.getByRole('button', { name: new RegExp(name) })).toBeVisible();
+		}
+	});
+
+	test('a type the species cannot take falls back to the species default', async ({ asMember }) => {
+		await asMember.goto(`/${JULIA}/log?type=bathroom`);
+		await expect(asMember.locator('input[name="type"][value="walk"]')).toBeChecked();
+	});
+
+	test('cat companion page offers the cat quick trio', async ({ asMember }) => {
+		await asMember.goto(`/${JULIA}`);
+		const section = asMember.locator('section', { hasText: 'Quick log' }).first();
+		for (const type of ['meal', 'litter', 'play']) {
+			await expect(section.locator(`a[href="/${JULIA}/log?type=${type}"]`)).toBeVisible();
+		}
+		await expect(section.locator(`a[href="/${JULIA}/log?type=bathroom"]`)).toHaveCount(0);
+		await expect(section.locator(`a[href="/${JULIA}/log?type=walk"]`)).toHaveCount(0);
+	});
+
+	test('also-log-for only lists companions that can take the selected type', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${EIN}/log?type=walk`);
+		const julia = asMember.locator(`input[name="additionalCompanionIds"][value="${JULIA}"]`);
+		await expect(julia).toHaveCount(1);
+
+		await expect(async () => {
+			await asMember.getByRole('radio', { name: /Bathroom/ }).check({ force: true });
+			await expect(julia).toHaveCount(0, { timeout: 1_000 });
+		}).toPass();
+		await expect(
+			asMember.locator(`input[name="additionalCompanionIds"][value="${EDWARD}"]`)
+		).toHaveCount(1);
+	});
+
+	test('switching companions in-app swaps the quick trio without a reload', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${EIN}`);
+		const section = asMember.locator('section', { hasText: 'Quick log' }).first();
+		await expect(section.locator(`a[href="/${EIN}/log?type=bathroom"]`)).toBeVisible();
+
+		// A full page load would drop this marker.
+		await asMember.evaluate(
+			() => ((window as unknown as { __noReload: boolean }).__noReload = true)
+		);
+
+		const listbox = asMember.getByRole('listbox', { name: 'Switch companion' });
+		await expect(async () => {
+			if (!(await listbox.isVisible()))
+				await asMember
+					.getByRole('button', { name: 'Switch companion' })
+					.filter({ visible: true })
+					.click();
+			await expect(listbox).toBeVisible({ timeout: 1_000 });
+		}).toPass();
+		await listbox.getByRole('button', { name: /Julia/ }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${JULIA}$`));
+
+		await expect(section.locator(`a[href="/${JULIA}/log?type=litter"]`)).toBeVisible();
+		await expect(section.getByRole('link', { name: /Litter box/ })).toBeVisible();
+		await expect(section.getByRole('link', { name: /Bathroom/ })).toHaveCount(0);
+		expect(
+			await asMember.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)
+		).toBe(true);
 	});
 });

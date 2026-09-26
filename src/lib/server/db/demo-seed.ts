@@ -39,7 +39,7 @@ export const SEED = {
 			vetName: 'Dr. Bacchus',
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
-			emergencyContactName: 'Julia',
+			emergencyContactName: 'Annie',
 			emergencyContactPhone: '(555) 010-1979',
 			notesForSitter:
 				'Responds to hand signals better than words. Keep him away from unattended laptops; he will use them. Favorite treat is dried sardines.'
@@ -64,6 +64,26 @@ export const SEED = {
 			emergencyContactPhone: '(555) 010-2244',
 			notesForSitter:
 				'She will disappear and reappear at will; this is normal. No shoes needed indoors. Keep snacks up high and your passwords to yourself.'
+		},
+		julia: {
+			id: 'seed-comp-julia',
+			name: 'Julia',
+			species: 'cat',
+			breed: 'Russian Blue',
+			sex: 'female',
+			dob: '2021-11-20',
+			weightUnit: 'lbs',
+			microchip: '981020055512345',
+			bio: 'Elegant, elusive, and entirely on her own schedule. Appears exactly when dinner does.',
+			feedingSchedule: 'Wet food at 7am and 7pm, dry food free-fed.',
+			walkSchedule: 'Wand-toy session every evening. Scoop the litter morning and night.',
+			medicationSchedule: 'Hairball paste on Sundays.',
+			vetName: 'Dr. Bacchus',
+			vetPhone: '(555) 287-3300',
+			vetClinic: 'Animal Treasure Veterinary',
+			emergencyContactName: 'Annie',
+			emergencyContactPhone: '(555) 010-1979',
+			notesForSitter: 'Do not let her out the back door. She will pretend she has not been fed.'
 		}
 	}
 } as const;
@@ -205,15 +225,25 @@ export function seedContent(
 
 	const ein = SEED.companions.ein.id;
 	const edward = SEED.companions.edward.id;
+	const julia = SEED.companions.julia.id;
 	const spike = SEED.admin.id;
 	const jet = SEED.member.id;
 	const faye = SEED.caretaker.id;
 
 	db.insert(schema.companions)
-		.values([{ ...SEED.companions.ein }, { ...SEED.companions.edward }])
+		.values([
+			{ ...SEED.companions.ein },
+			{ ...SEED.companions.edward },
+			{ ...SEED.companions.julia }
+		])
 		.run();
 
-	db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye }).run();
+	db.insert(schema.companionCaretakers)
+		.values([
+			{ companionId: ein, userId: faye },
+			{ companionId: julia, userId: faye }
+		])
+		.run();
 
 	// Active shift so the caretaker can see their companion.
 	db.insert(schema.caretakerShifts)
@@ -409,6 +439,30 @@ export function seedContent(
 				unit: 'lbs',
 				recordedAt: new Date(now - 8 * day),
 				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-julia-1',
+				companionId: julia,
+				weight: 9.1,
+				unit: 'lbs',
+				recordedAt: new Date(now - 90 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-julia-2',
+				companionId: julia,
+				weight: 9.3,
+				unit: 'lbs',
+				recordedAt: new Date(now - 45 * day),
+				loggedBy: jet
+			},
+			{
+				id: 'seed-weight-julia-3',
+				companionId: julia,
+				weight: 9.2,
+				unit: 'lbs',
+				recordedAt: new Date(now - 7 * day),
+				loggedBy: jet
 			}
 		])
 		.run();
@@ -589,6 +643,33 @@ export function seedContent(
 				loggedAt: new Date(now - 3 * day),
 				loggedBy: jet,
 				eventGroupId: 'seed-group-morning-routine'
+			},
+			{
+				id: 'seed-act-julia-1',
+				companionId: julia,
+				type: 'litter',
+				subtypes: ['scoop'],
+				notes: 'Scooped the box before breakfast.',
+				loggedAt: new Date(now - 3 * hour),
+				loggedBy: faye
+			},
+			{
+				id: 'seed-act-julia-2',
+				companionId: julia,
+				type: 'meal',
+				subtypes: ['breakfast'],
+				loggedAt: new Date(now - 6 * hour),
+				loggedBy: faye
+			},
+			{
+				id: 'seed-act-julia-3',
+				companionId: julia,
+				type: 'play',
+				subtypes: ['chase'],
+				durationMinutes: 15,
+				notes: 'Chased the feather wand across the hall.',
+				loggedAt: new Date(now - 1 * day),
+				loggedBy: jet
 			}
 		])
 		.run();

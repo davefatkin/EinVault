@@ -7,6 +7,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
 
 const EIN = 'seed-comp-ein';
+const JULIA = 'seed-comp-julia';
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
 // Creates a token via the settings UI and returns the raw value. Svelte sets
@@ -271,6 +272,51 @@ test.describe('api tokens', () => {
 			(e: { notes: string | null }) => e.notes === 'api subtype empty'
 		);
 		expect(emptyStored?.subtypes).toBeNull();
+	});
+
+	test('logs endpoint applies species rules per companion', async ({ asMember, app }) => {
+		const raw = await createToken(asMember, 'Species bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+
+		const detail = await asMember.request.get(app.server.baseURL + `/api/companions/${JULIA}`, {
+			headers
+		});
+		expect(detail.status()).toBe(200);
+		expect((await detail.json()).companion.species).toBe('cat');
+
+		// A cat can't have a bathroom event: stable 400, nothing written.
+		const bathroom = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: JULIA, type: 'bathroom', notes: 'api cat bathroom' }
+		});
+		expect(bathroom.status()).toBe(400);
+		expect((await bathroom.json()).code).toBe('typeNotAllowedForSpecies');
+
+		// A shared walk with a dog-only subtype: the dog keeps it, the cat drops it.
+		const walk = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: {
+				companionIds: [EIN, JULIA],
+				type: 'walk',
+				subtypes: ['hike'],
+				notes: 'api shared hike'
+			}
+		});
+		expect(walk.status()).toBe(201);
+
+		const readBack = async (companionId: string) => {
+			const res = await asMember.request.get(
+				app.server.baseURL + `/api/logs?companionId=${companionId}`,
+				{ headers }
+			);
+			expect(res.status()).toBe(200);
+			return (await res.json()).events as { notes: string | null; subtypes: string[] | null }[];
+		};
+		const juliaEvents = await readBack(JULIA);
+		expect(juliaEvents.some((e) => e.notes === 'api cat bathroom')).toBe(false);
+		expect(juliaEvents.find((e) => e.notes === 'api shared hike')?.subtypes).toBeNull();
+		const einEvents = await readBack(EIN);
+		expect(einEvents.find((e) => e.notes === 'api shared hike')?.subtypes).toEqual(['hike']);
 	});
 
 	test('journal endpoint upserts the day entry', async ({ asMember, app }) => {
