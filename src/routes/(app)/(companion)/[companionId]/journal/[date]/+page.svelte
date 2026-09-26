@@ -39,7 +39,6 @@
 	import { t, getLocale } from '$lib/i18n';
 	import {
 		moodOptions,
-		activityTypeOptions,
 		activityDisplayIcon,
 		activityDisplayLabel,
 		ACTIVITY_HAS_DURATION
@@ -355,7 +354,6 @@
 
 	// Activity log
 	let species = $derived(toSpecies(companion.species));
-	let EVENT_TYPES = $derived(activityTypeOptions(locale, SPECIES_ACTIVITY_TYPES[species], species));
 
 	function localDatetimeISO(d = new Date()) {
 		const p = (n: number) => String(n).padStart(2, '0');
@@ -915,33 +913,13 @@
 							}}
 						class="space-y-4"
 					>
-						<div class="space-y-1.5">
-							<span class="text-sm font-medium text-foreground"
-								>{t(locale, 'page.journal.day.activityType')}</span
-							>
-							<div class="flex flex-wrap gap-2">
-								{#each EVENT_TYPES as evtType (evtType.value)}
-									<label class="cursor-pointer">
-										<input
-											type="radio"
-											name="type"
-											value={evtType.value}
-											bind:group={selectedType}
-											class="sr-only"
-										/>
-										<span
-											class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {selectedType ===
-											evtType.value
-												? 'bg-primary/10 border-primary/30 text-primary'
-												: 'hover:text-foreground'}"
-										>
-											{evtType.icon}
-											{evtType.label}
-										</span>
-									</label>
-								{/each}
-							</div>
-						</div>
+						<ActivityTypePills
+							types={SPECIES_ACTIVITY_TYPES[species]}
+							bind:selected={selectedType}
+							{species}
+							legend={t(locale, 'page.journal.day.activityType')}
+							compact
+						/>
 						<SubtypePills type={selectedType} bind:selected={addActivitySubtypes} {species} />
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
@@ -1069,6 +1047,7 @@
 										current={editActivityOriginalType}
 										{species}
 										legend={t(locale, 'page.journal.day.activityType')}
+										compact
 									/>
 									<!-- While the saved type is unchanged, saved subtypes outside the
 									species list stay offered so they survive the edit. -->
