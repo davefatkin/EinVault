@@ -1097,12 +1097,12 @@
 											{/each}
 										</div>
 									</div>
-									<!-- A legacy type the species no longer allows keeps its global
-									subtype list so saving doesn't drop its subtypes. -->
+									<!-- While the saved type is unchanged, offer the global subtype list so
+									saved subtypes outside the species list survive the edit. -->
 									<SubtypePills
 										type={editActivityType}
 										bind:selected={editActivitySubtypes}
-										species={isActivityAllowed(species, editActivityType) ? species : undefined}
+										species={editActivityType === editActivityOriginalType ? undefined : species}
 									/>
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
