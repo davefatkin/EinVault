@@ -22,7 +22,8 @@
 	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { DAILY_EVENT_TYPES } from '$lib/activityTypes';
+	import type { DailyEventType, Species } from '$lib/activityTypes';
+	import { allowedTypesFor, isActivityAllowed } from '$lib/species';
 	import {
 		ACTIVITY_HAS_DURATION,
 		activityDisplayIcon,
@@ -42,6 +43,7 @@
 	interface CompanionOption {
 		id: string;
 		name: string;
+		species: Species;
 	}
 	interface UserOption {
 		id: string;
@@ -71,9 +73,13 @@
 	let editorOpen = $state<'create' | string | null>(null);
 	let shareOpen = $state<string | null>(null);
 
+	let typeList = $derived(allowedTypesFor(companions.map((c) => c.species)));
+
 	// Editor state, seeded when opening.
 	let editName = $state('');
-	let editType = $state('walk');
+	// svelte-ignore state_referenced_locally
+	let editType = $state<DailyEventType>(typeList[0] ?? 'meal');
+	let editOriginalType = $state<string | null>(null);
 	let editSubtypes = $state<string[]>([]);
 	let editDuration = $state('');
 	let editNote = $state('');
@@ -81,15 +87,21 @@
 	let editCompanionIds = $state<string[]>([]);
 	let shareRecipientIds = $state<string[]>([]);
 
-	let editHasDuration = $derived(
-		ACTIVITY_HAS_DURATION[editType as keyof typeof ACTIVITY_HAS_DURATION] ?? false
-	);
+	let editHasDuration = $derived(ACTIVITY_HAS_DURATION[editType] ?? false);
+	let editCompanions = $derived(companions.filter((c) => isActivityAllowed(c.species, editType)));
+
+	// Switching the type prunes any selected companion no longer allowed it.
+	$effect(() => {
+		const pruned = editCompanionIds.filter((id) => editCompanions.some((c) => c.id === id));
+		if (pruned.length !== editCompanionIds.length) editCompanionIds = pruned;
+	});
 
 	function openCreate() {
 		editorOpen = 'create';
 		shareOpen = null;
 		editName = '';
-		editType = 'walk';
+		editType = typeList[0] ?? 'meal';
+		editOriginalType = null;
 		editSubtypes = [];
 		editDuration = '';
 		editNote = '';
@@ -101,7 +113,8 @@
 		editorOpen = row.id;
 		shareOpen = null;
 		editName = row.name;
-		editType = row.type;
+		editType = row.type as DailyEventType;
+		editOriginalType = row.type;
 		editSubtypes = row.subtypes ?? [];
 		editDuration = row.durationMinutes ? String(row.durationMinutes) : '';
 		editNote = row.note ?? '';
@@ -172,7 +185,8 @@
 		</div>
 
 		<ActivityTypePills
-			types={DAILY_EVENT_TYPES}
+			types={typeList}
+			current={editOriginalType}
 			bind:selected={editType}
 			legend={t(locale, 'quickLogs.typeLabel')}
 		/>
@@ -217,7 +231,7 @@
 				>{t(locale, 'quickLogs.companionsLabel')}</legend
 			>
 			<div class="flex flex-wrap gap-2">
-				{#each companions as companion (companion.id)}
+				{#each editCompanions as companion (companion.id)}
 					{@const checked = editCompanionIds.includes(companion.id)}
 					<label class="cursor-pointer">
 						<input

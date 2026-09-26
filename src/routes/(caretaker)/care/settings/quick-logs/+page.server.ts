@@ -4,6 +4,7 @@ import { db, schema } from '$lib/server/db';
 import { and, eq, ne } from 'drizzle-orm';
 import { listQuickLogs } from '$lib/server/quick-logs';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
+import { toSpecies } from '$lib/species';
 
 export { quickLogActions as actions } from '$lib/server/quick-log-actions';
 
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			? db.query.companions.findMany({
 					where: and(eq(schema.companions.isActive, true)),
 					orderBy: (c, { asc }) => [asc(c.name)],
-					columns: { id: true, name: true }
+					columns: { id: true, name: true, species: true }
 				})
 			: Promise.resolve([]),
 		db.query.users.findMany({
@@ -31,7 +32,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		quickLogs,
-		quickLogCompanions: companions.filter((c) => assignedIds.includes(c.id)),
+		quickLogCompanions: companions
+			.filter((c) => assignedIds.includes(c.id))
+			.map((c) => ({ ...c, species: toSpecies(c.species) })),
 		shareableUsers
 	};
 };
