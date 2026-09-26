@@ -2,7 +2,8 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { eq, and, gte, lt, inArray } from 'drizzle-orm';
+import { generateId } from '$lib/server/utils';
 import {
 	parseMood,
 	parseDailyEventType,
@@ -14,7 +15,7 @@ import {
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
-import { logDailyEvent } from '$lib/server/daily-events';
+import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
 import { failCareError } from '$lib/server/care-errors';
 import { resolveActivityUpdate } from '$lib/server/journal-activity';
 import {
@@ -128,15 +129,47 @@ export const actions: Actions = {
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
 
+		// The primary companion always gets a row, even if archived: this page
+		// backfills entries for a companion's own journal, which stays reachable
+		// after the companion is archived. Only additional (tagged) companions
+		// are active-filtered, same as before species existed.
 		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
 			(v) => v !== companionId
 		);
-		const result = await logDailyEvent(
-			{ id: locals.user.id, role: locals.user.role },
-			[companionId, ...additionalIds],
-			{ type, notes, durationMinutes, loggedAt, subtypes: data.getAll('subtypes').map(String) }
+		let validAdditionalIds: string[] = [];
+		if (additionalIds.length > 0) {
+			const rows = await db.query.companions.findMany({
+				where: and(
+					inArray(schema.companions.id, additionalIds),
+					eq(schema.companions.isActive, true)
+				),
+				columns: { id: true }
+			});
+			validAdditionalIds = rows.map((r) => r.id);
+		}
+
+		const targetIds = [companionId, ...validAdditionalIds];
+		const checked = await checkSpeciesAndNarrow(
+			targetIds,
+			type,
+			data.getAll('subtypes').map(String)
 		);
-		if (!result.ok) return failCareError(result.code, locals.locale, 'error');
+		if (!checked.ok) return failCareError(checked.code, locals.locale, 'error');
+
+		const eventGroupId = targetIds.length > 1 ? generateId(15) : null;
+		const values = targetIds.map((cid) => ({
+			id: generateId(15),
+			companionId: cid,
+			type,
+			notes,
+			durationMinutes,
+			loggedAt,
+			subtypes: checked.subtypesById.get(cid) ?? null,
+			loggedBy: locals.user!.id,
+			eventGroupId
+		}));
+
+		await db.insert(schema.dailyEvents).values(values);
 
 		return { addSuccess: true };
 	},

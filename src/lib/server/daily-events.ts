@@ -15,6 +15,39 @@ export interface DailyEventInput {
 	subtypes?: string[] | null;
 }
 
+// Species rule shared by every daily-event write path: a target that can't
+// have this activity type rejects the whole request (callers only offer
+// valid targets, so this is a client bug or a stale API payload). On success,
+// subtypes are narrowed per companion, keyed by companion id so callers can
+// build their own rows (some, like the journal's backfill path, insert rows
+// for ids that were never authorized/species-checked as a group).
+export async function checkSpeciesAndNarrow(
+	ids: string[],
+	type: DailyEventType,
+	subtypes: string[] | null | undefined
+): Promise<
+	| { ok: true; subtypesById: Map<string, string[] | null> }
+	| { ok: false; code: 'typeNotAllowedForSpecies' }
+> {
+	const speciesRows = await db.query.companions.findMany({
+		where: inArray(schema.companions.id, ids),
+		columns: { id: true, species: true }
+	});
+	const speciesById = new Map(speciesRows.map((r) => [r.id, toSpecies(r.species)]));
+	if (ids.some((id) => !isActivityAllowed(speciesById.get(id) ?? 'dog', type)))
+		return { ok: false, code: 'typeNotAllowedForSpecies' };
+
+	const requested = new Set(subtypes ?? []);
+	const subtypesById = new Map(
+		ids.map((cid) => {
+			const allowed = subtypesFor(speciesById.get(cid) ?? 'dog', type);
+			const list = allowed.filter((v) => requested.has(v));
+			return [cid, list.length ? list : null] as const;
+		})
+	);
+	return { ok: true, subtypesById };
+}
+
 // Insert one daily_events row per authorized companion; rows from a single
 // submission share an eventGroupId so multi-companion logs stay linked.
 export async function logDailyEvent(
@@ -27,35 +60,22 @@ export async function logDailyEvent(
 	const resolved = await authorizeCompanions(user, companionIds);
 	if (!resolved.ok) return resolved;
 
-	// Species rule: an explicit target that can't have this activity rejects the
-	// whole request (callers only offer valid targets, so this is a client bug
-	// or a stale API payload). Subtypes are then narrowed per row.
-	const speciesRows = await db.query.companions.findMany({
-		where: inArray(schema.companions.id, resolved.ids),
-		columns: { id: true, species: true }
-	});
-	const speciesById = new Map(speciesRows.map((r) => [r.id, toSpecies(r.species)]));
-	if (resolved.ids.some((id) => !isActivityAllowed(speciesById.get(id) ?? 'dog', input.type)))
-		return { ok: false, code: 'typeNotAllowedForSpecies' };
+	const checked = await checkSpeciesAndNarrow(resolved.ids, input.type, input.subtypes);
+	if (!checked.ok) return checked;
 
 	const durationMinutes = ACTIVITY_HAS_DURATION[input.type] ? input.durationMinutes : null;
-	const requested = new Set(input.subtypes ?? []);
 	const eventGroupId = resolved.ids.length > 1 ? generateId(15) : null;
-	const rows = resolved.ids.map((cid) => {
-		const allowed = subtypesFor(speciesById.get(cid) ?? 'dog', input.type);
-		const list = allowed.filter((v) => requested.has(v));
-		return {
-			id: generateId(15),
-			companionId: cid,
-			type: input.type,
-			notes: input.notes,
-			durationMinutes,
-			subtypes: list.length ? list : null,
-			loggedAt: input.loggedAt,
-			loggedBy: user.id,
-			eventGroupId
-		};
-	});
+	const rows = resolved.ids.map((cid) => ({
+		id: generateId(15),
+		companionId: cid,
+		type: input.type,
+		notes: input.notes,
+		durationMinutes,
+		subtypes: checked.subtypesById.get(cid) ?? null,
+		loggedAt: input.loggedAt,
+		loggedBy: user.id,
+		eventGroupId
+	}));
 
 	await db.insert(schema.dailyEvents).values(rows);
 

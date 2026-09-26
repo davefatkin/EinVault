@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { logDailyEvent } from './daily-events';
+import { logDailyEvent, checkSpeciesAndNarrow } from './daily-events';
 import { authorizeCompanions } from './companion-scope';
 
 const HOUR = 60 * 60 * 1000;
@@ -255,5 +255,30 @@ describe('logDailyEvent species rules', () => {
 		});
 		expect(row?.subtypes).toEqual(['scoop']);
 		expect(row?.durationMinutes).toBeNull(); // litter has no duration
+	});
+});
+
+describe('checkSpeciesAndNarrow', () => {
+	const dogId = 'de-csan-dog';
+	const catId = 'de-csan-cat';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: dogId, name: 'Rex3', species: 'dog' },
+			{ id: catId, name: 'Tom', species: 'cat' }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	it('rejects a type one of the ids cannot have', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'bathroom', null);
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+	});
+
+	it('narrows subtypes per id for a mixed walk (cat only allows leash)', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['hike', 'leash']);
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		expect(res.subtypesById.get(dogId)).toEqual(['leash', 'hike']);
+		expect(res.subtypesById.get(catId)).toEqual(['leash']);
 	});
 });
