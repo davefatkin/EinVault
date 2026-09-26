@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { exceedsLen, parseIdArray, parseRecordTimestamp } from './validation';
+import {
+	exceedsLen,
+	parseIdArray,
+	parseRecordTimestamp,
+	parseSpecies,
+	parseWeightUnit,
+	parseWeightUnitStrict,
+	parseDailyEventType
+} from './validation';
 
 describe('exceedsLen', () => {
 	it('is true only for strings over the cap', () => {
@@ -42,5 +50,38 @@ describe('parseRecordTimestamp', () => {
 	it('rejects garbage and non-strings', () => {
 		expect(parseRecordTimestamp('not-a-date')).toBeNull();
 		expect(parseRecordTimestamp(42)).toBeNull();
+	});
+});
+
+describe('parseSpecies', () => {
+	it('accepts the three species', () => {
+		expect(parseSpecies('dog')).toBe('dog');
+		expect(parseSpecies('cat')).toBe('cat');
+		expect(parseSpecies('other')).toBe('other');
+	});
+	it('rejects anything else', () => {
+		expect(parseSpecies('horse')).toBeNull();
+		expect(parseSpecies('')).toBeNull();
+		expect(parseSpecies(null)).toBeNull();
+	});
+});
+
+describe('parseWeightUnit', () => {
+	it('accepts all four units', () => {
+		for (const u of ['kg', 'lbs', 'g', 'oz']) expect(parseWeightUnit(u, 'kg')).toBe(u);
+	});
+	it('falls back to the caller-supplied unit, not kg', () => {
+		expect(parseWeightUnit('', 'lbs')).toBe('lbs');
+		expect(parseWeightUnit('stone', 'g')).toBe('g');
+	});
+	it('strict variant returns null on garbage', () => {
+		expect(parseWeightUnitStrict('oz')).toBe('oz');
+		expect(parseWeightUnitStrict('stone')).toBeNull();
+	});
+});
+
+describe('parseDailyEventType', () => {
+	it('accepts litter', () => {
+		expect(parseDailyEventType('litter')).toBe('litter');
 	});
 });

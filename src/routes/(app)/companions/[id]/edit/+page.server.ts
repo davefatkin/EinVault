@@ -39,7 +39,7 @@ export const actions: Actions = {
 				breed: String(data.get('breed') ?? '').trim() || null,
 				sex: parseSex(String(data.get('sex') ?? '')),
 				dob: String(data.get('dob') ?? '') || null,
-				weightUnit: parseWeightUnit(String(data.get('weightUnit') ?? '')),
+				weightUnit: parseWeightUnit(String(data.get('weightUnit') ?? ''), companion.weightUnit),
 				microchip: String(data.get('microchip') ?? '').trim() || null,
 				bio: String(data.get('bio') ?? '').trim() || null,
 				// Caretaker fields

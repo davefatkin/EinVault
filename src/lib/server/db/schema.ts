@@ -8,6 +8,8 @@ import {
 	real,
 	primaryKey
 } from 'drizzle-orm/sqlite-core';
+// Relative, not $lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
+import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES } from '../../activityTypes';
 
 // users
 
@@ -170,15 +172,11 @@ export const companions = sqliteTable(
 	{
 		id: text('id').primaryKey(),
 		name: text('name').notNull(),
-		species: text('species', { enum: ['dog'] })
-			.notNull()
-			.default('dog'),
+		species: text('species', { enum: SPECIES }).notNull().default('dog'),
 		breed: text('breed'),
 		dob: text('dob'),
 		sex: text('sex', { enum: ['male', 'female', 'unknown'] }),
-		weightUnit: text('weight_unit', { enum: ['kg', 'lbs'] })
-			.notNull()
-			.default('lbs'),
+		weightUnit: text('weight_unit', { enum: WEIGHT_UNITS }).notNull().default('lbs'),
 		microchip: text('microchip'),
 		avatarPath: text('avatar_path'),
 		avatarProvider: text('avatar_provider', { enum: ['local', 's3', 'immich'] })
@@ -359,7 +357,7 @@ export const weightEntries = sqliteTable(
 			.notNull()
 			.references(() => companions.id, { onDelete: 'cascade' }),
 		weight: real('weight').notNull(),
-		unit: text('unit', { enum: ['kg', 'lbs'] }).notNull(),
+		unit: text('unit', { enum: WEIGHT_UNITS }).notNull(),
 		recordedAt: integer('recorded_at', { mode: 'timestamp' }).notNull(),
 		notes: text('notes'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
@@ -382,7 +380,7 @@ export const dailyEvents = sqliteTable(
 			.notNull()
 			.references(() => companions.id, { onDelete: 'cascade' }),
 		type: text('type', {
-			enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other']
+			enum: DAILY_EVENT_TYPES
 		}).notNull(),
 		notes: text('notes'),
 		durationMinutes: integer('duration_minutes'),
@@ -489,7 +487,7 @@ export const quickLogs = sqliteTable(
 		// Button label shown in the UI, chosen by the owner (e.g. "Evening walk").
 		name: text('name').notNull(),
 		type: text('type', {
-			enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other']
+			enum: DAILY_EVENT_TYPES
 		}).notNull(),
 		durationMinutes: integer('duration_minutes'),
 		subtypes: text('subtypes', { mode: 'json' }).$type<string[]>(),

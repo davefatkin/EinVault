@@ -20,7 +20,7 @@ export const actions: Actions = {
 		const breed = String(data.get('breed') ?? '').trim() || null;
 		const sex = parseSex(String(data.get('sex') ?? ''));
 		const dob = String(data.get('dob') ?? '') || null;
-		const weightUnit = parseWeightUnit(String(data.get('weightUnit') ?? ''));
+		const weightUnit = parseWeightUnit(String(data.get('weightUnit') ?? ''), 'lbs');
 		const microchip = String(data.get('microchip') ?? '').trim() || null;
 		const bio = String(data.get('bio') ?? '').trim() || null;
 
