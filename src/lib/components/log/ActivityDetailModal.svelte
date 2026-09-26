@@ -10,6 +10,7 @@
 	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
 	import type { UserRef } from '$lib/types';
+	import type { Species } from '$lib/activityTypes';
 
 	// The shared shape every activity-detail surface renders: icon/label with
 	// subtypes, logged time + byline, optional duration, markdown notes.
@@ -26,7 +27,8 @@
 		event,
 		onclose,
 		journalHref = null,
-		footer
+		footer,
+		species
 	}: {
 		event: ActivityDetailEvent;
 		onclose: () => void;
@@ -34,6 +36,7 @@
 		journalHref?: string | null;
 		/** Custom footer (e.g. an inline Edit action); overrides journalHref. */
 		footer?: Snippet;
+		species?: Species;
 	} = $props();
 
 	const locale = getLocale();
@@ -96,7 +99,7 @@
 	>
 		<div class="flex items-center justify-between px-5 pt-5 pb-3">
 			<h2 class="font-semibold text-base text-foreground">
-				{activityDisplayIcon(event.type, event.subtypes)}
+				{activityDisplayIcon(event.type, event.subtypes, species)}
 				{activityDisplayLabel(locale, event.type, event.subtypes)}
 			</h2>
 			<button

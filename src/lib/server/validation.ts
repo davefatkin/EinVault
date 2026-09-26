@@ -20,19 +20,26 @@ export function parseMood(value: string | null | undefined): Mood | null {
 
 // Daily event type
 
-export type DailyEventType = 'walk' | 'meal' | 'bathroom' | 'treat' | 'play' | 'grooming' | 'other';
-const DAILY_EVENT_TYPES = [
-	'walk',
-	'meal',
-	'bathroom',
-	'treat',
-	'play',
-	'grooming',
-	'other'
-] as const satisfies readonly DailyEventType[];
+import {
+	DAILY_EVENT_TYPES,
+	WEIGHT_UNITS,
+	SPECIES,
+	type DailyEventType,
+	type WeightUnit,
+	type Species
+} from '$lib/activityTypes';
+export { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES };
+export type { DailyEventType, WeightUnit, Species };
 
 export function parseDailyEventType(value: string): DailyEventType | null {
 	return parseEnum(value, DAILY_EVENT_TYPES);
+}
+
+// Species
+
+export function parseSpecies(value: string | null | undefined): Species | null {
+	if (!value) return null;
+	return parseEnum(value, SPECIES);
 }
 
 // Daily event duration: positive whole minutes, capped at the form's 480 max.
@@ -220,11 +227,14 @@ export function parseRecurrence(data: FormData, dueAt: Date): ParsedRecurrence |
 
 // Weight unit
 
-export type WeightUnit = 'kg' | 'lbs';
-const WEIGHT_UNITS = ['kg', 'lbs'] as const satisfies readonly WeightUnit[];
+// Fallback is explicit: create passes the species default, edit passes the
+// companion's stored unit (a missing field must not silently reset it).
+export function parseWeightUnit(value: string, fallback: WeightUnit): WeightUnit {
+	return parseEnum(value, WEIGHT_UNITS) ?? fallback;
+}
 
-export function parseWeightUnit(value: string): WeightUnit {
-	return parseEnum(value, WEIGHT_UNITS) ?? 'kg';
+export function parseWeightUnitStrict(value: string): WeightUnit | null {
+	return parseEnum(value, WEIGHT_UNITS);
 }
 
 // Date validation

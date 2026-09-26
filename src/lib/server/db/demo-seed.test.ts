@@ -158,7 +158,7 @@ describe('refreshDemoContent', () => {
 		refreshDemoContent(db, true, DATA_DIR);
 
 		const companions = await db.query.companions.findMany();
-		expect(companions.length).toBe(2); // only Ein and Edward, not doubled
+		expect(companions.length).toBe(3); // only Ein, Edward and Julia, not doubled
 	});
 });
 

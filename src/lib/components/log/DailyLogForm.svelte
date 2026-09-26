@@ -6,12 +6,22 @@
 	import { Check } from '@lucide/svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
-	import { activityTypeOptions } from '$lib/i18n/labels';
+	import { activityTypeOptions, ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
+	import type { DailyEventType, Species } from '$lib/activityTypes';
+	import {
+		SPECIES_ACTIVITY_TYPES,
+		allowedTypesFor,
+		defaultActivityType,
+		isActivityAllowed,
+		subtypesForAny
+	} from '$lib/species';
+	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 
 	interface CompanionOption {
 		id: string;
 		name: string;
+		species: Species;
 	}
 
 	// primaryCompanion set → it is the implicit target (route param) and the other
@@ -20,37 +30,76 @@
 	let {
 		companions = [],
 		primaryCompanion = null,
-		initialType = 'walk',
+		initialType = null,
 		action = '?/add',
 		form
 	}: {
 		companions?: CompanionOption[];
 		primaryCompanion?: CompanionOption | null;
-		initialType?: string;
+		initialType?: string | null;
 		action?: string;
 		form: { success?: boolean; error?: string } | null;
 	} = $props();
 
 	const locale = getLocale();
-	const EVENT_TYPES = activityTypeOptions(locale);
-	const TYPE_VALUES = EVENT_TYPES.map((t) => t.value);
+
+	// Primary companion → its species' list. Free mode (dashboard) → the union
+	// over every offered companion. Captured once on purpose: callers key this
+	// component by companion id, so it remounts on navigation.
+	// svelte-ignore state_referenced_locally
+	const typeList = primaryCompanion
+		? SPECIES_ACTIVITY_TYPES[primaryCompanion.species]
+		: allowedTypesFor(companions.map((c) => c.species));
 
 	// Intentionally captures the initial prop value: the type pre-selection comes
 	// from the ?type= query param on first render and the pills own it afterwards.
+	// A type the species can't take falls back to the species default.
 	// svelte-ignore state_referenced_locally
-	let selectedType = $state((TYPE_VALUES as string[]).includes(initialType) ? initialType : 'walk');
+	let selectedType = $state(
+		initialType && (typeList as readonly string[]).includes(initialType)
+			? initialType
+			: primaryCompanion
+				? defaultActivityType(primaryCompanion.species)
+				: typeList[0]
+	);
 	let duration = $state('');
 	let notes = $state('');
 	let subtypes = $state<string[]>([]);
 
 	let siblingCompanions = $derived(
-		primaryCompanion ? companions.filter((c) => c.id !== primaryCompanion!.id) : []
+		primaryCompanion
+			? companions.filter(
+					(c) => c.id !== primaryCompanion!.id && isActivityAllowed(c.species, selectedType)
+				)
+			: []
+	);
+	// Free mode: only companions that can take the selected type are offered.
+	let targetCompanions = $derived(
+		primaryCompanion ? [] : companions.filter((c) => isActivityAllowed(c.species, selectedType))
 	);
 	let selectedAdditionalIds = $state<string[]>([]);
 	let selectedCompanionIds = $state<string[]>([]);
-	let hasDuration = $derived(
-		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
-	);
+	// Drop selections whose companion is no longer offered for the selected type.
+	$effect(() => {
+		const ok = (ids: string[], list: CompanionOption[]) =>
+			ids.filter((id) => list.some((c) => c.id === id));
+		const a = ok(selectedAdditionalIds, siblingCompanions);
+		if (a.length !== selectedAdditionalIds.length) selectedAdditionalIds = a;
+		const b = ok(selectedCompanionIds, targetCompanions);
+		if (b.length !== selectedCompanionIds.length) selectedCompanionIds = b;
+	});
+	// Free mode: subtypes any checked companion can take (all offered targets
+	// while none is checked). Primary mode uses the primary's species list.
+	let freeSubtypes = $derived.by(() => {
+		if (primaryCompanion) return undefined;
+		const checked = targetCompanions.filter((c) => selectedCompanionIds.includes(c.id));
+		const pool = checked.length > 0 ? checked : targetCompanions;
+		return subtypesForAny(
+			pool.map((c) => c.species),
+			selectedType
+		);
+	});
+	let hasDuration = $derived(ACTIVITY_HAS_DURATION[selectedType as DailyEventType] ?? false);
 
 	function defaultLoggedAt() {
 		const now = new Date();
@@ -58,8 +107,12 @@
 		return new Date(now.getTime() - offset).toISOString().slice(0, 16);
 	}
 
-	const TYPE_PILL_LABELS = Object.fromEntries(
-		EVENT_TYPES.map((t) => [t.value, `${t.icon} ${t.label}`])
+	// svelte-ignore state_referenced_locally
+	const TYPE_PILL_LABELS: Record<string, string> = Object.fromEntries(
+		activityTypeOptions(locale, typeList, primaryCompanion?.species).map((t) => [
+			t.value,
+			`${t.icon} ${t.label}`
+		])
 	);
 </script>
 
@@ -98,40 +151,18 @@
 		}}
 	class="space-y-4"
 >
-	<!-- Activity type pills -->
-	<fieldset class="space-y-2">
-		<legend class="text-sm font-medium text-foreground"
-			>{t(locale, 'page.log.activityLabel')}</legend
-		>
-		<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-			{#each EVENT_TYPES as t (t.value)}
-				<label class="cursor-pointer">
-					<input
-						type="radio"
-						name="type"
-						value={t.value}
-						bind:group={selectedType}
-						class="sr-only peer"
-					/>
-					<span
-						class="flex items-center justify-center gap-1 rounded-xl border px-3 py-3
-					text-sm font-medium transition-all text-center
-					peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2
-					{selectedType === t.value
-							? 'bg-primary/10 border-primary ring-2 ring-inset ring-primary/40 text-primary shadow-sm'
-							: 'border-border text-muted-foreground hover:border-border hover:bg-accent hover:text-accent-foreground'}"
-					>
-						{#if selectedType === t.value}
-							<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-						{/if}
-						{TYPE_PILL_LABELS[t.value] ?? t.label}
-					</span>
-				</label>
-			{/each}
-		</div>
-	</fieldset>
+	<ActivityTypePills
+		types={typeList}
+		bind:selected={selectedType}
+		species={primaryCompanion?.species}
+	/>
 
-	<SubtypePills type={selectedType} bind:selected={subtypes} />
+	<SubtypePills
+		type={selectedType}
+		bind:selected={subtypes}
+		species={primaryCompanion?.species}
+		values={freeSubtypes}
+	/>
 
 	{#if !primaryCompanion}
 		<fieldset class="space-y-1.5">
@@ -139,7 +170,7 @@
 				>{t(locale, 'page.log.selectCompanions')}</legend
 			>
 			<div class="flex flex-wrap gap-2">
-				{#each companions as companion (companion.id)}
+				{#each targetCompanions as companion (companion.id)}
 					{@const checked = selectedCompanionIds.includes(companion.id)}
 					<label class="cursor-pointer">
 						<input

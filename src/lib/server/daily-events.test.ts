@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { logDailyEvent } from './daily-events';
+import { logDailyEvent, checkSpeciesAndNarrow } from './daily-events';
 import { authorizeCompanions } from './companion-scope';
 
 const HOUR = 60 * 60 * 1000;
@@ -182,5 +182,135 @@ describe('daily-events', () => {
 			where: eq(schema.dailyEvents.id, res.ids[0])
 		});
 		expect(row?.subtypes).toBeNull();
+	});
+});
+
+describe('logDailyEvent species rules', () => {
+	const dogId = 'de-sp-dog';
+	const catId = 'de-sp-cat';
+	const admin = { id: 'de-sp-admin', role: 'admin' as const };
+
+	beforeAll(async () => {
+		await db.insert(schema.users).values({
+			id: admin.id,
+			username: admin.id,
+			displayName: 'Admin',
+			role: 'admin'
+		} as typeof schema.users.$inferInsert);
+		await db.insert(schema.companions).values([
+			{ id: dogId, name: 'Rex2', species: 'dog' },
+			{ id: catId, name: 'Whiskers', species: 'cat' }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	it('rejects a type the cat cannot have, writing nothing', async () => {
+		const before = await db.select().from(schema.dailyEvents);
+		const res = await logDailyEvent(admin, [dogId, catId], {
+			type: 'bathroom',
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date()
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+		expect(await db.select().from(schema.dailyEvents)).toHaveLength(before.length);
+	});
+
+	it('rejects litter for a dog', async () => {
+		const res = await logDailyEvent(admin, [dogId], {
+			type: 'litter',
+			notes: null,
+			durationMinutes: null,
+			loggedAt: new Date()
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+	});
+
+	it('narrows subtypes per row for a mixed walk', async () => {
+		const res = await logDailyEvent(admin, [dogId, catId], {
+			type: 'walk',
+			notes: null,
+			durationMinutes: 20,
+			loggedAt: new Date(),
+			subtypes: ['hike']
+		});
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.find((r) => r.companionId === dogId)?.subtypes).toEqual(['hike']);
+		expect(rows.find((r) => r.companionId === catId)?.subtypes).toBeNull();
+	});
+
+	it('checks authorization before the subtype rule', async () => {
+		const res = await logDailyEvent(
+			{ id: 'de-sp-nobody', role: 'caretaker' },
+			[catId],
+			{ type: 'walk', notes: null, durationMinutes: null, loggedAt: new Date(), subtypes: ['x'] },
+			{ rejectUnusableSubtypes: true }
+		);
+		expect(res.ok).toBe(false);
+		expect((res as { code: string }).code).not.toBe('invalidSubtype');
+	});
+
+	it('accepts litter for a cat with litter subtypes', async () => {
+		const res = await logDailyEvent(admin, [catId], {
+			type: 'litter',
+			notes: null,
+			durationMinutes: 5,
+			loggedAt: new Date(),
+			subtypes: ['scoop']
+		});
+		expect(res.ok).toBe(true);
+		const row = await db.query.dailyEvents.findFirst({
+			where: eq(schema.dailyEvents.id, (res as { ids: string[] }).ids[0])
+		});
+		expect(row?.subtypes).toEqual(['scoop']);
+		expect(row?.durationMinutes).toBeNull(); // litter has no duration
+	});
+});
+
+describe('checkSpeciesAndNarrow', () => {
+	const dogId = 'de-csan-dog';
+	const catId = 'de-csan-cat';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: dogId, name: 'Rex3', species: 'dog' },
+			{ id: catId, name: 'Tom', species: 'cat' }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	it('rejects a type one of the ids cannot have', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'bathroom', null);
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+	});
+
+	it('narrows subtypes per id for a mixed walk (cat only allows leash)', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['hike', 'leash']);
+		expect(res.ok).toBe(true);
+		if (!res.ok) return;
+		expect(res.subtypesById.get(dogId)).toEqual(['leash', 'hike']);
+		expect(res.subtypesById.get(catId)).toEqual(['leash']);
+	});
+
+	it('rejectUnusableSubtypes: a subtype no id can take is invalidSubtype', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['pee'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res).toEqual({ ok: false, code: 'invalidSubtype' });
+	});
+
+	it('rejectUnusableSubtypes: one usable target keeps the subtype valid', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['hike'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res.ok).toBe(true);
+	});
+
+	it('rejectUnusableSubtypes: the species rule wins over the subtype check', async () => {
+		const res = await checkSpeciesAndNarrow([catId], 'bathroom', ['pee'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
 	});
 });

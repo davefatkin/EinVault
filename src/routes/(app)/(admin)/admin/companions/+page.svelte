@@ -10,6 +10,7 @@
 	import { PawPrint, RotateCcw, Pencil } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { SPECIES_ICON, toSpecies } from '$lib/species';
 
 	const locale = getLocale();
 
@@ -75,7 +76,9 @@
 						<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 							<span class="font-medium text-foreground">{companion.name}</span>
 							{#if companion.breed}
-								<Badge variant="secondary">{companion.breed}</Badge>
+								<Badge variant="secondary"
+									>{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}</Badge
+								>
 							{/if}
 							{#if age}
 								<span class="text-xs text-muted-foreground">{age}</span>
@@ -115,7 +118,9 @@
 							<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 								<span class="font-medium text-foreground">{companion.name}</span>
 								{#if companion.breed}
-									<Badge variant="secondary">{companion.breed}</Badge>
+									<Badge variant="secondary"
+										>{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}</Badge
+									>
 								{/if}
 								<Badge variant="outline">
 									{t(locale, 'page.settings.archivedOn')}

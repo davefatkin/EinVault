@@ -3,7 +3,9 @@ import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { parseSex, parseWeightUnit } from '$lib/server/validation';
+import { parseSex } from '$lib/server/validation';
+import { parseCompanionSpeciesAndUnit } from '$lib/server/companion-form';
+import { toSpecies } from '$lib/species';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -32,14 +34,21 @@ export const actions: Actions = {
 
 		if (!name) return fail(400, { error: t(locals.locale, 'error.nameRequired') });
 
+		const parsed = parseCompanionSpeciesAndUnit(data, {
+			species: toSpecies(companion.species),
+			weightUnit: companion.weightUnit
+		});
+		if (!parsed.ok) return fail(400, { error: t(locals.locale, 'error.speciesRequired') });
+
 		await db
 			.update(schema.companions)
 			.set({
 				name,
+				species: parsed.species,
 				breed: String(data.get('breed') ?? '').trim() || null,
 				sex: parseSex(String(data.get('sex') ?? '')),
 				dob: String(data.get('dob') ?? '') || null,
-				weightUnit: parseWeightUnit(String(data.get('weightUnit') ?? '')),
+				weightUnit: parsed.weightUnit,
 				microchip: String(data.get('microchip') ?? '').trim() || null,
 				bio: String(data.get('bio') ?? '').trim() || null,
 				// Caretaker fields

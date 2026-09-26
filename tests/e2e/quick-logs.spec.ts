@@ -2,6 +2,7 @@ import { test, expect } from '../lib/fixtures';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
+const JULIA = 'seed-comp-julia';
 
 test.describe('custom quick logs', () => {
 	test('member creates, executes, reorders, disables, and shares a quick log', async ({
@@ -128,11 +129,18 @@ test.describe('custom quick logs', () => {
 		await asCaretaker.goto('/care/settings/quick-logs');
 		await asCaretaker.getByRole('button', { name: 'Add quick log' }).click();
 
-		// Companion picker only offers the assigned companion (Ein), not Edward.
+		// Companion picker only offers the assigned companions (Ein, Julia), not Edward.
 		await expect(asCaretaker.locator(`input[name="companionIds"][value="${EIN}"]`)).toHaveCount(1);
+		await expect(asCaretaker.locator(`input[name="companionIds"][value="${JULIA}"]`)).toHaveCount(
+			1
+		);
 		await expect(asCaretaker.locator(`input[name="companionIds"][value="${EDWARD}"]`)).toHaveCount(
 			0
 		);
+		// Target Ein only so the button logs in one click.
+		await asCaretaker
+			.locator(`input[name="companionIds"][value="${JULIA}"]`)
+			.click({ force: true });
 
 		await asCaretaker.locator('input[name="name"]').fill('Care walk');
 		await asCaretaker.locator('textarea[name="note"]').fill('around the park');
@@ -140,7 +148,7 @@ test.describe('custom quick logs', () => {
 		await expect(asCaretaker.getByText('Care walk')).toBeVisible();
 
 		// The button renders on the care page (seeded caretaker is on shift). With a
-		// single assigned companion it logs in one click — no target picker step.
+		// single target companion it logs in one click — no target picker step.
 		await asCaretaker.goto(`/care/${EIN}`);
 		await asCaretaker.getByRole('button', { name: /Care walk/ }).click();
 		await expect(asCaretaker.getByText(/Activity logged/)).toBeVisible();
@@ -148,5 +156,43 @@ test.describe('custom quick logs', () => {
 
 		// Today's activity refreshes in place (no reload).
 		await expect(asCaretaker.getByText('around the park').first()).toBeVisible();
+	});
+
+	test('manager offers household species types and hides companions that cannot take one', async ({
+		asMember
+	}) => {
+		await asMember.goto('/settings/quick-logs');
+		// A click that lands before hydration is dropped, so retry until the editor opens.
+		const nameInput = asMember.locator('input[name="name"]');
+		await expect(async () => {
+			if (!(await nameInput.isVisible()))
+				await asMember.getByRole('button', { name: 'Add quick log' }).click();
+			await expect(nameInput).toBeVisible({ timeout: 1_000 });
+		}).toPass();
+
+		// Household has dogs and a cat: the litter box is on offer.
+		await expect(asMember.locator('input[name="type"][value="litter"]')).toHaveCount(1);
+
+		await nameInput.fill('e2e Potty break');
+		await asMember.locator('input[name="type"][value="bathroom"]').click({ force: true });
+		// A bathroom log can't target the cat.
+		await expect(asMember.locator(`input[name="companionIds"][value="${JULIA}"]`)).toHaveCount(0);
+		await expect(asMember.locator(`input[name="companionIds"][value="${EIN}"]`)).toHaveCount(1);
+		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(asMember.getByText('e2e Potty break')).toBeVisible();
+
+		await asMember.goto(`/${EIN}`);
+		await expect(asMember.getByRole('button', { name: /e2e Potty break/ })).toBeVisible();
+
+		await asMember.goto(`/${JULIA}`);
+		await expect(
+			asMember
+				.locator('section', { hasText: 'Quick log' })
+				.first()
+				.getByRole('link', {
+					name: /Litter box/
+				})
+		).toBeVisible();
+		await expect(asMember.getByRole('button', { name: /e2e Potty break/ })).toHaveCount(0);
 	});
 });

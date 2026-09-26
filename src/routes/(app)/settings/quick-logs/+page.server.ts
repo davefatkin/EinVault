@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
 import { and, eq, ne } from 'drizzle-orm';
 import { listQuickLogs } from '$lib/server/quick-logs';
+import { toSpecies } from '$lib/species';
 
 export { quickLogActions as actions } from '$lib/server/quick-log-actions';
 
@@ -14,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		db.query.companions.findMany({
 			where: eq(schema.companions.isActive, true),
 			orderBy: (c, { asc }) => [asc(c.name)],
-			columns: { id: true, name: true }
+			columns: { id: true, name: true, species: true }
 		}),
 		db.query.users.findMany({
 			where: and(eq(schema.users.isActive, true), ne(schema.users.id, locals.user.id)),
@@ -23,5 +24,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 	]);
 
-	return { quickLogs, quickLogCompanions: companions, shareableUsers };
+	return {
+		quickLogs,
+		quickLogCompanions: companions.map((c) => ({ ...c, species: toSpecies(c.species) })),
+		shareableUsers
+	};
 };

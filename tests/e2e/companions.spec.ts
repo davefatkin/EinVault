@@ -106,4 +106,32 @@ test.describe('companion crud', () => {
 				.first()
 		).toBeVisible();
 	});
+
+	test('species picker sets defaults and a cat shows the cat icon', async ({ asAdmin }) => {
+		await asAdmin.goto('/companions/new');
+
+		// Other: the breed field becomes "Type" and weight defaults to grams.
+		// Retry the pick: a click before hydration doesn't reach the bound state.
+		await expect(async () => {
+			await asAdmin.getByRole('radio', { name: 'Other', exact: true }).check({ force: true });
+			await expect(asAdmin.locator('#weightUnit')).toHaveValue('g', { timeout: 1_000 });
+		}).toPass();
+		await expect(asAdmin.getByLabel('Type', { exact: true })).toBeVisible();
+
+		// Cat: back to pounds, cat breed placeholder.
+		await asAdmin.getByRole('radio', { name: 'Cat', exact: true }).check({ force: true });
+		await expect(asAdmin.locator('#weightUnit')).toHaveValue('lbs');
+		await expect(asAdmin.getByLabel('Breed', { exact: true })).toHaveAttribute(
+			'placeholder',
+			'Maine Coon'
+		);
+
+		await asAdmin.locator('#name').fill('e2e-comp-cat');
+		await asAdmin.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(asAdmin).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+
+		await expect(asAdmin.locator('h1').filter({ hasText: 'e2e-comp-cat' })).toBeVisible();
+		// Hero subtitle leads with the species icon.
+		await expect(asAdmin.locator('p', { hasText: '🐈' }).first()).toBeVisible();
+	});
 });

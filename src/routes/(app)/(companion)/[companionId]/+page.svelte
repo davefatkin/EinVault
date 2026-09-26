@@ -30,7 +30,8 @@
 		activityDisplayIcon,
 		activityDisplayLabel,
 		healthTypeLabel,
-		reminderTypeLabel
+		reminderTypeLabel,
+		speciesLabels
 	} from '$lib/i18n/labels';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
@@ -44,6 +45,8 @@
 	import { careStatus } from '$lib/careStatus';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
+	import { convertWeight } from '$lib/weightChart';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -72,10 +75,12 @@
 
 	let today = localDateISO();
 
-	// Quick log shortcuts, the same trio the caretaker view offers.
-	const quickLogTypes = activityTypeOptions(locale).filter((o) =>
-		['walk', 'meal', 'bathroom'].includes(o.value)
+	// Quick log shortcuts: the species trio, same as the caretaker view offers.
+	let species = $derived(toSpecies(companion.species));
+	let quickLogTypes = $derived(
+		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
+	let labels = $derived(speciesLabels(locale, species));
 
 	// Care status derived from outstanding reminders
 	let status = $derived(
@@ -86,6 +91,15 @@
 
 	// Quick stats derived from loaded data
 	let latestWeight = $derived(recentWeights.length > 0 ? recentWeights[0] : null);
+	// Latest weight converted to the companion's display unit, so it matches
+	// the unit shown by the sparkline and the health page's chart.
+	let latestWeightDisplay = $derived(
+		latestWeight
+			? Math.round(
+					convertWeight(latestWeight.weight, latestWeight.unit, companion.weightUnit) * 10
+				) / 10
+			: null
+	);
 	// "Next Vet" surfaces the soonest vet or vaccination reminder only, not just
 	// the next reminder of any type (medication, grooming, etc.).
 	let nextReminder = $derived(
@@ -93,10 +107,14 @@
 	);
 	let activityCount = $derived(recentDaily.length);
 
-	// Weight sparkline points — map weight+recordedAt to {date, kg}
-	// We show in whatever unit is stored; the sparkline uses raw numeric values
+	// Sparkline plots every entry in the companion's display unit so mixed-unit
+	// history does not jump. (The field is named `kg` by WeightSparkline; it
+	// carries whatever unit the companion displays in.)
 	let sparklinePoints = $derived(
-		[...recentWeights].reverse().map((w) => ({ date: w.recordedAt, kg: w.weight }))
+		[...recentWeights].reverse().map((w) => ({
+			date: w.recordedAt,
+			kg: convertWeight(w.weight, w.unit, companion.weightUnit)
+		}))
 	);
 
 	// Merged activity timeline: recentDaily + recentHealth, newest first, capped at 8
@@ -291,6 +309,7 @@
 			journalHref={companion.isActive !== false
 				? `/${companion.id}/journal/${eventDate(selected.item.loggedAt)}`
 				: null}
+			{species}
 		/>
 	{:else}
 		<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
@@ -546,9 +565,10 @@
 						{/if}
 					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
-						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
-							companion.dob
-						)}{companion.sex ? ` · ${companion.sex}` : ''}
+						{labels.icon}
+						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
+							? ` · ${companion.sex}`
+							: ''}
 					</p>
 					<div class="mt-2">
 						{#if status === 'up-to-date'}
@@ -586,8 +606,8 @@
 							class="flex items-end gap-3 text-left rounded-md px-1 py-0.5 -mx-1 hover:bg-accent transition-colors"
 						>
 							<span class="text-base font-bold text-foreground"
-								>{latestWeight.weight}
-								<span class="text-xs font-normal text-muted-foreground">{latestWeight.unit}</span
+								>{latestWeightDisplay}
+								<span class="text-xs font-normal text-muted-foreground">{companion.weightUnit}</span
 								></span
 							>
 							{#if sparklinePoints.length >= 2}
@@ -761,6 +781,7 @@
 					companions={data.companions ?? []}
 					primaryCompanionId={companion.id}
 					{form}
+					{species}
 				/>
 			</div>
 			<div class="flex gap-2">
@@ -823,7 +844,7 @@
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-gold/15 flex items-center justify-center text-base"
 									>
-										{activityDisplayIcon(event.type, event.subtypes)}
+										{activityDisplayIcon(event.type, event.subtypes, species)}
 									</span>
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">

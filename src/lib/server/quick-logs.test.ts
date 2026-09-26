@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import {
 	createQuickLog,
@@ -281,5 +281,143 @@ describe('quick logs', () => {
 		});
 		const list = await listQuickLogs(OWNER.id);
 		expect(list.find((q) => q.id === id)?.subtypes).toBeNull();
+	});
+});
+
+describe('quick logs and species', () => {
+	const user = OWNER;
+	const dogId = 'ql-c1';
+	const catId = 'ql-cat';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({
+			id: catId,
+			name: 'Whiskers',
+			species: 'cat'
+		} as typeof schema.companions.$inferInsert);
+	});
+
+	// Saving drops disallowed targets, so a stale assignment (the companion's
+	// species changed after setup) is written directly.
+	async function assignStale(quickLogId: string, companionId: string) {
+		await db.insert(schema.quickLogCompanions).values({ quickLogId, companionId });
+	}
+
+	it('create and update drop targets whose species cannot have the type', async () => {
+		const input = {
+			name: 'Potty save',
+			type: 'bathroom' as const,
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, catId]
+		};
+		const id = await createQuickLog(user, input);
+		const assignedIds = async () =>
+			(await listQuickLogs(user.id)).find((q) => q.id === id)!.companions.map((c) => c.companionId);
+		expect(await assignedIds()).toEqual([dogId]);
+
+		await updateQuickLog(user, id, { ...input, type: 'litter' });
+		expect(await assignedIds()).toEqual([catId]);
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('executeQuickLog skips a cat for a bathroom quick log', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId]
+		});
+		await assignStale(id, catId);
+		const res = await executeQuickLog({ user, quickLogId: id, companionIds: [dogId, catId] });
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.map((r) => r.companionId)).toEqual([dogId]);
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('executeQuickLog returns typeNotAllowedForSpecies when every target is disallowed', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty cat',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: []
+		});
+		await assignStale(id, catId);
+		const res = await executeQuickLog({ user, quickLogId: id });
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('executeQuickLog falls back to allowed targets when the remembered one changed species', async () => {
+		const pupId = 'ql-pup';
+		await db.insert(schema.companions).values({
+			id: pupId,
+			name: 'Pup',
+			species: 'dog'
+		} as typeof schema.companions.$inferInsert);
+		const id = await createQuickLog(user, {
+			name: 'Potty remembered',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, pupId]
+		});
+		const r1 = await executeQuickLog({
+			user,
+			quickLogId: id,
+			companionIds: [pupId],
+			rememberSelection: true
+		});
+		expect(r1.ok).toBe(true);
+
+		// The remembered companion is now a cat: the prefill path uses the dog.
+		await db
+			.update(schema.companions)
+			.set({ species: 'cat' })
+			.where(eq(schema.companions.id, pupId));
+		const res = await executeQuickLog({ user, quickLogId: id });
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.map((r) => r.companionId)).toEqual([dogId]);
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('listQuickLogButtons filters targets and hides buttons by species', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty both',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId]
+		});
+		await assignStale(id, catId);
+		const all = await listQuickLogButtons(user);
+		const b = all.find((x) => x.id === id)!;
+		expect(b.companionIds).toEqual([dogId]);
+		expect(b.prefillCompanionIds).not.toContain(catId);
+
+		const onCat = await listQuickLogButtons(user, catId);
+		expect(onCat.find((x) => x.id === id)).toBeUndefined();
+		const onDog = await listQuickLogButtons(user, dogId);
+		expect(onDog.find((x) => x.id === id)).toBeDefined();
+
+		await deleteQuickLog(user.id, id);
 	});
 });

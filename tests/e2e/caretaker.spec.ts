@@ -2,6 +2,7 @@ import { test, expect } from '../lib/fixtures';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
+const JULIA = 'seed-comp-julia';
 
 /**
  * POST a care-page form action and force SvelteKit's JSON action response
@@ -128,9 +129,11 @@ test.describe('caretaker', () => {
 	test('member sees caretaker journal entry', async ({ asCaretaker, asMember }) => {
 		const today = todayUTC();
 
-		// Caretaker opens their care journal for Ein.
+		// Caretaker opens their care journal for Julia. Not Ein: other specs sharing
+		// this worker's DB (the API journal upsert) write Ein's entry for today as
+		// the member, which would make Jet the author and hide "edited by Jet".
 		// The care journal page is at /care/{companionId}/journal and works on today's date.
-		await asCaretaker.goto(`/care/${EIN}/journal`);
+		await asCaretaker.goto(`/care/${JULIA}/journal`);
 
 		// The journal textarea has name="body"; the MarkdownTextarea renders a <textarea>
 		const bodyField = asCaretaker.locator('textarea[name="body"]');
@@ -142,7 +145,7 @@ test.describe('caretaker', () => {
 		// Member views the journal entry for the same companion + date via the app route.
 		// The app [date] journal page renders the body in a raw <textarea> (no name attr)
 		// in write mode. Locate by placeholder substring.
-		await asMember.goto(`/${EIN}/journal/${today}`);
+		await asMember.goto(`/${JULIA}/journal/${today}`);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e-caretaker-journal', {
 			timeout: 10_000
 		});
@@ -153,7 +156,7 @@ test.describe('caretaker', () => {
 		await asMember.locator('h1').first().click();
 		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 10_000 });
 
-		await asCaretaker.goto(`/care/${EIN}/journal`);
+		await asCaretaker.goto(`/care/${JULIA}/journal`);
 		await expect(asCaretaker.getByText(/edited by Jet/)).toBeVisible({
 			timeout: 10_000
 		});
@@ -194,5 +197,36 @@ test.describe('caretaker', () => {
 			schedules.getByText('Two short walks, after breakfast and before dark.')
 		).toBeVisible();
 		await expect(schedules.getByText('Heartworm chew on the first of the month.')).toBeVisible();
+	});
+
+	test('schedule card and activity icons follow the species', async ({ asCaretaker }) => {
+		// Dog keeps the walk schedule card.
+		await asCaretaker.goto(`/care/${EIN}`);
+		const einSchedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
+		await expect(einSchedules.locator('p', { hasText: 'Walk Schedule' })).toContainText('🦮');
+
+		// Cat gets the routine card instead.
+		await asCaretaker.goto(`/care/${JULIA}`);
+		const juliaSchedules = asCaretaker
+			.locator('section')
+			.filter({ hasText: 'Medication Schedule' });
+		await expect(juliaSchedules.locator('p', { hasText: 'Routine' })).toContainText('🐈');
+		await expect(juliaSchedules.getByText('Walk Schedule')).toHaveCount(0);
+		await expect(
+			juliaSchedules.getByText(
+				'Wand-toy session every evening. Scoop the litter morning and night.'
+			)
+		).toBeVisible();
+
+		// A cat walk renders with the cat icon in today's activity.
+		await asCaretaker.goto(`/care/${JULIA}/log?type=walk`);
+		await asCaretaker.locator('textarea[name="notes"]').fill('e2e cat harness walk');
+		await asCaretaker.getByRole('button', { name: /^Log / }).click();
+		await expect(asCaretaker.getByText(/Activity logged/)).toBeVisible();
+
+		await asCaretaker.goto(`/care/${JULIA}`);
+		const row = asCaretaker.getByRole('button', { name: /e2e cat harness walk/ });
+		await expect(row).toBeVisible();
+		await expect(row.locator('span').first()).toHaveText('🐈');
 	});
 });

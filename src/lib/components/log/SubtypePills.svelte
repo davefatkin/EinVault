@@ -2,19 +2,26 @@
 	import { Check } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { activitySubtypeOptions } from '$lib/i18n/labels';
+	import type { Species } from '$lib/activityTypes';
 
 	let {
 		type,
 		selected = $bindable([]),
-		name = 'subtypes'
+		name = 'subtypes',
+		species,
+		values
 	}: {
 		type: string;
 		selected?: string[];
 		name?: string;
+		// Omitted → the global subtype list (multi-species pickers).
+		species?: Species;
+		// Explicit list to offer, overriding the species/global list.
+		values?: readonly string[];
 	} = $props();
 
 	const locale = getLocale();
-	let options = $derived(activitySubtypeOptions(locale, type));
+	let options = $derived(activitySubtypeOptions(locale, type, species, values));
 
 	// Switching to a type prunes any now-invalid selections. Guard the assignment
 	// so it only runs when something actually changed (avoids effect loops).

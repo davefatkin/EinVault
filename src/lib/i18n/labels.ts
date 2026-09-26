@@ -1,6 +1,8 @@
 import { t } from './index';
 import type { Locale, MessageKey } from './index';
 import { activitySubtypesFor } from '$lib/activitySubtypes';
+import { DAILY_EVENT_TYPES, SPECIES, type DailyEventType, type Species } from '$lib/activityTypes';
+import { SPECIES_ICON, speciesIcon, subtypesFor } from '$lib/species';
 
 // Icons are not translatable — they stay constant across locales.
 
@@ -16,6 +18,7 @@ export const ACTIVITY_ICONS: Record<string, string> = {
 	walk: '🦮',
 	meal: '🍖',
 	bathroom: '💩',
+	litter: '🪣',
 	treat: '🦴',
 	play: '🎾',
 	grooming: '🛁',
@@ -52,13 +55,17 @@ export const ACTIVITY_SUBTYPE_ICONS: Record<string, string> = {
 	ears: '👂',
 	chew: '🦴',
 	dental: '🪥',
-	training: '🎓'
+	training: '🎓',
+	scoop: '🧹',
+	change: '🔄',
+	chase: '🪶'
 };
 
-export const ACTIVITY_HAS_DURATION: Record<string, boolean> = {
+export const ACTIVITY_HAS_DURATION: Record<DailyEventType, boolean> = {
 	walk: true,
 	meal: false,
 	bathroom: false,
+	litter: false,
 	treat: false,
 	play: true,
 	grooming: true,
@@ -83,12 +90,28 @@ export function activitySubtypeLabel(locale: Locale, subtype: string): string {
 	return t(locale, `enum.activitySubtype.${subtype}` as MessageKey);
 }
 
+// Species icon overrides apply first; dog (and a missing species) render the
+// base maps unchanged. Stored subtypes are matched against the GLOBAL list so
+// events kept from before a species change still show their icon.
+export function activityTypeIcon(type: string, species: Species = 'dog'): string {
+	return speciesIcon(species, type) ?? ACTIVITY_ICONS[type] ?? '📝';
+}
+
 // Display helpers: the subtype's emoji shows only when exactly one valid
 // subtype is set; with zero or multiple subtypes, fall back to the type icon.
-export function activityDisplayIcon(type: string, subtypes?: string[] | null): string {
+export function activityDisplayIcon(
+	type: string,
+	subtypes?: string[] | null,
+	species: Species = 'dog'
+): string {
 	const valid = subtypes?.filter((s) => activitySubtypesFor(type).includes(s)) ?? [];
-	if (valid.length === 1) return ACTIVITY_SUBTYPE_ICONS[valid[0]] ?? ACTIVITY_ICONS[type] ?? '📝';
-	return ACTIVITY_ICONS[type] ?? '📝';
+	if (valid.length === 1)
+		return (
+			speciesIcon(species, valid[0]) ??
+			ACTIVITY_SUBTYPE_ICONS[valid[0]] ??
+			activityTypeIcon(type, species)
+		);
+	return activityTypeIcon(type, species);
 }
 
 export function activityDisplayLabel(
@@ -131,19 +154,31 @@ export function healthTypeOptions(locale: Locale) {
 	}));
 }
 
-export function activityTypeOptions(locale: Locale) {
-	return (['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other'] as const).map((v) => ({
+export function activityTypeOptions(
+	locale: Locale,
+	types: readonly DailyEventType[] = DAILY_EVENT_TYPES,
+	species: Species = 'dog'
+) {
+	return types.map((v) => ({
 		value: v,
-		icon: ACTIVITY_ICONS[v],
+		icon: activityTypeIcon(v, species),
 		label: activityLabel(locale, v),
 		hasDuration: ACTIVITY_HAS_DURATION[v]
 	}));
 }
 
-export function activitySubtypeOptions(locale: Locale, type: string) {
-	return activitySubtypesFor(type).map((v) => ({
+// species omitted → the global subtype list (multi-species pickers). `values`
+// gives an explicit list instead; species then only picks the icons.
+export function activitySubtypeOptions(
+	locale: Locale,
+	type: string,
+	species?: Species,
+	values?: readonly string[]
+) {
+	const list = values ?? (species ? subtypesFor(species, type) : activitySubtypesFor(type));
+	return list.map((v) => ({
 		value: v,
-		icon: ACTIVITY_SUBTYPE_ICONS[v],
+		icon: (species && speciesIcon(species, v)) ?? ACTIVITY_SUBTYPE_ICONS[v],
 		label: activitySubtypeLabel(locale, v)
 	}));
 }
@@ -168,4 +203,61 @@ export function roleOptions(locale: Locale) {
 		value: v,
 		label: roleLabel(locale, v)
 	}));
+}
+
+export function speciesLabel(locale: Locale, species: string): string {
+	return t(locale, `enum.species.${species}` as MessageKey);
+}
+
+export function speciesOptions(locale: Locale) {
+	return SPECIES.map((v) => ({ value: v, icon: SPECIES_ICON[v], label: speciesLabel(locale, v) }));
+}
+
+export interface SpeciesLabels {
+	icon: string;
+	breedLabel: string;
+	breedPlaceholder: string;
+	breedFallback: string;
+	scheduleLabel: string;
+	schedulePlaceholder: string;
+	scheduleCardTitle: string;
+	scheduleIcon: string;
+}
+
+// Species-dependent copy for companion forms and cards. Pure (locale passed in),
+// so callers use it inside $derived without touching Svelte context.
+export function speciesLabels(locale: Locale, species: Species): SpeciesLabels {
+	const icon = SPECIES_ICON[species];
+	if (species === 'dog')
+		return {
+			icon,
+			breedLabel: t(locale, 'page.companion.labelBreed'),
+			breedPlaceholder: t(locale, 'page.companion.placeholderBreed'),
+			breedFallback: t(locale, 'page.dashboard.mixedBreed'),
+			scheduleLabel: t(locale, 'page.companion.edit.labelWalkSchedule'),
+			schedulePlaceholder: t(locale, 'page.companion.edit.placeholderWalkSchedule'),
+			scheduleCardTitle: t(locale, 'page.dashboard.caretaker.cardWalk'),
+			scheduleIcon: '🦮'
+		};
+	if (species === 'cat')
+		return {
+			icon,
+			breedLabel: t(locale, 'page.companion.labelBreed'),
+			breedPlaceholder: t(locale, 'page.companion.placeholderBreedCat'),
+			breedFallback: t(locale, 'page.dashboard.mixedBreed'),
+			scheduleLabel: t(locale, 'page.companion.edit.labelRoutine'),
+			schedulePlaceholder: t(locale, 'page.companion.edit.placeholderRoutine'),
+			scheduleCardTitle: t(locale, 'page.dashboard.caretaker.cardRoutine'),
+			scheduleIcon: icon
+		};
+	return {
+		icon,
+		breedLabel: t(locale, 'page.companion.labelType'),
+		breedPlaceholder: t(locale, 'page.companion.placeholderBreedOther'),
+		breedFallback: t(locale, 'enum.species.other'),
+		scheduleLabel: t(locale, 'page.companion.edit.labelCareRoutine'),
+		schedulePlaceholder: t(locale, 'page.companion.edit.placeholderCareRoutine'),
+		scheduleCardTitle: t(locale, 'page.dashboard.caretaker.cardCareRoutine'),
+		scheduleIcon: icon
+	};
 }

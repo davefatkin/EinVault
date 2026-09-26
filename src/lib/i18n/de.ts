@@ -50,6 +50,7 @@ const messages: Record<keyof Messages, string> = {
 	'enum.activityType.play': 'Spielen',
 	'enum.activityType.grooming': 'Pflege',
 	'enum.activityType.other': 'Sonstiges',
+	'enum.activityType.litter': 'Katzenklo',
 
 	// Enum: Activity subtypes
 	'enum.activitySubtype.pee': 'Pipi',
@@ -74,6 +75,9 @@ const messages: Record<keyof Messages, string> = {
 	'enum.activitySubtype.chew': 'Kauartikel',
 	'enum.activitySubtype.dental': 'Zahnpflege',
 	'enum.activitySubtype.training': 'Training',
+	'enum.activitySubtype.scoop': 'Gereinigt',
+	'enum.activitySubtype.change': 'Streu gewechselt',
+	'enum.activitySubtype.chase': 'Jagen',
 
 	// Enum: Reminder types
 	'enum.reminderType.vet': 'Tierarzt',
@@ -86,6 +90,11 @@ const messages: Record<keyof Messages, string> = {
 	'enum.role.admin': 'Administrator',
 	'enum.role.member': 'Mitglied',
 	'enum.role.caretaker': 'Betreuer',
+
+	// Enum: Species
+	'enum.species.dog': 'Hund',
+	'enum.species.cat': 'Katze',
+	'enum.species.other': 'Andere',
 
 	// Enum: Sex
 	'enum.sex.male': 'Männlich',
@@ -113,6 +122,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.titleAndTypeRequired': 'Titel und ein gültiger Typ sind erforderlich.',
 	'error.typeRequired': 'Typ ist erforderlich.',
 	'error.invalidSubtype': 'Ungültiger Untertyp für diese Aktivität',
+	'error.typeNotAllowedForSpecies': 'Diese Aktivität ist für dieses Tier nicht verfügbar.',
+	'error.speciesRequired': 'Bitte eine Tierart auswählen.',
 	'error.displayNameRequired': 'Anzeigename ist erforderlich.',
 	'error.usernameRequired': 'Benutzername ist erforderlich.',
 	'error.invalidUsernameFormat':
@@ -468,7 +479,9 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion (shared form labels / placeholders)
 	'page.companion.labelName': 'Name',
+	'page.companion.labelSpecies': 'Tierart',
 	'page.companion.labelBreed': 'Rasse',
+	'page.companion.labelType': 'Art',
 	'page.companion.labelSex': 'Geschlecht',
 	'page.companion.labelDob': 'Geburtsdatum',
 	'page.companion.labelWeightUnit': 'Gewichtseinheit',
@@ -476,8 +489,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelBio': 'Bio / Notizen',
 	'page.companion.placeholderName': 'Ein',
 	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderBreedCat': 'Maine Coon',
+	'page.companion.placeholderBreedOther': 'Kaninchen, Goldfisch, Gecko…',
 	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
-	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
+	'page.companion.placeholderBio': 'Neugierig, verschmust und ein bisschen dramatisch.',
 	'page.companion.sexUnknown': 'Unbekannt',
 
 	// Page: companion new
@@ -495,6 +510,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.schedulesHint': 'Wird Betreuern auf ihrer Übersichtsseite angezeigt.',
 	'page.companion.edit.labelFeedingSchedule': 'Fütterungsplan',
 	'page.companion.edit.labelWalkSchedule': 'Spaziergangsplan',
+	'page.companion.edit.labelRoutine': 'Routine',
+	'page.companion.edit.labelCareRoutine': 'Pflegeroutine',
 	'page.companion.edit.labelMedicationSchedule': 'Medikamentenplan',
 	'page.companion.edit.cardContacts': 'Kontakte',
 	'page.companion.edit.labelVetName': 'Tierarztname',
@@ -505,9 +522,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.cardSitterNotes': 'Notizen für den Betreuer',
 	'page.companion.edit.labelNotesForSitter': 'Notizen für den Betreuer',
 	'page.companion.edit.placeholderFeedingSchedule':
-		'z.B. 7:00 Uhr: 1 Tasse Trockenfutter\n18:00 Uhr: 1 Tasse Trockenfutter\nLeckerlis nach Spaziergängen OK',
+		'z.B. 7:00 Uhr: Frühstück\n18:00 Uhr: Abendessen\nLeckerlis in Maßen OK',
 	'page.companion.edit.placeholderWalkSchedule':
 		'z.B. Morgens ~7 Uhr, 30 Min.\nAbends ~17:30 Uhr, 20–30 Min.\nHundepark unter der Woche meiden',
+	'page.companion.edit.placeholderRoutine':
+		'z.B. Spielrunde ~20 Uhr, 15 Min.\nStreu morgens und abends reinigen',
+	'page.companion.edit.placeholderCareRoutine':
+		'z.B. Gehege samstags reinigen\nAuslauf jeden Abend',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'z.B. Herzwurm-Tablette am 1. des Monats\nGelenkpräparat täglich zum Frühstück\nAugentropfen morgens und abends',
 	'page.companion.edit.placeholderSitterNotes':
@@ -607,6 +628,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.weightAsOf': 'Stand',
 	'page.dashboard.caretaker.cardFeeding': 'Fütterungsplan',
 	'page.dashboard.caretaker.cardWalk': 'Spaziergangsplan',
+	'page.dashboard.caretaker.cardRoutine': 'Routine',
+	'page.dashboard.caretaker.cardCareRoutine': 'Pflegeroutine',
 	'page.dashboard.caretaker.cardMedicationSchedule': 'Medikamentenplan',
 	'page.dashboard.caretaker.cardReminders': 'Anstehende Erinnerungen',
 	'page.dashboard.caretaker.remindersEmpty': 'Keine anstehenden Erinnerungen.',
@@ -996,7 +1019,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidOccurredAt':
 		'occurredAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',
 	'error.invalidWeight': 'Gewicht muss eine positive Zahl sein.',
-	'error.invalidUnit': 'Einheit muss kg oder lbs sein.',
+	'error.invalidUnit': 'Einheit muss kg, lbs, g oder oz sein.',
 	'error.invalidRecordedAt':
 		'recordedAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',
 	'error.invalidPagination':

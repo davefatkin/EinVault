@@ -6,6 +6,7 @@ import { listAllowedCompanions } from '$lib/server/companion-scope';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
 import { parseSubtypes } from '$lib/activitySubtypes';
+import { isActivityAllowed, toSpecies } from '$lib/species';
 
 export interface QuickLogInput {
 	name: string;
@@ -34,6 +35,21 @@ function parseLastCompanionIds(raw: string | null): string[] {
 	} catch {
 		return [];
 	}
+}
+
+// Ids from `ids` whose species allows `type`. One query for the whole set.
+// Applied at save (so assignments stay clean) and again at run time (a
+// companion's species can change after the quick log was set up).
+async function filterBySpecies(ids: string[], type: DailyEventType): Promise<string[]> {
+	if (ids.length === 0) return [];
+	const rows = await db.query.companions.findMany({
+		where: inArray(schema.companions.id, ids),
+		columns: { id: true, species: true }
+	});
+	const ok = new Set(
+		rows.filter((r) => isActivityAllowed(toSpecies(r.species), type)).map((r) => r.id)
+	);
+	return ids.filter((id) => ok.has(id));
 }
 
 // Full list for the management page, assignments included.
@@ -71,11 +87,23 @@ export async function listQuickLogButtons(
 		with: { companions: { columns: { companionId: true } } },
 		orderBy: (q, { asc }) => [asc(q.sortOrder), asc(q.createdAt)]
 	});
-	const allowed = new Set(await listAllowedCompanions(user));
+	const allowedIds = await listAllowedCompanions(user);
+	const allowed = new Set(allowedIds);
+	const speciesRows = allowedIds.length
+		? await db.query.companions.findMany({
+				where: inArray(schema.companions.id, allowedIds),
+				columns: { id: true, species: true }
+			})
+		: [];
+	const speciesById = new Map(speciesRows.map((r) => [r.id, toSpecies(r.species)]));
 
 	return rows
 		.map((row) => {
-			const assigned = row.companions.map((c) => c.companionId).filter((id) => allowed.has(id));
+			const assigned = row.companions
+				.map((c) => c.companionId)
+				.filter(
+					(id) => allowed.has(id) && isActivityAllowed(speciesById.get(id) ?? 'dog', row.type)
+				);
 			const remembered = parseLastCompanionIds(row.lastCompanionIds).filter((id) =>
 				assigned.includes(id)
 			);
@@ -105,7 +133,10 @@ export async function createQuickLog(
 	input: QuickLogInput
 ): Promise<string> {
 	const allowed = new Set(await listAllowedCompanions(user));
-	const companionIds = input.companionIds.filter((id) => allowed.has(id));
+	const companionIds = await filterBySpecies(
+		input.companionIds.filter((id) => allowed.has(id)),
+		input.type
+	);
 	const existing = await listQuickLogs(user.id);
 	const sortOrder = existing.length > 0 ? Math.max(...existing.map((q) => q.sortOrder)) + 1 : 0;
 	const id = generateId(15);
@@ -144,7 +175,10 @@ export async function updateQuickLog(
 	if (!existing) return false;
 
 	const allowed = new Set(await listAllowedCompanions(user));
-	const companionIds = input.companionIds.filter((idc) => allowed.has(idc));
+	const companionIds = await filterBySpecies(
+		input.companionIds.filter((idc) => allowed.has(idc)),
+		input.type
+	);
 
 	db.transaction((tx) => {
 		tx.update(schema.quickLogs)
@@ -276,7 +310,13 @@ export async function shareQuickLog(
 }
 
 export type ExecuteQuickLogError =
-	'notFound' | 'disabled' | 'noTargets' | 'noActiveShift' | 'notAssigned';
+	| 'notFound'
+	| 'disabled'
+	| 'noTargets'
+	| 'noActiveShift'
+	| 'notAssigned'
+	| 'typeNotAllowedForSpecies'
+	| 'invalidSubtype';
 
 // Run a quick log: resolve targets, delegate to logDailyEvent, then apply the
 // remember rule. companionIds omitted (API path) → the resolved prefill set.
@@ -295,19 +335,27 @@ export async function executeQuickLog(opts: {
 	if (!quickLog) return { ok: false, code: 'notFound' };
 	if (!quickLog.isEnabled) return { ok: false, code: 'disabled' };
 
+	// Stored or submitted targets that can't have this activity (a companion's
+	// species changed after the quick log was set up) are skipped, like archived ones.
 	const assigned = new Set(quickLog.companions.map((c) => c.companionId));
 	let targets: string[];
 	if (opts.companionIds && opts.companionIds.length > 0) {
 		targets = opts.companionIds.filter((id) => assigned.has(id));
+		if (targets.length === 0) return { ok: false, code: 'noTargets' };
+		targets = await filterBySpecies(targets, quickLog.type);
 	} else {
 		const allowed = new Set(await listAllowedCompanions(opts.user));
 		const assignedAllowed = [...assigned].filter((id) => allowed.has(id));
+		if (assignedAllowed.length === 0) return { ok: false, code: 'noTargets' };
+		// Species first, so a remembered target that changed species falls back
+		// to the assigned set the same way listQuickLogButtons' prefill does.
+		const eligible = await filterBySpecies(assignedAllowed, quickLog.type);
 		const remembered = parseLastCompanionIds(quickLog.lastCompanionIds).filter((id) =>
-			assignedAllowed.includes(id)
+			eligible.includes(id)
 		);
-		targets = remembered.length > 0 ? remembered : assignedAllowed;
+		targets = remembered.length > 0 ? remembered : eligible;
 	}
-	if (targets.length === 0) return { ok: false, code: 'noTargets' };
+	if (targets.length === 0) return { ok: false, code: 'typeNotAllowedForSpecies' };
 
 	const result = await logDailyEvent(opts.user, targets, {
 		type: quickLog.type,

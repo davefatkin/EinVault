@@ -10,7 +10,13 @@
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { activityTypeOptions, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
+	import {
+		activityTypeOptions,
+		activityDisplayIcon,
+		activityDisplayLabel,
+		speciesLabels
+	} from '$lib/i18n/labels';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -24,9 +30,11 @@
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
-	const quickLogTypes = activityTypeOptions(locale).filter((opt) =>
-		['walk', 'meal', 'bathroom'].includes(opt.value)
+	let species = $derived(toSpecies(companion.species));
+	let quickLogTypes = $derived(
+		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
+	let labels = $derived(speciesLabels(locale, species));
 
 	function age(dob: string | null): string {
 		if (!dob) return 'Unknown age';
@@ -174,7 +182,7 @@
 
 <!-- Activity detail modal (read-only, no journal link) -->
 {#if selected}
-	<ActivityDetailModal event={selected} onclose={closeDetail} />
+	<ActivityDetailModal event={selected} onclose={closeDetail} {species} />
 {/if}
 
 <!-- Reminder detail modal -->
@@ -295,9 +303,10 @@
 						{companion.name}
 					</h1>
 					<p class="text-sm text-muted-foreground mt-0.5">
-						{companion.breed ?? t(locale, 'page.dashboard.mixedBreed')} · {age(
-							companion.dob
-						)}{companion.sex ? ` · ${companion.sex}` : ''}
+						{labels.icon}
+						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
+							? ` · ${companion.sex}`
+							: ''}
 					</p>
 					{#if companion.microchip}
 						<p class="text-xs text-muted-foreground mt-1">
@@ -431,6 +440,7 @@
 					companions={data.companions ?? []}
 					primaryCompanionId={companion.id}
 					{form}
+					{species}
 				/>
 			</div>
 			<div class="flex gap-2">
@@ -475,8 +485,8 @@
 				{#if companion.walkSchedule}
 					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
 						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-							<span>🦮</span>
-							{t(locale, 'page.dashboard.caretaker.cardWalk')}
+							<span>{labels.scheduleIcon}</span>
+							{labels.scheduleCardTitle}
 						</p>
 						<div class="prose prose-sm dark:prose-invert max-w-none">
 							{@html renderMarkdown(companion.walkSchedule)}
@@ -609,7 +619,7 @@
 							<div class="flex items-center gap-3 text-sm">
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-base"
-									>{activityDisplayIcon(event.type, event.subtypes)}</span
+									>{activityDisplayIcon(event.type, event.subtypes, species)}</span
 								>
 								<Badge variant="gold" class="shrink-0"
 									>{activityDisplayLabel(locale, event.type, event.subtypes)}</Badge

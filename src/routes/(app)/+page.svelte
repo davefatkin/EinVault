@@ -31,6 +31,7 @@
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '$lib/reminderRecurrence';
+	import { SPECIES_ICON, toSpecies } from '$lib/species';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -69,6 +70,7 @@
 
 	// Per-companion maps for quick lookup
 	let companionsById = $derived(Object.fromEntries(data.companions.map((c) => [c.id, c])));
+	let speciesById = $derived(new Map(data.companions.map((c) => [c.id, toSpecies(c.species)])));
 
 	// Per-companion reminders for careStatus
 	let remindersByCompanion = $derived.by(() => {
@@ -560,7 +562,14 @@
 								<p class="font-semibold text-foreground truncate">{companion.name}</p>
 								{#if companion.breed || age}
 									<p class="text-xs text-muted-foreground truncate">
-										{[companion.breed, age].filter(Boolean).join(' · ')}
+										{[
+											companion.breed
+												? `${SPECIES_ICON[toSpecies(companion.species)]} ${companion.breed}`
+												: null,
+											age
+										]
+											.filter(Boolean)
+											.join(' · ')}
 									</p>
 								{/if}
 							</div>
@@ -663,7 +672,11 @@
 									aria-hidden="true"
 								>
 									{#if lastActivity.kind === 'daily'}
-										{activityDisplayIcon(lastActivity.item.type, lastActivity.item.subtypes)}
+										{activityDisplayIcon(
+											lastActivity.item.type,
+											lastActivity.item.subtypes,
+											speciesById.get(companion.id)
+										)}
 									{:else}
 										{HEALTH_ICONS[lastActivity.item.type] ?? '❤️'}
 									{/if}
@@ -756,7 +769,11 @@
 							aria-hidden="true"
 						>
 							{#if entry.kind === 'daily'}
-								{activityDisplayIcon(entry.item.type, entry.item.subtypes)}
+								{activityDisplayIcon(
+									entry.item.type,
+									entry.item.subtypes,
+									speciesById.get(entry.item.companionId)
+								)}
 							{:else}
 								{HEALTH_ICONS[entry.item.type] ?? '❤️'}
 							{/if}

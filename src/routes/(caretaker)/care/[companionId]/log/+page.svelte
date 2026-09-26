@@ -9,13 +9,17 @@
 	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
 	import TodayEventsList from '$lib/components/log/TodayEventsList.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { toSpecies } from '$lib/species';
 
 	// isOnShift and nextShift come from the caretaker layout data
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+	let species = $derived(toSpecies(data.companion.species));
 
-	const initialType = page.url.searchParams.get('type') ?? 'walk';
+	// DailyLogForm validates this against the species list and falls back to the
+	// species default.
+	let initialType = $derived(page.url.searchParams.get('type'));
 </script>
 
 <svelte:head>
@@ -56,12 +60,14 @@
 				<h2 class="font-semibold">{t(locale, 'page.log.quickLogTitle')}</h2>
 			</CardHeader>
 			<CardContent>
-				<DailyLogForm
-					companions={data.companions ?? []}
-					primaryCompanion={data.companion}
-					{initialType}
-					{form}
-				/>
+				{#key data.companion.id}
+					<DailyLogForm
+						companions={data.companions ?? []}
+						primaryCompanion={data.companion}
+						{initialType}
+						{form}
+					/>
+				{/key}
 			</CardContent>
 		</Card>
 
@@ -71,7 +77,7 @@
 				<h2 class="font-semibold">{t(locale, 'page.log.todaySoFar')}</h2>
 			</CardHeader>
 			<CardContent>
-				<TodayEventsList events={data.todayEvents} currentUserId={data.user?.id} />
+				<TodayEventsList events={data.todayEvents} currentUserId={data.user?.id} {species} />
 			</CardContent>
 		</Card>
 	{/if}

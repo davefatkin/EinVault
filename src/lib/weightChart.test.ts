@@ -7,8 +7,9 @@ import {
 	convertWeight,
 	type WeightPoint
 } from './weightChart';
+import type { WeightUnit } from '$lib/activityTypes';
 
-const P = (recordedAt: string, weight: number, unit: 'lbs' | 'kg' = 'lbs'): WeightPoint => ({
+const P = (recordedAt: string, weight: number, unit: WeightUnit = 'lbs'): WeightPoint => ({
 	recordedAt: new Date(recordedAt),
 	weight,
 	unit
@@ -88,5 +89,31 @@ describe('convertWeight', () => {
 	});
 	it('converts lbs to kg', () => {
 		expect(convertWeight(22.0462, 'lbs', 'kg')).toBeCloseTo(10, 3);
+	});
+});
+
+describe('convertWeight (four units)', () => {
+	const close = (a: number, b: number) => expect(a).toBeCloseTo(b, 4);
+	it('identity', () => {
+		for (const u of ['kg', 'lbs', 'g', 'oz'] as const) close(convertWeight(3, u, u), 3);
+	});
+	it('kg <-> g', () => {
+		close(convertWeight(1, 'kg', 'g'), 1000);
+		close(convertWeight(250, 'g', 'kg'), 0.25);
+	});
+	it('lbs <-> oz', () => {
+		close(convertWeight(1, 'lbs', 'oz'), 16);
+		close(convertWeight(8, 'oz', 'lbs'), 0.5);
+	});
+	it('g <-> oz', () => {
+		close(convertWeight(28.349523125, 'g', 'oz'), 1);
+	});
+	it('kg <-> lbs unchanged', () => {
+		close(convertWeight(1, 'kg', 'lbs'), 2.2046226218);
+	});
+	it('round-trips every pair', () => {
+		const units = ['kg', 'lbs', 'g', 'oz'] as const;
+		for (const a of units)
+			for (const b of units) close(convertWeight(convertWeight(7, a, b), b, a), 7);
 	});
 });

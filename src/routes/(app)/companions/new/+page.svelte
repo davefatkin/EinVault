@@ -2,6 +2,7 @@
 	import type { ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import SpeciesPicker from '$lib/components/companion/SpeciesPicker.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -11,10 +12,28 @@
 	import { ChevronLeft, PawPrint } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { speciesLabels } from '$lib/i18n/labels';
+	import { defaultWeightUnit } from '$lib/species';
+	import { WEIGHT_UNITS, type Species, type WeightUnit } from '$lib/activityTypes';
 
 	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);
 	const locale = getLocale();
+
+	// Preselect dog so the common path is one tap fewer; the field is still
+	// posted, so the server-side species requirement still holds. A failed post
+	// (no-JS round trip) echoes both values back; capture them once at setup.
+	// svelte-ignore state_referenced_locally
+	let species = $state<Species | ''>(form?.species ?? 'dog');
+	let labels = $derived(speciesLabels(locale, species || 'dog'));
+
+	// svelte-ignore state_referenced_locally
+	let unitTouched = $state(form?.weightUnit != null);
+	// svelte-ignore state_referenced_locally
+	let weightUnit = $state<WeightUnit>(form?.weightUnit ?? 'lbs');
+	$effect(() => {
+		if (!unitTouched) weightUnit = defaultWeightUnit(species || 'dog');
+	});
 </script>
 
 <svelte:head>
@@ -58,6 +77,8 @@
 				{t(locale, 'page.companion.edit.sectionBasics')}
 			</p>
 
+			<SpeciesPicker bind:value={species} />
+
 			<div class="space-y-1.5">
 				<Label for="name"
 					>{t(locale, 'page.companion.labelName')} <span class="text-coral">*</span></Label
@@ -74,13 +95,13 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<div class="space-y-1.5">
-					<Label for="breed">{t(locale, 'page.companion.labelBreed')}</Label>
+					<Label for="breed">{labels.breedLabel}</Label>
 					<Input
 						id="breed"
 						name="breed"
 						type="text"
 						autocomplete="off"
-						placeholder={t(locale, 'page.companion.placeholderBreed')}
+						placeholder={labels.breedPlaceholder}
 					/>
 				</div>
 				<div class="space-y-1.5">
@@ -100,9 +121,18 @@
 				</div>
 				<div class="space-y-1.5">
 					<Label for="weightUnit">{t(locale, 'page.companion.labelWeightUnit')}</Label>
-					<Select id="weightUnit" name="weightUnit">
-						<option value="lbs">lbs</option>
-						<option value="kg">kg</option>
+					<Select
+						id="weightUnit"
+						name="weightUnit"
+						value={weightUnit}
+						onchange={(e) => {
+							unitTouched = true;
+							weightUnit = (e.currentTarget as HTMLSelectElement).value as WeightUnit;
+						}}
+					>
+						{#each WEIGHT_UNITS as u (u)}
+							<option value={u}>{u}</option>
+						{/each}
 					</Select>
 				</div>
 			</div>

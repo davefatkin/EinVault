@@ -14,8 +14,10 @@ import {
 	exceedsLen
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
-import { parseSubtypes } from '$lib/activitySubtypes';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
+import { failCareError } from '$lib/server/care-errors';
+import { resolveActivityUpdate } from '$lib/server/journal-activity';
 import {
 	MAX_DAILY_MEDIA,
 	UPLOAD_MAX_MB,
@@ -126,13 +128,14 @@ export const actions: Actions = {
 		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
-		const list = parseSubtypes(type, data.getAll('subtypes'));
-		const subtypes = list.length ? list : null;
 
+		// The primary companion always gets a row, even if archived: this page
+		// backfills entries for a companion's own journal, which stays reachable
+		// after the companion is archived. Only additional (tagged) companions
+		// are active-filtered, same as before species existed.
 		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
 			(v) => v !== companionId
 		);
-
 		let validAdditionalIds: string[] = [];
 		if (additionalIds.length > 0) {
 			const rows = await db.query.companions.findMany({
@@ -146,8 +149,14 @@ export const actions: Actions = {
 		}
 
 		const targetIds = [companionId, ...validAdditionalIds];
-		const eventGroupId = targetIds.length > 1 ? generateId(15) : null;
+		const checked = await checkSpeciesAndNarrow(
+			targetIds,
+			type,
+			data.getAll('subtypes').map(String)
+		);
+		if (!checked.ok) return failCareError(checked.code, locals.locale, 'error');
 
+		const eventGroupId = targetIds.length > 1 ? generateId(15) : null;
 		const values = targetIds.map((cid) => ({
 			id: generateId(15),
 			companionId: cid,
@@ -155,7 +164,7 @@ export const actions: Actions = {
 			notes,
 			durationMinutes,
 			loggedAt,
-			subtypes,
+			subtypes: checked.subtypesById.get(cid) ?? null,
 			loggedBy: locals.user!.id,
 			eventGroupId
 		}));
@@ -182,18 +191,16 @@ export const actions: Actions = {
 
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
-		const list = parseSubtypes(type, data.getAll('subtypes'));
-		const subtypes = list.length ? list : null;
 
-		const existing = await db.query.dailyEvents.findFirst({
-			where: and(eq(schema.dailyEvents.id, id), eq(schema.dailyEvents.companionId, companionId)),
-			columns: { id: true }
-		});
-		if (!existing) return fail(404, { error: t(locals.locale, 'error.eventNotFound') });
+		const resolved = await resolveActivityUpdate(companionId, id, type, data.getAll('subtypes'));
+		if (!resolved.ok)
+			return resolved.code === 'notFound'
+				? fail(404, { error: t(locals.locale, 'error.eventNotFound') })
+				: fail(400, { error: t(locals.locale, 'error.typeNotAllowedForSpecies') });
 
 		await db
 			.update(schema.dailyEvents)
-			.set({ type, notes, durationMinutes, loggedAt, subtypes })
+			.set({ type, notes, durationMinutes, loggedAt, subtypes: resolved.subtypes })
 			.where(eq(schema.dailyEvents.id, id));
 
 		return { updateActivitySuccess: true };

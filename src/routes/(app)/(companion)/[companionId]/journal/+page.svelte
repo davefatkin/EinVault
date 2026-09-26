@@ -9,6 +9,7 @@
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { toSpecies } from '$lib/species';
 
 	const locale = getLocale();
 
@@ -17,6 +18,7 @@
 	type Entry = (typeof data.entries)[0];
 
 	let companion = $derived(data.companion);
+	let species = $derived(toSpecies(companion.species));
 	let entries = $state<Entry[]>([]);
 	let hasMore = $state(false);
 	let oldestDate = $state<string | null>(null);
@@ -104,6 +106,7 @@
 		journalHref={companion.isActive !== false
 			? `/${companion.id}/journal/${new Date(detailEvent.loggedAt).toISOString().slice(0, 10)}`
 			: null}
+		{species}
 	/>
 {/if}
 
@@ -170,6 +173,7 @@
 						canEdit={companion.isActive !== false}
 						onOpenLightbox={openLightbox}
 						onOpenActivity={openDetail}
+						{species}
 					/>
 				{/each}
 			</div>

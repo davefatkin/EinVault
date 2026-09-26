@@ -6,7 +6,6 @@ import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { throwCareError } from '$lib/server/care-errors';
 import { logDailyEvent } from '$lib/server/daily-events';
-import { activitySubtypesFor } from '$lib/activitySubtypes';
 import { requireFullScope, requireAllowedCompanion } from '$lib/server/api-guards';
 import { toApiDailyEvent } from '$lib/server/api-serializers';
 import { isValidDate, parseCompanionTargets, parseLoggedAt } from '$lib/server/validation';
@@ -63,21 +62,24 @@ export const POST = apiRouteZod(
 			loggedAt = parsed;
 		}
 
-		// Any submitted subtype that isn't allowed for this type is a client error.
-		if (body.subtypes?.some((s) => !activitySubtypesFor(body.type).includes(s))) {
-			error(400, { code: 'invalidSubtype', message: t(locale, 'error.invalidSubtype') });
-		}
-
 		return withIdempotency(
 			{ request: event.request, tokenId, endpoint: 'logs', body },
 			async () => {
-				const result = await logDailyEvent({ id: user.id, role: user.role }, companionIds, {
-					type: body.type,
-					notes: body.notes?.trim() || null,
-					durationMinutes: body.durationMinutes ?? null,
-					subtypes: body.subtypes ?? null,
-					loggedAt
-				});
+				const result = await logDailyEvent(
+					{ id: user.id, role: user.role },
+					companionIds,
+					{
+						type: body.type,
+						notes: body.notes?.trim() || null,
+						durationMinutes: body.durationMinutes ?? null,
+						subtypes: body.subtypes ?? null,
+						loggedAt
+					},
+					// A subtype no target can take is a client error; one that fits
+					// some targets is narrowed per row. Checked after authorization so
+					// the species of unreachable ids never shapes the response.
+					{ rejectUnusableSubtypes: true }
+				);
 				if (!result.ok) throwCareError(result.code, locale);
 				return { status: 201, data: { ids: result.ids, eventGroupId: result.eventGroupId } };
 			}

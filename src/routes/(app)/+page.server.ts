@@ -17,6 +17,7 @@ import { MAX_NOTE_LEN } from '$lib/server/env';
 import { logDailyEvent } from '$lib/server/daily-events';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
+import { failCareError } from '$lib/server/care-errors';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
@@ -183,9 +184,7 @@ export const actions: Actions = {
 			companionIds,
 			{ type, notes, durationMinutes, loggedAt, subtypes }
 		);
-		if (!result.ok) {
-			return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
-		}
+		if (!result.ok) return failCareError(result.code, locals.locale, 'error');
 
 		return { success: true };
 	},

@@ -7,11 +7,15 @@
 	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
 	import TodayEventsList from '$lib/components/log/TodayEventsList.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { toSpecies } from '$lib/species';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
+	let species = $derived(toSpecies(data.companion.species));
 
-	const initialType = page.url.searchParams.get('type') ?? 'walk';
+	// DailyLogForm validates this against the species list and falls back to the
+	// species default.
+	let initialType = $derived(page.url.searchParams.get('type'));
 
 	// Admins can delete anyone's entry; members only their own.
 	const canDelete = (event: { loggedBy: string | null }) =>
@@ -37,12 +41,14 @@
 			<h2 class="font-semibold">{t(locale, 'page.log.quickLogTitle')}</h2>
 		</CardHeader>
 		<CardContent>
-			<DailyLogForm
-				companions={data.companions ?? []}
-				primaryCompanion={data.companion}
-				{initialType}
-				{form}
-			/>
+			{#key data.companion.id}
+				<DailyLogForm
+					companions={data.companions ?? []}
+					primaryCompanion={data.companion}
+					{initialType}
+					{form}
+				/>
+			{/key}
 		</CardContent>
 	</Card>
 
@@ -57,6 +63,7 @@
 				currentUserId={data.user?.id}
 				{canDelete}
 				journalHrefBase="/{data.companion.id}/journal"
+				{species}
 			/>
 		</CardContent>
 	</Card>

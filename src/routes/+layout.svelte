@@ -38,7 +38,7 @@
 <svelte:head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<meta name="description" content="EinVault: private dog health &amp; care tracker" />
+	<meta name="description" content="EinVault: private companion health &amp; care tracker" />
 </svelte:head>
 
 {#if data.demoMode && data.user}

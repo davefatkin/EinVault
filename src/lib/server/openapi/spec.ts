@@ -64,7 +64,9 @@ export function buildOpenApiDocument() {
 				description: 'Created',
 				content: { 'application/json': { schema: LogResponse } }
 			},
-			400: errorResponse('Invalid body (invalidType, noCompanions, noteTooLong, …)'),
+			400: errorResponse(
+				"Invalid body (invalidType, noCompanions, noteTooLong, …); typeNotAllowedForSpecies when a target companion's species can't have the activity."
+			),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -459,7 +461,7 @@ export function buildOpenApiDocument() {
 			// API contract version, versioned independently of the app's release
 			// number: bump minor for additive changes, major for breaking ones.
 			title: 'EinVault API',
-			version: '1.0.0',
+			version: '1.1.0',
 			description:
 				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, and read companions, shifts, and the user roster.'
 		},
