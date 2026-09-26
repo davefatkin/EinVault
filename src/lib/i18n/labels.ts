@@ -167,9 +167,15 @@ export function activityTypeOptions(
 	}));
 }
 
-// species omitted → the global subtype list (multi-species pickers).
-export function activitySubtypeOptions(locale: Locale, type: string, species?: Species) {
-	const list = species ? subtypesFor(species, type) : activitySubtypesFor(type);
+// species omitted → the global subtype list (multi-species pickers). `values`
+// gives an explicit list instead; species then only picks the icons.
+export function activitySubtypeOptions(
+	locale: Locale,
+	type: string,
+	species?: Species,
+	values?: readonly string[]
+) {
+	const list = values ?? (species ? subtypesFor(species, type) : activitySubtypesFor(type));
 	return list.map((v) => ({
 		value: v,
 		icon: (species && speciesIcon(species, v)) ?? ACTIVITY_SUBTYPE_ICONS[v],

@@ -7,6 +7,8 @@ import {
 	defaultActivityType,
 	isActivityAllowed,
 	subtypesFor,
+	subtypesForAny,
+	subtypesKeepingSaved,
 	allowedTypesFor,
 	defaultWeightUnit,
 	speciesIcon
@@ -108,5 +110,35 @@ describe('helpers', () => {
 		expect(speciesIcon('other', 'treat')).toBe('🥕');
 		expect(speciesIcon('other', 'social')).toBe('🐾');
 		expect(speciesIcon('cat', 'grooming')).toBeUndefined();
+	});
+});
+
+describe('subtypesForAny', () => {
+	it('unions the species lists in registry order', () => {
+		expect(subtypesForAny(['cat'], 'walk')).toEqual(['leash']);
+		expect(subtypesForAny(['cat', 'dog'], 'walk')).toEqual(['leash', 'offleash', 'hike']);
+		expect(subtypesForAny(['dog', 'cat'], 'play')).toEqual([
+			'fetch',
+			'tug',
+			'puzzle',
+			'social',
+			'chase'
+		]);
+	});
+
+	it('is empty when no species can have the type or none are given', () => {
+		expect(subtypesForAny(['cat'], 'bathroom')).toEqual([]);
+		expect(subtypesForAny([], 'walk')).toEqual([]);
+	});
+});
+
+describe('subtypesKeepingSaved', () => {
+	it('adds saved values to the species list without other out-of-species ones', () => {
+		expect(subtypesKeepingSaved('cat', 'walk', ['hike'])).toEqual(['leash', 'hike']);
+		expect(subtypesKeepingSaved('cat', 'walk', [])).toEqual(['leash']);
+	});
+
+	it('ignores saved values that do not belong to the type', () => {
+		expect(subtypesKeepingSaved('cat', 'walk', ['pee'])).toEqual(['leash']);
 	});
 });

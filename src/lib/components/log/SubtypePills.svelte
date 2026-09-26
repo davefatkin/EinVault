@@ -8,17 +8,20 @@
 		type,
 		selected = $bindable([]),
 		name = 'subtypes',
-		species
+		species,
+		values
 	}: {
 		type: string;
 		selected?: string[];
 		name?: string;
-		// Omitted → the global subtype list (multi-species pickers, free mode).
+		// Omitted → the global subtype list (multi-species pickers).
 		species?: Species;
+		// Explicit list to offer, overriding the species/global list.
+		values?: readonly string[];
 	} = $props();
 
 	const locale = getLocale();
-	let options = $derived(activitySubtypeOptions(locale, type, species));
+	let options = $derived(activitySubtypeOptions(locale, type, species, values));
 
 	// Switching to a type prunes any now-invalid selections. Guard the assignment
 	// so it only runs when something actually changed (avoids effect loops).

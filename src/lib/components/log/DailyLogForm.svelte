@@ -12,7 +12,8 @@
 		SPECIES_ACTIVITY_TYPES,
 		allowedTypesFor,
 		defaultActivityType,
-		isActivityAllowed
+		isActivityAllowed,
+		subtypesForAny
 	} from '$lib/species';
 	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -87,6 +88,17 @@
 		const b = ok(selectedCompanionIds, targetCompanions);
 		if (b.length !== selectedCompanionIds.length) selectedCompanionIds = b;
 	});
+	// Free mode: subtypes any checked companion can take (all offered targets
+	// while none is checked). Primary mode uses the primary's species list.
+	let freeSubtypes = $derived.by(() => {
+		if (primaryCompanion) return undefined;
+		const checked = targetCompanions.filter((c) => selectedCompanionIds.includes(c.id));
+		const pool = checked.length > 0 ? checked : targetCompanions;
+		return subtypesForAny(
+			pool.map((c) => c.species),
+			selectedType
+		);
+	});
 	let hasDuration = $derived(ACTIVITY_HAS_DURATION[selectedType as DailyEventType] ?? false);
 
 	function defaultLoggedAt() {
@@ -145,7 +157,12 @@
 		species={primaryCompanion?.species}
 	/>
 
-	<SubtypePills type={selectedType} bind:selected={subtypes} species={primaryCompanion?.species} />
+	<SubtypePills
+		type={selectedType}
+		bind:selected={subtypes}
+		species={primaryCompanion?.species}
+		values={freeSubtypes}
+	/>
 
 	{#if !primaryCompanion}
 		<fieldset class="space-y-1.5">

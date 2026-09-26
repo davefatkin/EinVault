@@ -65,6 +65,25 @@ export function subtypesFor(species: Species, type: string): readonly string[] {
 	return SPECIES_SUBTYPE_OVERRIDES[species][type as DailyEventType] ?? activitySubtypesFor(type);
 }
 
+// Union of subtypesFor over several species, in registry order. Free-mode
+// pickers offer this for the companions being logged for.
+export function subtypesForAny(list: readonly Species[], type: string): string[] {
+	const set = new Set(list.flatMap((s) => subtypesFor(s, type)));
+	return activitySubtypesFor(type).filter((v) => set.has(v));
+}
+
+// The species list plus any already-saved values still valid for the type, in
+// registry order: editing an event keeps its saved subtypes visible without
+// offering new out-of-species choices.
+export function subtypesKeepingSaved(
+	species: Species,
+	type: string,
+	saved: readonly string[]
+): string[] {
+	const set = new Set([...subtypesFor(species, type), ...saved]);
+	return activitySubtypesFor(type).filter((v) => set.has(v));
+}
+
 export function allowedTypesFor(list: readonly Species[]): DailyEventType[] {
 	const set = new Set(list.flatMap((s) => SPECIES_ACTIVITY_TYPES[s]));
 	return DAILY_EVENT_TYPES.filter((t) => set.has(t));

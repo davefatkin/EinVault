@@ -29,6 +29,7 @@
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
+	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -48,6 +49,7 @@
 		SPECIES_ACTIVITY_TYPES,
 		defaultActivityType,
 		isActivityAllowed,
+		subtypesKeepingSaved,
 		toSpecies
 	} from '$lib/species';
 
@@ -401,15 +403,6 @@
 	let editActivitySubtypes = $state<string[]>([]);
 	let editActivityHasDuration = $derived(
 		ACTIVITY_HAS_DURATION[editActivityType as DailyEventType] ?? false
-	);
-	let EDIT_EVENT_TYPES = $derived(
-		activityTypeOptions(
-			locale,
-			editActivityOriginalType && !isActivityAllowed(species, editActivityOriginalType)
-				? [...SPECIES_ACTIVITY_TYPES[species], editActivityOriginalType as DailyEventType]
-				: SPECIES_ACTIVITY_TYPES[species],
-			species
-		)
 	);
 
 	function startEditActivity(event: (typeof data.dailyEvents)[0]) {
@@ -1070,39 +1063,22 @@
 									class="space-y-4"
 								>
 									<input type="hidden" name="id" value={event.id} />
-									<div class="space-y-1.5">
-										<span class="text-sm font-medium text-foreground"
-											>{t(locale, 'page.journal.day.activityType')}</span
-										>
-										<div class="flex flex-wrap gap-2">
-											{#each EDIT_EVENT_TYPES as evtType (evtType.value)}
-												<label class="cursor-pointer">
-													<input
-														type="radio"
-														name="type"
-														value={evtType.value}
-														bind:group={editActivityType}
-														class="sr-only"
-													/>
-													<span
-														class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer border-border text-muted-foreground {editActivityType ===
-														evtType.value
-															? 'bg-primary/10 border-primary/30 text-primary'
-															: 'hover:text-foreground'}"
-													>
-														{evtType.icon}
-														{evtType.label}
-													</span>
-												</label>
-											{/each}
-										</div>
-									</div>
-									<!-- While the saved type is unchanged, offer the global subtype list so
-									saved subtypes outside the species list survive the edit. -->
+									<ActivityTypePills
+										types={SPECIES_ACTIVITY_TYPES[species]}
+										bind:selected={editActivityType}
+										current={editActivityOriginalType}
+										{species}
+										legend={t(locale, 'page.journal.day.activityType')}
+									/>
+									<!-- While the saved type is unchanged, saved subtypes outside the
+									species list stay offered so they survive the edit. -->
 									<SubtypePills
 										type={editActivityType}
 										bind:selected={editActivitySubtypes}
-										species={editActivityType === editActivityOriginalType ? undefined : species}
+										{species}
+										values={editActivityType === editActivityOriginalType
+											? subtypesKeepingSaved(species, editActivityType, event.subtypes ?? [])
+											: undefined}
 									/>
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
