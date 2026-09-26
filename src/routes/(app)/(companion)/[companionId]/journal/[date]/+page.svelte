@@ -40,8 +40,16 @@
 		moodOptions,
 		activityTypeOptions,
 		activityDisplayIcon,
-		activityDisplayLabel
+		activityDisplayLabel,
+		ACTIVITY_HAS_DURATION
 	} from '$lib/i18n/labels';
+	import type { DailyEventType } from '$lib/activityTypes';
+	import {
+		SPECIES_ACTIVITY_TYPES,
+		defaultActivityType,
+		isActivityAllowed,
+		toSpecies
+	} from '$lib/species';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
@@ -344,7 +352,8 @@
 	}
 
 	// Activity log
-	const EVENT_TYPES = activityTypeOptions(locale);
+	let species = $derived(toSpecies(companion.species));
+	let EVENT_TYPES = $derived(activityTypeOptions(locale, SPECIES_ACTIVITY_TYPES[species], species));
 
 	function localDatetimeISO(d = new Date()) {
 		const p = (n: number) => String(n).padStart(2, '0');
@@ -358,27 +367,55 @@
 	}
 
 	let showActivityForm = $state(false);
-	let selectedType = $state('walk');
-	let hasDuration = $derived(
-		EVENT_TYPES.find((t) => t.value === selectedType)?.hasDuration ?? false
-	);
+	// svelte-ignore state_referenced_locally
+	let selectedType = $state<string>(defaultActivityType(species));
+	// This page isn't remounted when the companion switcher changes the route
+	// param, so fall back to the new species' default if the pick doesn't fit.
+	$effect(() => {
+		if (!isActivityAllowed(species, selectedType)) selectedType = defaultActivityType(species);
+	});
+	let hasDuration = $derived(ACTIVITY_HAS_DURATION[selectedType as DailyEventType] ?? false);
 	let duration = $state('');
 	let addActivitySubtypes = $state<string[]>([]);
 	let siblingCompanions = $derived(
-		data.companions.filter((c) => c.id !== data.companion.id && c.isActive)
+		data.companions.filter(
+			(c) =>
+				c.id !== data.companion.id &&
+				c.isActive &&
+				isActivityAllowed(toSpecies(c.species), selectedType)
+		)
 	);
 	let selectedAdditionalIds = $state<string[]>([]);
+	// Drop "also log for" picks that can't take the newly selected type.
+	$effect(() => {
+		const kept = selectedAdditionalIds.filter((id) => siblingCompanions.some((c) => c.id === id));
+		if (kept.length !== selectedAdditionalIds.length) selectedAdditionalIds = kept;
+	});
 
 	let editingActivityId = $state<string | null>(null);
-	let editActivityType = $state('walk');
+	// svelte-ignore state_referenced_locally
+	let editActivityType = $state<string>(defaultActivityType(species));
+	// The edited event's saved type, kept pickable even when the species no
+	// longer allows it (logged before a species change).
+	let editActivityOriginalType = $state<string | null>(null);
 	let editActivitySubtypes = $state<string[]>([]);
 	let editActivityHasDuration = $derived(
-		EVENT_TYPES.find((t) => t.value === editActivityType)?.hasDuration ?? false
+		ACTIVITY_HAS_DURATION[editActivityType as DailyEventType] ?? false
+	);
+	let EDIT_EVENT_TYPES = $derived(
+		activityTypeOptions(
+			locale,
+			editActivityOriginalType && !isActivityAllowed(species, editActivityOriginalType)
+				? [...SPECIES_ACTIVITY_TYPES[species], editActivityOriginalType as DailyEventType]
+				: SPECIES_ACTIVITY_TYPES[species],
+			species
+		)
 	);
 
 	function startEditActivity(event: (typeof data.dailyEvents)[0]) {
 		editingActivityId = event.id;
 		editActivityType = event.type;
+		editActivityOriginalType = event.type;
 		editActivitySubtypes = event.subtypes ?? [];
 	}
 
@@ -878,7 +915,7 @@
 							({ update }) => {
 								update();
 								showActivityForm = false;
-								selectedType = 'walk';
+								selectedType = defaultActivityType(species);
 								addActivitySubtypes = [];
 								selectedAdditionalIds = [];
 								duration = '';
@@ -912,7 +949,7 @@
 								{/each}
 							</div>
 						</div>
-						<SubtypePills type={selectedType} bind:selected={addActivitySubtypes} />
+						<SubtypePills type={selectedType} bind:selected={addActivitySubtypes} {species} />
 						{#if siblingCompanions.length > 0}
 							<fieldset class="space-y-1.5">
 								<legend class="text-sm font-medium text-foreground">
@@ -1038,7 +1075,7 @@
 											>{t(locale, 'page.journal.day.activityType')}</span
 										>
 										<div class="flex flex-wrap gap-2">
-											{#each EVENT_TYPES as evtType (evtType.value)}
+											{#each EDIT_EVENT_TYPES as evtType (evtType.value)}
 												<label class="cursor-pointer">
 													<input
 														type="radio"
@@ -1060,7 +1097,13 @@
 											{/each}
 										</div>
 									</div>
-									<SubtypePills type={editActivityType} bind:selected={editActivitySubtypes} />
+									<!-- A legacy type the species no longer allows keeps its global
+									subtype list so saving doesn't drop its subtypes. -->
+									<SubtypePills
+										type={editActivityType}
+										bind:selected={editActivitySubtypes}
+										species={isActivityAllowed(species, editActivityType) ? species : undefined}
+									/>
 									<div class="grid grid-cols-2 gap-4">
 										<div class="space-y-1.5">
 											<label

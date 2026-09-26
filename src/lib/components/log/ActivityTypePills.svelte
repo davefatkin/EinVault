@@ -2,19 +2,33 @@
 	import { Check } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { activityTypeOptions } from '$lib/i18n/labels';
+	import type { DailyEventType, Species } from '$lib/activityTypes';
 
+	// `current` is an existing value to keep visible even when it's not in
+	// `types` (an event or quick log saved before a species change).
 	let {
-		selected = $bindable('walk'),
+		types,
+		selected = $bindable(''),
+		current = null,
+		species,
 		name = 'type',
 		legend
 	}: {
+		types: readonly DailyEventType[];
 		selected?: string;
+		current?: string | null;
+		species?: Species;
 		name?: string;
 		legend?: string;
 	} = $props();
 
 	const locale = getLocale();
-	const EVENT_TYPES = activityTypeOptions(locale);
+	let shown = $derived(
+		current && !(types as readonly string[]).includes(current)
+			? [...types, current as DailyEventType]
+			: types
+	);
+	let options = $derived(activityTypeOptions(locale, shown, species));
 </script>
 
 <fieldset class="space-y-2">
@@ -22,7 +36,7 @@
 		>{legend ?? t(locale, 'page.log.activityLabel')}</legend
 	>
 	<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-		{#each EVENT_TYPES as opt (opt.value)}
+		{#each options as opt (opt.value)}
 			<label class="cursor-pointer">
 				<input type="radio" {name} value={opt.value} bind:group={selected} class="sr-only peer" />
 				<span

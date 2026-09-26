@@ -22,6 +22,7 @@
 	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { DAILY_EVENT_TYPES } from '$lib/activityTypes';
 	import {
 		ACTIVITY_HAS_DURATION,
 		activityDisplayIcon,
@@ -170,7 +171,11 @@
 			/>
 		</div>
 
-		<ActivityTypePills bind:selected={editType} legend={t(locale, 'quickLogs.typeLabel')} />
+		<ActivityTypePills
+			types={DAILY_EVENT_TYPES}
+			bind:selected={editType}
+			legend={t(locale, 'quickLogs.typeLabel')}
+		/>
 
 		<SubtypePills type={editType} bind:selected={editSubtypes} />
 

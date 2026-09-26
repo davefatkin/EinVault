@@ -11,6 +11,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { activityTypeOptions, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
@@ -24,8 +25,9 @@
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
-	const quickLogTypes = activityTypeOptions(locale).filter((opt) =>
-		['walk', 'meal', 'bathroom'].includes(opt.value)
+	let species = $derived(toSpecies(companion.species));
+	let quickLogTypes = $derived(
+		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 
 	function age(dob: string | null): string {

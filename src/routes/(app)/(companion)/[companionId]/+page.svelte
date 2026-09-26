@@ -45,6 +45,7 @@
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { convertWeight } from '$lib/weightChart';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -73,9 +74,10 @@
 
 	let today = localDateISO();
 
-	// Quick log shortcuts, the same trio the caretaker view offers.
-	const quickLogTypes = activityTypeOptions(locale).filter((o) =>
-		['walk', 'meal', 'bathroom'].includes(o.value)
+	// Quick log shortcuts: the species trio, same as the caretaker view offers.
+	let species = $derived(toSpecies(companion.species));
+	let quickLogTypes = $derived(
+		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 
 	// Care status derived from outstanding reminders
