@@ -5,7 +5,7 @@
 # EinVault
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.3.8-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
@@ -44,6 +44,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - [Bearer-token API (optional)](#bearer-token-api-optional)
 - [Adding a new locale](#adding-a-new-locale)
 - [Stack](#stack)
+- [Sponsors](#sponsors)
 - [License](#license)
 
 ## Features
@@ -516,6 +517,14 @@ No migration is needed; SQLite text columns don't enforce enums at the database 
 - **Tailwind CSS:** utility-first styling with custom components
 - **Session-based auth:** custom sessions with bcryptjs password hashing; optional OIDC SSO via [`openid-client`](https://github.com/panva/openid-client)
 - **Docker:** multi-stage, hardened single-container deployment
+
+---
+
+## Sponsors
+
+Thank you to the people who support EinVault through [GitHub Sponsors](https://github.com/sponsors/davefatkin).
+
+<a href="https://github.com/LeSnowTiger"><img src="https://avatars.githubusercontent.com/u/11633064?v=4" width="60" height="60" alt="LeSnowTiger"></a>
 
 ---
 
