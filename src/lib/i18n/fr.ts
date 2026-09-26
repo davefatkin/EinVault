@@ -123,6 +123,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.typeRequired': 'Le type est requis.',
 	'error.invalidSubtype': 'Sous-type invalide pour cette activité',
 	'error.typeNotAllowedForSpecies': "Cette activité n'est pas disponible pour ce compagnon.",
+	'error.speciesRequired': 'Choisissez une espèce.',
 	'error.displayNameRequired': "Le nom d'affichage est requis.",
 	'error.usernameRequired': "Le nom d'utilisateur est requis.",
 	'error.invalidUsernameFormat':

@@ -120,6 +120,7 @@ const messages = {
 	'error.typeRequired': 'Type is required.',
 	'error.invalidSubtype': 'Invalid subtype for this activity type',
 	'error.typeNotAllowedForSpecies': "That activity isn't available for this companion.",
+	'error.speciesRequired': 'Choose a species.',
 	'error.displayNameRequired': 'Display name is required.',
 	'error.usernameRequired': 'Username is required.',
 	'error.invalidUsernameFormat':

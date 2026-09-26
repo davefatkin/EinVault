@@ -2,9 +2,11 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
+	import SpeciesPicker from '$lib/components/companion/SpeciesPicker.svelte';
 	import { bustAvatarCache } from '$lib/avatarCache.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -15,6 +17,9 @@
 	import { ChevronLeft, PawPrint } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { speciesLabels } from '$lib/i18n/labels';
+	import { toSpecies } from '$lib/species';
+	import { WEIGHT_UNITS } from '$lib/activityTypes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion } = $derived(data);
@@ -22,6 +27,11 @@
 	let archiving = $state(false);
 	let activeTab = $state<'profile' | 'caretaker'>('profile');
 	const locale = getLocale();
+
+	// untrack: seed from the initially-loaded companion only; the field is
+	// then a normal user-controlled input, not synced to later prop changes.
+	let species = $state(untrack(() => toSpecies(data.companion.species)));
+	let labels = $derived(speciesLabels(locale, species));
 
 	let showArchivePanel = $state(false);
 	let savedAlertEl = $state<HTMLElement | null>(null);
@@ -174,6 +184,8 @@
 					{t(locale, 'page.companion.edit.sectionBasics')}
 				</p>
 
+				<SpeciesPicker bind:value={species} />
+
 				<div class="space-y-1.5">
 					<Label for="name"
 						>{t(locale, 'page.companion.labelName')}
@@ -191,13 +203,14 @@
 
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<div class="space-y-1.5">
-						<Label for="breed">{t(locale, 'page.companion.labelBreed')}</Label>
+						<Label for="breed">{labels.breedLabel}</Label>
 						<Input
 							id="breed"
 							name="breed"
 							type="text"
 							autocomplete="off"
 							value={companion.breed ?? ''}
+							placeholder={labels.breedPlaceholder}
 						/>
 					</div>
 					<div class="space-y-1.5">
@@ -222,8 +235,9 @@
 					<div class="space-y-1.5">
 						<Label for="weightUnit">{t(locale, 'page.companion.labelWeightUnit')}</Label>
 						<Select id="weightUnit" name="weightUnit">
-							<option value="lbs" selected={companion.weightUnit === 'lbs'}>lbs</option>
-							<option value="kg" selected={companion.weightUnit === 'kg'}>kg</option>
+							{#each WEIGHT_UNITS as u (u)}
+								<option value={u} selected={companion.weightUnit === u}>{u}</option>
+							{/each}
 						</Select>
 					</div>
 				</div>
@@ -286,12 +300,12 @@
 					/>
 				</div>
 				<div class="space-y-1.5">
-					<Label for="walkSchedule">{t(locale, 'page.companion.edit.labelWalkSchedule')}</Label>
+					<Label for="walkSchedule">{labels.scheduleLabel}</Label>
 					<MarkdownTextarea
 						id="walkSchedule"
 						name="walkSchedule"
 						value={companion.walkSchedule ?? ''}
-						placeholder={t(locale, 'page.companion.edit.placeholderWalkSchedule')}
+						placeholder={labels.schedulePlaceholder}
 						rows={4}
 					/>
 				</div>

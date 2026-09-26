@@ -3,7 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
-import { parseSex, parseWeightUnit } from '$lib/server/validation';
+import { parseSex } from '$lib/server/validation';
+import { parseCompanionSpeciesAndUnit } from '$lib/server/companion-form';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -20,7 +21,6 @@ export const actions: Actions = {
 		const breed = String(data.get('breed') ?? '').trim() || null;
 		const sex = parseSex(String(data.get('sex') ?? ''));
 		const dob = String(data.get('dob') ?? '') || null;
-		const weightUnit = parseWeightUnit(String(data.get('weightUnit') ?? ''), 'lbs');
 		const microchip = String(data.get('microchip') ?? '').trim() || null;
 		const bio = String(data.get('bio') ?? '').trim() || null;
 
@@ -36,15 +36,28 @@ export const actions: Actions = {
 			});
 		}
 
+		const parsed = parseCompanionSpeciesAndUnit(data);
+		if (!parsed.ok)
+			return fail(400, {
+				error: t(locals.locale, 'error.speciesRequired'),
+				name,
+				breed,
+				sex,
+				dob,
+				microchip,
+				bio
+			});
+
 		const id = generateId(15);
 
 		await db.insert(schema.companions).values({
 			id,
 			name,
+			species: parsed.species,
 			breed,
 			sex,
 			dob,
-			weightUnit,
+			weightUnit: parsed.weightUnit,
 			microchip,
 			bio
 		});
