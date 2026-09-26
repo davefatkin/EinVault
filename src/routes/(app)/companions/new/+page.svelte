@@ -21,12 +21,16 @@
 	const locale = getLocale();
 
 	// Preselect dog so the common path is one tap fewer; the field is still
-	// posted, so the server-side species requirement still holds.
-	let species = $state<Species | ''>('dog');
+	// posted, so the server-side species requirement still holds. A failed post
+	// (no-JS round trip) echoes both values back; capture them once at setup.
+	// svelte-ignore state_referenced_locally
+	let species = $state<Species | ''>(form?.species ?? 'dog');
 	let labels = $derived(speciesLabels(locale, species || 'dog'));
 
-	let unitTouched = $state(false);
-	let weightUnit = $state<WeightUnit>('lbs');
+	// svelte-ignore state_referenced_locally
+	let unitTouched = $state(form?.weightUnit != null);
+	// svelte-ignore state_referenced_locally
+	let weightUnit = $state<WeightUnit>(form?.weightUnit ?? 'lbs');
 	$effect(() => {
 		if (!unitTouched) weightUnit = defaultWeightUnit(species || 'dog');
 	});

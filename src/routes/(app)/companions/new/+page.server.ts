@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
-import { parseSex } from '$lib/server/validation';
+import { parseSex, parseSpecies, parseWeightUnitStrict } from '$lib/server/validation';
 import { parseCompanionSpeciesAndUnit } from '$lib/server/companion-form';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -23,6 +23,9 @@ export const actions: Actions = {
 		const dob = String(data.get('dob') ?? '') || null;
 		const microchip = String(data.get('microchip') ?? '').trim() || null;
 		const bio = String(data.get('bio') ?? '').trim() || null;
+		// Echoed on failure so the page restores the picker and unit select.
+		const species = parseSpecies(String(data.get('species') ?? ''));
+		const weightUnit = parseWeightUnitStrict(String(data.get('weightUnit') ?? ''));
 
 		if (!name) {
 			return fail(400, {
@@ -32,7 +35,9 @@ export const actions: Actions = {
 				sex,
 				dob,
 				microchip,
-				bio
+				bio,
+				species,
+				weightUnit
 			});
 		}
 
@@ -45,7 +50,9 @@ export const actions: Actions = {
 				sex,
 				dob,
 				microchip,
-				bio
+				bio,
+				species,
+				weightUnit
 			});
 
 		const id = generateId(15);
