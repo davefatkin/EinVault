@@ -331,6 +331,44 @@ describe('quick logs and species', () => {
 		await deleteQuickLog(user.id, id);
 	});
 
+	it('executeQuickLog falls back to allowed targets when the remembered one changed species', async () => {
+		const pupId = 'ql-pup';
+		await db.insert(schema.companions).values({
+			id: pupId,
+			name: 'Pup',
+			species: 'dog'
+		} as typeof schema.companions.$inferInsert);
+		const id = await createQuickLog(user, {
+			name: 'Potty remembered',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, pupId]
+		});
+		const r1 = await executeQuickLog({
+			user,
+			quickLogId: id,
+			companionIds: [pupId],
+			rememberSelection: true
+		});
+		expect(r1.ok).toBe(true);
+
+		// The remembered companion is now a cat: the prefill path uses the dog.
+		await db
+			.update(schema.companions)
+			.set({ species: 'cat' })
+			.where(eq(schema.companions.id, pupId));
+		const res = await executeQuickLog({ user, quickLogId: id });
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.map((r) => r.companionId)).toEqual([dogId]);
+		await deleteQuickLog(user.id, id);
+	});
+
 	it('listQuickLogButtons filters targets and hides buttons by species', async () => {
 		const id = await createQuickLog(user, {
 			name: 'Potty both',

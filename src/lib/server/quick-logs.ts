@@ -327,23 +327,26 @@ export async function executeQuickLog(opts: {
 	if (!quickLog) return { ok: false, code: 'notFound' };
 	if (!quickLog.isEnabled) return { ok: false, code: 'disabled' };
 
+	// Stored or submitted targets that can't have this activity (a companion's
+	// species changed after the quick log was set up) are skipped, like archived ones.
 	const assigned = new Set(quickLog.companions.map((c) => c.companionId));
 	let targets: string[];
 	if (opts.companionIds && opts.companionIds.length > 0) {
 		targets = opts.companionIds.filter((id) => assigned.has(id));
+		if (targets.length === 0) return { ok: false, code: 'noTargets' };
+		targets = await filterBySpecies(targets, quickLog.type);
 	} else {
 		const allowed = new Set(await listAllowedCompanions(opts.user));
 		const assignedAllowed = [...assigned].filter((id) => allowed.has(id));
+		if (assignedAllowed.length === 0) return { ok: false, code: 'noTargets' };
+		// Species first, so a remembered target that changed species falls back
+		// to the assigned set the same way listQuickLogButtons' prefill does.
+		const eligible = await filterBySpecies(assignedAllowed, quickLog.type);
 		const remembered = parseLastCompanionIds(quickLog.lastCompanionIds).filter((id) =>
-			assignedAllowed.includes(id)
+			eligible.includes(id)
 		);
-		targets = remembered.length > 0 ? remembered : assignedAllowed;
+		targets = remembered.length > 0 ? remembered : eligible;
 	}
-	if (targets.length === 0) return { ok: false, code: 'noTargets' };
-
-	// Stored or submitted targets that can't have this activity (a companion's
-	// species changed after the quick log was set up) are skipped, like archived ones.
-	targets = await filterBySpecies(targets, quickLog.type);
 	if (targets.length === 0) return { ok: false, code: 'typeNotAllowedForSpecies' };
 
 	const result = await logDailyEvent(opts.user, targets, {
