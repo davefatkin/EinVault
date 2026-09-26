@@ -105,6 +105,8 @@ export interface ImmichAssetSummary {
 	fileSizeInByte: number | null;
 	thumbhash: string | null;
 	createdAt: string | null;
+	/** Capture date (YYYY-MM-DD) in the photo's own local time. */
+	takenDate: string | null;
 	type: string;
 }
 
@@ -124,6 +126,7 @@ interface ImmichAssetResponse {
 	fileSizeInByte?: number;
 	thumbhash?: string;
 	fileCreatedAt?: string;
+	localDateTime?: string;
 	type?: string;
 }
 
@@ -142,6 +145,9 @@ function summarize(a: ImmichAssetResponse): ImmichAssetSummary {
 		fileSizeInByte: typeof a.fileSizeInByte === 'number' ? a.fileSizeInByte : null,
 		thumbhash: a.thumbhash ?? null,
 		createdAt: a.fileCreatedAt ?? null,
+		// localDateTime is the capture wall-clock time serialized as UTC, so its
+		// date part is the day the photo was taken wherever it was taken.
+		takenDate: (a.localDateTime ?? a.fileCreatedAt)?.slice(0, 10) ?? null,
 		type: a.type ?? 'IMAGE'
 	};
 }

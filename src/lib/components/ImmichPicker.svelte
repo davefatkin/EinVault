@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { X, ImageIcon, Loader2 } from '@lucide/svelte';
+	import { groupAssetsByDate } from '$lib/immichGroups';
 
 	interface ImmichAsset {
 		id: string;
@@ -10,6 +11,7 @@
 		originalMimeType: string;
 		fileSizeInByte: number | null;
 		createdAt: string | null;
+		takenDate: string | null;
 		type: string;
 	}
 
@@ -35,6 +37,20 @@
 	let selecting = $state<string | null>(null);
 
 	const PAGE_SIZE = 60;
+
+	const groups = $derived(groupAssetsByDate(assets));
+	const dateFormat = new Intl.DateTimeFormat(locale, {
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric'
+	});
+
+	function groupLabel(date: string | null) {
+		if (!date) return t(locale, 'immich.picker.unknownDate');
+		// Noon avoids any DST edge shifting the calendar day.
+		return dateFormat.format(new Date(`${date}T12:00:00`));
+	}
 
 	async function loadPage(nextPage: number, append = false) {
 		const flag = append ? 'loadingMore' : 'loading';
@@ -176,29 +192,38 @@
 						<p class="text-sm">{t(locale, 'immich.picker.empty')}</p>
 					</div>
 				{:else}
-					<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-						{#each assets as asset (asset.id)}
-							<button
-								type="button"
-								class="relative aspect-square overflow-hidden rounded-md bg-stone-100 dark:bg-stone-800 transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait"
-								onclick={() => pick(asset.id)}
-								disabled={selecting === asset.id}
-								title={asset.originalFileName}
+					{#each groups as group (group.assets[0].id)}
+						<section class="mb-4 last:mb-0">
+							<h3
+								class="sticky -top-4 z-10 -mx-4 bg-card px-4 py-2 text-sm font-medium text-foreground"
 							>
-								<img
-									src={`/api/immich/thumbnail/${asset.id}?size=thumbnail`}
-									alt={asset.originalFileName}
-									class="w-full h-full object-cover"
-									loading="lazy"
-								/>
-								{#if selecting === asset.id}
-									<div class="absolute inset-0 flex items-center justify-center bg-black/40">
-										<Loader2 class="h-5 w-5 animate-spin text-white" />
-									</div>
-								{/if}
-							</button>
-						{/each}
-					</div>
+								{groupLabel(group.date)}
+							</h3>
+							<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+								{#each group.assets as asset (asset.id)}
+									<button
+										type="button"
+										class="relative aspect-square overflow-hidden rounded-md bg-stone-100 dark:bg-stone-800 transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait"
+										onclick={() => pick(asset.id)}
+										disabled={selecting === asset.id}
+										title={asset.originalFileName}
+									>
+										<img
+											src={`/api/immich/thumbnail/${asset.id}?size=thumbnail`}
+											alt={asset.originalFileName}
+											class="w-full h-full object-cover"
+											loading="lazy"
+										/>
+										{#if selecting === asset.id}
+											<div class="absolute inset-0 flex items-center justify-center bg-black/40">
+												<Loader2 class="h-5 w-5 animate-spin text-white" />
+											</div>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						</section>
+					{/each}
 
 					{#if loadingMore}
 						<div class="flex items-center justify-center py-4 text-muted-foreground">

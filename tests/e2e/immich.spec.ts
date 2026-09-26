@@ -133,6 +133,31 @@ test('journal photo from Immich', async ({ world, page }) => {
 	await expect(photoImgAfterReload).toBeVisible({ timeout: 10_000 });
 });
 
+test('picker groups assets by capture date, newest first', async ({ world, page }) => {
+	world.fake.setAssets([
+		makeImmichAsset(ASSET_ID_1, { localDateTime: '2026-09-26T09:00:00.000Z' }),
+		makeImmichAsset(ASSET_ID_2, { localDateTime: '2026-09-26T08:00:00.000Z' }),
+		makeImmichAsset(ASSET_ID_3, { localDateTime: '2026-09-25T23:30:00.000Z' })
+	]);
+
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(world.server.baseURL + `/${EIN_ID}/journal/2026-06-01`);
+	await page.getByRole('button', { name: /pick from immich/i }).click();
+
+	const dialog = page.getByRole('dialog');
+	await expect(dialog.locator(`img[src*="${ASSET_ID_3}"]`)).toBeVisible({ timeout: 10_000 });
+
+	// Assert structure, not rendered date text (locale/timezone dependent).
+	await expect(dialog.getByRole('heading', { level: 3 })).toHaveCount(2);
+	const sections = dialog.locator('section');
+	await expect(sections).toHaveCount(2);
+	await expect(sections.nth(0).locator('img')).toHaveCount(2);
+	await expect(sections.nth(0).locator(`img[src*="${ASSET_ID_1}"]`)).toHaveCount(1);
+	await expect(sections.nth(0).locator(`img[src*="${ASSET_ID_2}"]`)).toHaveCount(1);
+	await expect(sections.nth(1).locator('img')).toHaveCount(1);
+	await expect(sections.nth(1).locator(`img[src*="${ASSET_ID_3}"]`)).toHaveCount(1);
+});
+
 test.describe('album mode', () => {
 	const ALBUM_ID = '00000000-0000-0000-0000-00000000a1b0';
 	test.use({ albumId: ALBUM_ID });

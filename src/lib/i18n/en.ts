@@ -1097,6 +1097,7 @@ const messages = {
 	'immich.picker.loadError': 'Could not load Immich library.',
 	'immich.picker.button': 'Pick from Immich',
 	'immich.picker.pickFailed': 'Could not attach Immich asset.',
+	'immich.picker.unknownDate': 'Unknown date',
 
 	// Paperless picker
 	'paperless.picker.title': 'Pick from Paperless',
