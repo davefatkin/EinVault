@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import {
 	createQuickLog,
@@ -281,5 +281,76 @@ describe('quick logs', () => {
 		});
 		const list = await listQuickLogs(OWNER.id);
 		expect(list.find((q) => q.id === id)?.subtypes).toBeNull();
+	});
+});
+
+describe('quick logs and species', () => {
+	const user = OWNER;
+	const dogId = 'ql-c1';
+	const catId = 'ql-cat';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({
+			id: catId,
+			name: 'Whiskers',
+			species: 'cat'
+		} as typeof schema.companions.$inferInsert);
+	});
+
+	it('executeQuickLog skips a cat for a bathroom quick log', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, catId]
+		});
+		const res = await executeQuickLog({ user, quickLogId: id, companionIds: [dogId, catId] });
+		expect(res.ok).toBe(true);
+		const rows = await db.query.dailyEvents.findMany({
+			where: inArray(schema.dailyEvents.id, (res as { ids: string[] }).ids)
+		});
+		expect(rows.map((r) => r.companionId)).toEqual([dogId]);
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('executeQuickLog returns typeNotAllowedForSpecies when every target is disallowed', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty cat',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [catId]
+		});
+		const res = await executeQuickLog({ user, quickLogId: id });
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
+		await deleteQuickLog(user.id, id);
+	});
+
+	it('listQuickLogButtons filters targets and hides buttons by species', async () => {
+		const id = await createQuickLog(user, {
+			name: 'Potty both',
+			type: 'bathroom',
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, catId]
+		});
+		const all = await listQuickLogButtons(user);
+		const b = all.find((x) => x.id === id)!;
+		expect(b.companionIds).toEqual([dogId]);
+		expect(b.prefillCompanionIds).not.toContain(catId);
+
+		const onCat = await listQuickLogButtons(user, catId);
+		expect(onCat.find((x) => x.id === id)).toBeUndefined();
+		const onDog = await listQuickLogButtons(user, dogId);
+		expect(onDog.find((x) => x.id === id)).toBeDefined();
+
+		await deleteQuickLog(user.id, id);
 	});
 });

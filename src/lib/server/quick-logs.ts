@@ -6,6 +6,7 @@ import { listAllowedCompanions } from '$lib/server/companion-scope';
 import type { DailyEventType, UserRole } from '$lib/server/validation';
 import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
 import { parseSubtypes } from '$lib/activitySubtypes';
+import { isActivityAllowed, toSpecies } from '$lib/species';
 
 export interface QuickLogInput {
 	name: string;
@@ -34,6 +35,19 @@ function parseLastCompanionIds(raw: string | null): string[] {
 	} catch {
 		return [];
 	}
+}
+
+// Ids from `ids` whose species allows `type`. One query for the whole set.
+async function filterBySpecies(ids: string[], type: DailyEventType): Promise<string[]> {
+	if (ids.length === 0) return [];
+	const rows = await db.query.companions.findMany({
+		where: inArray(schema.companions.id, ids),
+		columns: { id: true, species: true }
+	});
+	const ok = new Set(
+		rows.filter((r) => isActivityAllowed(toSpecies(r.species), type)).map((r) => r.id)
+	);
+	return ids.filter((id) => ok.has(id));
 }
 
 // Full list for the management page, assignments included.
@@ -71,11 +85,23 @@ export async function listQuickLogButtons(
 		with: { companions: { columns: { companionId: true } } },
 		orderBy: (q, { asc }) => [asc(q.sortOrder), asc(q.createdAt)]
 	});
-	const allowed = new Set(await listAllowedCompanions(user));
+	const allowedIds = await listAllowedCompanions(user);
+	const allowed = new Set(allowedIds);
+	const speciesRows = allowedIds.length
+		? await db.query.companions.findMany({
+				where: inArray(schema.companions.id, allowedIds),
+				columns: { id: true, species: true }
+			})
+		: [];
+	const speciesById = new Map(speciesRows.map((r) => [r.id, toSpecies(r.species)]));
 
 	return rows
 		.map((row) => {
-			const assigned = row.companions.map((c) => c.companionId).filter((id) => allowed.has(id));
+			const assigned = row.companions
+				.map((c) => c.companionId)
+				.filter(
+					(id) => allowed.has(id) && isActivityAllowed(speciesById.get(id) ?? 'dog', row.type)
+				);
 			const remembered = parseLastCompanionIds(row.lastCompanionIds).filter((id) =>
 				assigned.includes(id)
 			);
@@ -276,8 +302,6 @@ export async function shareQuickLog(
 }
 
 export type ExecuteQuickLogError =
-	// Interim: logDailyEvent can now return this code. Task 5 gives it real
-	// species-skip behavior here; for now it just passes through untouched.
 	| 'notFound'
 	| 'disabled'
 	| 'noTargets'
@@ -315,6 +339,11 @@ export async function executeQuickLog(opts: {
 		targets = remembered.length > 0 ? remembered : assignedAllowed;
 	}
 	if (targets.length === 0) return { ok: false, code: 'noTargets' };
+
+	// Stored or submitted targets that can't have this activity (a companion's
+	// species changed after the quick log was set up) are skipped, like archived ones.
+	targets = await filterBySpecies(targets, quickLog.type);
+	if (targets.length === 0) return { ok: false, code: 'typeNotAllowedForSpecies' };
 
 	const result = await logDailyEvent(opts.user, targets, {
 		type: quickLog.type,
