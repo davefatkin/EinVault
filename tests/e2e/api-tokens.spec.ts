@@ -292,6 +292,14 @@ test.describe('api tokens', () => {
 		expect(bathroom.status()).toBe(400);
 		expect((await bathroom.json()).code).toBe('typeNotAllowedForSpecies');
 
+		// Subtypes don't turn the species rule into a subtype error.
+		const bathroomPee = await asMember.request.post(app.server.baseURL + '/api/logs', {
+			headers,
+			data: { companionId: JULIA, type: 'bathroom', subtypes: ['pee'] }
+		});
+		expect(bathroomPee.status()).toBe(400);
+		expect((await bathroomPee.json()).code).toBe('typeNotAllowedForSpecies');
+
 		// A shared walk with a dog-only subtype: the dog keeps it, the cat drops it.
 		const walk = await asMember.request.post(app.server.baseURL + '/api/logs', {
 			headers,

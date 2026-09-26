@@ -241,6 +241,17 @@ describe('logDailyEvent species rules', () => {
 		expect(rows.find((r) => r.companionId === catId)?.subtypes).toBeNull();
 	});
 
+	it('checks authorization before the subtype rule', async () => {
+		const res = await logDailyEvent(
+			{ id: 'de-sp-nobody', role: 'caretaker' },
+			[catId],
+			{ type: 'walk', notes: null, durationMinutes: null, loggedAt: new Date(), subtypes: ['x'] },
+			{ rejectUnusableSubtypes: true }
+		);
+		expect(res.ok).toBe(false);
+		expect((res as { code: string }).code).not.toBe('invalidSubtype');
+	});
+
 	it('accepts litter for a cat with litter subtypes', async () => {
 		const res = await logDailyEvent(admin, [catId], {
 			type: 'litter',
@@ -280,5 +291,26 @@ describe('checkSpeciesAndNarrow', () => {
 		if (!res.ok) return;
 		expect(res.subtypesById.get(dogId)).toEqual(['leash', 'hike']);
 		expect(res.subtypesById.get(catId)).toEqual(['leash']);
+	});
+
+	it('rejectUnusableSubtypes: a subtype no id can take is invalidSubtype', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['pee'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res).toEqual({ ok: false, code: 'invalidSubtype' });
+	});
+
+	it('rejectUnusableSubtypes: one usable target keeps the subtype valid', async () => {
+		const res = await checkSpeciesAndNarrow([dogId, catId], 'walk', ['hike'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res.ok).toBe(true);
+	});
+
+	it('rejectUnusableSubtypes: the species rule wins over the subtype check', async () => {
+		const res = await checkSpeciesAndNarrow([catId], 'bathroom', ['pee'], {
+			rejectUnusableSubtypes: true
+		});
+		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
 	});
 });

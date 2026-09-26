@@ -307,7 +307,8 @@ export type ExecuteQuickLogError =
 	| 'noTargets'
 	| 'noActiveShift'
 	| 'notAssigned'
-	| 'typeNotAllowedForSpecies';
+	| 'typeNotAllowedForSpecies'
+	| 'invalidSubtype';
 
 // Run a quick log: resolve targets, delegate to logDailyEvent, then apply the
 // remember rule. companionIds omitted (API path) → the resolved prefill set.

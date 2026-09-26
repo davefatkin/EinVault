@@ -21,13 +21,16 @@ export interface DailyEventInput {
 // subtypes are narrowed per companion, keyed by companion id so callers can
 // build their own rows (some, like the journal's backfill path, insert rows
 // for ids that were never authorized/species-checked as a group).
+// With rejectUnusableSubtypes (the Bearer API), a requested subtype that no id
+// can take is an `invalidSubtype` error instead of being dropped silently.
 export async function checkSpeciesAndNarrow(
 	ids: string[],
 	type: DailyEventType,
-	subtypes: string[] | null | undefined
+	subtypes: string[] | null | undefined,
+	opts: { rejectUnusableSubtypes?: boolean } = {}
 ): Promise<
 	| { ok: true; subtypesById: Map<string, string[] | null> }
-	| { ok: false; code: 'typeNotAllowedForSpecies' }
+	| { ok: false; code: 'typeNotAllowedForSpecies' | 'invalidSubtype' }
 > {
 	const speciesRows = await db.query.companions.findMany({
 		where: inArray(schema.companions.id, ids),
@@ -38,6 +41,10 @@ export async function checkSpeciesAndNarrow(
 		return { ok: false, code: 'typeNotAllowedForSpecies' };
 
 	const requested = new Set(subtypes ?? []);
+	if (opts.rejectUnusableSubtypes && requested.size > 0) {
+		const usable = new Set(ids.flatMap((id) => subtypesFor(speciesById.get(id) ?? 'dog', type)));
+		if ([...requested].some((v) => !usable.has(v))) return { ok: false, code: 'invalidSubtype' };
+	}
 	const subtypesById = new Map(
 		ids.map((cid) => {
 			const allowed = subtypesFor(speciesById.get(cid) ?? 'dog', type);
@@ -53,14 +60,15 @@ export async function checkSpeciesAndNarrow(
 export async function logDailyEvent(
 	user: { id: string; role: UserRole },
 	companionIds: string[],
-	input: DailyEventInput
+	input: DailyEventInput,
+	opts: { rejectUnusableSubtypes?: boolean } = {}
 ): Promise<
 	{ ok: true; ids: string[]; eventGroupId: string | null } | { ok: false; code: CareErrorCode }
 > {
 	const resolved = await authorizeCompanions(user, companionIds);
 	if (!resolved.ok) return resolved;
 
-	const checked = await checkSpeciesAndNarrow(resolved.ids, input.type, input.subtypes);
+	const checked = await checkSpeciesAndNarrow(resolved.ids, input.type, input.subtypes, opts);
 	if (!checked.ok) return checked;
 
 	const durationMinutes = ACTIVITY_HAS_DURATION[input.type] ? input.durationMinutes : null;

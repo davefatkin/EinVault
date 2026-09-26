@@ -1,13 +1,11 @@
 import { error, json } from '@sveltejs/kit';
-import { and, eq, gte, inArray, lt } from 'drizzle-orm';
+import { and, eq, gte, lt } from 'drizzle-orm';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
 import { withIdempotency } from '$lib/server/api-idempotency';
 import { throwCareError } from '$lib/server/care-errors';
 import { logDailyEvent } from '$lib/server/daily-events';
-import { activitySubtypesFor } from '$lib/activitySubtypes';
-import { subtypesFor, toSpecies } from '$lib/species';
 import { requireFullScope, requireAllowedCompanion } from '$lib/server/api-guards';
 import { toApiDailyEvent } from '$lib/server/api-serializers';
 import { isValidDate, parseCompanionTargets, parseLoggedAt } from '$lib/server/validation';
@@ -64,31 +62,24 @@ export const POST = apiRouteZod(
 			loggedAt = parsed;
 		}
 
-		// A subtype no target can take is a client error; one that fits some
-		// targets is narrowed per row by logDailyEvent.
-		if (body.subtypes?.length) {
-			const rows = await db.query.companions.findMany({
-				where: inArray(schema.companions.id, companionIds),
-				columns: { species: true }
-			});
-			const allowed = new Set(rows.flatMap((r) => subtypesFor(toSpecies(r.species), body.type)));
-			// Unknown/unauthorized ids are rejected later by logDailyEvent; with no rows,
-			// fall back to the global list so the error stays about the subtype.
-			const check = rows.length ? allowed : new Set(activitySubtypesFor(body.type));
-			if (body.subtypes.some((s) => !check.has(s)))
-				error(400, { code: 'invalidSubtype', message: t(locale, 'error.invalidSubtype') });
-		}
-
 		return withIdempotency(
 			{ request: event.request, tokenId, endpoint: 'logs', body },
 			async () => {
-				const result = await logDailyEvent({ id: user.id, role: user.role }, companionIds, {
-					type: body.type,
-					notes: body.notes?.trim() || null,
-					durationMinutes: body.durationMinutes ?? null,
-					subtypes: body.subtypes ?? null,
-					loggedAt
-				});
+				const result = await logDailyEvent(
+					{ id: user.id, role: user.role },
+					companionIds,
+					{
+						type: body.type,
+						notes: body.notes?.trim() || null,
+						durationMinutes: body.durationMinutes ?? null,
+						subtypes: body.subtypes ?? null,
+						loggedAt
+					},
+					// A subtype no target can take is a client error; one that fits
+					// some targets is narrowed per row. Checked after authorization so
+					// the species of unreachable ids never shapes the response.
+					{ rejectUnusableSubtypes: true }
+				);
 				if (!result.ok) throwCareError(result.code, locale);
 				return { status: 201, data: { ids: result.ids, eventGroupId: result.eventGroupId } };
 			}

@@ -12,7 +12,8 @@ export type CareErrorCode =
 	| 'noTargets'
 	| 'noActiveShift'
 	| 'notAssigned'
-	| 'typeNotAllowedForSpecies';
+	| 'typeNotAllowedForSpecies'
+	| 'invalidSubtype';
 
 export const CARE_ERROR: Record<CareErrorCode, { status: number; key: MessageKey }> = {
 	notFound: { status: 404, key: 'error.quickLogNotFound' },
@@ -20,7 +21,8 @@ export const CARE_ERROR: Record<CareErrorCode, { status: number; key: MessageKey
 	noTargets: { status: 400, key: 'error.noValidTargets' },
 	noActiveShift: { status: 403, key: 'error.noActiveShift' },
 	notAssigned: { status: 403, key: 'error.notAssignedToCompanion' },
-	typeNotAllowedForSpecies: { status: 400, key: 'error.typeNotAllowedForSpecies' }
+	typeNotAllowedForSpecies: { status: 400, key: 'error.typeNotAllowedForSpecies' },
+	invalidSubtype: { status: 400, key: 'error.invalidSubtype' }
 };
 
 // Bearer-API path: throws an HttpError whose JSON body is { code, message }.

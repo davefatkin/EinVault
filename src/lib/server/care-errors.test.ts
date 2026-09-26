@@ -8,6 +8,7 @@ describe('care errors', () => {
 		expect(CARE_ERROR.noTargets).toEqual({ status: 400, key: 'error.noValidTargets' });
 		expect(CARE_ERROR.noActiveShift).toEqual({ status: 403, key: 'error.noActiveShift' });
 		expect(CARE_ERROR.notAssigned).toEqual({ status: 403, key: 'error.notAssignedToCompanion' });
+		expect(CARE_ERROR.invalidSubtype).toEqual({ status: 400, key: 'error.invalidSubtype' });
 	});
 
 	it('throwCareError throws an HttpError carrying code + localized message', () => {
