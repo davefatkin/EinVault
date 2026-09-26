@@ -38,6 +38,8 @@ function parseLastCompanionIds(raw: string | null): string[] {
 }
 
 // Ids from `ids` whose species allows `type`. One query for the whole set.
+// Applied at save (so assignments stay clean) and again at run time (a
+// companion's species can change after the quick log was set up).
 async function filterBySpecies(ids: string[], type: DailyEventType): Promise<string[]> {
 	if (ids.length === 0) return [];
 	const rows = await db.query.companions.findMany({
@@ -131,7 +133,10 @@ export async function createQuickLog(
 	input: QuickLogInput
 ): Promise<string> {
 	const allowed = new Set(await listAllowedCompanions(user));
-	const companionIds = input.companionIds.filter((id) => allowed.has(id));
+	const companionIds = await filterBySpecies(
+		input.companionIds.filter((id) => allowed.has(id)),
+		input.type
+	);
 	const existing = await listQuickLogs(user.id);
 	const sortOrder = existing.length > 0 ? Math.max(...existing.map((q) => q.sortOrder)) + 1 : 0;
 	const id = generateId(15);
@@ -170,7 +175,10 @@ export async function updateQuickLog(
 	if (!existing) return false;
 
 	const allowed = new Set(await listAllowedCompanions(user));
-	const companionIds = input.companionIds.filter((idc) => allowed.has(idc));
+	const companionIds = await filterBySpecies(
+		input.companionIds.filter((idc) => allowed.has(idc)),
+		input.type
+	);
 
 	db.transaction((tx) => {
 		tx.update(schema.quickLogs)

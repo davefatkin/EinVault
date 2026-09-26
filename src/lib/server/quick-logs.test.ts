@@ -297,6 +297,32 @@ describe('quick logs and species', () => {
 		} as typeof schema.companions.$inferInsert);
 	});
 
+	// Saving drops disallowed targets, so a stale assignment (the companion's
+	// species changed after setup) is written directly.
+	async function assignStale(quickLogId: string, companionId: string) {
+		await db.insert(schema.quickLogCompanions).values({ quickLogId, companionId });
+	}
+
+	it('create and update drop targets whose species cannot have the type', async () => {
+		const input = {
+			name: 'Potty save',
+			type: 'bathroom' as const,
+			durationMinutes: null,
+			subtypes: [],
+			note: null,
+			isEnabled: true,
+			companionIds: [dogId, catId]
+		};
+		const id = await createQuickLog(user, input);
+		const assignedIds = async () =>
+			(await listQuickLogs(user.id)).find((q) => q.id === id)!.companions.map((c) => c.companionId);
+		expect(await assignedIds()).toEqual([dogId]);
+
+		await updateQuickLog(user, id, { ...input, type: 'litter' });
+		expect(await assignedIds()).toEqual([catId]);
+		await deleteQuickLog(user.id, id);
+	});
+
 	it('executeQuickLog skips a cat for a bathroom quick log', async () => {
 		const id = await createQuickLog(user, {
 			name: 'Potty',
@@ -305,8 +331,9 @@ describe('quick logs and species', () => {
 			subtypes: [],
 			note: null,
 			isEnabled: true,
-			companionIds: [dogId, catId]
+			companionIds: [dogId]
 		});
+		await assignStale(id, catId);
 		const res = await executeQuickLog({ user, quickLogId: id, companionIds: [dogId, catId] });
 		expect(res.ok).toBe(true);
 		const rows = await db.query.dailyEvents.findMany({
@@ -324,8 +351,9 @@ describe('quick logs and species', () => {
 			subtypes: [],
 			note: null,
 			isEnabled: true,
-			companionIds: [catId]
+			companionIds: []
 		});
+		await assignStale(id, catId);
 		const res = await executeQuickLog({ user, quickLogId: id });
 		expect(res).toEqual({ ok: false, code: 'typeNotAllowedForSpecies' });
 		await deleteQuickLog(user.id, id);
@@ -377,8 +405,9 @@ describe('quick logs and species', () => {
 			subtypes: [],
 			note: null,
 			isEnabled: true,
-			companionIds: [dogId, catId]
+			companionIds: [dogId]
 		});
+		await assignStale(id, catId);
 		const all = await listQuickLogButtons(user);
 		const b = all.find((x) => x.id === id)!;
 		expect(b.companionIds).toEqual([dogId]);
