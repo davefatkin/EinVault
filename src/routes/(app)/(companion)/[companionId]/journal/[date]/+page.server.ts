@@ -2,8 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, gte, lt, inArray } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
+import { eq, and, gte, lt } from 'drizzle-orm';
 import {
 	parseMood,
 	parseDailyEventType,
@@ -14,8 +13,10 @@ import {
 	exceedsLen
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
-import { parseSubtypes } from '$lib/activitySubtypes';
 import { upsertJournalEntry } from '$lib/server/journal';
+import { logDailyEvent } from '$lib/server/daily-events';
+import { failCareError } from '$lib/server/care-errors';
+import { resolveActivityUpdate } from '$lib/server/journal-activity';
 import {
 	MAX_DAILY_MEDIA,
 	UPLOAD_MAX_MB,
@@ -126,41 +127,16 @@ export const actions: Actions = {
 		const loggedAt = parseLoggedAt(data.get('loggedAt')) ?? new Date();
 
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
-		const list = parseSubtypes(type, data.getAll('subtypes'));
-		const subtypes = list.length ? list : null;
 
 		const additionalIds = parseIdArray(data.getAll('additionalCompanionIds')).filter(
 			(v) => v !== companionId
 		);
-
-		let validAdditionalIds: string[] = [];
-		if (additionalIds.length > 0) {
-			const rows = await db.query.companions.findMany({
-				where: and(
-					inArray(schema.companions.id, additionalIds),
-					eq(schema.companions.isActive, true)
-				),
-				columns: { id: true }
-			});
-			validAdditionalIds = rows.map((r) => r.id);
-		}
-
-		const targetIds = [companionId, ...validAdditionalIds];
-		const eventGroupId = targetIds.length > 1 ? generateId(15) : null;
-
-		const values = targetIds.map((cid) => ({
-			id: generateId(15),
-			companionId: cid,
-			type,
-			notes,
-			durationMinutes,
-			loggedAt,
-			subtypes,
-			loggedBy: locals.user!.id,
-			eventGroupId
-		}));
-
-		await db.insert(schema.dailyEvents).values(values);
+		const result = await logDailyEvent(
+			{ id: locals.user.id, role: locals.user.role },
+			[companionId, ...additionalIds],
+			{ type, notes, durationMinutes, loggedAt, subtypes: data.getAll('subtypes').map(String) }
+		);
+		if (!result.ok) return failCareError(result.code, locals.locale, 'error');
 
 		return { addSuccess: true };
 	},
@@ -182,18 +158,16 @@ export const actions: Actions = {
 
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
 		if (!type) return fail(400, { error: t(locals.locale, 'error.eventTypeRequired') });
-		const list = parseSubtypes(type, data.getAll('subtypes'));
-		const subtypes = list.length ? list : null;
 
-		const existing = await db.query.dailyEvents.findFirst({
-			where: and(eq(schema.dailyEvents.id, id), eq(schema.dailyEvents.companionId, companionId)),
-			columns: { id: true }
-		});
-		if (!existing) return fail(404, { error: t(locals.locale, 'error.eventNotFound') });
+		const resolved = await resolveActivityUpdate(companionId, id, type, data.getAll('subtypes'));
+		if (!resolved.ok)
+			return resolved.code === 'notFound'
+				? fail(404, { error: t(locals.locale, 'error.eventNotFound') })
+				: fail(400, { error: t(locals.locale, 'error.typeNotAllowedForSpecies') });
 
 		await db
 			.update(schema.dailyEvents)
-			.set({ type, notes, durationMinutes, loggedAt, subtypes })
+			.set({ type, notes, durationMinutes, loggedAt, subtypes: resolved.subtypes })
 			.where(eq(schema.dailyEvents.id, id));
 
 		return { updateActivitySuccess: true };
