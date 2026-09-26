@@ -48,6 +48,7 @@ const messages = {
 	'enum.activityType.play': 'Play',
 	'enum.activityType.grooming': 'Grooming',
 	'enum.activityType.other': 'Other',
+	'enum.activityType.litter': 'Litter box',
 
 	// Enum: Activity subtypes
 	'enum.activitySubtype.pee': 'Pee',
@@ -72,6 +73,9 @@ const messages = {
 	'enum.activitySubtype.chew': 'Chew',
 	'enum.activitySubtype.dental': 'Dental',
 	'enum.activitySubtype.training': 'Training',
+	'enum.activitySubtype.scoop': 'Scooped',
+	'enum.activitySubtype.change': 'Litter changed',
+	'enum.activitySubtype.chase': 'Chase',
 
 	// Enum: Reminder types
 	'enum.reminderType.vet': 'Vet',
@@ -84,6 +88,11 @@ const messages = {
 	'enum.role.admin': 'Admin',
 	'enum.role.member': 'Member',
 	'enum.role.caretaker': 'Caretaker',
+
+	// Enum: Species
+	'enum.species.dog': 'Dog',
+	'enum.species.cat': 'Cat',
+	'enum.species.other': 'Other',
 
 	// Enum: Sex
 	'enum.sex.male': 'Male',
@@ -110,6 +119,7 @@ const messages = {
 	'error.titleAndTypeRequired': 'Title and a valid type are required.',
 	'error.typeRequired': 'Type is required.',
 	'error.invalidSubtype': 'Invalid subtype for this activity type',
+	'error.typeNotAllowedForSpecies': "That activity isn't available for this companion.",
 	'error.displayNameRequired': 'Display name is required.',
 	'error.usernameRequired': 'Username is required.',
 	'error.invalidUsernameFormat':
@@ -457,7 +467,9 @@ const messages = {
 
 	// Page: companion (shared form labels / placeholders)
 	'page.companion.labelName': 'Name',
+	'page.companion.labelSpecies': 'Species',
 	'page.companion.labelBreed': 'Breed',
+	'page.companion.labelType': 'Type',
 	'page.companion.labelSex': 'Sex',
 	'page.companion.labelDob': 'Date of birth',
 	'page.companion.labelWeightUnit': 'Weight unit',
@@ -465,8 +477,10 @@ const messages = {
 	'page.companion.labelBio': 'Bio / notes',
 	'page.companion.placeholderName': 'Ein',
 	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderBreedCat': 'Maine Coon',
+	'page.companion.placeholderBreedOther': 'Rabbit, goldfish, gecko…',
 	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
-	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
+	'page.companion.placeholderBio': 'Curious, cuddly, and a little bit dramatic.',
 	'page.companion.sexUnknown': 'Unknown',
 
 	// Page: companion new
@@ -484,6 +498,8 @@ const messages = {
 	'page.companion.edit.schedulesHint': 'Shown to caretakers on their overview page.',
 	'page.companion.edit.labelFeedingSchedule': 'Feeding schedule',
 	'page.companion.edit.labelWalkSchedule': 'Walk schedule',
+	'page.companion.edit.labelRoutine': 'Routine',
+	'page.companion.edit.labelCareRoutine': 'Care routine',
 	'page.companion.edit.labelMedicationSchedule': 'Medication schedule',
 	'page.companion.edit.cardContacts': 'Contacts',
 	'page.companion.edit.labelVetName': 'Vet name',
@@ -494,9 +510,13 @@ const messages = {
 	'page.companion.edit.cardSitterNotes': 'Sitter notes',
 	'page.companion.edit.labelNotesForSitter': 'Notes for caretaker',
 	'page.companion.edit.placeholderFeedingSchedule':
-		'e.g. 7:00am: 1 cup kibble\n6:00pm: 1 cup kibble\nTreats OK after walks',
+		'e.g. 7:00am: breakfast\n6:00pm: dinner\nTreats OK in moderation',
 	'page.companion.edit.placeholderWalkSchedule':
 		'e.g. Morning ~7am, 30 min\nEvening ~5:30pm, 20–30 min\nAvoid the dog park on weekdays',
+	'page.companion.edit.placeholderRoutine':
+		'e.g. Play session ~8pm, 15 min\nScoop litter morning and night',
+	'page.companion.edit.placeholderCareRoutine':
+		'e.g. Clean enclosure Saturdays\nOut-of-cage time every evening',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'e.g. Heartworm chew 1st of the month\nJoint supplement daily with breakfast\nEye drops morning and night',
 	'page.companion.edit.placeholderSitterNotes':
@@ -596,6 +616,8 @@ const messages = {
 	'page.dashboard.caretaker.weightAsOf': 'as of',
 	'page.dashboard.caretaker.cardFeeding': 'Feeding Schedule',
 	'page.dashboard.caretaker.cardWalk': 'Walk Schedule',
+	'page.dashboard.caretaker.cardRoutine': 'Routine',
+	'page.dashboard.caretaker.cardCareRoutine': 'Care routine',
 	'page.dashboard.caretaker.cardMedicationSchedule': 'Medication Schedule',
 	'page.dashboard.caretaker.cardReminders': 'Upcoming Reminders',
 	'page.dashboard.caretaker.remindersEmpty': 'No upcoming reminders.',
@@ -974,7 +996,7 @@ const messages = {
 	'error.invalidOccurredAt':
 		'occurredAt must be a valid ISO 8601 date-time within the allowed range.',
 	'error.invalidWeight': 'Weight must be a positive number.',
-	'error.invalidUnit': 'Unit must be kg or lbs.',
+	'error.invalidUnit': 'Unit must be kg, lbs, g, or oz.',
 	'error.invalidRecordedAt':
 		'recordedAt must be a valid ISO 8601 date-time within the allowed range.',
 	'error.invalidPagination': 'limit must be 1-200 and offset must be 0 or more.',

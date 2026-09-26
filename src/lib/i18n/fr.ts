@@ -50,6 +50,7 @@ const messages: Record<keyof Messages, string> = {
 	'enum.activityType.play': 'Jeu',
 	'enum.activityType.grooming': 'Toilettage',
 	'enum.activityType.other': 'Autre',
+	'enum.activityType.litter': 'Litière',
 
 	// Enum: Activity subtypes
 	'enum.activitySubtype.pee': 'Pipi',
@@ -74,6 +75,9 @@ const messages: Record<keyof Messages, string> = {
 	'enum.activitySubtype.chew': 'À mâcher',
 	'enum.activitySubtype.dental': 'Dentaire',
 	'enum.activitySubtype.training': 'Dressage',
+	'enum.activitySubtype.scoop': 'Nettoyée',
+	'enum.activitySubtype.change': 'Litière changée',
+	'enum.activitySubtype.chase': 'Poursuite',
 
 	// Enum: Reminder types
 	'enum.reminderType.vet': 'Vétérinaire',
@@ -86,6 +90,11 @@ const messages: Record<keyof Messages, string> = {
 	'enum.role.admin': 'Administrateur',
 	'enum.role.member': 'Membre',
 	'enum.role.caretaker': 'Gardien',
+
+	// Enum: Species
+	'enum.species.dog': 'Chien',
+	'enum.species.cat': 'Chat',
+	'enum.species.other': 'Autre',
 
 	// Enum: Sex
 	'enum.sex.male': 'Mâle',
@@ -113,6 +122,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.titleAndTypeRequired': 'Le titre et un type valide sont requis.',
 	'error.typeRequired': 'Le type est requis.',
 	'error.invalidSubtype': 'Sous-type invalide pour cette activité',
+	'error.typeNotAllowedForSpecies': "Cette activité n'est pas disponible pour ce compagnon.",
 	'error.displayNameRequired': "Le nom d'affichage est requis.",
 	'error.usernameRequired': "Le nom d'utilisateur est requis.",
 	'error.invalidUsernameFormat':
@@ -467,7 +477,9 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: companion (shared form labels / placeholders)
 	'page.companion.labelName': 'Nom',
+	'page.companion.labelSpecies': 'Espèce',
 	'page.companion.labelBreed': 'Race',
+	'page.companion.labelType': 'Type',
 	'page.companion.labelSex': 'Sexe',
 	'page.companion.labelDob': 'Date de naissance',
 	'page.companion.labelWeightUnit': 'Unité de poids',
@@ -475,8 +487,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelBio': 'Bio / notes',
 	'page.companion.placeholderName': 'Ein',
 	'page.companion.placeholderBreed': 'Welsh Corgi',
+	'page.companion.placeholderBreedCat': 'Maine Coon',
+	'page.companion.placeholderBreedOther': 'Lapin, poisson rouge, gecko…',
 	'page.companion.placeholderMicrochip': 'e.g. 985112000034577',
-	'page.companion.placeholderBio': 'Loyal data dog. Knows more than he lets on.',
+	'page.companion.placeholderBio': 'Curieux, câlin, et un peu dramatique.',
 	'page.companion.sexUnknown': 'Inconnu',
 
 	// Page: companion new
@@ -495,6 +509,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.schedulesHint': "Affichés aux gardiens sur leur page d'aperçu.",
 	'page.companion.edit.labelFeedingSchedule': 'Horaire des repas',
 	'page.companion.edit.labelWalkSchedule': 'Horaire des promenades',
+	'page.companion.edit.labelRoutine': 'Routine',
+	'page.companion.edit.labelCareRoutine': 'Routine de soins',
 	'page.companion.edit.labelMedicationSchedule': 'Horaire des médicaments',
 	'page.companion.edit.cardContacts': 'Contacts',
 	'page.companion.edit.labelVetName': 'Nom du vétérinaire',
@@ -505,9 +521,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.cardSitterNotes': 'Notes pour le gardien',
 	'page.companion.edit.labelNotesForSitter': 'Notes pour le gardien',
 	'page.companion.edit.placeholderFeedingSchedule':
-		'ex. 7h00 : 1 tasse de croquettes\n18h00 : 1 tasse de croquettes\nFriandises OK après les promenades',
+		'ex. 7h00 : petit-déjeuner\n18h00 : dîner\nFriandises OK avec modération',
 	'page.companion.edit.placeholderWalkSchedule':
 		'ex. Matin ~7h, 30 min\nSoir ~17h30, 20–30 min\nÉviter le parc canin en semaine',
+	'page.companion.edit.placeholderRoutine':
+		'ex. Séance de jeu ~20h, 15 min\nNettoyer la litière matin et soir',
+	'page.companion.edit.placeholderCareRoutine':
+		'ex. Nettoyer l’enclos le samedi\nTemps hors de la cage chaque soir',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'ex. Comprimé antiparasitaire le 1er du mois\nComplément articulaire chaque matin\nCollyre matin et soir',
 	'page.companion.edit.placeholderSitterNotes':
@@ -607,6 +627,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.weightAsOf': 'au',
 	'page.dashboard.caretaker.cardFeeding': 'Horaire des repas',
 	'page.dashboard.caretaker.cardWalk': 'Horaire des promenades',
+	'page.dashboard.caretaker.cardRoutine': 'Routine',
+	'page.dashboard.caretaker.cardCareRoutine': 'Routine de soins',
 	'page.dashboard.caretaker.cardMedicationSchedule': 'Horaire des médicaments',
 	'page.dashboard.caretaker.cardReminders': 'Rappels à venir',
 	'page.dashboard.caretaker.remindersEmpty': 'Aucun rappel à venir.',
@@ -997,7 +1019,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidOccurredAt':
 		'occurredAt doit être une date-heure ISO 8601 valide dans la plage autorisée.',
 	'error.invalidWeight': 'Le poids doit être un nombre positif.',
-	'error.invalidUnit': 'L’unité doit être kg ou lbs.',
+	'error.invalidUnit': 'L’unité doit être kg, lbs, g ou oz.',
 	'error.invalidRecordedAt':
 		'recordedAt doit être une date-heure ISO 8601 valide dans la plage autorisée.',
 	'error.invalidPagination':

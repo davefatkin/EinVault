@@ -80,7 +80,9 @@
 	let editCompanionIds = $state<string[]>([]);
 	let shareRecipientIds = $state<string[]>([]);
 
-	let editHasDuration = $derived(ACTIVITY_HAS_DURATION[editType] ?? false);
+	let editHasDuration = $derived(
+		ACTIVITY_HAS_DURATION[editType as keyof typeof ACTIVITY_HAS_DURATION] ?? false
+	);
 
 	function openCreate() {
 		editorOpen = 'create';
