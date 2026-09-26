@@ -107,12 +107,10 @@
 	// history does not jump. (The field is named `kg` by WeightSparkline; it
 	// carries whatever unit the companion displays in.)
 	let sparklinePoints = $derived(
-		[...recentWeights]
-			.reverse()
-			.map((w) => ({
-				date: w.recordedAt,
-				kg: convertWeight(w.weight, w.unit, companion.weightUnit)
-			}))
+		[...recentWeights].reverse().map((w) => ({
+			date: w.recordedAt,
+			kg: convertWeight(w.weight, w.unit, companion.weightUnit)
+		}))
 	);
 
 	// Merged activity timeline: recentDaily + recentHealth, newest first, capped at 8
