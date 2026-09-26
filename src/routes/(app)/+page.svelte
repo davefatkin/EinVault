@@ -23,7 +23,8 @@
 		MOOD_ICONS,
 		activityDisplayIcon,
 		activityDisplayLabel,
-		healthTypeLabel
+		healthTypeLabel,
+		reminderTypeLabel
 	} from '$lib/i18n/labels';
 	import { careStatus } from '$lib/careStatus';
 	import { reminderUrgency, type ReminderUrgency } from '$lib/reminderBuckets';
@@ -305,7 +306,7 @@
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 						>{t(locale, 'page.reminders.detailType')}</span
 					>
-					<Badge variant="secondary" class="capitalize">{r.type}</Badge>
+					<Badge variant="secondary" class="capitalize">{reminderTypeLabel(locale, r.type)}</Badge>
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"

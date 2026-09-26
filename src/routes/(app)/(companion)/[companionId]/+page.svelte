@@ -28,7 +28,9 @@
 		REMINDER_ICONS,
 		activityTypeOptions,
 		activityDisplayIcon,
-		activityDisplayLabel
+		activityDisplayLabel,
+		healthTypeLabel,
+		reminderTypeLabel
 	} from '$lib/i18n/labels';
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
@@ -335,7 +337,7 @@
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 								>{t(locale, 'page.dashboard.modalLabelType')}</span
 							>
-							<Badge variant="coral" class="capitalize">{r.type}</Badge>
+							<Badge variant="coral" class="capitalize">{reminderTypeLabel(locale, r.type)}</Badge>
 						</div>
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -400,7 +402,7 @@
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
 								>{t(locale, 'page.dashboard.modalLabelType')}</span
 							>
-							<Badge variant="teal" class="capitalize">{h.type.replace('_', ' ')}</Badge>
+							<Badge variant="teal" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
 						</div>
 						<div class="flex items-center gap-3">
 							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -861,7 +863,7 @@
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2">
 											<Badge variant="teal" class="capitalize text-xs"
-												>{event.type.replace('_', ' ')}</Badge
+												>{healthTypeLabel(locale, event.type)}</Badge
 											>
 											<span class="truncate text-xs text-foreground">{event.title}</span>
 										</div>

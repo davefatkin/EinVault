@@ -25,6 +25,39 @@ test.describe('i18n', () => {
 		await expect(asMember.locator('html')).toHaveAttribute('lang', 'en');
 	});
 
+	test('dashboard health badges use translated type labels', async ({ asMember, app }) => {
+		const COMP = 'seed-comp-ein';
+		const title = 'e2e-i18n-vet';
+
+		// Seed health events are weeks old and fall outside Recent Activity; log a fresh one
+		await asMember.goto(`${app.server.baseURL}/${COMP}/health`);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		await asMember.locator('#title').fill(title);
+		await asMember.locator('select[name="type"]').selectOption('vet_visit');
+		await asMember.getByRole('button', { name: 'Save Event' }).click();
+		await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
+
+		await asMember.goto(app.server.baseURL + '/settings');
+		await asMember.locator('select[name="locale"]').selectOption('de');
+		await asMember.waitForLoadState('networkidle');
+		await expect(asMember.locator('html')).toHaveAttribute('lang', 'de');
+
+		try {
+			await asMember.goto(`${app.server.baseURL}/${COMP}`);
+			// 'Tierarztbesuch' is enum.healthType.vet_visit in de.ts
+			const row = asMember.getByRole('button').filter({ hasText: title });
+			await expect(row.getByText('Tierarztbesuch', { exact: true })).toBeVisible();
+
+			await row.click();
+			const dialog = asMember.locator('[role="dialog"]');
+			await expect(dialog.getByText('Tierarztbesuch', { exact: true })).toBeVisible();
+		} finally {
+			await asMember.goto(app.server.baseURL + '/settings');
+			await asMember.locator('select[name="locale"]').selectOption('en');
+			await asMember.waitForLoadState('networkidle');
+		}
+	});
+
 	test('einvault_locale cookie drives language on anonymous pages', async ({ app, browser }) => {
 		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
 		await ctx.addCookies([{ name: 'einvault_locale', value: 'de', url: app.server.baseURL }]);
