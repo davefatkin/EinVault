@@ -44,6 +44,7 @@
 	import { careStatus } from '$lib/careStatus';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
+	import { convertWeight } from '$lib/weightChart';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -86,6 +87,15 @@
 
 	// Quick stats derived from loaded data
 	let latestWeight = $derived(recentWeights.length > 0 ? recentWeights[0] : null);
+	// Latest weight converted to the companion's display unit, so it matches
+	// the unit shown by the sparkline and the health page's chart.
+	let latestWeightDisplay = $derived(
+		latestWeight
+			? Math.round(
+					convertWeight(latestWeight.weight, latestWeight.unit, companion.weightUnit) * 10
+				) / 10
+			: null
+	);
 	// "Next Vet" surfaces the soonest vet or vaccination reminder only, not just
 	// the next reminder of any type (medication, grooming, etc.).
 	let nextReminder = $derived(
@@ -93,10 +103,16 @@
 	);
 	let activityCount = $derived(recentDaily.length);
 
-	// Weight sparkline points — map weight+recordedAt to {date, kg}
-	// We show in whatever unit is stored; the sparkline uses raw numeric values
+	// Sparkline plots every entry in the companion's display unit so mixed-unit
+	// history does not jump. (The field is named `kg` by WeightSparkline; it
+	// carries whatever unit the companion displays in.)
 	let sparklinePoints = $derived(
-		[...recentWeights].reverse().map((w) => ({ date: w.recordedAt, kg: w.weight }))
+		[...recentWeights]
+			.reverse()
+			.map((w) => ({
+				date: w.recordedAt,
+				kg: convertWeight(w.weight, w.unit, companion.weightUnit)
+			}))
 	);
 
 	// Merged activity timeline: recentDaily + recentHealth, newest first, capped at 8
@@ -586,8 +602,8 @@
 							class="flex items-end gap-3 text-left rounded-md px-1 py-0.5 -mx-1 hover:bg-accent transition-colors"
 						>
 							<span class="text-base font-bold text-foreground"
-								>{latestWeight.weight}
-								<span class="text-xs font-normal text-muted-foreground">{latestWeight.unit}</span
+								>{latestWeightDisplay}
+								<span class="text-xs font-normal text-muted-foreground">{companion.weightUnit}</span
 								></span
 							>
 							{#if sparklinePoints.length >= 2}

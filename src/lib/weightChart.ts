@@ -1,17 +1,24 @@
+import type { WeightUnit } from '$lib/activityTypes';
+
 export interface WeightPoint {
 	recordedAt: Date;
 	weight: number;
-	unit: 'lbs' | 'kg';
+	unit: WeightUnit;
 }
 
 export type WeightRange = '6m' | '1y' | 'all';
 
-const LBS_PER_KG = 2.2046226218;
+const GRAMS_PER: Record<WeightUnit, number> = {
+	g: 1,
+	kg: 1000,
+	oz: 28.349523125,
+	lbs: 453.59237
+};
 
-/** Convert a weight between lbs and kg. */
-export function convertWeight(weight: number, from: 'lbs' | 'kg', to: 'lbs' | 'kg'): number {
+/** Convert a weight between any two supported units (via grams). */
+export function convertWeight(weight: number, from: WeightUnit, to: WeightUnit): number {
 	if (from === to) return weight;
-	return from === 'kg' ? weight * LBS_PER_KG : weight / LBS_PER_KG;
+	return (weight * GRAMS_PER[from]) / GRAMS_PER[to];
 }
 
 /** Keep points within the range, relative to `now`. Assumes input is sorted ascending by recordedAt. */

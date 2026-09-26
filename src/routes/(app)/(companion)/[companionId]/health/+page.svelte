@@ -25,6 +25,7 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
 	import { reminderPrefillUrl, type HealthEventType } from '$lib/health';
+	import { WEIGHT_UNITS } from '$lib/activityTypes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -34,7 +35,7 @@
 			.map((w) => ({
 				recordedAt: new Date(w.recordedAt),
 				weight: w.weight,
-				unit: w.unit as 'lbs' | 'kg'
+				unit: w.unit
 			}))
 			.sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime())
 	);
@@ -643,10 +644,9 @@
 						<div class="space-y-1.5">
 							<Label for="unit">{t(locale, 'page.health.labelUnit')}</Label>
 							<Select id="unit" name="unit">
-								<option value={data.companion.weightUnit}>{data.companion.weightUnit}</option>
-								<option value={data.companion.weightUnit === 'lbs' ? 'kg' : 'lbs'}>
-									{data.companion.weightUnit === 'lbs' ? 'kg' : 'lbs'}
-								</option>
+								{#each WEIGHT_UNITS as u (u)}
+									<option value={u} selected={u === data.companion.weightUnit}>{u}</option>
+								{/each}
 							</Select>
 						</div>
 					</div>
@@ -690,6 +690,7 @@
 		</p>
 		<WeightChart
 			entries={weightPoints}
+			displayUnit={data.companion.weightUnit}
 			onAddWeight={data.companion.isActive !== false ? () => (showWeightForm = true) : undefined}
 		/>
 	</section>
@@ -734,8 +735,9 @@
 									<div class="space-y-1.5">
 										<Label for="edit-unit-{entry.id}">{t(locale, 'page.health.labelUnit')}</Label>
 										<Select id="edit-unit-{entry.id}" name="unit">
-											<option value="lbs" selected={entry.unit === 'lbs'}>lbs</option>
-											<option value="kg" selected={entry.unit === 'kg'}>kg</option>
+											{#each WEIGHT_UNITS as u (u)}
+												<option value={u} selected={entry.unit === u}>{u}</option>
+											{/each}
 										</Select>
 									</div>
 								</div>

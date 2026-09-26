@@ -9,6 +9,7 @@
 		type WeightPoint,
 		type WeightRange
 	} from '$lib/weightChart';
+	import type { WeightUnit } from '$lib/activityTypes';
 	import { Scale, TrendingUp, TrendingDown } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -16,11 +17,13 @@
 	interface Props {
 		/** Weight entries, ascending by recordedAt. */
 		entries: WeightPoint[];
+		/** Unit the chart normalizes and displays every point in (the companion's stored weightUnit). */
+		displayUnit: WeightUnit;
 		now?: Date;
 		/** When provided, the empty state shows a "Record weight" CTA. Omit to keep it message-only (e.g. read-only / archived). */
 		onAddWeight?: () => void;
 	}
-	let { entries, now = undefined, onAddWeight = undefined }: Props = $props();
+	let { entries, displayUnit, now = undefined, onAddWeight = undefined }: Props = $props();
 	const uid = $props.id();
 	const locale = getLocale();
 
@@ -32,7 +35,6 @@
 	let visible = $derived(filterByRange(entries, range, ref));
 	let effective = $derived(visible.length < 2 && entries.length >= 2 ? entries : visible);
 	let latest = $derived(entries.at(-1) ?? null);
-	let displayUnit = $derived(latest?.unit ?? 'lbs');
 	let normalized = $derived(effective.map((p) => convertWeight(p.weight, p.unit, displayUnit)));
 	let values = $derived(normalized);
 	let areaPath = $derived(buildAreaPath(values, W, H));

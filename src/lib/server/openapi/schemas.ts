@@ -1,5 +1,6 @@
 import { z } from './z';
 import { MAX_NOTE_LEN } from '$lib/textLimits';
+import { WEIGHT_UNITS } from '$lib/activityTypes';
 
 // Shared zod schemas for the Bearer API. Single source of truth: the route
 // validates against these AND the OpenAPI spec is generated from them, so the
@@ -189,7 +190,7 @@ export const HealthWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('HealthWriteResponse');
 
-export const WeightUnit = z.enum(['kg', 'lbs']).openapi('WeightUnit');
+export const WeightUnit = z.enum(WEIGHT_UNITS).openapi('WeightUnit');
 
 export const WeightRequest = z
 	.object({

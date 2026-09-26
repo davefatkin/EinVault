@@ -64,7 +64,11 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const weight = parseFloat(String(data.get('weight') ?? ''));
-		const unit = parseWeightUnit(String(data.get('unit') ?? ''), 'lbs');
+		const companion = await db.query.companions.findFirst({
+			where: eq(schema.companions.id, params.companionId),
+			columns: { weightUnit: true }
+		});
+		const unit = parseWeightUnit(String(data.get('unit') ?? ''), companion?.weightUnit ?? 'lbs');
 		const notes = String(data.get('notes') ?? '').trim() || null;
 		const recordedAt = data.get('recordedAt')
 			? new Date(String(data.get('recordedAt')))
