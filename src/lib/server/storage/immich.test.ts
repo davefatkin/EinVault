@@ -87,4 +87,29 @@ describe('createImmichClient listAssets', () => {
 		expect(page2.items.map((a) => a.id)).toEqual(['a3']);
 		expect(page2.hasNextPage).toBe(false);
 	});
+
+	it('takenDate uses the capture-local date from localDateTime', async () => {
+		// Taken 23:30 local on the 25th in UTC-5; fileCreatedAt is already the 26th in UTC.
+		fake.setAssets([
+			makeImmichAsset('late', {
+				fileCreatedAt: '2026-09-26T04:30:00.000Z',
+				localDateTime: '2026-09-25T23:30:00.000Z'
+			})
+		]);
+
+		const { items } = await client.listAssets({ page: 1, pageSize: 10 });
+		expect(items[0].takenDate).toBe('2026-09-25');
+	});
+
+	it('takenDate falls back to fileCreatedAt without localDateTime', async () => {
+		fake.setAssets([
+			makeImmichAsset('old', {
+				fileCreatedAt: '2026-09-20T10:00:00.000Z',
+				localDateTime: undefined
+			})
+		]);
+
+		const { items } = await client.listAssets({ page: 1, pageSize: 10 });
+		expect(items[0].takenDate).toBe('2026-09-20');
+	});
 });

@@ -27,6 +27,8 @@ export interface ImmichAsset {
 	fileSizeInByte: number;
 	thumbhash: string | null;
 	fileCreatedAt: string;
+	/** Capture wall-clock time, serialized as if UTC (Immich's convention). */
+	localDateTime?: string;
 	type: 'IMAGE' | 'VIDEO';
 	visibility: ImmichVisibility;
 }
@@ -56,6 +58,7 @@ export function makeImmichAsset(id: string, overrides?: Partial<ImmichAsset>): I
 		fileSizeInByte: PNG.length,
 		thumbhash: null,
 		fileCreatedAt: '2026-01-01T00:00:00.000Z',
+		localDateTime: '2026-01-01T00:00:00.000Z',
 		type: 'IMAGE',
 		visibility: 'timeline',
 		...overrides

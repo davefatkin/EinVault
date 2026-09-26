@@ -1120,6 +1120,7 @@ const messages: Record<keyof Messages, string> = {
 	'immich.picker.loadError': 'Impossible de charger la bibliothèque Immich.',
 	'immich.picker.button': 'Choisir depuis Immich',
 	'immich.picker.pickFailed': "Impossible d'attacher l'élément Immich.",
+	'immich.picker.unknownDate': 'Date inconnue',
 
 	// Paperless picker
 	'paperless.picker.title': 'Choisir depuis Paperless',
