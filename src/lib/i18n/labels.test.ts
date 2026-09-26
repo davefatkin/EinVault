@@ -49,7 +49,9 @@ describe('option builders', () => {
 	it('activitySubtypeOptions narrows by species', () => {
 		expect(activitySubtypeOptions('en', 'walk', 'cat').map((o) => o.value)).toEqual(['leash']);
 		expect(activitySubtypeOptions('en', 'walk').map((o) => o.value)).toEqual([
-			'leash', 'offleash', 'hike'
+			'leash',
+			'offleash',
+			'hike'
 		]);
 	});
 });
@@ -58,21 +60,33 @@ describe('speciesLabels', () => {
 	it('dog', () => {
 		const l = speciesLabels('en', 'dog');
 		expect(l).toMatchObject({
-			icon: '🐕', breedLabel: 'Breed', breedPlaceholder: 'Welsh Corgi',
-			breedFallback: 'Mixed breed', scheduleLabel: 'Walk schedule',
-			scheduleCardTitle: 'Walk Schedule', scheduleIcon: '🦮'
+			icon: '🐕',
+			breedLabel: 'Breed',
+			breedPlaceholder: 'Welsh Corgi',
+			breedFallback: 'Mixed breed',
+			scheduleLabel: 'Walk schedule',
+			scheduleCardTitle: 'Walk Schedule',
+			scheduleIcon: '🦮'
 		});
 	});
 	it('cat', () => {
 		expect(speciesLabels('en', 'cat')).toMatchObject({
-			icon: '🐈', breedLabel: 'Breed', breedPlaceholder: 'Maine Coon',
-			breedFallback: 'Mixed breed', scheduleLabel: 'Routine', scheduleIcon: '🐈'
+			icon: '🐈',
+			breedLabel: 'Breed',
+			breedPlaceholder: 'Maine Coon',
+			breedFallback: 'Mixed breed',
+			scheduleLabel: 'Routine',
+			scheduleIcon: '🐈'
 		});
 	});
 	it('other', () => {
 		expect(speciesLabels('en', 'other')).toMatchObject({
-			icon: '🐾', breedLabel: 'Type', breedPlaceholder: 'Rabbit, goldfish, gecko…',
-			breedFallback: 'Other', scheduleLabel: 'Care routine', scheduleIcon: '🐾'
+			icon: '🐾',
+			breedLabel: 'Type',
+			breedPlaceholder: 'Rabbit, goldfish, gecko…',
+			breedFallback: 'Other',
+			scheduleLabel: 'Care routine',
+			scheduleIcon: '🐾'
 		});
 	});
 });
