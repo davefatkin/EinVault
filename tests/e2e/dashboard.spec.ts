@@ -212,3 +212,72 @@ test('one-off reminder on the dashboard has no skip button in list or modal', as
 	await expect(dialog).toBeVisible({ timeout: 5_000 });
 	await expect(dialog.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
 });
+
+test.describe('mood trend card', () => {
+	test('7-day strip renders seeded moods @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}`);
+		const card = asMember.getByTestId('mood-trend');
+		await expect(card.locator('a[data-date]')).toHaveCount(7);
+		await expect(card.locator('a[data-date]:not([data-mood="none"])')).not.toHaveCount(0);
+		await expect(card.getByRole('button', { name: 'Show 7 days' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+	});
+
+	test('range choice persists across reloads @mobile', async ({ asMember }) => {
+		const card = asMember.getByTestId('mood-trend');
+		const saveRange = async (days: number) => {
+			const saved = asMember.waitForResponse(
+				(r) => r.url().includes('setMoodTrendDays') && r.request().method() === 'POST'
+			);
+			await card.getByRole('button', { name: `Show ${days} days` }).click();
+			await saved;
+		};
+
+		await asMember.goto(`/${COMP}`);
+		try {
+			await saveRange(90);
+			await expect(card.locator('a[data-date]')).toHaveCount(90);
+			await expect(card.getByText('No entry')).toBeVisible();
+
+			await asMember.reload();
+			await expect(card.locator('a[data-date]')).toHaveCount(90);
+			await expect(card.getByRole('button', { name: 'Show 90 days' })).toHaveAttribute(
+				'aria-pressed',
+				'true'
+			);
+
+			// No horizontal page scroll with the widest grid.
+			const overflows = await asMember.evaluate(
+				() => document.documentElement.scrollWidth > window.innerWidth
+			);
+			expect(overflows).toBe(false);
+		} finally {
+			// Shared asMember user: always restore the default for later tests.
+			await asMember.goto(`/${COMP}`);
+			await saveRange(7);
+		}
+	});
+
+	test('clicking a day opens that journal day', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}`);
+		const cell = asMember.getByTestId('mood-trend').locator('a[data-date]').first();
+		const date = await cell.getAttribute('data-date');
+		expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+		await cell.click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/${date}$`));
+	});
+
+	test('companion without moods shows the empty state', async ({ asMember }) => {
+		await asMember.goto('/companions/new');
+		await asMember.locator('#name').fill('e2e-mood-empty');
+		await asMember.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+
+		const card = asMember.getByTestId('mood-trend');
+		await expect(card.getByText('No moods logged yet')).toBeVisible();
+		await expect(card.getByRole('link', { name: "Log today's mood" })).toBeVisible();
+		await expect(card.locator('a[data-date]')).toHaveCount(0);
+	});
+});
