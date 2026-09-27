@@ -139,6 +139,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidTheme': 'Ungültiges Design.',
 	'error.invalidLocale': 'Ungültige Sprache.',
 	'error.invalidReminderUndo': 'Ungültiger Wert für Rückgängig-Fenster.',
+	'error.invalidMoodTrendRange': 'Ungültiger Zeitraum.',
 	'error.invalidRecurrence': 'Ungültige Wiederholungskonfiguration.',
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
@@ -651,6 +652,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Fällig',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Wiederholt sich',
 	'page.dashboard.caretaker.closeDialog': 'Dialog schließen',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Stimmung',
+	'page.dashboard.moodTrend.range7': '7 T',
+	'page.dashboard.moodTrend.range30': '30 T',
+	'page.dashboard.moodTrend.range90': '90 T',
+	'page.dashboard.moodTrend.rangeGroup': 'Stimmungszeitraum',
+	'page.dashboard.moodTrend.rangeAria': '{days} Tage anzeigen',
+	'page.dashboard.moodTrend.noEntry': 'Kein Eintrag',
+	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
+	'page.dashboard.moodTrend.legend': 'Legende',
+	'page.dashboard.moodTrend.emptyTitle': 'Noch keine Stimmung erfasst',
+	'page.dashboard.moodTrend.emptyCta': 'Heutige Stimmung eintragen',
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'Keine Begleiter zugewiesen',

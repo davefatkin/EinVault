@@ -138,6 +138,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidTheme': 'Tema non valido.',
 	'error.invalidLocale': 'Lingua non valida.',
 	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',
+	'error.invalidMoodTrendRange': 'Periodo non valido.',
 	'error.invalidRecurrence': 'Configurazione ricorrenza non valida.',
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
@@ -647,6 +648,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Scadenza',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Si ripete',
 	'page.dashboard.caretaker.closeDialog': 'Chiudi finestra',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Umore',
+	'page.dashboard.moodTrend.range7': '7 g',
+	'page.dashboard.moodTrend.range30': '30 g',
+	'page.dashboard.moodTrend.range90': '90 g',
+	'page.dashboard.moodTrend.rangeGroup': 'Periodo umore',
+	'page.dashboard.moodTrend.rangeAria': 'Mostra {days} giorni',
+	'page.dashboard.moodTrend.noEntry': 'Nessuna voce',
+	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
+	'page.dashboard.moodTrend.legend': 'Legenda',
+	'page.dashboard.moodTrend.emptyTitle': 'Nessun umore registrato',
+	'page.dashboard.moodTrend.emptyCta': "Registra l'umore di oggi",
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'Nessun compagno assegnato',

@@ -139,6 +139,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidTheme': 'Tema inválido.',
 	'error.invalidLocale': 'Idioma inválido.',
 	'error.invalidReminderUndo': 'Valor de janela para desfazer inválido.',
+	'error.invalidMoodTrendRange': 'Período inválido.',
 	'error.invalidRecurrence': 'Configuração de recorrência inválida.',
 	'error.invalidDefaultRecurrence': 'Unidade de recorrência padrão inválida.',
 	'error.invalidRole': 'Função inválida.',
@@ -649,6 +650,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Vencimento',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repete-se',
 	'page.dashboard.caretaker.closeDialog': 'Fechar diálogo',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Humor',
+	'page.dashboard.moodTrend.range7': '7 d',
+	'page.dashboard.moodTrend.range30': '30 d',
+	'page.dashboard.moodTrend.range90': '90 d',
+	'page.dashboard.moodTrend.rangeGroup': 'Período de humor',
+	'page.dashboard.moodTrend.rangeAria': 'Mostrar {days} dias',
+	'page.dashboard.moodTrend.noEntry': 'Sem registo',
+	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
+	'page.dashboard.moodTrend.legend': 'Legenda',
+	'page.dashboard.moodTrend.emptyTitle': 'Nenhum humor registado',
+	'page.dashboard.moodTrend.emptyCta': 'Registar o humor de hoje',
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'Sem companheiros atribuídos',

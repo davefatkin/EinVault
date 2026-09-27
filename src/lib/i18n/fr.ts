@@ -139,6 +139,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidTheme': 'Thème invalide.',
 	'error.invalidLocale': 'Langue invalide.',
 	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
+	'error.invalidMoodTrendRange': 'Période invalide.',
 	'error.invalidRecurrence': 'Configuration de récurrence invalide.',
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
@@ -651,6 +652,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Échéance',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se répète',
 	'page.dashboard.caretaker.closeDialog': 'Fermer la boîte de dialogue',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Humeur',
+	'page.dashboard.moodTrend.range7': '7 j',
+	'page.dashboard.moodTrend.range30': '30 j',
+	'page.dashboard.moodTrend.range90': '90 j',
+	'page.dashboard.moodTrend.rangeGroup': "Période d'humeur",
+	'page.dashboard.moodTrend.rangeAria': 'Afficher {days} jours',
+	'page.dashboard.moodTrend.noEntry': 'Aucune entrée',
+	'page.dashboard.moodTrend.cellLabel': '{date} : {mood}',
+	'page.dashboard.moodTrend.legend': 'Légende',
+	'page.dashboard.moodTrend.emptyTitle': 'Aucune humeur enregistrée',
+	'page.dashboard.moodTrend.emptyCta': "Noter l'humeur du jour",
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'Aucun compagnon assigné',

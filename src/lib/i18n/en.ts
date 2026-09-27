@@ -136,6 +136,7 @@ const messages = {
 	'error.invalidTheme': 'Invalid theme.',
 	'error.invalidLocale': 'Invalid locale.',
 	'error.invalidReminderUndo': 'Invalid undo window value.',
+	'error.invalidMoodTrendRange': 'Invalid mood range.',
 	'error.invalidRecurrence': 'Invalid recurrence configuration.',
 	'error.invalidDefaultRecurrence': 'Invalid default recurrence unit.',
 	'error.invalidRole': 'Invalid role.',
@@ -640,6 +641,19 @@ const messages = {
 	'page.dashboard.caretaker.modalLabelDue': 'Due',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repeats',
 	'page.dashboard.caretaker.closeDialog': 'Close dialog',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Mood',
+	'page.dashboard.moodTrend.range7': '7d',
+	'page.dashboard.moodTrend.range30': '30d',
+	'page.dashboard.moodTrend.range90': '90d',
+	'page.dashboard.moodTrend.rangeGroup': 'Mood range',
+	'page.dashboard.moodTrend.rangeAria': 'Show {days} days',
+	'page.dashboard.moodTrend.noEntry': 'No entry',
+	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
+	'page.dashboard.moodTrend.legend': 'Legend',
+	'page.dashboard.moodTrend.emptyTitle': 'No moods logged yet',
+	'page.dashboard.moodTrend.emptyCta': "Log today's mood",
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'No companions assigned',
