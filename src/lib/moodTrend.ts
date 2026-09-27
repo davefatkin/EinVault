@@ -79,3 +79,33 @@ export function formatWeekdayShort(iso: string, locale: Locale): string {
 		utcNoon(iso)
 	);
 }
+
+// One entry per week column: a short month name where that month starts,
+// otherwise null. The first column gets its own month only when the next
+// label is at least two columns away, so labels never collide.
+export function monthColumnLabels(
+	columns: (MoodDay | null)[][],
+	locale: Locale
+): (string | null)[] {
+	const fmt = new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' });
+	const labels = columns.map((col) => {
+		const start = col.find((d) => d?.date.endsWith('-01'));
+		return start ? fmt.format(utcNoon(start.date)) : null;
+	});
+	const next = labels.findIndex((l) => l !== null);
+	const first = columns[0]?.find((d) => d !== null);
+	if (first && labels[0] === null && (next === -1 || next >= 2)) {
+		labels[0] = fmt.format(utcNoon(first.date));
+	}
+	return labels;
+}
+
+// Seven row labels starting at weekStart; rows 0, 2 and 4 are filled
+// (Mon/Wed/Fri or Sun/Tue/Thu), the rest stay blank.
+export function weekdayRowLabels(weekStart: 0 | 1, locale: Locale): string[] {
+	const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+	// 2026-09-20 is a Sunday, so adding n days gives weekday n.
+	return Array.from({ length: 7 }, (_, r) =>
+		r % 2 === 0 && r < 6 ? fmt.format(utcNoon(addDaysISO('2026-09-20', weekStart + r))) : ''
+	);
+}

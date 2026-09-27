@@ -7,7 +7,9 @@ import {
 	resolveMoodTrendDays,
 	formatDayLabel,
 	formatWeekdayShort,
-	WEEK_START
+	WEEK_START,
+	monthColumnLabels,
+	weekdayRowLabels
 } from './moodTrend';
 
 describe('addDaysISO', () => {
@@ -111,5 +113,38 @@ describe('labels', () => {
 
 	it('week start map covers every locale', () => {
 		expect(WEEK_START).toEqual({ en: 0, pt: 0, de: 1, es: 1, fr: 1, it: 1 });
+	});
+});
+
+describe('monthColumnLabels', () => {
+	it('labels the column holding each month start (90d)', () => {
+		const cols = toWeekColumns(buildMoodDays([], '2026-09-27', 90), 1);
+		const labels = monthColumnLabels(cols, 'en');
+		expect(labels).toHaveLength(cols.length);
+		expect(labels[0]).toBe('Jul');
+		expect(labels[4]).toBe('Aug');
+		expect(labels[9]).toBe('Sep');
+		expect(labels.filter(Boolean)).toHaveLength(3);
+	});
+
+	it('skips a first-column label that would crowd the next month', () => {
+		// 30d from Sat Aug 29: first column has no month start, Sep 1 is in column 1.
+		const cols = toWeekColumns(buildMoodDays([], '2026-09-27', 30), 1);
+		expect(monthColumnLabels(cols, 'en')).toEqual([null, 'Sep', null, null, null]);
+	});
+
+	it('labels the first column when no month starts nearby', () => {
+		// 30d from Fri Oct 2: Oct 1 is outside the range, Nov 1 too.
+		const cols = toWeekColumns(buildMoodDays([], '2026-10-31', 30), 1);
+		const labels = monthColumnLabels(cols, 'en');
+		expect(labels[0]).toBe('Oct');
+		expect(labels.filter(Boolean)).toHaveLength(1);
+	});
+});
+
+describe('weekdayRowLabels', () => {
+	it('labels every other row from the week start', () => {
+		expect(weekdayRowLabels(1, 'en')).toEqual(['Mon', '', 'Wed', '', 'Fri', '', '']);
+		expect(weekdayRowLabels(0, 'en')).toEqual(['Sun', '', 'Tue', '', 'Thu', '', '']);
 	});
 });
