@@ -52,7 +52,7 @@
 				action="?/setMoodTrendDays"
 				role="group"
 				aria-label={t(locale, 'page.dashboard.moodTrend.rangeGroup')}
-				class="inline-flex rounded-md border border-border p-0.5"
+				class="inline-flex rounded-lg border border-border p-1"
 				use:enhance={({ submitter }) => {
 					const next = Number((submitter as HTMLButtonElement | null)?.value);
 					if (isMoodTrendRange(next)) days = next;
@@ -67,7 +67,7 @@
 						value={r}
 						aria-pressed={days === r}
 						title={t(locale, 'page.dashboard.moodTrend.rangeAria', { days: String(r) })}
-						class="min-h-6 rounded px-2 py-1 text-xs font-medium transition-colors {days === r
+						class="min-h-6 rounded-sm px-2 py-1 text-xs font-medium transition-colors {days === r
 							? 'bg-primary text-primary-foreground'
 							: 'text-muted-foreground hover:bg-accent'}"
 					>

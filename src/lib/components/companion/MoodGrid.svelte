@@ -24,8 +24,12 @@
 	}
 </script>
 
-<!-- 7 rows (weekdays) x 13-14 columns (weeks); 14px cells fit a 320px viewport. -->
-<div class="grid w-fit grid-flow-col grid-rows-7 gap-[3px]">
+<!-- 7 rows (weekdays) x one column per week. Columns share the card width;
+     rows keep a fixed height, so cells stretch into bricks on wide cards. -->
+<div
+	class="grid w-full grid-flow-col grid-rows-7 gap-[3px]"
+	style="grid-template-columns: repeat({columns.length}, minmax(0, 1fr))"
+>
 	{#each columns as col, ci (ci)}
 		{#each col as day, ri (`${ci}-${ri}`)}
 			{#if day}
@@ -36,12 +40,12 @@
 					data-mood={day.mood ?? 'none'}
 					aria-label={label(day)}
 					title={label(day)}
-					class="size-3.5 rounded-[3px] outline-none hover:ring-2 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring sm:size-4 {day.mood
+					class="h-4 rounded-[3px] outline-none hover:ring-2 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring sm:h-5 {day.mood
 						? MOOD_TONE[day.mood]
 						: EMPTY}"
 				></a>
 			{:else}
-				<span aria-hidden="true" class="size-3.5 sm:size-4"></span>
+				<span aria-hidden="true" class="h-4 sm:h-5"></span>
 			{/if}
 		{/each}
 	{/each}
