@@ -2,18 +2,21 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, gte, and, lte, isNull } from 'drizzle-orm';
+import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
+import { handleMoodTrendDaysUpdate } from '$lib/server/account';
+import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '$lib/moodTrend';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const { companion } = await parent();
 
 	const now = new Date();
+	const moodToday = localDateISO(now);
 
 	const [
 		recentHealth,
@@ -22,7 +25,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		recentWeights,
 		todayJournal,
 		activeCaretakerShift,
-		recentDocuments
+		recentDocuments,
+		moodHistory
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -84,7 +88,18 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			where: eq(schema.documents.companionId, params.companionId),
 			orderBy: (d, { desc }) => [desc(d.createdAt)],
 			limit: 5
-		})
+		}),
+		db
+			.select({ date: schema.journalEntries.date, mood: schema.journalEntries.mood })
+			.from(schema.journalEntries)
+			.where(
+				and(
+					eq(schema.journalEntries.companionId, params.companionId),
+					isNotNull(schema.journalEntries.mood),
+					gte(schema.journalEntries.date, addDaysISO(moodToday, -(MOOD_TREND_MAX - 1)))
+				)
+			)
+			.then((rows) => rows.filter((r): r is { date: string; mood: Mood } => r.mood !== null))
 	]);
 
 	const quickLogButtons = await listQuickLogButtons(
@@ -101,7 +116,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		todayJournal,
 		activeCaretakerShift,
 		recentDocuments,
-		quickLogButtons
+		quickLogButtons,
+		moodHistory,
+		moodTrendDays: resolveMoodTrendDays(locals.user.moodTrendDays),
+		moodToday
 	};
 };
 
@@ -156,5 +174,10 @@ export const actions: Actions = {
 	executeQuickLog: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		return handleQuickLogExecute(locals.user, request, locals.locale);
+	},
+
+	setMoodTrendDays: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		return handleMoodTrendDaysUpdate(locals.user, request, locals.locale);
 	}
 };

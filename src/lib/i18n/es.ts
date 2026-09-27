@@ -139,6 +139,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidTheme': 'Tema no válido.',
 	'error.invalidLocale': 'Idioma no válido.',
 	'error.invalidReminderUndo': 'Valor de ventana de deshacer no válido.',
+	'error.invalidMoodTrendRange': 'Periodo no válido.',
 	'error.invalidRecurrence': 'Configuración de recurrencia no válida.',
 	'error.invalidDefaultRecurrence': 'Unidad de recurrencia predeterminada no válida.',
 	'error.invalidRole': 'Rol no válido.',
@@ -649,6 +650,20 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Vencimiento',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se repite',
 	'page.dashboard.caretaker.closeDialog': 'Cerrar diálogo',
+
+	// Page: dashboard (mood trend)
+	'page.dashboard.moodTrend.title': 'Ánimo',
+	'page.dashboard.moodTrend.range7': '7 d',
+	'page.dashboard.moodTrend.range30': '30 d',
+	'page.dashboard.moodTrend.range90': '90 d',
+	'page.dashboard.moodTrend.rangeGroup': 'Periodo de ánimo',
+	'page.dashboard.moodTrend.rangeAria': 'Mostrar {days} días',
+	'page.dashboard.moodTrend.noEntry': 'Sin registro',
+	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
+	'page.dashboard.moodTrend.legend': 'Leyenda',
+	'page.dashboard.moodTrend.emptyTitle': 'Aún no hay estados de ánimo',
+	'page.dashboard.moodTrend.emptyRange': 'Sin estados de ánimo en este periodo',
+	'page.dashboard.moodTrend.emptyCta': 'Registrar el ánimo de hoy',
 
 	// Page: caretaker home
 	'page.caretaker.home.noCompanionsHeading': 'Sin compañeros asignados',

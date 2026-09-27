@@ -40,6 +40,7 @@ export const users = sqliteTable(
 		oidcSubject: text('oidc_subject'),
 		oidcIssuer: text('oidc_issuer'),
 		reminderUndoSeconds: integer('reminder_undo_seconds'),
+		moodTrendDays: integer('mood_trend_days'),
 		defaultRecurrenceUnit: text('default_recurrence_unit', {
 			enum: ['day', 'week', 'month', 'year']
 		}),

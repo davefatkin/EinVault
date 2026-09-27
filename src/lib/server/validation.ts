@@ -10,8 +10,8 @@ export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Mood
 
-export type Mood = 'great' | 'good' | 'meh' | 'off' | 'sick';
-const MOODS = ['great', 'good', 'meh', 'off', 'sick'] as const satisfies readonly Mood[];
+import { MOODS, type Mood } from '$lib/mood';
+export type { Mood };
 
 export function parseMood(value: string | null | undefined): Mood | null {
 	if (!value) return null;

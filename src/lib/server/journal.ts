@@ -2,7 +2,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, lt, gte, and, inArray, sql, desc } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
-import type { Mood } from '$lib/server/validation';
+import type { Mood } from '$lib/mood';
 import type { UserRef } from '$lib/types';
 
 const PAGE_SIZE = 20;

@@ -47,6 +47,7 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { convertWeight } from '$lib/weightChart';
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
+	import MoodTrendCard from '$lib/components/companion/MoodTrendCard.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -653,6 +654,14 @@
 			</div>
 		</div>
 	</Card>
+
+	<MoodTrendCard
+		companionId={companion.id}
+		archived={companion.isActive === false}
+		history={data.moodHistory}
+		today={data.moodToday}
+		initialDays={data.moodTrendDays}
+	/>
 
 	<!-- Upcoming reminders card -->
 	<Card>

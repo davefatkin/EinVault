@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `mood_trend_days` integer;

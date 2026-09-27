@@ -22,6 +22,7 @@ import { parseRecurrenceUnit, EMAIL_RE } from '$lib/server/validation';
 import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '$lib/server/notify/ntfy';
 import { isMailEnabled, sendMail } from '$lib/server/mail';
 import { buildTestEmail } from '$lib/server/mail/templates';
+import { isMoodTrendRange } from '$lib/moodTrend';
 
 export async function handleAccountUpdate(
 	userId: string,
@@ -154,6 +155,24 @@ export async function handleReminderUndoUpdate(userId: string, request: Request,
 		.where(eq(schema.users.id, userId));
 
 	return { reminderUndoSuccess: true };
+}
+
+export async function handleMoodTrendDaysUpdate(
+	user: { id: string; role: string },
+	request: Request,
+	locale: Locale
+) {
+	if (user.role === 'caretaker') return fail(403, { error: t(locale, 'error.forbidden') });
+
+	const data = await request.formData();
+	const days = Number(data.get('days'));
+	if (!isMoodTrendRange(days)) {
+		return fail(400, { error: t(locale, 'error.invalidMoodTrendRange') });
+	}
+
+	await db.update(schema.users).set({ moodTrendDays: days }).where(eq(schema.users.id, user.id));
+
+	return { moodTrendSuccess: true as const };
 }
 
 export async function handleDefaultRecurrenceUpdate(
