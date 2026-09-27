@@ -15,6 +15,7 @@ declare global {
 				email: string | null;
 				phone: string | null;
 				reminderUndoSeconds: number | null;
+				moodTrendDays: number | null;
 				defaultRecurrenceUnit: RecurrenceUnit | null;
 				notifyReminderEmail: boolean;
 				notifyShiftEmail: boolean;
