@@ -30,7 +30,8 @@
 	// Seeded once from the server; the toggle owns it afterwards.
 	let days = $state<MoodTrendRange>(untrack(() => initialDays));
 	let moodDays = $derived(buildMoodDays(history, today, days));
-	let hasAny = $derived(moodDays.some((d) => d.mood !== null));
+	let hasInRange = $derived(moodDays.some((d) => d.mood !== null));
+	let hasAny = $derived(history.length > 0);
 
 	const RANGE_KEY = {
 		7: 'page.dashboard.moodTrend.range7',
@@ -65,8 +66,8 @@
 						name="days"
 						value={r}
 						aria-pressed={days === r}
-						aria-label={t(locale, 'page.dashboard.moodTrend.rangeAria', { days: String(r) })}
-						class="rounded px-2 py-0.5 text-xs font-medium transition-colors {days === r
+						title={t(locale, 'page.dashboard.moodTrend.rangeAria', { days: String(r) })}
+						class="min-h-6 rounded px-2 py-1 text-xs font-medium transition-colors {days === r
 							? 'bg-primary text-primary-foreground'
 							: 'text-muted-foreground hover:bg-accent'}"
 					>
@@ -82,10 +83,13 @@
 		</Button>
 	{/snippet}
 	<CardContent class="pt-0">
-		{#if !hasAny}
+		{#if !hasInRange}
 			<EmptyState
 				size="sm"
-				title={t(locale, 'page.dashboard.moodTrend.emptyTitle')}
+				title={t(
+					locale,
+					hasAny ? 'page.dashboard.moodTrend.emptyRange' : 'page.dashboard.moodTrend.emptyTitle'
+				)}
 				action={archived ? undefined : emptyAction}
 			/>
 		{:else if days === 7}

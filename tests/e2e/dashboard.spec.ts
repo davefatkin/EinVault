@@ -219,7 +219,7 @@ test.describe('mood trend card', () => {
 		const card = asMember.getByTestId('mood-trend');
 		await expect(card.locator('a[data-date]')).toHaveCount(7);
 		await expect(card.locator('a[data-date]:not([data-mood="none"])')).not.toHaveCount(0);
-		await expect(card.getByRole('button', { name: 'Show 7 days' })).toHaveAttribute(
+		await expect(card.getByRole('button', { name: '7d', exact: true })).toHaveAttribute(
 			'aria-pressed',
 			'true'
 		);
@@ -231,7 +231,7 @@ test.describe('mood trend card', () => {
 			const saved = asMember.waitForResponse(
 				(r) => r.url().includes('setMoodTrendDays') && r.request().method() === 'POST'
 			);
-			await card.getByRole('button', { name: `Show ${days} days` }).click();
+			await card.getByRole('button', { name: `${days}d`, exact: true }).click();
 			await saved;
 		};
 
@@ -243,7 +243,7 @@ test.describe('mood trend card', () => {
 
 			await asMember.reload();
 			await expect(card.locator('a[data-date]')).toHaveCount(90);
-			await expect(card.getByRole('button', { name: 'Show 90 days' })).toHaveAttribute(
+			await expect(card.getByRole('button', { name: '90d', exact: true })).toHaveAttribute(
 				'aria-pressed',
 				'true'
 			);
@@ -279,5 +279,30 @@ test.describe('mood trend card', () => {
 		await expect(card.getByText('No moods logged yet')).toBeVisible();
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toBeVisible();
 		await expect(card.locator('a[data-date]')).toHaveCount(0);
+	});
+
+	test('archived companion hides the log-mood CTA', async ({ asAdmin }) => {
+		await asAdmin.goto('/companions/new');
+		await asAdmin.locator('#name').fill('e2e-mood-archived');
+		await asAdmin.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(asAdmin).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+		const id = asAdmin.url().split('/').filter(Boolean).pop()!;
+
+		const card = asAdmin.getByTestId('mood-trend');
+		await expect(card.getByRole('link', { name: "Log today's mood" })).toBeVisible();
+
+		// Archive the companion via the real UI flow (see companions.spec.ts).
+		await asAdmin.goto(`/companions/${id}/edit`);
+		const triggerBtn = asAdmin.getByRole('button', { name: /Archive e2e-mood-archived/i });
+		await triggerBtn.scrollIntoViewIfNeeded();
+		await triggerBtn.click();
+		const archiveForm = asAdmin.locator('form[action="?/archive"]');
+		await expect(archiveForm).toBeVisible({ timeout: 5_000 });
+		await archiveForm.locator('button[type="submit"]').click();
+		await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 10_000 });
+
+		await asAdmin.goto(`/${id}`);
+		await expect(card.getByText('No moods logged yet')).toBeVisible();
+		await expect(card.getByRole('link', { name: "Log today's mood" })).toHaveCount(0);
 	});
 });

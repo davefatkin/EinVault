@@ -653,6 +653,7 @@ const messages = {
 	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
 	'page.dashboard.moodTrend.legend': 'Legend',
 	'page.dashboard.moodTrend.emptyTitle': 'No moods logged yet',
+	'page.dashboard.moodTrend.emptyRange': 'No moods in this range',
 	'page.dashboard.moodTrend.emptyCta': "Log today's mood",
 
 	// Page: caretaker home

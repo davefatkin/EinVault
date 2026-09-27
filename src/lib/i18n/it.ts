@@ -660,6 +660,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
 	'page.dashboard.moodTrend.legend': 'Legenda',
 	'page.dashboard.moodTrend.emptyTitle': 'Nessun umore registrato',
+	'page.dashboard.moodTrend.emptyRange': 'Nessun umore in questo periodo',
 	'page.dashboard.moodTrend.emptyCta': "Registra l'umore di oggi",
 
 	// Page: caretaker home

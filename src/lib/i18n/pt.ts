@@ -662,6 +662,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
 	'page.dashboard.moodTrend.legend': 'Legenda',
 	'page.dashboard.moodTrend.emptyTitle': 'Nenhum humor registado',
+	'page.dashboard.moodTrend.emptyRange': 'Sem humor registado neste período',
 	'page.dashboard.moodTrend.emptyCta': 'Registar o humor de hoje',
 
 	// Page: caretaker home

@@ -662,6 +662,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.moodTrend.cellLabel': '{date}: {mood}',
 	'page.dashboard.moodTrend.legend': 'Leyenda',
 	'page.dashboard.moodTrend.emptyTitle': 'Aún no hay estados de ánimo',
+	'page.dashboard.moodTrend.emptyRange': 'Sin estados de ánimo en este periodo',
 	'page.dashboard.moodTrend.emptyCta': 'Registrar el ánimo de hoy',
 
 	// Page: caretaker home

@@ -31,6 +31,7 @@
 			{#if day}
 				<a
 					href="/{companionId}/journal/{day.date}"
+					tabindex="-1"
 					data-date={day.date}
 					data-mood={day.mood ?? 'none'}
 					aria-label={label(day)}
