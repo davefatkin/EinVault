@@ -1,6 +1,6 @@
 {
 	"name": "einvault",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"private": true,
 	"scripts": {
 		"dev": "svelte-kit sync && vite dev",
