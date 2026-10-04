@@ -4,6 +4,7 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import NoteContent from '$lib/components/notes/NoteContent.svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -508,14 +509,21 @@
 		</section>
 	{/if}
 
-	<!-- 4b. Sitter notes (reference) -->
-	{#if companion.notesForSitter}
+	<!-- 4b. Shared notes (reference) -->
+	{#if data.sharedNotes.length > 0}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 				{t(locale, 'page.dashboard.caretaker.cardSitterNotes')}
 			</h2>
-			<div class="prose prose-sm dark:prose-invert max-w-none">
-				{@html renderMarkdown(companion.notesForSitter)}
+			<div class="space-y-2">
+				{#each data.sharedNotes as note, i (note.id)}
+					<details class="rounded-lg border border-border bg-card px-4 py-3" open={i === 0}>
+						<summary class="cursor-pointer font-medium text-foreground">{note.title}</summary>
+						<div class="mt-3">
+							<NoteContent {note} showTitle={false} />
+						</div>
+					</details>
+				{/each}
 			</div>
 		</section>
 	{/if}

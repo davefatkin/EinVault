@@ -519,8 +519,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelVetClinic': 'Clínica veterinária',
 	'page.companion.edit.labelEmergencyContact': 'Contacto de emergência',
 	'page.companion.edit.labelEmergencyPhone': 'Telefone',
-	'page.companion.edit.cardSitterNotes': 'Notas para o cuidador',
-	'page.companion.edit.labelNotesForSitter': 'Notas para o cuidador',
 	'page.companion.edit.placeholderFeedingSchedule':
 		'ex. 7:00: pequeno-almoço\n18:00: jantar\nBiscoitos OK com moderação',
 	'page.companion.edit.placeholderWalkSchedule':
@@ -531,8 +529,6 @@ const messages: Record<keyof Messages, string> = {
 		'ex. Limpar o recinto aos sábados\nTempo fora da gaiola todas as noites',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'ex. Comprimido antiparasitário no dia 1 do mês\nSuplemento articular diário ao pequeno-almoço\nColírio de manhã e à noite',
-	'page.companion.edit.placeholderSitterNotes':
-		'Tudo o que um cuidador deve saber: manias, medos, sítios preferidos…',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Hospital Veterinário Valentine',

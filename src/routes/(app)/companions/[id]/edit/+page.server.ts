@@ -59,8 +59,7 @@ export const actions: Actions = {
 				emergencyContactPhone: String(data.get('emergencyContactPhone') ?? '').trim() || null,
 				vetName: String(data.get('vetName') ?? '').trim() || null,
 				vetPhone: String(data.get('vetPhone') ?? '').trim() || null,
-				vetClinic: String(data.get('vetClinic') ?? '').trim() || null,
-				notesForSitter: String(data.get('notesForSitter') ?? '').trim() || null
+				vetClinic: String(data.get('vetClinic') ?? '').trim() || null
 			})
 			.where(eq(schema.companions.id, params.id));
 

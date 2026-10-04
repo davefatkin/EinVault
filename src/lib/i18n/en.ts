@@ -510,8 +510,6 @@ const messages = {
 	'page.companion.edit.labelVetClinic': 'Vet clinic',
 	'page.companion.edit.labelEmergencyContact': 'Emergency contact',
 	'page.companion.edit.labelEmergencyPhone': 'Phone',
-	'page.companion.edit.cardSitterNotes': 'Sitter notes',
-	'page.companion.edit.labelNotesForSitter': 'Notes for caretaker',
 	'page.companion.edit.placeholderFeedingSchedule':
 		'e.g. 7:00am: breakfast\n6:00pm: dinner\nTreats OK in moderation',
 	'page.companion.edit.placeholderWalkSchedule':
@@ -522,8 +520,6 @@ const messages = {
 		'e.g. Clean enclosure Saturdays\nOut-of-cage time every evening',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'e.g. Heartworm chew 1st of the month\nJoint supplement daily with breakfast\nEye drops morning and night',
-	'page.companion.edit.placeholderSitterNotes':
-		'Anything a sitter or walker should know: quirks, fears, favorite spots…',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Animal Hospital',

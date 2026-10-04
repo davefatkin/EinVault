@@ -8,6 +8,7 @@ import { getShiftStatus } from '$lib/server/shifts';
 import { completeReminder, skipReminder } from '$lib/server/reminders';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
+import { listSharedNotes } from '$lib/server/notes';
 
 // Actions need their own assignment + shift gate: the load()'s assignment
 // check does not protect POSTs, so without this an on-shift caretaker could
@@ -109,7 +110,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		latestWeight: latestWeight ?? null,
 		owners,
 		upcomingReminders,
-		quickLogButtons
+		quickLogButtons,
+		// Shared notes are reference material: visible whenever the caretaker is
+		// assigned, on or off shift (same as the old sitter-notes field before #310).
+		sharedNotes: await listSharedNotes(params.companionId)
 	};
 };
 
