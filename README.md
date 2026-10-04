@@ -57,7 +57,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users
 - **Bearer-token API:** log activities and journal entries, manage notes, record health and weight, manage reminders, and read companion, shift, and roster data headlessly from smart buttons, scripts, and devices
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
-- **Search:** full-text search across journals, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
+- **Search:** full-text search across journals, notes, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
 - **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
@@ -498,7 +498,7 @@ Quick logs are the customizable one-tap buttons you set up under Settings → Qu
 
 **Pagination.** The list endpoints (`GET /api/logs`, `/api/notes`, `/api/health-events`, `/api/weight`, `/api/reminders`, `/api/shifts`, `/api/users`) accept `?limit=&offset=` (`limit` 1-200, default 50; `offset` 0-100000, default 0) and return a `hasMore` boolean alongside the array.
 
-**Reliability.** Write endpoints accept an optional `Idempotency-Key` header. A retried request that carries the same key and body replays the original response instead of writing a duplicate (a device on a flaky network can safely retry); reusing a key with a different body returns `409`. Error responses are JSON `{ code, message }`; branch on the stable `code` (e.g. `noActiveShift`, `notAssigned`, `noTargets`, `typeNotAllowedForSpecies`, `noteTooLong`, `journalTooLong`, `invalidPagination`), not the localized `message`. Request bodies are strict: an unknown field is rejected with `400 invalidBody`. Free text is bounded: notes cap at 5000 characters and journal bodies at 20000.
+**Reliability.** Write endpoints accept an optional `Idempotency-Key` header. A retried request that carries the same key and body replays the original response instead of writing a duplicate (a device on a flaky network can safely retry); reusing a key with a different body returns `409`. Error responses are JSON `{ code, message }`; branch on the stable `code` (e.g. `noActiveShift`, `notAssigned`, `noTargets`, `typeNotAllowedForSpecies`, `noteTooLong`, `journalTooLong`, `invalidPagination`), not the localized `message`. Request bodies are strict: an unknown field is rejected with `400 invalidBody`. Free text is bounded: log notes cap at 5000 characters and journal bodies at 20000.
 
 **Docs.** `/api/docs` is a self-hosted, zero-dependency reference for every endpoint above: request/response shapes, status codes, and a per-endpoint Try-It panel that fires real requests with a token you paste in. It's generated from the same schemas the server validates against, so it can't drift from what an endpoint actually accepts. The raw document is `/api/openapi.json` (OpenAPI 3.1), for anyone who wants to feed it into their own client or codegen; that endpoint is gated by `API_TOKENS_ENABLED` like the rest of the API, and `/api/docs` shows a load error when it's off.
 

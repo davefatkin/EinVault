@@ -72,6 +72,30 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByRole('link', { name: 'E2E Favorite foods' })).toHaveCount(0);
 	});
 
+	test("pinning someone else's note is not an edit", async ({ asAdmin }) => {
+		// Jet logged the seed note; Spike pinning it must not add "edited by Spike".
+		await asAdmin.goto(`/${EIN}/notes`);
+		const card = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
+		try {
+			await card.getByRole('button', { name: 'Pin' }).click();
+			await expect(card.getByRole('button', { name: 'Unpin' })).toBeVisible();
+			await expect(card).not.toContainText('edited by');
+			await asAdmin.goto(`/${EIN}/notes/${N.einCommands.id}`);
+			await expect(
+				asAdmin.getByRole('heading', { name: N.einCommands.title, exact: true })
+			).toBeVisible();
+			await expect(asAdmin.getByText('edited by')).toHaveCount(0);
+		} finally {
+			await asAdmin.goto(`/${EIN}/notes`);
+			const again = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
+			const unpin = again.getByRole('button', { name: 'Unpin' });
+			if (await unpin.count()) {
+				await unpin.click();
+				await expect(again.getByRole('button', { name: 'Pin' })).toBeVisible();
+			}
+		}
+	});
+
 	test('pasted comma-separated tags and turning sharing off', async ({ asMember }) => {
 		const title = 'E2E Paste tags';
 		const save = asMember.getByRole('button', { name: 'Save', exact: true });
@@ -138,18 +162,23 @@ test.describe('notes (owner)', () => {
 		await dialog.getByRole('button', { name: 'Cancel' }).click();
 		await expect(asMember).toHaveURL(/edit=1/);
 
-		await asMember.getByLabel('Title', { exact: true }).fill(`${N.einCommands.title} (saved)`);
-		await asMember.keyboard.press('ControlOrMeta+s');
-		await expect(asMember).toHaveURL(new RegExp(`/notes/${N.einCommands.id}$`));
-		await expect(
-			asMember.getByRole('heading', { name: `${N.einCommands.title} (saved)` })
-		).toBeVisible();
-
-		// Restore the seed title so other tests see the original.
-		await asMember.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
-		await asMember.getByLabel('Title', { exact: true }).fill(N.einCommands.title);
-		await asMember.keyboard.press('ControlOrMeta+s');
-		await expect(asMember.getByRole('heading', { name: N.einCommands.title })).toBeVisible();
+		try {
+			await asMember.getByLabel('Title', { exact: true }).fill(`${N.einCommands.title} (saved)`);
+			await asMember.keyboard.press('ControlOrMeta+s');
+			await expect(asMember).toHaveURL(new RegExp(`/notes/${N.einCommands.id}$`));
+			await expect(
+				asMember.getByRole('heading', { name: `${N.einCommands.title} (saved)`, exact: true })
+			).toBeVisible();
+		} finally {
+			// Restore the seed title so other tests see the original, even if an assertion failed.
+			await asMember.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
+			await asMember.getByLabel('Title', { exact: true }).fill(N.einCommands.title);
+			await asMember.keyboard.press('ControlOrMeta+s');
+			await expect(asMember).toHaveURL(new RegExp(`/notes/${N.einCommands.id}$`));
+			await expect(
+				asMember.getByRole('heading', { name: N.einCommands.title, exact: true })
+			).toBeVisible();
+		}
 	});
 
 	test('closing the tab with unsaved changes triggers the browser prompt', async ({ asMember }) => {
@@ -193,6 +222,20 @@ test.describe('notes (owner)', () => {
 		await icon.click();
 		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
 		await expect(icon).toHaveAttribute('aria-current', 'page');
+
+		// The switcher flexes to fill the bar; the icon must not paint over it.
+		const iconBox = await icon.boundingBox();
+		const switcherBox = await asMember
+			.getByRole('button', { name: 'Switch companion' })
+			.boundingBox();
+		expect(iconBox).toBeTruthy();
+		expect(switcherBox).toBeTruthy();
+		const separated =
+			iconBox!.x + iconBox!.width <= switcherBox!.x ||
+			switcherBox!.x + switcherBox!.width <= iconBox!.x ||
+			iconBox!.y + iconBox!.height <= switcherBox!.y ||
+			switcherBox!.y + switcherBox!.height <= iconBox!.y;
+		expect(separated, 'header Notes icon must not overlap the companion switcher').toBe(true);
 	});
 });
 
