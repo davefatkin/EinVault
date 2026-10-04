@@ -5,9 +5,7 @@
 	import { Search, X } from '@lucide/svelte';
 	import { parseSigilToken, stripSigilToken } from '$lib/searchSigil';
 	import { stripMarkdown } from '$lib/markdown';
-
-	export type SearchEntityType =
-		'journal' | 'health' | 'reminder' | 'document' | 'daily' | 'weight' | 'media';
+	import { SEARCH_ENTITY_TYPES, type SearchEntityType } from '$lib/searchTypes';
 
 	export interface ClientSearchResult {
 		type: SearchEntityType;
@@ -20,15 +18,7 @@
 		href: string;
 	}
 
-	const ENTITY_TYPES: SearchEntityType[] = [
-		'journal',
-		'daily',
-		'health',
-		'weight',
-		'reminder',
-		'document',
-		'media'
-	];
+	const ENTITY_TYPES: readonly SearchEntityType[] = SEARCH_ENTITY_TYPES;
 
 	let {
 		open = $bindable(false),
@@ -239,15 +229,7 @@
 
 	type GroupKey = SearchEntityType;
 
-	const GROUP_ORDER: GroupKey[] = [
-		'journal',
-		'daily',
-		'health',
-		'weight',
-		'reminder',
-		'document',
-		'media'
-	];
+	const GROUP_ORDER: readonly GroupKey[] = SEARCH_ENTITY_TYPES;
 
 	let groups = $derived(
 		(() => {
@@ -379,7 +361,8 @@
 			document: 'search.group.document',
 			daily: 'search.group.daily',
 			weight: 'search.group.weight',
-			media: 'search.group.media'
+			media: 'search.group.media',
+			note: 'search.group.note'
 		};
 		return t(locale, keyMap[type]);
 	}

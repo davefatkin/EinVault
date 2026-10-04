@@ -1,15 +1,6 @@
 import { db } from '$lib/server/db';
-
-export const SEARCH_ENTITY_TYPES = [
-	'journal',
-	'health',
-	'reminder',
-	'document',
-	'daily',
-	'weight',
-	'media'
-] as const;
-export type SearchEntityType = (typeof SEARCH_ENTITY_TYPES)[number];
+import type { SearchEntityType } from '$lib/searchTypes';
+export { SEARCH_ENTITY_TYPES, type SearchEntityType } from '$lib/searchTypes';
 
 export interface SearchFilters {
 	text: string;
@@ -89,7 +80,8 @@ const HREF_BY_TYPE: Record<
 	weight: (c, _d, id) => `/${c}/health?detailWeight=${id}`,
 	reminder: (c, _d, id) => `/${c}/reminders?detail=${id}`,
 	document: (c, _d, id) => `/${c}/documents?preview=${id}`,
-	media: (c, d, id) => `/${c}/journal/${d}?media=${id}`
+	media: (c, d, id) => `/${c}/journal/${d}?media=${id}`,
+	note: (c, _d, id) => `/${c}/notes/${id}`
 };
 
 interface SearchRow {
