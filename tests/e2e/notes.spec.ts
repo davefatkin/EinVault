@@ -275,78 +275,6 @@ test.describe('notes (caretaker)', () => {
 	});
 });
 
-test.describe('notes API', () => {
-	test('CRUD, idempotent create, and the companion alias', async ({ asMember, app }) => {
-		const raw = await createToken(asMember, 'Notes bot');
-		const api = (p: string) => app.server.baseURL + p;
-		const auth = { Authorization: `Bearer ${raw}` };
-
-		const headers = { ...auth, 'Idempotency-Key': 'note-e2e-1' };
-		const data = { companionId: EIN, title: 'API note', body: 'via api', tags: ['API'] };
-		const first = await asMember.request.post(api('/api/notes'), { headers, data });
-		expect(first.status()).toBe(201);
-		const { id } = await first.json();
-		const replay = await asMember.request.post(api('/api/notes'), { headers, data });
-		expect(await replay.json()).toEqual({ id, companionId: EIN });
-
-		const got = await asMember.request.get(api(`/api/notes/${id}`), { headers: auth });
-		expect(await got.json()).toMatchObject({ title: 'API note', tags: ['api'], pinned: false });
-
-		const list = await asMember.request.get(api(`/api/notes?companionId=${EIN}&tag=api`), {
-			headers: auth
-		});
-		expect((await list.json()).notes.map((n: { id: string }) => n.id)).toEqual([id]);
-
-		const patched = await asMember.request.patch(api(`/api/notes/${id}`), {
-			headers: auth,
-			data: { pinned: true, tags: [] }
-		});
-		expect(await patched.json()).toMatchObject({ pinned: true, tags: [] });
-
-		const bad = await asMember.request.post(api('/api/notes'), {
-			headers: auth,
-			data: { companionId: EIN, title: '  ' }
-		});
-		expect(bad.status()).toBe(400);
-		expect((await bad.json()).code).toBe('titleRequired');
-
-		const del = await asMember.request.delete(api(`/api/notes/${id}`), { headers: auth });
-		expect(del.status()).toBe(204);
-		const gone = await asMember.request.get(api(`/api/notes/${id}`), { headers: auth });
-		expect(gone.status()).toBe(404);
-
-		const companion = await asMember.request.get(api(`/api/companions/${EIN}`), { headers: auth });
-		const alias = (await companion.json()).companion.notesForSitter as string;
-		expect(alias).toContain(`## ${N.einSitter.title}`);
-		expect(alias).not.toContain(N.einPrivate.title);
-	});
-
-	test('write-scope and caretaker tokens get 403', async ({ asMember, asCaretaker, app }) => {
-		const api = (p: string) => app.server.baseURL + p;
-		const valid = { companionId: EIN, title: 'nope' };
-
-		const writeToken = await createToken(asMember, 'Notes write', '/settings', 'write');
-		const w = await asMember.request.post(api('/api/notes'), {
-			headers: { Authorization: `Bearer ${writeToken}` },
-			data: valid
-		});
-		expect(w.status()).toBe(403);
-
-		const careToken = await createToken(asCaretaker, 'Care notes', '/care/settings');
-		const c = await asCaretaker.request.get(api(`/api/notes?companionId=${EIN}`), {
-			headers: { Authorization: `Bearer ${careToken}` }
-		});
-		expect(c.status()).toBe(403);
-		expect((await c.json()).code).toBe('forbidden');
-
-		// The deprecated alias still serves shared notes to an assigned caretaker.
-		const comp = await asCaretaker.request.get(api(`/api/companions/${EIN}`), {
-			headers: { Authorization: `Bearer ${careToken}` }
-		});
-		expect((await comp.json()).companion.notesForSitter).toContain(N.einSitter.title);
-	});
-});
-
 // Per-test servers for env variants: never mutate the shared worker DB.
 type World = { server: AppServer };
 
@@ -374,6 +302,7 @@ function worldTest(prepare: (dir: string) => string, label: string) {
 	});
 }
 
+// Returns the logged-in page; callers close it with `page.context().close()`.
 async function login(
 	world: World,
 	browser: import('@playwright/test').Browser,
@@ -393,9 +322,13 @@ const offShift = worldTest((dir) => createSeededDbNoShift(dir), 'offshift');
 offShift('off-shift caretaker still sees shared notes', async ({ world, browser }) => {
 	test.slow();
 	const page = await login(world, browser, SEED.caretaker);
-	await page.goto(`/care/${EIN}`);
-	await expect(page.getByText(N.einSitter.title, { exact: true })).toBeVisible();
-	await expect(page.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
+	try {
+		await page.goto(`/care/${EIN}`);
+		await expect(page.getByText(N.einSitter.title, { exact: true })).toBeVisible();
+		await expect(page.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
+	} finally {
+		await page.context().close();
+	}
 });
 
 const archived = worldTest((dir) => {
@@ -408,9 +341,104 @@ const archived = worldTest((dir) => {
 archived('API hides notes on archived companions', async ({ world, browser }) => {
 	test.slow();
 	const page = await login(world, browser, SEED.member);
-	const raw = await createToken(page, 'Archived probe');
-	const res = await page.request.get(`${world.server.baseURL}/api/notes/${N.juliaSitter.id}`, {
-		headers: { Authorization: `Bearer ${raw}` }
-	});
-	expect(res.status()).toBe(404);
+	try {
+		const raw = await createToken(page, 'Archived probe');
+		const res = await page.request.get(`${world.server.baseURL}/api/notes/${N.juliaSitter.id}`, {
+			headers: { Authorization: `Bearer ${raw}` }
+		});
+		expect(res.status()).toBe(404);
+	} finally {
+		await page.context().close();
+	}
+});
+
+// Bearer calls are rate limited per IP per server process, so the API specs get
+// their own server instead of spending the shared worker server's budget.
+const apiWorld = worldTest((dir) => createSeededDb(dir), 'api');
+
+apiWorld(
+	'notes API: CRUD, idempotent create, and the companion alias',
+	async ({ world, browser }) => {
+		test.slow();
+		const page = await login(world, browser, SEED.member);
+		try {
+			const raw = await createToken(page, 'Notes bot');
+			const api = (p: string) => world.server.baseURL + p;
+			const auth = { Authorization: `Bearer ${raw}` };
+
+			const headers = { ...auth, 'Idempotency-Key': 'note-e2e-1' };
+			const data = { companionId: EIN, title: 'API note', body: 'via api', tags: ['API'] };
+			const first = await page.request.post(api('/api/notes'), { headers, data });
+			expect(first.status()).toBe(201);
+			const { id } = await first.json();
+			const replay = await page.request.post(api('/api/notes'), { headers, data });
+			expect(await replay.json()).toEqual({ id, companionId: EIN });
+
+			const got = await page.request.get(api(`/api/notes/${id}`), { headers: auth });
+			expect(await got.json()).toMatchObject({ title: 'API note', tags: ['api'], pinned: false });
+
+			const list = await page.request.get(api(`/api/notes?companionId=${EIN}&tag=api`), {
+				headers: auth
+			});
+			expect((await list.json()).notes.map((n: { id: string }) => n.id)).toEqual([id]);
+
+			const patched = await page.request.patch(api(`/api/notes/${id}`), {
+				headers: auth,
+				data: { pinned: true, tags: [] }
+			});
+			expect(await patched.json()).toMatchObject({ pinned: true, tags: [] });
+
+			const bad = await page.request.post(api('/api/notes'), {
+				headers: auth,
+				data: { companionId: EIN, title: '  ' }
+			});
+			expect(bad.status()).toBe(400);
+			expect((await bad.json()).code).toBe('titleRequired');
+
+			const del = await page.request.delete(api(`/api/notes/${id}`), { headers: auth });
+			expect(del.status()).toBe(204);
+			const gone = await page.request.get(api(`/api/notes/${id}`), { headers: auth });
+			expect(gone.status()).toBe(404);
+
+			const companion = await page.request.get(api(`/api/companions/${EIN}`), { headers: auth });
+			const alias = (await companion.json()).companion.notesForSitter as string;
+			expect(alias).toContain(`## ${N.einSitter.title}`);
+			expect(alias).not.toContain(N.einPrivate.title);
+		} finally {
+			await page.context().close();
+		}
+	}
+);
+
+apiWorld('notes API: write-scope and caretaker tokens get 403', async ({ world, browser }) => {
+	test.slow();
+	const member = await login(world, browser, SEED.member);
+	const caretaker = await login(world, browser, SEED.caretaker);
+	try {
+		const api = (p: string) => world.server.baseURL + p;
+		const valid = { companionId: EIN, title: 'nope' };
+
+		const writeToken = await createToken(member, 'Notes write', '/settings', 'write');
+		const w = await member.request.post(api('/api/notes'), {
+			headers: { Authorization: `Bearer ${writeToken}` },
+			data: valid
+		});
+		expect(w.status()).toBe(403);
+
+		const careToken = await createToken(caretaker, 'Care notes', '/care/settings');
+		const c = await caretaker.request.get(api(`/api/notes?companionId=${EIN}`), {
+			headers: { Authorization: `Bearer ${careToken}` }
+		});
+		expect(c.status()).toBe(403);
+		expect((await c.json()).code).toBe('forbidden');
+
+		// The deprecated alias still serves shared notes to an assigned caretaker.
+		const comp = await caretaker.request.get(api(`/api/companions/${EIN}`), {
+			headers: { Authorization: `Bearer ${careToken}` }
+		});
+		expect((await comp.json()).companion.notesForSitter).toContain(N.einSitter.title);
+	} finally {
+		await member.context().close();
+		await caretaker.context().close();
+	}
 });
