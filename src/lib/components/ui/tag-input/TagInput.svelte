@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { normalizeTag, splitTagInput, NOTE_MAX_TAGS, NOTE_TAG_MAX_LEN } from '$lib/notes';
+	import { normalizeTag, splitTagInput, NOTE_MAX_TAGS } from '$lib/notes';
 
 	interface Props {
 		tags?: string[];
@@ -71,9 +71,10 @@
 			active = active <= 0 ? matches.length - 1 : active - 1;
 		} else if (e.key === 'Enter') {
 			// Enter adds a tag; it must not submit the surrounding form.
-			if (showList && active >= 0) {
+			const pick = active >= 0 ? matches[active] : undefined;
+			if (showList && pick) {
 				e.preventDefault();
-				add([matches[active]]);
+				add([pick]);
 				text = '';
 				active = -1;
 			} else if (text.trim()) {
@@ -125,7 +126,6 @@
 			type="text"
 			role="combobox"
 			autocomplete="off"
-			maxlength={NOTE_TAG_MAX_LEN * 4}
 			disabled={atLimit}
 			aria-expanded={showList}
 			aria-controls={listId}
@@ -162,6 +162,7 @@
 							e.preventDefault();
 							add([s]);
 							text = '';
+							active = -1;
 						}}
 					>
 						{s}
