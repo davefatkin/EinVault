@@ -29,4 +29,11 @@ describe('buildOpenApiDocument', () => {
 		);
 		expect(params).toEqual(expect.arrayContaining(['companionId', 'date']));
 	});
+
+	it('marks Companion.notesForSitter deprecated', () => {
+		const companion = doc.components?.schemas?.Companion as {
+			properties: Record<string, { deprecated?: boolean }>;
+		};
+		expect(companion.properties.notesForSitter.deprecated).toBe(true);
+	});
 });

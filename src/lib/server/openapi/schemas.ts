@@ -77,7 +77,10 @@ export const Companion = z
 		vetName: z.string().nullable().optional(),
 		vetPhone: z.string().nullable().optional(),
 		vetClinic: z.string().nullable().optional(),
-		notesForSitter: z.string().nullable().optional(),
+		notesForSitter: z.string().nullable().optional().openapi({
+			deprecated: true,
+			description: 'Deprecated. Shared notes joined as markdown; use /api/notes.'
+		}),
 		archivedAt: z.string().nullable().optional(),
 		archiveNote: z.string().nullable().optional(),
 		createdAt: z.string().optional()
@@ -184,9 +187,32 @@ export const HealthEvent = z
 export const HealthList = z
 	.object({ events: z.array(HealthEvent), hasMore: z.boolean() })
 	.openapi('HealthList');
+
 export const HealthWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('HealthWriteResponse');
+
+export const Note = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		title: z.string(),
+		body: z.string(),
+		tags: z.array(z.string()),
+		pinned: z.boolean(),
+		sharedWithCaretakers: z.boolean(),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+		updatedBy: z.string().nullable().openapi({ description: 'User id; resolve via /api/users.' })
+	})
+	.openapi('Note');
+
+export const NoteList = z
+	.object({ notes: z.array(Note), hasMore: z.boolean() })
+	.openapi('NoteList');
+export const NoteWriteResponse = z
+	.object({ id: z.string(), companionId: z.string() })
+	.openapi('NoteWriteResponse');
 
 export const WeightUnit = z.enum(WEIGHT_UNITS).openapi('WeightUnit');
 
