@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { StickyNote, Plus } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import NoteCard from '$lib/components/notes/NoteCard.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	const locale = getLocale();
 
 	const base = $derived(`/${data.companion.id}/notes`);
@@ -39,6 +40,10 @@
 			</Button>
 		{/snippet}
 	</PageHeader>
+
+	{#if form?.noteError}
+		<Alert variant="coral"><AlertDescription>{form.noteError}</AlertDescription></Alert>
+	{/if}
 
 	{#if data.tags.length > 0}
 		<nav class="flex flex-wrap gap-2" aria-label={t(locale, 'page.notes.filterLabel')}>

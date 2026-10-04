@@ -518,7 +518,9 @@
 			<div class="space-y-2">
 				{#each data.sharedNotes as note, i (note.id)}
 					<details class="rounded-lg border border-border bg-card px-4 py-3" open={i === 0}>
-						<summary class="cursor-pointer font-medium text-foreground">{note.title}</summary>
+						<summary class="cursor-pointer break-words font-medium text-foreground"
+							>{note.title}</summary
+						>
 						<div class="mt-3">
 							<NoteContent {note} showTitle={false} />
 						</div>

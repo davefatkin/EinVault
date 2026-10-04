@@ -29,8 +29,12 @@ export async function loadAllowedNote(
 ): Promise<NoteListItem> {
 	const note = await getNote(id);
 	const allowed = note && (await listAllowedCompanions(user)).includes(note.companionId);
-	if (!note || !allowed) error(404, { code: 'notFound', message: t(locale, 'error.noteNotFound') });
+	if (!note || !allowed) throwNoteNotFound(locale);
 	return note;
+}
+
+export function throwNoteNotFound(locale: Locale): never {
+	error(404, { code: 'notFound', message: t(locale, 'error.noteNotFound') });
 }
 
 export function throwNoteError(code: NoteErrorCode, locale: Locale): never {

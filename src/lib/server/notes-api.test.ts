@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
-import { parsePinnedParam, requireNoteOwnerScope, throwNoteError } from './notes-api';
+import {
+	parsePinnedParam,
+	requireNoteOwnerScope,
+	throwNoteError,
+	throwNoteNotFound
+} from './notes-api';
 
 function caught(fn: () => unknown) {
 	try {
@@ -28,6 +33,13 @@ describe('notes api guards', () => {
 		expect(caught(() => throwNoteError('tooManyTags', 'en'))).toEqual({
 			status: 400,
 			body: { code: 'tooManyTags', message: 'Too many tags (max 10).' }
+		});
+	});
+
+	it('maps a missing note to a localized 404', () => {
+		expect(caught(() => throwNoteNotFound('en'))).toEqual({
+			status: 404,
+			body: { code: 'notFound', message: 'Note not found.' }
 		});
 	});
 

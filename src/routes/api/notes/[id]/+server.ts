@@ -8,7 +8,8 @@ import {
 	loadAllowedNote,
 	noteCodeFor,
 	requireNoteOwnerScope,
-	throwNoteError
+	throwNoteError,
+	throwNoteNotFound
 } from '$lib/server/notes-api';
 
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
@@ -25,9 +26,11 @@ export const PATCH = apiRouteZod(
 		const note = await loadAllowedNote(event.params.id!, user, locale);
 		const checked = validateNotePatch(body);
 		if (!checked.ok) throwNoteError(checked.code, locale);
-		await updateNote(note.id, checked.value, user.id);
-		const updated = await getNote(note.id);
-		return json(toApiNote(updated!));
+		// The note can be deleted between the load above and the write.
+		const saved = await updateNote(note.id, checked.value, user.id);
+		const updated = saved ? await getNote(note.id) : null;
+		if (!updated) throwNoteNotFound(locale);
+		return json(toApiNote(updated));
 	},
 	noteCodeFor
 );
