@@ -40,9 +40,7 @@ export const SEED = {
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
 			emergencyContactName: 'Annie',
-			emergencyContactPhone: '(555) 010-1979',
-			notesForSitter:
-				'Responds to hand signals better than words. Keep him away from unattended laptops; he will use them. Favorite treat is dried sardines.'
+			emergencyContactPhone: '(555) 010-1979'
 		},
 		edward: {
 			id: 'seed-comp-edward',
@@ -61,9 +59,7 @@ export const SEED = {
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
 			emergencyContactName: 'Mr. Appledelhi',
-			emergencyContactPhone: '(555) 010-2244',
-			notesForSitter:
-				'She will disappear and reappear at will; this is normal. No shoes needed indoors. Keep snacks up high and your passwords to yourself.'
+			emergencyContactPhone: '(555) 010-2244'
 		},
 		julia: {
 			id: 'seed-comp-julia',
@@ -82,8 +78,54 @@ export const SEED = {
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
 			emergencyContactName: 'Annie',
-			emergencyContactPhone: '(555) 010-1979',
-			notesForSitter: 'Do not let her out the back door. She will pretend she has not been fed.'
+			emergencyContactPhone: '(555) 010-1979'
+		}
+	},
+	notes: {
+		einSitter: {
+			id: 'seed-note-ein-sitter',
+			companionId: 'seed-comp-ein',
+			title: 'Notes for sitter',
+			body: 'Responds to hand signals better than words. Keep him away from unattended laptops; he will use them. Favorite treat is dried sardines.',
+			sharedWithCaretakers: true,
+			pinned: true,
+			tags: ['sitter']
+		},
+		einCommands: {
+			id: 'seed-note-ein-commands',
+			companionId: 'seed-comp-ein',
+			title: 'Commands he knows',
+			body: '- Sit\n- Down\n- Paw\n- Spin (hand signal: circle one finger)\n- Leave it',
+			sharedWithCaretakers: true,
+			pinned: false,
+			tags: ['training', 'tricks']
+		},
+		einPrivate: {
+			id: 'seed-note-ein-private',
+			companionId: 'seed-comp-ein',
+			title: 'Questions for Dr. Bacchus',
+			body: 'Ask whether the new kibble is behind the itchy ears.',
+			sharedWithCaretakers: false,
+			pinned: false,
+			tags: ['vet']
+		},
+		edwardSitter: {
+			id: 'seed-note-edward-sitter',
+			companionId: 'seed-comp-edward',
+			title: 'Notes for sitter',
+			body: 'She will disappear and reappear at will; this is normal. No shoes needed indoors. Keep snacks up high and your passwords to yourself.',
+			sharedWithCaretakers: true,
+			pinned: false,
+			tags: []
+		},
+		juliaSitter: {
+			id: 'seed-note-julia-sitter',
+			companionId: 'seed-comp-julia',
+			title: 'Notes for sitter',
+			body: 'Do not let her out the back door. She will pretend she has not been fed.',
+			sharedWithCaretakers: true,
+			pinned: false,
+			tags: []
 		}
 	}
 } as const;
@@ -244,6 +286,22 @@ export function seedContent(
 			{ companionId: julia, userId: faye }
 		])
 		.run();
+
+	// ---- Notes (#310): explicit timestamps keep the list order deterministic ----
+	const seedNotes = Object.values(SEED.notes);
+	db.insert(schema.notes)
+		.values(
+			seedNotes.map(({ tags: _tags, ...n }, i) => ({
+				...n,
+				createdAt: new Date(now - (i + 1) * hour),
+				updatedAt: new Date(now - (i + 1) * hour),
+				loggedBy: jet,
+				updatedBy: jet
+			}))
+		)
+		.run();
+	const seedNoteTags = seedNotes.flatMap((n) => n.tags.map((tag) => ({ noteId: n.id, tag })));
+	if (seedNoteTags.length > 0) db.insert(schema.noteTags).values(seedNoteTags).run();
 
 	// Active shift so the caretaker can see their companion.
 	db.insert(schema.caretakerShifts)

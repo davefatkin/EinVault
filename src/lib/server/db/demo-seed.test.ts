@@ -90,6 +90,20 @@ describe('seedRows', () => {
 			).toContain(entry!.date);
 		}
 	});
+
+	it('seeds shared, private, pinned, and tagged notes', async () => {
+		seedRows(db as never, { now: 1_700_000_000_000 });
+		const notes = await db.query.notes.findMany({ with: { tags: true } });
+		const byId = new Map(notes.map((n) => [n.id, n]));
+		expect(byId.get(SEED.notes.einSitter.id)?.sharedWithCaretakers).toBe(true);
+		expect(byId.get(SEED.notes.einPrivate.id)?.sharedWithCaretakers).toBe(false);
+		expect(notes.some((n) => n.pinned)).toBe(true);
+		expect(byId.get(SEED.notes.einCommands.id)?.tags.map((t) => t.tag)).toEqual(
+			expect.arrayContaining(['training'])
+		);
+		const companions = await db.query.companions.findMany();
+		expect(companions.every((c) => c.notesForSitter === null)).toBe(true);
+	});
 });
 
 describe('ensureDemoUsers', () => {
