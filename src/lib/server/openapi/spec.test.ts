@@ -30,6 +30,14 @@ describe('buildOpenApiDocument', () => {
 		expect(params).toEqual(expect.arrayContaining(['companionId', 'date']));
 	});
 
+	it('registers the notes endpoints', () => {
+		const paths = doc.paths ?? {};
+		expect(Object.keys(paths['/api/notes'] ?? {})).toEqual(expect.arrayContaining(['get', 'post']));
+		expect(Object.keys(paths['/api/notes/{id}'] ?? {})).toEqual(
+			expect.arrayContaining(['get', 'patch', 'delete'])
+		);
+	});
+
 	it('marks Companion.notesForSitter deprecated', () => {
 		const companion = doc.components?.schemas?.Companion as {
 			properties: Record<string, { deprecated?: boolean }>;
