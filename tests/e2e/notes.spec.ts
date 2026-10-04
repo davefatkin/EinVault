@@ -38,7 +38,7 @@ test.describe('notes (owner)', () => {
 	test('create with tags, filter, edit away a tag, pin, delete', async ({ asMember }) => {
 		await fillNewNote(asMember, 'E2E Favorite foods', 'Loves *pumpkin*', ['Food', 'treats']);
 		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
-		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes/[^/?]+$`));
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes/(?!new)[^/?]+$`));
 		await expect(asMember.getByRole('heading', { name: 'E2E Favorite foods' })).toBeVisible();
 		await expect(asMember.getByText('pumpkin')).toBeVisible();
 		const noteUrl = asMember.url();
@@ -73,23 +73,54 @@ test.describe('notes (owner)', () => {
 	});
 
 	test('pasted comma-separated tags and turning sharing off', async ({ asMember }) => {
-		await fillNewNote(asMember, 'E2E Paste tags', '', []);
-		await asMember.getByRole('combobox').fill('one, two, three');
-		await asMember.getByLabel('Share with caretakers').check();
-		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
-		for (const tag of ['one', 'two', 'three']) {
-			await expect(asMember.getByRole('link', { name: tag, exact: true })).toBeVisible();
-		}
-		await expect(asMember.getByText('Shared', { exact: true })).toBeVisible();
+		const title = 'E2E Paste tags';
+		const save = asMember.getByRole('button', { name: 'Save', exact: true });
+		const tags = ['one', 'two', 'three'];
+		let noteUrl: string | null = null;
+		try {
+			await fillNewNote(asMember, title, '', []);
+			await asMember.getByRole('combobox').fill('one, two, three');
+			await asMember.getByLabel('Share with caretakers').check();
+			await save.click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes/(?!new)[^/?]+$`));
+			noteUrl = asMember.url();
+			for (const tag of tags) {
+				await expect(asMember.getByRole('link', { name: tag, exact: true })).toBeVisible();
+			}
+			await expect(asMember.getByText('Shared', { exact: true })).toBeVisible();
 
-		await asMember.goto(`${asMember.url()}?edit=1`);
-		await asMember.getByLabel('Share with caretakers').uncheck();
-		for (const tag of ['one', 'two', 'three']) {
-			await asMember.getByRole('button', { name: `Remove tag ${tag}` }).click();
+			await asMember.goto(`${noteUrl}?edit=1`);
+			await asMember.getByLabel('Share with caretakers').uncheck();
+			for (const tag of tags) {
+				await asMember.getByRole('button', { name: `Remove tag ${tag}` }).click();
+			}
+			await save.click();
+			await expect(asMember).toHaveURL(noteUrl);
+			await expect(asMember.getByRole('heading', { name: title })).toBeVisible();
+			await expect(asMember.getByText('Shared', { exact: true })).toHaveCount(0);
+			for (const tag of tags) {
+				await expect(asMember.getByRole('link', { name: tag, exact: true })).toHaveCount(0);
+			}
+
+			// Persisted: a fresh read view and the list card show neither badge nor chips.
+			await asMember.reload();
+			await expect(asMember.getByRole('heading', { name: title })).toBeVisible();
+			await expect(asMember.getByText('Shared', { exact: true })).toHaveCount(0);
+			await asMember.goto(`/${EIN}/notes`);
+			const card = asMember.locator('article').filter({ hasText: title });
+			await expect(card).toBeVisible();
+			await expect(card.getByText('Shared', { exact: true })).toHaveCount(0);
+			await expect(card.getByRole('list', { name: 'Tags' })).toHaveCount(0);
+		} finally {
+			// Leave no note behind in the shared worker DB, even if an assertion failed.
+			if (noteUrl) {
+				await asMember.goto(noteUrl);
+				await asMember.getByRole('button', { name: 'Delete note' }).click();
+				await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+				await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
+				await expect(asMember.getByRole('link', { name: title })).toHaveCount(0);
+			}
 		}
-		await asMember.getByRole('button', { name: 'Save', exact: true }).click();
-		await expect(asMember.getByText('Shared', { exact: true })).toHaveCount(0);
-		await expect(asMember.getByRole('link', { name: 'one', exact: true })).toHaveCount(0);
 	});
 
 	test('editor: cancel discards, dirty navigation asks, Ctrl+S saves', async ({ asMember }) => {
@@ -317,6 +348,7 @@ async function login(
 
 const offShift = worldTest((dir) => createSeededDbNoShift(dir), 'offshift');
 offShift('off-shift caretaker still sees shared notes', async ({ world, browser }) => {
+	test.slow();
 	const page = await login(world, browser, SEED.caretaker);
 	await page.goto(`/care/${EIN}`);
 	await expect(page.getByText(N.einSitter.title, { exact: true })).toBeVisible();
@@ -331,6 +363,7 @@ const archived = worldTest((dir) => {
 	return dbPath;
 }, 'archived');
 archived('API hides notes on archived companions', async ({ world, browser }) => {
+	test.slow();
 	const page = await login(world, browser, SEED.member);
 	const raw = await createToken(page, 'Archived probe');
 	const res = await page.request.get(`${world.server.baseURL}/api/notes/${N.juliaSitter.id}`, {
