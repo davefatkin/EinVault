@@ -218,6 +218,27 @@
       "when": 1790514530972,
       "tag": "0030_striped_captain_flint",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1791144248409,
+      "tag": "0031_notes_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1791144255012,
+      "tag": "0032_notes_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1791144255650,
+      "tag": "0033_notes_sitter_migration",
+      "breakpoints": true
     }
   ]
 }
