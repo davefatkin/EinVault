@@ -4,20 +4,32 @@
 
 	let {
 		user,
+		updater = null,
 		variant = 'block',
 		class: className = ''
-	}: { user: UserRef | undefined; variant?: 'inline' | 'block'; class?: string } = $props();
+	}: {
+		user: UserRef | undefined;
+		// Last editor. Pass it only when it differs from `user`.
+		updater?: UserRef | undefined;
+		variant?: 'inline' | 'block';
+		class?: string;
+	} = $props();
 	const locale = getLocale();
+
+	const text = $derived(
+		[
+			user ? t(locale, 'common.loggedBy', { name: user.displayName }) : null,
+			updater ? t(locale, 'common.updatedBy', { name: updater.displayName }) : null
+		]
+			.filter(Boolean)
+			.join(' · ')
+	);
 </script>
 
-{#if user}
+{#if text}
 	{#if variant === 'inline'}
-		<span class="text-muted-foreground text-xs ml-1 {className}"
-			>{t(locale, 'common.loggedBy', { name: user.displayName })}</span
-		>
+		<span class="text-muted-foreground text-xs ml-1 {className}">{text}</span>
 	{:else}
-		<p class="text-xs text-muted-foreground opacity-60 {className}">
-			{t(locale, 'common.loggedBy', { name: user.displayName })}
-		</p>
+		<p class="text-xs text-muted-foreground opacity-60 {className}">{text}</p>
 	{/if}
 {/if}
