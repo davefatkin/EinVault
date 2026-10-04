@@ -10,6 +10,7 @@
 		HeartPulse,
 		Bell,
 		FileText,
+		StickyNote,
 		Search,
 		ChevronDown,
 		LayoutGrid,
@@ -89,6 +90,11 @@
 						href: `/${activeCompanion.id}/documents`,
 						label: t(locale, 'nav.documents'),
 						icon: FileText
+					},
+					{
+						href: `/${activeCompanion.id}/notes`,
+						label: t(locale, 'nav.notes'),
+						icon: StickyNote
 					}
 				]
 			: []
