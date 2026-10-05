@@ -106,3 +106,104 @@ test.describe('api authz', () => {
 		await ctx.close();
 	});
 });
+
+// Form actions run before any load(), so layout role redirects never protect
+// them. These POST straight to owner-route actions the way a crafted request
+// would. A blocked request may come back as an HTTP error status or, for a
+// fail() inside the action, as HTTP 200 with { type: 'failure', status }; either
+// way the effective status must be the rejection, never a success.
+async function postAction(
+	request: import('@playwright/test').APIRequestContext,
+	baseURL: string,
+	path: string,
+	form: Record<string, string> = {}
+): Promise<number> {
+	const res = await request.post(path, {
+		headers: { Origin: baseURL, Accept: 'application/json' },
+		form
+	});
+	if (res.status() !== 200) return res.status();
+	const body = await res.json().catch(() => ({}));
+	return body.type === 'failure' ? body.status : 200;
+}
+
+const OWNER_ACTIONS: { path: string; form?: Record<string, string> }[] = [
+	{ path: `/${EIN}/health?/addHealth`, form: { title: 'caretaker forged', type: 'other' } },
+	{ path: `/${EIN}/health?/addWeight`, form: { weight: '12', unit: 'lbs' } },
+	{
+		path: `/${EIN}/health?/updateHealth`,
+		form: { id: 'no-such-event', title: 'x', type: 'other' }
+	},
+	{ path: `/${EIN}/health?/deleteHealth`, form: { id: 'no-such-event' } },
+	{ path: `/${EIN}/health?/updateWeight`, form: { id: 'no-such-weight', weight: '1' } },
+	{ path: `/${EIN}/health?/deleteWeight`, form: { id: 'no-such-weight' } },
+	{
+		path: `/${EIN}/reminders?/add`,
+		form: { title: 'caretaker forged', type: 'other', dueAt: '2030-01-01T09:00' }
+	},
+	{ path: `/${EIN}/reminders?/update`, form: { id: 'no-such-reminder', title: 'x' } },
+	{ path: `/${EIN}/reminders?/complete`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}/reminders?/skip`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}/reminders?/restore`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}/reminders?/delete`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}?/complete`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}?/skip`, form: { id: 'no-such-reminder' } },
+	{ path: `/${EIN}/journal/2020-01-01?/save`, form: { body: 'caretaker forged' } },
+	{ path: `/${EIN}/log?/add`, form: { type: 'walk' } }
+];
+
+test.describe('owner form actions reject caretakers', () => {
+	for (const { path, form } of OWNER_ACTIONS) {
+		test(`caretaker POST ${path} is forbidden`, async ({ app, asCaretaker }) => {
+			expect(await postAction(asCaretaker.request, app.server.baseURL, path, form)).toBe(403);
+		});
+	}
+
+	// Same test (same worker DB) so the read-back sees what the forged writes did.
+	test('caretaker forged writes leave no data behind', async ({ app, asCaretaker, asMember }) => {
+		const base = app.server.baseURL;
+		const title = 'caretaker forged write';
+		await postAction(asCaretaker.request, base, `/${EIN}/health?/addHealth`, {
+			title,
+			type: 'other'
+		});
+		await postAction(asCaretaker.request, base, `/${EIN}/reminders?/add`, {
+			title,
+			type: 'other',
+			dueAt: '2030-01-01T09:00'
+		});
+		await asMember.goto(`/${EIN}/health`);
+		await expect(asMember.getByText(title)).toHaveCount(0);
+		await asMember.goto(`/${EIN}/reminders`);
+		await expect(asMember.getByText(title)).toHaveCount(0);
+	});
+});
+
+test.describe('admin form actions reject non-admins', () => {
+	const RESTORE = '/admin/companions?/restore';
+
+	test('member cannot restore a companion', async ({ app, asMember }) => {
+		expect(
+			await postAction(asMember.request, app.server.baseURL, RESTORE, {
+				companionId: 'no-such-companion'
+			})
+		).toBe(403);
+	});
+
+	test('unauthenticated request cannot restore a companion', async ({ app, browser }) => {
+		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
+		const status = await postAction(ctx.request, app.server.baseURL, RESTORE, {
+			companionId: 'no-such-companion'
+		});
+		await ctx.close();
+		expect(status).toBe(401);
+	});
+
+	test('caretaker cannot restore a companion', async ({ app, asCaretaker }) => {
+		expect(
+			await postAction(asCaretaker.request, app.server.baseURL, RESTORE, {
+				companionId: 'no-such-companion'
+			})
+		).toBe(403);
+	});
+});

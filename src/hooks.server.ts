@@ -1,9 +1,9 @@
-import { redirect, json } from '@sveltejs/kit';
+import { error, redirect, json } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth, isSecureRequest } from '$server/auth';
 import { env } from '$env/dynamic/private';
-import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
+import { t, resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
 import {
 	S3_CONFIG,
@@ -24,6 +24,7 @@ import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
 import { requiresTwoFactor } from '$lib/server/auth/two-factor';
+import { ownerRouteDecision } from '$lib/server/auth/route-guard';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -231,10 +232,25 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
+// Form actions run before any load(), so the (app)/(admin) layout role checks
+// never protect a POST. Enforce them here for every write to the owner UI; see
+// route-guard.ts. Runs last so locals.locale is set for the error message.
+const ownerRouteGuard: Handle = async ({ event, resolve }) => {
+	const decision = ownerRouteDecision(
+		event.request.method,
+		event.route.id,
+		event.locals.user ? { role: event.locals.user.role } : null
+	);
+	if (decision === 'unauthenticated') error(401, t(event.locals.locale, 'error.unauthorized'));
+	if (decision === 'forbidden') error(403, t(event.locals.locale, 'error.forbidden'));
+	return resolve(event);
+};
+
 export const handle = sequence(
 	securityHeaders,
 	authContext,
 	twoFactorGate,
 	demoReadOnly,
-	localeDetect
+	localeDetect,
+	ownerRouteGuard
 );
