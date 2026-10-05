@@ -179,6 +179,65 @@ test.describe('owner form actions reject caretakers', () => {
 	});
 });
 
+test.describe('owner route guard responses', () => {
+	const ADD_HEALTH = `/${EIN}/health?/addHealth`;
+
+	// A plain 403 could also come from SvelteKit's CSRF origin check. The guard
+	// answers enhanced (JSON) action requests with an ActionResult error, so
+	// assert that shape to prove the guard is what rejected the request.
+	test('guard rejection is an ActionResult error with security headers', async ({
+		app,
+		asCaretaker
+	}) => {
+		const res = await asCaretaker.request.post(ADD_HEALTH, {
+			headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+			form: { title: 'x', type: 'other' }
+		});
+		expect(res.status()).toBe(403);
+		expect(await res.json()).toEqual({ type: 'error', error: { message: 'Forbidden' } });
+		expect(res.headers()['x-frame-options']).toBe('DENY');
+	});
+
+	test('unauthenticated owner action is 401', async ({ app, browser }) => {
+		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
+		const res = await ctx.request.post(ADD_HEALTH, {
+			headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+			form: { title: 'x', type: 'other' }
+		});
+		const body = await res.json();
+		await ctx.close();
+		expect(res.status()).toBe(401);
+		expect(body.type).toBe('error');
+	});
+
+	test('unauthenticated non-JS post redirects to login', async ({ app, browser }) => {
+		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
+		const res = await ctx.request.post(ADD_HEALTH, {
+			headers: { Origin: app.server.baseURL, Accept: 'text/html' },
+			form: { title: 'x', type: 'other' },
+			maxRedirects: 0
+		});
+		await ctx.close();
+		expect(res.status()).toBe(303);
+		expect(res.headers()['location']).toBe('/auth/login');
+	});
+});
+
+test.describe('owner-only API reads reject caretakers', () => {
+	for (const companion of [EIN, EDWARD]) {
+		test(`caretaker cannot page journal entries for ${companion}`, async ({ asCaretaker }) => {
+			const res = await asCaretaker.request.get(`/api/companions/${companion}/journal/entries`);
+			expect(res.status()).toBe(403);
+		});
+	}
+
+	test('member can still page journal entries', async ({ asMember }) => {
+		const res = await asMember.request.get(`/api/companions/${EIN}/journal/entries`);
+		expect(res.status()).toBe(200);
+		expect(Array.isArray((await res.json()).entries)).toBe(true);
+	});
+});
+
 test.describe('admin form actions reject non-admins', () => {
 	const RESTORE = '/admin/companions?/restore';
 

@@ -27,6 +27,13 @@ describe('ownerRouteDecision', () => {
 		expect(ownerRouteDecision('POST', ADMIN_COMPANIONS, caretaker)).toBe('forbidden');
 	});
 
+	it('treats every non-read method as a write', () => {
+		for (const method of ['PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+			expect(ownerRouteDecision(method, HEALTH, caretaker)).toBe('forbidden');
+			expect(ownerRouteDecision(method, HEALTH, null)).toBe('unauthenticated');
+		}
+	});
+
 	it('allows member and admin writes to owner routes', () => {
 		expect(ownerRouteDecision('POST', HEALTH, member)).toBe('allow');
 		expect(ownerRouteDecision('POST', HEALTH, admin)).toBe('allow');

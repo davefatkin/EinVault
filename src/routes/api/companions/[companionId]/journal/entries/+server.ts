@@ -6,6 +6,9 @@ import { getEnrichedJournalEntries } from '$lib/server/journal';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
+	// Backs the owner journal page's "load older" only. Caretakers read journal
+	// entries through their own shift- and assignment-scoped /care pages.
+	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
 
 	const { companionId } = params;
 	const beforeParam = url.searchParams.get('before');
