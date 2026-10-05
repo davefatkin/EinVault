@@ -701,6 +701,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Enregistrement…',
 	'page.journal.day.saveFailedStatus': "Échec de l'enregistrement",
 	'page.journal.day.saveFailedRetry': 'Réessayer',
+	'page.journal.signedOutStatus': 'Déconnecté, non enregistré',
+	'page.journal.signInToSave': 'Se connecter',
 	'page.journal.day.mediaTitle': 'Photos et vidéos',
 	'page.journal.day.addMedia': 'Ajouter un média',
 	'page.journal.day.uploading': 'Envoi…',

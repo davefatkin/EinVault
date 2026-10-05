@@ -11,6 +11,7 @@
 	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import { localDateISO } from '$lib/date';
+	import { postFormAction } from '$lib/postFormAction';
 	import { getContext } from 'svelte';
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
@@ -70,8 +71,9 @@
 	let body = $state('');
 	let mood = $state('');
 	let viewMode = $state<'write' | 'preview'>('write');
-	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error' | 'signedOut'>('idle');
 	let saveTimer: ReturnType<typeof setTimeout>;
+	let savedTimer: ReturnType<typeof setTimeout>;
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
@@ -123,20 +125,25 @@
 
 	async function saveNow() {
 		saveStatus = 'saving';
-		try {
-			const fd = new FormData();
-			fd.set('body', body);
-			fd.set('mood', mood);
-			const res = await fetch('?/save', { method: 'POST', body: fd });
-			saveStatus = res.ok ? 'saved' : 'error';
-			if (res.ok) setTimeout(() => (saveStatus = 'idle'), 2000);
-		} catch {
-			saveStatus = 'error';
-		}
+		const fd = new FormData();
+		fd.set('body', body);
+		fd.set('mood', mood);
+		clearTimeout(savedTimer);
+		const outcome = await postFormAction('?/save', fd);
+		saveStatus = outcome === 'failed' ? 'error' : outcome;
+		// Keep a stale "Saved" fade-out from hiding a later failure.
+		if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
+	}
+
+	// The sign-in link opens in a new tab so the draft survives; save again
+	// when the user comes back to this one.
+	function retryAfterSignIn() {
+		if (saveStatus === 'signedOut') saveNow();
 	}
 
 	function triggerSave() {
 		clearTimeout(saveTimer);
+		clearTimeout(savedTimer);
 		saveStatus = 'saving';
 		saveTimer = setTimeout(saveNow, 800);
 	}
@@ -436,7 +443,7 @@
 	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} onfocus={retryAfterSignIn} />
 
 <!-- Activity detail modal -->
 {#if detailEvent}
@@ -471,8 +478,9 @@
 			</a>
 		</div>
 
-		<!-- Date nav + autosave -->
-		<div class="flex items-center justify-between">
+		<!-- Date nav + autosave; on mobile the status gets its own line, kept even
+		     when empty so the editor doesn't jump on every save -->
+		<div class="flex flex-wrap items-center justify-between gap-y-1">
 			<div class="flex items-center gap-2">
 				<a
 					href="/{companion.id}/journal/{prevDate(data.date)}"
@@ -521,7 +529,7 @@
 					>
 				{/if}
 			</div>
-			<div class="flex items-center gap-3">
+			<div class="flex min-h-5 basis-full items-center justify-end gap-3 sm:ml-auto sm:basis-auto">
 				<!-- Save status (inline, right of date nav) -->
 				<div class="flex items-center gap-2 text-sm shrink-0">
 					{#if saveStatus === 'saving'}
@@ -539,6 +547,15 @@
 							onclick={saveNow}
 							class="text-xs text-red-500 underline hover:no-underline"
 							>{t(locale, 'page.journal.day.saveFailedRetry')}</button
+						>
+					{:else if saveStatus === 'signedOut'}
+						<span class="text-red-500">{t(locale, 'page.journal.signedOutStatus')}</span>
+						<a
+							href="/auth/login"
+							target="_blank"
+							rel="noopener"
+							class="text-xs text-red-500 underline hover:no-underline"
+							>{t(locale, 'page.journal.signInToSave')}</a
 						>
 					{/if}
 				</div>
