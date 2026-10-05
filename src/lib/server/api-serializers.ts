@@ -8,6 +8,7 @@ import type {
 	caretakerShifts,
 	users
 } from '$lib/server/db/schema';
+import type { NoteWithTags } from '$lib/server/notes';
 import type { QuickLogButton } from '$lib/server/quick-logs';
 
 type CompanionRow = typeof companions.$inferSelect;
@@ -95,7 +96,9 @@ export function toApiWeightEntry(row: WeightEntryRow) {
 // is added below. The avatar* storage columns are omitted entirely: they are
 // internal storage plumbing, and /api/avatars is session-gated so a token
 // holder can't fetch the image anyway.
-export function toApiCompanion(row: CompanionRow) {
+// `sitterNotes` feeds the deprecated notesForSitter field (shared notes as
+// markdown, from sharedNotesMarkdown). The DB column is always NULL since #310.
+export function toApiCompanion(row: CompanionRow, sitterNotes: string | null = null) {
 	return {
 		id: row.id,
 		name: row.name,
@@ -114,7 +117,7 @@ export function toApiCompanion(row: CompanionRow) {
 		vetName: row.vetName,
 		vetPhone: row.vetPhone,
 		vetClinic: row.vetClinic,
-		notesForSitter: row.notesForSitter,
+		notesForSitter: sitterNotes,
 		isActive: row.isActive,
 		archivedAt: row.archivedAt,
 		archiveNote: row.archiveNote,
@@ -187,5 +190,22 @@ export function toApiUserPublic(row: UserRow) {
 		displayName: row.displayName,
 		role: row.role,
 		isActive: row.isActive
+	};
+}
+
+// Public shape for a note (GET /api/notes). Drops loggedBy per the serializer
+// convention; updatedBy stays because "last edited by" is part of the feature.
+export function toApiNote(row: NoteWithTags) {
+	return {
+		id: row.id,
+		companionId: row.companionId,
+		title: row.title,
+		body: row.body,
+		tags: row.tags,
+		pinned: row.pinned,
+		sharedWithCaretakers: row.sharedWithCaretakers,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt,
+		updatedBy: row.updatedBy
 	};
 }

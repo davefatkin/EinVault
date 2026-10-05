@@ -1,5 +1,6 @@
 import { z } from './z';
 import { MAX_NOTE_LEN } from '$lib/textLimits';
+import { NOTE_TITLE_MAX_LEN, NOTE_BODY_MAX_LEN, NOTE_MAX_TAGS } from '$lib/notes';
 import { DAILY_EVENT_TYPES, SPECIES, WEIGHT_UNITS } from '$lib/activityTypes';
 
 // Shared zod schemas for the Bearer API. Single source of truth: the route
@@ -77,7 +78,10 @@ export const Companion = z
 		vetName: z.string().nullable().optional(),
 		vetPhone: z.string().nullable().optional(),
 		vetClinic: z.string().nullable().optional(),
-		notesForSitter: z.string().nullable().optional(),
+		notesForSitter: z.string().nullable().optional().openapi({
+			deprecated: true,
+			description: 'Deprecated. Shared notes joined as markdown; use /api/notes.'
+		}),
 		archivedAt: z.string().nullable().optional(),
 		archiveNote: z.string().nullable().optional(),
 		createdAt: z.string().optional()
@@ -184,9 +188,73 @@ export const HealthEvent = z
 export const HealthList = z
 	.object({ events: z.array(HealthEvent), hasMore: z.boolean() })
 	.openapi('HealthList');
+
 export const HealthWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('HealthWriteResponse');
+
+export const Note = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		title: z.string(),
+		body: z.string(),
+		tags: z.array(z.string()),
+		pinned: z.boolean(),
+		sharedWithCaretakers: z.boolean(),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+		updatedBy: z.string().nullable().openapi({ description: 'User id; resolve via /api/users.' })
+	})
+	.openapi('Note');
+
+export const NoteList = z
+	.object({ notes: z.array(Note), hasMore: z.boolean() })
+	.openapi('NoteList');
+export const NoteWriteResponse = z
+	.object({ id: z.string(), companionId: z.string() })
+	.openapi('NoteWriteResponse');
+
+// Shape only. The title is trimmed before its length check so the cap matches
+// the form. The single-line title rule and tag normalization run in
+// validateNewNote/validateNotePatch ($lib/notes), shared with the form actions.
+export const NoteCreate = z
+	.object({
+		companionId: z.string().min(1),
+		title: z
+			.string()
+			.trim()
+			.max(NOTE_TITLE_MAX_LEN)
+			.openapi({ description: 'Single line, 1-200 characters after trimming.' }),
+		body: z.string().max(NOTE_BODY_MAX_LEN).optional().openapi({ description: 'Markdown.' }),
+		tags: z.array(z.string()).max(NOTE_MAX_TAGS).optional().openapi({
+			description: 'Lowercased, whitespace-collapsed, de-duplicated. Each 1-32 characters.'
+		}),
+		pinned: z.boolean().optional(),
+		sharedWithCaretakers: z.boolean().optional()
+	})
+	.strict()
+	.openapi('NoteCreate', {
+		example: {
+			companionId: 'companion-id-here',
+			title: 'Commands',
+			body: '- sit',
+			tags: ['training']
+		}
+	});
+
+export const NoteUpdate = z
+	.object({
+		title: z.string().trim().max(NOTE_TITLE_MAX_LEN).optional(),
+		body: z.string().max(NOTE_BODY_MAX_LEN).optional(),
+		tags: z.array(z.string()).max(NOTE_MAX_TAGS).optional().openapi({
+			description: 'Replaces the whole tag set when present.'
+		}),
+		pinned: z.boolean().optional(),
+		sharedWithCaretakers: z.boolean().optional()
+	})
+	.strict()
+	.openapi('NoteUpdate');
 
 export const WeightUnit = z.enum(WEIGHT_UNITS).openapi('WeightUnit');
 

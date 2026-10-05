@@ -221,7 +221,7 @@
 			{/if}
 			{#if item.logger}
 				<div class="mt-2 flex justify-center">
-					<ByLine user={item.logger} variant="inline" class="!text-white/60 !ml-0" />
+					<ByLine user={item.logger} variant="inline" class="text-white/60 ml-0" />
 				</div>
 			{/if}
 		</div>

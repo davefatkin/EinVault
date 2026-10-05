@@ -291,12 +291,14 @@
 				{/if}
 			</span>
 			<span class="flex items-center gap-1">
-				<ByLine user={data.todayEntry?.logger} variant="inline" />
-				{#if data.todayEntry?.updatedBy && data.todayEntry.updatedBy !== data.todayEntry.loggedBy && data.todayEntry.updater}
-					<span class="text-xs text-muted-foreground">
-						· {t(locale, 'common.updatedBy', { name: data.todayEntry.updater.displayName })}
-					</span>
-				{/if}
+				<ByLine
+					user={data.todayEntry?.logger}
+					updater={data.todayEntry?.updatedBy &&
+					data.todayEntry.updatedBy !== data.todayEntry.loggedBy
+						? data.todayEntry.updater
+						: null}
+					variant="inline"
+				/>
 			</span>
 		</div>
 

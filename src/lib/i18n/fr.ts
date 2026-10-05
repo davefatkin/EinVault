@@ -144,6 +144,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
 	'error.invalidStatus': 'status doit être "due" ou "all".',
+	'error.invalidPinned': 'pinned doit être "true" ou "false".',
 	'error.invalidNtfyTopic':
 		'Le sujet ne peut contenir que des lettres, chiffres, tirets et tirets bas (max. 64).',
 	'error.invalidDate': 'Date invalide',
@@ -217,6 +218,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.health': 'Santé',
 	'nav.reminders': 'Rappels',
 	'nav.documents': 'Documents',
+	'nav.notes': 'Notes',
 	'nav.settings': 'Paramètres',
 	'nav.admin': 'Administration',
 	'nav.adminCompanions': 'Compagnons',
@@ -520,8 +522,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelVetClinic': 'Clinique vétérinaire',
 	'page.companion.edit.labelEmergencyContact': "Contact d'urgence",
 	'page.companion.edit.labelEmergencyPhone': 'Téléphone',
-	'page.companion.edit.cardSitterNotes': 'Notes pour le gardien',
-	'page.companion.edit.labelNotesForSitter': 'Notes pour le gardien',
 	'page.companion.edit.placeholderFeedingSchedule':
 		'ex. 7h00 : petit-déjeuner\n18h00 : dîner\nFriandises OK avec modération',
 	'page.companion.edit.placeholderWalkSchedule':
@@ -532,8 +532,6 @@ const messages: Record<keyof Messages, string> = {
 		'ex. Nettoyer l’enclos le samedi\nTemps hors de la cage chaque soir',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'ex. Comprimé antiparasitaire le 1er du mois\nComplément articulaire chaque matin\nCollyre matin et soir',
-	'page.companion.edit.placeholderSitterNotes':
-		'Tout ce qu\u2019un gardien devrait savoir : habitudes, peurs, endroits préférés…',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Clinique Vétérinaire Valentine',
@@ -1028,6 +1026,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.apiAccessRevoked': 'Un administrateur a révoqué votre accès à l’API.',
 	'error.tokenLimitReached': 'Limite de jetons atteinte (max {max}). Révoquez-en un d’abord.',
 	'error.noteTooLong': 'La note est trop longue (max {max} caractères).',
+	'error.noteTitleTooLong': 'Le titre est trop long (max {max} caractères).',
+	'error.noteTitleNewline': 'Le titre doit tenir sur une seule ligne.',
+	'error.noteBodyTooLong': 'La note est trop longue (max {max} caractères).',
+	'error.noteTooManyTags': 'Trop de tags (max {max}).',
+	'error.noteInvalidTag': 'Chaque tag doit comporter de 1 à {max} caractères.',
+	'error.noteNotFound': 'Note introuvable.',
 	'error.invalidDuration': 'La durée doit être un nombre entier de minutes, au maximum 480.',
 	'error.invalidLoggedAt':
 		'loggedAt doit être une date-heure ISO 8601 valide dans la plage autorisée.',
@@ -1108,7 +1112,7 @@ const messages: Record<keyof Messages, string> = {
 		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages EinVault.',
 
 	// Search palette
-	'search.placeholder': 'Rechercher journaux, médias, santé, documents…',
+	'search.placeholder': 'Rechercher journaux, notes, médias, santé, documents…',
 	'search.hint': 'Saisissez au moins 2 caractères pour rechercher',
 	'search.noResults': 'Aucun résultat',
 	'search.group.journal': 'Journal',
@@ -1118,6 +1122,7 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.daily': 'Journal quotidien',
 	'search.group.weight': 'Poids',
 	'search.group.media': 'Photos et vidéos',
+	'search.group.note': 'Notes',
 	'search.filter.after': 'Après',
 	'search.filter.before': 'Avant',
 	'search.filter.removeCompanion': 'Retirer le filtre {name}',
@@ -1177,6 +1182,40 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': "Impossible d'afficher l'aperçu. Utilisez Télécharger.",
 	'page.documents.pageOf': 'Page {page} sur {total}',
 	'page.documents.fromPaperless': 'Paperless',
+
+	'page.notes.title': 'Notes',
+	'page.notes.new': 'Nouvelle note',
+	'page.notes.empty': 'Aucune note pour le moment',
+	'page.notes.emptyBody':
+		'Gardez les informations de référence au même endroit : commandes, aliments préférés, conseils de soins.',
+	'page.notes.filterLabel': 'Filtrer par tag',
+	'page.notes.filterAll': 'Toutes',
+	'page.notes.filterEmpty': 'Aucune note avec ce tag',
+	'page.notes.clearFilter': 'Effacer le filtre',
+	'page.notes.shared': 'Partagée',
+	'page.notes.pin': 'Épingler',
+	'page.notes.delete': 'Supprimer la note',
+	'page.notes.confirmDelete': 'Supprimer « {title} » ? Cette action est irréversible.',
+	'page.notes.backToList': 'Toutes les notes',
+	'page.notes.labelTitle': 'Titre',
+	'page.notes.placeholderTitle': "p. ex. Commandes qu'il connaît",
+	'page.notes.labelBody': 'Note',
+	'page.notes.placeholderBody': 'Écrivez en markdown…',
+	'page.notes.labelTags': 'Tags',
+	'page.notes.tagsHint': "Appuyez sur Entrée ou virgule pour ajouter. Jusqu'à {max} tags.",
+	'page.notes.tagSuggestions': 'Suggestions de tags',
+	'page.notes.removeTag': 'Retirer le tag {tag}',
+	'page.notes.labelShared': 'Partager avec les gardiens',
+	'page.notes.sharedHint': 'Les gardiens assignés à {name} peuvent lire cette note.',
+	'page.notes.labelPinned': 'Épingler en haut',
+	'page.notes.unsavedPrompt':
+		'Vous avez des modifications non enregistrées. Quitter sans enregistrer ?',
+	'page.notes.leave': 'Quitter',
+	'page.notes.archivedNotice':
+		'{name} est archivé. Les notes restent disponibles pour consultation.',
+	'page.companion.edit.notesMovedHint':
+		'Les notes pour le gardien se trouvent désormais dans Notes. Activez « Partager avec les gardiens » sur une note.',
+	'page.companion.edit.notesMovedLink': 'Ouvrir les notes',
 
 	// Enum: Document categories
 	'documents.category.receipt': 'Reçu',

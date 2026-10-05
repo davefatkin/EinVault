@@ -29,4 +29,27 @@ describe('buildOpenApiDocument', () => {
 		);
 		expect(params).toEqual(expect.arrayContaining(['companionId', 'date']));
 	});
+
+	it('registers the notes endpoints', () => {
+		const paths = doc.paths ?? {};
+		expect(Object.keys(paths['/api/notes'] ?? {})).toEqual(expect.arrayContaining(['get', 'post']));
+		expect(Object.keys(paths['/api/notes/{id}'] ?? {})).toEqual(
+			expect.arrayContaining(['get', 'patch', 'delete'])
+		);
+	});
+
+	it('documents invalidBody on the note write endpoints', () => {
+		const paths = doc.paths ?? {};
+		const post = paths['/api/notes']?.post?.responses?.['400'] as { description: string };
+		const patch = paths['/api/notes/{id}']?.patch?.responses?.['400'] as { description: string };
+		expect(post.description).toContain('invalidBody');
+		expect(patch.description).toContain('invalidBody');
+	});
+
+	it('marks Companion.notesForSitter deprecated', () => {
+		const companion = doc.components?.schemas?.Companion as {
+			properties: Record<string, { deprecated?: boolean }>;
+		};
+		expect(companion.properties.notesForSitter.deprecated).toBe(true);
+	});
 });

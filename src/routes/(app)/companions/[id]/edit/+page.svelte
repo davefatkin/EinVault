@@ -400,21 +400,12 @@
 
 			<Separator />
 
-			<!-- SITTER NOTES section -->
-			<section class="space-y-4">
-				<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-					{t(locale, 'page.companion.edit.cardSitterNotes')}
-				</p>
-				<div class="space-y-1.5">
-					<Label for="notesForSitter">{t(locale, 'page.companion.edit.labelNotesForSitter')}</Label>
-					<MarkdownTextarea
-						id="notesForSitter"
-						name="notesForSitter"
-						value={companion.notesForSitter ?? ''}
-						placeholder={t(locale, 'page.companion.edit.placeholderSitterNotes')}
-						rows={5}
-					/>
-				</div>
+			<!-- Sitter notes moved to Notes (#310) -->
+			<section class="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+				{t(locale, 'page.companion.edit.notesMovedHint')}
+				<a href="/{companion.id}/notes" class="ml-1 font-medium text-primary hover:underline">
+					{t(locale, 'page.companion.edit.notesMovedLink')}
+				</a>
 			</section>
 		</div>
 

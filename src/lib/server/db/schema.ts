@@ -193,6 +193,8 @@ export const companions = sqliteTable(
 		vetName: text('vet_name'),
 		vetPhone: text('vet_phone'),
 		vetClinic: text('vet_clinic'),
+		// Deprecated (#310): migrated into a shared note and always NULL. Nothing
+		// writes it; the API alias reads shared notes instead.
 		notesForSitter: text('notes_for_sitter'),
 		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		archivedAt: integer('archived_at', { mode: 'timestamp' }),
@@ -348,6 +350,46 @@ export const documents = sqliteTable(
 		companionIdx: index('document_companion_idx').on(t.companionId),
 		healthEventIdx: index('document_health_event_idx').on(t.healthEventId)
 	})
+);
+
+// companion notes (issue #310)
+
+export const notes = sqliteTable(
+	'notes',
+	{
+		id: text('id').primaryKey(),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		body: text('body').notNull().default(''),
+		sharedWithCaretakers: integer('shared_with_caretakers', { mode: 'boolean' })
+			.notNull()
+			.default(false),
+		pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		updatedAt: integer('updated_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
+		updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [index('note_companion_list_idx').on(t.companionId, t.pinned, t.updatedAt)]
+);
+
+// One row per (note, tag). The tag vocabulary is SELECT DISTINCT tag, so a tag
+// disappears on its own once no note uses it.
+export const noteTags = sqliteTable(
+	'note_tags',
+	{
+		noteId: text('note_id')
+			.notNull()
+			.references(() => notes.id, { onDelete: 'cascade' }),
+		tag: text('tag').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.noteId, t.tag] }), index('note_tag_idx').on(t.tag)]
 );
 
 export const weightEntries = sqliteTable(
@@ -594,6 +636,8 @@ export type JournalEntry = typeof journalEntries.$inferSelect;
 export type JournalPhoto = typeof journalPhotos.$inferSelect;
 export type HealthEvent = typeof healthEvents.$inferSelect;
 export type Document = typeof documents.$inferSelect;
+export type Note = typeof notes.$inferSelect;
+export type NoteTag = typeof noteTags.$inferSelect;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
@@ -633,7 +677,9 @@ export const usersRelations = relations(users, ({ many }) => ({
 	loggedReminders: many(reminders, { relationName: 'reminderLogger' }),
 	completedReminders: many(reminders, { relationName: 'reminderCompleter' }),
 	quickLogs: many(quickLogs),
-	apiTokens: many(apiTokens)
+	apiTokens: many(apiTokens),
+	loggedNotes: many(notes, { relationName: 'noteLogger' }),
+	updatedNotes: many(notes, { relationName: 'noteUpdater' })
 }));
 
 export const totpBackupCodesRelations = relations(totpBackupCodes, ({ one }) => ({
@@ -710,6 +756,25 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 		references: [healthEvents.id]
 	}),
 	uploader: one(users, { fields: [documents.uploadedBy], references: [users.id] })
+}));
+
+export const notesRelations = relations(notes, ({ one, many }) => ({
+	companion: one(companions, { fields: [notes.companionId], references: [companions.id] }),
+	tags: many(noteTags),
+	logger: one(users, {
+		fields: [notes.loggedBy],
+		references: [users.id],
+		relationName: 'noteLogger'
+	}),
+	updater: one(users, {
+		fields: [notes.updatedBy],
+		references: [users.id],
+		relationName: 'noteUpdater'
+	})
+}));
+
+export const noteTagsRelations = relations(noteTags, ({ one }) => ({
+	note: one(notes, { fields: [noteTags.noteId], references: [notes.id] })
 }));
 
 export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({

@@ -22,7 +22,12 @@ import {
 	CompleteResponse,
 	SkipResponse,
 	ShiftList,
-	UserList
+	UserList,
+	Note,
+	NoteList,
+	NoteWriteResponse,
+	NoteCreate,
+	NoteUpdate
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -454,6 +459,118 @@ export function buildOpenApiDocument() {
 		}
 	});
 
+	const noteIdParam = z.object({ id: z.string() });
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/notes',
+		tags: ['notes'],
+		summary: "List a companion's notes",
+		description:
+			'Pinned first, then most recently updated. Paginated with limit/offset; see hasMore. Requires a full-scope token; caretaker tokens get 403.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().openapi({ description: 'Required target companion.' }),
+				tag: z.string().optional().openapi({ description: 'Only notes with this tag.' }),
+				pinned: z.enum(['true', 'false']).optional(),
+				...paginationQuery
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: NoteList } } },
+			400: errorResponse('noCompanions / invalidPinned / invalidPagination'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / forbidden / notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/notes',
+		tags: ['notes'],
+		summary: 'Create a note',
+		description:
+			'Creates one note for a companion. Requires a full-scope token; caretaker tokens get 403. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			body: { content: { 'application/json': { schema: NoteCreate } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: NoteWriteResponse } }
+			},
+			400: errorResponse(
+				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag / noTargets / invalidBody'
+			),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / forbidden'),
+			404: errorResponse('API disabled'),
+			409: errorResponse('idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/notes/{id}',
+		tags: ['notes'],
+		summary: 'Read one note',
+		security: secured,
+		request: { params: noteIdParam },
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: Note } } },
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / forbidden'),
+			404: errorResponse('notFound (also for notes on companions the token cannot access)'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'patch',
+		path: '/api/notes/{id}',
+		tags: ['notes'],
+		summary: 'Update a note',
+		description:
+			'Partial update; fields left out are unchanged. `tags` replaces the whole set. Safe to retry: the same body gives the same result.',
+		security: secured,
+		request: {
+			params: noteIdParam,
+			body: { content: { 'application/json': { schema: NoteUpdate } }, required: true }
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: Note } } },
+			400: errorResponse(
+				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag / invalidBody'
+			),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / forbidden'),
+			404: errorResponse('notFound'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'delete',
+		path: '/api/notes/{id}',
+		tags: ['notes'],
+		summary: 'Delete a note',
+		description: 'Not idempotent: retrying after a lost response returns 404.',
+		security: secured,
+		request: { params: noteIdParam },
+		responses: {
+			204: { description: 'Deleted' },
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('writeScopeReadOnly / forbidden'),
+			404: errorResponse('notFound'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
 	const generator = new OpenApiGeneratorV31(registry.definitions);
 	return generator.generateDocument({
 		openapi: '3.1.0',
@@ -461,9 +578,9 @@ export function buildOpenApiDocument() {
 			// API contract version, versioned independently of the app's release
 			// number: bump minor for additive changes, major for breaking ones.
 			title: 'EinVault API',
-			version: '1.1.0',
+			version: '1.2.0',
 			description:
-				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, and read companions, shifts, and the user roster.'
+				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, manage notes, and read companions, shifts, and the user roster.'
 		},
 		servers: [{ url: '/' }]
 	});

@@ -12,7 +12,9 @@ test.describe('api docs', () => {
 			'/api/journal',
 			'/api/quick-logs',
 			'/api/quick-logs/{id}/execute',
-			'/api/companions'
+			'/api/companions',
+			'/api/notes',
+			'/api/notes/{id}'
 		]) {
 			expect(doc.paths).toHaveProperty(p);
 		}

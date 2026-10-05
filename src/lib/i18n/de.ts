@@ -144,6 +144,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
 	'error.invalidStatus': 'status muss "due" oder "all" sein.',
+	'error.invalidPinned': 'pinned muss "true" oder "false" sein.',
 	'error.invalidNtfyTopic':
 		'Das Thema darf nur Buchstaben, Zahlen, Binde- und Unterstriche enthalten (max. 64).',
 	'error.invalidDate': 'Ungültiges Datum',
@@ -219,6 +220,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.health': 'Gesundheit',
 	'nav.reminders': 'Erinnerungen',
 	'nav.documents': 'Dokumente',
+	'nav.notes': 'Notizen',
 	'nav.settings': 'Einstellungen',
 	'nav.admin': 'Verwaltung',
 	'nav.adminCompanions': 'Begleiter',
@@ -520,8 +522,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelVetClinic': 'Tierklinik',
 	'page.companion.edit.labelEmergencyContact': 'Notfallkontakt',
 	'page.companion.edit.labelEmergencyPhone': 'Telefon',
-	'page.companion.edit.cardSitterNotes': 'Notizen für den Betreuer',
-	'page.companion.edit.labelNotesForSitter': 'Notizen für den Betreuer',
 	'page.companion.edit.placeholderFeedingSchedule':
 		'z.B. 7:00 Uhr: Frühstück\n18:00 Uhr: Abendessen\nLeckerlis in Maßen OK',
 	'page.companion.edit.placeholderWalkSchedule':
@@ -532,8 +532,6 @@ const messages: Record<keyof Messages, string> = {
 		'z.B. Gehege samstags reinigen\nAuslauf jeden Abend',
 	'page.companion.edit.placeholderMedicationSchedule':
 		'z.B. Herzwurm-Tablette am 1. des Monats\nGelenkpräparat täglich zum Frühstück\nAugentropfen morgens und abends',
-	'page.companion.edit.placeholderSitterNotes':
-		'Alles, was ein Betreuer wissen sollte: Eigenheiten, Ängste, Lieblingsorte…',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Tierklinik',
@@ -1027,6 +1025,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.apiAccessRevoked': 'Ein Administrator hat deinen API-Zugriff entzogen.',
 	'error.tokenLimitReached': 'Token-Limit erreicht (max. {max}). Widerrufe zuerst eines.',
 	'error.noteTooLong': 'Notiz ist zu lang (max. {max} Zeichen).',
+	'error.noteTitleTooLong': 'Der Titel ist zu lang (max. {max} Zeichen).',
+	'error.noteTitleNewline': 'Der Titel muss einzeilig sein.',
+	'error.noteBodyTooLong': 'Die Notiz ist zu lang (max. {max} Zeichen).',
+	'error.noteTooManyTags': 'Zu viele Schlagwörter (max. {max}).',
+	'error.noteInvalidTag': 'Jedes Schlagwort muss 1 bis {max} Zeichen lang sein.',
+	'error.noteNotFound': 'Notiz nicht gefunden.',
 	'error.invalidDuration': 'Die Dauer muss eine ganze Zahl von Minuten sein, höchstens 480.',
 	'error.invalidLoggedAt':
 		'loggedAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',
@@ -1107,7 +1111,7 @@ const messages: Record<keyof Messages, string> = {
 		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
 	// Search palette
-	'search.placeholder': 'Tagebücher, Medien, Gesundheit, Dokumente durchsuchen…',
+	'search.placeholder': 'Tagebücher, Notizen, Medien, Gesundheit, Dokumente durchsuchen…',
 	'search.hint': 'Mindestens 2 Zeichen eingeben',
 	'search.noResults': 'Keine Ergebnisse',
 	'search.group.journal': 'Tagebuch',
@@ -1117,6 +1121,7 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.daily': 'Tagesprotokoll',
 	'search.group.weight': 'Gewicht',
 	'search.group.media': 'Fotos & Videos',
+	'search.group.note': 'Notizen',
 	'search.filter.after': 'Nach',
 	'search.filter.before': 'Vor',
 	'search.filter.removeCompanion': '{name}-Filter entfernen',
@@ -1176,6 +1181,38 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': 'Vorschau konnte nicht angezeigt werden. Bitte herunterladen.',
 	'page.documents.pageOf': 'Seite {page} von {total}',
 	'page.documents.fromPaperless': 'Paperless',
+
+	'page.notes.title': 'Notizen',
+	'page.notes.new': 'Neue Notiz',
+	'page.notes.empty': 'Noch keine Notizen',
+	'page.notes.emptyBody':
+		'Halte Referenzinfos an einem Ort fest: Kommandos, Lieblingsfutter, Pflegetipps.',
+	'page.notes.filterLabel': 'Nach Schlagwort filtern',
+	'page.notes.filterAll': 'Alle',
+	'page.notes.filterEmpty': 'Keine Notizen mit diesem Schlagwort',
+	'page.notes.clearFilter': 'Filter zurücksetzen',
+	'page.notes.shared': 'Geteilt',
+	'page.notes.pin': 'Anheften',
+	'page.notes.delete': 'Notiz löschen',
+	'page.notes.confirmDelete': '"{title}" löschen? Das kann nicht rückgängig gemacht werden.',
+	'page.notes.backToList': 'Alle Notizen',
+	'page.notes.labelTitle': 'Titel',
+	'page.notes.placeholderTitle': 'z. B. Bekannte Kommandos',
+	'page.notes.labelBody': 'Notiz',
+	'page.notes.placeholderBody': 'In Markdown schreiben…',
+	'page.notes.labelTags': 'Schlagwörter',
+	'page.notes.tagsHint': 'Zum Hinzufügen Enter oder Komma drücken. Bis zu {max} Schlagwörter.',
+	'page.notes.tagSuggestions': 'Schlagwort-Vorschläge',
+	'page.notes.removeTag': 'Schlagwort {tag} entfernen',
+	'page.notes.labelShared': 'Mit Betreuern teilen',
+	'page.notes.sharedHint': 'Betreuer, die {name} zugewiesen sind, können diese Notiz lesen.',
+	'page.notes.labelPinned': 'Oben anheften',
+	'page.notes.unsavedPrompt': 'Du hast ungespeicherte Änderungen. Ohne Speichern verlassen?',
+	'page.notes.leave': 'Verlassen',
+	'page.notes.archivedNotice': '{name} ist archiviert. Notizen bleiben zum Nachschlagen verfügbar.',
+	'page.companion.edit.notesMovedHint':
+		'Notizen für Betreuer findest du jetzt unter Notizen. Aktiviere bei einer Notiz "Mit Betreuern teilen".',
+	'page.companion.edit.notesMovedLink': 'Notizen öffnen',
 
 	// Enum: Document categories
 	'documents.category.receipt': 'Quittung',

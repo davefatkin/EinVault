@@ -5,6 +5,7 @@ import {
 	toApiQuickLog,
 	toApiCompanion,
 	toApiCompanionMinimal,
+	toApiNote,
 	toApiHealthEvent,
 	toApiWeightEntry,
 	toApiReminder,
@@ -19,6 +20,7 @@ import {
 	JournalEntry,
 	QuickLog,
 	Companion,
+	Note,
 	HealthEvent,
 	WeightEntry,
 	Reminder,
@@ -115,6 +117,23 @@ describe('response schemas match their serializers', () => {
 		};
 		const result = toApiCompanion(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Companion.shape).sort());
+	});
+
+	it('toApiNote output keys match Note.shape exactly', () => {
+		const out = toApiNote({
+			id: 'n1',
+			companionId: 'c1',
+			title: 't',
+			body: '',
+			sharedWithCaretakers: false,
+			pinned: false,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			loggedBy: null,
+			updatedBy: null,
+			tags: []
+		});
+		expect(Object.keys(out).sort()).toEqual(Object.keys(Note.shape).sort());
 	});
 
 	it('toApiCompanionMinimal output keys are a subset of Companion.shape', () => {

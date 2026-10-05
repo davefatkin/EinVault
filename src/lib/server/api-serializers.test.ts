@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toApiCompanion, toApiCompanionMinimal } from './api-serializers';
+import { toApiCompanion, toApiCompanionMinimal, toApiNote } from './api-serializers';
 
 // A companion row carrying PII the write-scope shape must never leak, plus a
 // stray column the default-deny full shape must not pass through untouched.
@@ -45,9 +45,15 @@ describe('api companion serializers', () => {
 	it('full shape includes PII but never storage/unknown columns (default-deny)', () => {
 		const out = toApiCompanion(row);
 		expect(out.microchip).toBe('985112000000000');
-		expect(out.notesForSitter).toBe('secret gate code 1234');
 		expect('avatarKey' in out).toBe(false);
 		expect('secretFutureColumn' in out).toBe(false);
+	});
+
+	it('notesForSitter comes from shared notes, never the deprecated column', () => {
+		expect(toApiCompanion(row).notesForSitter).toBeNull();
+		expect(toApiCompanion(row, '## Feeding\n\nTwice a day.').notesForSitter).toBe(
+			'## Feeding\n\nTwice a day.'
+		);
 	});
 
 	it('minimal (write-scope) shape omits every PII field', () => {
@@ -56,5 +62,35 @@ describe('api companion serializers', () => {
 		for (const field of PII_FIELDS) {
 			expect(field in out).toBe(false);
 		}
+	});
+});
+
+describe('toApiNote', () => {
+	it('exposes the public note fields only', () => {
+		const out = toApiNote({
+			id: 'n1',
+			companionId: 'c1',
+			title: 'Commands',
+			body: '- sit',
+			sharedWithCaretakers: true,
+			pinned: false,
+			createdAt: new Date('2026-01-01T00:00:00Z'),
+			updatedAt: new Date('2026-01-02T00:00:00Z'),
+			loggedBy: 'u1',
+			updatedBy: 'u2',
+			tags: ['training']
+		});
+		expect(out).toEqual({
+			id: 'n1',
+			companionId: 'c1',
+			title: 'Commands',
+			body: '- sit',
+			tags: ['training'],
+			pinned: false,
+			sharedWithCaretakers: true,
+			createdAt: new Date('2026-01-01T00:00:00Z'),
+			updatedAt: new Date('2026-01-02T00:00:00Z'),
+			updatedBy: 'u2'
+		});
 	});
 });

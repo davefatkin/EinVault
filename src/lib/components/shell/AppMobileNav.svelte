@@ -15,7 +15,8 @@
 		Activity,
 		BookOpen,
 		Weight,
-		FileText
+		FileText,
+		StickyNote
 	} from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { currentFabSection, orderFabActions } from '$lib/nav/fabSections';
@@ -222,6 +223,18 @@
 					: ''}"
 			>
 				<FileText class="h-5 w-5" />
+			</a>
+			<a
+				href={`/${activeCompanion.id}/notes`}
+				aria-label={t(locale, 'nav.notes')}
+				aria-current={isTabActive(`/${activeCompanion.id}/notes`) ? 'page' : undefined}
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
+					`/${activeCompanion.id}/notes`
+				)
+					? 'text-primary'
+					: ''}"
+			>
+				<StickyNote class="h-5 w-5" />
 			</a>
 		{/if}
 		<button

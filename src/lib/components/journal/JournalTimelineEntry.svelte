@@ -87,12 +87,12 @@
 					{#if isToday}<span class="font-medium text-primary"
 							>{t(locale, 'page.journal.today')}</span
 						>{/if}
-					<ByLine user={entry.logger} variant="inline" class="ml-0" />
-					{#if entry.updatedBy && entry.updatedBy !== entry.loggedBy && entry.updater}
-						<span class="text-muted-foreground"
-							>· {t(locale, 'common.updatedBy', { name: entry.updater.displayName })}</span
-						>
-					{/if}
+					<ByLine
+						user={entry.logger}
+						updater={entry.updatedBy && entry.updatedBy !== entry.loggedBy ? entry.updater : null}
+						variant="inline"
+						class="ml-0"
+					/>
 				</div>
 			</div>
 			{#if canEdit}

@@ -560,22 +560,26 @@
 					{/if}
 				</div>
 				<span class="hidden items-center gap-1 sm:flex">
-					<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
-					{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
-						<span class="text-xs text-muted-foreground">
-							· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
-						</span>
-					{/if}
+					<ByLine
+						user={data.entry?.logger}
+						updater={data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy
+							? data.entry.updater
+							: null}
+						variant="inline"
+						class="ml-0"
+					/>
 				</span>
 			</div>
 		</div>
 		<div class="flex items-center gap-1 sm:hidden">
-			<ByLine user={data.entry?.logger} variant="inline" class="ml-0" />
-			{#if data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy && data.entry.updater}
-				<span class="text-xs text-muted-foreground">
-					· {t(locale, 'common.updatedBy', { name: data.entry.updater.displayName })}
-				</span>
-			{/if}
+			<ByLine
+				user={data.entry?.logger}
+				updater={data.entry?.updatedBy && data.entry.updatedBy !== data.entry.loggedBy
+					? data.entry.updater
+					: null}
+				variant="inline"
+				class="ml-0"
+			/>
 		</div>
 
 		<!-- Mood -->

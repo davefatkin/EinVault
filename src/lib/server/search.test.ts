@@ -236,3 +236,28 @@ describe('search index + query', () => {
 		});
 	});
 });
+
+describe('note search', () => {
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({ id: 'c-search-note', name: 'Nora' });
+		await db.insert(schema.notes).values({
+			id: 'n-search',
+			companionId: 'c-search-note',
+			title: 'Favorite things',
+			body: 'Loves sardines'
+		});
+		await db.insert(schema.noteTags).values({ noteId: 'n-search', tag: 'treats' });
+	});
+
+	it('finds a note by body or tag and links to the note page', () => {
+		for (const text of ['sardines', 'treats']) {
+			const hit = search(q({ text })).find((r) => r.id === 'n-search');
+			expect(hit).toMatchObject({ type: 'note', href: '/c-search-note/notes/n-search' });
+		}
+	});
+
+	it('filters to notes with the note type', () => {
+		const results = search(q({ text: 'sardines', types: ['note'] }));
+		expect(results.map((r) => r.type)).toEqual(['note']);
+	});
+});

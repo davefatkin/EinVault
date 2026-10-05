@@ -3,6 +3,7 @@ import { inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { apiRoute } from '$lib/server/auth/api-request';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
+import { sharedNotesMarkdown } from '$lib/server/notes';
 import { toApiCompanion, toApiCompanionMinimal } from '$lib/server/api-serializers';
 
 // Bearer-token endpoint: list the companions the token user may target, so a
@@ -19,6 +20,7 @@ export const GET = apiRoute(async ({ user, scope }) => {
 		orderBy: (c, { asc }) => [asc(c.name)]
 	});
 
-	const serialize = scope === 'write' ? toApiCompanionMinimal : toApiCompanion;
-	return json({ companions: rows.map(serialize) });
+	if (scope === 'write') return json({ companions: rows.map(toApiCompanionMinimal) });
+	const sitterNotes = await sharedNotesMarkdown(rows.map((r) => r.id));
+	return json({ companions: rows.map((r) => toApiCompanion(r, sitterNotes.get(r.id) ?? null)) });
 });
