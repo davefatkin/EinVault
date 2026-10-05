@@ -265,6 +265,56 @@ test.describe('owner route guard responses', () => {
 	});
 });
 
+// Owners have no companion_caretakers row, so most care actions would fail()
+// for them anyway. Asserting the guard's ActionResult error (HTTP 403, type
+// 'error') rather than a failure proves the role check is what stopped them.
+const CARE_ACTIONS: { path: string; form?: Record<string, string> }[] = [
+	{ path: `/care/${EIN}?/complete`, form: { id: 'no-such-reminder' } },
+	{ path: `/care/${EIN}?/skip`, form: { id: 'no-such-reminder' } },
+	{ path: `/care/${EIN}?/executeQuickLog`, form: { id: 'no-such-quick-log' } },
+	{ path: `/care/${EIN}/journal?/save`, form: { body: 'owner forged' } },
+	{ path: `/care/${EIN}/log?/add`, form: { type: 'walk' } },
+	{ path: `/care/${EIN}/log?/delete`, form: { id: 'no-such-event' } },
+	{ path: '/care/settings?/theme', form: { theme: 'not-a-theme' } }
+];
+
+async function expectGuardForbidden(
+	request: import('@playwright/test').APIRequestContext,
+	baseURL: string,
+	path: string,
+	form?: Record<string, string>
+) {
+	const res = await request.post(path, {
+		headers: { Origin: baseURL, Accept: 'application/json' },
+		form
+	});
+	expect(res.status()).toBe(403);
+	expect(await res.json()).toEqual({ type: 'error', error: { message: 'Forbidden' } });
+}
+
+test.describe('caretaker form actions reject owners', () => {
+	for (const { path, form } of CARE_ACTIONS) {
+		test(`member POST ${path} is forbidden`, async ({ app, asMember }) => {
+			await expectGuardForbidden(asMember.request, app.server.baseURL, path, form);
+		});
+		test(`admin POST ${path} is forbidden`, async ({ app, asAdmin }) => {
+			await expectGuardForbidden(asAdmin.request, app.server.baseURL, path, form);
+		});
+	}
+
+	test('unauthenticated caretaker action is 401', async ({ app, browser }) => {
+		const ctx = await browser.newContext({ baseURL: app.server.baseURL });
+		const res = await ctx.request.post(`/care/${EIN}/log?/add`, {
+			headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+			form: { type: 'walk' }
+		});
+		const body = await res.json();
+		await ctx.close();
+		expect(res.status()).toBe(401);
+		expect(body.type).toBe('error');
+	});
+});
+
 test.describe('owner-only API reads reject caretakers', () => {
 	for (const companion of [EIN, EDWARD]) {
 		test(`caretaker cannot page journal entries for ${companion}`, async ({ asCaretaker }) => {
