@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { ChevronLeft, Pencil, Pin, PinOff, Trash2, StickyNote } from '@lucide/svelte';
+	import { ChevronLeft, Pencil, Trash2, StickyNote } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
@@ -9,6 +8,7 @@
 	import ByLine from '$lib/components/ByLine.svelte';
 	import NoteContent from '$lib/components/notes/NoteContent.svelte';
 	import NoteEditor from '$lib/components/notes/NoteEditor.svelte';
+	import PinToggle from '$lib/components/notes/PinToggle.svelte';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, form } = $props();
@@ -52,17 +52,7 @@
 		<PageHeader title={data.note.title} tint="muted">
 			{#snippet icon()}<StickyNote class="h-5 w-5" />{/snippet}
 			{#snippet actions()}
-				<form method="POST" action="?/togglePin" use:enhance>
-					<input type="hidden" name="id" value={data.note.id} />
-					<input type="hidden" name="pinned" value={data.note.pinned ? 'false' : 'true'} />
-					<Button type="submit" variant="soft" size="sm" aria-pressed={data.note.pinned}>
-						{#if data.note.pinned}
-							<Pin class="h-4 w-4 mr-1.5" />{t(locale, 'page.notes.unpin')}
-						{:else}
-							<PinOff class="h-4 w-4 mr-1.5" />{t(locale, 'page.notes.pin')}
-						{/if}
-					</Button>
-				</form>
+				<PinToggle noteId={data.note.id} pinned={data.note.pinned} variant="labeled" />
 				<Button variant="soft" size="sm" href="?edit=1">
 					<Pencil class="h-4 w-4 mr-1.5" />{t(locale, 'common.edit')}
 				</Button>

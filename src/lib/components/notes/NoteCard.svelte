@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { Pin, PinOff } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import PinToggle from './PinToggle.svelte';
 	import { stripMarkdown } from '$lib/markdown';
 	import { t, getLocale } from '$lib/i18n';
 	import type { UserRef } from '$lib/types';
@@ -58,19 +57,6 @@
 				class="ml-0"
 			/>
 		</div>
-		<form method="POST" action="?/togglePin" use:enhance>
-			<input type="hidden" name="id" value={note.id} />
-			<input type="hidden" name="pinned" value={note.pinned ? 'false' : 'true'} />
-			<button
-				type="submit"
-				aria-pressed={note.pinned}
-				aria-label={t(locale, note.pinned ? 'page.notes.unpin' : 'page.notes.pin')}
-				class="rounded-md p-1.5 transition-colors hover:bg-accent {note.pinned
-					? 'text-primary'
-					: 'text-muted-foreground'}"
-			>
-				{#if note.pinned}<Pin class="h-4 w-4" />{:else}<PinOff class="h-4 w-4" />{/if}
-			</button>
-		</form>
+		<PinToggle noteId={note.id} pinned={note.pinned} />
 	</div>
 </article>

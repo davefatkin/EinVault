@@ -58,11 +58,22 @@ test.describe('notes (owner)', () => {
 		await asMember.goto(`/${EIN}/notes`);
 		await expect(chips.getByRole('link', { name: /^treats/ })).toHaveCount(0);
 
-		// Pin moves it to the top and is not an edit.
+		// Pin moves it to the top and is not an edit. The toggle keeps its name;
+		// aria-pressed carries the state.
 		const card = asMember.locator('article').filter({ hasText: 'E2E Favorite foods' });
-		await card.getByRole('button', { name: 'Pin' }).click();
+		await card.getByRole('button', { name: 'Pin', exact: true, pressed: false }).click();
+		await expect(
+			card.getByRole('button', { name: 'Pin', exact: true, pressed: true })
+		).toBeVisible();
 		await expect(asMember.locator('article').first()).toContainText('E2E Favorite foods');
 		await expect(card).not.toContainText('edited by');
+
+		// The detail page toggle works the same way.
+		await asMember.goto(noteUrl);
+		const detailPin = asMember.getByRole('button', { name: 'Pin', exact: true });
+		await expect(detailPin).toHaveAttribute('aria-pressed', 'true');
+		await detailPin.click();
+		await expect(detailPin).toHaveAttribute('aria-pressed', 'false');
 
 		// Delete.
 		await asMember.goto(noteUrl);
@@ -77,8 +88,10 @@ test.describe('notes (owner)', () => {
 		await asAdmin.goto(`/${EIN}/notes`);
 		const card = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
 		try {
-			await card.getByRole('button', { name: 'Pin' }).click();
-			await expect(card.getByRole('button', { name: 'Unpin' })).toBeVisible();
+			await card.getByRole('button', { name: 'Pin', exact: true, pressed: false }).click();
+			await expect(
+				card.getByRole('button', { name: 'Pin', exact: true, pressed: true })
+			).toBeVisible();
 			await expect(card).not.toContainText('edited by');
 			await asAdmin.goto(`/${EIN}/notes/${N.einCommands.id}`);
 			await expect(
@@ -88,10 +101,12 @@ test.describe('notes (owner)', () => {
 		} finally {
 			await asAdmin.goto(`/${EIN}/notes`);
 			const again = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
-			const unpin = again.getByRole('button', { name: 'Unpin' });
+			const unpin = again.getByRole('button', { name: 'Pin', exact: true, pressed: true });
 			if (await unpin.count()) {
 				await unpin.click();
-				await expect(again.getByRole('button', { name: 'Pin' })).toBeVisible();
+				await expect(
+					again.getByRole('button', { name: 'Pin', exact: true, pressed: false })
+				).toBeVisible();
 			}
 		}
 	});
