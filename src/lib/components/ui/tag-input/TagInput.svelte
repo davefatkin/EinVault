@@ -40,7 +40,12 @@
 	let text = $state(untrack(() => pendingText));
 	let open = $state(false);
 	let active = $state(-1);
-	let error = $state<TagCommitError | null>(null);
+	// Text carried over from a failed no-JS submit shows its problem right away.
+	let error = $state<TagCommitError | null>(
+		untrack(() =>
+			pendingText ? commitTags(tags, splitTagText(pendingText), { max, normalize }).error : null
+		)
+	);
 	const listId = $derived(`${id}-suggestions`);
 	const errorId = $derived(`${id}-error`);
 
@@ -109,9 +114,16 @@
 		open = true;
 		active = -1;
 		error = null;
-		if ((e as InputEvent).isComposing) return;
-		// Pasted text with commas becomes several tags right away.
-		if (text.includes(',')) commit(splitTagText(text));
+		const ie = e as InputEvent;
+		if (ie.isComposing) return;
+		// Pasted text with commas becomes several tags right away. Only when this
+		// input brought the comma: leftover text like "bad one, bad two" must not
+		// re-commit on every keystroke while the user fixes it.
+		const insertedComma =
+			ie.inputType === 'insertFromPaste' ||
+			ie.inputType === 'insertFromDrop' ||
+			(ie.data ?? '').includes(',');
+		if (insertedComma && text.includes(',')) commit(splitTagText(text));
 	}
 </script>
 
@@ -147,7 +159,7 @@
 				role="combobox"
 				autocomplete="off"
 				readonly={atLimit && text === ''}
-				aria-disabled={atLimit || undefined}
+				aria-disabled={(atLimit && text === '') || undefined}
 				aria-invalid={error ? 'true' : undefined}
 				aria-expanded={showList}
 				aria-controls={listId}

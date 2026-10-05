@@ -13,7 +13,8 @@ export type TagCommit = {
 	error: TagCommitError | null;
 };
 
-// Commas separate tags in typed or pasted text.
+// Commas separate tags in typed or pasted text. Also used by the server to read
+// uncommitted tag text, so the client and server split the same way.
 export function splitTagText(raw: string): string[] {
 	return raw
 		.split(',')

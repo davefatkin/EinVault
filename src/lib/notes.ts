@@ -27,13 +27,9 @@ export function normalizeTags(raw: string[]): { tags: string[]; invalid: boolean
 	return { tags, invalid };
 }
 
-// Typed or pasted tag text: commas separate tags.
-export function splitTagInput(raw: string): string[] {
-	return raw
-		.split(',')
-		.map((s) => s.trim())
-		.filter(Boolean);
-}
+// Typed or pasted tag text: commas separate tags. One implementation, owned by
+// the generic tag input.
+export { splitTagText as splitTagInput } from '$lib/components/ui/tag-input/commit';
 
 export type NoteErrorCode =
 	'titleRequired' | 'titleTooLong' | 'invalidTitle' | 'bodyTooLong' | 'tooManyTags' | 'invalidTag';

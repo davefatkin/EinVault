@@ -216,6 +216,29 @@ test.describe('notes (owner)', () => {
 		await expect(tagBox).not.toHaveAttribute('aria-invalid');
 	});
 
+	test('fixing leftover invalid tags does not commit them mid-edit', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/notes/new`);
+		const tagBox = asMember.getByRole('combobox');
+		const chips = asMember.getByRole('button', { name: /^Remove tag/ });
+		const x = 'x'.repeat(33);
+		const y = 'y'.repeat(33);
+		await tagBox.fill(`${x}, ${y}`);
+		await expect(tagBox).toHaveValue(`${x}, ${y}`);
+		await expect(asMember.getByRole('alert')).toHaveText('Each tag must be 1 to 32 characters.');
+
+		// Shortening the second tag makes it valid, but typing must not commit it.
+		await tagBox.press('End');
+		await tagBox.press('Backspace');
+		await expect(tagBox).toHaveValue(`${x}, ${y.slice(1)}`);
+		await expect(chips).toHaveCount(0);
+
+		// Enter commits the valid one and keeps the other with its reason.
+		await tagBox.press('Enter');
+		await expect(chips).toHaveCount(1);
+		await expect(tagBox).toHaveValue(x);
+		await expect(asMember.getByRole('alert')).toHaveText('Each tag must be 1 to 32 characters.');
+	});
+
 	test('tag input at the limit keeps focus and Backspace removes a chip', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
 		const tagBox = asMember.getByRole('combobox');
