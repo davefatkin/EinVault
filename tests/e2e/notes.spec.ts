@@ -181,6 +181,52 @@ test.describe('notes (owner)', () => {
 		}
 	});
 
+	test('tag input keeps invalid text and explains why', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/notes/new`);
+		const tagBox = asMember.getByRole('combobox');
+		const long = 'x'.repeat(33);
+		await tagBox.fill(long);
+		await tagBox.press('Enter');
+		await expect(tagBox).toHaveValue(long);
+		await expect(tagBox).toHaveAttribute('aria-invalid', 'true');
+		await expect(asMember.getByRole('alert')).toHaveText('Each tag must be 1 to 32 characters.');
+		await expect(asMember.getByRole('button', { name: /^Remove tag/ })).toHaveCount(0);
+
+		// Over-long text matches no suggestions instead of listing them all.
+		await expect(asMember.getByRole('listbox')).toHaveCount(0);
+
+		// Editing the text clears the message.
+		await tagBox.press('Backspace');
+		await expect(asMember.getByRole('alert')).toHaveCount(0);
+		await expect(tagBox).not.toHaveAttribute('aria-invalid');
+	});
+
+	test('tag input at the limit keeps focus and Backspace removes a chip', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/notes/new`);
+		const tagBox = asMember.getByRole('combobox');
+		const chips = asMember.getByRole('button', { name: /^Remove tag/ });
+		for (let i = 1; i <= 10; i++) {
+			await tagBox.fill(`t${i}`);
+			await tagBox.press('Enter');
+		}
+		await expect(chips).toHaveCount(10);
+		await expect(tagBox).toBeFocused();
+		await expect(tagBox).toHaveAttribute('aria-disabled', 'true');
+		await expect(tagBox).toHaveAttribute('readonly', '');
+
+		await asMember.keyboard.press('Backspace');
+		await expect(chips).toHaveCount(9);
+		await expect(asMember.getByRole('button', { name: 'Remove tag t10' })).toHaveCount(0);
+		await expect(tagBox).toBeFocused();
+		await expect(tagBox).not.toHaveAttribute('aria-disabled');
+
+		// Pasting past the limit keeps the extra text with a reason.
+		await tagBox.fill('t10, t11');
+		await expect(chips).toHaveCount(10);
+		await expect(tagBox).toHaveValue('t11');
+		await expect(asMember.getByRole('alert')).toHaveText('Too many tags (max 10).');
+	});
+
 	test('closing the tab with unsaved changes triggers the browser prompt', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
 		await asMember.getByLabel('Title', { exact: true }).fill('Unsaved');

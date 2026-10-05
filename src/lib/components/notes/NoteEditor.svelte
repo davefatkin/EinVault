@@ -10,7 +10,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { createDirtyGuard } from '$lib/dirtyGuard.svelte';
-	import { NOTE_TITLE_MAX_LEN, NOTE_MAX_TAGS } from '$lib/notes';
+	import { NOTE_ERROR, NOTE_TITLE_MAX_LEN, NOTE_MAX_TAGS, normalizeTag } from '$lib/notes';
 	import { t, getLocale } from '$lib/i18n';
 
 	let {
@@ -36,6 +36,8 @@
 	} = $props();
 	const locale = getLocale();
 	const guard = createDirtyGuard();
+	const tagErrorText = (code: 'invalidTag' | 'tooManyTags') =>
+		t(locale, NOTE_ERROR[code].key, NOTE_ERROR[code].params);
 
 	// Seeded once from the prop: the editor owns its draft after mount.
 	let title = $state(untrack(() => note?.title ?? ''));
@@ -112,6 +114,10 @@
 			bind:tags
 			{suggestions}
 			describedby="note-tags-hint"
+			max={NOTE_MAX_TAGS}
+			normalize={normalizeTag}
+			invalidText={tagErrorText('invalidTag')}
+			tooManyText={tagErrorText('tooManyTags')}
 			onchange={() => guard.markDirty()}
 		/>
 		<p id="note-tags-hint" class="text-xs text-muted-foreground">
