@@ -700,6 +700,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Speichern…',
 	'page.journal.day.saveFailedStatus': 'Speichern fehlgeschlagen',
 	'page.journal.day.saveFailedRetry': 'Erneut versuchen',
+	'page.journal.signedOutStatus': 'Abgemeldet, nicht gespeichert',
+	'page.journal.signInToSave': 'Anmelden',
 	'page.journal.day.mediaTitle': 'Fotos & Videos',
 	'page.journal.day.addMedia': 'Medien hinzufügen',
 	'page.journal.day.uploading': 'Hochladen…',

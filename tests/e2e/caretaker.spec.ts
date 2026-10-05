@@ -162,6 +162,28 @@ test.describe('caretaker', () => {
 		});
 	});
 
+	test('journal autosave reports a signed-out save and retries after sign-in (#318)', async ({
+		asCaretaker
+	}) => {
+		await asCaretaker.goto(`/care/${JULIA}/journal`);
+
+		// Drop the session cookie in this context only; the server session stays
+		// valid, so restoring the cookie stands in for signing in again.
+		const cookies = await asCaretaker.context().cookies();
+		await asCaretaker.context().clearCookies();
+
+		const bodyField = asCaretaker.locator('textarea[name="body"]');
+		await bodyField.fill('e2e-caretaker-signed-out');
+		await expect(asCaretaker.getByText('Signed out, not saved')).toBeVisible({ timeout: 10_000 });
+
+		await asCaretaker.context().addCookies(cookies);
+		await asCaretaker.evaluate(() => window.dispatchEvent(new Event('focus')));
+		await expect(asCaretaker.getByText('✓ Saved')).toBeVisible({ timeout: 10_000 });
+
+		await asCaretaker.reload();
+		await expect(bodyField).toHaveValue('e2e-caretaker-signed-out');
+	});
+
 	test('caretaker app-route bounce', async ({ asCaretaker }) => {
 		// The (app) layout load() checks role === 'caretaker' and redirects to /care.
 		await asCaretaker.goto(`/${EIN}/health`);

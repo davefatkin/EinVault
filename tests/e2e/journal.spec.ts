@@ -28,6 +28,31 @@ test.describe('journal day editor', () => {
 		await expect(asMember.locator('button[title="Good"][aria-pressed="true"]')).toBeVisible();
 	});
 
+	test('autosave reports a signed-out save and retries after sign-in (#318)', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-04`);
+
+		// Drop the session cookie in this context only; the server session stays
+		// valid, so restoring the cookie stands in for signing in again.
+		const cookies = await asMember.context().cookies();
+		await asMember.context().clearCookies();
+
+		await asMember.locator('textarea').fill('e2e written while signed out');
+		await expect(asMember.getByText('Signed out, not saved')).toBeVisible({ timeout: 5_000 });
+		await expect(asMember.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+			'href',
+			'/auth/login'
+		);
+
+		await asMember.context().addCookies(cookies);
+		await asMember.evaluate(() => window.dispatchEvent(new Event('focus')));
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 5_000 });
+
+		await asMember.reload();
+		await expect(asMember.locator('textarea')).toHaveValue('e2e written while signed out');
+	});
+
 	test('photo upload', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal/2026-05-02`);
 

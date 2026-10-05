@@ -698,6 +698,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'A guardar…',
 	'page.journal.day.saveFailedStatus': 'Falha ao guardar',
 	'page.journal.day.saveFailedRetry': 'Tentar novamente',
+	'page.journal.signedOutStatus': 'Sessão terminada, não guardado',
+	'page.journal.signInToSave': 'Iniciar sessão',
 	'page.journal.day.mediaTitle': 'Fotos e vídeos',
 	'page.journal.day.addMedia': 'Adicionar conteúdo',
 	'page.journal.day.uploading': 'A enviar…',

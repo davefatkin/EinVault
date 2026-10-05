@@ -696,6 +696,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Salvataggio…',
 	'page.journal.day.saveFailedStatus': 'Salvataggio non riuscito',
 	'page.journal.day.saveFailedRetry': 'Riprova',
+	'page.journal.signedOutStatus': 'Disconnesso, non salvato',
+	'page.journal.signInToSave': 'Accedi',
 	'page.journal.day.mediaTitle': 'Foto e video',
 	'page.journal.day.addMedia': 'Aggiungi contenuti',
 	'page.journal.day.uploading': 'Caricamento…',
