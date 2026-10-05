@@ -144,6 +144,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidDefaultRecurrence': 'Unidad de recurrencia predeterminada no válida.',
 	'error.invalidRole': 'Rol no válido.',
 	'error.invalidStatus': 'status debe ser "due" o "all".',
+	'error.invalidPinned': 'pinned debe ser "true" o "false".',
 	'error.invalidNtfyTopic':
 		'El tema solo puede contener letras, números, guiones y guiones bajos (máx. 64).',
 	'error.invalidDate': 'Fecha no válida',

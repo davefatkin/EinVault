@@ -144,6 +144,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
 	'error.invalidStatus': 'status muss "due" oder "all" sein.',
+	'error.invalidPinned': 'pinned muss "true" oder "false" sein.',
 	'error.invalidNtfyTopic':
 		'Das Thema darf nur Buchstaben, Zahlen, Binde- und Unterstriche enthalten (max. 64).',
 	'error.invalidDate': 'Ungültiges Datum',

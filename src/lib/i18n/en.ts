@@ -141,6 +141,7 @@ const messages = {
 	'error.invalidDefaultRecurrence': 'Invalid default recurrence unit.',
 	'error.invalidRole': 'Invalid role.',
 	'error.invalidStatus': 'status must be "due" or "all".',
+	'error.invalidPinned': 'pinned must be "true" or "false".',
 	'error.invalidNtfyTopic':
 		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',

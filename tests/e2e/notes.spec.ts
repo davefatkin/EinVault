@@ -382,6 +382,22 @@ apiWorld(
 			});
 			expect((await list.json()).notes.map((n: { id: string }) => n.id)).toEqual([id]);
 
+			// A tag that can't exist still has its pagination checked.
+			const badPage = await page.request.get(
+				api(`/api/notes?companionId=${EIN}&tag=${'x'.repeat(33)}&limit=abc`),
+				{ headers: auth }
+			);
+			expect(badPage.status()).toBe(400);
+			expect((await badPage.json()).code).toBe('invalidPagination');
+			const badPinned = await page.request.get(api(`/api/notes?companionId=${EIN}&pinned=yes`), {
+				headers: auth
+			});
+			expect(badPinned.status()).toBe(400);
+			expect(await badPinned.json()).toMatchObject({
+				code: 'invalidPinned',
+				message: 'pinned must be "true" or "false".'
+			});
+
 			const patched = await page.request.patch(api(`/api/notes/${id}`), {
 				headers: auth,
 				data: { pinned: true, tags: [] }
@@ -394,6 +410,14 @@ apiWorld(
 			});
 			expect(bad.status()).toBe(400);
 			expect((await bad.json()).code).toBe('titleRequired');
+
+			// Length is counted after trimming, as in the form.
+			const padded = await page.request.patch(api(`/api/notes/${id}`), {
+				headers: auth,
+				data: { title: `${'t'.repeat(200)} ` }
+			});
+			expect(padded.status()).toBe(200);
+			expect((await padded.json()).title).toBe('t'.repeat(200));
 
 			const del = await page.request.delete(api(`/api/notes/${id}`), { headers: auth });
 			expect(del.status()).toBe(204);

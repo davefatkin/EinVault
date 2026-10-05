@@ -504,7 +504,7 @@ export function buildOpenApiDocument() {
 				content: { 'application/json': { schema: NoteWriteResponse } }
 			},
 			400: errorResponse(
-				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag / noTargets'
+				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag / noTargets / invalidBody'
 			),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / forbidden'),
@@ -545,7 +545,7 @@ export function buildOpenApiDocument() {
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: Note } } },
 			400: errorResponse(
-				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag'
+				'titleRequired / titleTooLong / invalidTitle / bodyTooLong / tooManyTags / invalidTag / invalidBody'
 			),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / forbidden'),

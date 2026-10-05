@@ -215,13 +215,15 @@ export const NoteWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('NoteWriteResponse');
 
-// Shape only. Trimming, the single-line title rule, and tag normalization run
-// in validateNewNote/validateNotePatch ($lib/notes), shared with the form actions.
+// Shape only. The title is trimmed before its length check so the cap matches
+// the form. The single-line title rule and tag normalization run in
+// validateNewNote/validateNotePatch ($lib/notes), shared with the form actions.
 export const NoteCreate = z
 	.object({
 		companionId: z.string().min(1),
 		title: z
 			.string()
+			.trim()
 			.max(NOTE_TITLE_MAX_LEN)
 			.openapi({ description: 'Single line, 1-200 characters after trimming.' }),
 		body: z.string().max(NOTE_BODY_MAX_LEN).optional().openapi({ description: 'Markdown.' }),
@@ -243,7 +245,7 @@ export const NoteCreate = z
 
 export const NoteUpdate = z
 	.object({
-		title: z.string().max(NOTE_TITLE_MAX_LEN).optional(),
+		title: z.string().trim().max(NOTE_TITLE_MAX_LEN).optional(),
 		body: z.string().max(NOTE_BODY_MAX_LEN).optional(),
 		tags: z.array(z.string()).max(NOTE_MAX_TAGS).optional().openapi({
 			description: 'Replaces the whole tag set when present.'

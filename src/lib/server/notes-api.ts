@@ -66,5 +66,5 @@ export function parsePinnedParam(raw: string | null, locale: Locale): boolean | 
 	if (raw === null) return undefined;
 	if (raw === 'true') return true;
 	if (raw === 'false') return false;
-	error(400, { code: 'invalidPinned', message: t(locale, 'error.invalidRequestBody') });
+	error(400, { code: 'invalidPinned', message: t(locale, 'error.invalidPinned') });
 }

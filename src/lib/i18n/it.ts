@@ -143,6 +143,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
 	'error.invalidStatus': 'status deve essere "due" oppure "all".',
+	'error.invalidPinned': 'pinned deve essere "true" oppure "false".',
 	'error.invalidNtfyTopic':
 		"L'argomento può contenere solo lettere, numeri, trattini e trattini bassi (max 64).",
 	'error.invalidDate': 'Data non valida',

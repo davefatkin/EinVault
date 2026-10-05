@@ -23,11 +23,11 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const pinned = parsePinnedParam(event.url.searchParams.get('pinned'), locale);
 	const tagParam = event.url.searchParams.get('tag');
 	const tag = tagParam === null ? undefined : normalizeTag(tagParam);
-	// A tag that can't exist matches nothing.
-	if (tag === null) return json({ notes: [], hasMore: false });
-
+	// A tag that can't exist matches nothing, but limit/offset are still checked.
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
-		listNotes(companionId, { tag, pinned, limit: take, offset })
+		tag === null
+			? Promise.resolve([])
+			: listNotes(companionId, { tag, pinned, limit: take, offset })
 	);
 	return json({ notes: page.map(toApiNote), hasMore });
 });
