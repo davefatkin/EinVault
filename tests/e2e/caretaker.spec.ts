@@ -1,5 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 import { todayUTC } from '../lib/dates';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
@@ -127,6 +128,7 @@ test.describe('caretaker', () => {
 		// the member, which would make Jet the author and hide "edited by Jet".
 		// The care journal page is at /care/{companionId}/journal and works on today's date.
 		await asCaretaker.goto(`/care/${JULIA}/journal`);
+		await waitForHydration(asCaretaker);
 
 		// The journal textarea has name="body"; the MarkdownTextarea renders a <textarea>
 		const bodyField = asCaretaker.locator('textarea[name="body"]');
@@ -139,6 +141,7 @@ test.describe('caretaker', () => {
 		// The app [date] journal page renders the body in a raw <textarea> (no name attr)
 		// in write mode. Locate by placeholder substring.
 		await asMember.goto(`/${JULIA}/journal/${today}`);
+		await waitForHydration(asMember);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e-caretaker-journal', {
 			timeout: 10_000
 		});
@@ -159,6 +162,7 @@ test.describe('caretaker', () => {
 		asCaretaker
 	}) => {
 		await asCaretaker.goto(`/care/${JULIA}/journal`);
+		await waitForHydration(asCaretaker);
 
 		// Drop the session cookie in this context only; the server session stays
 		// valid, so restoring the cookie stands in for signing in again.

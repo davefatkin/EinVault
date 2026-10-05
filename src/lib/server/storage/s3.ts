@@ -42,10 +42,11 @@ export function createS3Backend(config: S3Config): StorageBackend {
 			const res = await aws.fetch(objectUrl(key), {
 				method: 'PUT',
 				body: blob,
-				headers: {
-					'Content-Type': contentType,
-					'Content-Length': String(blob.size)
-				}
+				// No explicit Content-Length: fetch derives it from the Blob. jsdom's
+				// undici 8 installs itself as the legacy global dispatcher, and on
+				// Node 24 the built-in fetch then rejects a hand-set Content-Length
+				// ("invalid content-length header").
+				headers: { 'Content-Type': contentType }
 			});
 			if (!res.ok) {
 				const text = await res.text().catch(() => '');

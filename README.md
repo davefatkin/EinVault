@@ -119,6 +119,7 @@ Everything else in the compose file can be edited directly:
 | `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
 | `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
 | `API_TOKENS_ENABLED`          | `true`              | Set `false` to disable the Bearer-token API (token creation and the `/api/logs`, `/api/journal`, `/api/quick-logs` endpoints) entirely.                    |
+| `API_RATE_LIMIT_PER_MINUTE`   | `30`                | Bearer API requests allowed per client IP per minute. Behind a reverse proxy, set adapter-node's `ADDRESS_HEADER` so each client gets its own budget.      |
 | `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                |
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |

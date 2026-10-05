@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { browser } from '$app/environment';
-	import { setContext, untrack } from 'svelte';
+	import { onMount, setContext, untrack } from 'svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { applyTheme, readThemeCookie } from '$lib/theme';
@@ -18,6 +18,14 @@
 		'locale',
 		untrack(() => data.locale)
 	);
+
+	// Marks the page as interactive once the whole tree has hydrated. E2e tests
+	// wait on it before typing into autosave fields: before hydration no input
+	// handlers are attached and page state is reinitialized from load data, so
+	// a value filled earlier is lost and never saved.
+	onMount(() => {
+		document.documentElement.dataset.hydrated = '';
+	});
 
 	$effect(() => {
 		if (!browser) return;

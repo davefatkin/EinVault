@@ -9,16 +9,18 @@ import { test, expect } from '../lib/fixtures';
 async function enableAndGetUrl(page: Page, settingsPath: string): Promise<string> {
 	await page.goto(settingsPath);
 	// With fullyParallel scheduling, an earlier calendar test in the same
-	// worker may have left the feed enabled — the card then shows the feed URL
-	// instead of the Enable button. The two states are mutually exclusive, so
-	// wait until either renders (isVisible alone would race hydration), then
-	// click Enable only when the feed is still disabled.
+	// worker may have left the feed enabled. The URL is only shown once, right
+	// after enabling, so an enabled feed shows Regenerate instead of Enable.
+	// Both post to ?/calendarEnable, and the page that comes back reveals the
+	// URL. Wait for either button, then click the one that rendered.
 	const enableButton = page.getByRole('button', { name: 'Enable calendar feed' });
+	const regenerateButton = page.getByRole('button', { name: 'Regenerate URL' });
 	const urlInput = page.locator('input[readonly].font-mono');
-	await expect(enableButton.or(urlInput)).toBeVisible({ timeout: 15_000 });
+	await expect(enableButton.or(regenerateButton)).toBeVisible({ timeout: 15_000 });
 	if (await enableButton.isVisible()) {
-		// After the form POST the page reloads and reveals the URL card.
 		await enableButton.click();
+	} else {
+		await regenerateButton.click();
 	}
 	await expect(urlInput).toBeVisible({ timeout: 8_000 });
 	return await urlInput.inputValue();

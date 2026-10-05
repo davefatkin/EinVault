@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { getFreePort } from '../lib/ports';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -18,11 +17,10 @@ const test = base.extend<{ server: AppServer }>({
 			'.test-data',
 			`apitokens-off-${testInfo.workerIndex}-${testInfo.testId}`
 		);
-		const port = await getFreePort();
 		const dbPath = createSeededDb(dir);
 		const server = await startAppServer({
 			dbPath,
-			env: { PORT: String(port), API_TOKENS_ENABLED: 'false' }
+			env: { API_TOKENS_ENABLED: 'false' }
 		});
 		await use(server);
 		await server.stop();
