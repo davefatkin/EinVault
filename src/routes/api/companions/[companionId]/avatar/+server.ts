@@ -1,14 +1,20 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, type RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { avatarLegacyKey } from '$lib/server/storage/avatarKeys';
-import { assertCanEditCompanion } from '$lib/server/permissions';
 import { processAvatarUpload, deletePreviousAvatar, deleteAvatar } from '$lib/server/avatar';
 
+// Companion profile edits are for members and admins; caretakers have no
+// avatar UI (the Immich picker route rejects them too).
+function assertOwner(locals: RequestEvent['locals']) {
+	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
+	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
+}
+
 export const POST: RequestHandler = async ({ request, params, locals }) => {
-	await assertCanEditCompanion(locals, params.companionId);
+	assertOwner(locals);
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
@@ -49,7 +55,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-	await assertCanEditCompanion(locals, params.companionId);
+	assertOwner(locals);
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)

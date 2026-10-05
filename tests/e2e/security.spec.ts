@@ -1,9 +1,11 @@
 import { test, expect } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { pngUpload } from '../lib/files';
+import { todayUTC } from '../lib/dates';
 
 const EIN = SEED.companions.ein.id;
 const EDWARD = SEED.companions.edward.id;
+const JULIA = SEED.companions.julia.id;
 
 test.describe('security headers', () => {
 	test('page response carries required security headers', async ({ app, browser }) => {
@@ -80,7 +82,7 @@ test.describe('api authz', () => {
 		// Regression: POST used to skip the assignment check the GET enforces,
 		// letting any caretaker write into any companion's journal.
 		const res = await asCaretaker.request.post(
-			`/api/companions/${EDWARD}/journal/2026-06-04/photos`,
+			`/api/companions/${EDWARD}/journal/${todayUTC()}/photos`,
 			{
 				headers: { Origin: app.server.baseURL }, // SvelteKit CSRF check
 				multipart: { photo: pngUpload() }
@@ -89,13 +91,53 @@ test.describe('api authz', () => {
 		expect(res.status()).toBe(403);
 	});
 
-	test('assigned caretaker can still upload a journal photo', async ({ app, asCaretaker }) => {
-		// Guard must not over-tighten: caretaker IS assigned to Ein.
-		const res = await asCaretaker.request.post(`/api/companions/${EIN}/journal/2026-06-04/photos`, {
+	test('assigned caretaker on shift can upload and delete a photo for today', async ({
+		app,
+		asCaretaker
+	}) => {
+		// Guard must not over-tighten: the caretaker is assigned to Julia and on shift.
+		// Julia's entry for today is caretaker-authored in other specs too, and the
+		// photo is deleted again so no media is left behind on a shared day.
+		const base = `/api/companions/${JULIA}/journal/${todayUTC()}/photos`;
+		const res = await asCaretaker.request.post(base, {
 			headers: { Origin: app.server.baseURL },
 			multipart: { photo: pngUpload() }
 		});
 		expect(res.status()).toBe(200);
+		const { id } = await res.json();
+
+		const del = await asCaretaker.request.delete(`${base}?photoId=${id}`, {
+			headers: { Origin: app.server.baseURL }
+		});
+		expect(del.status()).toBe(200);
+	});
+
+	test('caretaker cannot upload a journal photo for another date (#319)', async ({
+		app,
+		asCaretaker
+	}) => {
+		// Caretakers write only today's journal; photo uploads follow the same rule.
+		const res = await asCaretaker.request.post(`/api/companions/${EIN}/journal/2026-06-04/photos`, {
+			headers: { Origin: app.server.baseURL },
+			multipart: { photo: pngUpload() }
+		});
+		expect(res.status()).toBe(403);
+	});
+
+	test('caretaker cannot change or remove a companion avatar (#319)', async ({
+		app,
+		asCaretaker
+	}) => {
+		const post = await asCaretaker.request.post(`/api/companions/${EIN}/avatar`, {
+			headers: { Origin: app.server.baseURL },
+			multipart: { avatar: pngUpload() }
+		});
+		expect(post.status()).toBe(403);
+
+		const del = await asCaretaker.request.delete(`/api/companions/${EIN}/avatar`, {
+			headers: { Origin: app.server.baseURL }
+		});
+		expect(del.status()).toBe(403);
 	});
 
 	test('anonymous request to avatar endpoint returns 401', async ({ app, browser }) => {
