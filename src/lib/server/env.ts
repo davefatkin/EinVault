@@ -488,6 +488,10 @@ export const CALENDAR_FEED_ENABLED = envBool(env.CALENDAR_FEED_ENABLED, true);
 // business minting write-capable tokens regardless of how the var is set.
 export const API_TOKENS_ENABLED = !DEMO_MODE && envBool(env.API_TOKENS_ENABLED, true);
 
+// Bearer API requests allowed per client IP per minute, checked before the
+// token is looked up. Every client behind one proxy IP shares the budget.
+export const API_RATE_LIMIT_PER_MINUTE = envInt(env.API_RATE_LIMIT_PER_MINUTE, 30);
+
 // 0 = no undo window (instant commit). >0 = seconds before dismissal commits.
 export const REMINDER_UNDO_SECONDS_DEFAULT = Math.min(
 	envNonNegativeInt(env.REMINDER_UNDO_SECONDS, 7),

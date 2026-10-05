@@ -1,7 +1,7 @@
 import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import type { z } from 'zod';
 import { t, type Locale } from '$lib/i18n';
-import { API_TOKENS_ENABLED } from '$lib/server/env';
+import { API_TOKENS_ENABLED, API_RATE_LIMIT_PER_MINUTE } from '$lib/server/env';
 import {
 	resolveApiToken,
 	touchApiToken,
@@ -29,7 +29,7 @@ export async function requireApiToken(
 	} catch {
 		// adapter can throw when the address is unavailable; fall back to a shared bucket
 	}
-	if (!checkRateLimit(`api-ip:${ip}`, 30, 60 * 1000)) {
+	if (!checkRateLimit(`api-ip:${ip}`, API_RATE_LIMIT_PER_MINUTE, 60 * 1000)) {
 		error(429, { code: 'rateLimited', message: t(event.locals.locale, 'error.rateLimited') });
 	}
 
