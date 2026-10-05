@@ -687,6 +687,8 @@ const messages = {
 	'page.journal.day.savingStatus': 'Saving…',
 	'page.journal.day.saveFailedStatus': 'Save failed',
 	'page.journal.day.saveFailedRetry': 'Retry',
+	'page.journal.signedOutStatus': 'Signed out, not saved',
+	'page.journal.signInToSave': 'Sign in',
 	'page.journal.day.mediaTitle': 'Photos & Videos',
 	'page.journal.day.addMedia': 'Add Media',
 	'page.journal.day.uploading': 'Uploading…',

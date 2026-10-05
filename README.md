@@ -5,7 +5,7 @@
 # EinVault
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.0-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
+[![Version](https://img.shields.io/badge/version-1.5.1-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
 
 EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
@@ -120,6 +120,7 @@ Everything else in the compose file can be edited directly:
 | `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
 | `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
 | `API_TOKENS_ENABLED`          | `true`              | Set `false` to disable the Bearer-token API (token creation and the `/api/logs`, `/api/journal`, `/api/quick-logs` endpoints) entirely.                    |
+| `API_RATE_LIMIT_PER_MINUTE`   | `30`                | Bearer API requests allowed per client IP per minute. Behind a reverse proxy, set adapter-node's `ADDRESS_HEADER` so each client gets its own budget.      |
 | `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                |
 | `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
 | `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |

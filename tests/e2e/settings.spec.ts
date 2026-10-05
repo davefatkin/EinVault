@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 // Helper: log in as a freshly-created user in an isolated context.
 // Returns the page (already past login) and a cleanup function.
@@ -232,6 +233,7 @@ test.describe('settings', () => {
 	// -------------------------------------------------------------------------
 	test('profile photo upload and remove', async ({ asMember }) => {
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await expect(asMember).toHaveURL(/\/settings/, { timeout: 10_000 });
 
 		// The "Profile photo" label and "Change photo" button should be present.

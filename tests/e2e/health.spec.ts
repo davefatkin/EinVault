@@ -1,5 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
@@ -94,6 +95,7 @@ test.describe('health events and weight log', () => {
 	}) => {
 		// Upload a document and link it to the seeded "Wellness checkup" health event.
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-health-attach.pdf'));
 		await expect(asMember.getByText('e2e-health-attach.pdf')).toBeVisible({ timeout: 15_000 });
 		const li = asMember.locator('li').filter({ hasText: 'e2e-health-attach.pdf' }).first();

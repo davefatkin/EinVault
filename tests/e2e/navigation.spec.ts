@@ -4,7 +4,6 @@ import path from 'node:path';
 import { test } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { getFreePort } from '../lib/ports';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
@@ -255,14 +254,10 @@ const offShiftTest = base.extend<{ world: OffShiftWorld }>({
 			'.test-data',
 			`nav-offshift-${testInfo.workerIndex}-${testInfo.testId}`
 		);
-		const appPort = await getFreePort();
 		const dbPath = createSeededDbNoShift(dir);
 		let server: AppServer;
 		try {
-			server = await startAppServer({
-				dbPath,
-				env: { PORT: String(appPort) }
-			});
+			server = await startAppServer({ dbPath });
 		} catch (err) {
 			fs.rmSync(dir, { recursive: true, force: true });
 			throw err;

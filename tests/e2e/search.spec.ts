@@ -1,5 +1,6 @@
 import { type Page } from '@playwright/test';
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
@@ -146,6 +147,7 @@ test.describe('global search palette', () => {
 
 		// Navigate to the day page and upload a photo.
 		await asMember.goto(`/${COMP_ID}/journal/${DATE}`);
+		await waitForHydration(asMember);
 
 		const textarea = asMember.locator('textarea');
 		await textarea.fill('e2e lightbox test entry');

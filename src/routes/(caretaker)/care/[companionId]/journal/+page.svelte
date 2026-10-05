@@ -14,6 +14,7 @@
 	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
 	import { t, getLocale } from '$lib/i18n';
 	import { moodOptions } from '$lib/i18n/labels';
+	import { postFormAction } from '$lib/postFormAction';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
@@ -29,8 +30,9 @@
 
 	let body = $state(untrack(() => data.todayEntry?.body ?? ''));
 	let mood = $state(untrack(() => data.todayEntry?.mood ?? ''));
-	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error' | 'signedOut'>('idle');
 	let saveTimer: ReturnType<typeof setTimeout>;
+	let savedTimer: ReturnType<typeof setTimeout>;
 
 	// Media
 	let media = $state(untrack(() => data.photos ?? []));
@@ -57,25 +59,31 @@
 
 	const MOODS = moodOptions(locale);
 
-	async function triggerSave() {
+	function triggerSave() {
 		clearTimeout(saveTimer);
+		clearTimeout(savedTimer);
 		saveStatus = 'saving';
-		saveTimer = setTimeout(async () => {
-			try {
-				const fd = new FormData();
-				fd.set('body', body);
-				fd.set('mood', mood);
-				const res = await fetch('?/save', { method: 'POST', body: fd });
-				if (res.ok) {
-					saveStatus = 'saved';
-					setTimeout(() => (saveStatus = 'idle'), 2000);
-				} else {
-					saveStatus = 'error';
-				}
-			} catch {
-				saveStatus = 'error';
-			}
-		}, 800);
+		saveTimer = setTimeout(saveNow, 800);
+	}
+
+	async function saveNow() {
+		const fd = new FormData();
+		fd.set('body', body);
+		fd.set('mood', mood);
+		clearTimeout(savedTimer);
+		const outcome = await postFormAction('?/save', fd);
+		saveStatus = outcome === 'failed' ? 'error' : outcome;
+		// Keep a stale "Saved" fade-out from hiding a later failure.
+		if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
+	}
+
+	// The sign-in link opens in a new tab so the draft survives; save again
+	// when the user comes back to this one.
+	function retryAfterSignIn() {
+		if (saveStatus === 'signedOut') {
+			saveStatus = 'saving';
+			saveNow();
+		}
 	}
 
 	async function uploadMedia(file: File) {
@@ -230,6 +238,8 @@
 	}
 </script>
 
+<svelte:window onfocus={retryAfterSignIn} />
+
 <svelte:head>
 	<title>{t(locale, 'page.journal.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
@@ -268,6 +278,15 @@
 					>
 				{:else if saveStatus === 'error'}<span class="text-coral"
 						>{t(locale, 'page.journal.caretaker.saveFailedStatus')}</span
+					>
+				{:else if saveStatus === 'signedOut'}<span class="text-coral"
+						>{t(locale, 'page.journal.signedOutStatus')}
+						<a
+							href="/auth/login"
+							target="_blank"
+							rel="noopener"
+							class="underline hover:no-underline">{t(locale, 'page.journal.signInToSave')}</a
+						></span
 					>
 				{/if}
 			</span>

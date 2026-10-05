@@ -41,6 +41,12 @@ export async function startS3Fake(): Promise<S3Fake> {
 		const key = decodeURIComponent(url.pathname.slice(prefix.length));
 
 		if (req.method === 'PUT') {
+			// Real S3 rejects a PUT without a length (411); keep the fake as strict.
+			if (req.headers['content-length'] === undefined) {
+				res.writeHead(411).end('<Error><Code>MissingContentLength</Code></Error>');
+				req.resume();
+				return;
+			}
 			const chunks: Buffer[] = [];
 			req.on('data', (c) => chunks.push(c));
 			req.on('end', () => {

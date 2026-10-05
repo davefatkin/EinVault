@@ -144,8 +144,8 @@ export async function handleQuickLogExecute(user: ActionUser, request: Request, 
 }
 
 // Shared quick-logs settings actions. The member (`/settings/quick-logs`) and
-// caretaker (`/care/settings/quick-logs`) routes both `export const actions =
-// quickLogActions`, so the 401 guard and wiring live in one place and the twins
+// caretaker (`/care/settings/quick-logs`) routes both
+// `export { quickLogActions as actions }`, so the 401 guard and wiring live in one place and the twins
 // can't drift. The routes keep their own `load` (they surface different
 // companion/recipient sets).
 export const quickLogActions: Actions = {

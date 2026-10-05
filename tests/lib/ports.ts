@@ -2,8 +2,8 @@ import net from 'node:net';
 
 /**
  * Probe-and-release has an inherent TOCTOU window: another process can grab
- * the port between close() and the child's listen(). Accepted — collisions
- * surface as a readiness failure and CI retries pick a fresh port.
+ * the port between close() and the child's listen(). startAppServer retries
+ * an auto-picked port that comes back EADDRINUSE.
  */
 export function getFreePort(): Promise<number> {
 	return new Promise((resolve, reject) => {

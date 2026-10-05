@@ -3,7 +3,7 @@ import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { validateAuth, isSecureRequest } from '$server/auth';
 import { env } from '$env/dynamic/private';
-import { resolveLocale, parseAcceptLanguage } from '$lib/i18n';
+import { t, resolveLocale, parseAcceptLanguage } from '$lib/i18n';
 import { logOidcBootStatus } from '$lib/server/auth/oidc';
 import {
 	S3_CONFIG,
@@ -24,6 +24,7 @@ import { recoverAndStart } from '$lib/server/video/worker';
 import { startNotifyScheduler } from '$lib/server/notify/scheduler';
 import { getAppSettings } from '$lib/server/app-settings';
 import { requiresTwoFactor } from '$lib/server/auth/two-factor';
+import { routeGroupDecision } from '$lib/server/auth/route-guard';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -231,10 +232,49 @@ const localeDetect: Handle = async ({ event, resolve }) => {
 	});
 };
 
+// Form actions run before any load(), so the (app), (admin) and (caretaker)
+// layout role checks never protect a POST. Enforce them here for every write to
+// those groups; see route-guard.ts. Runs last so locals.locale is set for the
+// message. Returns a Response (rather than throwing) so securityHeaders still
+// applies.
+//
+// Remote functions (*.remote.ts) are not covered. For a /_app/remote call,
+// SvelteKit takes url.pathname, and so event.route.id, from the client-supplied
+// x-sveltekit-pathname header, so a caller can pick any route group. The same
+// goes for every other url.pathname check in this file. If remote functions are
+// adopted, each one needs its own role check. route-guard.test.ts fails while
+// any exist so this gets revisited.
+const routeGroupGuard: Handle = async ({ event, resolve }) => {
+	const decision = routeGroupDecision(
+		event.request.method,
+		event.route.id,
+		event.locals.user ? { role: event.locals.user.role } : null
+	);
+	if (decision === 'allow') return resolve(event);
+
+	const status = decision === 'unauthenticated' ? 401 : 403;
+	const message = t(event.locals.locale, status === 401 ? 'error.unauthorized' : 'error.forbidden');
+	// use:enhance posts with Accept: application/json and reads an ActionResult;
+	// an `error` result makes the client show the error page with this status.
+	if ((event.request.headers.get('accept') ?? '').includes('application/json')) {
+		return json({ type: 'error', error: { message } }, { status });
+	}
+	// Plain form posts: send a signed-out user to the login page, as the layout
+	// load would for a page view.
+	if (status === 401) {
+		return new Response(null, { status: 303, headers: { location: '/auth/login' } });
+	}
+	return new Response(message, {
+		status,
+		headers: { 'content-type': 'text/plain; charset=utf-8' }
+	});
+};
+
 export const handle = sequence(
 	securityHeaders,
 	authContext,
 	twoFactorGate,
 	demoReadOnly,
-	localeDetect
+	localeDetect,
+	routeGroupGuard
 );

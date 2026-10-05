@@ -5,6 +5,7 @@ import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { startS3Fake, type S3Fake } from '../fakes/s3';
 import { pngUpload } from '../lib/files';
+import { waitForHydration } from '../lib/hydration';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const COMP = SEED.companions.ein.id;
@@ -58,6 +59,7 @@ async function login(page: Page, baseURL: string, username: string) {
 async function uploadPhoto(page: Page, baseURL: string) {
 	await login(page, baseURL, SEED.member.username);
 	await page.goto(baseURL + `/${COMP}/journal/2026-06-02`);
+	await waitForHydration(page);
 	const fileInput = page.locator('input[type="file"][name="photos"]').first();
 	await fileInput.setInputFiles(pngUpload());
 	const img = page.locator('img[src*="/api/photos/journal/"]').first();

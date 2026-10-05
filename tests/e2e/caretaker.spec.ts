@@ -1,4 +1,6 @@
 import { test, expect } from '../lib/fixtures';
+import { todayUTC } from '../lib/dates';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
@@ -24,14 +26,6 @@ async function postCareAction(
 	});
 	const body = await res.json();
 	return { res, body };
-}
-
-// The server runs with TZ=UTC; localDateISO() uses the process timezone (UTC),
-// so "today" from the server's perspective is the current UTC date.
-function todayUTC(): string {
-	const now = new Date();
-	const p = (n: number) => String(n).padStart(2, '0');
-	return `${now.getUTCFullYear()}-${p(now.getUTCMonth() + 1)}-${p(now.getUTCDate())}`;
 }
 
 test.describe('caretaker', () => {
@@ -134,6 +128,7 @@ test.describe('caretaker', () => {
 		// the member, which would make Jet the author and hide "edited by Jet".
 		// The care journal page is at /care/{companionId}/journal and works on today's date.
 		await asCaretaker.goto(`/care/${JULIA}/journal`);
+		await waitForHydration(asCaretaker);
 
 		// The journal textarea has name="body"; the MarkdownTextarea renders a <textarea>
 		const bodyField = asCaretaker.locator('textarea[name="body"]');
@@ -146,6 +141,7 @@ test.describe('caretaker', () => {
 		// The app [date] journal page renders the body in a raw <textarea> (no name attr)
 		// in write mode. Locate by placeholder substring.
 		await asMember.goto(`/${JULIA}/journal/${today}`);
+		await waitForHydration(asMember);
 		await expect(asMember.locator('textarea').first()).toHaveValue('e2e-caretaker-journal', {
 			timeout: 10_000
 		});
@@ -160,6 +156,29 @@ test.describe('caretaker', () => {
 		await expect(asCaretaker.getByText(/edited by Jet/)).toBeVisible({
 			timeout: 10_000
 		});
+	});
+
+	test('journal autosave reports a signed-out save and retries after sign-in (#318)', async ({
+		asCaretaker
+	}) => {
+		await asCaretaker.goto(`/care/${JULIA}/journal`);
+		await waitForHydration(asCaretaker);
+
+		// Drop the session cookie in this context only; the server session stays
+		// valid, so restoring the cookie stands in for signing in again.
+		const cookies = await asCaretaker.context().cookies();
+		await asCaretaker.context().clearCookies();
+
+		const bodyField = asCaretaker.locator('textarea[name="body"]');
+		await bodyField.fill('e2e-caretaker-signed-out');
+		await expect(asCaretaker.getByText('Signed out, not saved')).toBeVisible({ timeout: 10_000 });
+
+		await asCaretaker.context().addCookies(cookies);
+		await asCaretaker.evaluate(() => window.dispatchEvent(new Event('focus')));
+		await expect(asCaretaker.getByText('✓ Saved')).toBeVisible({ timeout: 10_000 });
+
+		await asCaretaker.reload();
+		await expect(bodyField).toHaveValue('e2e-caretaker-signed-out');
 	});
 
 	test('caretaker app-route bounce', async ({ asCaretaker }) => {
