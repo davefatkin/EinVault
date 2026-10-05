@@ -1,8 +1,8 @@
-import { test as base, type Page } from '@playwright/test';
+import { test as base, type Browser, type Page } from '@playwright/test';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect } from '../lib/fixtures';
+import { test, expect, type AppWorker } from '../lib/fixtures';
 import { createSeededDb, createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
@@ -32,6 +32,27 @@ async function fillNewNote(page: Page, title: string, body: string, tags: string
 		await tagBox.fill(tag);
 		await tagBox.press('Enter');
 	}
+}
+
+// A member page with JavaScript off, for no-JS form fallbacks.
+async function noJsMember(app: AppWorker, browser: Browser) {
+	const ctx = await browser.newContext({
+		baseURL: app.server.baseURL,
+		storageState: await app.stateFor('member', browser),
+		javaScriptEnabled: false
+	});
+	return ctx.newPage();
+}
+
+// After a failed no-JS submit the tag text is back in the input, flagged inline,
+// and the form-level alert repeats the server's message.
+async function expectTagError(page: Page, text: string) {
+	const tagBox = page.getByRole('combobox');
+	await expect(tagBox).toHaveValue(text);
+	await expect(tagBox).toHaveAttribute('aria-invalid', 'true');
+	await expect(
+		page.getByRole('alert').filter({ hasText: 'Each tag must be 1 to 32 characters.' })
+	).toHaveCount(2);
 }
 
 test.describe('notes (owner)', () => {
@@ -165,7 +186,7 @@ test.describe('notes (owner)', () => {
 	test('editor: cancel discards, dirty navigation asks, Ctrl+S saves', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
 		await asMember.getByLabel('Title', { exact: true }).fill('Discard me');
-		await asMember.getByRole('button', { name: 'Cancel' }).click();
+		await asMember.getByRole('link', { name: 'Cancel' }).click();
 		await expect(asMember).toHaveURL(new RegExp(`/notes/${N.einCommands.id}$`));
 		await expect(asMember.getByRole('heading', { name: N.einCommands.title })).toBeVisible();
 
@@ -269,39 +290,60 @@ test.describe('notes (owner)', () => {
 		app,
 		browser
 	}) => {
-		const ctx = await browser.newContext({
-			baseURL: app.server.baseURL,
-			storageState: await app.stateFor('member', browser),
-			javaScriptEnabled: false
-		});
-		const page = await ctx.newPage();
+		const page = await noJsMember(app, browser);
 		try {
 			await page.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
 			await page.getByLabel('Title', { exact: true }).fill('No-JS draft title');
 			await page.locator('#note-body').fill('No-JS draft body');
+			// The seed note is shared and not pinned; flip both.
+			await page.getByLabel('Share with caretakers').uncheck();
+			await page.getByLabel('Pin to top').check();
 			const long = 'y'.repeat(33);
 			await page.getByRole('combobox').fill(long);
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 
 			// Re-rendered at ?/update without edit=1: still the editor, with the draft.
 			await expect(page).toHaveURL(/\?\/update$/);
-			await expect(
-				page.getByRole('alert').filter({ hasText: 'Each tag must be 1 to 32 characters.' })
-			).toBeVisible();
+			await expectTagError(page, long);
 			await expect(page.getByLabel('Title', { exact: true })).toHaveValue('No-JS draft title');
 			await expect(page.locator('#note-body')).toHaveValue('No-JS draft body');
-			await expect(page.getByRole('combobox')).toHaveValue(long);
+			await expect(page.getByLabel('Share with caretakers')).not.toBeChecked();
+			await expect(page.getByLabel('Pin to top')).toBeChecked();
 			for (const tag of ['training', 'tricks']) {
 				await expect(page.getByRole('button', { name: `Remove tag ${tag}` })).toBeVisible();
 			}
 
-			// Nothing was saved.
-			await page.goto(`/${EIN}/notes/${N.einCommands.id}`);
+			// Cancel is a plain link, so it works without JS too. Nothing was saved.
+			await page.getByRole('link', { name: 'Cancel' }).click();
+			await expect(page).toHaveURL(new RegExp(`/notes/${N.einCommands.id}$`));
 			await expect(
 				page.getByRole('heading', { name: N.einCommands.title, exact: true })
 			).toBeVisible();
 		} finally {
-			await ctx.close();
+			await page.context().close();
+		}
+	});
+
+	test('without JavaScript a failed create keeps the typed text', async ({ app, browser }) => {
+		const page = await noJsMember(app, browser);
+		try {
+			await page.goto(`/${EIN}/notes/new`);
+			await page.getByLabel('Title', { exact: true }).fill('No-JS new note');
+			await page.locator('#note-body').fill('No-JS new body');
+			const long = 'z'.repeat(33);
+			await page.getByRole('combobox').fill(`food, ${long}`);
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+			await expect(page).toHaveURL(/\/notes\/new\?\/create$/);
+			await expectTagError(page, `food, ${long}`);
+			await expect(page.getByLabel('Title', { exact: true })).toHaveValue('No-JS new note');
+			await expect(page.locator('#note-body')).toHaveValue('No-JS new body');
+
+			// Nothing was created.
+			await page.goto(`/${EIN}/notes`);
+			await expect(page.getByRole('link', { name: 'No-JS new note' })).toHaveCount(0);
+		} finally {
+			await page.context().close();
 		}
 	});
 

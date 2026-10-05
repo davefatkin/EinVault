@@ -1192,7 +1192,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.clearFilter': 'Effacer le filtre',
 	'page.notes.shared': 'Partagée',
 	'page.notes.pin': 'Épingler',
-	'page.notes.unpin': 'Désépingler',
 	'page.notes.delete': 'Supprimer la note',
 	'page.notes.confirmDelete': 'Supprimer « {title} » ? Cette action est irréversible.',
 	'page.notes.backToList': 'Toutes les notes',

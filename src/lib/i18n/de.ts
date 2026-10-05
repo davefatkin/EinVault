@@ -1191,7 +1191,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.clearFilter': 'Filter zurücksetzen',
 	'page.notes.shared': 'Geteilt',
 	'page.notes.pin': 'Anheften',
-	'page.notes.unpin': 'Nicht mehr anheften',
 	'page.notes.delete': 'Notiz löschen',
 	'page.notes.confirmDelete': '"{title}" löschen? Das kann nicht rückgängig gemacht werden.',
 	'page.notes.backToList': 'Alle Notizen',

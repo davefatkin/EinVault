@@ -1186,7 +1186,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.clearFilter': 'Rimuovi filtro',
 	'page.notes.shared': 'Condivisa',
 	'page.notes.pin': 'Fissa',
-	'page.notes.unpin': 'Stacca',
 	'page.notes.delete': 'Elimina nota',
 	'page.notes.confirmDelete': 'Eliminare "{title}"? L\'operazione non può essere annullata.',
 	'page.notes.backToList': 'Tutte le note',

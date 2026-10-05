@@ -1168,7 +1168,6 @@ const messages = {
 	'page.notes.clearFilter': 'Clear filter',
 	'page.notes.shared': 'Shared',
 	'page.notes.pin': 'Pin',
-	'page.notes.unpin': 'Unpin',
 	'page.notes.delete': 'Delete note',
 	'page.notes.confirmDelete': 'Delete "{title}"? This cannot be undone.',
 	'page.notes.backToList': 'All notes',

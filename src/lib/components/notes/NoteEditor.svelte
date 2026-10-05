@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
 	import { untrack } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -56,9 +55,10 @@
 		}
 	}
 
-	function cancel() {
-		guard.markClean();
-		goto(cancelHref);
+	// A link so Cancel works without JS; with JS it skips the unsaved prompt.
+	// A modified click opens a new tab and leaves this draft in place.
+	function cancel(e: MouseEvent) {
+		if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) guard.markClean();
 	}
 </script>
 
@@ -158,7 +158,7 @@
 		<Button type="submit" disabled={saving}>
 			{saving ? t(locale, 'common.saving') : t(locale, 'common.save')}
 		</Button>
-		<Button type="button" variant="ghost" onclick={cancel}>{t(locale, 'common.cancel')}</Button>
+		<Button variant="ghost" href={cancelHref} onclick={cancel}>{t(locale, 'common.cancel')}</Button>
 	</div>
 </form>
 

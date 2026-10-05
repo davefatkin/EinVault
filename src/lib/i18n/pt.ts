@@ -1186,7 +1186,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.clearFilter': 'Limpar filtro',
 	'page.notes.shared': 'Partilhada',
 	'page.notes.pin': 'Fixar',
-	'page.notes.unpin': 'Desafixar',
 	'page.notes.delete': 'Eliminar nota',
 	'page.notes.confirmDelete': 'Eliminar "{title}"? Esta ação não pode ser desfeita.',
 	'page.notes.backToList': 'Todas as notas',

@@ -40,14 +40,17 @@
 		<PageHeader title={data.note.title} tint="muted">
 			{#snippet icon()}<StickyNote class="h-5 w-5" />{/snippet}
 		</PageHeader>
-		<NoteEditor
-			note={form?.values ?? data.note}
-			action="?/update"
-			suggestions={data.suggestions}
-			cancelHref="{base}/{data.note.id}"
-			companionName={data.companion.name}
-			error={form?.noteError}
-		/>
+		<!-- The editor seeds its draft once; a different note needs a fresh one. -->
+		{#key data.note.id}
+			<NoteEditor
+				note={form?.values ?? data.note}
+				action="?/update"
+				suggestions={data.suggestions}
+				cancelHref="{base}/{data.note.id}"
+				companionName={data.companion.name}
+				error={form?.noteError}
+			/>
+		{/key}
 	{:else}
 		{#if form?.noteError}
 			<Alert variant="coral"><AlertDescription>{form.noteError}</AlertDescription></Alert>
