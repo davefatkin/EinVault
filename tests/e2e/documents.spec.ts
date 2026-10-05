@@ -1,11 +1,13 @@
 import { test, expect } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
 test.describe('documents', () => {
 	test('upload PDF', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 
 		const fileInput = asMember.locator('input[type="file"]');
 		await fileInput.setInputFiles(pdfUpload('e2e-doc.pdf'));
@@ -20,6 +22,7 @@ test.describe('documents', () => {
 
 	test('edit metadata', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 
 		// Upload a dedicated doc for this test
 		const fileInput = asMember.locator('input[type="file"]');
@@ -56,6 +59,7 @@ test.describe('documents', () => {
 
 	test('download', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 
 		const fileInput = asMember.locator('input[type="file"]');
 		await fileInput.setInputFiles(pdfUpload('e2e-doc-dl.pdf'));
@@ -78,6 +82,7 @@ test.describe('documents', () => {
 
 	test('delete', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 
 		const fileInput = asMember.locator('input[type="file"]');
 		await fileInput.setInputFiles(pdfUpload('e2e-doc-del.pdf'));
@@ -101,6 +106,7 @@ test.describe('documents', () => {
 
 	test('category chips filter the document list', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
 		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload('e2e-doc-chip.pdf'));
 		await expect(asMember.getByText('e2e-doc-chip.pdf')).toBeVisible({ timeout: 15_000 });
 		const li = asMember.locator('li').filter({ hasText: 'e2e-doc-chip.pdf' }).first();

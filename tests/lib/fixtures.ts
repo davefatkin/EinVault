@@ -22,6 +22,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 	app: [
 		// eslint-disable-next-line no-empty-pattern
 		async ({}, use, workerInfo) => {
+			// One server per worker, shared by every spec that worker runs. Its
+			// in-memory limiters are shared too: the Bearer API allows 30 requests
+			// per minute per IP, and every test client is 127.0.0.1. API-heavy
+			// specs should boot their own server (see offShiftTest in
+			// api-tokens.spec.ts) rather than spend this budget.
 			const dataDir = path.join(REPO_ROOT, '.test-data', `worker-${workerInfo.workerIndex}`);
 			const smtp = await startSmtpSink();
 			const dbPath = createSeededDb(dataDir);

@@ -2,7 +2,6 @@ import { test as base, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { getFreePort } from '../lib/ports';
 import { SEED } from '../lib/seed';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -25,13 +24,11 @@ const test = base.extend<{ world: DemoWorld }>({
 		fs.mkdirSync(dir, { recursive: true });
 		const dbPath = path.join(dir, 'einvault.db');
 
-		const appPort = await getFreePort();
 		let server: AppServer;
 		try {
 			server = await startAppServer({
 				dbPath,
 				env: {
-					PORT: String(appPort),
 					DEMO_MODE: 'true'
 				}
 			});

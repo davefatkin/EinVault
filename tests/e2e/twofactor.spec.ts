@@ -4,7 +4,6 @@ import path from 'node:path';
 import { TOTP, Secret } from 'otpauth';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { getFreePort } from '../lib/ports';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -73,12 +72,10 @@ test.describe('2FA @desktop', () => {
 	test.beforeAll(async () => {
 		const dir = path.join(REPO_ROOT, '.test-data', `2fa-shared-${Date.now()}`);
 		sharedDir = dir;
-		const appPort = await getFreePort();
 		const dbPath = createSeededDb(dir);
 		sharedServer = await startAppServer({
 			dbPath,
 			env: {
-				PORT: String(appPort),
 				// Deliberately NO OIDC_STATE_SECRET: 2FA must work without it
 				// (the MFA cookie key derives from TWOFA_ENC_KEY).
 				TWOFA_ENC_KEY: ENC_KEY

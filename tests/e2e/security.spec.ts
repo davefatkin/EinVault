@@ -2,6 +2,7 @@ import { test, expect } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { pngUpload } from '../lib/files';
 import { todayUTC } from '../lib/dates';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = SEED.companions.ein.id;
 const EDWARD = SEED.companions.edward.id;
@@ -61,6 +62,7 @@ test.describe('api authz', () => {
 	}) => {
 		// Upload a photo to Edward (caretaker is only assigned to Ein)
 		await asMember.goto(`/${EDWARD}/journal/2026-06-03`);
+		await waitForHydration(asMember);
 		const fileInput = asMember.locator('input[type="file"][name="photos"]').first();
 		await fileInput.setInputFiles(pngUpload());
 

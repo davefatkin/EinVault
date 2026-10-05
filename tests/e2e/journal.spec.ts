@@ -1,11 +1,13 @@
 import { test, expect } from '../lib/fixtures';
 import { pngUpload } from '../lib/files';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
 test.describe('journal day editor', () => {
 	test('write entry with autosave', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal/2026-05-01`);
+		await waitForHydration(asMember);
 
 		const textarea = asMember.locator('textarea');
 		await textarea.fill('e2e journal body');
@@ -32,6 +34,7 @@ test.describe('journal day editor', () => {
 		asMember
 	}) => {
 		await asMember.goto(`/${COMP}/journal/2026-05-04`);
+		await waitForHydration(asMember);
 
 		// Drop the session cookie in this context only; the server session stays
 		// valid, so restoring the cookie stands in for signing in again.
@@ -55,6 +58,7 @@ test.describe('journal day editor', () => {
 
 	test('photo upload', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal/2026-05-02`);
+		await waitForHydration(asMember);
 
 		// Write a short body so an entry row exists (upload needs entry id in some impls)
 		const textarea = asMember.locator('textarea');
@@ -84,6 +88,7 @@ test.describe('journal day editor', () => {
 		// same worker above, so it persists. But because Playwright can run tests in any
 		// order within a describe, we ensure the photo exists first.
 		await asMember.goto(`/${COMP}/journal/2026-05-02`);
+		await waitForHydration(asMember);
 
 		// Make sure a photo is present; if not, upload one.
 		const mediaImg = asMember.locator('img[src*="/api/photos/journal/"]').first();
@@ -153,6 +158,7 @@ test.describe('journal day editor', () => {
 
 		// Create today's entry with a photo.
 		await asMember.goto(`/${COMP}/journal/${today}`);
+		await waitForHydration(asMember);
 		await asMember.locator('textarea').first().fill('timeline e2e body');
 		await asMember.locator('h1').first().click();
 		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
@@ -200,12 +206,14 @@ test.describe('journal day editor', () => {
 
 		// Member authors the entry.
 		await asMember.goto(`/${COMP}/journal/${date}`);
+		await waitForHydration(asMember);
 		await asMember.locator('textarea').first().fill('authored by member');
 		await asMember.locator('h1').first().click();
 		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
 
 		// Admin edits the same entry.
 		await asAdmin.goto(`/${COMP}/journal/${date}`);
+		await waitForHydration(asAdmin);
 		await asAdmin.locator('textarea').first().fill('edited by admin');
 		await asAdmin.locator('h1').first().click();
 		await expect(asAdmin.getByText('✓ Saved')).toBeVisible({ timeout: 8_000 });
