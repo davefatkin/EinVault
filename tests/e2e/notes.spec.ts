@@ -20,7 +20,7 @@ async function postAction(page: Page, baseURL: string, url: string, form: Record
 		headers: { Origin: baseURL, Accept: 'application/json' },
 		form
 	});
-	return res.json();
+	return { status: res.status(), body: await res.json() };
 }
 
 async function fillNewNote(page: Page, title: string, body: string, tags: string[]) {
@@ -424,16 +424,18 @@ test.describe('notes (caretaker)', () => {
 	});
 
 	test('form actions reject caretakers', async ({ asCaretaker, app }) => {
+		// The owner route guard in hooks rejects these before the action runs.
+		const FORBIDDEN = { status: 403, body: { type: 'error', error: { message: 'Forbidden' } } };
 		const base = app.server.baseURL;
 		const update = await postAction(asCaretaker, base, `/${EIN}/notes/${N.einSitter.id}?/update`, {
 			title: 'hijacked',
 			body: ''
 		});
-		expect(update).toMatchObject({ type: 'failure', status: 403 });
+		expect(update).toEqual(FORBIDDEN);
 		const create = await postAction(asCaretaker, base, `/${EIN}/notes/new?/create`, {
 			title: 'sneaky'
 		});
-		expect(create).toMatchObject({ type: 'failure', status: 403 });
+		expect(create).toEqual(FORBIDDEN);
 
 		await asCaretaker.goto(`/care/${EIN}`);
 		await expect(asCaretaker.getByText(N.einSitter.title, { exact: true })).toBeVisible();
