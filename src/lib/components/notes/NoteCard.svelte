@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import NoteTags from './NoteTags.svelte';
 	import PinToggle from './PinToggle.svelte';
 	import { stripMarkdown } from '$lib/markdown';
 	import { t, getLocale } from '$lib/i18n';
@@ -43,13 +44,7 @@
 			{#if preview}
 				<p class="line-clamp-2 text-sm text-muted-foreground">{preview}</p>
 			{/if}
-			{#if note.tags.length > 0}
-				<ul class="flex flex-wrap gap-1.5" aria-label={t(locale, 'page.notes.labelTags')}>
-					{#each note.tags as tag (tag)}
-						<li><a href={tagHref(tag)}><Badge variant="secondary">{tag}</Badge></a></li>
-					{/each}
-				</ul>
-			{/if}
+			<NoteTags tags={note.tags} {tagHref} />
 			<ByLine
 				user={note.logger}
 				updater={note.updatedBy && note.updatedBy !== note.loggedBy ? note.updater : null}

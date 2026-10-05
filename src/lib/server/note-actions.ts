@@ -5,18 +5,31 @@ import { getNote, setPinned } from '$lib/server/notes';
 
 // Every field is always present: an unchecked box and an empty tag list submit
 // nothing, which must mean "off" / "no tags", not "unchanged". Text typed into
-// the tag box but not yet committed arrives as tagsPending.
-export function noteFieldsFromForm(data: FormData): Required<NoteFieldsInput> {
+// the tag box but not yet committed arrives as tagsPending and is kept apart
+// here, so a failed no-JS submit can re-fill the editor with it as text.
+export function noteFormValues(data: FormData) {
 	return {
 		title: String(data.get('title') ?? ''),
 		body: String(data.get('body') ?? ''),
-		tags: [
-			...data.getAll('tags').map(String),
-			...splitTagInput(String(data.get('tagsPending') ?? ''))
-		],
+		tags: data.getAll('tags').map(String),
+		tagsPending: String(data.get('tagsPending') ?? ''),
 		pinned: data.get('pinned') === 'on',
 		sharedWithCaretakers: data.get('shared') === 'on'
 	};
+}
+
+export type NoteFormValues = ReturnType<typeof noteFormValues>;
+
+// Failure for the create and update actions. Every failure has the same shape,
+// so pages can read form.values without narrowing.
+export function noteFail(status: number, noteError: string, values?: NoteFormValues) {
+	return fail(status, { noteError, values });
+}
+
+// Validation input: pending tag text counts as tags.
+export function noteFieldsFromForm(data: FormData): Required<NoteFieldsInput> {
+	const { tags, tagsPending, ...rest } = noteFormValues(data);
+	return { ...rest, tags: [...tags, ...splitTagInput(tagsPending)] };
 }
 
 export function noteErrorText(code: NoteErrorCode, locale: Locale): string {

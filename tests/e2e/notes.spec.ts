@@ -242,6 +242,46 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByRole('alert')).toHaveText('Too many tags (max 10).');
 	});
 
+	test('without JavaScript a failed save keeps the editor and typed text', async ({
+		app,
+		browser
+	}) => {
+		const ctx = await browser.newContext({
+			baseURL: app.server.baseURL,
+			storageState: await app.stateFor('member', browser),
+			javaScriptEnabled: false
+		});
+		const page = await ctx.newPage();
+		try {
+			await page.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
+			await page.getByLabel('Title', { exact: true }).fill('No-JS draft title');
+			await page.locator('#note-body').fill('No-JS draft body');
+			const long = 'y'.repeat(33);
+			await page.getByRole('combobox').fill(long);
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+			// Re-rendered at ?/update without edit=1: still the editor, with the draft.
+			await expect(page).toHaveURL(/\?\/update$/);
+			await expect(
+				page.getByRole('alert').filter({ hasText: 'Each tag must be 1 to 32 characters.' })
+			).toBeVisible();
+			await expect(page.getByLabel('Title', { exact: true })).toHaveValue('No-JS draft title');
+			await expect(page.locator('#note-body')).toHaveValue('No-JS draft body');
+			await expect(page.getByRole('combobox')).toHaveValue(long);
+			for (const tag of ['training', 'tricks']) {
+				await expect(page.getByRole('button', { name: `Remove tag ${tag}` })).toBeVisible();
+			}
+
+			// Nothing was saved.
+			await page.goto(`/${EIN}/notes/${N.einCommands.id}`);
+			await expect(
+				page.getByRole('heading', { name: N.einCommands.title, exact: true })
+			).toBeVisible();
+		} finally {
+			await ctx.close();
+		}
+	});
+
 	test('closing the tab with unsaved changes triggers the browser prompt', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
 		await asMember.getByLabel('Title', { exact: true }).fill('Unsaved');

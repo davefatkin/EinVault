@@ -2,7 +2,13 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { deleteNote, getNote, listTags, updateNote } from '$lib/server/notes';
-import { noteErrorText, noteFieldsFromForm, togglePinAction } from '$lib/server/note-actions';
+import {
+	noteErrorText,
+	noteFail,
+	noteFieldsFromForm,
+	noteFormValues,
+	togglePinAction
+} from '$lib/server/note-actions';
 import { validateNotePatch } from '$lib/notes';
 
 export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
@@ -18,17 +24,18 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 
 export const actions: Actions = {
 	update: async ({ request, params, locals }) => {
-		if (!locals.user) return fail(401, { noteError: t(locals.locale, 'error.unauthorized') });
-		if (locals.user.role === 'caretaker')
-			return fail(403, { noteError: t(locals.locale, 'error.forbidden') });
+		if (!locals.user) return noteFail(401, t(locals.locale, 'error.unauthorized'));
+		if (locals.user.role === 'caretaker') return noteFail(403, t(locals.locale, 'error.forbidden'));
 
 		const note = await getNote(params.noteId, params.companionId);
-		if (!note) return fail(404, { noteError: t(locals.locale, 'error.noteNotFound') });
+		if (!note) return noteFail(404, t(locals.locale, 'error.noteNotFound'));
 
-		const checked = validateNotePatch(noteFieldsFromForm(await request.formData()));
-		if (!checked.ok) return fail(400, { noteError: noteErrorText(checked.code, locals.locale) });
+		const data = await request.formData();
+		const checked = validateNotePatch(noteFieldsFromForm(data));
+		if (!checked.ok)
+			return noteFail(400, noteErrorText(checked.code, locals.locale), noteFormValues(data));
 		if (!(await updateNote(note.id, checked.value, locals.user.id)))
-			return fail(404, { noteError: t(locals.locale, 'error.noteNotFound') });
+			return noteFail(404, t(locals.locale, 'error.noteNotFound'));
 		redirect(303, `/${params.companionId}/notes/${note.id}`);
 	},
 

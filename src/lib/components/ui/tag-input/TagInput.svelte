@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { X } from '@lucide/svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { commitTags, matchSuggestions, splitTagText, type TagCommitError } from './commit';
@@ -9,6 +10,8 @@
 		id: string;
 		name?: string;
 		pendingName?: string;
+		// Uncommitted text to start with, e.g. after a failed no-JS submit.
+		pendingText?: string;
 		describedby?: string;
 		max?: number;
 		normalize?: (raw: string) => string | null;
@@ -24,6 +27,7 @@
 		id,
 		name = 'tags',
 		pendingName = 'tagsPending',
+		pendingText = '',
 		describedby,
 		max = Infinity,
 		normalize = (raw: string) => raw.trim() || null,
@@ -33,7 +37,7 @@
 	}: Props = $props();
 	const locale = getLocale();
 
-	let text = $state('');
+	let text = $state(untrack(() => pendingText));
 	let open = $state(false);
 	let active = $state(-1);
 	let error = $state<TagCommitError | null>(null);

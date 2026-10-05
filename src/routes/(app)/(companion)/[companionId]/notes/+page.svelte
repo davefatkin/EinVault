@@ -13,7 +13,7 @@
 	const base = $derived(`/${data.companion.id}/notes`);
 	const tagHref = (tag: string) => `${base}?tag=${encodeURIComponent(tag)}`;
 	const chipClass = (on: boolean) =>
-		`rounded-full border px-3 py-1 text-xs transition-colors ${
+		`rounded-full border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
 			on
 				? 'border-primary/40 bg-primary/10 text-primary font-medium'
 				: 'border-border bg-card text-muted-foreground hover:bg-accent'

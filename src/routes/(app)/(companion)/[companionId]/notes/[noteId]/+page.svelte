@@ -16,6 +16,9 @@
 
 	const base = $derived(`/${data.companion.id}/notes`);
 	const tagHref = (tag: string) => `${base}?tag=${encodeURIComponent(tag)}`;
+	// A failed save without JS re-renders at ?/update with no edit=1; the
+	// returned values keep the editor open with what was typed.
+	const editing = $derived(data.editing || form?.values !== undefined);
 	let confirmDelete = $state(false);
 	let deleteForm = $state<HTMLFormElement | null>(null);
 </script>
@@ -33,12 +36,12 @@
 		{t(locale, 'page.notes.backToList')}
 	</a>
 
-	{#if data.editing}
+	{#if editing}
 		<PageHeader title={data.note.title} tint="muted">
 			{#snippet icon()}<StickyNote class="h-5 w-5" />{/snippet}
 		</PageHeader>
 		<NoteEditor
-			note={data.note}
+			note={form?.values ?? data.note}
 			action="?/update"
 			suggestions={data.suggestions}
 			cancelHref="{base}/{data.note.id}"

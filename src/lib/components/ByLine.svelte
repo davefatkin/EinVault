@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t, getLocale } from '$lib/i18n';
 	import type { UserRef } from '$lib/types';
+	import { cn } from '$lib/utils';
 
 	let {
 		user,
@@ -28,8 +29,8 @@
 
 {#if text}
 	{#if variant === 'inline'}
-		<span class="text-muted-foreground text-xs ml-1 {className}">{text}</span>
+		<span class={cn('text-muted-foreground text-xs ml-1', className)}>{text}</span>
 	{:else}
-		<p class="text-xs text-muted-foreground opacity-60 {className}">{text}</p>
+		<p class={cn('text-xs text-muted-foreground opacity-60', className)}>{text}</p>
 	{/if}
 {/if}

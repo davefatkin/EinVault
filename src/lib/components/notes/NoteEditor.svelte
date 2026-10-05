@@ -25,6 +25,8 @@
 			title: string;
 			body: string;
 			tags: string[];
+			// Uncommitted tag text from a failed submit.
+			tagsPending?: string;
 			pinned: boolean;
 			sharedWithCaretakers: boolean;
 		};
@@ -113,6 +115,7 @@
 			id="note-tags"
 			bind:tags
 			{suggestions}
+			pendingText={note?.tagsPending}
 			describedby="note-tags-hint"
 			max={NOTE_MAX_TAGS}
 			normalize={normalizeTag}

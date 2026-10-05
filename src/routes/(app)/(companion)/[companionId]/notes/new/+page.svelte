@@ -17,6 +17,7 @@
 		{#snippet icon()}<StickyNote class="h-5 w-5" />{/snippet}
 	</PageHeader>
 	<NoteEditor
+		note={form?.values}
 		action="?/create"
 		suggestions={data.suggestions}
 		cancelHref="/{data.companion.id}/notes"
