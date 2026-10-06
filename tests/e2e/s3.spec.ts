@@ -121,3 +121,28 @@ test('delete removes from bucket', async ({ world, page }) => {
 	// Bucket objects should decrease
 	await expect.poll(() => world.s3.objects.size, { timeout: 5_000 }).toBeLessThan(sizeBefore);
 });
+
+test('note photo lands under notes/ and GET 302s to a presigned URL', async ({ world, page }) => {
+	const base = world.server.baseURL;
+	const noteId = SEED.notes.einSitter.id;
+	await login(page, base, SEED.member.username);
+	await page.goto(base + `/${COMP}/notes/${noteId}`);
+	await waitForHydration(page);
+	await page.locator('input[type="file"][name="photos"]').first().setInputFiles(pngUpload());
+	const img = page.locator(`img[src*="/api/photos/notes/${COMP}/${noteId}/"]`).first();
+	await expect(img).toBeVisible({ timeout: 15_000 });
+	await expect
+		.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth), { timeout: 15_000 })
+		.toBeGreaterThan(0);
+
+	expect([...world.s3.objects.keys()].some((k) => k.startsWith(`notes/${COMP}/${noteId}/`))).toBe(
+		true
+	);
+
+	const src = await img.getAttribute('src');
+	const res = await page.request.get(base + src!, { maxRedirects: 0 });
+	expect(res.status()).toBe(302);
+	const location = res.headers()['location'] ?? '';
+	expect(location).toContain(world.s3.url);
+	expect(location).toContain('X-Amz-');
+});

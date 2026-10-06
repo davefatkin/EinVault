@@ -27,7 +27,8 @@ const test = base.extend<{ world: LimitsWorld }>({
 				dbPath,
 				env: {
 					UPLOAD_MAX_MB: '1',
-					MAX_DAILY_MEDIA: '2'
+					MAX_DAILY_MEDIA: '2',
+					MAX_NOTE_MEDIA: '1'
 				}
 			});
 		} catch (err) {
@@ -108,4 +109,27 @@ test('daily media cap rejects the third upload', async ({ world, page }) => {
 	expect(listRes.status()).toBe(200);
 	const data = await listRes.json();
 	expect(data.photos).toHaveLength(2);
+});
+
+test('note media cap rejects the second upload', async ({ world, page }) => {
+	await login(page, world.server.baseURL, SEED.member.username);
+
+	// The sitter note has no seeded media.
+	const url = `${world.server.baseURL}/api/companions/${COMP}/notes/${SEED.notes.einSitter.id}/media`;
+	const upload = () =>
+		page.request.post(url, {
+			headers: { Origin: world.server.baseURL },
+			multipart: { file: { name: 'photo.png', mimeType: 'image/png', buffer: PNG_BYTES } }
+		});
+
+	const first = await upload();
+	expect(first.ok()).toBe(true);
+
+	const second = await upload();
+	expect(second.status()).toBe(400);
+	expect(await second.text()).toContain('Maximum 1 photos or videos per note');
+
+	const list = await page.request.get(url);
+	expect(list.status()).toBe(200);
+	expect((await list.json()).media).toHaveLength(1);
 });
