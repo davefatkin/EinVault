@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { tick } from 'svelte';
+	import { isPreviewToggle, previewToggleLabel } from '$lib/markdownToggle';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
@@ -67,6 +68,10 @@
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
+	let toggleShortcut = $state('Ctrl+P');
+	onMount(() => {
+		toggleShortcut = previewToggleLabel(navigator.platform);
+	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
 	// Sync local state when data changes (navigation between dates)
@@ -157,9 +162,10 @@
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
-		if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+		if (isPreviewToggle(e)) {
 			e.preventDefault();
 			viewMode = viewMode === 'write' ? 'preview' : 'write';
+			if (viewMode === 'write') tick().then(() => textareaEl?.focus());
 		}
 	}
 
@@ -450,7 +456,7 @@
 					</div>
 					<div class="hidden sm:flex items-center gap-3">
 						<span class="text-xs text-muted-foreground"
-							>{t(locale, 'page.journal.day.toggleHint')}</span
+							>{t(locale, 'component.markdown.toggleHint', { shortcut: toggleShortcut })}</span
 						>
 						<details class="group relative">
 							<summary

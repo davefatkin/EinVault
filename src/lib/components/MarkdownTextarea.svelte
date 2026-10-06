@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
 	import { renderMarkdown } from '$lib/markdown';
+	import { isPreviewToggle, previewToggleLabel } from '$lib/markdownToggle';
 	import { t, getLocale } from '$lib/i18n';
 
 	interface Props {
@@ -24,6 +26,24 @@
 	const locale = getLocale();
 
 	let mode = $state<'write' | 'preview'>('write');
+	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
+	let previewTabEl = $state<HTMLButtonElement | undefined>(undefined);
+	let toggleShortcut = $state('Ctrl+P');
+	onMount(() => {
+		toggleShortcut = previewToggleLabel(navigator.platform);
+	});
+
+	// Scoped to this editor: pages can hold several, and the journal day page
+	// has its own window-level handler that must not also fire.
+	async function onToggleKey(e: KeyboardEvent) {
+		if (!isPreviewToggle(e)) return;
+		e.preventDefault();
+		e.stopPropagation();
+		mode = mode === 'write' ? 'preview' : 'write';
+		// The hidden textarea drops focus; park it where the next press lands.
+		await tick();
+		(mode === 'write' ? textareaEl : previewTabEl)?.focus();
+	}
 
 	let preview = $derived(mode === 'preview' && value ? renderMarkdown(value) : '');
 
@@ -39,6 +59,7 @@
 		<button
 			type="button"
 			onclick={() => (mode = 'write')}
+			onkeydown={onToggleKey}
 			class="px-2 py-0.5 rounded transition-colors
 				{mode === 'write'
 				? 'bg-primary/10 text-primary font-medium'
@@ -48,7 +69,9 @@
 		</button>
 		<button
 			type="button"
+			bind:this={previewTabEl}
 			onclick={() => (mode = 'preview')}
+			onkeydown={onToggleKey}
 			class="px-2 py-0.5 rounded transition-colors
 				{mode === 'preview'
 				? 'bg-primary/10 text-primary font-medium'
@@ -56,15 +79,20 @@
 		>
 			{t(locale, 'component.markdown.preview')}
 		</button>
+		<span class="ml-auto hidden self-center text-muted-foreground sm:inline"
+			>{t(locale, 'component.markdown.toggleHint', { shortcut: toggleShortcut })}</span
+		>
 	</div>
 
 	<!-- Textarea always in DOM for form submission -->
 	<textarea
+		bind:this={textareaEl}
 		{id}
 		{name}
 		{placeholder}
 		{rows}
 		{oninput}
+		onkeydown={onToggleKey}
 		bind:value
 		class="{fieldClass} resize-none font-mono {className}"
 		style={mode === 'preview' ? 'display:none' : ''}></textarea>

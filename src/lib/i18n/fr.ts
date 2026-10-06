@@ -472,6 +472,7 @@ const messages: Record<keyof Messages, string> = {
 	'component.markdown.preview': 'Aperçu',
 	'component.markdown.nothingToPreview': 'Rien à afficher',
 	'component.markdown.markdownSupported': 'Markdown pris en charge',
+	'component.markdown.toggleHint': '{shortcut} pour basculer',
 	'component.markdown.cheatsheet.bold': 'gras',
 	'component.markdown.cheatsheet.italic': 'italique',
 	'component.markdown.cheatsheet.heading': 'Titre',
@@ -692,7 +693,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.moodQuestion': 'Comment va {name} ?',
 	'page.journal.day.write': 'Écrire',
 	'page.journal.day.preview': 'Aperçu',
-	'page.journal.day.toggleHint': '⌘P pour basculer',
 	'page.journal.day.writePlaceholder':
 		'Écrivez sur la journée de {name}… Le Markdown est pris en charge.',
 	'page.journal.day.savedStatus': '✓ Enregistré',
