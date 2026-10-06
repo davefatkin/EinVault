@@ -129,7 +129,7 @@
 
 <div class="space-y-1.5">
 	<div
-		class="flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 focus-within:ring-1 {error
+		class="flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-xl border bg-card px-2 py-1.5 focus-within:ring-2 {error
 			? 'border-coral focus-within:ring-coral'
 			: 'border-input focus-within:ring-ring'}"
 	>

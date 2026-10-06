@@ -3,7 +3,7 @@
 	import { cn } from '$lib/utils.js';
 
 	type Props = HTMLSelectAttributes & { class?: string };
-	let { class: className, children, ...restProps }: Props = $props();
+	let { class: className, value = $bindable(), children, ...restProps }: Props = $props();
 </script>
 
 <div class="relative">
@@ -15,6 +15,7 @@
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			className
 		)}
+		bind:value
 		{...restProps}
 	>
 		{@render children?.()}

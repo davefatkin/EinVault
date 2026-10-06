@@ -32,6 +32,7 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -420,7 +421,7 @@
 			<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 				{t(locale, 'page.journal.day.write')}
 			</p>
-			<div class="rounded-lg border border-input overflow-hidden">
+			<div class="rounded-lg border border-input bg-card overflow-hidden">
 				<div class="flex items-center justify-between px-3 py-1.5 border-b border-border">
 					<div class="flex gap-0.5">
 						<button
@@ -519,7 +520,7 @@
 						oninput={triggerSave}
 						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 						dir="ltr"
-						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-background text-foreground placeholder:text-muted-foreground focus:outline-none"
+						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
 						spellcheck="true"></textarea>
 				{:else}
 					<div
@@ -620,12 +621,12 @@
 							<label for="act-loggedAt" class="text-sm font-medium text-foreground"
 								>{t(locale, 'page.journal.day.activityTime')}</label
 							>
-							<input
+							<Input
 								id="act-loggedAt"
 								name="loggedAt"
 								type="datetime-local"
 								autocomplete="off"
-								class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+								class="h-9"
 								value={defaultLoggedAt()}
 							/>
 						</div>
@@ -643,14 +644,14 @@
 											onclick={() => (duration = String(mins))}>{mins}m</Button
 										>
 									{/each}
-									<input
+									<Input
 										id="act-duration"
 										name="durationMinutes"
 										type="number"
 										min="1"
 										autocomplete="off"
 										bind:value={duration}
-										class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+										class="h-9 flex-1"
 										placeholder="30"
 									/>
 								</div>
@@ -730,12 +731,12 @@
 												class="text-sm font-medium text-foreground"
 												>{t(locale, 'page.journal.day.activityTime')}</label
 											>
-											<input
+											<Input
 												id="edit-act-loggedAt-{event.id}"
 												name="loggedAt"
 												autocomplete="off"
 												type="datetime-local"
-												class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+												class="h-9"
 												value={localDatetimeISO(new Date(event.loggedAt))}
 											/>
 										</div>
@@ -746,13 +747,13 @@
 													class="text-sm font-medium text-foreground"
 													>{t(locale, 'page.journal.day.activityDuration')}</label
 												>
-												<input
+												<Input
 													id="edit-act-duration-{event.id}"
 													name="durationMinutes"
 													autocomplete="off"
 													type="number"
 													min="1"
-													class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+													class="h-9"
 													value={event.durationMinutes ?? ''}
 													placeholder="30"
 												/>

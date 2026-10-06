@@ -3,6 +3,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import { Check } from '@lucide/svelte';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -244,7 +245,7 @@
 						onclick={() => (duration = String(mins))}>{mins}m</Button
 					>
 				{/each}
-				<input
+				<Input
 					id="duration"
 					name="durationMinutes"
 					type="number"
@@ -252,7 +253,7 @@
 					max="480"
 					autocomplete="off"
 					bind:value={duration}
-					class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+					class="h-9 flex-1"
 					placeholder="30"
 				/>
 			</div>
@@ -261,13 +262,13 @@
 
 	<div class="space-y-1.5">
 		<Label for="loggedAt">{t(locale, 'page.log.whenLabel')}</Label>
-		<input
+		<Input
 			id="loggedAt"
 			name="loggedAt"
 			autocomplete="off"
 			type="datetime-local"
 			value={defaultLoggedAt()}
-			class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+			class="h-9"
 		/>
 	</div>
 

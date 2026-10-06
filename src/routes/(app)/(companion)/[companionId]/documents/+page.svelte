@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Select } from '$lib/components/ui/select/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -264,15 +265,11 @@
 									<div>
 										<Label for="doc-cat-{doc.id}">{t(locale, 'page.documents.labelCategory')}</Label
 										>
-										<select
-											id="doc-cat-{doc.id}"
-											class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-											bind:value={editCategory}
-										>
+										<Select id="doc-cat-{doc.id}" bind:value={editCategory}>
 											{#each CATEGORIES as c (c)}
 												<option value={c}>{categoryLabel(c)}</option>
 											{/each}
-										</select>
+										</Select>
 									</div>
 									<div>
 										<Label for="doc-date-{doc.id}">{t(locale, 'page.documents.labelDate')}</Label>
@@ -286,16 +283,12 @@
 								</div>
 								<div>
 									<Label for="doc-event-{doc.id}">{t(locale, 'page.documents.linkedEvent')}</Label>
-									<select
-										id="doc-event-{doc.id}"
-										class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-										bind:value={editHealthEventId}
-									>
+									<Select id="doc-event-{doc.id}" bind:value={editHealthEventId}>
 										<option value="">{t(locale, 'page.documents.noLinkedEvent')}</option>
 										{#each data.healthEvents as event (event.id)}
 											<option value={event.id}>{healthEventLabel(event)}</option>
 										{/each}
-									</select>
+									</Select>
 								</div>
 								{#if saveError}
 									<p class="text-sm text-coral">{saveError}</p>
