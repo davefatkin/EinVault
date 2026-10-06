@@ -4,19 +4,14 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
-import sharp from 'sharp';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '$lib/server/env';
-import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/server/storage/mime';
-import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
+import { MAX_DAILY_MEDIA } from '$lib/server/env';
+import { prepareMediaUpload } from '$lib/server/storage/media-upload';
+import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
 import { kickWorker } from '$lib/server/video/worker';
 import { canModifyMedia } from '$lib/permissions';
 import { assertCanWriteJournalMedia } from '$lib/server/permissions';
 import { isValidDate } from '$lib/server/validation';
-
-const MAX_IMAGE_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
-const MAX_VIDEO_SIZE = VIDEO_MAX_MB * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function journalKey(companionId: string, date: string, filename: string): string {
 	return `journal/${companionId}/${date}/${filename}`;
@@ -116,77 +111,15 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const formData = await request.formData();
 	const file = formData.get('photo') as File | null;
 
-	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
-
-	const isVideo = isAllowedVideoMime(file.type);
-	if (!isVideo && !ALLOWED_IMAGE_TYPES.includes(file.type))
-		error(400, t(locals.locale, 'error.invalidFileType'));
-
-	if (isVideo) {
-		if (file.size > MAX_VIDEO_SIZE)
-			error(400, t(locals.locale, 'error.fileTooLarge', { max: VIDEO_MAX_MB }));
-	} else if (file.size > MAX_IMAGE_SIZE) {
-		error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
-	}
-
-	const raw = Buffer.from(await file.arrayBuffer());
 	const mediaId = generateId(15);
-	let processed: Buffer;
-	let ext: string;
-	let mimeType: string;
-	const mediaType: 'photo' | 'video' = isVideo ? 'video' : 'photo';
-
-	if (isVideo) {
-		// Confirm the bytes match the declared container before trusting the
-		// client mime type (we store videos as-is, with no re-encode to sanitize).
-		if (!looksLikeVideo(raw, file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
-		// Videos are stored as-is: no server-side transcode or resize.
-		processed = raw;
-		ext = videoExtFromMime(file.type);
-		mimeType = file.type;
-	} else if (file.type === 'image/gif') {
-		// Validate GIF magic bytes before passing through
-		const sig = raw.slice(0, 6).toString('ascii');
-		if (sig !== 'GIF87a' && sig !== 'GIF89a') {
-			error(400, t(locals.locale, 'error.invalidGifFile'));
-		}
-		// Truncate at the GIF terminator byte (0x3B) to strip trailing data
-		const termIdx = raw.lastIndexOf(0x3b);
-		processed = termIdx !== -1 ? raw.slice(0, termIdx + 1) : raw;
-		ext = 'gif';
-		mimeType = 'image/gif';
-	} else {
-		processed = await sharp(raw)
-			.resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
-			.jpeg({ quality: 85 })
-			.toBuffer();
-		ext = 'jpg';
-		mimeType = 'image/jpeg';
-	}
-
-	// Queue this video for background transcoding when the feature is enabled,
-	// ffmpeg is present, the container is supported, and the clip is within the
-	// transcode size cap. The row is stored as a normal raw-video row and flipped
-	// to 'processing'; the worker repoints it at the transcoded MP4 when done.
-	// Anything that doesn't qualify is stored as-is (status defaults to 'ready').
-	const willTranscode =
-		isVideo &&
-		demuxerForMime(mimeType) !== null &&
-		processed.length <= VIDEO_TRANSCODE.maxMb * 1024 * 1024 &&
-		(await transcodeAvailable());
-
-	// A to-be-transcoded source is stored under a sentinel '.orig.' name so its
-	// key can never collide with the worker's output ('{mediaId}.mp4'). Without
-	// this, an mp4-container source (e.g. Apple HEVC) would share the output key:
-	// the transcode would overwrite the kept original, or — with KEEP_ORIGINAL
-	// off — the post-transcode cleanup would delete the output itself.
-	const filename = willTranscode ? `${mediaId}.orig.${ext}` : `${mediaId}.${ext}`;
+	const prepared = await prepareMediaUpload(file, mediaId, locals.locale);
+	const { filename } = prepared;
 	const key = journalKey(companionId, date, filename);
 	try {
 		await getStorage().put({
 			key,
-			body: processed,
-			contentType: mimeType
+			body: prepared.body,
+			contentType: prepared.contentType
 		});
 	} catch (err) {
 		console.error('[journal-media] storage put failed:', err);
@@ -199,15 +132,15 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		filename,
 		provider: STORAGE_BACKEND,
 		storageKey: key,
-		originalName: file.name,
-		mediaType,
-		mimeType,
-		sizeBytes: processed.length,
-		status: willTranscode ? 'processing' : 'ready',
+		originalName: file?.name ?? null,
+		mediaType: prepared.mediaType,
+		mimeType: prepared.contentType,
+		sizeBytes: prepared.sizeBytes,
+		status: prepared.willTranscode ? 'processing' : 'ready',
 		loggedBy: locals.user.id
 	});
 
-	if (willTranscode) kickWorker();
+	if (prepared.willTranscode) kickWorker();
 
 	const created = await db.query.journalPhotos.findFirst({
 		where: eq(schema.journalPhotos.id, mediaId),
@@ -283,17 +216,15 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	// of truth, so a transient backend failure on one key must not abort the
 	// others or leave an undeletable row (an orphaned object is recoverable; a
 	// stuck row is not).
-	const backend = getStorage(item.provider);
-	const key = item.storageKey ?? journalKey(params.companionId, params.date, item.filename);
-	const keys = [key, item.originalKey, item.posterKey].filter(
-		(k): k is string => typeof k === 'string' && k.length > 0
+	await deleteMediaBlobs(
+		[
+			{
+				...item,
+				storageKey: item.storageKey ?? journalKey(params.companionId, params.date, item.filename)
+			}
+		],
+		'journal-media'
 	);
-	const results = await Promise.allSettled(keys.map((k) => backend.delete(k)));
-	results.forEach((r, i) => {
-		if (r.status === 'rejected') {
-			console.warn(`[journal-media] failed to delete object ${keys[i]}:`, r.reason);
-		}
-	});
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 

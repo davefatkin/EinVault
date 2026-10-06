@@ -4,7 +4,7 @@ import { t, type Locale } from '$lib/i18n';
 import { NOTE_ERROR, type NoteErrorCode } from '$lib/notes';
 import { requireFullScope } from '$lib/server/api-guards';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { getNote, type NoteListItem } from '$lib/server/notes';
+import { getNote, type NoteWithAuthors } from '$lib/server/notes';
 import type { ApiTokenScope } from '$lib/server/api-tokens';
 import type { UserRole } from '$lib/server/validation';
 
@@ -26,7 +26,7 @@ export async function loadAllowedNote(
 	id: string,
 	user: { id: string; role: UserRole },
 	locale: Locale
-): Promise<NoteListItem> {
+): Promise<NoteWithAuthors> {
 	const note = await getNote(id);
 	const allowed = note && (await listAllowedCompanions(user)).includes(note.companionId);
 	if (!note || !allowed) throwNoteNotFound(locale);

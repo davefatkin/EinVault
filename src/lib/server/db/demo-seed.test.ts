@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { copyFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { db, schema } from '$server/db';
-import { seedRows, SEED } from '$server/db/demo-seed';
+import { seedRows, SEED, copyDemoPhotoFiles } from '$server/db/demo-seed';
 
 // copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
 // a developer's journal photos in the ./data directory. Stub the fs operations
@@ -103,6 +105,42 @@ describe('seedRows', () => {
 		);
 		const companions = await db.query.companions.findMany();
 		expect(companions.every((c) => c.notesForSitter === null)).toBe(true);
+	});
+
+	it('seeds note media on shared, private, and unassigned-companion notes (#321)', async () => {
+		seedRows(db as never, { now: 1_700_000_000_000 });
+		const rows = await db.query.noteMedia.findMany();
+		const byId = new Map(rows.map((r) => [r.id, r]));
+		for (const m of Object.values(SEED.noteMedia)) {
+			const row = byId.get(m.id);
+			expect(row, m.id).toBeDefined();
+			expect(row!.noteId).toBe(m.noteId);
+			expect(row!.filename).toBe(m.filename);
+			expect(row!.provider).toBe('local');
+			expect(row!.mediaType).toBe('photo');
+			expect(row!.status).toBe('ready');
+			expect(row!.caption).toBe(m.caption);
+			expect(row!.storageKey).toBe(`notes/${m.companionId}/${m.noteId}/${m.filename}`);
+		}
+		// The serving lookup matches on noteId + filename; keep filenames unique anyway.
+		expect(new Set(rows.map((r) => r.filename)).size).toBe(rows.length);
+	});
+});
+
+describe('copyDemoPhotoFiles', () => {
+	it('copies each note media asset to its storage key (#321)', () => {
+		vi.mocked(copyFileSync).mockClear();
+		const root = join('/tmp', 'einvault-demo-seed-test', 'uploads');
+		copyDemoPhotoFiles(root, 1_700_000_000_000);
+		const calls = vi
+			.mocked(copyFileSync)
+			.mock.calls.map(([src, dest]) => [String(src), String(dest)]);
+		for (const m of Object.values(SEED.noteMedia)) {
+			const dest = join(root, 'notes', m.companionId, m.noteId, m.filename);
+			const call = calls.find(([, d]) => d === dest);
+			expect(call, dest).toBeDefined();
+			expect(call![0].endsWith(m.sourceAsset)).toBe(true);
+		}
 	});
 });
 

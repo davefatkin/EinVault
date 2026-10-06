@@ -133,6 +133,33 @@ test('journal photo from Immich', async ({ world, page }) => {
 	await expect(photoImgAfterReload).toBeVisible({ timeout: 10_000 });
 });
 
+test('note photo from Immich', async ({ world, page }) => {
+	world.fake.setAssets(ASSETS);
+
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(world.server.baseURL + `/${EIN_ID}/notes/${SEED.notes.einSitter.id}`);
+
+	await page.getByRole('button', { name: /pick from immich/i }).click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog).toBeVisible({ timeout: 10_000 });
+	await expect(dialog.locator(`img[src*="/api/immich/thumbnail/${ASSET_ID_2}"]`)).toBeVisible({
+		timeout: 10_000
+	});
+	await dialog.locator(`button[title="${ASSET_ID_2}.png"]`).click();
+	await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+
+	const photo = page.locator(`img[src*="/api/photos/notes/${EIN_ID}/${SEED.notes.einSitter.id}/"]`);
+	await expect(photo).toBeVisible({ timeout: 10_000 });
+	await page.reload();
+	await expect(photo).toBeVisible({ timeout: 10_000 });
+
+	// Served by proxying the Immich preview, not from local storage.
+	const src = await photo.getAttribute('src');
+	const res = await page.request.get(world.server.baseURL + src!);
+	expect(res.status()).toBe(200);
+	expect(res.headers()['content-type'] ?? '').toMatch(/^image\//);
+});
+
 test('picker groups assets by capture date, newest first', async ({ world, page }) => {
 	world.fake.setAssets([
 		makeImmichAsset(ASSET_ID_1, { localDateTime: '2026-09-26T09:00:00.000Z' }),

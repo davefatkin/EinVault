@@ -10,6 +10,7 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { toSpecies } from '$lib/species';
+	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
 	const locale = getLocale();
 
@@ -61,11 +62,11 @@
 
 	// Lightbox state (bound to MediaLightbox)
 	let lightboxOpen = $state(false);
-	let lightboxItems = $state<Entry['photos']>([]);
+	let lightboxItems = $state<MediaItem[]>([]);
 	let lightboxDate = $state('');
 	let lightboxIndex = $state(0);
 
-	function openLightbox(items: Entry['photos'], date: string, index: number) {
+	function openLightbox(items: MediaItem[], date: string, index: number) {
 		lightboxItems = items;
 		lightboxDate = date;
 		lightboxIndex = index;
@@ -91,9 +92,8 @@
 
 <!-- Lightbox -->
 <MediaLightbox
-	companionId={companion.id}
 	items={lightboxItems}
-	date={lightboxDate}
+	urlFor={(item) => journalMediaUrl(companion.id, lightboxDate, item)}
 	bind:open={lightboxOpen}
 	bind:index={lightboxIndex}
 />

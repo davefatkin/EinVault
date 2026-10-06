@@ -208,6 +208,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidFileType': 'Type de fichier invalide',
 	'error.invalidGifFile': 'Fichier GIF invalide',
 	'error.maxMediaExceeded': 'Maximum {max} photos ou vidéos par jour',
+	'error.maxNoteMediaExceeded': 'Maximum {max} photos ou vidéos par note',
 	'error.requestBodyTooLarge': 'Requête trop volumineuse',
 	'error.maxDocumentsExceeded': 'Limite de documents atteinte (max {max} par compagnon)',
 
@@ -681,7 +682,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.edit': 'Modifier',
 	'page.journal.noNotes': 'Aucune note écrite.',
 	'page.journal.loadOlderEntries': 'Charger les entrées plus anciennes',
-	'page.journal.photoAlt': 'Photo du journal',
 	'page.journal.videoAlt': 'Vidéo du journal',
 	'page.journal.videoUnsupported': 'Cette vidéo ne peut pas être lue dans votre navigateur.',
 	'page.journal.videoProcessing': 'Conversion de la vidéo…',
@@ -701,14 +701,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Réessayer',
 	'page.journal.signedOutStatus': 'Déconnecté, non enregistré',
 	'page.journal.signInToSave': 'Se connecter',
-	'page.journal.day.mediaTitle': 'Photos et vidéos',
-	'page.journal.day.addMedia': 'Ajouter un média',
-	'page.journal.day.uploading': 'Envoi…',
-	'page.journal.day.dropMedia': 'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
-	'page.journal.day.mediaTypes': 'Images (max {imgMax}Mo) ou vidéos (max {vidMax}Mo)',
-	'page.journal.day.noCaption': 'Pas de légende',
-	'page.journal.day.addCaption': 'Ajouter une légende…',
-	'page.journal.day.editCaption': 'Modifier la légende',
 	'page.journal.day.activitiesTitle': 'Activités',
 	'page.journal.day.logActivity': 'Enregistrer une activité',
 	'page.journal.day.activityType': 'Type',
@@ -730,13 +722,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Enregistré',
 	'page.journal.caretaker.savingStatus': 'Enregistrement…',
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
-	'page.journal.caretaker.media': 'Photos et vidéos',
-	'page.journal.caretaker.addMedia': 'Ajouter un média',
-	'page.journal.caretaker.dropMedia':
-		'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
-	'page.journal.caretaker.noCaption': 'Pas de légende',
-	'page.journal.caretaker.addCaption': 'Ajouter une légende…',
-	'page.journal.caretaker.editCaption': 'Modifier la légende',
 
 	// Page: Health
 	'page.health.title': 'Dossier santé',
@@ -1133,6 +1118,20 @@ const messages: Record<keyof Messages, string> = {
 	'search.tipType': 'filtrer par type',
 	'aria.sigilAutocomplete': 'Suggestions de filtre',
 
+	// Media (journal and notes)
+	'media.uploadFailed': "Échec de l'envoi. Veuillez réessayer.",
+	'media.actionFailed': "Une erreur s'est produite. Veuillez réessayer.",
+	'media.title': 'Photos et vidéos',
+	'media.add': 'Ajouter un média',
+	'media.uploading': 'Envoi…',
+	'media.drop': 'Glissez des photos ou des vidéos ici ou cliquez pour envoyer',
+	'media.types': 'Images (max {imgMax}Mo) ou vidéos (max {vidMax}Mo)',
+	'media.noCaption': 'Pas de légende',
+	'media.addCaption': 'Ajouter une légende…',
+	'media.editCaption': 'Modifier la légende',
+	'media.photoAlt': 'Photo',
+	'media.videoAlt': 'Vidéo',
+
 	// Immich picker
 	'immich.picker.title': 'Choisir depuis Immich',
 	'immich.picker.albumScoped': "Affichage des éléments de l'album configuré.",
@@ -1193,6 +1192,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.filterEmpty': 'Aucune note avec ce tag',
 	'page.notes.clearFilter': 'Effacer le filtre',
 	'page.notes.shared': 'Partagée',
+	'page.notes.mediaCount': 'Photos et vidéos : {count}',
 	'page.notes.pin': 'Épingler',
 	'page.notes.delete': 'Supprimer la note',
 	'page.notes.confirmDelete': 'Supprimer « {title} » ? Cette action est irréversible.',
@@ -1208,6 +1208,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.labelShared': 'Partager avec les gardiens',
 	'page.notes.sharedHint': 'Les gardiens assignés à {name} peuvent lire cette note.',
 	'page.notes.labelPinned': 'Épingler en haut',
+	'page.notes.mediaAfterSave': 'Enregistrez la note pour ajouter des photos et des vidéos.',
 	'page.notes.unsavedPrompt':
 		'Vous avez des modifications non enregistrées. Quitter sans enregistrer ?',
 	'page.notes.leave': 'Quitter',

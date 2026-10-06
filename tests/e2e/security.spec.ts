@@ -149,6 +149,58 @@ test.describe('api authz', () => {
 		expect(res.status()).toBe(401);
 		await ctx.close();
 	});
+
+	test('caretaker cannot write note media (#321)', async ({ app, asCaretaker }) => {
+		// /api/companions/* sits outside the guarded route groups; the endpoint's
+		// own check is the only protection.
+		const base = `/api/companions/${EIN}/notes/${SEED.notes.einCommands.id}/media`;
+		const headers = { Origin: app.server.baseURL };
+		const item = `?mediaId=${SEED.noteMedia.einCommands.id}`;
+
+		const post = await asCaretaker.request.post(base, {
+			headers,
+			multipart: { file: pngUpload() }
+		});
+		expect(post.status()).toBe(403);
+		const patch = await asCaretaker.request.patch(base + item, {
+			headers,
+			data: { caption: 'hijacked' }
+		});
+		expect(patch.status()).toBe(403);
+		const del = await asCaretaker.request.delete(base + item, { headers });
+		expect(del.status()).toBe(403);
+		const immich = await asCaretaker.request.post(`${base}/from-immich`, {
+			headers,
+			data: { assetId: '00000000-0000-0000-0000-000000000001' }
+		});
+		expect(immich.status()).toBe(403);
+		const poll = await asCaretaker.request.get(base);
+		expect(poll.status()).toBe(403);
+	});
+
+	test('note media writes check the note against the URL (#321)', async ({ app, asMember }) => {
+		const headers = { Origin: app.server.baseURL };
+		const commands = SEED.notes.einCommands.id;
+
+		// Ein's note under Edward's URL.
+		const wrongCompanion = await asMember.request.post(
+			`/api/companions/${EDWARD}/notes/${commands}/media`,
+			{ headers, multipart: { file: pngUpload() } }
+		);
+		expect(wrongCompanion.status()).toBe(404);
+
+		// A media id that belongs to another note.
+		const foreign = SEED.noteMedia.einPrivate;
+		const wrongNote = await asMember.request.delete(
+			`/api/companions/${EIN}/notes/${commands}/media?mediaId=${foreign.id}`,
+			{ headers }
+		);
+		expect(wrongNote.status()).toBe(404);
+		const stillThere = await asMember.request.get(
+			`/api/photos/notes/${EIN}/${foreign.noteId}/${foreign.filename}`
+		);
+		expect(stillThere.status()).toBe(200);
+	});
 });
 
 // Form actions run before any load(), so layout role redirects never protect

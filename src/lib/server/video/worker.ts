@@ -1,24 +1,31 @@
 // Background video transcode worker (issue #86). A single in-process loop that
-// drains queued transcode jobs (journal media rows (journal_photos table) with status='processing'),
-// converts the source to a web-playable MP4 + poster via the hardened ffmpeg
-// wrapper, and updates the row. No external job queue — this fits the app's
-// single-process adapter-node + SQLite model.
+// drains queued transcode jobs (media rows with status='processing' in
+// journal_photos and note_media), converts the source to a web-playable MP4 +
+// poster via the hardened ffmpeg wrapper, and updates the row. No external job
+// queue: this fits the app's single-process adapter-node + SQLite model.
 //
-// State machine (journal media rows (journal_photos table).status):
+// Each media table is reached through a MediaQueue adapter; the loop claims the
+// oldest processing row across all queues.
+//
+// State machine (row.status):
 //   processing -> claimed -> ready          (success)
 //   processing -> claimed -> failed         (error, or attempts exhausted)
 //
 // A 'processing'/'failed' row is a fully valid RAW-video row: filename/storageKey
 // point at the original upload exactly as a pre-#86 video. Only on success does
 // the worker repoint the row at the transcoded MP4. So a failed transcode simply
-// degrades to the original "stored as-is" behavior — the UI's existing
-// can't-play fallback still works.
+// degrades to the original "stored as-is" behavior and the UI's can't-play
+// fallback still works.
 //
 // Crash safety: a job is atomically claimed (status -> 'claimed', attempt
-// counter incremented) before any async work. On boot, recover() resets orphaned
-// 'claimed' rows back to 'processing'; the per-claim attempt cap turns a crashing
-// poison input into a terminal 'failed' after a few boots rather than an infinite
-// requeue. Leftover temp dirs are purged on boot.
+// counter incremented) before any async work. On boot, recoverAndStart() resets
+// orphaned 'claimed' rows back to 'processing'; the per-claim attempt cap turns a
+// crashing poison input into a terminal 'failed' after a few boots rather than
+// an infinite requeue. Leftover temp dirs are purged on boot.
+//
+// Deletion during a job: if the row is gone (its note or item was deleted) when
+// the transcode finishes, markReady matches nothing and the worker deletes the
+// outputs and the source so nothing is left behind.
 
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -95,78 +102,140 @@ async function downloadObject(provider: StorageProvider, key: string): Promise<B
 	throw new Error(`unexpected get result: ${res.kind}`);
 }
 
+export type ClaimRow = {
+	id: string;
+	storageKey: string | null;
+	provider: StorageProvider;
+	mimeType: string;
+	attempts: number;
+};
+
+export type ReadyUpdate = {
+	filename: string;
+	storageKey: string;
+	posterKey: string;
+	originalKey: string | null;
+	mimeType: string;
+	sizeBytes: number;
+};
+
+export type MediaQueue = {
+	name: 'journal' | 'note';
+	oldestProcessing(): Promise<{ id: string; createdAt: Date } | undefined>;
+	// processing -> claimed, attempts + 1. Undefined when another writer won.
+	claim(id: string): Promise<ClaimRow | undefined>;
+	markFailed(id: string): Promise<void>;
+	// Guarded on status = 'claimed'. False when the row is gone or was reset.
+	markReady(id: string, update: ReadyUpdate): Promise<boolean>;
+	// Boot recovery: claimed -> processing. Returns the number of rows reset.
+	resetClaimed(): Promise<number>;
+	// Whether the row still exists. Distinguishes a deleted row from a reset one
+	// when markReady reports false.
+	exists(id: string): Promise<boolean>;
+};
+
 interface ClaimedJob {
 	id: string;
 	storageKey: string;
 	provider: StorageProvider;
 	mimeType: string;
 	attempts: number;
+	queue: MediaQueue;
 }
 
+// Both media tables share every column the worker touches (same names and
+// types), so one factory serves both. note_media is passed through a cast to
+// the journal table type; the worker never reads a column outside that set.
+type QueueTable = typeof schema.journalPhotos;
+
+function createQueue(name: MediaQueue['name'], table: QueueTable): MediaQueue {
+	return {
+		name,
+		async oldestProcessing() {
+			const [row] = await db
+				.select({ id: table.id, createdAt: table.createdAt })
+				.from(table)
+				.where(eq(table.status, 'processing'))
+				.orderBy(asc(table.createdAt), asc(table.id))
+				.limit(1);
+			return row;
+		},
+		async claim(id) {
+			const [row] = await db
+				.update(table)
+				.set({ status: 'claimed', transcodeAttempts: sql`${table.transcodeAttempts} + 1` })
+				.where(and(eq(table.id, id), eq(table.status, 'processing')))
+				.returning({
+					id: table.id,
+					storageKey: table.storageKey,
+					provider: table.provider,
+					mimeType: table.mimeType,
+					attempts: table.transcodeAttempts
+				});
+			return row;
+		},
+		async markFailed(id) {
+			// Leave filename/storageKey untouched: the row remains a valid raw-video
+			// row pointing at the original upload, so the UI's can't-play fallback works.
+			await db.update(table).set({ status: 'failed' }).where(eq(table.id, id));
+		},
+		async markReady(id, update) {
+			const rows = await db
+				.update(table)
+				.set({ ...update, status: 'ready' })
+				.where(and(eq(table.id, id), eq(table.status, 'claimed')))
+				.returning({ id: table.id });
+			return rows.length > 0;
+		},
+		async exists(id) {
+			const [row] = await db.select({ id: table.id }).from(table).where(eq(table.id, id)).limit(1);
+			return !!row;
+		},
+		async resetClaimed() {
+			const rows = await db
+				.update(table)
+				.set({ status: 'processing' })
+				.where(eq(table.status, 'claimed'))
+				.returning({ id: table.id });
+			return rows.length;
+		}
+	};
+}
+
+export const journalQueue = createQueue('journal', schema.journalPhotos);
+export const noteQueue = createQueue('note', schema.noteMedia as unknown as QueueTable);
+
+const QUEUES: MediaQueue[] = [journalQueue, noteQueue];
+
 /**
- * Atomically claim the oldest claimable job. Selects the oldest 'processing'
- * row, then transitions it to 'claimed' guarded on its still being 'processing'
- * (incrementing the attempt counter). Loops past candidates lost to a racing
- * writer or unclaimable (no storage key) so a single skip never ends the drain;
- * returns null only when the queue is genuinely empty.
+ * Atomically claim the oldest claimable job across all queues. Picks the
+ * queue whose oldest 'processing' row is oldest (journal wins ties), then
+ * claims it guarded on its still being 'processing'. Loops past candidates
+ * lost to a racing writer or unclaimable (no storage key) so a single skip
+ * never ends the drain; returns null only when every queue is empty.
  */
 async function claimNext(): Promise<ClaimedJob | null> {
 	for (;;) {
-		const [candidate] = await db
-			.select({ id: schema.journalPhotos.id })
-			.from(schema.journalPhotos)
-			.where(eq(schema.journalPhotos.status, 'processing'))
-			.orderBy(asc(schema.journalPhotos.createdAt))
-			.limit(1);
+		let pick: { queue: MediaQueue; id: string; createdAt: Date } | null = null;
+		for (const queue of QUEUES) {
+			const head = await queue.oldestProcessing();
+			if (head && (!pick || head.createdAt.getTime() < pick.createdAt.getTime())) {
+				pick = { queue, ...head };
+			}
+		}
+		if (!pick) return null; // every queue empty
 
-		if (!candidate) return null; // queue empty
+		const row = await pick.queue.claim(pick.id);
+		if (!row) continue; // lost the race; pick the next candidate
 
-		const claimed = await db
-			.update(schema.journalPhotos)
-			.set({
-				status: 'claimed',
-				transcodeAttempts: sql`${schema.journalPhotos.transcodeAttempts} + 1`
-			})
-			.where(
-				and(
-					eq(schema.journalPhotos.id, candidate.id),
-					eq(schema.journalPhotos.status, 'processing')
-				)
-			)
-			.returning({
-				id: schema.journalPhotos.id,
-				storageKey: schema.journalPhotos.storageKey,
-				provider: schema.journalPhotos.provider,
-				mimeType: schema.journalPhotos.mimeType,
-				attempts: schema.journalPhotos.transcodeAttempts
-			});
-
-		if (claimed.length === 0) continue; // lost the race; pick the next candidate
-
-		const row = claimed[0];
 		if (!row.storageKey) {
 			// A video row always has a storage key; if not, it cannot be
 			// transcoded. Fail it and keep draining the rest of the queue.
-			await markFailed(row.id);
+			await pick.queue.markFailed(row.id);
 			continue;
 		}
-		return {
-			id: row.id,
-			storageKey: row.storageKey,
-			provider: row.provider,
-			mimeType: row.mimeType,
-			attempts: row.attempts
-		};
+		return { ...row, storageKey: row.storageKey, queue: pick.queue };
 	}
-}
-
-async function markFailed(id: string): Promise<void> {
-	// Leave filename/storageKey untouched: the row remains a valid raw-video row
-	// pointing at the original upload, so the UI's can't-play fallback works.
-	await db
-		.update(schema.journalPhotos)
-		.set({ status: 'failed' })
-		.where(eq(schema.journalPhotos.id, id));
 }
 
 /**
@@ -227,18 +296,28 @@ async function processJob(job: ClaimedJob): Promise<void> {
 		await backend.put({ key: posterKey, body: posterBuf, contentType: 'image/jpeg' });
 
 		const keepOriginal = VIDEO_TRANSCODE.keepOriginal;
-		await db
-			.update(schema.journalPhotos)
-			.set({
-				filename: mp4Filename,
-				storageKey: mp4Key,
-				posterKey,
-				originalKey: keepOriginal ? sourceKey : null,
-				mimeType: 'video/mp4',
-				sizeBytes: mp4Buf.length,
-				status: 'ready'
-			})
-			.where(eq(schema.journalPhotos.id, job.id));
+		const updated = await job.queue.markReady(job.id, {
+			filename: mp4Filename,
+			storageKey: mp4Key,
+			posterKey,
+			originalKey: keepOriginal ? sourceKey : null,
+			mimeType: 'video/mp4',
+			sizeBytes: mp4Buf.length
+		});
+
+		if (!updated) {
+			// The outputs are unreferenced either way. Delete the source only when
+			// the row is gone (its note or item was deleted); a row that was merely
+			// reset to 'processing' still needs it for the retry.
+			await cleanupOutputs(job);
+			if (!(await job.queue.exists(job.id))) {
+				console.info(`[video] ${job.queue.name} media ${job.id} was deleted mid-job, cleaning up`);
+				await backend.delete(sourceKey).catch((err) => {
+					console.warn(`[video] failed to delete original ${sourceKey}:`, err);
+				});
+			}
+			return;
+		}
 
 		// Discard the source only after the row no longer references it.
 		if (!keepOriginal) {
@@ -251,8 +330,8 @@ async function processJob(job: ClaimedJob): Promise<void> {
 	}
 }
 
-/** Drain the queue until empty. Single-flight via the `draining` guard. */
-async function drain(): Promise<void> {
+/** Drain the queues until empty. Single-flight via the `draining` guard. */
+export async function drain(): Promise<void> {
 	if (draining) return;
 	draining = true;
 	try {
@@ -261,22 +340,27 @@ async function drain(): Promise<void> {
 			if (!job) break;
 			if (job.attempts > MAX_ATTEMPTS) {
 				console.warn(`[video] job ${job.id} exhausted ${MAX_ATTEMPTS} attempts, marking failed`);
-				await markFailed(job.id);
+				await job.queue.markFailed(job.id);
 				await cleanupOutputs(job);
 				continue;
 			}
 			try {
 				await processJob(job);
-				console.info(`[video] transcoded ${job.id}`);
+				console.info(`[video] transcoded ${job.queue.name} media ${job.id}`);
 			} catch (err) {
 				console.error(`[video] transcode failed for ${job.id} (attempt ${job.attempts}):`, err);
-				await markFailed(job.id);
+				await job.queue.markFailed(job.id);
 				await cleanupOutputs(job);
 			}
 		}
 	} finally {
 		draining = false;
 	}
+}
+
+/** Test hook: clear the single-flight guard between cases. */
+export function __resetWorkerForTests(): void {
+	draining = false;
 }
 
 /**
@@ -321,13 +405,10 @@ export function recoverAndStart(): void {
 	transcodeAvailable()
 		.then(async (ok) => {
 			if (!ok) return;
-			const reset = await db
-				.update(schema.journalPhotos)
-				.set({ status: 'processing' })
-				.where(eq(schema.journalPhotos.status, 'claimed'))
-				.returning({ id: schema.journalPhotos.id });
-			if (reset.length > 0) {
-				console.info(`[video] recovered ${reset.length} interrupted transcode job(s)`);
+			let reset = 0;
+			for (const queue of QUEUES) reset += await queue.resetClaimed();
+			if (reset > 0) {
+				console.info(`[video] recovered ${reset} interrupted transcode job(s)`);
 			}
 			await purgeOrphanTempDirs();
 			await drain();

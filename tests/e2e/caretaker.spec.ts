@@ -1,5 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 import { todayUTC } from '../lib/dates';
+import { pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
 
 const EIN = 'seed-comp-ein';
@@ -179,6 +180,45 @@ test.describe('caretaker', () => {
 
 		await asCaretaker.reload();
 		await expect(bodyField).toHaveValue('e2e-caretaker-signed-out');
+	});
+
+	test('caretaker journal media: upload, lightbox, delete with confirmation', async ({
+		asCaretaker
+	}) => {
+		// Julia: other specs on this worker write Ein's entry for today as the member.
+		await asCaretaker.goto(`/care/${JULIA}/journal`);
+		await waitForHydration(asCaretaker);
+
+		const thumbs = asCaretaker.locator('div.group img[src*="/api/photos/journal/"]');
+		const before = await thumbs.count();
+
+		await asCaretaker
+			.locator('input[type="file"][name="photos"]')
+			.first()
+			.setInputFiles(pngUpload('care-photo.png'));
+		await expect(thumbs).toHaveCount(before + 1, { timeout: 15_000 });
+
+		// The caretaker page gains the lightbox with the shared MediaManager.
+		await thumbs.last().click();
+		const lightbox = asCaretaker.locator('[role="dialog"][aria-modal="true"]');
+		await expect(lightbox).toBeVisible({ timeout: 5_000 });
+		await asCaretaker.keyboard.press('Escape');
+		await expect(lightbox).toHaveCount(0);
+
+		// Delete now asks for confirmation (it used to delete immediately).
+		const container = asCaretaker
+			.locator('div.group')
+			.filter({ has: asCaretaker.locator('img[src*="/api/photos/journal/"]') })
+			.last();
+		await container.hover();
+		await container.getByRole('button', { name: 'Delete media' }).click();
+		const confirm = asCaretaker.locator('[role="dialog"]');
+		await expect(confirm).toBeVisible();
+		await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+
+		await expect(thumbs).toHaveCount(before, { timeout: 5_000 });
+		await asCaretaker.reload();
+		await expect(thumbs).toHaveCount(before, { timeout: 5_000 });
 	});
 
 	test('caretaker app-route bounce', async ({ asCaretaker }) => {

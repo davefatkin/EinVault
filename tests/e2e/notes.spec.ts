@@ -7,11 +7,15 @@ import { createSeededDb, createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
 import { createToken } from '../lib/api-tokens';
+import { pngUpload, mp4Upload } from '../lib/files';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = SEED.companions.ein.id;
 const JULIA = SEED.companions.julia.id;
 const EDWARD = SEED.companions.edward.id;
 const N = SEED.notes;
+const M = SEED.noteMedia;
+const MEDIA_HINT = 'Save the note to add photos and videos.';
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
 // Force SvelteKit's JSON action response so fail() status lands in the body.
@@ -32,6 +36,21 @@ async function fillNewNote(page: Page, title: string, body: string, tags: string
 		await tagBox.fill(tag);
 		await tagBox.press('Enter');
 	}
+}
+
+// Creates a note owned by the test so media tests never touch seeded notes.
+async function createScratchNote(page: Page, title: string): Promise<string> {
+	await fillNewNote(page, title, 'media scratch', []);
+	await page.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`/${EIN}/notes/(?!new)[^/?]+$`));
+	return page.url();
+}
+
+async function deleteNoteAt(page: Page, noteUrl: string) {
+	await page.goto(noteUrl);
+	await page.getByRole('button', { name: 'Delete note' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+	await expect(page).toHaveURL(new RegExp(`/${EIN}/notes$`));
 }
 
 // A member page with JavaScript off, for no-JS form fallbacks.
@@ -102,6 +121,16 @@ test.describe('notes (owner)', () => {
 		await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
 		await expect(asMember.getByRole('link', { name: 'E2E Favorite foods' })).toHaveCount(0);
+	});
+
+	test('list cards show a media count only for notes with media', async ({ asAdmin }) => {
+		await asAdmin.goto(`/${EIN}/notes`);
+		const withMedia = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
+		await expect(withMedia.getByTestId('note-media-count')).toHaveText('1');
+		await expect(withMedia.getByText('Photos and videos: 1', { exact: true })).toBeAttached();
+		const without = asAdmin.locator('article').filter({ hasText: N.einSitter.title });
+		await expect(without).toBeVisible();
+		await expect(without.getByTestId('note-media-count')).toHaveCount(0);
 	});
 
 	test("pinning someone else's note is not an edit", async ({ asAdmin }) => {
@@ -381,6 +410,108 @@ test.describe('notes (owner)', () => {
 		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes/${N.einCommands.id}$`));
 	});
 
+	test('media: upload, lightbox, caption, delete; deleting the note removes it', async ({
+		asMember
+	}) => {
+		let noteUrl: string | null = null;
+		try {
+			noteUrl = await createScratchNote(asMember, 'E2E Media note');
+			await waitForHydration(asMember);
+			const imgs = asMember.locator('img[src*="/api/photos/notes/"]');
+			const input = asMember.locator('input[type="file"][name="photos"]').first();
+
+			await input.setInputFiles(pngUpload('first.png'));
+			await expect(imgs.first()).toBeVisible({ timeout: 15_000 });
+
+			// The thumbnail opens the lightbox; Escape closes it.
+			await imgs.first().click();
+			const lightbox = asMember.locator('[role="dialog"][aria-modal="true"]');
+			await expect(lightbox).toBeVisible({ timeout: 5_000 });
+			await asMember.keyboard.press('Escape');
+			await expect(lightbox).toHaveCount(0);
+
+			// Caption edit persists.
+			await asMember.getByRole('button', { name: 'Edit Caption' }).first().click();
+			await asMember.locator('textarea[name="photo-notes"]').first().fill('e2e note caption');
+			await asMember.getByRole('button', { name: 'Save', exact: true }).first().click();
+			await expect(asMember.getByText('e2e note caption')).toBeVisible({ timeout: 5_000 });
+			await asMember.reload();
+			await expect(asMember.getByText('e2e note caption')).toBeVisible({ timeout: 5_000 });
+
+			// Delete asks for confirmation.
+			await waitForHydration(asMember);
+			const tile = asMember
+				.locator('div.group')
+				.filter({ has: asMember.locator('img[src*="/api/photos/notes/"]') })
+				.first();
+			await tile.hover();
+			await tile.getByRole('button', { name: 'Delete media' }).click();
+			await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+			await expect(imgs).toHaveCount(0, { timeout: 5_000 });
+
+			// Upload again, then delete the whole note: its media URL goes with it.
+			await input.setInputFiles(pngUpload('second.png'));
+			await expect(imgs.first()).toBeVisible({ timeout: 15_000 });
+			const src = await imgs.first().getAttribute('src');
+			expect(src).toBeTruthy();
+			expect((await asMember.request.get(src!)).status()).toBe(200);
+			await deleteNoteAt(asMember, noteUrl);
+			noteUrl = null;
+			expect((await asMember.request.get(src!)).status()).toBe(404);
+		} finally {
+			if (noteUrl) await deleteNoteAt(asMember, noteUrl);
+		}
+	});
+
+	test('media: a video upload is stored as-is and listed', async ({ asMember }) => {
+		let noteUrl: string | null = null;
+		try {
+			noteUrl = await createScratchNote(asMember, 'E2E Video note');
+			const noteId = new URL(noteUrl).pathname.split('/').pop()!;
+			await waitForHydration(asMember);
+			await asMember
+				.locator('input[type="file"][name="photos"]')
+				.first()
+				.setInputFiles(mp4Upload());
+
+			// The signature-only buffer can't be decoded, so JournalVideo may swap the
+			// player for its download link. Either element carries the media URL.
+			await expect(
+				asMember.locator('video[src*="/api/photos/notes/"], a[href*="/api/photos/notes/"]').first()
+			).toBeAttached({ timeout: 15_000 });
+
+			const res = await asMember.request.get(`/api/companions/${EIN}/notes/${noteId}/media`);
+			expect(res.status()).toBe(200);
+			const { media } = await res.json();
+			expect(media).toHaveLength(1);
+			expect(media[0].filename).toMatch(/\.mp4$/);
+			expect(media[0].status).toBe('ready');
+		} finally {
+			if (noteUrl) await deleteNoteAt(asMember, noteUrl);
+		}
+	});
+
+	test('media strip: hint before the first save, hidden while editing, shown on view', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${EIN}/notes/new`);
+		await expect(asMember.getByText(MEDIA_HINT)).toBeVisible();
+		await expect(asMember.locator('input[type="file"][name="photos"]')).toHaveCount(0);
+
+		await asMember.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
+		await expect(asMember.getByLabel('Title', { exact: true })).toBeVisible();
+		await expect(asMember.getByText(MEDIA_HINT)).toHaveCount(0);
+		await expect(asMember.locator('input[type="file"][name="photos"]')).toHaveCount(0);
+
+		await asMember.goto(`/${EIN}/notes/${N.einCommands.id}`);
+		await expect(
+			asMember.locator(
+				`img[src*="/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}"]`
+			)
+		).toBeVisible({ timeout: 10_000 });
+		await expect(asMember.getByText(M.einCommands.caption)).toBeVisible();
+	});
+
 	test('header Notes icon on mobile @mobile', async ({ asMember }, testInfo) => {
 		test.skip(testInfo.project.name !== 'mobile', 'header icons are mobile-only');
 		await asMember.goto(`/${EIN}`);
@@ -406,11 +537,57 @@ test.describe('notes (owner)', () => {
 });
 
 test.describe('notes (caretaker)', () => {
+	test('shared note summary shows the media count while collapsed', async ({ asCaretaker }) => {
+		await asCaretaker.goto(`/care/${EIN}`);
+		const summary = asCaretaker
+			.locator('details > summary')
+			.filter({ hasText: N.einCommands.title });
+		await expect(summary.getByTestId('note-media-count')).toHaveText('1');
+		await expect(summary.getByText('Photos and videos: 1', { exact: true })).toBeAttached();
+	});
+
 	test('sees shared notes, not private ones', async ({ asCaretaker }) => {
 		await asCaretaker.goto(`/care/${EIN}`);
 		await expect(asCaretaker.getByText(N.einSitter.title, { exact: true })).toBeVisible();
 		await expect(asCaretaker.getByText(N.einCommands.title, { exact: true })).toBeVisible();
 		await expect(asCaretaker.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
+	});
+
+	test('shared note media opens in the lightbox; private and unassigned media are blocked', async ({
+		asCaretaker
+	}) => {
+		await asCaretaker.goto(`/care/${EIN}`);
+		await waitForHydration(asCaretaker);
+
+		// Only the first <details> starts open, and the pinned sitter note sorts first.
+		const commands = asCaretaker.locator('details').filter({ hasText: N.einCommands.title });
+		await commands.locator('summary').click();
+		const thumb = commands.locator(
+			`img[src*="/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}"]`
+		);
+		await expect(thumb).toBeVisible({ timeout: 10_000 });
+		await thumb.click();
+		const lightbox = asCaretaker.locator('[role="dialog"][aria-modal="true"]');
+		await expect(lightbox).toBeVisible({ timeout: 5_000 });
+		await expect(lightbox).toContainText(M.einCommands.caption);
+		await asCaretaker.keyboard.press('Escape');
+		await expect(lightbox).toHaveCount(0);
+
+		// No media from the private note reaches the page.
+		await expect(asCaretaker.locator(`img[src*="/${N.einPrivate.id}/"]`)).toHaveCount(0);
+
+		const shared = await asCaretaker.request.get(
+			`/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}`
+		);
+		expect(shared.status()).toBe(200);
+		const unshared = await asCaretaker.request.get(
+			`/api/photos/notes/${EIN}/${N.einPrivate.id}/${M.einPrivate.filename}`
+		);
+		expect(unshared.status()).toBe(404);
+		const unassigned = await asCaretaker.request.get(
+			`/api/photos/notes/${EDWARD}/${N.edwardSitter.id}/${M.edwardSitter.filename}`
+		);
+		expect(unassigned.status()).toBe(403);
 	});
 
 	test('unassigned companion is a 403', async ({ asCaretaker }) => {
@@ -494,6 +671,11 @@ offShift('off-shift caretaker still sees shared notes', async ({ world, browser 
 		await page.goto(`/care/${EIN}`);
 		await expect(page.getByText(N.einSitter.title, { exact: true })).toBeVisible();
 		await expect(page.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
+		// Shared note media follows the note: readable off shift too.
+		const media = await page.request.get(
+			`/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}`
+		);
+		expect(media.status()).toBe(200);
 	} finally {
 		await page.context().close();
 	}
@@ -519,6 +701,31 @@ archived('API hides notes on archived companions', async ({ world, browser }) =>
 		await page.context().close();
 	}
 });
+
+archived(
+	'owners add media on archived companions; caretakers get 404',
+	async ({ world, browser }) => {
+		test.slow();
+		const member = await login(world, browser, SEED.member);
+		const caretaker = await login(world, browser, SEED.caretaker);
+		try {
+			const base = world.server.baseURL;
+			const res = await member.request.post(
+				`${base}/api/companions/${JULIA}/notes/${N.juliaSitter.id}/media`,
+				{ headers: { Origin: base }, multipart: { file: pngUpload() } }
+			);
+			expect(res.ok()).toBe(true);
+			const { url } = await res.json();
+			expect(url).toContain(`/api/photos/notes/${JULIA}/${N.juliaSitter.id}/`);
+			expect((await member.request.get(base + url)).status()).toBe(200);
+			// Faye is assigned to Julia, but an archived companion hides its shared notes.
+			expect((await caretaker.request.get(base + url)).status()).toBe(404);
+		} finally {
+			await member.context().close();
+			await caretaker.context().close();
+		}
+	}
+);
 
 // Bearer calls are rate limited per IP per server process, so the API specs get
 // their own server instead of spending the shared worker server's budget.

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import NoteMediaCount from './NoteMediaCount.svelte';
 	import NoteTags from './NoteTags.svelte';
 	import PinToggle from './PinToggle.svelte';
 	import { stripMarkdown } from '$lib/markdown';
@@ -19,6 +20,7 @@
 			tags: string[];
 			pinned: boolean;
 			sharedWithCaretakers: boolean;
+			mediaCount: number;
 			loggedBy: string | null;
 			updatedBy: string | null;
 			logger: UserRef;
@@ -40,6 +42,7 @@
 				{#if note.sharedWithCaretakers}
 					<Badge variant="teal">{t(locale, 'page.notes.shared')}</Badge>
 				{/if}
+				<NoteMediaCount count={note.mediaCount} />
 			</div>
 			{#if preview}
 				<p class="line-clamp-2 text-sm text-muted-foreground">{preview}</p>

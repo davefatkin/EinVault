@@ -113,6 +113,7 @@ ENV DATABASE_URL=/data/einvault.db
 ENV UPLOAD_MAX_MB=10
 ENV VIDEO_MAX_MB=100
 ENV MAX_DAILY_MEDIA=5
+ENV MAX_NOTE_MEDIA=10
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1

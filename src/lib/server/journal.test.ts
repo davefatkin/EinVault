@@ -192,4 +192,44 @@ describe('journal', () => {
 		expect(page2.entries.map((e) => e.date)).toEqual(['2026-06-02', '2026-06-01']);
 		expect(page2.hasMore).toBe(false);
 	});
+	it('returns timeline media as MediaItem fields only, without storage keys', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j4',
+			name: 'Snappy'
+		} as typeof schema.companions.$inferInsert);
+		const entryId = await upsertJournalEntry('c-j4', '2026-07-01', 'photo day', null, 'u-j');
+		await db.insert(schema.journalPhotos).values({
+			id: 'p-j4',
+			entryId,
+			filename: 'p-j4.jpg',
+			provider: 'local',
+			storageKey: 'journal/c-j4/2026-07-01/p-j4.jpg',
+			originalName: 'beach.jpg',
+			mimeType: 'image/jpeg',
+			sizeBytes: 10,
+			notes: 'at the beach',
+			loggedBy: 'u-j'
+		} as typeof schema.journalPhotos.$inferInsert);
+
+		const page = await getEnrichedJournalEntries('c-j4');
+		const [photo] = page.entries[0].photos;
+		expect(Object.keys(photo).sort()).toEqual(
+			[
+				'caption',
+				'filename',
+				'id',
+				'logger',
+				'loggedBy',
+				'mediaType',
+				'originalName',
+				'posterKey',
+				'status'
+			].sort()
+		);
+		expect(photo).toMatchObject({
+			id: 'p-j4',
+			caption: 'at the beach',
+			logger: { displayName: 'J User' }
+		});
+	});
 });

@@ -9,6 +9,9 @@
 	import NoteContent from '$lib/components/notes/NoteContent.svelte';
 	import NoteEditor from '$lib/components/notes/NoteEditor.svelte';
 	import PinToggle from '$lib/components/notes/PinToggle.svelte';
+	import MediaManager from '$lib/components/MediaManager.svelte';
+	import { noteMediaApi } from '$lib/mediaApi';
+	import type { MediaItem } from '$lib/media';
 	import { t, getLocale } from '$lib/i18n';
 
 	let { data, form } = $props();
@@ -21,6 +24,9 @@
 	const editing = $derived(data.editing || form?.values !== undefined);
 	let confirmDelete = $state(false);
 	let deleteForm = $state<HTMLFormElement | null>(null);
+	// MediaManager owns the list after load; reset it when navigating to another note.
+	let media = $derived<MediaItem[]>(data.media);
+	const mediaApi = $derived(noteMediaApi(data.companion.id, data.note.id, locale));
 </script>
 
 <svelte:head>
@@ -83,6 +89,19 @@
 		</div>
 
 		<NoteContent note={data.note} showTitle={false} {tagHref} />
+
+		<section>
+			<MediaManager
+				bind:items={media}
+				api={mediaApi}
+				max={data.maxNoteMedia}
+				canModify={() => true}
+				immichEnabled={data.immichEnabled ?? false}
+				uploadMaxMb={data.uploadMaxMb}
+				videoMaxMb={data.videoMaxMb}
+				title={t(locale, 'media.title')}
+			/>
+		</section>
 
 		<form bind:this={deleteForm} method="POST" action="?/delete" class="hidden"></form>
 		<ConfirmDialog

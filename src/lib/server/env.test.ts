@@ -59,3 +59,25 @@ describe('demo mode env', () => {
 		expect(env.API_TOKENS_ENABLED).toBe(true);
 	});
 });
+
+describe('note media cap env', () => {
+	it('defaults MAX_NOTE_MEDIA to 10', async () => {
+		delete process.env.MAX_NOTE_MEDIA;
+		vi.resetModules();
+		const env = await import('./env');
+		expect(env.MAX_NOTE_MEDIA).toBe(10);
+	});
+
+	it('reads MAX_NOTE_MEDIA and ignores non-positive values', async () => {
+		process.env.MAX_NOTE_MEDIA = '3';
+		vi.resetModules();
+		try {
+			expect((await import('./env')).MAX_NOTE_MEDIA).toBe(3);
+			process.env.MAX_NOTE_MEDIA = '0';
+			vi.resetModules();
+			expect((await import('./env')).MAX_NOTE_MEDIA).toBe(10);
+		} finally {
+			delete process.env.MAX_NOTE_MEDIA;
+		}
+	});
+});

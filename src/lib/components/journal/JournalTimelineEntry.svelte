@@ -2,20 +2,21 @@
 	import { renderMarkdown } from '$lib/markdown';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
-	import { Pencil, NotebookPen, Play } from '@lucide/svelte';
+	import { Pencil, NotebookPen } from '@lucide/svelte';
 	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
-	import type { JournalEntry, JournalPhoto, DailyEvent } from '$server/db/schema';
+	import type { JournalEntry, DailyEvent } from '$server/db/schema';
 	import type { UserRef } from '$lib/types';
 	import type { Species } from '$lib/activityTypes';
+	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
+	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
-	type Photo = JournalPhoto & { logger: UserRef };
 	type Activity = DailyEvent & { logger: UserRef };
 
 	type Entry = Pick<JournalEntry, 'date' | 'mood' | 'body' | 'loggedBy' | 'updatedBy'> & {
 		logger: UserRef | null;
 		updater: { displayName: string } | null;
-		photos: Photo[];
+		photos: MediaItem[];
 		events: Activity[];
 	};
 
@@ -24,7 +25,7 @@
 		companionId: string;
 		today: string;
 		canEdit: boolean;
-		onOpenLightbox: (photos: Photo[], date: string, index: number) => void;
+		onOpenLightbox: (items: MediaItem[], date: string, index: number) => void;
 		onOpenActivity: (event: Activity) => void;
 		species?: Species;
 	}
@@ -35,21 +36,11 @@
 	const locale = getLocale();
 	let isToday = $derived(entry.date === today);
 
-	const MAX_THUMBS = 4;
-	let visiblePhotos = $derived(entry.photos.slice(0, MAX_THUMBS));
-	let overflow = $derived(Math.max(0, entry.photos.length - MAX_THUMBS));
-
 	function dayNum(d: string) {
 		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric' });
 	}
 	function weekday(d: string) {
 		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' });
-	}
-	function mediaUrl(item: Entry['photos'][number]) {
-		return `/api/photos/journal/${companionId}/${entry.date}/${item.filename}`;
-	}
-	function posterUrl(item: Entry['photos'][number]) {
-		return item.posterKey ? `${mediaUrl(item)}?poster` : null;
 	}
 </script>
 
@@ -109,69 +100,13 @@
 		</div>
 
 		{#if entry.photos.length > 0}
-			<div class="mt-3 flex gap-1.5">
-				{#each visiblePhotos as item, i (item.id)}
-					<button
-						type="button"
-						onclick={() =>
-							onOpenLightbox(
-								entry.photos,
-								entry.date,
-								i === MAX_THUMBS - 1 && overflow > 0 ? MAX_THUMBS : i
-							)}
-						class="relative h-16 w-16 overflow-hidden rounded-lg transition-opacity hover:opacity-90"
-						title={item.originalName ??
-							t(
-								locale,
-								item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
-							)}
-						aria-label={item.originalName ??
-							t(
-								locale,
-								item.mediaType === 'video' ? 'page.journal.videoAlt' : 'page.journal.photoAlt'
-							)}
-					>
-						{#if item.mediaType === 'video' && item.posterKey}
-							<img
-								src={posterUrl(item)}
-								alt={item.originalName ?? ''}
-								class="h-full w-full object-cover"
-								loading="lazy"
-							/>
-						{:else if item.mediaType === 'video'}
-							<video
-								src={mediaUrl(item)}
-								preload="metadata"
-								muted
-								playsinline
-								aria-hidden="true"
-								class="h-full w-full object-cover"
-							></video>
-						{:else}
-							<img
-								src={mediaUrl(item)}
-								alt={item.originalName ?? ''}
-								class="h-full w-full object-cover"
-								loading="lazy"
-							/>
-						{/if}
-						{#if item.mediaType === 'video'}
-							<span
-								class="absolute inset-0 flex items-center justify-center bg-black/20"
-								aria-hidden="true"
-								><span class="rounded-full bg-black/55 p-1.5"
-									><Play class="h-4 w-4 text-white" /></span
-								></span
-							>
-						{/if}
-						{#if i === MAX_THUMBS - 1 && overflow > 0}
-							<span
-								class="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-semibold text-white"
-								>+{overflow}</span
-							>
-						{/if}
-					</button>
-				{/each}
+			<div class="mt-3">
+				<MediaThumbs
+					items={entry.photos}
+					urlFor={(item) => journalMediaUrl(companionId, entry.date, item)}
+					onopen={(index) => onOpenLightbox(entry.photos, entry.date, index)}
+					max={4}
+				/>
 			</div>
 		{/if}
 

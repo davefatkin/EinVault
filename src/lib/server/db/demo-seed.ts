@@ -127,6 +127,34 @@ export const SEED = {
 			pinned: false,
 			tags: []
 		}
+	},
+	// Note media (#321). Filenames follow the app's `{mediaId}.{ext}` shape;
+	// `sourceAsset` names the bundled demo JPEG copied to the storage key.
+	noteMedia: {
+		einCommands: {
+			id: 'seed-nmedia-ein-commands',
+			noteId: 'seed-note-ein-commands',
+			companionId: 'seed-comp-ein',
+			filename: 'seed-nmedia-ein-commands.jpg',
+			sourceAsset: 'ein-02.jpg',
+			caption: 'Sit and stay, even at the shelter.'
+		},
+		einPrivate: {
+			id: 'seed-nmedia-ein-private',
+			noteId: 'seed-note-ein-private',
+			companionId: 'seed-comp-ein',
+			filename: 'seed-nmedia-ein-private.jpg',
+			sourceAsset: 'ein-03.jpg',
+			caption: null
+		},
+		edwardSitter: {
+			id: 'seed-nmedia-edward-sitter',
+			noteId: 'seed-note-edward-sitter',
+			companionId: 'seed-comp-edward',
+			filename: 'seed-nmedia-edward-sitter.jpg',
+			sourceAsset: 'edward-01.jpg',
+			caption: 'The leash she tolerates.'
+		}
 	}
 } as const;
 
@@ -206,6 +234,37 @@ export function buildPhotoManifest(now: number): Array<{
 			storageKey: `journal/${companionId}/${date}/${p.filename}`
 		};
 	});
+}
+
+/**
+ * Demo note media rows AND files (#321). The key mirrors noteMediaKey() in
+ * $lib/server/note-media.ts, which this module can't import (it loads outside
+ * Vite in the Playwright runner). Note keys don't depend on `now`.
+ */
+export function buildNoteMediaManifest(): Array<{
+	id: string;
+	noteId: string;
+	companionId: string;
+	filename: string;
+	sourceAsset: string;
+	caption: string | null;
+	storageKey: string;
+}> {
+	return Object.values(SEED.noteMedia).map((m) => ({
+		...m,
+		storageKey: `notes/${m.companionId}/${m.noteId}/${m.filename}`
+	}));
+}
+
+/** Byte size of a bundled demo asset, or a plausible placeholder if it's missing. */
+function demoAssetSize(filename: string): number {
+	try {
+		const assetPath = join(resolveAssetsDir(), filename);
+		if (existsSync(assetPath)) return statSync(assetPath).size;
+	} catch {
+		// fall back to placeholder
+	}
+	return 84000;
 }
 
 /** Inserts the 4 user rows. Date-independent; safe to call separately. */
@@ -302,6 +361,30 @@ export function seedContent(
 		.run();
 	const seedNoteTags = seedNotes.flatMap((n) => n.tags.map((tag) => ({ noteId: n.id, tag })));
 	if (seedNoteTags.length > 0) db.insert(schema.noteTags).values(seedNoteTags).run();
+
+	// ---- Note media (#321): one photo each on a shared note, a private note,
+	// and a shared note of a companion the caretaker isn't assigned to ----
+	db.insert(schema.noteMedia)
+		.values(
+			buildNoteMediaManifest().map(
+				({ id, noteId, filename, sourceAsset, caption, storageKey }, i) => ({
+					id,
+					noteId,
+					filename,
+					provider: 'local' as const,
+					storageKey,
+					originalName: sourceAsset,
+					mediaType: 'photo' as const,
+					mimeType: 'image/jpeg',
+					sizeBytes: demoAssetSize(sourceAsset),
+					caption,
+					status: 'ready' as const,
+					createdAt: new Date(now - (i + 1) * hour),
+					loggedBy: jet
+				})
+			)
+		)
+		.run();
 
 	// Active shift so the caretaker can see their companion.
 	db.insert(schema.caretakerShifts)
@@ -924,30 +1007,19 @@ export function seedContent(
 	// ---- Journal photos ----
 	const photoManifest = buildPhotoManifest(now);
 
-	const photoRows = photoManifest.map(({ id, entryId, filename, storageKey }) => {
-		let sizeBytes = 84000; // plausible placeholder
-		try {
-			const assetPath = join(resolveAssetsDir(), filename);
-			if (existsSync(assetPath)) {
-				sizeBytes = statSync(assetPath).size;
-			}
-		} catch {
-			// fall back to placeholder
-		}
-		return {
-			id,
-			entryId,
-			filename,
-			provider: 'local' as const,
-			storageKey,
-			originalName: filename,
-			mediaType: 'photo' as const,
-			mimeType: 'image/jpeg',
-			sizeBytes,
-			status: 'ready' as const,
-			loggedBy: jet
-		};
-	});
+	const photoRows = photoManifest.map(({ id, entryId, filename, storageKey }) => ({
+		id,
+		entryId,
+		filename,
+		provider: 'local' as const,
+		storageKey,
+		originalName: filename,
+		mediaType: 'photo' as const,
+		mimeType: 'image/jpeg',
+		sizeBytes: demoAssetSize(filename),
+		status: 'ready' as const,
+		loggedBy: jet
+	}));
 
 	db.insert(schema.journalPhotos).values(photoRows).run();
 
@@ -1044,7 +1116,7 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// it; delete explicitly (this cascades to quick_log_companions).
 		tx.delete(schema.quickLogs).run();
 		// companions cascade to: journalEntries -> journalPhotos, healthEvents,
-		// weightEntries, dailyEvents, reminders
+		// weightEntries, dailyEvents, reminders, notes -> noteTags, noteMedia
 		tx.delete(schema.companions).run();
 		// Shift runs past the 24h reseed interval so the caretaker stays on-shift
 		// for the whole window between refreshes (issue #158).
@@ -1076,14 +1148,23 @@ export function startDemoRefreshScheduler(db: SeedDb, demoMode: boolean, dataDir
 
 /**
  * Copies bundled demo asset JPEGs to the uploads directory, keyed by storageKey
- * derived from `now`. Clears stale dated dirs first so re-anchoring is clean.
+ * derived from `now`. Clears stale dated journal dirs first so re-anchoring is
+ * clean. Note media keys don't depend on the date, so they are overwritten in
+ * place.
  */
 export function copyDemoPhotoFiles(uploadsRoot: string, now: number): void {
 	const assetsDir = resolveAssetsDir();
 	const journalRoot = join(uploadsRoot, 'journal');
 	rmSync(journalRoot, { recursive: true, force: true });
-	for (const { filename, storageKey } of buildPhotoManifest(now)) {
-		const src = join(assetsDir, filename);
+	const copies = [
+		...buildPhotoManifest(now).map(({ filename, storageKey }) => ({ src: filename, storageKey })),
+		...buildNoteMediaManifest().map(({ sourceAsset, storageKey }) => ({
+			src: sourceAsset,
+			storageKey
+		}))
+	];
+	for (const { src: name, storageKey } of copies) {
+		const src = join(assetsDir, name);
 		const dest = join(uploadsRoot, storageKey);
 		if (!existsSync(src)) continue;
 		mkdirSync(dirname(dest), { recursive: true });
