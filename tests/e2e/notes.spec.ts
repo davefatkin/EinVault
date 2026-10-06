@@ -534,6 +534,43 @@ test.describe('notes (caretaker)', () => {
 		await expect(asCaretaker.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
 	});
 
+	test('shared note media opens in the lightbox; private and unassigned media are blocked', async ({
+		asCaretaker
+	}) => {
+		await asCaretaker.goto(`/care/${EIN}`);
+		await waitForHydration(asCaretaker);
+
+		// Only the first <details> starts open, and the pinned sitter note sorts first.
+		const commands = asCaretaker.locator('details').filter({ hasText: N.einCommands.title });
+		await commands.locator('summary').click();
+		const thumb = commands.locator(
+			`img[src*="/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}"]`
+		);
+		await expect(thumb).toBeVisible({ timeout: 10_000 });
+		await thumb.click();
+		const lightbox = asCaretaker.locator('[role="dialog"][aria-modal="true"]');
+		await expect(lightbox).toBeVisible({ timeout: 5_000 });
+		await expect(lightbox).toContainText(M.einCommands.caption);
+		await asCaretaker.keyboard.press('Escape');
+		await expect(lightbox).toHaveCount(0);
+
+		// No media from the private note reaches the page.
+		await expect(asCaretaker.locator(`img[src*="/${N.einPrivate.id}/"]`)).toHaveCount(0);
+
+		const shared = await asCaretaker.request.get(
+			`/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}`
+		);
+		expect(shared.status()).toBe(200);
+		const unshared = await asCaretaker.request.get(
+			`/api/photos/notes/${EIN}/${N.einPrivate.id}/${M.einPrivate.filename}`
+		);
+		expect(unshared.status()).toBe(404);
+		const unassigned = await asCaretaker.request.get(
+			`/api/photos/notes/${EDWARD}/${N.edwardSitter.id}/${M.edwardSitter.filename}`
+		);
+		expect(unassigned.status()).toBe(403);
+	});
+
 	test('unassigned companion is a 403', async ({ asCaretaker }) => {
 		await asCaretaker.goto(`/care/${EDWARD}`);
 		await expect(asCaretaker.getByText(/403|not assigned/i)).toBeVisible();
@@ -615,6 +652,11 @@ offShift('off-shift caretaker still sees shared notes', async ({ world, browser 
 		await page.goto(`/care/${EIN}`);
 		await expect(page.getByText(N.einSitter.title, { exact: true })).toBeVisible();
 		await expect(page.getByText(N.einPrivate.title, { exact: true })).toHaveCount(0);
+		// Shared note media follows the note: readable off shift too.
+		const media = await page.request.get(
+			`/api/photos/notes/${EIN}/${N.einCommands.id}/${M.einCommands.filename}`
+		);
+		expect(media.status()).toBe(200);
 	} finally {
 		await page.context().close();
 	}
@@ -640,6 +682,31 @@ archived('API hides notes on archived companions', async ({ world, browser }) =>
 		await page.context().close();
 	}
 });
+
+archived(
+	'owners add media on archived companions; caretakers get 404',
+	async ({ world, browser }) => {
+		test.slow();
+		const member = await login(world, browser, SEED.member);
+		const caretaker = await login(world, browser, SEED.caretaker);
+		try {
+			const base = world.server.baseURL;
+			const res = await member.request.post(
+				`${base}/api/companions/${JULIA}/notes/${N.juliaSitter.id}/media`,
+				{ headers: { Origin: base }, multipart: { file: pngUpload() } }
+			);
+			expect(res.ok()).toBe(true);
+			const { url } = await res.json();
+			expect(url).toContain(`/api/photos/notes/${JULIA}/${N.juliaSitter.id}/`);
+			expect((await member.request.get(base + url)).status()).toBe(200);
+			// Faye is assigned to Julia, but an archived companion hides its shared notes.
+			expect((await caretaker.request.get(base + url)).status()).toBe(404);
+		} finally {
+			await member.context().close();
+			await caretaker.context().close();
+		}
+	}
+);
 
 // Bearer calls are rate limited per IP per server process, so the API specs get
 // their own server instead of spending the shared worker server's budget.

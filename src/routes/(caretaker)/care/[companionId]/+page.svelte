@@ -5,6 +5,10 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import NoteContent from '$lib/components/notes/NoteContent.svelte';
+	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
+	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
+	import { noteMediaApi } from '$lib/mediaApi';
+	import type { MediaItem } from '$lib/media';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -52,6 +56,24 @@
 	// Avatar lightbox
 	let avatarLightboxOpen = $state(false);
 	let avatarUrl = $derived(companion.avatarPath ? `/api/avatars/${companion.id}` : null);
+
+	// One lightbox for the page (one keydown listener), loaded with the clicked
+	// note's media.
+	function noteUrlFor(noteId: string) {
+		const api = noteMediaApi(companion.id, noteId, locale);
+		return (item: MediaItem) => api.urlFor(item);
+	}
+	let lightboxItems = $state<MediaItem[]>([]);
+	let lightboxNoteId = $state('');
+	let lightboxIndex = $state(0);
+	let lightboxOpen = $state(false);
+	const lightboxUrlFor = $derived(noteUrlFor(lightboxNoteId));
+	function openNoteMedia(noteId: string, items: MediaItem[], index: number) {
+		lightboxNoteId = noteId;
+		lightboxItems = items;
+		lightboxIndex = index;
+		lightboxOpen = true;
+	}
 
 	function closeAvatarLightbox() {
 		avatarLightboxOpen = false;
@@ -521,13 +543,26 @@
 						<summary class="cursor-pointer break-words font-medium text-foreground"
 							>{note.title}</summary
 						>
-						<div class="mt-3">
+						<div class="mt-3 space-y-3">
 							<NoteContent {note} showTitle={false} />
+							{#if note.media.length > 0}
+								<MediaThumbs
+									items={note.media}
+									urlFor={noteUrlFor(note.id)}
+									onopen={(index) => openNoteMedia(note.id, note.media, index)}
+								/>
+							{/if}
 						</div>
 					</details>
 				{/each}
 			</div>
 		</section>
+		<MediaLightbox
+			items={lightboxItems}
+			bind:index={lightboxIndex}
+			bind:open={lightboxOpen}
+			urlFor={lightboxUrlFor}
+		/>
 	{/if}
 
 	<!-- 4c. Contacts (reference): vet + emergency prioritized, then household -->
