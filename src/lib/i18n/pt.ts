@@ -699,14 +699,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Tentar novamente',
 	'page.journal.signedOutStatus': 'Sessão terminada, não guardado',
 	'page.journal.signInToSave': 'Iniciar sessão',
-	'page.journal.day.mediaTitle': 'Fotos e vídeos',
-	'page.journal.day.addMedia': 'Adicionar conteúdo',
-	'page.journal.day.uploading': 'A enviar…',
-	'page.journal.day.dropMedia': 'Arraste fotos ou vídeos para aqui ou clique para enviar',
-	'page.journal.day.mediaTypes': 'Imagens (máx. {imgMax}MB) ou vídeos (máx. {vidMax}MB)',
-	'page.journal.day.noCaption': 'Sem legenda',
-	'page.journal.day.addCaption': 'Adicionar legenda…',
-	'page.journal.day.editCaption': 'Editar legenda',
 	'page.journal.day.activitiesTitle': 'Atividades',
 	'page.journal.day.logActivity': 'Registar atividade',
 	'page.journal.day.activityType': 'Tipo',
@@ -1128,9 +1120,20 @@ const messages: Record<keyof Messages, string> = {
 	'search.tipType': 'filtrar por tipo',
 	'aria.sigilAutocomplete': 'Sugestões de filtro',
 
-	// Immich picker
 	// Media (journal and notes)
 	'media.uploadFailed': 'Falha ao enviar. Tente novamente.',
+	'media.title': 'Fotos e vídeos',
+	'media.add': 'Adicionar conteúdo',
+	'media.uploading': 'A enviar…',
+	'media.drop': 'Arraste fotos ou vídeos para aqui ou clique para enviar',
+	'media.types': 'Imagens (máx. {imgMax}MB) ou vídeos (máx. {vidMax}MB)',
+	'media.noCaption': 'Sem legenda',
+	'media.addCaption': 'Adicionar legenda…',
+	'media.editCaption': 'Editar legenda',
+	'media.photoAlt': 'Foto',
+	'media.videoAlt': 'Vídeo',
+
+	// Immich picker
 	'immich.picker.title': 'Escolher do Immich',
 	'immich.picker.albumScoped': 'Mostrando itens do álbum configurado.',
 	'immich.picker.empty': 'Nenhum item encontrado no Immich.',

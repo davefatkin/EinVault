@@ -697,14 +697,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Riprova',
 	'page.journal.signedOutStatus': 'Disconnesso, non salvato',
 	'page.journal.signInToSave': 'Accedi',
-	'page.journal.day.mediaTitle': 'Foto e video',
-	'page.journal.day.addMedia': 'Aggiungi contenuti',
-	'page.journal.day.uploading': 'Caricamento…',
-	'page.journal.day.dropMedia': 'Trascina foto o video qui o clicca per caricare',
-	'page.journal.day.mediaTypes': 'Immagini (max {imgMax}MB) o video (max {vidMax}MB)',
-	'page.journal.day.noCaption': 'Nessuna didascalia',
-	'page.journal.day.addCaption': 'Aggiungi una didascalia…',
-	'page.journal.day.editCaption': 'Modifica didascalia',
 	'page.journal.day.activitiesTitle': 'Attività',
 	'page.journal.day.logActivity': 'Registra attività',
 	'page.journal.day.activityType': 'Tipo',
@@ -1128,9 +1120,20 @@ const messages: Record<keyof Messages, string> = {
 	'search.tipType': 'filtra per tipo',
 	'aria.sigilAutocomplete': 'Suggerimenti filtro',
 
-	// Immich picker
 	// Media (journal and notes)
 	'media.uploadFailed': 'Caricamento non riuscito. Riprova.',
+	'media.title': 'Foto e video',
+	'media.add': 'Aggiungi contenuti',
+	'media.uploading': 'Caricamento…',
+	'media.drop': 'Trascina foto o video qui o clicca per caricare',
+	'media.types': 'Immagini (max {imgMax}MB) o video (max {vidMax}MB)',
+	'media.noCaption': 'Nessuna didascalia',
+	'media.addCaption': 'Aggiungi una didascalia…',
+	'media.editCaption': 'Modifica didascalia',
+	'media.photoAlt': 'Foto',
+	'media.videoAlt': 'Video',
+
+	// Immich picker
 	'immich.picker.title': 'Scegli da Immich',
 	'immich.picker.albumScoped': "Mostrando elementi dall'album configurato.",
 	'immich.picker.empty': 'Nessun elemento trovato in Immich.',

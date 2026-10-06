@@ -701,14 +701,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Erneut versuchen',
 	'page.journal.signedOutStatus': 'Abgemeldet, nicht gespeichert',
 	'page.journal.signInToSave': 'Anmelden',
-	'page.journal.day.mediaTitle': 'Fotos & Videos',
-	'page.journal.day.addMedia': 'Medien hinzufügen',
-	'page.journal.day.uploading': 'Hochladen…',
-	'page.journal.day.dropMedia': 'Fotos oder Videos hierher ziehen oder klicken zum Hochladen',
-	'page.journal.day.mediaTypes': 'Bilder (max. {imgMax}MB) oder Videos (max. {vidMax}MB)',
-	'page.journal.day.noCaption': 'Keine Bildunterschrift',
-	'page.journal.day.addCaption': 'Bildunterschrift hinzufügen…',
-	'page.journal.day.editCaption': 'Bildunterschrift bearbeiten',
 	'page.journal.day.activitiesTitle': 'Aktivitäten',
 	'page.journal.day.logActivity': 'Aktivität erfassen',
 	'page.journal.day.activityType': 'Typ',
@@ -1133,9 +1125,20 @@ const messages: Record<keyof Messages, string> = {
 	'search.tipType': 'nach Typ filtern',
 	'aria.sigilAutocomplete': 'Filtervorschläge',
 
-	// Immich picker
 	// Media (journal and notes)
 	'media.uploadFailed': 'Hochladen fehlgeschlagen. Bitte erneut versuchen.',
+	'media.title': 'Fotos & Videos',
+	'media.add': 'Medien hinzufügen',
+	'media.uploading': 'Hochladen…',
+	'media.drop': 'Fotos oder Videos hierher ziehen oder klicken zum Hochladen',
+	'media.types': 'Bilder (max. {imgMax}MB) oder Videos (max. {vidMax}MB)',
+	'media.noCaption': 'Keine Bildunterschrift',
+	'media.addCaption': 'Bildunterschrift hinzufügen…',
+	'media.editCaption': 'Bildunterschrift bearbeiten',
+	'media.photoAlt': 'Foto',
+	'media.videoAlt': 'Video',
+
+	// Immich picker
 	'immich.picker.title': 'Aus Immich auswählen',
 	'immich.picker.albumScoped': 'Es werden Inhalte aus dem konfigurierten Album angezeigt.',
 	'immich.picker.empty': 'Keine Inhalte in Immich gefunden.',

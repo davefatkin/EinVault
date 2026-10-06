@@ -699,14 +699,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Reintentar',
 	'page.journal.signedOutStatus': 'Sesión cerrada, no guardado',
 	'page.journal.signInToSave': 'Iniciar sesión',
-	'page.journal.day.mediaTitle': 'Fotos y vídeos',
-	'page.journal.day.addMedia': 'Añadir contenido',
-	'page.journal.day.uploading': 'Subiendo…',
-	'page.journal.day.dropMedia': 'Arrastra fotos o vídeos aquí o haz clic para subir',
-	'page.journal.day.mediaTypes': 'Imágenes (máx. {imgMax}MB) o vídeos (máx. {vidMax}MB)',
-	'page.journal.day.noCaption': 'Sin pie de foto',
-	'page.journal.day.addCaption': 'Añadir un pie de foto…',
-	'page.journal.day.editCaption': 'Editar pie de foto',
 	'page.journal.day.activitiesTitle': 'Actividades',
 	'page.journal.day.logActivity': 'Registrar actividad',
 	'page.journal.day.activityType': 'Tipo',
@@ -1128,9 +1120,20 @@ const messages: Record<keyof Messages, string> = {
 	'search.tipType': 'filtrar por tipo',
 	'aria.sigilAutocomplete': 'Sugerencias de filtro',
 
-	// Immich picker
 	// Media (journal and notes)
 	'media.uploadFailed': 'Error al subir. Inténtalo de nuevo.',
+	'media.title': 'Fotos y vídeos',
+	'media.add': 'Añadir contenido',
+	'media.uploading': 'Subiendo…',
+	'media.drop': 'Arrastra fotos o vídeos aquí o haz clic para subir',
+	'media.types': 'Imágenes (máx. {imgMax}MB) o vídeos (máx. {vidMax}MB)',
+	'media.noCaption': 'Sin pie de foto',
+	'media.addCaption': 'Añadir un pie de foto…',
+	'media.editCaption': 'Editar pie de foto',
+	'media.photoAlt': 'Foto',
+	'media.videoAlt': 'Vídeo',
+
+	// Immich picker
 	'immich.picker.title': 'Elegir desde Immich',
 	'immich.picker.albumScoped': 'Mostrando elementos del álbum configurado.',
 	'immich.picker.empty': 'No se encontraron elementos en Immich.',

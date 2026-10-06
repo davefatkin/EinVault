@@ -6,23 +6,21 @@
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
+	import MediaManager from '$lib/components/MediaManager.svelte';
 	import { canModifyMedia } from '$lib/permissions';
-	import { isVideoMime, MEDIA_ACCEPT, journalMediaUrl, toMediaItem } from '$lib/media';
-	import JournalVideo from '$lib/components/JournalVideo.svelte';
+	import type { MediaItem } from '$lib/media';
+	import { journalMediaApi } from '$lib/mediaApi';
 	import { localDateISO } from '$lib/date';
 	import { postFormAction } from '$lib/postFormAction';
 	import { getContext } from 'svelte';
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import {
 		Trash2,
 		ChevronLeft,
 		ChevronRight,
 		Calendar,
-		ImageIcon,
 		Plus,
 		Pencil,
 		NotebookPen,
@@ -56,16 +54,7 @@
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();
 
-	// Shape of the transcode status poll response (GET .../photos).
-	type VideoStatus = {
-		id: string;
-		status: 'ready' | 'processing' | 'claimed' | 'failed';
-		filename: string;
-		mimeType: string;
-		posterKey: string | null;
-	};
-
-	let media = $state<typeof data.photos>([]);
+	let media = $state<MediaItem[]>([]);
 	let companion = $derived(data.companion);
 
 	let body = $state('');
@@ -77,18 +66,7 @@
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
-	let fileInputEl = $state<HTMLInputElement | undefined>(undefined);
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
-
-	let uploading = $state(false);
-	let uploadError = $state('');
-	let uploadErrorTimer: ReturnType<typeof setTimeout>;
-
-	function setUploadError(msg: string) {
-		uploadError = msg;
-		clearTimeout(uploadErrorTimer);
-		uploadErrorTimer = setTimeout(() => (uploadError = ''), 5000);
-	}
 
 	// Sync local state when data changes (navigation between dates)
 	$effect(() => {
@@ -148,109 +126,11 @@
 		saveTimer = setTimeout(saveNow, 800);
 	}
 
-	async function uploadMedia(file: File) {
-		if (media.length >= data.maxDailyMedia) {
-			setUploadError(t(locale, 'error.maxMediaExceeded', { max: data.maxDailyMedia }));
-			return;
-		}
-		uploadError = '';
-		clearTimeout(uploadErrorTimer);
-		uploading = true;
-		try {
-			const fd = new FormData();
-			fd.set('photo', file);
-			const res = await fetch(`/api/companions/${data.companion.id}/journal/${data.date}/photos`, {
-				method: 'POST',
-				body: fd
-			});
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({ message: 'Upload failed' }));
-				setUploadError(err.message ?? 'Upload failed');
-				return;
-			}
-			const { id, filename, provider, storageKey, status, posterKey, mimeType, loggedBy, logger } =
-				await res.json();
-			media = [
-				...media,
-				{
-					id,
-					filename,
-					provider,
-					storageKey,
-					entryId: data.entry?.id ?? '',
-					originalName: file.name,
-					mediaType: isVideoMime(file.type) ? 'video' : 'photo',
-					mimeType: mimeType ?? file.type,
-					sizeBytes: file.size,
-					notes: null,
-					status: status ?? 'ready',
-					originalKey: null,
-					posterKey: posterKey ?? null,
-					transcodeAttempts: 0,
-					createdAt: new Date(),
-					loggedBy,
-					logger
-				}
-			];
-		} catch {
-			setUploadError('Upload failed. Please try again.');
-		} finally {
-			uploading = false;
-		}
-	}
+	let mediaApi = $derived(journalMediaApi(data.companion.id, data.date, locale));
 
-	async function deleteMedia(photoId: string) {
-		const res = await fetch(
-			`/api/companions/${data.companion.id}/journal/${data.date}/photos?photoId=${photoId}`,
-			{ method: 'DELETE' }
-		);
-		if (res.ok) media = media.filter((p) => p.id !== photoId);
-	}
-
-	let editingMediaId = $state<string | null>(null);
-	let editingMediaNotes = $state('');
-
-	function startEditMediaNotes(item: (typeof media)[0]) {
-		editingMediaId = item.id;
-		editingMediaNotes = item.notes ?? '';
-	}
-
-	async function saveMediaNotes(photoId: string) {
-		const res = await fetch(
-			`/api/companions/${data.companion.id}/journal/${data.date}/photos?photoId=${photoId}`,
-			{
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ notes: editingMediaNotes })
-			}
-		);
-		if (res.ok) {
-			media = media.map((p) =>
-				p.id === photoId ? { ...p, notes: editingMediaNotes.trim() || null } : p
-			);
-			editingMediaId = null;
-		}
-	}
-
-	function handleFileInput(e: Event) {
-		const files = (e.target as HTMLInputElement).files;
-		if (!files?.length) return;
-		for (const file of Array.from(files)) {
-			if (media.length < data.maxDailyMedia) uploadMedia(file);
-		}
-		if (fileInputEl) fileInputEl.value = '';
-	}
-
-	let immichPickerOpen = $state(false);
-
-	// Lightbox state
+	// Lightbox state, bound into MediaManager so the deep link below can open it.
 	let lightboxOpen = $state(false);
 	let lightboxIndex = $state(0);
-
-	function openLightbox(index: number) {
-		lightboxIndex = index;
-		lightboxOpen = true;
-	}
 
 	// Deep-link: ?media={id} opens the lightbox at that item. Re-fires for a
 	// different id/date (the page component is reused across date navigations),
@@ -273,83 +153,6 @@
 			url.searchParams.delete('media');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});
-	});
-
-	async function pickFromImmich(assetId: string) {
-		try {
-			const res = await fetch(
-				`/api/companions/${data.companion.id}/journal/${data.date}/photos/from-immich`,
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ assetId })
-				}
-			);
-			if (!res.ok) {
-				const err = await res
-					.json()
-					.catch(() => ({ message: t(locale, 'immich.picker.pickFailed') }));
-				setUploadError(err.message ?? t(locale, 'immich.picker.pickFailed'));
-				return;
-			}
-			const item = await res.json();
-			media = [...media, item];
-			immichPickerOpen = false;
-		} catch {
-			setUploadError(t(locale, 'immich.picker.pickFailed'));
-		}
-	}
-
-	function mediaUrl(item: (typeof media)[0]) {
-		return `/api/photos/journal/${companion.id}/${data.date}/${item.filename}`;
-	}
-
-	function posterUrl(item: (typeof media)[0]) {
-		return item.posterKey ? `${mediaUrl(item)}?poster` : null;
-	}
-
-	// True while any video is still transcoding. Derived so the poll effect starts
-	// once when work appears and stops once when it finishes — not on every edit to
-	// the media array.
-	const hasPendingTranscode = $derived(
-		media.some((p) => p.status === 'processing' || p.status === 'claimed')
-	);
-
-	// Poll the transcode status and swap in the MP4 (filename/mimeType/poster
-	// change) without a full reload — invalidateAll would clobber the in-progress
-	// journal text. Patches only the transcode-relevant fields of changed rows.
-	$effect(() => {
-		if (!hasPendingTranscode) return;
-		let inFlight = false;
-		const interval = setInterval(async () => {
-			if (inFlight) return; // don't stack requests if one poll is slow
-			inFlight = true;
-			try {
-				const res = await fetch(`/api/companions/${companion.id}/journal/${data.date}/photos`);
-				if (!res.ok) return;
-				const { photos: statuses }: { photos: VideoStatus[] } = await res.json();
-				const byId = new Map(statuses.map((s) => [s.id, s]));
-				let changed = false;
-				const next = media.map((p) => {
-					const s = byId.get(p.id);
-					if (!s || s.status === p.status) return p;
-					changed = true;
-					return {
-						...p,
-						status: s.status,
-						filename: s.filename,
-						mimeType: s.mimeType,
-						posterKey: s.posterKey
-					};
-				});
-				if (changed) media = next;
-			} catch {
-				// transient; next tick retries
-			} finally {
-				inFlight = false;
-			}
-		}, 3000);
-		return () => clearInterval(interval);
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -729,178 +532,18 @@
 		</div>
 
 		<!-- Photos & Videos -->
-		<div class="space-y-2">
-			<div class="flex items-center justify-between">
-				<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-					{t(locale, 'page.journal.day.mediaTitle')}
-					<span class="ml-1 normal-case font-normal text-muted-foreground/70"
-						>{media.length}/{data.maxDailyMedia}</span
-					>
-				</p>
-				{#if media.length < data.maxDailyMedia}
-					<div class="flex flex-wrap items-center gap-2">
-						{#if data.immichEnabled}
-							<button
-								type="button"
-								class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-								onclick={() => (immichPickerOpen = true)}
-							>
-								<ImageIcon class="h-3.5 w-3.5" />
-								{t(locale, 'immich.picker.button')}
-							</button>
-						{/if}
-						<label
-							class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
-						>
-							{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
-									class="h-3.5 w-3.5"
-								/>
-								{t(locale, 'page.journal.day.addMedia')}{/if}
-							<input
-								bind:this={fileInputEl}
-								type="file"
-								name="photos"
-								accept={MEDIA_ACCEPT}
-								multiple
-								class="sr-only"
-								onchange={handleFileInput}
-								disabled={uploading}
-							/>
-						</label>
-					</div>
-				{/if}
-			</div>
-
-			{#if uploadError}
-				<div
-					role="alert"
-					class="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300"
-				>
-					{uploadError}
-				</div>
-			{/if}
-
-			{#if media.length === 0}
-				<label
-					class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
-				>
-					<ImageIcon class="h-8 w-8 mb-2 text-muted-foreground" />
-					<span class="text-sm text-muted-foreground"
-						>{t(locale, 'page.journal.day.dropMedia')}</span
-					>
-					<span class="text-xs mt-1 text-muted-foreground"
-						>{t(locale, 'page.journal.day.mediaTypes', {
-							imgMax: data.uploadMaxMb,
-							vidMax: data.videoMaxMb
-						})}</span
-					>
-					<input
-						type="file"
-						name="photos"
-						accept={MEDIA_ACCEPT}
-						multiple
-						class="sr-only"
-						onchange={handleFileInput}
-					/>
-				</label>
-			{:else}
-				<div class="space-y-3">
-					{#each media as item (item.id)}
-						<div class="flex gap-3 items-start">
-							<div
-								class="group relative shrink-0 {item.mediaType === 'video'
-									? 'w-40'
-									: 'w-24'} h-24 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
-							>
-								{#if item.mediaType === 'video'}
-									<JournalVideo
-										src={mediaUrl(item)}
-										poster={posterUrl(item)}
-										status={item.status}
-										downloadName={item.originalName}
-										label={item.originalName ?? undefined}
-										class="w-full h-full object-cover"
-										compact
-									/>
-								{:else}
-									<button
-										type="button"
-										onclick={() => openLightbox(media.indexOf(item))}
-										class="block w-full h-full focus:outline-none"
-										aria-label={item.originalName ?? t(locale, 'page.journal.photoAlt')}
-									>
-										<img
-											src={mediaUrl(item)}
-											alt={item.originalName ?? t(locale, 'page.journal.photoAlt')}
-											class="w-full h-full object-cover"
-											loading="lazy"
-										/>
-									</button>
-								{/if}
-								{#if canModifyMedia(data.user, item)}
-									<button
-										type="button"
-										onclick={() => openConfirm(() => deleteMedia(item.id))}
-										class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 text-xs
-										flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100
-										hover:bg-red-600 transition-all"
-										aria-label={t(locale, 'aria.deleteMedia')}
-									>
-										<Trash2 class="h-3 w-3" />
-									</button>
-								{/if}
-							</div>
-							<div class="flex-1 min-w-0">
-								{#if editingMediaId === item.id}
-									<MarkdownTextarea
-										value={editingMediaNotes}
-										oninput={(e) => (editingMediaNotes = (e.target as HTMLTextAreaElement).value)}
-										placeholder={t(locale, 'page.journal.day.addCaption')}
-										rows={3}
-										name="photo-notes"
-									/>
-									<div class="flex gap-2 mt-2">
-										<button
-											type="button"
-											onclick={() => saveMediaNotes(item.id)}
-											class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-2 py-1 text-xs font-medium shadow hover:bg-primary/90 transition-colors"
-											>{t(locale, 'common.save')}</button
-										>
-										<button
-											type="button"
-											onclick={() => (editingMediaId = null)}
-											class="inline-flex items-center justify-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-sm hover:bg-accent transition-colors"
-											>{t(locale, 'common.cancel')}</button
-										>
-									</div>
-								{:else}
-									{#if item.notes}
-										<p class="text-sm text-muted-foreground">
-											{stripMarkdown(item.notes)}
-										</p>
-									{:else}
-										<p class="text-sm italic text-muted-foreground">
-											{t(locale, 'page.journal.day.noCaption')}
-										</p>
-									{/if}
-									<div class="flex items-center gap-2 mt-1">
-										{#if canModifyMedia(data.user, item)}
-											<button
-												type="button"
-												onclick={() => startEditMediaNotes(item)}
-												class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-												>{t(locale, 'page.journal.day.editCaption')}</button
-											>
-										{/if}
-										<ByLine user={item.logger} variant="inline" />
-									</div>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
+		<MediaManager
+			bind:items={media}
+			api={mediaApi}
+			max={data.maxDailyMedia}
+			canModify={(item) => canModifyMedia(data.user, item)}
+			immichEnabled={data.immichEnabled ?? false}
+			uploadMaxMb={data.uploadMaxMb}
+			videoMaxMb={data.videoMaxMb}
+			title={t(locale, 'media.title')}
+			bind:lightboxOpen
+			bind:lightboxIndex
+		/>
 
 		<!-- Activities -->
 		<div class="space-y-2">
@@ -1252,13 +895,6 @@
 	<input type="hidden" name="id" value={deleteActivityId} />
 </form>
 
-<MediaLightbox
-	items={media.map(toMediaItem)}
-	urlFor={(item) => journalMediaUrl(data.companion.id, data.date, item)}
-	bind:open={lightboxOpen}
-	bind:index={lightboxIndex}
-/>
-
 <ConfirmDialog
 	open={confirmOpen}
 	message={t(locale, 'component.confirmDialog.cantBeUndone')}
@@ -1268,11 +904,3 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
-
-{#if data.immichEnabled}
-	<ImmichPicker
-		open={immichPickerOpen}
-		onpick={pickFromImmich}
-		onclose={() => (immichPickerOpen = false)}
-	/>
-{/if}

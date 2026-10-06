@@ -7,6 +7,21 @@ import type { UserRef } from '$lib/types';
 
 const PAGE_SIZE = 20;
 
+/**
+ * journal_photos columns that build a MediaItem (see toMediaItem). Loads that
+ * feed the browser select only these, so storage keys never leave the server.
+ */
+export const JOURNAL_MEDIA_ITEM_COLUMNS = {
+	id: true,
+	filename: true,
+	originalName: true,
+	mediaType: true,
+	notes: true,
+	status: true,
+	posterKey: true,
+	loggedBy: true
+} as const;
+
 export async function getEnrichedJournalEntries(
 	companionId: string,
 	opts?: { limit?: number; before?: string }

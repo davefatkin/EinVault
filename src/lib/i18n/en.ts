@@ -690,14 +690,6 @@ const messages = {
 	'page.journal.day.saveFailedRetry': 'Retry',
 	'page.journal.signedOutStatus': 'Signed out, not saved',
 	'page.journal.signInToSave': 'Sign in',
-	'page.journal.day.mediaTitle': 'Photos & Videos',
-	'page.journal.day.addMedia': 'Add Media',
-	'page.journal.day.uploading': 'Uploading…',
-	'page.journal.day.dropMedia': 'Drop photos or videos here or click to upload',
-	'page.journal.day.mediaTypes': 'Images (max {imgMax}MB) or videos (max {vidMax}MB)',
-	'page.journal.day.noCaption': 'No caption',
-	'page.journal.day.addCaption': 'Add a caption…',
-	'page.journal.day.editCaption': 'Edit Caption',
 	'page.journal.day.activitiesTitle': 'Activities',
 	'page.journal.day.logActivity': 'Log activity',
 	'page.journal.day.activityType': 'Type',
@@ -1111,9 +1103,20 @@ const messages = {
 	'search.tipType': 'filter by type',
 	'aria.sigilAutocomplete': 'Filter suggestions',
 
-	// Immich picker
 	// Media (journal and notes)
 	'media.uploadFailed': 'Upload failed. Please try again.',
+	'media.title': 'Photos & Videos',
+	'media.add': 'Add Media',
+	'media.uploading': 'Uploading…',
+	'media.drop': 'Drop photos or videos here or click to upload',
+	'media.types': 'Images (max {imgMax}MB) or videos (max {vidMax}MB)',
+	'media.noCaption': 'No caption',
+	'media.addCaption': 'Add a caption…',
+	'media.editCaption': 'Edit Caption',
+	'media.photoAlt': 'Photo',
+	'media.videoAlt': 'Video',
+
+	// Immich picker
 	'immich.picker.title': 'Pick from Immich',
 	'immich.picker.albumScoped': 'Showing assets from the configured album.',
 	'immich.picker.empty': 'No assets found in Immich.',
