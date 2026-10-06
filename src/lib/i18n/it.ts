@@ -1115,6 +1115,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Media (journal and notes)
 	'media.uploadFailed': 'Caricamento non riuscito. Riprova.',
+	'media.actionFailed': 'Qualcosa è andato storto. Riprova.',
 	'media.title': 'Foto e video',
 	'media.add': 'Aggiungi contenuti',
 	'media.uploading': 'Caricamento…',

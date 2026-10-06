@@ -1120,6 +1120,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Media (journal and notes)
 	'media.uploadFailed': 'Hochladen fehlgeschlagen. Bitte erneut versuchen.',
+	'media.actionFailed': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
 	'media.title': 'Fotos & Videos',
 	'media.add': 'Medien hinzufügen',
 	'media.uploading': 'Hochladen…',

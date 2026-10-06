@@ -151,7 +151,7 @@
 						poster={posterUrl(item)}
 						status={item.status}
 						downloadName={item.originalName}
-						label={item.originalName ?? undefined}
+						label={item.originalName ?? t(locale, 'media.videoAlt')}
 						autoplay
 						class="max-h-[78vh] w-full object-contain rounded-lg bg-black"
 					/>

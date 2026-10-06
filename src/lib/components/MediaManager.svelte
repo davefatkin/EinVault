@@ -67,6 +67,13 @@
 		return err instanceof Error && err.message ? err.message : fallback;
 	}
 
+	// Skip an item already present (page data may refresh mid-upload), which
+	// would otherwise trip the keyed each block.
+	function addItem(item: MediaItem) {
+		if (items.some((m) => m.id === item.id)) return;
+		items = [...items, item];
+	}
+
 	async function upload(file: File) {
 		if (items.length >= max) {
 			setUploadError(api.capMessage(max));
@@ -77,7 +84,7 @@
 		uploading = true;
 		try {
 			const item = await api.upload(file);
-			items = [...items, item];
+			addItem(item);
 		} catch (err) {
 			setUploadError(messageOf(err, t(locale, 'media.uploadFailed')));
 		} finally {
@@ -98,7 +105,7 @@
 	async function pickFromImmich(assetId: string) {
 		try {
 			const item = await api.importImmich(assetId);
-			items = [...items, item];
+			addItem(item);
 			immichPickerOpen = false;
 		} catch (err) {
 			setUploadError(messageOf(err, t(locale, 'immich.picker.pickFailed')));
@@ -118,8 +125,9 @@
 		try {
 			await api.remove(id);
 			items = items.filter((m) => m.id !== id);
-		} catch {
+		} catch (err) {
 			// Leave the item in place; a reload shows the true state.
+			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
 		}
 	}
 
@@ -131,8 +139,10 @@
 	async function saveCaption(id: string) {
 		try {
 			await api.setCaption(id, editingCaption);
-		} catch {
-			return; // keep the editor open so the text isn't lost
+		} catch (err) {
+			// Keep the editor open so the text isn't lost.
+			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
+			return;
 		}
 		const caption = editingCaption.trim() || null;
 		items = items.map((m) => (m.id === id ? { ...m, caption } : m));
@@ -263,7 +273,7 @@
 								poster={posterUrl(item)}
 								status={item.status}
 								downloadName={item.originalName}
-								label={item.originalName ?? undefined}
+								label={item.originalName ?? t(locale, 'media.videoAlt')}
 								class="w-full h-full object-cover"
 								compact
 							/>

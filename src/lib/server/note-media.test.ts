@@ -293,6 +293,38 @@ describe('captions and deletes', () => {
 	});
 });
 
+describe('deleteNoteMediaItem staleness', () => {
+	it('deletes the keys on the row at delete time, not the stale copy', async () => {
+		insertNoteMedia(row('w', N1, { filename: 'w.mov', storageKey: `notes/${C1}/${N1}/w.mov` }), 10);
+		const stale = (await getNoteMediaItem(N1, 'w'))!;
+		// A worker finishes the transcode between the read and the delete.
+		await db
+			.update(schema.noteMedia)
+			.set({
+				storageKey: `notes/${C1}/${N1}/w.mp4`,
+				originalKey: `notes/${C1}/${N1}/w.orig.mov`,
+				posterKey: `notes/${C1}/${N1}/w.poster.jpg`
+			})
+			.where(eq(schema.noteMedia.id, 'w'));
+		await deleteNoteMediaItem(stale);
+		expect(store.deletes.sort()).toEqual(
+			[
+				`notes/${C1}/${N1}/w.mp4`,
+				`notes/${C1}/${N1}/w.orig.mov`,
+				`notes/${C1}/${N1}/w.poster.jpg`
+			].sort()
+		);
+	});
+
+	it('deletes no blobs when the row is already gone', async () => {
+		insertNoteMedia(row('x', N1, { storageKey: `notes/${C1}/${N1}/x.jpg` }), 10);
+		const item = (await getNoteMediaItem(N1, 'x'))!;
+		await db.delete(schema.noteMedia).where(eq(schema.noteMedia.id, 'x'));
+		await deleteNoteMediaItem(item);
+		expect(store.deletes).toEqual([]);
+	});
+});
+
 describe('getNoteMediaView', () => {
 	it('returns one MediaItem with the logger, scoped to the note', async () => {
 		insertNoteMedia(row('a', N1, { caption: 'sit' }), 10);

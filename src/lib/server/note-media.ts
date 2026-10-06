@@ -190,6 +190,16 @@ export async function setNoteMediaCaption(mediaId: string, caption: string): Pro
 // Row first, then objects: the row is the source of truth, and an orphaned
 // object is recoverable while a row pointing at a deleted object is not.
 export async function deleteNoteMediaItem(item: NoteMedia): Promise<void> {
-	await db.delete(schema.noteMedia).where(eq(schema.noteMedia.id, item.id));
-	await deleteMediaBlobs([item], 'note-media');
+	// Blob keys come from the row as deleted: a worker may have marked it ready
+	// (new MP4 and poster) after the caller read it.
+	const deleted = await db
+		.delete(schema.noteMedia)
+		.where(eq(schema.noteMedia.id, item.id))
+		.returning({
+			provider: schema.noteMedia.provider,
+			storageKey: schema.noteMedia.storageKey,
+			originalKey: schema.noteMedia.originalKey,
+			posterKey: schema.noteMedia.posterKey
+		});
+	if (deleted.length > 0) await deleteMediaBlobs(deleted, 'note-media');
 }

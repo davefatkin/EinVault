@@ -1098,6 +1098,7 @@ const messages = {
 
 	// Media (journal and notes)
 	'media.uploadFailed': 'Upload failed. Please try again.',
+	'media.actionFailed': 'Something went wrong. Please try again.',
 	'media.title': 'Photos & Videos',
 	'media.add': 'Add Media',
 	'media.uploading': 'Uploading…',

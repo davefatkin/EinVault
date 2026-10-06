@@ -137,7 +137,7 @@ export const SEED = {
 			companionId: 'seed-comp-ein',
 			filename: 'seed-nmedia-ein-commands.jpg',
 			sourceAsset: 'ein-02.jpg',
-			caption: 'Spin, mid-turn.'
+			caption: 'Sit and stay, even at the shelter.'
 		},
 		einPrivate: {
 			id: 'seed-nmedia-ein-private',
