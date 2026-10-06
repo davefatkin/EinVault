@@ -197,6 +197,7 @@ const messages = {
 	'error.invalidFileType': 'Invalid file type',
 	'error.invalidGifFile': 'Invalid GIF file',
 	'error.maxMediaExceeded': 'Maximum {max} photos or videos per day',
+	'error.maxNoteMediaExceeded': 'Maximum {max} photos or videos per note',
 	'error.requestBodyTooLarge': 'Request body too large',
 	'error.maxDocumentsExceeded': 'Document limit reached (max {max} per companion)',
 

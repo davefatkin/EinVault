@@ -208,6 +208,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidFileType': 'Type de fichier invalide',
 	'error.invalidGifFile': 'Fichier GIF invalide',
 	'error.maxMediaExceeded': 'Maximum {max} photos ou vidéos par jour',
+	'error.maxNoteMediaExceeded': 'Maximum {max} photos ou vidéos par note',
 	'error.requestBodyTooLarge': 'Requête trop volumineuse',
 	'error.maxDocumentsExceeded': 'Limite de documents atteinte (max {max} par compagnon)',
 
