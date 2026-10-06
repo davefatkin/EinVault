@@ -1112,6 +1112,8 @@ const messages = {
 	'aria.sigilAutocomplete': 'Filter suggestions',
 
 	// Immich picker
+	// Media (journal and notes)
+	'media.uploadFailed': 'Upload failed. Please try again.',
 	'immich.picker.title': 'Pick from Immich',
 	'immich.picker.albumScoped': 'Showing assets from the configured album.',
 	'immich.picker.empty': 'No assets found in Immich.',

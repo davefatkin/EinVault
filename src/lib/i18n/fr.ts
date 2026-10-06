@@ -1135,6 +1135,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.sigilAutocomplete': 'Suggestions de filtre',
 
 	// Immich picker
+	// Media (journal and notes)
+	'media.uploadFailed': "Échec de l'envoi. Veuillez réessayer.",
 	'immich.picker.title': 'Choisir depuis Immich',
 	'immich.picker.albumScoped': "Affichage des éléments de l'album configuré.",
 	'immich.picker.empty': 'Aucun élément trouvé dans Immich.',

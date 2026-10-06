@@ -67,3 +67,11 @@ export function noteMediaUrl(
 ): string {
 	return `/api/photos/notes/${companionId}/${noteId}/${item.filename}`;
 }
+
+export function journalMediaUrl(
+	companionId: string,
+	date: string,
+	item: Pick<MediaItem, 'filename'>
+): string {
+	return `/api/photos/journal/${companionId}/${date}/${item.filename}`;
+}

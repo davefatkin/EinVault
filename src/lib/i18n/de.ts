@@ -1134,6 +1134,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.sigilAutocomplete': 'Filtervorschläge',
 
 	// Immich picker
+	// Media (journal and notes)
+	'media.uploadFailed': 'Hochladen fehlgeschlagen. Bitte erneut versuchen.',
 	'immich.picker.title': 'Aus Immich auswählen',
 	'immich.picker.albumScoped': 'Es werden Inhalte aus dem konfigurierten Album angezeigt.',
 	'immich.picker.empty': 'Keine Inhalte in Immich gefunden.',

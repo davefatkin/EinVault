@@ -8,7 +8,7 @@
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
 	import { canModifyMedia } from '$lib/permissions';
-	import { isVideoMime, MEDIA_ACCEPT } from '$lib/media';
+	import { isVideoMime, MEDIA_ACCEPT, journalMediaUrl, toMediaItem } from '$lib/media';
 	import JournalVideo from '$lib/components/JournalVideo.svelte';
 	import { localDateISO } from '$lib/date';
 	import { postFormAction } from '$lib/postFormAction';
@@ -1253,9 +1253,8 @@
 </form>
 
 <MediaLightbox
-	companionId={data.companion.id}
-	items={media}
-	date={data.date}
+	items={media.map(toMediaItem)}
+	urlFor={(item) => journalMediaUrl(data.companion.id, data.date, item)}
 	bind:open={lightboxOpen}
 	bind:index={lightboxIndex}
 />

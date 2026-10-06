@@ -5,42 +5,22 @@
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { renderMarkdown } from '$lib/markdown';
 	import { t, getLocale } from '$lib/i18n';
-	import type { UserRef } from '$lib/types';
+	import type { MediaItem } from '$lib/media';
 
 	const locale = getLocale();
 
-	type MediaItem = {
-		id: string;
-		filename: string;
-		originalName: string | null;
-		mediaType: 'photo' | 'video';
-		notes: string | null;
-		status: string;
-		posterKey: string | null;
-		logger: UserRef;
-		[key: string]: unknown;
-	};
-
 	interface Props {
-		/** The companion ID, used to build /api/photos/journal/:companionId/:date/:filename URLs. */
-		companionId: string;
 		/** The media items to page through. */
 		items: MediaItem[];
-		/** Active item index — caller can set the start index. */
+		/** Builds the /api/photos/... URL for an item (journal or note). */
+		urlFor: (item: MediaItem) => string;
+		/** Active item index. The caller can set the start index. */
 		index?: number;
-		/** Entry date (YYYY-MM-DD), needed to build media URLs. */
-		date: string;
 		/** Whether the lightbox is visible. */
 		open?: boolean;
 	}
 
-	let {
-		companionId,
-		items = [],
-		index = $bindable(0),
-		date,
-		open = $bindable(false)
-	}: Props = $props();
+	let { items = [], urlFor, index = $bindable(0), open = $bindable(false) }: Props = $props();
 
 	let lightboxEl = $state<HTMLElement | null>(null);
 	let triggerEl = $state<HTMLElement | null>(null);
@@ -57,12 +37,8 @@
 		}
 	});
 
-	function mediaUrl(it: MediaItem) {
-		return `/api/photos/journal/${companionId}/${date}/${it.filename}`;
-	}
-
 	function posterUrl(it: MediaItem) {
-		return it.posterKey ? `${mediaUrl(it)}?poster` : null;
+		return it.posterKey ? `${urlFor(it)}?poster` : null;
 	}
 
 	function close() {
@@ -150,7 +126,7 @@
 				{/if}
 				<div class="flex items-center gap-1">
 					<a
-						href={mediaUrl(item)}
+						href={urlFor(item)}
 						download={item.originalName ?? item.filename}
 						class="flex items-center justify-center w-9 h-9 rounded-full bg-black/55 text-white hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
 						aria-label={t(locale, 'aria.downloadMedia')}
@@ -171,7 +147,7 @@
 			<div class="relative">
 				{#if item.mediaType === 'video'}
 					<JournalVideo
-						src={mediaUrl(item)}
+						src={urlFor(item)}
 						poster={posterUrl(item)}
 						status={item.status}
 						downloadName={item.originalName}
@@ -181,7 +157,7 @@
 					/>
 				{:else}
 					<img
-						src={mediaUrl(item)}
+						src={urlFor(item)}
 						alt={item.originalName ?? ''}
 						class="max-h-[78vh] w-full object-contain rounded-lg"
 					/>
@@ -214,9 +190,10 @@
 				{/if}
 			</div>
 
-			{#if item.notes}
+			{#if item.caption}
+				<!-- renderMarkdown sanitizes with DOMPurify; captions on shared notes reach caretakers. -->
 				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm text-white/90">
-					{@html renderMarkdown(item.notes)}
+					{@html renderMarkdown(item.caption)}
 				</div>
 			{/if}
 			{#if item.logger}
