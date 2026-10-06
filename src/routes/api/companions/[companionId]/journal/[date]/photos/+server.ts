@@ -7,6 +7,7 @@ import { generateId } from '$lib/server/utils';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
 import { MAX_DAILY_MEDIA } from '$lib/server/env';
 import { prepareMediaUpload } from '$lib/server/storage/media-upload';
+import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
 import { kickWorker } from '$lib/server/video/worker';
 import { canModifyMedia } from '$lib/permissions';
 import { assertCanWriteJournalMedia } from '$lib/server/permissions';
@@ -215,17 +216,15 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	// of truth, so a transient backend failure on one key must not abort the
 	// others or leave an undeletable row (an orphaned object is recoverable; a
 	// stuck row is not).
-	const backend = getStorage(item.provider);
-	const key = item.storageKey ?? journalKey(params.companionId, params.date, item.filename);
-	const keys = [key, item.originalKey, item.posterKey].filter(
-		(k): k is string => typeof k === 'string' && k.length > 0
+	await deleteMediaBlobs(
+		[
+			{
+				...item,
+				storageKey: item.storageKey ?? journalKey(params.companionId, params.date, item.filename)
+			}
+		],
+		'journal-media'
 	);
-	const results = await Promise.allSettled(keys.map((k) => backend.delete(k)));
-	results.forEach((r, i) => {
-		if (r.status === 'rejected') {
-			console.warn(`[journal-media] failed to delete object ${keys[i]}:`, r.reason);
-		}
-	});
 
 	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
 

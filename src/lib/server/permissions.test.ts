@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { db, schema } from '$lib/server/db';
 import { localDateISO } from '$lib/date';
-import { assertCanWriteJournalMedia } from './permissions';
+import { assertCanWriteJournalMedia, assertCanWriteNoteMedia } from './permissions';
 
 type Locals = Parameters<typeof assertCanWriteJournalMedia>[0];
 type Role = 'admin' | 'member' | 'caretaker';
@@ -104,5 +104,58 @@ describe('assertCanWriteJournalMedia', () => {
 	it('403 for a caretaker on an archived companion', async () => {
 		const ct = locals({ id: 'ct-on', role: 'caretaker' });
 		expect(await statusOf(assertCanWriteJournalMedia(ct, 'comp-archived', today))).toBe(403);
+	});
+});
+
+describe('assertCanWriteNoteMedia', () => {
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: 'nm-comp', name: 'NoteComp' },
+			{ id: 'nm-archived', name: 'NoteOld', isActive: false },
+			{ id: 'nm-other', name: 'Other' }
+		] as (typeof schema.companions.$inferInsert)[]);
+		await db.insert(schema.notes).values([
+			{ id: 'nm-note', companionId: 'nm-comp', title: 'Cmds' },
+			{ id: 'nm-note-arch', companionId: 'nm-archived', title: 'Old' }
+		]);
+		// ct-on (assigned + on shift from the journal block above) gets an
+		// assignment here too, so the 403 comes from the role, not the assignment.
+		await db.insert(schema.companionCaretakers).values({ companionId: 'nm-comp', userId: 'ct-on' });
+	});
+
+	const noteStatus = (user: { id: string; role: Role } | null, cid: string, nid: string) =>
+		statusOf(assertCanWriteNoteMedia(locals(user), cid, nid).then(() => undefined));
+
+	it('401 for anonymous', async () => {
+		expect(await noteStatus(null, 'nm-comp', 'nm-note')).toBe(401);
+	});
+
+	it('403 for caretakers, even assigned and on shift', async () => {
+		expect(await noteStatus({ id: 'ct-on', role: 'caretaker' }, 'nm-comp', 'nm-note')).toBe(403);
+	});
+
+	it('allows members and admins, including on archived companions', async () => {
+		for (const user of [
+			{ id: 'adm', role: 'admin' as const },
+			{ id: 'mem', role: 'member' as const }
+		]) {
+			expect(await noteStatus(user, 'nm-comp', 'nm-note')).toBe('ok');
+			expect(await noteStatus(user, 'nm-archived', 'nm-note-arch')).toBe('ok');
+		}
+	});
+
+	it('404 when the note is missing or belongs to another companion', async () => {
+		const mem = { id: 'mem', role: 'member' as const };
+		expect(await noteStatus(mem, 'nm-comp', 'missing')).toBe(404);
+		expect(await noteStatus(mem, 'nm-other', 'nm-note')).toBe(404);
+	});
+
+	it('returns the note', async () => {
+		const res = await assertCanWriteNoteMedia(
+			locals({ id: 'mem', role: 'member' }),
+			'nm-comp',
+			'nm-note'
+		);
+		expect(res.note).toEqual({ id: 'nm-note', companionId: 'nm-comp' });
 	});
 });
