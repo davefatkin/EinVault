@@ -127,6 +127,7 @@ test.describe('notes (owner)', () => {
 		await asAdmin.goto(`/${EIN}/notes`);
 		const withMedia = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
 		await expect(withMedia.getByTestId('note-media-count')).toHaveText('1');
+		await expect(withMedia.getByText('Photos and videos: 1', { exact: true })).toBeAttached();
 		const without = asAdmin.locator('article').filter({ hasText: N.einSitter.title });
 		await expect(without).toBeVisible();
 		await expect(without.getByTestId('note-media-count')).toHaveCount(0);
@@ -542,6 +543,7 @@ test.describe('notes (caretaker)', () => {
 			.locator('details > summary')
 			.filter({ hasText: N.einCommands.title });
 		await expect(summary.getByTestId('note-media-count')).toHaveText('1');
+		await expect(summary.getByText('Photos and videos: 1', { exact: true })).toBeAttached();
 	});
 
 	test('sees shared notes, not private ones', async ({ asCaretaker }) => {

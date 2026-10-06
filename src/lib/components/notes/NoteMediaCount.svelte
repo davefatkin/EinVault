@@ -8,14 +8,17 @@
 </script>
 
 {#if count > 0}
-	<span
-		data-testid="note-media-count"
-		role="img"
-		class="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground {className}"
-		aria-label={label}
-		title={label}
-	>
-		<Images class="size-3.5" aria-hidden="true" />
-		{count}
+	<span class="inline-flex items-center text-xs font-normal text-muted-foreground {className}">
+		<!-- Visual icon and number with a hover tooltip; screen readers get the sr-only label instead. -->
+		<span
+			data-testid="note-media-count"
+			class="inline-flex items-center gap-1"
+			title={label}
+			aria-hidden="true"
+		>
+			<Images class="size-3.5" />
+			{count}
+		</span>
+		<span class="sr-only">{label}</span>
 	</span>
 {/if}
