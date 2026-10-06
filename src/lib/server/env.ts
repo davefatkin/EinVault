@@ -51,6 +51,9 @@ export const VIDEO_MAX_MB = envInt(env.VIDEO_MAX_MB, 100);
 // still honored as a fallback; logDeprecatedEnvWarnings() warns about it at boot.
 export const MAX_DAILY_MEDIA = envInt(env.MAX_DAILY_MEDIA ?? env.MAX_DAILY_PHOTOS, 5);
 
+// Per-note cap on attached photos and videos combined (issue #321).
+export const MAX_NOTE_MEDIA = envInt(env.MAX_NOTE_MEDIA, 10);
+
 export function logDeprecatedEnvWarnings(): void {
 	if (env.MAX_DAILY_PHOTOS !== undefined) {
 		console.warn(

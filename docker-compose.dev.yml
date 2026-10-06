@@ -35,6 +35,8 @@ services:
       VIDEO_MAX_MB: ${VIDEO_MAX_MB:-100}
       # Maximum journal photos and videos (combined) per companion per day.
       MAX_DAILY_MEDIA: ${MAX_DAILY_MEDIA:-5}
+      # Maximum photos and videos (combined) attached to a single note.
+      MAX_NOTE_MEDIA: ${MAX_NOTE_MEDIA:-10}
       # Maximum documents (uploads and Paperless references) per companion.
       MAX_DOCUMENTS_PER_COMPANION: ${MAX_DOCUMENTS_PER_COMPANION:-200}
       # Default undo window (seconds) for dismissing a Reminder. 0 disables it.

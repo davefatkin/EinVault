@@ -115,6 +115,7 @@ Everything else in the compose file can be edited directly:
 | `UPLOAD_MAX_MB`               | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.       |
 | `VIDEO_MAX_MB`                | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                           |
 | `MAX_DAILY_MEDIA`             | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
+| `MAX_NOTE_MEDIA`              | `10`                | Maximum number of photos and videos (combined) attached to a single note.                                                                                  |
 | `MAX_DOCUMENTS_PER_COMPANION` | `200`               | Maximum number of documents (uploads and Paperless references combined) stored per companion.                                                              |
 | `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
 | `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
