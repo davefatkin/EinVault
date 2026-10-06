@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, type RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { t, type Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
@@ -14,8 +14,7 @@ export type ResolvedMedia = {
 	isPoster: boolean;
 };
 
-// eslint-disable-next-line no-undef -- App is the ambient namespace from app.d.ts
-export type MediaViewer = Pick<NonNullable<App.Locals['user']>, 'id' | 'role'>;
+export type MediaViewer = Pick<NonNullable<RequestEvent['locals']['user']>, 'id' | 'role'>;
 
 type StoredRow = {
 	provider: StorageProvider;
@@ -92,4 +91,37 @@ export async function resolveJournalMedia(
 	}
 
 	return pickObject(photo, segments.join('/'), wantPoster, locale);
+}
+
+// URL shape: notes/{companionId}/{noteId}/{filename}
+// Members and admins can read any note's media. Caretakers follow the care
+// page's rule for shared notes: assigned, companion active, note shared; shift
+// doesn't matter. Unassigned is 403 (matching journal); an unshared note or an
+// archived companion is 404 so a caretaker can't confirm a private note exists.
+export async function resolveNoteMedia(
+	segments: string[],
+	user: MediaViewer,
+	locale: Locale,
+	wantPoster: boolean
+): Promise<ResolvedMedia> {
+	if (segments.length !== 4) notFound(locale);
+	const [, urlCompanionId, urlNoteId, filename] = segments;
+
+	const item = await db.query.noteMedia.findFirst({
+		where: and(eq(schema.noteMedia.noteId, urlNoteId), eq(schema.noteMedia.filename, filename)),
+		with: {
+			note: {
+				columns: { companionId: true, sharedWithCaretakers: true },
+				with: { companion: { columns: { isActive: true } } }
+			}
+		}
+	});
+	if (!item || !item.note || item.note.companionId !== urlCompanionId) notFound(locale);
+
+	if (user.role === 'caretaker') {
+		if (!(await isAssigned(urlCompanionId, user.id))) error(403, t(locale, 'error.forbidden'));
+		if (!item.note.sharedWithCaretakers || !item.note.companion?.isActive) notFound(locale);
+	}
+
+	return pickObject(item, segments.join('/'), wantPoster, locale);
 }
