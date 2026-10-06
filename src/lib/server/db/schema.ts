@@ -392,6 +392,47 @@ export const noteTags = sqliteTable(
 	(t) => [primaryKey({ columns: [t.noteId, t.tag] }), index('note_tag_idx').on(t.tag)]
 );
 
+// Photos and videos attached to a note (issue #321). Mirrors journal_photos,
+// with `caption` in place of journal's `notes` column.
+export const noteMedia = sqliteTable(
+	'note_media',
+	{
+		id: text('id').primaryKey(),
+		noteId: text('note_id')
+			.notNull()
+			.references(() => notes.id, { onDelete: 'cascade' }),
+		filename: text('filename').notNull(),
+		provider: text('provider', { enum: ['local', 's3', 'immich'] })
+			.notNull()
+			.default('local'),
+		storageKey: text('storage_key'),
+		originalName: text('original_name'),
+		mediaType: text('media_type', { enum: ['photo', 'video'] })
+			.notNull()
+			.default('photo'),
+		mimeType: text('mime_type').notNull(),
+		sizeBytes: integer('size_bytes').notNull(),
+		caption: text('caption'),
+		// Same transcode lifecycle as journal_photos.status.
+		status: text('status', { enum: ['ready', 'processing', 'claimed', 'failed'] })
+			.notNull()
+			.default('ready'),
+		// Kept source video (VIDEO_KEEP_ORIGINAL=true). Never served to clients.
+		originalKey: text('original_key'),
+		posterKey: text('poster_key'),
+		transcodeAttempts: integer('transcode_attempts').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [
+		index('note_media_note_idx').on(t.noteId, t.createdAt),
+		// The video worker scans for queued jobs by status.
+		index('note_media_status_idx').on(t.status)
+	]
+);
+
 export const weightEntries = sqliteTable(
 	'weight_entries',
 	{
@@ -638,6 +679,7 @@ export type HealthEvent = typeof healthEvents.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type NoteTag = typeof noteTags.$inferSelect;
+export type NoteMedia = typeof noteMedia.$inferSelect;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
@@ -671,6 +713,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 	loggedJournalEntries: many(journalEntries, { relationName: 'journalLogger' }),
 	updatedJournalEntries: many(journalEntries, { relationName: 'journalUpdater' }),
 	loggedJournalPhotos: many(journalPhotos),
+	loggedNoteMedia: many(noteMedia),
 	loggedDailyEvents: many(dailyEvents),
 	loggedHealthEvents: many(healthEvents),
 	loggedWeightEntries: many(weightEntries),
@@ -761,6 +804,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export const notesRelations = relations(notes, ({ one, many }) => ({
 	companion: one(companions, { fields: [notes.companionId], references: [companions.id] }),
 	tags: many(noteTags),
+	media: many(noteMedia),
 	logger: one(users, {
 		fields: [notes.loggedBy],
 		references: [users.id],
@@ -771,6 +815,11 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
 		references: [users.id],
 		relationName: 'noteUpdater'
 	})
+}));
+
+export const noteMediaRelations = relations(noteMedia, ({ one }) => ({
+	note: one(notes, { fields: [noteMedia.noteId], references: [notes.id] }),
+	logger: one(users, { fields: [noteMedia.loggedBy], references: [users.id] })
 }));
 
 export const noteTagsRelations = relations(noteTags, ({ one }) => ({
