@@ -4,6 +4,7 @@ import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
 import type { Mood } from '$lib/mood';
 import type { UserRef } from '$lib/types';
+import { toMediaItem, type MediaItem } from '$lib/media';
 
 const PAGE_SIZE = 20;
 
@@ -75,10 +76,7 @@ export async function getEnrichedJournalEntries(
 	type EventWithUserRef = typeof schema.dailyEvents.$inferSelect & {
 		logger: UserRef;
 	};
-	type MediaWithUserRef = typeof schema.journalPhotos.$inferSelect & {
-		logger: UserRef;
-	};
-	let mediaByEntry = new Map<string, MediaWithUserRef[]>();
+	let mediaByEntry = new Map<string, MediaItem[]>();
 	let eventsByDate = new Map<string, EventWithUserRef[]>();
 
 	if (allDates.length > 0) {
@@ -94,6 +92,8 @@ export async function getEnrichedJournalEntries(
 			db.query.journalPhotos.findMany({
 				where: inArray(schema.journalPhotos.entryId, entryIds),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
+				// entryId only groups rows below; the browser gets MediaItem fields.
+				columns: { ...JOURNAL_MEDIA_ITEM_COLUMNS, entryId: true },
 				with: { logger: { columns: { displayName: true } } }
 			}),
 			db.query.dailyEvents.findMany({
@@ -109,7 +109,7 @@ export async function getEnrichedJournalEntries(
 
 		for (const item of allMedia) {
 			if (!mediaByEntry.has(item.entryId)) mediaByEntry.set(item.entryId, []);
-			mediaByEntry.get(item.entryId)!.push(item);
+			mediaByEntry.get(item.entryId)!.push(toMediaItem(item));
 		}
 		for (const event of allEvents) {
 			const date = localDateISO(new Date(event.loggedAt));

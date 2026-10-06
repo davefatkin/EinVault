@@ -5,19 +5,18 @@
 	import { Pencil, NotebookPen } from '@lucide/svelte';
 	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
 	import { t, getLocale } from '$lib/i18n';
-	import type { JournalEntry, JournalPhoto, DailyEvent } from '$server/db/schema';
+	import type { JournalEntry, DailyEvent } from '$server/db/schema';
 	import type { UserRef } from '$lib/types';
 	import type { Species } from '$lib/activityTypes';
 	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
-	import { journalMediaUrl, toMediaItem, type MediaItem } from '$lib/media';
+	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
-	type Photo = JournalPhoto & { logger: UserRef };
 	type Activity = DailyEvent & { logger: UserRef };
 
 	type Entry = Pick<JournalEntry, 'date' | 'mood' | 'body' | 'loggedBy' | 'updatedBy'> & {
 		logger: UserRef | null;
 		updater: { displayName: string } | null;
-		photos: Photo[];
+		photos: MediaItem[];
 		events: Activity[];
 	};
 
@@ -36,9 +35,6 @@
 
 	const locale = getLocale();
 	let isToday = $derived(entry.date === today);
-
-	// Journal rows (initial load and loadMore) carry the caption as `notes`.
-	let mediaItems = $derived(entry.photos.map(toMediaItem));
 
 	function dayNum(d: string) {
 		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric' });
@@ -103,12 +99,12 @@
 			{/if}
 		</div>
 
-		{#if mediaItems.length > 0}
+		{#if entry.photos.length > 0}
 			<div class="mt-3">
 				<MediaThumbs
-					items={mediaItems}
+					items={entry.photos}
 					urlFor={(item) => journalMediaUrl(companionId, entry.date, item)}
-					onopen={(index) => onOpenLightbox(mediaItems, entry.date, index)}
+					onopen={(index) => onOpenLightbox(entry.photos, entry.date, index)}
 					max={4}
 				/>
 			</div>
