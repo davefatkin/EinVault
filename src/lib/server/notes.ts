@@ -3,6 +3,9 @@ import { db, schema } from '$lib/server/db';
 import type { Note } from '$lib/server/db/schema';
 import { generateId } from '$lib/server/utils';
 import type { NewNote, NotePatch } from '$lib/notes';
+import type { MediaItem } from '$lib/media';
+import { listMediaForNotes } from '$lib/server/note-media';
+import { deleteMediaBlobs, type StoredMediaRef } from '$lib/server/storage/media-blobs';
 
 // Companion notes (issue #310). Pure data access: callers (form actions, the
 // Bearer API) do the role and companion checks.
@@ -166,12 +169,33 @@ export async function setPinned(id: string, pinned: boolean): Promise<boolean> {
 	return rows.length > 0;
 }
 
+// Reading the media keys and deleting the note share one immediate
+// transaction, so an upload can't commit a media row between the read and the
+// cascade (its object would never be cleaned up). Objects go after commit.
 export async function deleteNote(id: string): Promise<boolean> {
-	const rows = await db
-		.delete(schema.notes)
-		.where(eq(schema.notes.id, id))
-		.returning({ id: schema.notes.id });
-	return rows.length > 0;
+	const { deleted, media } = db.transaction(
+		(tx): { deleted: boolean; media: StoredMediaRef[] } => {
+			const media = tx
+				.select({
+					provider: schema.noteMedia.provider,
+					storageKey: schema.noteMedia.storageKey,
+					originalKey: schema.noteMedia.originalKey,
+					posterKey: schema.noteMedia.posterKey
+				})
+				.from(schema.noteMedia)
+				.where(eq(schema.noteMedia.noteId, id))
+				.all();
+			const rows = tx
+				.delete(schema.notes)
+				.where(eq(schema.notes.id, id))
+				.returning({ id: schema.notes.id })
+				.all();
+			return { deleted: rows.length > 0, media };
+		},
+		{ behavior: 'immediate' }
+	);
+	if (media.length > 0) await deleteMediaBlobs(media, 'note-media');
+	return deleted;
 }
 
 export async function listTags(companionId?: string): Promise<{ tag: string; count: number }[]> {
@@ -192,7 +216,9 @@ export async function listTags(companionId?: string): Promise<{ tag: string; cou
 		.orderBy(asc(schema.noteTags.tag));
 }
 
-export async function listSharedNotes(companionId: string): Promise<NoteWithTags[]> {
+export type SharedNote = NoteWithTags & { media: MediaItem[] };
+
+export async function listSharedNotes(companionId: string): Promise<SharedNote[]> {
 	const rows = await db.query.notes.findMany({
 		where: and(
 			eq(schema.notes.companionId, companionId),
@@ -200,7 +226,9 @@ export async function listSharedNotes(companionId: string): Promise<NoteWithTags
 		),
 		orderBy: NOTE_ORDER
 	});
-	return attachTags(rows);
+	const withTags = await attachTags(rows);
+	const media = await listMediaForNotes(withTags.map((n) => n.id));
+	return withTags.map((n) => ({ ...n, media: media.get(n.id) ?? [] }));
 }
 
 // Backs the deprecated Companion.notesForSitter API field: each companion's

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import {
@@ -13,6 +13,30 @@ import {
 	sharedNotesMarkdown
 } from './notes';
 import type { NewNote } from '$lib/notes';
+
+// Note deletion hands the note's media objects to deleteMediaBlobs; record the
+// call instead of touching real storage.
+vi.mock('$lib/server/storage/media-blobs', () => ({
+	deleteMediaBlobs: vi.fn(async () => {})
+}));
+const { deleteMediaBlobs } = await import('$lib/server/storage/media-blobs');
+
+async function addMedia(
+	noteId: string,
+	id: string,
+	extra: Partial<typeof schema.noteMedia.$inferInsert> = {}
+) {
+	await db.insert(schema.noteMedia).values({
+		id,
+		noteId,
+		filename: `${id}.jpg`,
+		storageKey: `notes/${C1}/${noteId}/${id}.jpg`,
+		mimeType: 'image/jpeg',
+		sizeBytes: 1,
+		loggedBy: U1,
+		...extra
+	});
+}
 
 const C1 = 'c-notes-1';
 const C2 = 'c-notes-2';
@@ -122,12 +146,53 @@ describe('setPinned', () => {
 });
 
 describe('deleteNote', () => {
+	beforeEach(() => vi.mocked(deleteMediaBlobs).mockClear());
+
 	it('deletes the note and its tags', async () => {
 		const id = await createNote(C1, note({ title: 'A', tags: ['gone'] }), U1);
 		expect(await deleteNote(id)).toBe(true);
 		expect(await getNote(id)).toBeNull();
 		expect(await listTags()).toEqual([]);
 		expect(await deleteNote(id)).toBe(false);
+		expect(deleteMediaBlobs).not.toHaveBeenCalled();
+	});
+
+	it('removes media rows and hands every stored object to deleteMediaBlobs', async () => {
+		const id = await createNote(C1, note({ title: 'A' }), U1);
+		await addMedia(id, 'p1');
+		await addMedia(id, 'v1', {
+			filename: 'v1.mp4',
+			storageKey: `notes/${C1}/${id}/v1.mp4`,
+			originalKey: `notes/${C1}/${id}/v1.orig.mov`,
+			posterKey: `notes/${C1}/${id}/v1.poster.jpg`,
+			mediaType: 'video',
+			mimeType: 'video/mp4'
+		});
+		await addMedia(id, 'i1', { provider: 'immich', storageKey: 'immich:abc' });
+
+		expect(await deleteNote(id)).toBe(true);
+		expect(await db.query.noteMedia.findMany()).toEqual([]);
+		expect(deleteMediaBlobs).toHaveBeenCalledTimes(1);
+		const [rows, tag] = vi.mocked(deleteMediaBlobs).mock.calls[0];
+		expect(tag).toBe('note-media');
+		expect(rows).toEqual(
+			expect.arrayContaining([
+				{
+					provider: 'local',
+					storageKey: `notes/${C1}/${id}/p1.jpg`,
+					originalKey: null,
+					posterKey: null
+				},
+				{
+					provider: 'local',
+					storageKey: `notes/${C1}/${id}/v1.mp4`,
+					originalKey: `notes/${C1}/${id}/v1.orig.mov`,
+					posterKey: `notes/${C1}/${id}/v1.poster.jpg`
+				},
+				{ provider: 'immich', storageKey: 'immich:abc', originalKey: null, posterKey: null }
+			])
+		);
+		expect(rows).toHaveLength(3);
 	});
 });
 
@@ -194,5 +259,23 @@ describe('shared notes', () => {
 		expect(md.get(C1)).toBe('## Doors\n\nKeep the gate shut.\n\n## Feeding\n\nTwice a day.');
 		expect(md.has(C2)).toBe(false);
 		expect(await sharedNotesMarkdown([])).toEqual(new Map());
+	});
+
+	it('attaches each shared note media in display order, MediaItem fields only', async () => {
+		const shared = await createNote(C1, note({ title: 'S', sharedWithCaretakers: true }), U1);
+		const other = await createNote(C1, note({ title: 'T', sharedWithCaretakers: true }), U1);
+		const priv = await createNote(C1, note({ title: 'P' }), U1);
+		await addMedia(shared, 'm-b', { createdAt: new Date(2_000_000) });
+		await addMedia(shared, 'm-a', { createdAt: new Date(1_000_000), caption: 'sit' });
+		await addMedia(priv, 'm-p');
+
+		const list = await listSharedNotes(C1);
+		const s = list.find((n) => n.id === shared)!;
+		expect(s.media.map((m) => m.id)).toEqual(['m-a', 'm-b']);
+		expect(s.media[0]).toMatchObject({ caption: 'sit', logger: { displayName: 'Jet' } });
+		expect(s.media[0]).not.toHaveProperty('storageKey');
+		expect(s.media[0]).not.toHaveProperty('provider');
+		expect(list.find((n) => n.id === other)!.media).toEqual([]);
+		expect(list.some((n) => n.id === priv)).toBe(false);
 	});
 });
