@@ -41,6 +41,18 @@ export async function listNoteMedia(noteId: string): Promise<MediaItem[]> {
 	return rows.map(toMediaItem);
 }
 
+export async function countMediaForNotes(noteIds: string[]): Promise<Map<string, number>> {
+	const counts = new Map<string, number>();
+	if (noteIds.length === 0) return counts;
+	const rows = await db
+		.select({ noteId: schema.noteMedia.noteId, n: count() })
+		.from(schema.noteMedia)
+		.where(inArray(schema.noteMedia.noteId, noteIds))
+		.groupBy(schema.noteMedia.noteId);
+	for (const r of rows) counts.set(r.noteId, r.n);
+	return counts;
+}
+
 export async function listMediaForNotes(noteIds: string[]): Promise<Map<string, MediaItem[]>> {
 	const byNote = new Map<string, MediaItem[]>();
 	if (noteIds.length === 0) return byNote;

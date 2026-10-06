@@ -123,6 +123,15 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByRole('link', { name: 'E2E Favorite foods' })).toHaveCount(0);
 	});
 
+	test('list cards show a media count only for notes with media', async ({ asAdmin }) => {
+		await asAdmin.goto(`/${EIN}/notes`);
+		const withMedia = asAdmin.locator('article').filter({ hasText: N.einCommands.title });
+		await expect(withMedia.getByTestId('note-media-count')).toHaveText('1');
+		const without = asAdmin.locator('article').filter({ hasText: N.einSitter.title });
+		await expect(without).toBeVisible();
+		await expect(without.getByTestId('note-media-count')).toHaveCount(0);
+	});
+
 	test("pinning someone else's note is not an edit", async ({ asAdmin }) => {
 		// Jet logged the seed note; Spike pinning it must not add "edited by Spike".
 		await asAdmin.goto(`/${EIN}/notes`);
@@ -527,6 +536,14 @@ test.describe('notes (owner)', () => {
 });
 
 test.describe('notes (caretaker)', () => {
+	test('shared note summary shows the media count while collapsed', async ({ asCaretaker }) => {
+		await asCaretaker.goto(`/care/${EIN}`);
+		const summary = asCaretaker
+			.locator('details > summary')
+			.filter({ hasText: N.einCommands.title });
+		await expect(summary.getByTestId('note-media-count')).toHaveText('1');
+	});
+
 	test('sees shared notes, not private ones', async ({ asCaretaker }) => {
 		await asCaretaker.goto(`/care/${EIN}`);
 		await expect(asCaretaker.getByText(N.einSitter.title, { exact: true })).toBeVisible();

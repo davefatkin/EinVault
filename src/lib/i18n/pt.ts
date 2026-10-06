@@ -1187,6 +1187,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.filterEmpty': 'Nenhuma nota com esta tag',
 	'page.notes.clearFilter': 'Limpar filtro',
 	'page.notes.shared': 'Partilhada',
+	'page.notes.mediaCount': 'Fotos e vídeos: {count}',
 	'page.notes.pin': 'Fixar',
 	'page.notes.delete': 'Eliminar nota',
 	'page.notes.confirmDelete': 'Eliminar "{title}"? Esta ação não pode ser desfeita.',

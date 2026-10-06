@@ -215,6 +215,17 @@ describe('listNotes', () => {
 		expect((await listNotes(C1, { pinned: true })).map((n) => n.title)).toEqual(['walk']);
 		expect(await listNotes(C1, { limit: 1, offset: 1 })).toHaveLength(1);
 	});
+
+	it('attaches mediaCount, 0 when a note has no media', async () => {
+		const bare = await createNote(C1, note({ title: 'bare' }), U1);
+		const full = await createNote(C1, note({ title: 'full' }), U1);
+		await addMedia(full, 'm-a');
+		await addMedia(full, 'm-b');
+		const byTitle = new Map((await listNotes(C1)).map((n) => [n.title, n.mediaCount]));
+		expect(byTitle.get('bare')).toBe(0);
+		expect(byTitle.get('full')).toBe(2);
+		expect(bare).toBeTruthy();
+	});
 });
 
 describe('listTags', () => {

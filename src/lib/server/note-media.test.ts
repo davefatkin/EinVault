@@ -28,6 +28,7 @@ const {
 	noteMediaKey,
 	listNoteMedia,
 	listMediaForNotes,
+	countMediaForNotes,
 	listNoteMediaStatus,
 	getNoteMediaItem,
 	getNoteMediaView,
@@ -347,5 +348,18 @@ describe('getNoteMediaView', () => {
 		);
 		expect(await getNoteMediaView(N2, 'a')).toBeUndefined();
 		expect(await getNoteMediaView(N1, 'missing')).toBeUndefined();
+	});
+});
+
+describe('countMediaForNotes', () => {
+	it('returns an empty map for no ids', async () => {
+		expect((await countMediaForNotes([])).size).toBe(0);
+	});
+
+	it('counts media per note and omits notes without media', async () => {
+		await db.insert(schema.noteMedia).values([row('cm-1'), row('cm-2')]);
+		const counts = await countMediaForNotes([N1, N2]);
+		expect(counts.get(N1)).toBe(2);
+		expect(counts.has(N2)).toBe(false);
 	});
 });

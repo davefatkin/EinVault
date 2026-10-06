@@ -1169,6 +1169,7 @@ const messages = {
 	'page.notes.filterEmpty': 'No notes with this tag',
 	'page.notes.clearFilter': 'Clear filter',
 	'page.notes.shared': 'Shared',
+	'page.notes.mediaCount': 'Photos and videos: {count}',
 	'page.notes.pin': 'Pin',
 	'page.notes.delete': 'Delete note',
 	'page.notes.confirmDelete': 'Delete "{title}"? This cannot be undone.',

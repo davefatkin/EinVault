@@ -4,6 +4,7 @@
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import NoteMediaCount from '$lib/components/notes/NoteMediaCount.svelte';
 	import NoteContent from '$lib/components/notes/NoteContent.svelte';
 	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
 	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
@@ -541,7 +542,8 @@
 				{#each data.sharedNotes as note, i (note.id)}
 					<details class="rounded-lg border border-border bg-card px-4 py-3" open={i === 0}>
 						<summary class="cursor-pointer break-words font-medium text-foreground"
-							>{note.title}</summary
+							><span>{note.title}</span>
+							<NoteMediaCount count={note.media.length} class="ml-2 align-middle" /></summary
 						>
 						<div class="mt-3 space-y-3">
 							<NoteContent {note} showTitle={false} />

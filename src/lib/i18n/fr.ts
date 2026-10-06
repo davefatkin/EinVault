@@ -1192,6 +1192,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.filterEmpty': 'Aucune note avec ce tag',
 	'page.notes.clearFilter': 'Effacer le filtre',
 	'page.notes.shared': 'Partagée',
+	'page.notes.mediaCount': 'Photos et vidéos : {count}',
 	'page.notes.pin': 'Épingler',
 	'page.notes.delete': 'Supprimer la note',
 	'page.notes.confirmDelete': 'Supprimer « {title} » ? Cette action est irréversible.',

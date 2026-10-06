@@ -1187,6 +1187,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.filterEmpty': 'Nessuna nota con questo tag',
 	'page.notes.clearFilter': 'Rimuovi filtro',
 	'page.notes.shared': 'Condivisa',
+	'page.notes.mediaCount': 'Foto e video: {count}',
 	'page.notes.pin': 'Fissa',
 	'page.notes.delete': 'Elimina nota',
 	'page.notes.confirmDelete': 'Eliminare "{title}"? L\'operazione non può essere annullata.',

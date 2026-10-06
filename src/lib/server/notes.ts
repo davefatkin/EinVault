@@ -4,17 +4,18 @@ import type { Note } from '$lib/server/db/schema';
 import { generateId } from '$lib/server/utils';
 import type { NewNote, NotePatch } from '$lib/notes';
 import type { MediaItem } from '$lib/media';
-import { listMediaForNotes } from '$lib/server/note-media';
+import { countMediaForNotes, listMediaForNotes } from '$lib/server/note-media';
 import { deleteMediaBlobs, type StoredMediaRef } from '$lib/server/storage/media-blobs';
 
 // Companion notes (issue #310). Pure data access: callers (form actions, the
 // Bearer API) do the role and companion checks.
 
 export type NoteWithTags = Note & { tags: string[] };
-export type NoteListItem = NoteWithTags & {
+export type NoteWithAuthors = NoteWithTags & {
 	logger: { displayName: string } | null;
 	updater: { displayName: string } | null;
 };
+export type NoteListItem = NoteWithAuthors & { mediaCount: number };
 
 const NOTE_ORDER = [desc(schema.notes.pinned), desc(schema.notes.updatedAt), asc(schema.notes.id)];
 const BY_LINE = {
@@ -67,10 +68,14 @@ export async function listNotes(
 		offset: opts.offset,
 		with: BY_LINE
 	});
-	return attachTags(rows);
+	const [withTags, counts] = await Promise.all([
+		attachTags(rows),
+		countMediaForNotes(rows.map((r) => r.id))
+	]);
+	return withTags.map((n) => ({ ...n, mediaCount: counts.get(n.id) ?? 0 }));
 }
 
-export async function getNote(id: string, companionId?: string): Promise<NoteListItem | null> {
+export async function getNote(id: string, companionId?: string): Promise<NoteWithAuthors | null> {
 	const where = companionId
 		? and(eq(schema.notes.id, id), eq(schema.notes.companionId, companionId))
 		: eq(schema.notes.id, id);
