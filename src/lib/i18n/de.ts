@@ -1206,6 +1206,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.labelShared': 'Mit Betreuern teilen',
 	'page.notes.sharedHint': 'Betreuer, die {name} zugewiesen sind, können diese Notiz lesen.',
 	'page.notes.labelPinned': 'Oben anheften',
+	'page.notes.mediaAfterSave': 'Speichere die Notiz, um Fotos und Videos hinzuzufügen.',
 	'page.notes.unsavedPrompt': 'Du hast ungespeicherte Änderungen. Ohne Speichern verlassen?',
 	'page.notes.leave': 'Verlassen',
 	'page.notes.archivedNotice': '{name} ist archiviert. Notizen bleiben zum Nachschlagen verfügbar.',

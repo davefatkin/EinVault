@@ -18,7 +18,8 @@
 		suggestions,
 		cancelHref,
 		companionName,
-		error
+		error,
+		showMediaHint = false
 	}: {
 		note?: {
 			title: string;
@@ -34,6 +35,10 @@
 		cancelHref: string;
 		companionName: string;
 		error?: string;
+		// Set only by the new-note page: media can be added once the note exists.
+		// Not inferred from a missing id, because a failed update passes form
+		// values without one.
+		showMediaHint?: boolean;
 	} = $props();
 	const locale = getLocale();
 	const guard = createDirtyGuard();
@@ -153,6 +158,10 @@
 			{t(locale, 'page.notes.labelPinned')}
 		</label>
 	</div>
+
+	{#if showMediaHint}
+		<p class="text-xs text-muted-foreground">{t(locale, 'page.notes.mediaAfterSave')}</p>
+	{/if}
 
 	<div class="flex items-center gap-2">
 		<Button type="submit" disabled={saving}>

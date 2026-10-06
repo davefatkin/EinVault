@@ -1201,6 +1201,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.notes.labelShared': 'Partilhar com cuidadores',
 	'page.notes.sharedHint': 'Os cuidadores atribuídos a {name} podem ler esta nota.',
 	'page.notes.labelPinned': 'Fixar no topo',
+	'page.notes.mediaAfterSave': 'Guarde a nota para adicionar fotos e vídeos.',
 	'page.notes.unsavedPrompt': 'Tem alterações não guardadas. Sair sem guardar?',
 	'page.notes.leave': 'Sair',
 	'page.notes.archivedNotice':

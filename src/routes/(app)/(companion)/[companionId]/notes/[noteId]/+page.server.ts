@@ -9,6 +9,8 @@ import {
 	noteFormValues,
 	togglePinAction
 } from '$lib/server/note-actions';
+import { listNoteMedia } from '$lib/server/note-media';
+import { MAX_NOTE_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
 import { validateNotePatch } from '$lib/notes';
 
 export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
@@ -19,7 +21,16 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	if (!note) error(404, t(locals.locale, 'error.noteNotFound'));
 	const editing = url.searchParams.get('edit') === '1';
 	const suggestions = editing ? (await listTags()).map((r) => r.tag) : [];
-	return { companion, note, editing, suggestions };
+	return {
+		companion,
+		note,
+		editing,
+		suggestions,
+		media: await listNoteMedia(note.id),
+		maxNoteMedia: MAX_NOTE_MEDIA,
+		uploadMaxMb: UPLOAD_MAX_MB,
+		videoMaxMb: VIDEO_MAX_MB
+	};
 };
 
 export const actions: Actions = {

@@ -23,5 +23,6 @@
 		cancelHref="/{data.companion.id}/notes"
 		companionName={data.companion.name}
 		error={form?.noteError}
+		showMediaHint
 	/>
 </div>

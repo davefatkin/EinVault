@@ -1183,6 +1183,7 @@ const messages = {
 	'page.notes.labelShared': 'Share with caretakers',
 	'page.notes.sharedHint': 'Caretakers assigned to {name} can read this note.',
 	'page.notes.labelPinned': 'Pin to top',
+	'page.notes.mediaAfterSave': 'Save the note to add photos and videos.',
 	'page.notes.unsavedPrompt': 'You have unsaved changes. Leave without saving?',
 	'page.notes.leave': 'Leave',
 	'page.notes.archivedNotice': '{name} is archived. Notes stay available for reference.',
