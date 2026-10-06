@@ -722,12 +722,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Gespeichert',
 	'page.journal.caretaker.savingStatus': 'Speichern…',
 	'page.journal.caretaker.saveFailedStatus': 'Speichern fehlgeschlagen',
-	'page.journal.caretaker.media': 'Fotos & Videos',
-	'page.journal.caretaker.addMedia': 'Medien hinzufügen',
-	'page.journal.caretaker.dropMedia': 'Fotos oder Videos hierher ziehen oder klicken zum Hochladen',
-	'page.journal.caretaker.noCaption': 'Keine Bildunterschrift',
-	'page.journal.caretaker.addCaption': 'Bildunterschrift hinzufügen…',
-	'page.journal.caretaker.editCaption': 'Bildunterschrift bearbeiten',
 
 	// Page: Health
 	'page.health.title': 'Gesundheitsprotokoll',

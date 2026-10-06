@@ -50,6 +50,7 @@
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let uploadErrorTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => () => clearTimeout(uploadErrorTimer));
 	let immichPickerOpen = $state(false);
 	let editingId = $state<string | null>(null);
 	let editingCaption = $state('');

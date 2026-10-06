@@ -711,12 +711,6 @@ const messages = {
 	'page.journal.caretaker.savedStatus': '✓ Saved',
 	'page.journal.caretaker.savingStatus': 'Saving…',
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
-	'page.journal.caretaker.media': 'Photos & Videos',
-	'page.journal.caretaker.addMedia': 'Add media',
-	'page.journal.caretaker.dropMedia': 'Drop photos or videos here or click to upload',
-	'page.journal.caretaker.noCaption': 'No caption',
-	'page.journal.caretaker.addCaption': 'Add a caption…',
-	'page.journal.caretaker.editCaption': 'Edit Caption',
 
 	// Page: Health
 	'page.health.title': 'Health Log',

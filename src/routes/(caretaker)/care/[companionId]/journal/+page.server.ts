@@ -6,8 +6,9 @@ import { eq, and } from 'drizzle-orm';
 import { parseMood } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 import { localDateISO } from '$lib/date';
-import { upsertJournalEntry } from '$lib/server/journal';
-import { MAX_DAILY_MEDIA } from '$lib/server/env';
+import { upsertJournalEntry, JOURNAL_MEDIA_ITEM_COLUMNS } from '$lib/server/journal';
+import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
+import { toMediaItem } from '$lib/media';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();
@@ -23,7 +24,15 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const today = localDateISO();
 
 	if (!isOnShift) {
-		return { companion, todayEntry: null, photos: [], today, maxDailyMedia: MAX_DAILY_MEDIA };
+		return {
+			companion,
+			todayEntry: null,
+			photos: [],
+			today,
+			maxDailyMedia: MAX_DAILY_MEDIA,
+			uploadMaxMb: UPLOAD_MAX_MB,
+			videoMaxMb: VIDEO_MAX_MB
+		};
 	}
 
 	const todayEntry = await db.query.journalEntries.findFirst({
@@ -37,10 +46,12 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		}
 	});
 
+	// Only the fields the UI needs: no storage keys or transcode bookkeeping.
 	const media = todayEntry
 		? await db.query.journalPhotos.findMany({
 				where: eq(schema.journalPhotos.entryId, todayEntry.id),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
+				columns: JOURNAL_MEDIA_ITEM_COLUMNS,
 				with: { logger: { columns: { displayName: true } } }
 			})
 		: [];
@@ -48,9 +59,11 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	return {
 		companion,
 		todayEntry: todayEntry ?? null,
-		photos: media,
+		photos: media.map(toMediaItem),
 		today,
-		maxDailyMedia: MAX_DAILY_MEDIA
+		maxDailyMedia: MAX_DAILY_MEDIA,
+		uploadMaxMb: UPLOAD_MAX_MB,
+		videoMaxMb: VIDEO_MAX_MB
 	};
 };
 
