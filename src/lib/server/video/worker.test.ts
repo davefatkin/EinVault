@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
+import { rm } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
 import type { StorageBackend } from '$lib/server/storage';
 
@@ -121,6 +122,10 @@ beforeAll(async () => {
 	await db.insert(schema.journalEntries).values({ id: ENTRY, companionId: C, date: DATE });
 });
 
+afterAll(async () => {
+	await rm(cfg.tmpDir, { recursive: true, force: true });
+});
+
 beforeEach(async () => {
 	__resetWorkerForTests();
 	store.clear();
@@ -215,6 +220,22 @@ describe('video worker', () => {
 		expect(store.has(nKey('nv-gone.mp4'))).toBe(false);
 		expect(store.has(nKey('nv-gone.poster.jpg'))).toBe(false);
 		expect(store.has(src)).toBe(false);
+	});
+
+	it('keeps the source of a row reset mid-job and leaves no outputs', async () => {
+		const src = await addNoteVideo('nv-reset', 1000);
+		ctl.duringTranscode = async () => {
+			await noteQueue.resetClaimed();
+			ctl.duringTranscode = null;
+			ctl.fail = true; // stop the retry from completing
+		};
+		await drain();
+		expect(store.has(src)).toBe(true);
+		expect(store.has(nKey('nv-reset.mp4'))).toBe(false);
+		expect(store.has(nKey('nv-reset.poster.jpg'))).toBe(false);
+		expect(
+			await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-reset') })
+		).toBeDefined();
 	});
 
 	it('resets claimed rows to processing on boot for both tables', async () => {

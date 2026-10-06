@@ -129,6 +129,9 @@ export type MediaQueue = {
 	markReady(id: string, update: ReadyUpdate): Promise<boolean>;
 	// Boot recovery: claimed -> processing. Returns the number of rows reset.
 	resetClaimed(): Promise<number>;
+	// Whether the row still exists. Distinguishes a deleted row from a reset one
+	// when markReady reports false.
+	exists(id: string): Promise<boolean>;
 };
 
 interface ClaimedJob {
@@ -183,6 +186,10 @@ function createQueue(name: MediaQueue['name'], table: QueueTable): MediaQueue {
 				.where(and(eq(table.id, id), eq(table.status, 'claimed')))
 				.returning({ id: table.id });
 			return rows.length > 0;
+		},
+		async exists(id) {
+			const [row] = await db.select({ id: table.id }).from(table).where(eq(table.id, id)).limit(1);
+			return !!row;
 		},
 		async resetClaimed() {
 			const rows = await db
@@ -299,13 +306,16 @@ async function processJob(job: ClaimedJob): Promise<void> {
 		});
 
 		if (!updated) {
-			// The row was deleted while we transcoded (its note or the item went
-			// away). Nothing references the outputs or the source any more.
-			console.info(`[video] ${job.queue.name} media ${job.id} was deleted mid-job, cleaning up`);
+			// The outputs are unreferenced either way. Delete the source only when
+			// the row is gone (its note or item was deleted); a row that was merely
+			// reset to 'processing' still needs it for the retry.
 			await cleanupOutputs(job);
-			await backend.delete(sourceKey).catch((err) => {
-				console.warn(`[video] failed to delete original ${sourceKey}:`, err);
-			});
+			if (!(await job.queue.exists(job.id))) {
+				console.info(`[video] ${job.queue.name} media ${job.id} was deleted mid-job, cleaning up`);
+				await backend.delete(sourceKey).catch((err) => {
+					console.warn(`[video] failed to delete original ${sourceKey}:`, err);
+				});
+			}
 			return;
 		}
 
