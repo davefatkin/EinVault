@@ -682,7 +682,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.edit': 'Bearbeiten',
 	'page.journal.noNotes': 'Keine Notizen geschrieben.',
 	'page.journal.loadOlderEntries': 'Ältere Einträge laden',
-	'page.journal.photoAlt': 'Tagebuchfoto',
 	'page.journal.videoAlt': 'Tagebuchvideo',
 	'page.journal.videoUnsupported': 'Dieses Video kann in deinem Browser nicht abgespielt werden.',
 	'page.journal.videoProcessing': 'Video wird konvertiert…',

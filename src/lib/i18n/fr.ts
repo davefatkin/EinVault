@@ -682,7 +682,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.edit': 'Modifier',
 	'page.journal.noNotes': 'Aucune note écrite.',
 	'page.journal.loadOlderEntries': 'Charger les entrées plus anciennes',
-	'page.journal.photoAlt': 'Photo du journal',
 	'page.journal.videoAlt': 'Vidéo du journal',
 	'page.journal.videoUnsupported': 'Cette vidéo ne peut pas être lue dans votre navigateur.',
 	'page.journal.videoProcessing': 'Conversion de la vidéo…',

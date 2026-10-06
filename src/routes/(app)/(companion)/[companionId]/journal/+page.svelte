@@ -10,7 +10,7 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { toSpecies } from '$lib/species';
-	import { journalMediaUrl, toMediaItem, type MediaItem } from '$lib/media';
+	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
 	const locale = getLocale();
 
@@ -66,9 +66,8 @@
 	let lightboxDate = $state('');
 	let lightboxIndex = $state(0);
 
-	// Journal rows carry the caption as `notes`; toMediaItem maps it.
-	function openLightbox(items: Entry['photos'], date: string, index: number) {
-		lightboxItems = items.map(toMediaItem);
+	function openLightbox(items: MediaItem[], date: string, index: number) {
+		lightboxItems = items;
 		lightboxDate = date;
 		lightboxIndex = index;
 		lightboxOpen = true;

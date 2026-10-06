@@ -671,7 +671,6 @@ const messages = {
 	'page.journal.edit': 'Edit',
 	'page.journal.noNotes': 'No notes written.',
 	'page.journal.loadOlderEntries': 'Load older entries',
-	'page.journal.photoAlt': 'Journal photo',
 	'page.journal.videoAlt': 'Journal video',
 	'page.journal.videoUnsupported': "This video can't be played in your browser.",
 	'page.journal.videoProcessing': 'Converting video…',
