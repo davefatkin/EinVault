@@ -531,7 +531,7 @@
 						type="date"
 						name="after"
 						bind:value={after}
-						class="rounded border border-border bg-transparent px-2 py-0.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
+						class="rounded border border-input bg-transparent px-2 py-0.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
 					/>
 				</label>
 				<label class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -540,7 +540,7 @@
 						type="date"
 						name="before"
 						bind:value={before}
-						class="rounded border border-border bg-transparent px-2 py-0.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
+						class="rounded border border-input bg-transparent px-2 py-0.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
 					/>
 				</label>
 			</div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { isPreviewToggle, previewToggleLabel } from '$lib/markdownToggle';
+	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -70,7 +70,7 @@
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
 	let toggleShortcut = $state('Ctrl+P');
 	onMount(() => {
-		toggleShortcut = previewToggleLabel(navigator.platform);
+		toggleShortcut = modKeyLabel(navigator.platform, 'P');
 	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 

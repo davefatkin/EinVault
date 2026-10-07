@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { renderMarkdown } from '$lib/markdown';
-	import { isPreviewToggle, previewToggleLabel } from '$lib/markdownToggle';
+	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
 	import { t, getLocale } from '$lib/i18n';
 
 	interface Props {
@@ -30,7 +30,7 @@
 	let previewTabEl = $state<HTMLButtonElement | undefined>(undefined);
 	let toggleShortcut = $state('Ctrl+P');
 	onMount(() => {
-		toggleShortcut = previewToggleLabel(navigator.platform);
+		toggleShortcut = modKeyLabel(navigator.platform, 'P');
 	});
 
 	// Scoped to this editor: pages can hold several, and the journal day page

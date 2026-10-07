@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isPreviewToggle, previewToggleLabel } from './markdownToggle';
+import { isModShortcut, isPreviewToggle, modKeyLabel } from './shortcuts';
 
 function key(init: Partial<KeyboardEvent>) {
 	return {
@@ -24,14 +24,21 @@ describe('isPreviewToggle', () => {
 	});
 });
 
-describe('previewToggleLabel', () => {
+describe('isModShortcut', () => {
+	it('matches the given key only', () => {
+		expect(isModShortcut(key({ ctrlKey: true, key: 'k' }), 'k')).toBe(true);
+		expect(isModShortcut(key({ ctrlKey: true, key: 'p' }), 'k')).toBe(false);
+	});
+});
+
+describe('modKeyLabel', () => {
 	it('uses the command key on Apple platforms', () => {
-		expect(previewToggleLabel('MacIntel')).toBe('⌘P');
-		expect(previewToggleLabel('iPad')).toBe('⌘P');
+		expect(modKeyLabel('MacIntel', 'P')).toBe('⌘P');
+		expect(modKeyLabel('iPad', 'P')).toBe('⌘P');
 	});
 	it('uses Ctrl elsewhere', () => {
-		expect(previewToggleLabel('Win32')).toBe('Ctrl+P');
-		expect(previewToggleLabel('Linux x86_64')).toBe('Ctrl+P');
-		expect(previewToggleLabel('')).toBe('Ctrl+P');
+		expect(modKeyLabel('Win32', 'P')).toBe('Ctrl+P');
+		expect(modKeyLabel('Linux x86_64', 'P')).toBe('Ctrl+P');
+		expect(modKeyLabel('', 'P')).toBe('Ctrl+P');
 	});
 });
