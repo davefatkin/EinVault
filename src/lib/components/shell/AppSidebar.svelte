@@ -16,7 +16,9 @@
 		LayoutGrid,
 		PlusCircle
 	} from '@lucide/svelte';
+	import { onMount } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { modKeyLabel } from '$lib/shortcuts';
 	import type { CareStatus } from '$lib/careStatus';
 	import AccountSheet from './AccountSheet.svelte';
 
@@ -99,6 +101,11 @@
 				]
 			: []
 	);
+
+	let searchShortcut = $state('Ctrl+K');
+	onMount(() => {
+		searchShortcut = modKeyLabel(navigator.platform, 'K');
+	});
 
 	let switcherOpen = $state(false);
 	let accountOpen = $state(false);
@@ -354,7 +361,7 @@
 				class="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground"
 				aria-hidden="true"
 			>
-				⌘K
+				{searchShortcut}
 			</kbd>
 		</button>
 

@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Select } from '$lib/components/ui/select/index.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import LocalTime from '$lib/components/LocalTime.svelte';
@@ -138,29 +139,21 @@
 					<label for="api-token-scope" class="text-xs text-muted-foreground">
 						{t(locale, 'settings.apiTokens.scopeLabel')}
 					</label>
-					<select
-						id="api-token-scope"
-						name="scope"
-						class="h-9 rounded-md border border-input bg-background px-2 text-sm"
-					>
+					<Select id="api-token-scope" name="scope">
 						<option value="full">{t(locale, 'settings.apiTokens.scopeFull')}</option>
 						<option value="write">{t(locale, 'settings.apiTokens.scopeWrite')}</option>
-					</select>
+					</Select>
 				</div>
 				<div class="flex flex-col gap-1">
 					<label for="api-token-expiry" class="text-xs text-muted-foreground">
 						{t(locale, 'settings.apiTokens.expiryLabel')}
 					</label>
-					<select
-						id="api-token-expiry"
-						name="expiresInDays"
-						class="h-9 rounded-md border border-input bg-background px-2 text-sm"
-					>
+					<Select id="api-token-expiry" name="expiresInDays">
 						<option value="">{t(locale, 'settings.apiTokens.expiryNever')}</option>
 						<option value="30">{t(locale, 'settings.apiTokens.expiry30')}</option>
 						<option value="90">{t(locale, 'settings.apiTokens.expiry90')}</option>
 						<option value="365">{t(locale, 'settings.apiTokens.expiry365')}</option>
-					</select>
+					</Select>
 				</div>
 				<Button type="submit" size="sm" class="h-9">{t(locale, 'settings.apiTokens.create')}</Button
 				>

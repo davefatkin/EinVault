@@ -266,6 +266,23 @@ test.describe('notes (owner)', () => {
 		await expect(tagBox).not.toHaveAttribute('aria-invalid');
 	});
 
+	test('Ctrl+P toggles the note body between write and preview', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/notes/new`);
+		const body = asMember.getByLabel('Note', { exact: true });
+		await body.fill('## Sit');
+		await expect(asMember.getByText(/^(Ctrl\+P|⌘P) to toggle$/)).toBeVisible();
+
+		await body.press('Control+p');
+		await expect(body).toBeHidden();
+		await expect(asMember.getByRole('heading', { name: 'Sit' })).toBeVisible();
+
+		// Focus stays inside the editor, so a second press flips back.
+		await asMember.keyboard.press('Control+p');
+		await expect(body).toBeVisible();
+		await expect(body).toBeFocused();
+		await expect(body).toHaveValue('## Sit');
+	});
+
 	test('fixing leftover invalid tags does not commit them mid-edit', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
 		const tagBox = asMember.getByRole('combobox');

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { tick } from 'svelte';
+	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
@@ -32,6 +33,7 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
@@ -66,6 +68,10 @@
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
+	let toggleShortcut = $state('Ctrl+P');
+	onMount(() => {
+		toggleShortcut = modKeyLabel(navigator.platform, 'P');
+	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
 	// Sync local state when data changes (navigation between dates)
@@ -156,9 +162,10 @@
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
-		if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+		if (isPreviewToggle(e)) {
 			e.preventDefault();
 			viewMode = viewMode === 'write' ? 'preview' : 'write';
+			if (viewMode === 'write') tick().then(() => textareaEl?.focus());
 		}
 	}
 
@@ -420,7 +427,7 @@
 			<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 				{t(locale, 'page.journal.day.write')}
 			</p>
-			<div class="rounded-lg border border-input overflow-hidden">
+			<div class="rounded-lg border border-input bg-card overflow-hidden">
 				<div class="flex items-center justify-between px-3 py-1.5 border-b border-border">
 					<div class="flex gap-0.5">
 						<button
@@ -449,7 +456,7 @@
 					</div>
 					<div class="hidden sm:flex items-center gap-3">
 						<span class="text-xs text-muted-foreground"
-							>{t(locale, 'page.journal.day.toggleHint')}</span
+							>{t(locale, 'component.markdown.toggleHint', { shortcut: toggleShortcut })}</span
 						>
 						<details class="group relative">
 							<summary
@@ -519,7 +526,7 @@
 						oninput={triggerSave}
 						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 						dir="ltr"
-						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-background text-foreground placeholder:text-muted-foreground focus:outline-none"
+						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
 						spellcheck="true"></textarea>
 				{:else}
 					<div
@@ -620,12 +627,12 @@
 							<label for="act-loggedAt" class="text-sm font-medium text-foreground"
 								>{t(locale, 'page.journal.day.activityTime')}</label
 							>
-							<input
+							<Input
 								id="act-loggedAt"
 								name="loggedAt"
 								type="datetime-local"
 								autocomplete="off"
-								class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+								class="h-9"
 								value={defaultLoggedAt()}
 							/>
 						</div>
@@ -643,14 +650,14 @@
 											onclick={() => (duration = String(mins))}>{mins}m</Button
 										>
 									{/each}
-									<input
+									<Input
 										id="act-duration"
 										name="durationMinutes"
 										type="number"
 										min="1"
 										autocomplete="off"
 										bind:value={duration}
-										class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+										class="h-9 flex-1"
 										placeholder="30"
 									/>
 								</div>
@@ -730,12 +737,12 @@
 												class="text-sm font-medium text-foreground"
 												>{t(locale, 'page.journal.day.activityTime')}</label
 											>
-											<input
+											<Input
 												id="edit-act-loggedAt-{event.id}"
 												name="loggedAt"
 												autocomplete="off"
 												type="datetime-local"
-												class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+												class="h-9"
 												value={localDatetimeISO(new Date(event.loggedAt))}
 											/>
 										</div>
@@ -746,13 +753,13 @@
 													class="text-sm font-medium text-foreground"
 													>{t(locale, 'page.journal.day.activityDuration')}</label
 												>
-												<input
+												<Input
 													id="edit-act-duration-{event.id}"
 													name="durationMinutes"
 													autocomplete="off"
 													type="number"
 													min="1"
-													class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+													class="h-9"
 													value={event.durationMinutes ?? ''}
 													placeholder="30"
 												/>

@@ -8,6 +8,7 @@
 	import AppSidebar from '$lib/components/shell/AppSidebar.svelte';
 	import AppMobileNav from '$lib/components/shell/AppMobileNav.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { isModShortcut } from '$lib/shortcuts';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -25,7 +26,7 @@
 
 <svelte:window
 	onkeydown={(e) => {
-		if (!(e.ctrlKey || e.metaKey) || e.key !== 'k' || e.defaultPrevented) return;
+		if (!isModShortcut(e, 'k') || e.defaultPrevented) return;
 		const tgt = e.target as HTMLElement;
 		if (
 			tgt instanceof HTMLInputElement ||

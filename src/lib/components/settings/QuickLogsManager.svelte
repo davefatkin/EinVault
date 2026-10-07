@@ -196,7 +196,7 @@
 		{#if editHasDuration}
 			<div class="space-y-1.5 animate-slide-up">
 				<Label for="ql-duration">{t(locale, 'page.log.durationLabel')}</Label>
-				<input
+				<Input
 					id="ql-duration"
 					name="durationMinutes"
 					type="number"
@@ -204,7 +204,7 @@
 					max="480"
 					autocomplete="off"
 					bind:value={editDuration}
-					class="flex h-9 w-32 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+					class="h-9 w-32"
 					placeholder="30"
 				/>
 			</div>
