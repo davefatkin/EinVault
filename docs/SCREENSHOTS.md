@@ -27,6 +27,16 @@
 ![Health dark](screenshots/member_health_dark.png)
 ![Health light](screenshots/member_health_light.png)
 
+### Notes
+
+![Notes dark](screenshots/member_notes_dark.png)
+![Notes light](screenshots/member_notes_light.png)
+
+### Note with photos
+
+![Note dark](screenshots/member_note_dark.png)
+![Note light](screenshots/member_note_light.png)
+
 ### Admin panel
 
 ![Admin panel dark](screenshots/member_admin_dark.png)
