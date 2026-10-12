@@ -314,7 +314,9 @@
 				/>
 				<div class="flex-1 min-w-0">
 					<div class="flex items-start justify-between gap-2">
-						<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
+						<h1
+							class="min-w-0 break-words font-display text-2xl font-bold text-foreground leading-tight"
+						>
 							{companion.name}
 						</h1>
 						<Button href="/care/{companion.id}/sheet" variant="soft" size="sm" class="shrink-0">

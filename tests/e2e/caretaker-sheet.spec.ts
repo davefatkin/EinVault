@@ -9,6 +9,7 @@ import { waitForHydration } from '../lib/hydration';
 // the photo test's scratch note is deleted in finally.
 const EIN = SEED.companions.ein.id;
 const EDWARD = SEED.companions.edward.id;
+const JULIA = SEED.companions.julia.id;
 const C = SEED.companions.ein;
 const N = SEED.notes;
 const M = SEED.noteMedia;
@@ -158,12 +159,25 @@ test.describe('caretaker sheet', () => {
 				).toBeHidden();
 			});
 		} finally {
-			// Leave no note behind in the shared worker DB, even if an assertion failed.
-			if (noteUrl) {
-				await asMember.goto(noteUrl);
-				await asMember.getByRole('button', { name: 'Delete note' }).click();
-				await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
-				await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
+			// Leave no note behind in the shared worker DB, even if an assertion
+			// failed. Cleanup problems are logged so they never mask the test's own error.
+			try {
+				let found = true;
+				if (noteUrl) {
+					await asMember.goto(noteUrl);
+				} else {
+					await asMember.goto(`/${EIN}/notes`);
+					const link = asMember.getByRole('link', { name: title }).first();
+					found = (await link.count()) > 0;
+					if (found) await link.click();
+				}
+				if (found) {
+					await asMember.getByRole('button', { name: 'Delete note' }).click();
+					await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+					await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
+				}
+			} catch (err) {
+				console.warn('caretaker-sheet: scratch note cleanup failed', err);
 			}
 		}
 	});
@@ -190,6 +204,27 @@ test.describe('caretaker sheet', () => {
 
 		const res = await asCaretaker.goto(`/care/${EDWARD}/sheet`);
 		expect(res?.status()).toBe(403);
+	});
+
+	test('switching companion resets the include choices', async ({ asCaretaker }) => {
+		await asCaretaker.goto(`/care/${EIN}/sheet`);
+		await waitForHydration(asCaretaker);
+		const household = include(asCaretaker, 'Household Contacts');
+		await household.uncheck();
+		await expect(asCaretaker.getByText('Not printed', { exact: true }).first()).toBeVisible();
+
+		await asCaretaker.getByRole('button', { name: 'Switch companion' }).click();
+		await asCaretaker
+			.getByRole('listbox', { name: 'Switch companion' })
+			.getByRole('button', { name: SEED.companions.julia.name })
+			.click();
+		await expect(asCaretaker).toHaveURL(new RegExp(`/care/${JULIA}/sheet$`));
+		await expect(
+			asCaretaker.getByRole('heading', { level: 1, name: SEED.companions.julia.name })
+		).toBeVisible();
+
+		await expect(household).toBeChecked();
+		await expect(asCaretaker.getByText('Not printed', { exact: true })).toHaveCount(0);
 	});
 
 	test('without JavaScript the full sheet renders with no controls', async ({ app, browser }) => {
