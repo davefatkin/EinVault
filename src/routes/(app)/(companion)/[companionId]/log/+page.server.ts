@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			eq(schema.dailyEvents.companionId, params.companionId),
 			gte(schema.dailyEvents.loggedAt, todayStart)
 		),
-		orderBy: (d, { desc }) => [desc(d.loggedAt)],
+		orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt)],
 		with: { logger: { columns: { displayName: true } } }
 	});
 

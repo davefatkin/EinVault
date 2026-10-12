@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		}),
 		db.query.dailyEvents.findMany({
 			where: eq(schema.dailyEvents.companionId, params.companionId),
-			orderBy: (d, { desc }) => [desc(d.loggedAt)],
+			orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt)],
 			limit: 10,
 			with: { logger: { columns: { displayName: true } } }
 		}),
