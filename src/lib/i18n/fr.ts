@@ -677,6 +677,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.photosIncluded.one': '{n} sur {m} photo incluse',
 	'page.sheet.photosIncluded.other': '{n} sur {m} photos incluses',
 	'page.sheet.notPrinted': 'Non imprimé',
+	'page.sheet.openFromOverview': 'Imprimer la fiche pour le gardien',
+	'page.sheet.openFromEdit': "Aperçu de la fiche pour le gardien (s'ouvre dans un nouvel onglet)",
+	'page.sheet.openFromCare': 'Imprimer la fiche',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Humeur',

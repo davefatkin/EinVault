@@ -666,6 +666,9 @@ const messages = {
 	'page.sheet.photosIncluded.one': '{n} of {m} photo included',
 	'page.sheet.photosIncluded.other': '{n} of {m} photos included',
 	'page.sheet.notPrinted': 'Not printed',
+	'page.sheet.openFromOverview': 'Print caretaker sheet',
+	'page.sheet.openFromEdit': 'Preview caretaker sheet (opens in a new tab)',
+	'page.sheet.openFromCare': 'Print sheet',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Mood',

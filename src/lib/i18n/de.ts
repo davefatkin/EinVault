@@ -677,6 +677,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.photosIncluded.one': '{n} von {m} Foto ausgewählt',
 	'page.sheet.photosIncluded.other': '{n} von {m} Fotos ausgewählt',
 	'page.sheet.notPrinted': 'Wird nicht gedruckt',
+	'page.sheet.openFromOverview': 'Betreuerblatt drucken',
+	'page.sheet.openFromEdit': 'Betreuerblatt-Vorschau (öffnet in neuem Tab)',
+	'page.sheet.openFromCare': 'Blatt drucken',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Stimmung',

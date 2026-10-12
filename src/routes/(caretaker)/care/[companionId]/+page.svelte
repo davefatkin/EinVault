@@ -11,7 +11,8 @@
 	import { noteMediaApi } from '$lib/mediaApi';
 	import type { MediaItem } from '$lib/media';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Phone, Mail, X, Bell, Activity, Printer } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -312,9 +313,15 @@
 					onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
 				/>
 				<div class="flex-1 min-w-0">
-					<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
-						{companion.name}
-					</h1>
+					<div class="flex items-start justify-between gap-2">
+						<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
+							{companion.name}
+						</h1>
+						<Button href="/care/{companion.id}/sheet" variant="soft" size="sm" class="shrink-0">
+							<Printer class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.sheet.openFromCare')}
+						</Button>
+					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
 						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??

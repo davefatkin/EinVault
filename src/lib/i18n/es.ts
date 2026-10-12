@@ -675,6 +675,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.photosIncluded.one': '{n} de {m} foto incluida',
 	'page.sheet.photosIncluded.other': '{n} de {m} fotos incluidas',
 	'page.sheet.notPrinted': 'No se imprime',
+	'page.sheet.openFromOverview': 'Imprimir hoja para el cuidador',
+	'page.sheet.openFromEdit': 'Ver la hoja para el cuidador (se abre en una pestaña nueva)',
+	'page.sheet.openFromCare': 'Imprimir hoja',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Ánimo',

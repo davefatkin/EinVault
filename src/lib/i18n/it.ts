@@ -673,6 +673,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.photosIncluded.one': '{n} di {m} foto inclusa',
 	'page.sheet.photosIncluded.other': '{n} di {m} foto incluse',
 	'page.sheet.notPrinted': 'Non stampato',
+	'page.sheet.openFromOverview': 'Stampa la scheda per il custode',
+	'page.sheet.openFromEdit':
+		'Anteprima della scheda per il custode (si apre in una nuova finestra)',
+	'page.sheet.openFromCare': 'Stampa scheda',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Umore',

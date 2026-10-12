@@ -15,6 +15,7 @@
 		Bell,
 		HeartPulse,
 		Pencil,
+		Printer,
 		UserCheck,
 		FileText,
 		X,
@@ -547,12 +548,21 @@
 						<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
 							{companion.name}
 						</h1>
-						{#if companion.isActive !== false}
-							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
-								<Pencil class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.edit')}
+						<div class="flex shrink-0 items-center gap-2">
+							<!-- Outside the isActive check: archived companions print too. -->
+							<Button href="/{companion.id}/sheet" variant="soft" size="sm">
+								<Printer class="h-3.5 w-3.5 sm:mr-1.5" />
+								<span class="sr-only sm:not-sr-only"
+									>{t(locale, 'page.sheet.openFromOverview')}</span
+								>
 							</Button>
-						{/if}
+							{#if companion.isActive !== false}
+								<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+									<Pencil class="h-3.5 w-3.5 mr-1.5" />
+									{t(locale, 'common.edit')}
+								</Button>
+							{/if}
+						</div>
 					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
