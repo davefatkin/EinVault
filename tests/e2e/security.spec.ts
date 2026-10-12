@@ -150,6 +150,18 @@ test.describe('api authz', () => {
 		await ctx.close();
 	});
 
+	test('caretaker cannot read an unassigned companion avatar (#348)', async ({ asCaretaker }) => {
+		// Faye is assigned to Ein and Julia, not Edward. 403 matches journal and
+		// note media, and it comes before the "no avatar" 404 so it doesn't
+		// reveal which companions have a photo.
+		const res = await asCaretaker.request.get(`/api/avatars/${EDWARD}`);
+		expect(res.status()).toBe(403);
+		// Ein is assigned but has no seeded avatar: the request gets past the
+		// assignment check and stops at the "no avatar" 404.
+		const assigned = await asCaretaker.request.get(`/api/avatars/${EIN}`);
+		expect(assigned.status()).toBe(404);
+	});
+
 	test('caretaker cannot write note media (#321)', async ({ app, asCaretaker }) => {
 		// /api/companions/* sits outside the guarded route groups; the endpoint's
 		// own check is the only protection.

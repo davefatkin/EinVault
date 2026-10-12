@@ -27,7 +27,8 @@ function notFound(locale: Locale): never {
 	error(404, t(locale, 'error.notFound'));
 }
 
-async function isAssigned(companionId: string, userId: string): Promise<boolean> {
+// Also used by /api/avatars, which follows the same caretaker rule.
+export async function isAssigned(companionId: string, userId: string): Promise<boolean> {
 	const row = await db.query.companionCaretakers.findFirst({
 		where: and(
 			eq(schema.companionCaretakers.companionId, companionId),
