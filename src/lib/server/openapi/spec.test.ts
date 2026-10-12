@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { NOTE_FILTER_MAX_TAGS } from '$lib/notes';
 import { buildOpenApiDocument } from './spec';
 
 describe('buildOpenApiDocument', () => {
@@ -55,8 +56,12 @@ describe('buildOpenApiDocument', () => {
 
 	it('documents the multi-tag notes filter', () => {
 		const get = doc.paths?.['/api/notes']?.get;
-		const params = (get?.parameters ?? []) as { name: string; schema?: { type?: string } }[];
+		const params = (get?.parameters ?? []) as {
+			name: string;
+			schema?: { type?: string; maxItems?: number };
+		}[];
 		expect(params.find((p) => p.name === 'tag')?.schema?.type).toBe('array');
+		expect(params.find((p) => p.name === 'tag')?.schema?.maxItems).toBe(NOTE_FILTER_MAX_TAGS);
 		expect(params.map((p) => p.name)).toContain('match');
 		const bad = get?.responses?.['400'] as { description: string };
 		expect(bad.description).toContain('invalidMatch');

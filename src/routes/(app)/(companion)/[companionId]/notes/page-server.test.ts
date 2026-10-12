@@ -86,6 +86,11 @@ describe('notes list load', () => {
 		expect(d.titles).toEqual(['both', 'food', 'signals']);
 	});
 
+	it('reports any when fewer than two tags are selected', async () => {
+		expect((await run('?tag=food&match=all')).match).toBe('any');
+		expect((await run('?tag=food&tag=hand+signals&match=all')).match).toBe('all');
+	});
+
 	it('keeps only the first tags over the cap', async () => {
 		const extra = Array.from({ length: NOTE_FILTER_MAX_TAGS }, (_, i) => `&tag=t${i}`).join('');
 		const d = await run(`?tag=food${extra}`);

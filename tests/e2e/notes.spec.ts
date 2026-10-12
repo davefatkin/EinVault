@@ -185,6 +185,7 @@ test.describe('notes (owner)', () => {
 			}
 		}
 	});
+
 	test('list cards show a media count only for notes with media', async ({ asAdmin }) => {
 		await asAdmin.goto(`/${EIN}/notes`);
 		const withMedia = asAdmin.locator('article').filter({ hasText: N.einCommands.title });

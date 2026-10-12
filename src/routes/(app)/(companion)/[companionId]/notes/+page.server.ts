@@ -26,7 +26,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		notes,
 		tags,
 		selectedTags: filter.tags,
-		match: filter.match,
+		// match only means something with two or more tags, so a second chip starts at any.
+		match: filter.tags.length >= 2 ? filter.match : 'any',
 		filtered: filter.rawCount > 0,
 		manyRequested: filter.rawCount >= 2
 	};
