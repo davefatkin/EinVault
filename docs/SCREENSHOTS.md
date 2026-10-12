@@ -37,6 +37,11 @@
 ![Note dark](screenshots/member_note_dark.png)
 ![Note light](screenshots/member_note_light.png)
 
+### Caretaker sheet
+
+![Caretaker sheet dark](screenshots/member_sheet_dark.png)
+![Caretaker sheet light](screenshots/member_sheet_light.png)
+
 ### Admin panel
 
 ![Admin panel dark](screenshots/member_admin_dark.png)

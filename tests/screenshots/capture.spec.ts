@@ -29,6 +29,7 @@ const SHOTS: Shot[] = [
 	{ name: 'member_health', role: 'member', path: `/${EIN}/health` },
 	{ name: 'member_notes', role: 'member', path: `/${EIN}/notes` },
 	{ name: 'member_note', role: 'member', path: `/${EIN}/notes/${SEED.notes.einCommands.id}` },
+	{ name: 'member_sheet', role: 'member', path: `/${EIN}/sheet` },
 	{ name: 'member_admin', role: 'admin', path: '/admin/users' },
 	{ name: 'caretaker_dashboard', role: 'caretaker', path: `/care/${EIN}` },
 	{ name: 'caretaker_dashboard_mobile', role: 'caretaker', path: `/care/${EIN}`, mobile: true },
