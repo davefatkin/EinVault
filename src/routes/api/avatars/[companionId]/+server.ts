@@ -4,14 +4,25 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { getStorage, type GetResult } from '$lib/server/storage';
+import { isAssigned } from '$lib/server/media-access';
 
 export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
+
+	// Caretakers follow the note media rule: assigned (403 otherwise, checked
+	// before the avatar lookup so the status doesn't reveal which companions
+	// have one) and companion active (404 otherwise).
+	if (locals.user.role === 'caretaker' && !(await isAssigned(params.companionId, locals.user.id))) {
+		error(403, t(locals.locale, 'error.forbidden'));
+	}
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId)
 	});
 	if (!companion?.avatarPath) error(404, t(locals.locale, 'error.noAvatar'));
+	if (locals.user.role === 'caretaker' && !companion.isActive) {
+		error(404, t(locals.locale, 'error.noAvatar'));
+	}
 
 	const key = companion.avatarStorageKey ?? `avatars/${companion.avatarPath}`;
 	const ifNoneMatch = request.headers.get('if-none-match');
