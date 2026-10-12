@@ -27,6 +27,53 @@ export function normalizeTags(raw: string[]): { tags: string[]; invalid: boolean
 	return { tags, invalid };
 }
 
+// Notes list tag filter (#342), shared by the notes page and GET /api/notes.
+// The cap counts raw values, duplicates included.
+export const NOTE_FILTER_MAX_TAGS = 20;
+export type TagMatch = 'any' | 'all';
+export type TagFilter = {
+	rawCount: number; // tag values received, before normalizing
+	tags: string[]; // valid, normalized, de-duplicated
+	invalid: boolean; // some value failed normalizeTag
+	match: TagMatch;
+};
+export type TagFilterError = 'invalidMatch' | 'tooManyFilterTags';
+
+export function buildTagFilter(rawTags: string[], match: TagMatch): TagFilter {
+	const { tags, invalid } = normalizeTags(rawTags);
+	return { rawCount: rawTags.length, tags, invalid, match };
+}
+
+// Strict form for the API: match must be exactly 'any' or 'all' when given.
+export function parseTagFilter(
+	rawTags: string[],
+	rawMatch: string | null
+): { ok: true; value: TagFilter } | { ok: false; code: TagFilterError } {
+	if (rawMatch !== null && rawMatch !== 'any' && rawMatch !== 'all') {
+		return { ok: false, code: 'invalidMatch' };
+	}
+	if (rawTags.length > NOTE_FILTER_MAX_TAGS) return { ok: false, code: 'tooManyFilterTags' };
+	return { ok: true, value: buildTagFilter(rawTags, rawMatch ?? 'any') };
+}
+
+// An invalid tag is one no note has: with 'all' over several tags nothing can
+// match, and a filter with no valid tag at all matches nothing either.
+export function tagFilterMatchesNothing(filter: TagFilter): boolean {
+	if (filter.rawCount === 0) return false;
+	if (filter.tags.length === 0) return true;
+	return filter.match === 'all' && filter.invalid;
+}
+
+// Notes list URL for a tag selection. match=all is written only when it can
+// change the result; 'any' is the default and never written.
+export function notesFilterHref(base: string, tags: string[], match: TagMatch): string {
+	const params = new URLSearchParams();
+	for (const tag of tags) params.append('tag', tag);
+	if (match === 'all' && tags.length >= 2) params.set('match', 'all');
+	const query = params.toString();
+	return query ? `${base}?${query}` : base;
+}
+
 // Typed or pasted tag text: commas separate tags. One implementation, owned by
 // the generic tag input.
 export { splitTagText as splitTagInput } from '$lib/components/ui/tag-input/commit';
