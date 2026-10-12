@@ -33,7 +33,9 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
 		db.query.dailyEvents.findMany({
 			where: and(...filters),
-			orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt)],
+			// id last: one quick log fanned out to several companions shares loggedAt
+			// and createdAt, and paging needs a fixed order among those ties.
+			orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt), desc(d.id)],
 			limit: take,
 			offset
 		})
