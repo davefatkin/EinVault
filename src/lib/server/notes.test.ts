@@ -211,7 +211,7 @@ describe('listNotes', () => {
 		await createNote(C1, note({ title: 'food', tags: ['food'] }), U1);
 		await createNote(C1, note({ title: 'walk', tags: ['walks'], pinned: true }), U1);
 		await createNote(C2, note({ title: 'other', tags: ['food'] }), U1);
-		expect((await listNotes(C1, { tag: 'food' })).map((n) => n.title)).toEqual(['food']);
+		expect((await listNotes(C1, { tags: ['food'] })).map((n) => n.title)).toEqual(['food']);
 		expect((await listNotes(C1, { pinned: true })).map((n) => n.title)).toEqual(['walk']);
 		expect(await listNotes(C1, { limit: 1, offset: 1 })).toHaveLength(1);
 	});
@@ -225,6 +225,63 @@ describe('listNotes', () => {
 		expect(byTitle.get('bare')).toBe(0);
 		expect(byTitle.get('full')).toBe(2);
 		expect(bare).toBeTruthy();
+	});
+
+	it('matches any of several tags by default, all on request', async () => {
+		await createNote(C1, note({ title: 'food', tags: ['food'] }), U1);
+		await createNote(C1, note({ title: 'walk', tags: ['walks'] }), U1);
+		await createNote(C1, note({ title: 'both', tags: ['food', 'walks'] }), U1);
+		await createNote(C1, note({ title: 'none' }), U1);
+		const titles = async (opts: Parameters<typeof listNotes>[1]) =>
+			(await listNotes(C1, opts)).map((n) => n.title).sort();
+		expect(await titles({ tags: ['food', 'walks'] })).toEqual(['both', 'food', 'walk']);
+		expect(await titles({ tags: ['food', 'walks'], match: 'any' })).toEqual([
+			'both',
+			'food',
+			'walk'
+		]);
+		expect(await titles({ tags: ['food', 'walks'], match: 'all' })).toEqual(['both']);
+	});
+
+	it('ignores a tag no note has with any, matches nothing with all', async () => {
+		await createNote(C1, note({ title: 'food', tags: ['food'] }), U1);
+		const titles = async (opts: Parameters<typeof listNotes>[1]) =>
+			(await listNotes(C1, opts)).map((n) => n.title);
+		expect(await titles({ tags: ['food', 'nope'] })).toEqual(['food']);
+		expect(await titles({ tags: ['food', 'nope'], match: 'all' })).toEqual([]);
+	});
+
+	it('treats duplicate tags as one with all', async () => {
+		await createNote(C1, note({ title: 'food', tags: ['food'] }), U1);
+		expect(
+			(await listNotes(C1, { tags: ['food', 'food'], match: 'all' })).map((n) => n.title)
+		).toEqual(['food']);
+	});
+
+	it('applies no tag filter for an empty tag list', async () => {
+		await createNote(C1, note({ title: 'a', tags: ['x'] }), U1);
+		await createNote(C1, note({ title: 'b' }), U1);
+		expect(await listNotes(C1, { tags: [] })).toHaveLength(2);
+	});
+
+	it('combines all with pinned and pagination, scoped to the companion', async () => {
+		await createNote(C1, note({ title: 'p1', tags: ['a', 'b'], pinned: true }), U1);
+		await createNote(C1, note({ title: 'p2', tags: ['a', 'b'], pinned: true }), U1);
+		await createNote(C1, note({ title: 'u', tags: ['a', 'b'] }), U1);
+		await createNote(C1, note({ title: 'p-a', tags: ['a'], pinned: true }), U1);
+		await createNote(C2, note({ title: 'other', tags: ['a', 'b'], pinned: true }), U1);
+		const all = await listNotes(C1, { tags: ['a', 'b'], match: 'all', pinned: true });
+		expect(all.map((n) => n.title).sort()).toEqual(['p1', 'p2']);
+		const page = await listNotes(C1, {
+			tags: ['a', 'b'],
+			match: 'all',
+			pinned: true,
+			limit: 1,
+			offset: 1
+		});
+		expect(page).toHaveLength(1);
+		expect(['p1', 'p2']).toContain(page[0].title);
+		expect(page[0].title).not.toBe(all[0].title);
 	});
 });
 

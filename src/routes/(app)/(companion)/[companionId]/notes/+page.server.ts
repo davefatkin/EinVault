@@ -2,23 +2,35 @@ import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { listNotes, listTags } from '$lib/server/notes';
 import { togglePinAction } from '$lib/server/note-actions';
-import { normalizeTag } from '$lib/notes';
+import { NOTE_FILTER_MAX_TAGS, buildTagFilter, tagFilterMatchesNothing } from '$lib/notes';
 
 export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	if (locals.user.role === 'caretaker') redirect(302, '/care');
 	const { companion } = await parent();
 
-	const rawTag = url.searchParams.get('tag');
-	const tag = rawTag === null ? null : normalizeTag(rawTag);
+	// Lenient where GET /api/notes is strict: extra tags are dropped and any
+	// match other than 'all' reads as 'any'.
+	const filter = buildTagFilter(
+		url.searchParams.getAll('tag').slice(0, NOTE_FILTER_MAX_TAGS),
+		url.searchParams.get('match') === 'all' ? 'all' : 'any'
+	);
 	const [notes, tags] = await Promise.all([
-		// A ?tag= that can't be a valid tag matches nothing.
-		rawTag !== null && tag === null
+		tagFilterMatchesNothing(filter)
 			? Promise.resolve([])
-			: listNotes(params.companionId, { tag: tag ?? undefined }),
+			: listNotes(params.companionId, { tags: filter.tags, match: filter.match }),
 		listTags(params.companionId)
 	]);
-	return { companion, notes, tags, activeTag: rawTag === null ? null : (tag ?? rawTag) };
+	return {
+		companion,
+		notes,
+		tags,
+		selectedTags: filter.tags,
+		// match only means something with two or more tags, so a second chip starts at any.
+		match: filter.tags.length >= 2 ? filter.match : 'any',
+		filtered: filter.rawCount > 0,
+		manyRequested: filter.rawCount >= 2
+	};
 };
 
 export const actions: Actions = { togglePin: togglePinAction };
