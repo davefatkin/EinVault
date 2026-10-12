@@ -17,7 +17,7 @@
 <div
 	role="region"
 	aria-label={ariaLabel}
-	class="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:right-4 sm:bottom-4 z-50 flex flex-col-reverse gap-2 p-3 sm:p-0 pointer-events-none items-center sm:items-end"
+	class="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:right-4 sm:bottom-4 z-50 flex flex-col-reverse gap-2 p-3 sm:p-0 pointer-events-none items-center sm:items-end print:hidden"
 >
 	{#each visible as toast (toast.id)}
 		<div class="pointer-events-auto w-full max-w-sm">

@@ -103,9 +103,9 @@
 	let overviewLabel = $derived(t(locale, 'nav.caretaker.overview'));
 </script>
 
-<div class="min-h-screen flex flex-col bg-background">
+<div class="min-h-screen flex flex-col bg-background print:min-h-0">
 	<header
-		class="sticky z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
+		class="sticky z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 print:hidden"
 		style="top: var(--demo-bar-h, 0px)"
 	>
 		<div class="mx-auto max-w-3xl px-4 sm:px-6">
@@ -168,7 +168,7 @@
 	{#if data.isOnShift && data.activeShift}
 		<a
 			href="/care/settings#shifts"
-			class="block border-b border-border bg-teal/10 hover:bg-teal/15 transition-colors"
+			class="block border-b border-border bg-teal/10 hover:bg-teal/15 transition-colors print:hidden"
 		>
 			<div class="mx-auto max-w-3xl px-4 sm:px-6 py-2 flex items-center gap-2 text-sm text-teal">
 				<span class="inline-block w-2 h-2 rounded-full bg-teal shrink-0" aria-hidden="true"></span>
@@ -185,7 +185,7 @@
 	{:else}
 		<a
 			href="/care/settings#shifts"
-			class="block border-b bg-muted/50 hover:bg-muted/80 transition-colors"
+			class="block border-b bg-muted/50 hover:bg-muted/80 transition-colors print:hidden"
 		>
 			<div
 				class="mx-auto max-w-3xl px-4 sm:px-6 py-2 flex items-center gap-2 text-sm text-muted-foreground"
@@ -208,10 +208,12 @@
 		</a>
 	{/if}
 
-	<div class="mx-auto w-full max-w-3xl px-4 sm:px-6 py-6 flex-1 pb-20 md:pb-6">
+	<div
+		class="mx-auto w-full max-w-3xl px-4 sm:px-6 py-6 flex-1 pb-20 md:pb-6 print:max-w-none print:p-0"
+	>
 		{#if navItems.length > 0}
 			<nav
-				class="hidden md:flex gap-1 mb-6 rounded-xl border border-border bg-muted p-1"
+				class="hidden md:flex gap-1 mb-6 rounded-xl border border-border bg-muted p-1 print:hidden"
 				aria-label={t(locale, 'aria.caretakerNav')}
 			>
 				{#each navItems as item (item.href)}
@@ -259,7 +261,7 @@
 	<!-- Mobile bottom nav -->
 	{#if navItems.length > 0}
 		<nav
-			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30"
+			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30 print:hidden"
 			aria-label={t(locale, 'aria.caretakerNav')}
 		>
 			<div class="relative flex items-end">
@@ -381,7 +383,7 @@
 		</nav>
 	{:else}
 		<nav
-			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30"
+			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30 print:hidden"
 			aria-label={t(locale, 'aria.caretakerNav')}
 		>
 			<div class="flex">

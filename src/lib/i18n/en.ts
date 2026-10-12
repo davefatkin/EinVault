@@ -458,6 +458,16 @@ const messages = {
 	'time.hoursAgo': '{count}h ago',
 	'time.daysAgo': '{count}d ago',
 
+	// $lib/age.ts
+	'age.unknown': 'Unknown age',
+	'age.monthsOld.one': '{count}mo old',
+	'age.monthsOld.other': '{count}mo old',
+	'age.yearsOld.one': '{count}y old',
+	'age.yearsOld.other': '{count}y old',
+	'age.yearsMonths': '{years}y {months}mo',
+	'age.monthsShort': '{count}mo',
+	'age.yearsShort': '{count}y',
+
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Write',
 	'component.markdown.preview': 'Preview',
@@ -642,6 +652,24 @@ const messages = {
 	'page.dashboard.caretaker.modalLabelDue': 'Due',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repeats',
 	'page.dashboard.caretaker.closeDialog': 'Close dialog',
+
+	// Page: caretaker sheet (#280)
+	'page.sheet.title': 'Caretaker sheet',
+	'page.sheet.sectionNotes': 'Notes',
+	'page.sheet.video': 'Video in EinVault',
+	'page.sheet.printedOn': 'Printed {date} from EinVault',
+	'page.sheet.print': 'Print',
+	'page.sheet.hint': "Uncheck anything you don't want on paper.",
+	'page.sheet.include': 'Include',
+	'page.sheet.includeNamed': 'Include {name}',
+	'page.sheet.includePhoto': 'Include photo {name}',
+	'page.sheet.includePhotos': 'Include photos',
+	'page.sheet.photosIncluded.one': '{n} of {m} photo included',
+	'page.sheet.photosIncluded.other': '{n} of {m} photos included',
+	'page.sheet.notPrinted': 'Not printed',
+	'page.sheet.openFromOverview': 'Print caretaker sheet',
+	'page.sheet.openFromEdit': 'Preview caretaker sheet (opens in a new tab)',
+	'page.sheet.openFromCare': 'Print sheet',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Mood',

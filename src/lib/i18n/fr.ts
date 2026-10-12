@@ -468,6 +468,16 @@ const messages: Record<keyof Messages, string> = {
 	'time.hoursAgo': 'il y a {count}h',
 	'time.daysAgo': 'il y a {count}j',
 
+	// $lib/age.ts
+	'age.unknown': 'Âge inconnu',
+	'age.monthsOld.one': '{count} mois',
+	'age.monthsOld.other': '{count} mois',
+	'age.yearsOld.one': '{count} an',
+	'age.yearsOld.other': '{count} ans',
+	'age.yearsMonths': '{years} a {months} m',
+	'age.monthsShort': '{count} m',
+	'age.yearsShort': '{count} a',
+
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Écrire',
 	'component.markdown.preview': 'Aperçu',
@@ -653,6 +663,24 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Échéance',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Se répète',
 	'page.dashboard.caretaker.closeDialog': 'Fermer la boîte de dialogue',
+
+	// Page: caretaker sheet (#280)
+	'page.sheet.title': 'Fiche pour le gardien',
+	'page.sheet.sectionNotes': 'Notes',
+	'page.sheet.video': 'Vidéo dans EinVault',
+	'page.sheet.printedOn': 'Imprimé le {date} depuis EinVault',
+	'page.sheet.print': 'Imprimer',
+	'page.sheet.hint': 'Décochez ce que vous ne voulez pas sur papier.',
+	'page.sheet.include': 'Inclure',
+	'page.sheet.includeNamed': 'Inclure {name}',
+	'page.sheet.includePhoto': 'Inclure la photo {name}',
+	'page.sheet.includePhotos': 'Inclure les photos',
+	'page.sheet.photosIncluded.one': '{n} sur {m} photo incluse',
+	'page.sheet.photosIncluded.other': '{n} sur {m} photos incluses',
+	'page.sheet.notPrinted': 'Non imprimé',
+	'page.sheet.openFromOverview': 'Imprimer la fiche pour le gardien',
+	'page.sheet.openFromEdit': "Aperçu de la fiche pour le gardien (s'ouvre dans un nouvel onglet)",
+	'page.sheet.openFromCare': 'Imprimer la fiche',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Humeur',

@@ -11,7 +11,8 @@
 	import { noteMediaApi } from '$lib/mediaApi';
 	import type { MediaItem } from '$lib/media';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Phone, Mail, X, Bell, Activity } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Phone, Mail, X, Bell, Activity, Printer } from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -25,6 +26,7 @@
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { formatAge } from '$lib/age';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -41,18 +43,6 @@
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 	let labels = $derived(speciesLabels(locale, species));
-
-	function age(dob: string | null): string {
-		if (!dob) return 'Unknown age';
-		const birth = new Date(dob);
-		const now = new Date();
-		const months =
-			(now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
-		if (months < 12) return `${months}mo old`;
-		const y = Math.floor(months / 12);
-		const m = months % 12;
-		return m > 0 ? `${y}y ${m}mo` : `${y}y old`;
-	}
 
 	// Avatar lightbox
 	let avatarLightboxOpen = $state(false);
@@ -323,14 +313,21 @@
 					onlightbox={avatarUrl ? () => (avatarLightboxOpen = true) : undefined}
 				/>
 				<div class="flex-1 min-w-0">
-					<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
-						{companion.name}
-					</h1>
+					<div class="flex items-start justify-between gap-2">
+						<h1
+							class="min-w-0 break-words font-display text-2xl font-bold text-foreground leading-tight"
+						>
+							{companion.name}
+						</h1>
+						<Button href="/care/{companion.id}/sheet" variant="soft" size="sm" class="shrink-0">
+							<Printer class="h-3.5 w-3.5 mr-1.5" />
+							{t(locale, 'page.sheet.openFromCare')}
+						</Button>
+					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
-							? ` · ${companion.sex}`
-							: ''}
+						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
+							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					{#if companion.microchip}
 						<p class="text-xs text-muted-foreground mt-1">

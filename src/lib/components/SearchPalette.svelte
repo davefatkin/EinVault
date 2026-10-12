@@ -381,7 +381,7 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 pb-4"
+		class="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 pb-4 print:hidden"
 		role="presentation"
 		onkeydown={handleKeydown}
 	>

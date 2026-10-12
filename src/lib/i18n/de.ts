@@ -469,6 +469,16 @@ const messages: Record<keyof Messages, string> = {
 	'time.hoursAgo': 'vor {count}h',
 	'time.daysAgo': 'vor {count}T',
 
+	// $lib/age.ts
+	'age.unknown': 'Alter unbekannt',
+	'age.monthsOld.one': '{count} Monat alt',
+	'age.monthsOld.other': '{count} Monate alt',
+	'age.yearsOld.one': '{count} Jahr alt',
+	'age.yearsOld.other': '{count} Jahre alt',
+	'age.yearsMonths': '{years} J. {months} Mon.',
+	'age.monthsShort': '{count} Mon.',
+	'age.yearsShort': '{count} J.',
+
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Schreiben',
 	'component.markdown.preview': 'Vorschau',
@@ -653,6 +663,24 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelDue': 'Fällig',
 	'page.dashboard.caretaker.modalLabelRepeats': 'Wiederholt sich',
 	'page.dashboard.caretaker.closeDialog': 'Dialog schließen',
+
+	// Page: caretaker sheet (#280)
+	'page.sheet.title': 'Betreuerblatt',
+	'page.sheet.sectionNotes': 'Notizen',
+	'page.sheet.video': 'Video in EinVault',
+	'page.sheet.printedOn': 'Gedruckt am {date} aus EinVault',
+	'page.sheet.print': 'Drucken',
+	'page.sheet.hint': 'Entferne den Haken bei allem, was nicht aufs Papier soll.',
+	'page.sheet.include': 'Mitdrucken',
+	'page.sheet.includeNamed': '{name} mitdrucken',
+	'page.sheet.includePhoto': 'Foto {name} mitdrucken',
+	'page.sheet.includePhotos': 'Fotos mitdrucken',
+	'page.sheet.photosIncluded.one': '{n} von {m} Foto ausgewählt',
+	'page.sheet.photosIncluded.other': '{n} von {m} Fotos ausgewählt',
+	'page.sheet.notPrinted': 'Wird nicht gedruckt',
+	'page.sheet.openFromOverview': 'Betreuerblatt drucken',
+	'page.sheet.openFromEdit': 'Betreuerblatt-Vorschau (öffnet in neuem Tab)',
+	'page.sheet.openFromCare': 'Blatt drucken',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Stimmung',

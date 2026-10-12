@@ -15,6 +15,7 @@
 		Bell,
 		HeartPulse,
 		Pencil,
+		Printer,
 		UserCheck,
 		FileText,
 		X,
@@ -36,6 +37,7 @@
 	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { formatAge } from '$lib/age';
 	import type { MessageKey } from '$lib/i18n/en';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
@@ -61,18 +63,6 @@
 	} = $derived(data);
 
 	const locale = getLocale();
-
-	function age(dob: string | null): string {
-		if (!dob) return 'Unknown age';
-		const birth = new Date(dob);
-		const now = new Date();
-		const months =
-			(now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
-		if (months < 12) return `${months}mo old`;
-		const y = Math.floor(months / 12);
-		const m = months % 12;
-		return m > 0 ? `${y}y ${m}mo` : `${y}y old`;
-	}
 
 	let today = localDateISO();
 
@@ -558,18 +548,26 @@
 						<h1 class="font-display text-2xl font-bold text-foreground leading-tight">
 							{companion.name}
 						</h1>
-						{#if companion.isActive !== false}
-							<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
-								<Pencil class="h-3.5 w-3.5 mr-1.5" />
-								{t(locale, 'common.edit')}
+						<div class="flex shrink-0 items-center gap-2">
+							<!-- Outside the isActive check: archived companions print too. -->
+							<Button href="/{companion.id}/sheet" variant="soft" size="sm">
+								<Printer class="h-3.5 w-3.5 sm:mr-1.5" />
+								<span class="sr-only sm:not-sr-only"
+									>{t(locale, 'page.sheet.openFromOverview')}</span
+								>
 							</Button>
-						{/if}
+							{#if companion.isActive !== false}
+								<Button href="/companions/{companion.id}/edit" variant="soft" size="sm">
+									<Pencil class="h-3.5 w-3.5 mr-1.5" />
+									{t(locale, 'common.edit')}
+								</Button>
+							{/if}
+						</div>
 					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
-							? ` · ${companion.sex}`
-							: ''}
+						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
+							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					<div class="mt-2">
 						{#if status === 'up-to-date'}

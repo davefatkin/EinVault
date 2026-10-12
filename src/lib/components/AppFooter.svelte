@@ -5,7 +5,9 @@
 	const locale = getLocale();
 </script>
 
-<footer class="text-center text-xs text-muted-foreground/60 pt-2 pb-24 md:pb-2 space-x-2">
+<footer
+	class="text-center text-xs text-muted-foreground/60 pt-2 pb-24 md:pb-2 space-x-2 print:hidden"
+>
 	<a
 		href="https://github.com/davefatkin/einvault"
 		target="_blank"

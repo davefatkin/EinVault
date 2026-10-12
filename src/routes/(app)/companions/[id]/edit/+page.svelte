@@ -14,7 +14,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { ChevronLeft, PawPrint } from '@lucide/svelte';
+	import { ChevronLeft, PawPrint, Printer } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { speciesLabels } from '$lib/i18n/labels';
@@ -277,6 +277,17 @@
 
 		<!-- Caretaker tab: always in DOM, hidden when not active -->
 		<div class:hidden={activeTab !== 'caretaker'} class="space-y-6 animate-fade-in">
+			<!-- A new tab: this tab sits inside the edit form, and leaving the page
+			     would drop unsaved edits. -->
+			<a
+				href="/{companion.id}/sheet"
+				target="_blank"
+				rel="noopener"
+				class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-link hover:underline"
+			>
+				<Printer class="h-4 w-4" />
+				{t(locale, 'page.sheet.openFromEdit')}
+			</a>
 			<!-- SCHEDULES section -->
 			<section class="space-y-4">
 				<div>
