@@ -182,6 +182,26 @@ test.describe('caretaker sheet', () => {
 		}
 	});
 
+	test('unchecking Include does not move the checkbox or the content below @mobile', async ({
+		asMember
+	}) => {
+		await openSheet(asMember);
+		// Page coordinates, not boundingBox(): uncheck() scrolls the box into view.
+		const pageTop = (locator: ReturnType<typeof include>) =>
+			locator.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+		const below = asMember.getByRole('heading', { name: N.einCommands.title, exact: true });
+		for (const name of [N.einSitter.title, 'Household Contacts', SEED.admin.displayName]) {
+			const box = include(asMember, name);
+			const before = await pageTop(box);
+			const belowBefore = await pageTop(below);
+			await box.uncheck();
+			await expect(asMember.getByText('Not printed').first()).toBeVisible();
+			expect(await pageTop(box), `checkbox for ${name}`).toBeCloseTo(before, 0);
+			expect(await pageTop(below), `content below ${name}`).toBeCloseTo(belowBefore, 0);
+			await box.check();
+		}
+	});
+
 	test('an excluded household owner is left out of print', async ({ asMember }) => {
 		await openSheet(asMember);
 		const household = asMember.locator('section').filter({

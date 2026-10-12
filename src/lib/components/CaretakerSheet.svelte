@@ -4,7 +4,7 @@
 	// Include checkboxes and the toolbar render only after hydration, so without
 	// JavaScript the full sheet shows and the browser's own print works. Choices
 	// live here and reset on reload: an excluded item stays on screen, dimmed
-	// with a "Not printed" badge, and is print:hidden. Excluding a note or a
+	// and marked "Not printed", and is print:hidden. Excluding a note or a
 	// section hides its photos through the DOM without touching their own
 	// checkboxes. The sheet uses no <nav>, <aside> or <header> elements (the
 	// e2e print checks rely on that), and its images are not lazy-loaded, since
@@ -102,10 +102,7 @@
 
 {#snippet include(included: boolean, name: string, onchange: (included: boolean) => void)}
 	{#if mounted}
-		<span class="flex shrink-0 items-center gap-2 print:hidden">
-			{#if !included}
-				<Badge variant="coral">{t(locale, 'page.sheet.notPrinted')}</Badge>
-			{/if}
+		<span class="flex shrink-0 items-center print:hidden">
 			<label
 				class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-muted-foreground"
 			>
@@ -116,7 +113,21 @@
 					aria-label={t(locale, 'page.sheet.includeNamed', { name })}
 					onchange={(e) => onchange(e.currentTarget.checked)}
 				/>
-				<span aria-hidden="true">{t(locale, 'page.sheet.include')}</span>
+				<!-- The label reads "Not printed" when excluded. The other label sits
+				     invisibly in the same grid cell (::after), so the control keeps
+				     one width in both states and nothing around it shifts. -->
+				<span
+					aria-hidden="true"
+					data-alt={t(locale, included ? 'page.sheet.notPrinted' : 'page.sheet.include')}
+					class={[
+						'inline-grid after:invisible after:col-start-1 after:row-start-1 after:content-[attr(data-alt)]',
+						!included && 'text-coral'
+					]}
+				>
+					<span class="col-start-1 row-start-1"
+						>{t(locale, included ? 'page.sheet.include' : 'page.sheet.notPrinted')}</span
+					>
+				</span>
 			</label>
 		</span>
 	{/if}
