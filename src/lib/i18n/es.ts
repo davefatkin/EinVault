@@ -145,6 +145,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidRole': 'Rol no válido.',
 	'error.invalidStatus': 'status debe ser "due" o "all".',
 	'error.invalidPinned': 'pinned debe ser "true" o "false".',
+	'error.invalidMatch': 'match debe ser "any" o "all".',
 	'error.invalidNtfyTopic':
 		'El tema solo puede contener letras, números, guiones y guiones bajos (máx. 64).',
 	'error.invalidDate': 'Fecha no válida',
@@ -1011,6 +1012,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTitleNewline': 'El título debe ser una sola línea.',
 	'error.noteBodyTooLong': 'La nota es demasiado larga (máx. {max} caracteres).',
 	'error.noteTooManyTags': 'Demasiadas etiquetas (máx. {max}).',
+	'error.noteTooManyFilterTags': 'Filtra por un máximo de {max} etiquetas.',
 	'error.noteInvalidTag': 'Cada etiqueta debe tener de 1 a {max} caracteres.',
 	'error.noteNotFound': 'Nota no encontrada.',
 	'error.invalidDuration': 'La duración debe ser un número entero de minutos, como máximo 480.',

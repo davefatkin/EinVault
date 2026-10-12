@@ -790,6 +790,16 @@ apiWorld(
 				message: 'pinned must be "true" or "false".'
 			});
 
+			const badMatch = await page.request.get(
+				api(`/api/notes?companionId=${EIN}&tag=api&tag=x&match=bogus`),
+				{ headers: auth }
+			);
+			expect(badMatch.status()).toBe(400);
+			expect(await badMatch.json()).toMatchObject({
+				code: 'invalidMatch',
+				message: 'match must be "any" or "all".'
+			});
+
 			const patched = await page.request.patch(api(`/api/notes/${id}`), {
 				headers: auth,
 				data: { pinned: true, tags: [] }

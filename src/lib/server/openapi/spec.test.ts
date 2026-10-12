@@ -52,4 +52,15 @@ describe('buildOpenApiDocument', () => {
 		};
 		expect(companion.properties.notesForSitter.deprecated).toBe(true);
 	});
+
+	it('documents the multi-tag notes filter', () => {
+		const get = doc.paths?.['/api/notes']?.get;
+		const params = (get?.parameters ?? []) as { name: string; schema?: { type?: string } }[];
+		expect(params.find((p) => p.name === 'tag')?.schema?.type).toBe('array');
+		expect(params.map((p) => p.name)).toContain('match');
+		const bad = get?.responses?.['400'] as { description: string };
+		expect(bad.description).toContain('invalidMatch');
+		expect(bad.description).toContain('tooManyFilterTags');
+		expect(doc.info.version).toBe('1.3.0');
+	});
 });

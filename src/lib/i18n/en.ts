@@ -142,6 +142,7 @@ const messages = {
 	'error.invalidRole': 'Invalid role.',
 	'error.invalidStatus': 'status must be "due" or "all".',
 	'error.invalidPinned': 'pinned must be "true" or "false".',
+	'error.invalidMatch': 'match must be "any" or "all".',
 	'error.invalidNtfyTopic':
 		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',
@@ -994,6 +995,7 @@ const messages = {
 	'error.noteTitleNewline': 'Title must be a single line.',
 	'error.noteBodyTooLong': 'Note is too long (max {max} characters).',
 	'error.noteTooManyTags': 'Too many tags (max {max}).',
+	'error.noteTooManyFilterTags': 'Filter by at most {max} tags.',
 	'error.noteInvalidTag': 'Each tag must be 1 to {max} characters.',
 	'error.noteNotFound': 'Note not found.',
 	'error.invalidDuration': 'Duration must be a whole number of minutes, at most 480.',

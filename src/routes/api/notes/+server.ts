@@ -8,26 +8,33 @@ import { paginate } from '$lib/server/pagination';
 import { createNote, listNotes } from '$lib/server/notes';
 import { toApiNote } from '$lib/server/api-serializers';
 import { NoteCreate } from '$lib/server/openapi/schemas';
-import { normalizeTag, validateNewNote } from '$lib/notes';
+import { tagFilterMatchesNothing, validateNewNote } from '$lib/notes';
 import {
 	noteCodeFor,
 	parsePinnedParam,
+	parseTagFilterParams,
 	requireNoteOwnerScope,
 	throwNoteError
 } from '$lib/server/notes-api';
 
-// GET /api/notes?companionId=&tag=&pinned=&limit=&offset=. Full scope, owners only.
+// GET /api/notes?companionId=&tag=&match=&pinned=&limit=&offset=. Full scope,
+// owners only. Repeat tag for several; match=all requires every one.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	requireNoteOwnerScope(scope, user, locale);
 	const companionId = await requireAllowedCompanion(event.url, user, locale);
 	const pinned = parsePinnedParam(event.url.searchParams.get('pinned'), locale);
-	const tagParam = event.url.searchParams.get('tag');
-	const tag = tagParam === null ? undefined : normalizeTag(tagParam);
-	// A tag that can't exist matches nothing, but limit/offset are still checked.
+	const filter = parseTagFilterParams(event.url.searchParams, locale);
+	// A filter that can't match still has its limit/offset checked.
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
-		tag === null
+		tagFilterMatchesNothing(filter)
 			? Promise.resolve([])
-			: listNotes(companionId, { tags: tag ? [tag] : undefined, pinned, limit: take, offset })
+			: listNotes(companionId, {
+					tags: filter.tags,
+					match: filter.match,
+					pinned,
+					limit: take,
+					offset
+				})
 	);
 	return json({ notes: page.map(toApiNote), hasMore });
 });

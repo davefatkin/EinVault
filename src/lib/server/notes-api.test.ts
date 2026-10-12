@@ -3,11 +3,17 @@ import { isHttpError } from '@sveltejs/kit';
 import { db, schema } from '$lib/server/db';
 import { createNote } from '$lib/server/notes';
 import { NoteCreate, NoteUpdate } from '$lib/server/openapi/schemas';
-import { NOTE_BODY_MAX_LEN, NOTE_MAX_TAGS, NOTE_TITLE_MAX_LEN } from '$lib/notes';
+import {
+	NOTE_BODY_MAX_LEN,
+	NOTE_FILTER_MAX_TAGS,
+	NOTE_MAX_TAGS,
+	NOTE_TITLE_MAX_LEN
+} from '$lib/notes';
 import {
 	loadAllowedNote,
 	noteCodeFor,
 	parsePinnedParam,
+	parseTagFilterParams,
 	requireNoteOwnerScope,
 	throwNoteError,
 	throwNoteNotFound
@@ -56,6 +62,36 @@ describe('notes api guards', () => {
 		expect(caught(() => throwNoteNotFound('en'))).toEqual({
 			status: 404,
 			body: { code: 'notFound', message: 'Note not found.' }
+		});
+	});
+
+	it('parses the tag filter from repeated params', () => {
+		const params = new URLSearchParams('tag=Food&tag=walks&tag=food&match=all');
+		expect(parseTagFilterParams(params, 'en')).toEqual({
+			rawCount: 3,
+			tags: ['food', 'walks'],
+			invalid: false,
+			match: 'all'
+		});
+		expect(parseTagFilterParams(new URLSearchParams(''), 'en')).toMatchObject({
+			rawCount: 0,
+			match: 'any'
+		});
+	});
+
+	it('rejects a bad match and too many tags', () => {
+		for (const bad of ['match=bogus', 'match=', 'match=ALL']) {
+			expect(caught(() => parseTagFilterParams(new URLSearchParams(bad), 'en'))).toEqual({
+				status: 400,
+				body: { code: 'invalidMatch', message: 'match must be "any" or "all".' }
+			});
+		}
+		const many = new URLSearchParams(
+			Array.from({ length: NOTE_FILTER_MAX_TAGS + 1 }, (_, i) => `tag=t${i}`).join('&')
+		);
+		expect(caught(() => parseTagFilterParams(many, 'en'))).toEqual({
+			status: 400,
+			body: { code: 'tooManyFilterTags', message: 'Filter by at most 20 tags.' }
 		});
 	});
 

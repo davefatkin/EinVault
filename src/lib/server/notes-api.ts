@@ -1,7 +1,13 @@
 import { error } from '@sveltejs/kit';
 import type { z } from 'zod';
 import { t, type Locale } from '$lib/i18n';
-import { NOTE_ERROR, type NoteErrorCode } from '$lib/notes';
+import {
+	NOTE_ERROR,
+	NOTE_FILTER_MAX_TAGS,
+	parseTagFilter,
+	type NoteErrorCode,
+	type TagFilter
+} from '$lib/notes';
 import { requireFullScope } from '$lib/server/api-guards';
 import { listAllowedCompanions } from '$lib/server/companion-scope';
 import { getNote, type NoteWithAuthors } from '$lib/server/notes';
@@ -67,4 +73,17 @@ export function parsePinnedParam(raw: string | null, locale: Locale): boolean | 
 	if (raw === 'true') return true;
 	if (raw === 'false') return false;
 	error(400, { code: 'invalidPinned', message: t(locale, 'error.invalidPinned') });
+}
+
+// GET /api/notes tag filter: repeated ?tag= plus ?match=any|all.
+export function parseTagFilterParams(params: URLSearchParams, locale: Locale): TagFilter {
+	const parsed = parseTagFilter(params.getAll('tag'), params.get('match'));
+	if (parsed.ok) return parsed.value;
+	if (parsed.code === 'invalidMatch') {
+		error(400, { code: 'invalidMatch', message: t(locale, 'error.invalidMatch') });
+	}
+	error(400, {
+		code: 'tooManyFilterTags',
+		message: t(locale, 'error.noteTooManyFilterTags', { max: NOTE_FILTER_MAX_TAGS })
+	});
 }

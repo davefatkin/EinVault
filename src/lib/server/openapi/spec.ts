@@ -1,5 +1,6 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { z } from './z';
+import { NOTE_FILTER_MAX_TAGS } from '$lib/notes';
 import {
 	LogRequest,
 	LogResponse,
@@ -472,14 +473,22 @@ export function buildOpenApiDocument() {
 		request: {
 			query: z.object({
 				companionId: z.string().openapi({ description: 'Required target companion.' }),
-				tag: z.string().optional().openapi({ description: 'Only notes with this tag.' }),
+				tag: z.array(z.string()).max(NOTE_FILTER_MAX_TAGS).optional().openapi({
+					description: 'Filter by tag. Repeat for several tags (up to 20); see `match`.'
+				}),
+				match: z.enum(['any', 'all']).optional().openapi({
+					description:
+						'How several tags combine: `any` (default) returns notes with at least one, `all` only notes with every tag.'
+				}),
 				pinned: z.enum(['true', 'false']).optional(),
 				...paginationQuery
 			})
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: NoteList } } },
-			400: errorResponse('noCompanions / invalidPinned / invalidPagination'),
+			400: errorResponse(
+				'noCompanions / invalidPinned / invalidMatch / tooManyFilterTags / invalidPagination'
+			),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('writeScopeReadOnly / forbidden / notAssigned'),
 			404: errorResponse('API disabled'),
@@ -578,7 +587,7 @@ export function buildOpenApiDocument() {
 			// API contract version, versioned independently of the app's release
 			// number: bump minor for additive changes, major for breaking ones.
 			title: 'EinVault API',
-			version: '1.2.0',
+			version: '1.3.0',
 			description:
 				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, manage notes, and read companions, shifts, and the user roster.'
 		},
