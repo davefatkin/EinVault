@@ -664,6 +664,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.modalLabelRepeats': 'Wiederholt sich',
 	'page.dashboard.caretaker.closeDialog': 'Dialog schließen',
 
+	// Page: caretaker sheet (#280)
+	'page.sheet.title': 'Betreuerblatt',
+	'page.sheet.sectionNotes': 'Notizen',
+	'page.sheet.video': 'Video in EinVault',
+	'page.sheet.printedOn': 'Gedruckt am {date} aus EinVault',
+
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Stimmung',
 	'page.dashboard.moodTrend.range7': '7 T',

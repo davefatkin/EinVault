@@ -653,6 +653,12 @@ const messages = {
 	'page.dashboard.caretaker.modalLabelRepeats': 'Repeats',
 	'page.dashboard.caretaker.closeDialog': 'Close dialog',
 
+	// Page: caretaker sheet (#280)
+	'page.sheet.title': 'Caretaker sheet',
+	'page.sheet.sectionNotes': 'Notes',
+	'page.sheet.video': 'Video in EinVault',
+	'page.sheet.printedOn': 'Printed {date} from EinVault',
+
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Mood',
 	'page.dashboard.moodTrend.range7': '7d',
