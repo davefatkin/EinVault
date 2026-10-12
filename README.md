@@ -51,7 +51,8 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 
 - **Companion profiles:** species, breed, bio, vet info, emergency contacts, and avatar photo
 - **Daily journal:** per-companion entries with mood tracking, photo and video uploads, and a configurable daily media limit (default 5)
-- **Notes:** pinned, tagged markdown notes per companion, with per-note sharing to caretakers
+- **Notes:** pinned, tagged markdown notes per companion with photos and videos, multi-tag filtering, and per-note sharing to caretakers
+- **Caretaker sheet:** a printable one-pager with schedules, contacts, and shared notes for sitters without an account; pick which sections, notes, and photos go on paper
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
 - **Activity logging:** walks, meals, bathroom trips, litter box visits, treats, play sessions, and grooming, with the choices matched to each companion's species (dog, cat, or other)
 - **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users
