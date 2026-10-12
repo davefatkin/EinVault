@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { t, getLocale } from '$lib/i18n';
+	import { formatAge } from '$lib/age';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Plus, Zap, Check, Pencil, Bell, X, House, Activity, ChevronDown } from '@lucide/svelte';
@@ -143,22 +144,6 @@
 		// The server already rejects far-future timestamps at write time.
 		return items.sort((a, b) => b.ts.getTime() - a.ts.getTime()).slice(0, 8);
 	});
-
-	// Age from DOB string "YYYY-MM-DD"
-	function companionAge(dob: string | null | undefined): string | null {
-		if (!dob) return null;
-		const [y, m, d] = dob.split('-').map(Number);
-		const born = new Date(y, m - 1, d);
-		const now = new Date();
-		const years = now.getFullYear() - born.getFullYear();
-		const adjusted =
-			now < new Date(now.getFullYear(), born.getMonth(), born.getDate()) ? years - 1 : years;
-		if (adjusted < 1) {
-			const months = Math.floor((now.getTime() - born.getTime()) / (30 * 24 * 60 * 60 * 1000));
-			return `${months}mo`;
-		}
-		return `${adjusted}y`;
-	}
 
 	function urgencyLabel(u: ReminderUrgency): string {
 		if (u === 'overdue') return t(locale, 'page.dashboard.caretaker.reminderOverdue');
@@ -523,7 +508,7 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 				{#each data.companions as companion (companion.id)}
-					{@const age = companionAge(companion.dob)}
+					{@const age = formatAge(companion.dob, locale, { style: 'short' })}
 					{@const compReminders = remindersByCompanion[companion.id] ?? []}
 					{@const status = careStatus(
 						compReminders.map((r) => ({

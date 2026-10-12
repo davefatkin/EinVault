@@ -458,6 +458,16 @@ const messages = {
 	'time.hoursAgo': '{count}h ago',
 	'time.daysAgo': '{count}d ago',
 
+	// $lib/age.ts
+	'age.unknown': 'Unknown age',
+	'age.monthsOld.one': '{count}mo old',
+	'age.monthsOld.other': '{count}mo old',
+	'age.yearsOld.one': '{count}y old',
+	'age.yearsOld.other': '{count}y old',
+	'age.yearsMonths': '{years}y {months}mo',
+	'age.monthsShort': '{count}mo',
+	'age.yearsShort': '{count}y',
+
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Write',
 	'component.markdown.preview': 'Preview',

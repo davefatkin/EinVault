@@ -467,6 +467,16 @@ const messages: Record<keyof Messages, string> = {
 	'time.hoursAgo': 'hace {count}h',
 	'time.daysAgo': 'hace {count}d',
 
+	// $lib/age.ts
+	'age.unknown': 'Edad desconocida',
+	'age.monthsOld.one': '{count} mes',
+	'age.monthsOld.other': '{count} meses',
+	'age.yearsOld.one': '{count} año',
+	'age.yearsOld.other': '{count} años',
+	'age.yearsMonths': '{years} a {months} m',
+	'age.monthsShort': '{count} m',
+	'age.yearsShort': '{count} a',
+
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Escribir',
 	'component.markdown.preview': 'Vista previa',

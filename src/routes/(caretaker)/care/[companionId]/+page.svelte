@@ -25,6 +25,7 @@
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { formatAge } from '$lib/age';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -41,18 +42,6 @@
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 	let labels = $derived(speciesLabels(locale, species));
-
-	function age(dob: string | null): string {
-		if (!dob) return 'Unknown age';
-		const birth = new Date(dob);
-		const now = new Date();
-		const months =
-			(now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
-		if (months < 12) return `${months}mo old`;
-		const y = Math.floor(months / 12);
-		const m = months % 12;
-		return m > 0 ? `${y}y ${m}mo` : `${y}y old`;
-	}
 
 	// Avatar lightbox
 	let avatarLightboxOpen = $state(false);
@@ -328,9 +317,8 @@
 					</h1>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {age(companion.dob)}{companion.sex
-							? ` · ${companion.sex}`
-							: ''}
+						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
+							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					{#if companion.microchip}
 						<p class="text-xs text-muted-foreground mt-1">
