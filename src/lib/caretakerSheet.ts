@@ -39,3 +39,29 @@ export type CaretakerSheet = {
 	owners: { id: string; displayName: string; phone: string | null; email: string | null }[]; // only with a phone or email
 	notes: SheetNote[];
 };
+
+/** Sections with their own Include checkbox. */
+export type SheetSection = 'header' | 'contacts' | 'household' | 'routine' | 'notes';
+
+/** Every photo on the sheet, in print order. Videos have no Include choice. */
+export function sheetPhotoIds(sheet: Pick<CaretakerSheet, 'notes'>): string[] {
+	return sheet.notes.flatMap((n) =>
+		n.media.filter((m) => m.mediaType === 'photo').map((m) => m.id)
+	);
+}
+
+export type PhotoSelection = { included: number; total: number; state: 'all' | 'some' | 'none' };
+
+/**
+ * The toolbar's "Include photos" state and count. Only the photos' own
+ * choices count: excluding a note or a section leaves them as they were.
+ */
+export function photoSelection(
+	photoIds: readonly string[],
+	excluded: ReadonlySet<string>
+): PhotoSelection {
+	const total = photoIds.length;
+	const included = photoIds.filter((id) => !excluded.has(id)).length;
+	const state = total > 0 && included === total ? 'all' : included > 0 ? 'some' : 'none';
+	return { included, total, state };
+}

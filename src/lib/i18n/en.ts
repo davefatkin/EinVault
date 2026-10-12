@@ -658,6 +658,14 @@ const messages = {
 	'page.sheet.sectionNotes': 'Notes',
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Printed {date} from EinVault',
+	'page.sheet.print': 'Print',
+	'page.sheet.include': 'Include',
+	'page.sheet.includeNamed': 'Include {name}',
+	'page.sheet.includePhoto': 'Include photo {name}',
+	'page.sheet.includePhotos': 'Include photos',
+	'page.sheet.photosIncluded.one': '{n} of {m} photo included',
+	'page.sheet.photosIncluded.other': '{n} of {m} photos included',
+	'page.sheet.notPrinted': 'Not printed',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Mood',

@@ -669,6 +669,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.sectionNotes': 'Notizen',
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Gedruckt am {date} aus EinVault',
+	'page.sheet.print': 'Drucken',
+	'page.sheet.include': 'Mitdrucken',
+	'page.sheet.includeNamed': '{name} mitdrucken',
+	'page.sheet.includePhoto': 'Foto {name} mitdrucken',
+	'page.sheet.includePhotos': 'Fotos mitdrucken',
+	'page.sheet.photosIncluded.one': '{n} von {m} Foto ausgewählt',
+	'page.sheet.photosIncluded.other': '{n} von {m} Fotos ausgewählt',
+	'page.sheet.notPrinted': 'Wird nicht gedruckt',
 
 	// Page: dashboard (mood trend)
 	'page.dashboard.moodTrend.title': 'Stimmung',

@@ -11,4 +11,4 @@
 	<title>{data.sheet.companion.name} | {t(locale, 'page.sheet.title')} | EinVault</title>
 </svelte:head>
 
-<CaretakerSheet sheet={data.sheet} printedOn={data.printedOn} />
+<CaretakerSheet sheet={data.sheet} printedOn={data.printedOn} shell="care" />
