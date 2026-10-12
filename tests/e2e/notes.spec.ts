@@ -123,6 +123,68 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByRole('link', { name: 'E2E Favorite foods' })).toHaveCount(0);
 	});
 
+	test('filter by several tags, any or all (#342)', async ({ asMember }) => {
+		const title = 'E2E Training and vet';
+		let noteUrl: string | null = null;
+		try {
+			await fillNewNote(asMember, title, '', ['training', 'vet']);
+			await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes/(?!new)[^/?]+$`));
+			noteUrl = asMember.url();
+
+			await asMember.goto(`/${EIN}/notes`);
+			const chips = asMember.getByRole('navigation', { name: 'Filter by tag' });
+			const match = asMember.getByRole('group', { name: 'Match' });
+			const note = (name: string) => asMember.getByRole('link', { name });
+
+			await chips.getByRole('link', { name: /^training/ }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes\\?tag=training$`));
+			await expect(note(N.einCommands.title)).toBeVisible();
+			await expect(note(title)).toBeVisible();
+			await expect(note(N.einPrivate.title)).toHaveCount(0);
+			await expect(match).toHaveCount(0);
+
+			await chips.getByRole('link', { name: /^vet/ }).click();
+			await expect(asMember).toHaveURL(new RegExp(`\\?tag=training&tag=vet$`));
+			await expect(match.getByRole('link', { name: 'Match any', exact: true })).toHaveAttribute(
+				'aria-current',
+				'true'
+			);
+			await expect(note(N.einCommands.title)).toBeVisible();
+			await expect(note(N.einPrivate.title)).toBeVisible();
+			await expect(note(title)).toBeVisible();
+			await expect(note(N.einSitter.title)).toHaveCount(0);
+
+			await match.getByRole('link', { name: 'Match all', exact: true }).click();
+			await expect(asMember).toHaveURL(new RegExp(`\\?tag=training&tag=vet&match=all$`));
+			await expect(note(title)).toBeVisible();
+			await expect(note(N.einCommands.title)).toHaveCount(0);
+			await expect(note(N.einPrivate.title)).toHaveCount(0);
+
+			await chips.getByRole('link', { name: /^training/ }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes\\?tag=vet$`));
+			await expect(match).toHaveCount(0);
+			await expect(note(N.einPrivate.title)).toBeVisible();
+			await expect(note(title)).toBeVisible();
+			await expect(note(N.einCommands.title)).toHaveCount(0);
+
+			await asMember.goto(`/${EIN}/notes?tag=training`);
+			await expect(note(N.einCommands.title)).toBeVisible();
+			await expect(note(N.einPrivate.title)).toHaveCount(0);
+
+			await chips.getByRole('link', { name: 'All', exact: true }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
+			await expect(note(N.einSitter.title)).toBeVisible();
+		} finally {
+			// Leave no note behind in the shared worker DB, even if an assertion failed.
+			if (noteUrl) {
+				await asMember.goto(noteUrl);
+				await asMember.getByRole('button', { name: 'Delete note' }).click();
+				await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+				await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
+			}
+		}
+	});
 	test('list cards show a media count only for notes with media', async ({ asAdmin }) => {
 		await asAdmin.goto(`/${EIN}/notes`);
 		const withMedia = asAdmin.locator('article').filter({ hasText: N.einCommands.title });

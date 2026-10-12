@@ -6,12 +6,29 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import NoteCard from '$lib/components/notes/NoteCard.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { notesFilterHref, type TagMatch } from '$lib/notes';
 
 	let { data, form } = $props();
 	const locale = getLocale();
 
 	const base = $derived(`/${data.companion.id}/notes`);
-	const tagHref = (tag: string) => `${base}?tag=${encodeURIComponent(tag)}`;
+	// Tags on a note card narrow the list to just that tag.
+	const tagHref = (tag: string) => notesFilterHref(base, [tag], 'any');
+	// A chip adds its tag to the selection or removes it, keeping match.
+	const toggleHref = (tag: string) =>
+		notesFilterHref(
+			base,
+			data.selectedTags.includes(tag)
+				? data.selectedTags.filter((s) => s !== tag)
+				: [...data.selectedTags, tag],
+			data.match
+		);
+	// A selected tag no note has any more still gets a chip, so it can be removed.
+	const staleTags = $derived(data.selectedTags.filter((s) => !data.tags.some((v) => v.tag === s)));
+	const MATCH_MODES: { mode: TagMatch; key: 'page.notes.matchAny' | 'page.notes.matchAll' }[] = [
+		{ mode: 'any', key: 'page.notes.matchAny' },
+		{ mode: 'all', key: 'page.notes.matchAll' }
+	];
 	const chipClass = (on: boolean) =>
 		`rounded-full border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
 			on
@@ -45,30 +62,55 @@
 		<Alert variant="coral"><AlertDescription>{form.noteError}</AlertDescription></Alert>
 	{/if}
 
-	{#if data.tags.length > 0}
-		<nav class="flex flex-wrap gap-2" aria-label={t(locale, 'page.notes.filterLabel')}>
-			<a
-				href={base}
-				class={chipClass(data.activeTag === null)}
-				aria-current={data.activeTag === null ? 'page' : undefined}
-			>
-				{t(locale, 'page.notes.filterAll')}
-			</a>
-			{#each data.tags as { tag, count } (tag)}
+	{#if data.tags.length > 0 || staleTags.length > 0}
+		<div class="space-y-3">
+			<nav class="flex flex-wrap gap-2" aria-label={t(locale, 'page.notes.filterLabel')}>
 				<a
-					href={tagHref(tag)}
-					class={chipClass(data.activeTag === tag)}
-					aria-current={data.activeTag === tag ? 'page' : undefined}
+					href={base}
+					class={chipClass(!data.filtered)}
+					aria-current={!data.filtered ? 'page' : undefined}
 				>
-					{tag} <span class="opacity-60">{count}</span>
+					{t(locale, 'page.notes.filterAll')}
 				</a>
-			{/each}
-		</nav>
+				{#each data.tags as { tag, count } (tag)}
+					{@const on = data.selectedTags.includes(tag)}
+					<a href={toggleHref(tag)} class={chipClass(on)} aria-current={on ? 'true' : undefined}>
+						{tag} <span class="opacity-60">{count}</span>
+					</a>
+				{/each}
+				{#each staleTags as tag (tag)}
+					<a href={toggleHref(tag)} class={chipClass(true)} aria-current="true">{tag}</a>
+				{/each}
+			</nav>
+			{#if data.selectedTags.length >= 2}
+				<div
+					class="flex flex-wrap gap-2"
+					role="group"
+					aria-label={t(locale, 'page.notes.matchLabel')}
+				>
+					{#each MATCH_MODES as { mode, key } (mode)}
+						<a
+							href={notesFilterHref(base, data.selectedTags, mode)}
+							class={chipClass(data.match === mode)}
+							aria-current={data.match === mode ? 'true' : undefined}
+						>
+							{t(locale, key)}
+						</a>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	{/if}
 
 	{#if data.notes.length === 0}
-		{#if data.activeTag !== null}
-			<EmptyState tint="muted" title={t(locale, 'page.notes.filterEmpty')}>
+		{#if data.filtered}
+			<EmptyState
+				tint="muted"
+				title={t(
+					locale,
+					data.manyRequested ? 'page.notes.filterEmptyMany' : 'page.notes.filterEmpty'
+				)}
+			>
 				{#snippet icon()}<StickyNote class="h-5 w-5" />{/snippet}
 				{#snippet action()}
 					<Button variant="outline" href={base}>{t(locale, 'page.notes.clearFilter')}</Button>
