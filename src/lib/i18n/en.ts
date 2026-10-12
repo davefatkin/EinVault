@@ -659,6 +659,7 @@ const messages = {
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Printed {date} from EinVault',
 	'page.sheet.print': 'Print',
+	'page.sheet.hint': "Uncheck anything you don't want on paper.",
 	'page.sheet.include': 'Include',
 	'page.sheet.includeNamed': 'Include {name}',
 	'page.sheet.includePhoto': 'Include photo {name}',

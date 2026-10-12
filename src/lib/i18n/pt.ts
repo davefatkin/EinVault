@@ -668,6 +668,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.video': 'Vídeo no EinVault',
 	'page.sheet.printedOn': 'Impresso em {date} a partir do EinVault',
 	'page.sheet.print': 'Imprimir',
+	'page.sheet.hint': 'Desmarque o que não quer no papel.',
 	'page.sheet.include': 'Incluir',
 	'page.sheet.includeNamed': 'Incluir {name}',
 	'page.sheet.includePhoto': 'Incluir a foto {name}',

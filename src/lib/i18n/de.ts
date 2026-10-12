@@ -670,6 +670,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Gedruckt am {date} aus EinVault',
 	'page.sheet.print': 'Drucken',
+	'page.sheet.hint': 'Entferne den Haken bei allem, was nicht aufs Papier soll.',
 	'page.sheet.include': 'Mitdrucken',
 	'page.sheet.includeNamed': '{name} mitdrucken',
 	'page.sheet.includePhoto': 'Foto {name} mitdrucken',

@@ -166,34 +166,42 @@
 >
 	{#if mounted}
 		<div
-			class="sticky z-30 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-card/95 px-3 py-2 backdrop-blur print:hidden {TOOLBAR_TOP[
+			class="sticky z-30 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border bg-card/95 px-3 py-2 backdrop-blur print:hidden {TOOLBAR_TOP[
 				shell
 			]}"
 		>
-			<Button type="button" size="sm" onclick={() => window.print()}>
-				<Printer class="mr-1.5 h-4 w-4" />
-				{t(locale, 'page.sheet.print')}
-			</Button>
-			{#if photos.total > 0}
-				<label class="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
-					<input
-						type="checkbox"
-						class="h-4 w-4 accent-primary"
-						bind:checked={() => photos.state === 'all', setAllPhotos}
-						bind:indeterminate={() => photos.state === 'some', () => {}}
-					/>
-					{t(locale, 'page.sheet.includePhotos')}
-				</label>
-				<span class="text-xs text-muted-foreground">
-					{t(
-						locale,
-						photos.total === 1
-							? 'page.sheet.photosIncluded.one'
-							: 'page.sheet.photosIncluded.other',
-						{ n: photos.included, m: photos.total }
-					)}
-				</span>
-			{/if}
+			<p class="min-w-0 flex-1 basis-48 text-sm text-muted-foreground">
+				{t(locale, 'page.sheet.hint')}
+			</p>
+			<div class="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+				{#if photos.total > 0}
+					<!-- Stacked on phones so the photo controls and Print share one row. -->
+					<div class="flex flex-col items-end sm:flex-row sm:items-center sm:gap-4">
+						<label class="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
+							<input
+								type="checkbox"
+								class="h-4 w-4 accent-primary"
+								bind:checked={() => photos.state === 'all', setAllPhotos}
+								bind:indeterminate={() => photos.state === 'some', () => {}}
+							/>
+							{t(locale, 'page.sheet.includePhotos')}
+						</label>
+						<span class="text-xs text-muted-foreground">
+							{t(
+								locale,
+								photos.total === 1
+									? 'page.sheet.photosIncluded.one'
+									: 'page.sheet.photosIncluded.other',
+								{ n: photos.included, m: photos.total }
+							)}
+						</span>
+					</div>
+				{/if}
+				<Button type="button" size="sm" onclick={() => window.print()}>
+					<Printer class="mr-1.5 h-4 w-4" />
+					{t(locale, 'page.sheet.print')}
+				</Button>
+			</div>
 		</div>
 	{/if}
 
