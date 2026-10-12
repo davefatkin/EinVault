@@ -6,9 +6,16 @@
 @plugin "@tailwindcss/typography";
 
 /* ============================================================
-   Dark mode: toggle the .dark class on <html>
+   Dark mode: toggle the .dark class on <html>. Screen only: a
+   printout always uses the light palette (#280).
    ============================================================ */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark {
+	@media not print {
+		&:where(.dark, .dark *) {
+			@slot;
+		}
+	}
+}
 
 /* ============================================================
    Design tokens — replaces tailwind.config.ts `theme` block
@@ -178,36 +185,38 @@
 		--brand-gradient: linear-gradient(135deg, hsl(255 89% 62%), hsl(12 86% 59%));
 	}
 
-	.dark {
-		color-scheme: dark;
-		--background: 236 36% 9%;
-		--foreground: 0 0% 100%;
-		--card: 237 28% 14%;
-		--card-foreground: 0 0% 100%;
-		--popover: 237 28% 14%;
-		--popover-foreground: 0 0% 100%;
-		--primary: 252 100% 65%;
-		--primary-foreground: 0 0% 100%;
-		--primary-link: 252 100% 82%;
-		--secondary: 238 30% 19%;
-		--secondary-foreground: 0 0% 100%;
-		--muted: 238 30% 19%;
-		--muted-foreground: 240 14% 66%;
-		--accent: 238 30% 19%;
-		--accent-foreground: 0 0% 100%;
-		--destructive: 0 63% 50%;
-		--destructive-foreground: 0 0% 100%;
-		--border: 238 25% 22%;
-		--input: 238 20% 30%;
-		--ring: 252 100% 68%;
-		--surface-2: 238 35% 19%;
-		--coral: 13 84% 62%;
-		--coral-foreground: 240 36% 9%;
-		--gold: 42 100% 70%;
-		--gold-foreground: 240 36% 9%;
-		--teal: 172 66% 50%;
-		--teal-foreground: 174 80% 8%;
-		--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 84% 62%));
+	@media not print {
+		.dark {
+			color-scheme: dark;
+			--background: 236 36% 9%;
+			--foreground: 0 0% 100%;
+			--card: 237 28% 14%;
+			--card-foreground: 0 0% 100%;
+			--popover: 237 28% 14%;
+			--popover-foreground: 0 0% 100%;
+			--primary: 252 100% 65%;
+			--primary-foreground: 0 0% 100%;
+			--primary-link: 252 100% 82%;
+			--secondary: 238 30% 19%;
+			--secondary-foreground: 0 0% 100%;
+			--muted: 238 30% 19%;
+			--muted-foreground: 240 14% 66%;
+			--accent: 238 30% 19%;
+			--accent-foreground: 0 0% 100%;
+			--destructive: 0 63% 50%;
+			--destructive-foreground: 0 0% 100%;
+			--border: 238 25% 22%;
+			--input: 238 20% 30%;
+			--ring: 252 100% 68%;
+			--surface-2: 238 35% 19%;
+			--coral: 13 84% 62%;
+			--coral-foreground: 240 36% 9%;
+			--gold: 42 100% 70%;
+			--gold-foreground: 240 36% 9%;
+			--teal: 172 66% 50%;
+			--teal-foreground: 174 80% 8%;
+			--brand-gradient: linear-gradient(135deg, hsl(252 100% 65%), hsl(13 84% 62%));
+		}
 	}
 
 	* {
@@ -419,4 +428,33 @@
 		animation: none;
 		width: 100%;
 	}
+}
+
+/* ============================================================
+   Print (#280): the light palette on a white page, no shadows.
+   Unlayered, so it beats the @layer base tokens above.
+   ============================================================ */
+@media print {
+	:root {
+		color-scheme: light;
+		--background: 0 0% 100%;
+		--foreground: 0 0% 0%;
+		--card: 0 0% 100%;
+		--card-foreground: 0 0% 0%;
+	}
+
+	html {
+		transition: none;
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-shadow: none !important;
+		text-shadow: none !important;
+	}
+}
+
+@page {
+	margin: 12mm;
 }

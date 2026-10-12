@@ -170,7 +170,7 @@
 
 <!-- Top bar -->
 <header
-	class="sticky z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 {className}"
+	class="sticky z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 print:hidden {className}"
 	style="top: var(--demo-bar-h, 0px)"
 >
 	<div class="flex h-14 items-center gap-3 px-4">
@@ -267,7 +267,7 @@
 <!-- Bottom tab bar -->
 <nav
 	aria-label={t(locale, 'aria.mainNav')}
-	class="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card pb-safe md:hidden"
+	class="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card pb-safe md:hidden print:hidden"
 >
 	<div class="relative flex items-end">
 		{#if isCompanionContext}
