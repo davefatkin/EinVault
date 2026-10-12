@@ -27,7 +27,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
 		tag === null
 			? Promise.resolve([])
-			: listNotes(companionId, { tag, pinned, limit: take, offset })
+			: listNotes(companionId, { tags: tag ? [tag] : undefined, pinned, limit: take, offset })
 	);
 	return json({ notes: page.map(toApiNote), hasMore });
 });

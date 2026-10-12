@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import type { Note } from '$lib/server/db/schema';
 import { generateId } from '$lib/server/utils';
-import type { NewNote, NotePatch } from '$lib/notes';
+import type { NewNote, NotePatch, TagMatch } from '$lib/notes';
 import type { MediaItem } from '$lib/media';
 import { countMediaForNotes, listMediaForNotes } from '$lib/server/note-media';
 import { deleteMediaBlobs, type StoredMediaRef } from '$lib/server/storage/media-blobs';
@@ -46,17 +46,29 @@ async function attachTags<T extends Note>(rows: T[]): Promise<(T & { tags: strin
 
 export async function listNotes(
 	companionId: string,
-	opts: { tag?: string; pinned?: boolean; limit?: number; offset?: number } = {}
+	opts: {
+		tags?: string[];
+		match?: TagMatch;
+		pinned?: boolean;
+		limit?: number;
+		offset?: number;
+	} = {}
 ): Promise<NoteListItem[]> {
 	const filters = [eq(schema.notes.companionId, companionId)];
-	if (opts.tag !== undefined) {
+	const tags = [...new Set(opts.tags ?? [])];
+	if (tags.length > 0) {
+		const tagged = db
+			.select({ id: schema.noteTags.noteId })
+			.from(schema.noteTags)
+			.where(inArray(schema.noteTags.tag, tags));
+		// 'all': a note qualifies when it carries every tag. note_tags is keyed on
+		// (note_id, tag), so the per-note count can't double up.
 		filters.push(
 			inArray(
 				schema.notes.id,
-				db
-					.select({ id: schema.noteTags.noteId })
-					.from(schema.noteTags)
-					.where(eq(schema.noteTags.tag, opts.tag))
+				opts.match === 'all'
+					? tagged.groupBy(schema.noteTags.noteId).having(sql`count(*) = ${tags.length}`)
+					: tagged
 			)
 		);
 	}

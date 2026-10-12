@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		// A ?tag= that can't be a valid tag matches nothing.
 		rawTag !== null && tag === null
 			? Promise.resolve([])
-			: listNotes(params.companionId, { tag: tag ?? undefined }),
+			: listNotes(params.companionId, { tags: tag ? [tag] : undefined }),
 		listTags(params.companionId)
 	]);
 	return { companion, notes, tags, activeTag: rawTag === null ? null : (tag ?? rawTag) };
