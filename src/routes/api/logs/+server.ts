@@ -33,7 +33,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const { page, hasMore } = await paginate(event.url, locale, (take, offset) =>
 		db.query.dailyEvents.findMany({
 			where: and(...filters),
-			orderBy: (d, { desc }) => [desc(d.loggedAt)],
+			orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt)],
 			limit: take,
 			offset
 		})

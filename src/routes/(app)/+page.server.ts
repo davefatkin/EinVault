@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 				inArray(schema.dailyEvents.companionId, ids),
 				gte(schema.dailyEvents.loggedAt, ago7d)
 			),
-			orderBy: (d, { desc }) => [desc(d.loggedAt)],
+			orderBy: (d, { desc }) => [desc(d.loggedAt), desc(d.createdAt)],
 			limit: RECENT_EVENT_LIMIT,
 			with: { logger: { columns: { displayName: true } } }
 		}),
