@@ -78,6 +78,18 @@ export function parseRecordTimestamp(value: unknown): Date | null {
 	return d;
 }
 
+// Timestamp from a health or weight form (Health Log, journal day). Blank
+// means now, as before. No future cap: a planned visit can be entered ahead.
+export function parseFormTimestamp(value: string | File | null): Date | null {
+	if (value === null || (typeof value === 'string' && !value.trim())) return new Date();
+	if (typeof value !== 'string') return null;
+	const d = new Date(value);
+	return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Result of parsing a record form: the insert values, or a user-facing message. */
+export type FormParse<T> = { ok: true; value: T } | { ok: false; message: string };
+
 // Short user-facing names (quick log buttons, API token labels)
 
 export function parseShortName(value: unknown): string | null {

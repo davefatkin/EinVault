@@ -1038,6 +1038,8 @@ const messages = {
 	'error.apiAccessRevoked': 'An administrator has revoked your API access.',
 	'error.tokenLimitReached': 'Token limit reached (max {max}). Revoke one first.',
 	'error.noteTooLong': 'Note is too long (max {max} characters).',
+	'error.invalidDateTime': 'Enter a valid date and time.',
+	'error.fieldTooLong': 'Too long (max {max} characters).',
 	'error.noteTitleTooLong': 'Title is too long (max {max} characters).',
 	'error.noteTitleNewline': 'Title must be a single line.',
 	'error.noteBodyTooLong': 'Note is too long (max {max} characters).',

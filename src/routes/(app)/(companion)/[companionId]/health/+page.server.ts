@@ -3,10 +3,9 @@ import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
-import { parseHealthEventType, parseWeightUnit } from '$lib/server/validation';
 import { reminderPrefillUrl } from '$lib/health';
-import { createHealthEvent } from '$lib/server/health';
-import { createWeightEntry } from '$lib/server/weight';
+import { createHealthEvent, parseHealthEventForm } from '$lib/server/health';
+import { createWeightEntry, parseWeightForm } from '$lib/server/weight';
 import { getJournalDatesByEvent, deleteHealthEvent } from '$lib/server/journal-links';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
@@ -43,53 +42,29 @@ export const actions: Actions = {
 	addHealth: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
-		const title = String(data.get('title') ?? '').trim();
-		const type = parseHealthEventType(String(data.get('type') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
-		const occurredAt = data.get('occurredAt')
-			? new Date(String(data.get('occurredAt')))
-			: new Date();
-		const vetName = String(data.get('vetName') ?? '').trim() || null;
-		const vetClinic = String(data.get('vetClinic') ?? '').trim() || null;
-		const andReminder = data.get('andReminder') === '1';
+		const parsed = parseHealthEventForm(data, locals.locale);
+		if (!parsed.ok) return fail(400, { healthError: parsed.message });
 
-		if (!title || !type)
-			return fail(400, { healthError: t(locals.locale, 'error.titleAndTypeRequired') });
+		await createHealthEvent(params.companionId, parsed.value, locals.user.id);
 
-		await createHealthEvent(
-			params.companionId,
-			{ type, title, notes, occurredAt, vetName, vetClinic },
-			locals.user.id
-		);
-
-		if (andReminder) redirect(303, reminderPrefillUrl(params.companionId, type, title, notes));
-
+		if (data.get('andReminder') === '1') {
+			const { type, title, notes } = parsed.value;
+			redirect(303, reminderPrefillUrl(params.companionId, type, title, notes));
+		}
 		return { healthSuccess: true };
 	},
 
 	addWeight: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
-		const weight = parseFloat(String(data.get('weight') ?? ''));
 		const companion = await db.query.companions.findFirst({
 			where: eq(schema.companions.id, params.companionId),
 			columns: { weightUnit: true }
 		});
-		const unit = parseWeightUnit(String(data.get('unit') ?? ''), companion?.weightUnit ?? 'lbs');
-		const notes = String(data.get('notes') ?? '').trim() || null;
-		const recordedAt = data.get('recordedAt')
-			? new Date(String(data.get('recordedAt')))
-			: new Date();
+		const parsed = parseWeightForm(data, companion?.weightUnit ?? 'lbs', locals.locale);
+		if (!parsed.ok) return fail(400, { weightError: parsed.message });
 
-		if (isNaN(weight) || weight <= 0)
-			return fail(400, { weightError: t(locals.locale, 'error.validWeightRequired') });
-
-		await createWeightEntry(
-			params.companionId,
-			{ weight, unit, notes, recordedAt },
-			locals.user.id
-		);
-
+		await createWeightEntry(params.companionId, parsed.value, locals.user.id);
 		return { weightSuccess: true };
 	},
 
@@ -97,18 +72,9 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
-		const title = String(data.get('title') ?? '').trim();
-		const type = parseHealthEventType(String(data.get('type') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
-		const occurredAt = data.get('occurredAt')
-			? new Date(String(data.get('occurredAt')))
-			: new Date();
-		const vetName = String(data.get('vetName') ?? '').trim() || null;
-		const vetClinic = String(data.get('vetClinic') ?? '').trim() || null;
-
 		if (!id) return fail(400, { healthError: t(locals.locale, 'error.missingId') });
-		if (!title || !type)
-			return fail(400, { healthError: t(locals.locale, 'error.titleAndTypeRequired') });
+		const parsed = parseHealthEventForm(data, locals.locale);
+		if (!parsed.ok) return fail(400, { healthError: parsed.message });
 
 		const existing = await db.query.healthEvents.findFirst({
 			where: and(
@@ -119,10 +85,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { healthError: t(locals.locale, 'error.eventNotFound') });
 
-		await db
-			.update(schema.healthEvents)
-			.set({ type, title, notes, occurredAt, vetName, vetClinic })
-			.where(eq(schema.healthEvents.id, id));
+		await db.update(schema.healthEvents).set(parsed.value).where(eq(schema.healthEvents.id, id));
 
 		return { updateHealthSuccess: true };
 	},
@@ -150,15 +113,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
-		const weight = parseFloat(String(data.get('weight') ?? ''));
-		const notes = String(data.get('notes') ?? '').trim() || null;
-		const recordedAt = data.get('recordedAt')
-			? new Date(String(data.get('recordedAt')))
-			: new Date();
-
 		if (!id) return fail(400, { weightError: t(locals.locale, 'error.missingId') });
-		if (isNaN(weight) || weight <= 0)
-			return fail(400, { weightError: t(locals.locale, 'error.validWeightRequired') });
 
 		const existing = await db.query.weightEntries.findFirst({
 			where: and(
@@ -169,12 +124,10 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { weightError: t(locals.locale, 'error.entryNotFound') });
 
-		const unit = parseWeightUnit(String(data.get('unit') ?? ''), existing.unit);
+		const parsed = parseWeightForm(data, existing.unit, locals.locale);
+		if (!parsed.ok) return fail(400, { weightError: parsed.message });
 
-		await db
-			.update(schema.weightEntries)
-			.set({ weight, unit, notes, recordedAt })
-			.where(eq(schema.weightEntries.id, id));
+		await db.update(schema.weightEntries).set(parsed.value).where(eq(schema.weightEntries.id, id));
 
 		return { updateWeightSuccess: true };
 	},

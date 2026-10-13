@@ -1060,6 +1060,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.apiAccessRevoked': 'Ein Administrator hat deinen API-Zugriff entzogen.',
 	'error.tokenLimitReached': 'Token-Limit erreicht (max. {max}). Widerrufe zuerst eines.',
 	'error.noteTooLong': 'Notiz ist zu lang (max. {max} Zeichen).',
+	'error.invalidDateTime': 'Gib ein gültiges Datum und eine gültige Uhrzeit ein.',
+	'error.fieldTooLong': 'Zu lang (max. {max} Zeichen).',
 	'error.noteTitleTooLong': 'Der Titel ist zu lang (max. {max} Zeichen).',
 	'error.noteTitleNewline': 'Der Titel muss einzeilig sein.',
 	'error.noteBodyTooLong': 'Die Notiz ist zu lang (max. {max} Zeichen).',
