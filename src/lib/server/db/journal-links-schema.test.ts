@@ -52,6 +52,11 @@ describe('journal_entry_health_events', () => {
 	});
 
 	it('cascades when the journal entry is deleted', async () => {
+		await db
+			.insert(schema.journalEntryHealthEvents)
+			.values({ entryId: 'e-jl-1', healthEventId: 'h-jl-1' })
+			.onConflictDoNothing();
+		expect((await links()).some((l) => l.entryId === 'e-jl-1')).toBe(true);
 		await db.delete(schema.journalEntries).where(eq(schema.journalEntries.id, 'e-jl-1'));
 		expect((await links()).some((l) => l.entryId === 'e-jl-1')).toBe(false);
 	});

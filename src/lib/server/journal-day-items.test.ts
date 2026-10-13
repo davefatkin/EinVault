@@ -421,6 +421,14 @@ describe('linked health events', () => {
 		expect(own.kind === 'health' && own.journalDates).toEqual(['2026-07-20', '2026-07-25']);
 	});
 
+	it('places the event on its own day and each linking day across a wide range', async () => {
+		const days = await getDayItems(c, { from: '2026-07-01', to: '2026-07-31' });
+		const pick = (day: string) => days.get(day)!.find((i) => i.id === visit);
+		expect(pick('2026-07-01')).toMatchObject({ kind: 'health', fromLink: false });
+		expect(pick('2026-07-20')).toMatchObject({ fromLink: true, linkedHere: true });
+		expect(pick('2026-07-25')).toMatchObject({ fromLink: true, linkedHere: true });
+	});
+
 	it('ignores a link to another companion', async () => {
 		const all = [
 			...(await getDayItems(c, { from: '2026-07-01', to: '2026-07-31' })).values()
