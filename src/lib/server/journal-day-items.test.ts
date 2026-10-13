@@ -85,6 +85,7 @@ describe.each(['America/New_York', 'Asia/Tokyo'])('day bucketing in %s', (tz) =>
 	afterAll(() => setTz('America/New_York'));
 
 	it('sqlite localtime follows the process TZ', () => {
+		expect(new Date(2026, 2, 10, 12).getTimezoneOffset()).toBe(tz === 'Asia/Tokyo' ? -540 : 240);
 		const at = new Date(2026, 2, 10, 23, 30);
 		const row = db.get<{ d: string }>(
 			sql`select date(${Math.floor(at.getTime() / 1000)}, 'unixepoch', 'localtime') as d`
