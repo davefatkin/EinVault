@@ -142,8 +142,11 @@ describe('load health records', () => {
 			[
 				'at',
 				'documents',
+				'fromLink',
 				'id',
+				'journalDates',
 				'kind',
+				'linkedHere',
 				'logger',
 				'notes',
 				'title',

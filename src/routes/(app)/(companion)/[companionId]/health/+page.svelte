@@ -200,7 +200,8 @@
 				vetName: h.vetName,
 				vetClinic: h.vetClinic,
 				notes: h.notes,
-				logger: h.logger
+				logger: h.logger,
+				journalDates: data.journalDatesByEvent[h.id] ?? []
 			};
 		}
 		const w = s.item;
