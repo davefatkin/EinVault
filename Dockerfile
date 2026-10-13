@@ -67,7 +67,8 @@ WORKDIR /app
 # operators can enable it by flipping one env var without rebuilding. Alpine's
 # ffmpeg includes the native HEVC decoder (reads Apple-recorded source) and
 # libx264 for H.264 encode. Adds ~100-150MB to the image.
-RUN apk add --no-cache ffmpeg
+# tzdata: musl needs zoneinfo for TZ; without it SQLite's 'localtime' stays UTC while Node follows TZ.
+RUN apk add --no-cache ffmpeg tzdata
 
 # Pull in OS security fixes published after the pinned base digest. The node
 # image only picks these up when the alpine base image itself is rebuilt, which

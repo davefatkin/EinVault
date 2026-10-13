@@ -446,6 +446,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.error.goHome': 'Ir para o início',
 	'page.error.goBack': 'Voltar',
 
+	// Component: HealthDetailModal
+	'component.healthDetail.openHealthLog': 'Abrir no registo de saúde',
+
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancelar',
 	'component.confirmDialog.delete': 'Eliminar',
@@ -736,6 +739,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.logIt': 'Registar',
 	'page.journal.day.noActivities': 'Sem atividades registadas.',
 	'page.journal.day.recentEntries': 'Entradas recentes',
+	'page.journal.day.healthRecords': 'Registos de saúde',
+	'page.journal.dayItem.health': 'evento de saúde',
+	'page.journal.dayItem.weight': 'peso',
+	'page.journal.dayItem.document': 'documento',
+	'page.journal.dayItem.attachments.one': '{count} documento anexado',
+	'page.journal.dayItem.attachments.other': '{count} documentos anexados',
 
 	// Page: Journal (caretaker)
 	'page.journal.caretaker.todaysNotes': 'Notas de hoje',

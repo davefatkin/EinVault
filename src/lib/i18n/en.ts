@@ -437,6 +437,9 @@ const messages = {
 	'page.error.goHome': 'Go home',
 	'page.error.goBack': 'Go back',
 
+	// Component: HealthDetailModal
+	'component.healthDetail.openHealthLog': 'Open in Health Log',
+
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancel',
 	'component.confirmDialog.delete': 'Delete',
@@ -727,6 +730,12 @@ const messages = {
 	'page.journal.day.logIt': 'Log it',
 	'page.journal.day.noActivities': 'No activities logged yet.',
 	'page.journal.day.recentEntries': 'Recent entries',
+	'page.journal.day.healthRecords': 'Health records',
+	'page.journal.dayItem.health': 'health event',
+	'page.journal.dayItem.weight': 'weight',
+	'page.journal.dayItem.document': 'document',
+	'page.journal.dayItem.attachments.one': '{count} attached document',
+	'page.journal.dayItem.attachments.other': '{count} attached documents',
 
 	// Page: Journal (caretaker)
 	'page.journal.caretaker.todaysNotes': "Today's notes",

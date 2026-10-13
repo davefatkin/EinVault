@@ -101,3 +101,60 @@ describe('load activity order', () => {
 		expect(data.dailyEvents.map((e) => e.id)).toEqual(['ps-order-late', 'ps-order-backdated']);
 	});
 });
+
+describe('load health records', () => {
+	const companionId = 'ps-items';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({
+			id: companionId,
+			name: 'Items Dog',
+			species: 'dog'
+		} as typeof schema.companions.$inferInsert);
+		await db.insert(schema.healthEvents).values({
+			id: 'ps-items-health',
+			companionId,
+			type: 'vaccination',
+			title: 'Rabies booster',
+			occurredAt: new Date(2026, 0, 2, 12, 0)
+		});
+		await db.insert(schema.weightEntries).values({
+			id: 'ps-items-other-day',
+			companionId,
+			weight: 20,
+			unit: 'kg',
+			recordedAt: new Date(2026, 0, 3, 12, 0)
+		});
+	});
+
+	const loadDate = async (date: string) =>
+		(await load({
+			params: { companionId, date },
+			locals: { user: { id: 'ps-member', role: 'member' }, locale: 'en' },
+			parent: async () => ({ companion: { id: companionId } })
+		} as unknown as Parameters<typeof load>[0])) as { dayItems: Record<string, unknown>[] };
+
+	it("returns only that date's items, with display fields only", async () => {
+		const data = await loadDate('2026-01-02');
+		expect(data.dayItems).toHaveLength(1);
+		expect(data.dayItems[0]).toMatchObject({ kind: 'health', id: 'ps-items-health' });
+		expect(Object.keys(data.dayItems[0]).sort()).toEqual(
+			[
+				'at',
+				'documents',
+				'id',
+				'kind',
+				'logger',
+				'notes',
+				'title',
+				'type',
+				'vetClinic',
+				'vetName'
+			].sort()
+		);
+	});
+
+	it('returns an empty list for a day without items', async () => {
+		expect((await loadDate('2026-01-05')).dayItems).toEqual([]);
+	});
+});

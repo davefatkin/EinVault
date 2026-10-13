@@ -19,3 +19,13 @@ export type WeightUnit = (typeof WEIGHT_UNITS)[number];
 
 export const SPECIES = ['dog', 'cat', 'other'] as const;
 export type Species = (typeof SPECIES)[number];
+
+export const DOCUMENT_CATEGORIES = [
+	'receipt',
+	'invoice',
+	'medical',
+	'insurance',
+	'ownership',
+	'other'
+] as const;
+export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];

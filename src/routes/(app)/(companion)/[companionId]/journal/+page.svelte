@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, Snapshot } from './$types';
+	import { tick, onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
@@ -10,7 +11,15 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { toSpecies } from '$lib/species';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { journalMediaUrl, type MediaItem } from '$lib/media';
+	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import {
+		documentUrl,
+		healthRecordHref,
+		type DayItemDocument,
+		type DayRecordItem
+	} from '$lib/dayItems';
 
 	const locale = getLocale();
 
@@ -30,6 +39,41 @@
 		hasMore = data.hasMore;
 		oldestDate = data.oldestDate;
 	});
+
+	// Back from a health or weight detail re-runs the load, which resets the list
+	// to the first page. The snapshot stores only how far back the list had been
+	// loaded and the scroll position, never the entries themselves: restoring
+	// stored entries would overwrite fresh data (edited days, changed records)
+	// with stale copies. Instead restore refetches older pages until that day is
+	// reached again, then scrolls. SvelteKit scrolls before it restores snapshots,
+	// while the DOM still holds only the first page, so the scroll has to happen
+	// here once the older days are rendered.
+	let destroyed = false;
+	onDestroy(() => (destroyed = true));
+
+	async function restoreLoaded(value: { oldestDate: string | null; scrollY: number }) {
+		const target = value.oldestDate;
+		if (!target || !oldestDate || oldestDate <= target) return;
+		// Bail out if the user left the page while older days were loading.
+		while (!destroyed && hasMore && oldestDate && oldestDate > target) {
+			const before: string = oldestDate;
+			await loadMore();
+			if (oldestDate === before) break;
+		}
+		await tick();
+		if (destroyed) return;
+		window.scrollTo(0, value.scrollY);
+	}
+
+	export const snapshot: Snapshot<{ oldestDate: string | null; scrollY: number }> = {
+		capture: () => ({ oldestDate, scrollY: window.scrollY }),
+		restore: (value) => {
+			void restoreLoaded(value);
+		}
+	};
+
+	let previewDoc = $state<DayItemDocument | null>(null);
+	let detailRecord = $state<DayRecordItem | null>(null);
 
 	async function loadMore() {
 		if (!oldestDate || loadingMore) return;
@@ -77,8 +121,14 @@
 	type EventItem = Entry['events'][0];
 	let detailEvent = $state<EventItem | null>(null);
 
-	function openDetail(event: EventItem) {
+	// The timeline day the activity is filed under (server-local), for the
+	// modal's journal link. Converting loggedAt in the browser would use the
+	// browser's timezone instead.
+	let detailDate = $state('');
+
+	function openDetail(event: EventItem, date: string) {
 		detailEvent = event;
+		detailDate = date;
 	}
 
 	function closeDetail() {
@@ -103,10 +153,28 @@
 	<ActivityDetailModal
 		event={detailEvent}
 		onclose={closeDetail}
-		journalHref={companion.isActive !== false
-			? `/${companion.id}/journal/${new Date(detailEvent.loggedAt).toISOString().slice(0, 10)}`
-			: null}
+		journalHref={companion.isActive !== false ? `/${companion.id}/journal/${detailDate}` : null}
 		{species}
+	/>
+{/if}
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={documentUrl(companion.id, previewDoc.filename)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
+	/>
+{/if}
+
+{#if detailRecord}
+	<HealthDetailModal
+		detail={detailRecord}
+		documents={detailRecord.kind === 'health' ? detailRecord.documents : []}
+		onclose={() => (detailRecord = null)}
+		onPreviewDocument={(doc) => (previewDoc = doc)}
+		healthHref={healthRecordHref(companion.id, detailRecord)}
 	/>
 {/if}
 
@@ -173,6 +241,8 @@
 						canEdit={companion.isActive !== false}
 						onOpenLightbox={openLightbox}
 						onOpenActivity={openDetail}
+						onOpenRecord={(item) => (detailRecord = item)}
+						onPreviewDocument={(doc) => (previewDoc = doc)}
 						{species}
 					/>
 				{/each}

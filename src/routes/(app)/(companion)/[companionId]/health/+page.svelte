@@ -11,20 +11,20 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
 	import { Select } from '$lib/components/ui/select/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Scale, Plus, Pencil, Trash2, X, FileText, HeartPulse } from '@lucide/svelte';
+	import { Scale, Plus, Pencil, Trash2, FileText, HeartPulse } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import WeightChart from '$lib/components/WeightChart.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
+	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import { stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
-	import { reminderPrefillUrl, type HealthEventType } from '$lib/health';
+	import { reminderPrefillUrl, type HealthEventType, type HealthDetail } from '$lib/health';
 	import { WEIGHT_UNITS } from '$lib/activityTypes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -187,42 +187,40 @@
 		| { kind: 'health'; item: (typeof data.healthEvents)[0] };
 
 	let selected = $state<SelectedItem | null>(null);
-	let dialogEl = $state<HTMLElement | null>(null);
 
-	async function openDetail(s: SelectedItem) {
+	function toDetail(s: SelectedItem): HealthDetail {
+		if (s.kind === 'health') {
+			const h = s.item;
+			return {
+				kind: 'health',
+				id: h.id,
+				type: h.type,
+				title: h.title,
+				at: h.occurredAt,
+				vetName: h.vetName,
+				vetClinic: h.vetClinic,
+				notes: h.notes,
+				logger: h.logger
+			};
+		}
+		const w = s.item;
+		return {
+			kind: 'weight',
+			id: w.id,
+			weight: w.weight,
+			unit: w.unit,
+			at: w.recordedAt,
+			notes: w.notes,
+			logger: w.logger
+		};
+	}
+
+	function openDetail(s: SelectedItem) {
 		selected = s;
-		await tick();
-		dialogEl?.focus();
 	}
 
 	function closeDetail() {
 		selected = null;
-	}
-
-	function trapFocus(e: KeyboardEvent) {
-		if (!dialogEl) return;
-		const focusable = Array.from(
-			dialogEl.querySelectorAll<HTMLElement>(
-				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-			)
-		).filter((el) => !el.hasAttribute('disabled'));
-		if (!focusable.length) return;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		if (e.key === 'Tab') {
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		}
-		if (e.key === 'Escape') closeDetail();
 	}
 </script>
 
@@ -230,224 +228,92 @@
 	<title>{t(locale, 'page.health.title')} | {data.companion.name} | EinVault</title>
 </svelte:head>
 
-<!-- Detail modal -->
 {#if selected}
-	<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
-		<button
-			tabindex="-1"
-			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-			aria-label={t(locale, 'aria.closeDialog')}
-			onclick={closeDetail}
-		></button>
-		<div
-			bind:this={dialogEl}
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="health-detail-title"
-			tabindex="-1"
-			onkeydown={trapFocus}
-			class="relative z-10 w-full max-w-md rounded-xl border bg-card text-card-foreground shadow-xl focus:outline-none
-				animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200"
-		>
-			<div class="flex items-center justify-between px-5 pt-5 pb-3">
-				<h2 id="health-detail-title" class="font-semibold text-base text-foreground">
-					{#if selected.kind === 'weight'}
-						{t(locale, 'page.health.detailWeightEntry')}
-					{:else if selected.kind === 'health'}
-						{selected.item.title}
-					{/if}
-				</h2>
-				<button
-					onclick={closeDetail}
-					aria-label={t(locale, 'aria.close')}
-					class="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<Separator />
-
-			<div class="px-5 py-4 space-y-3 text-sm">
-				{#if selected.kind === 'weight'}
-					{@const w = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.health.detailWeight')}</span
-						>
-						<span class="text-xl font-bold text-foreground"
-							>{w.weight}
-							<span class="text-sm font-normal text-muted-foreground">{w.unit}</span></span
-						>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.health.detailRecorded')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={w.recordedAt} format="datetime" /><ByLine
-								user={w.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if w.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.health.detailNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(w.notes)}
-							</div>
-						</div>
-					{/if}
-				{:else if selected.kind === 'health'}
-					{@const h = selected.item}
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.health.detailType')}</span
-						>
-						<Badge variant="teal" class="capitalize">{healthTypeLabel(locale, h.type)}</Badge>
-					</div>
-					<div class="flex items-center gap-3">
-						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-							>{t(locale, 'page.health.detailDate')}</span
-						>
-						<span class="text-foreground"
-							><LocalTime date={h.occurredAt} format="datetime" /><ByLine
-								user={h.logger}
-								variant="inline"
-							/></span
-						>
-					</div>
-					{#if h.vetName || h.vetClinic}
-						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
-								>{t(locale, 'page.health.detailVet')}</span
-							>
-							<span class="text-foreground"
-								>{[h.vetName, h.vetClinic].filter(Boolean).join(', ')}</span
-							>
-						</div>
-					{/if}
-					{#if h.notes}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'page.health.detailNotes')}
-							</p>
-							<div class="prose prose-sm dark:prose-invert max-w-none">
-								{@html renderMarkdown(h.notes)}
-							</div>
-						</div>
-					{/if}
-					{#if docsForEvent(h.id).length > 0}
-						<div class="pt-1">
-							<p class="text-xs font-medium text-muted-foreground mb-1">
-								{t(locale, 'nav.documents')}
-							</p>
-							<div class="flex flex-col gap-1.5">
-								{#each docsForEvent(h.id) as doc (doc.id)}
-									<button
-										type="button"
-										onclick={() => {
-											closeDetail();
-											previewDoc = doc;
-										}}
-										class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
-									>
-										<FileText class="h-4 w-4 shrink-0 text-muted-foreground" />
-										<span class="truncate">{doc.title}</span>
-									</button>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				{/if}
-			</div>
-
-			<Separator />
-
-			{#if data.companion.isActive !== false}
-				<div class="flex gap-2 px-5 py-4">
-					{#if selected.kind === 'weight'}
-						<Button
-							variant="soft"
-							size="sm"
-							onclick={() => {
-								if (selected?.kind === 'weight') {
-									const item = selected.item;
-									closeDetail();
-									startEditWeight(item);
-								}
-							}}
-						>
-							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.edit')}
-						</Button>
-						<Button
-							variant="softDestructive"
-							size="sm"
-							onclick={() => {
-								if (selected?.kind === 'weight') {
-									const item = selected.item;
-									closeDetail();
-									deleteWeightId = item.id;
-									openConfirm(() => deleteWeightForm?.requestSubmit());
-								}
-							}}
-						>
-							<Trash2 class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.delete')}
-						</Button>
-					{:else if selected.kind === 'health'}
-						<Button
-							variant="soft"
-							size="sm"
-							onclick={() => {
-								if (selected?.kind === 'health') {
-									const item = selected.item;
-									closeDetail();
-									startEditHealth(item);
-								}
-							}}
-						>
-							<Pencil class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.edit')}
-						</Button>
-						<Button
-							variant="soft"
-							size="sm"
-							href={reminderPrefillUrl(
-								data.companion.id,
-								selected.item.type,
-								selected.item.title,
-								selected.item.notes
-							)}
-						>
-							<Plus class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.reminders.addReminder')}
-						</Button>
-						<Button
-							variant="softDestructive"
-							size="sm"
-							onclick={() => {
-								if (selected?.kind === 'health') {
-									const item = selected.item;
-									closeDetail();
-									deleteHealthId = item.id;
-									openConfirm(() => deleteHealthForm?.requestSubmit());
-								}
-							}}
-						>
-							<Trash2 class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'common.delete')}
-						</Button>
-					{/if}
-				</div>
-			{/if}
-		</div>
-	</div>
+	<HealthDetailModal
+		detail={toDetail(selected)}
+		documents={selected.kind === 'health' ? docsForEvent(selected.item.id) : []}
+		onclose={closeDetail}
+		onPreviewDocument={(doc) => (previewDoc = doc)}
+		footer={data.companion.isActive !== false ? detailActions : undefined}
+	/>
 {/if}
+
+{#snippet detailActions()}
+	{#if selected?.kind === 'weight'}
+		<Button
+			variant="soft"
+			size="sm"
+			onclick={() => {
+				if (selected?.kind === 'weight') {
+					const item = selected.item;
+					closeDetail();
+					startEditWeight(item);
+				}
+			}}
+		>
+			<Pencil class="h-3.5 w-3.5 mr-1.5" />
+			{t(locale, 'common.edit')}
+		</Button>
+		<Button
+			variant="softDestructive"
+			size="sm"
+			onclick={() => {
+				if (selected?.kind === 'weight') {
+					const item = selected.item;
+					closeDetail();
+					deleteWeightId = item.id;
+					openConfirm(() => deleteWeightForm?.requestSubmit());
+				}
+			}}
+		>
+			<Trash2 class="h-3.5 w-3.5 mr-1.5" />
+			{t(locale, 'common.delete')}
+		</Button>
+	{:else if selected?.kind === 'health'}
+		<Button
+			variant="soft"
+			size="sm"
+			onclick={() => {
+				if (selected?.kind === 'health') {
+					const item = selected.item;
+					closeDetail();
+					startEditHealth(item);
+				}
+			}}
+		>
+			<Pencil class="h-3.5 w-3.5 mr-1.5" />
+			{t(locale, 'common.edit')}
+		</Button>
+		<Button
+			variant="soft"
+			size="sm"
+			href={reminderPrefillUrl(
+				data.companion.id,
+				selected.item.type,
+				selected.item.title,
+				selected.item.notes
+			)}
+		>
+			<Plus class="h-3.5 w-3.5 mr-1.5" />
+			{t(locale, 'page.reminders.addReminder')}
+		</Button>
+		<Button
+			variant="softDestructive"
+			size="sm"
+			onclick={() => {
+				if (selected?.kind === 'health') {
+					const item = selected.item;
+					closeDetail();
+					deleteHealthId = item.id;
+					openConfirm(() => deleteHealthForm?.requestSubmit());
+				}
+			}}
+		>
+			<Trash2 class="h-3.5 w-3.5 mr-1.5" />
+			{t(locale, 'common.delete')}
+		</Button>
+	{/if}
+{/snippet}
 
 <div class="space-y-6 pb-20 md:pb-0">
 	{#if !data.companion.isActive}

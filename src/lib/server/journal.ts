@@ -6,6 +6,7 @@ import type { Mood } from '$lib/mood';
 import type { UserRef } from '$lib/types';
 import { toMediaItem, type MediaItem } from '$lib/media';
 import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
+import { getDayItems, listDayItemDates, type DayItem } from '$lib/server/journal-day-items';
 
 const PAGE_SIZE = 20;
 
@@ -17,14 +18,15 @@ export async function getEnrichedJournalEntries(
 	const before = opts?.before;
 
 	// The timeline paginates over DAYS: a day is shown when it has a journal
-	// entry, a daily event, or both. Fetch pageSize+1 candidate days from each
-	// source; the k newest days of the union are then guaranteed complete
+	// entry, a daily event, a health record (health event, weight or document),
+	// or any mix. Fetch pageSize+1 candidate days from each of the three sources;
+	// the k newest days of the union are then guaranteed complete
 	// (adding dates from the other source only pushes a source's own dates down
 	// the order, never past its fetch horizon).
 	// loggedAt is stored as unixepoch seconds; 'localtime' matches the process
 	// TZ that localDateISO uses, so both sides bucket days identically.
 	const eventDay = sql<string>`date(${schema.dailyEvents.loggedAt}, 'unixepoch', 'localtime')`;
-	const [entries, eventDayRows] = await Promise.all([
+	const [entries, eventDayRows, itemDays] = await Promise.all([
 		db.query.journalEntries.findMany({
 			where: and(
 				eq(schema.journalEntries.companionId, companionId),
@@ -48,10 +50,15 @@ export async function getEnrichedJournalEntries(
 			)
 			.groupBy(eventDay)
 			.orderBy(desc(eventDay))
-			.limit(pageSize + 1)
+			.limit(pageSize + 1),
+		listDayItemDates(companionId, { before, limit: pageSize + 1 })
 	]);
 
-	const dateSet = new Set([...entries.map((e) => e.date), ...eventDayRows.map((r) => r.date)]);
+	const dateSet = new Set([
+		...entries.map((e) => e.date),
+		...eventDayRows.map((r) => r.date),
+		...itemDays
+	]);
 	// Sort descending (ISO strings sort lexicographically)
 	const sortedDates = [...dateSet].sort((a, b) => (a < b ? 1 : -1));
 	const hasMore = sortedDates.length > pageSize;
@@ -64,6 +71,7 @@ export async function getEnrichedJournalEntries(
 	};
 	let mediaByEntry = new Map<string, MediaItem[]>();
 	let eventsByDate = new Map<string, EventWithUserRef[]>();
+	let itemsByDay = new Map<string, DayItem[]>();
 
 	if (allDates.length > 0) {
 		const entryIds = pageEntries.map((e) => e.id);
@@ -74,7 +82,7 @@ export async function getEnrichedJournalEntries(
 		const rangeStart = new Date(oy, om - 1, od); // local midnight (respects TZ)
 		const rangeEnd = new Date(ny, nm - 1, nd + 1); // next local midnight after newest
 
-		const [allMedia, allEvents] = await Promise.all([
+		const [allMedia, allEvents, dayItems] = await Promise.all([
 			db.query.media.findMany({
 				where: inArray(schema.media.entryId, entryIds),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
@@ -90,8 +98,10 @@ export async function getEnrichedJournalEntries(
 				),
 				orderBy: (d, { asc }) => [asc(d.loggedAt)],
 				with: { logger: { columns: { displayName: true } } }
-			})
+			}),
+			getDayItems(companionId, { from: oldest, to: newest })
 		]);
+		itemsByDay = dayItems;
 
 		for (const item of allMedia) {
 			if (!item.entryId) continue; // inArray guarantees it; narrows the type
@@ -124,7 +134,8 @@ export async function getEnrichedJournalEntries(
 			logger: entry?.logger ?? null,
 			updater: entry?.updater ?? null,
 			photos: entry ? (mediaByEntry.get(entry.id) ?? []) : [],
-			events: eventsByDate.get(date) ?? []
+			events: eventsByDate.get(date) ?? [],
+			items: itemsByDay.get(date) ?? []
 		};
 	});
 

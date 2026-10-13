@@ -1,5 +1,6 @@
 import { test, expect } from '../lib/fixtures';
-import { pngUpload } from '../lib/files';
+import { pngUpload, pdfUpload } from '../lib/files';
+import { todayUTC } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
@@ -232,5 +233,129 @@ test.describe('journal day editor', () => {
 		await expect(asMember.getByText(/edited by Spike/).first()).toBeVisible({
 			timeout: 8_000
 		});
+	});
+
+	test('timeline and day page show the day’s health records (#291)', async ({ asMember }) => {
+		const stamp = Date.now().toString(36);
+		const eventTitle = `e2e-dayitem-event-${stamp}`;
+		const docName = `e2e-dayitem-${stamp}.pdf`;
+		const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+		// A health event dated today (server-local), a weight and a document.
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		await asMember.locator('#title').fill(eventTitle);
+		// datetime-local; noon keeps the server-UTC day for any browser offset under 12h
+		await asMember.locator('#occurredAt').fill(`${todayUTC()}T12:00`);
+		await asMember.locator('select[name="type"]').selectOption('vet_visit');
+		await asMember.getByRole('button', { name: 'Save Event' }).click();
+		await expect(asMember.getByText(eventTitle)).toBeVisible({ timeout: 8_000 });
+
+		await asMember.getByRole('button', { name: 'Log Weight' }).click();
+		await asMember.locator('#weight').fill('27.4');
+		await asMember.getByRole('button', { name: 'Log Weight' }).last().click();
+		await expect(
+			asMember
+				.locator('section')
+				.filter({ hasText: 'Weight History' })
+				.getByText(/27\.4\b/)
+		).toBeVisible({ timeout: 8_000 });
+
+		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
+		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload(docName));
+		await expect(asMember.getByText(docName)).toBeVisible({ timeout: 15_000 });
+
+		// Timeline chips. Located by unique text, never by day number or count.
+		await asMember.goto(`/${COMP}/journal`);
+		await waitForHydration(asMember);
+		const healthChip = asMember.getByRole('button', { name: new RegExp(`^${esc(eventTitle)}`) });
+		const weightChip = asMember.getByRole('button', { name: /^27\.4 / });
+		const docChip = asMember.getByRole('button', { name: new RegExp(`^${esc(docName)}`) });
+		await expect(healthChip).toBeVisible();
+		await expect(weightChip).toBeVisible();
+		await expect(docChip).toBeVisible();
+
+		// The document chip previews in place.
+		await docChip.click();
+		await expect(asMember.getByRole('dialog', { name: docName })).toBeVisible({ timeout: 8_000 });
+		await asMember.keyboard.press('Escape');
+		await expect(asMember.getByRole('dialog', { name: docName })).toHaveCount(0);
+
+		// The health chip opens the detail in place; its link opens the Health Log.
+		await healthChip.click();
+		const detail = asMember.getByRole('dialog', { name: eventTitle });
+		await expect(detail).toBeVisible({ timeout: 8_000 });
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
+		await asMember.keyboard.press('Escape');
+		await expect(detail).toHaveCount(0);
+
+		await weightChip.click();
+		await expect(asMember.getByRole('dialog').getByText(/27\.4/)).toBeVisible();
+		await asMember.keyboard.press('Escape');
+
+		await healthChip.click();
+		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health`));
+		await expect(asMember.locator('[role="dialog"]').getByText(eventTitle)).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
+		await expect(healthChip).toBeVisible();
+
+		// The day page lists the event under "Health records".
+		await asMember
+			.getByTestId('journal-day')
+			.filter({ has: healthChip })
+			.getByRole('link', { name: 'Edit' })
+			.click();
+		const section = asMember.getByTestId('day-health-records');
+		await expect(section.getByText('Health records')).toBeVisible({ timeout: 8_000 });
+		await expect(section.getByText(eventTitle)).toBeVisible();
+		await section.getByRole('button', { name: new RegExp(`^${esc(eventTitle)}`) }).click();
+		await expect(asMember.getByRole('dialog', { name: eventTitle })).toBeVisible();
+	});
+
+	test('Back from a health record keeps days loaded with Load more', async ({ asMember }) => {
+		// Ein's seed spans 19 timeline days, under the page size of 20. Three
+		// old health events push the timeline onto a second page.
+		const stamp = Date.now().toString(36);
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		for (const daysAgo of [400, 401, 402]) {
+			const d = new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+			const title = `e2e-old-${stamp}-${daysAgo}`;
+			await asMember.getByRole('button', { name: 'Add Event' }).click();
+			await asMember.locator('#title').fill(title);
+			await asMember.locator('#occurredAt').fill(`${d}T12:00`);
+			await asMember.getByRole('button', { name: 'Save Event' }).click();
+			await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
+		}
+
+		await asMember.goto(`/${COMP}/journal`);
+		await waitForHydration(asMember);
+		const days = asMember.getByTestId('journal-day');
+		const firstPage = await days.count();
+
+		// Load pages until the oldest health chip is rendered.
+		const oldChip = asMember.getByRole('button', { name: new RegExp(`^e2e-old-${stamp}-402`) });
+		let prev = firstPage;
+		for (let i = 0; i < 5 && !(await oldChip.isVisible()); i++) {
+			await asMember.getByRole('button', { name: 'Load older entries' }).click();
+			await expect.poll(() => days.count()).toBeGreaterThan(prev);
+			prev = await days.count();
+		}
+		await expect(oldChip).toBeVisible();
+		const loaded = await days.count();
+
+		await oldChip.click();
+		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
+		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 8_000 });
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
+		await expect(days).toHaveCount(loaded);
+		await expect(oldChip).toBeInViewport();
 	});
 });

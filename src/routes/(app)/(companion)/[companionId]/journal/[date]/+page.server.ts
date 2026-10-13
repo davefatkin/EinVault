@@ -20,6 +20,7 @@ import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
 import { failCareError } from '$lib/server/care-errors';
 import { resolveActivityUpdate } from '$lib/server/journal-activity';
+import { getDayItems } from '$lib/server/journal-day-items';
 import {
 	MAX_DAILY_MEDIA,
 	UPLOAD_MAX_MB,
@@ -79,6 +80,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		with: { logger: { columns: { displayName: true } } }
 	});
 
+	const dayItems = (await getDayItems(companionId, { from: date, to: date })).get(date) ?? [];
+
 	const today = localDateISO();
 
 	return {
@@ -87,6 +90,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		photos: media.map(toMediaItem),
 		recentEntries,
 		dailyEvents,
+		dayItems,
 		date,
 		today,
 		isToday: date === today,

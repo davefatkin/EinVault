@@ -232,4 +232,98 @@ describe('journal', () => {
 			logger: { displayName: 'J User' }
 		});
 	});
+
+	it('makes a day with only a weight a timeline day', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j5',
+			name: 'Scales'
+		} as typeof schema.companions.$inferInsert);
+		await db.insert(schema.weightEntries).values({
+			id: 'w-j5',
+			companionId: 'c-j5',
+			weight: 10.5,
+			unit: 'kg',
+			recordedAt: localNoon('2026-08-01')
+		});
+
+		const page = await getEnrichedJournalEntries('c-j5');
+		expect(page.entries).toHaveLength(1);
+		expect(page.entries[0]).toMatchObject({ date: '2026-08-01', id: null, events: [] });
+		expect(page.entries[0].items).toEqual([
+			expect.objectContaining({ kind: 'weight', id: 'w-j5', weight: 10.5 })
+		]);
+		// Load more goes through res.json(); items must survive it unchanged.
+		expect(JSON.parse(JSON.stringify(page.entries[0].items))).toEqual(page.entries[0].items);
+	});
+
+	it('paginates across all five sources without skipping or repeating a day', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j6',
+			name: 'Mixed'
+		} as typeof schema.companions.$inferInsert);
+		await upsertJournalEntry('c-j6', '2026-08-01', 'entry', null, 'u-j');
+		await db.insert(schema.healthEvents).values({
+			id: 'h-j6',
+			companionId: 'c-j6',
+			type: 'vet_visit',
+			title: 'Checkup',
+			occurredAt: localNoon('2026-08-02')
+		});
+		await db.insert(schema.documents).values({
+			id: 'd-j6',
+			companionId: 'c-j6',
+			filename: 'd-j6.pdf',
+			provider: 'local',
+			storageKey: 'documents/c-j6/d-j6.pdf',
+			title: 'Receipt',
+			category: 'receipt',
+			documentDate: '2026-08-03',
+			mimeType: 'application/pdf'
+		});
+		await db.insert(schema.weightEntries).values({
+			id: 'w-j6',
+			companionId: 'c-j6',
+			weight: 9,
+			unit: 'kg',
+			recordedAt: localNoon('2026-08-04')
+		});
+		await insertEvent('c-j6', '2026-08-05');
+
+		const seen: string[] = [];
+		let before: string | undefined;
+		for (let i = 0; i < 5; i++) {
+			const page = await getEnrichedJournalEntries('c-j6', { limit: 2, before });
+			seen.push(...page.entries.map((e) => e.date));
+			expect(page.entries.every((e) => Array.isArray(e.items))).toBe(true);
+			if (!page.hasMore) break;
+			before = page.oldestDate!;
+		}
+		expect(seen).toEqual(['2026-08-05', '2026-08-04', '2026-08-03', '2026-08-02', '2026-08-01']);
+
+		const all = await getEnrichedJournalEntries('c-j6', { limit: 50 });
+		const kinds = Object.fromEntries(all.entries.map((e) => [e.date, e.items.map((i) => i.kind)]));
+		expect(kinds).toEqual({
+			'2026-08-05': [],
+			'2026-08-04': ['weight'],
+			'2026-08-03': ['document'],
+			'2026-08-02': ['health'],
+			'2026-08-01': []
+		});
+	});
+
+	it('leaves future health records off the timeline', async () => {
+		await db.insert(schema.companions).values({
+			id: 'c-j7',
+			name: 'Later'
+		} as typeof schema.companions.$inferInsert);
+		await db.insert(schema.weightEntries).values({
+			id: 'w-j7',
+			companionId: 'c-j7',
+			weight: 9,
+			unit: 'kg',
+			recordedAt: new Date(Date.now() + 3 * 86_400_000)
+		});
+		const page = await getEnrichedJournalEntries('c-j7');
+		expect(page.entries).toEqual([]);
+	});
 });
