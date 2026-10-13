@@ -184,23 +184,31 @@ export async function saveNoteMediaUpload(input: {
 	return outcome;
 }
 
-export async function setNoteMediaCaption(mediaId: string, caption: string): Promise<void> {
+export async function setNoteMediaCaption(
+	noteId: string,
+	mediaId: string,
+	caption: string
+): Promise<void> {
 	await db
 		.update(schema.media)
 		.set({ caption: caption.trim() || null })
-		.where(eq(schema.media.id, mediaId));
+		.where(and(eq(schema.media.id, mediaId), eq(schema.media.noteId, noteId)));
 }
 
 // Row first, then objects: the row is the source of truth, and an orphaned
 // object is recoverable while a row pointing at a deleted object is not.
 export async function deleteNoteMediaItem(item: Media): Promise<void> {
+	if (!item.noteId) return;
 	// Blob keys come from the row as deleted: a worker may have marked it ready
 	// (new MP4 and poster) after the caller read it.
-	const deleted = await db.delete(schema.media).where(eq(schema.media.id, item.id)).returning({
-		provider: schema.media.provider,
-		storageKey: schema.media.storageKey,
-		originalKey: schema.media.originalKey,
-		posterKey: schema.media.posterKey
-	});
+	const deleted = await db
+		.delete(schema.media)
+		.where(and(eq(schema.media.id, item.id), eq(schema.media.noteId, item.noteId)))
+		.returning({
+			provider: schema.media.provider,
+			storageKey: schema.media.storageKey,
+			originalKey: schema.media.originalKey,
+			posterKey: schema.media.posterKey
+		});
 	if (deleted.length > 0) await deleteMediaBlobs(deleted, 'note-media');
 }

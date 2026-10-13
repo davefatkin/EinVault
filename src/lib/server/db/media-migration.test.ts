@@ -192,6 +192,49 @@ describe('media_table migration', () => {
 		sqlite.close();
 	});
 
+	it('guards the update and delete search triggers on entry_id', () => {
+		const sqlite = dbAtPreMedia();
+		migrateAll(sqlite);
+		const sqlOf = (name: string) =>
+			(
+				sqlite
+					.prepare("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?")
+					.get(name) as {
+					sql: string;
+				}
+			).sql;
+		expect(sqlOf('search_media_au')).toMatch(
+			/WHEN old\.entry_id IS NOT NULL OR new\.entry_id IS NOT NULL/
+		);
+		expect(sqlOf('search_media_ad')).toMatch(/WHEN old\.entry_id IS NOT NULL/);
+		sqlite.close();
+	});
+
+	it('removes search rows left by photos whose entry was deleted without foreign keys', () => {
+		const sqlite = new Database(':memory:');
+		sqlite.pragma('foreign_keys = ON');
+		migrateThrough(sqlite, LAST_PRE_MEDIA_TAG);
+		sqlite.exec(`
+			INSERT INTO companions (id, name) VALUES ('c1', 'Ein');
+			INSERT INTO journal_entries (id, companion_id, date) VALUES ('e1', 'c1', '2026-05-01');
+			INSERT INTO journal_photos (id, entry_id, filename, media_type, mime_type, size_bytes, notes)
+				VALUES ('jp-stale', 'e1', 'a.jpg', 'photo', 'image/jpeg', 10, 'stale caption');
+		`);
+		const indexed = () =>
+			sqlite
+				.prepare(
+					"SELECT count(*) AS n FROM search_index WHERE entity_type = 'media' AND entity_id = 'jp-stale'"
+				)
+				.get() as { n: number };
+		expect(indexed().n).toBe(1);
+		sqlite.pragma('foreign_keys = OFF');
+		sqlite.exec("DELETE FROM journal_entries WHERE id = 'e1'");
+		sqlite.pragma('foreign_keys = ON');
+		migrateAll(sqlite);
+		expect(indexed().n).toBe(0);
+		sqlite.close();
+	});
+
 	it('drops the old tables', () => {
 		const sqlite = dbAtPreMedia();
 		migrateAll(sqlite);

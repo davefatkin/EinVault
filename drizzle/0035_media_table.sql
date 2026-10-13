@@ -54,6 +54,10 @@ SELECT id, note_id, filename, provider, storage_key, original_name, media_type,
 FROM note_media
 WHERE note_id IN (SELECT id FROM notes);
 --> statement-breakpoint
+-- Drop search rows of journal photos whose entry was deleted with foreign keys
+-- off (old installs); the copy above skipped those rows.
+DELETE FROM search_index WHERE entity_type = 'media' AND entity_id NOT IN (SELECT id FROM media);
+--> statement-breakpoint
 -- Created after the copy so copied rows keep their existing search_index rows
 -- instead of gaining a second one. Only journal media is indexed: the join
 -- matches nothing for note or health event media.
@@ -63,14 +67,18 @@ CREATE TRIGGER search_media_ai AFTER INSERT ON media BEGIN
 	FROM journal_entries je WHERE je.id = new.entry_id;
 END;
 --> statement-breakpoint
--- No WHEN clause: a row moved off entry_id must still lose its search row.
-CREATE TRIGGER search_media_au AFTER UPDATE ON media BEGIN
+-- Rows that never had an entry (note and health event media) skip the index
+-- work, since FTS5 would scan the whole index for the DELETE. A row moving off
+-- an entry still matches through old.entry_id and loses its search row.
+CREATE TRIGGER search_media_au AFTER UPDATE ON media
+WHEN old.entry_id IS NOT NULL OR new.entry_id IS NOT NULL BEGIN
 	DELETE FROM search_index WHERE entity_type = 'media' AND entity_id = old.id;
 	INSERT INTO search_index (title, body, entity_type, entity_id, companion_id, event_date)
 	SELECT '', COALESCE(new.caption, ''), 'media', new.id, je.companion_id, je.date
 	FROM journal_entries je WHERE je.id = new.entry_id;
 END;
 --> statement-breakpoint
-CREATE TRIGGER search_media_ad AFTER DELETE ON media BEGIN
+CREATE TRIGGER search_media_ad AFTER DELETE ON media
+WHEN old.entry_id IS NOT NULL BEGIN
 	DELETE FROM search_index WHERE entity_type = 'media' AND entity_id = old.id;
 END;

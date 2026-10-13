@@ -5,9 +5,9 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-// Test helper for data migrations: tests run on their own database, because
-// importing $server/db would migrate the whole chain before pre-migration rows
-// could be inserted.
+// Test helper for data migrations, not imported by app code. Tests run on
+// their own database, because importing $server/db would migrate the whole
+// chain before pre-migration rows could be inserted.
 export const DRIZZLE_DIR = resolve(import.meta.dirname, '../../../../drizzle');
 
 type Journal = { entries: { idx: number; when: number; tag: string }[] };

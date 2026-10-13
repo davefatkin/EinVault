@@ -267,10 +267,33 @@ describe('listing', () => {
 describe('captions and deletes', () => {
 	it('trims captions and stores blank as null', async () => {
 		insertNoteMedia(row('a'), 10);
-		await setNoteMediaCaption('a', '  paw  ');
+		await setNoteMediaCaption(N1, 'a', '  paw  ');
 		expect((await getNoteMediaItem(N1, 'a'))?.caption).toBe('paw');
-		await setNoteMediaCaption('a', '   ');
+		await setNoteMediaCaption(N1, 'a', '   ');
 		expect((await getNoteMediaItem(N1, 'a'))?.caption).toBeNull();
+	});
+
+	it('leaves journal media and other notes alone', async () => {
+		await db
+			.insert(schema.journalEntries)
+			.values({ id: 'je-x', companionId: C1, date: '2026-05-01' });
+		await db.insert(schema.media).values({
+			id: 'jm',
+			entryId: 'je-x',
+			filename: 'jm.jpg',
+			mimeType: 'image/jpeg',
+			sizeBytes: 1,
+			caption: 'keep'
+		});
+		insertNoteMedia(row('a', N2), 10);
+		await setNoteMediaCaption(N1, 'jm', 'hijack');
+		await setNoteMediaCaption(N1, 'a', 'hijack');
+		const jm = await db.query.media.findFirst({ where: eq(schema.media.id, 'jm') });
+		expect(jm?.caption).toBe('keep');
+		expect((await getNoteMediaItem(N2, 'a'))?.caption).toBeNull();
+		await deleteNoteMediaItem(jm!);
+		expect(await db.query.media.findFirst({ where: eq(schema.media.id, 'jm') })).toBeDefined();
+		expect(store.deletes).toEqual([]);
 	});
 
 	it('deletes the row and its objects', async () => {

@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 
 // Storage, upload prep and the worker are not under test.
 vi.mock('$lib/server/storage', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/server/storage')>()),
+	getImmichClient: () => ({
+		getAsset: async () => ({
+			originalMimeType: 'image/jpeg',
+			originalFileName: 'x.jpg',
+			fileSizeInByte: 1
+		})
+	}),
 	getStorage: () => ({ put: vi.fn(async () => {}), delete: vi.fn(async () => {}) }),
 	STORAGE_BACKEND: 'local'
 }));
@@ -22,6 +29,7 @@ vi.mock('$lib/server/storage/media-blobs', () => ({ deleteMediaBlobs: vi.fn(asyn
 vi.mock('$lib/server/video/worker', () => ({ kickWorker: vi.fn() }));
 
 const { POST, PATCH, DELETE } = await import('./+server');
+const { POST: POST_IMMICH } = await import('./from-immich/+server');
 
 const C = 'c-jps';
 const DATE = '2026-05-01';
@@ -88,6 +96,51 @@ describe('journal photos endpoint on the media table', () => {
 		expect(await statusOf(DELETE(event('DELETE', { photoId: 'nm-jps' })))).toBe(404);
 		const row = await db.query.media.findFirst({ where: eq(schema.media.id, 'nm-jps') });
 		expect(row?.caption).toBe('keep me');
+	});
+
+	it('PATCH and DELETE 404 for journal media under a different date', async () => {
+		await db
+			.insert(schema.journalEntries)
+			.values({ id: 'je-jps', companionId: C, date: DATE })
+			.onConflictDoNothing();
+		const entry = await db.query.journalEntries.findFirst({
+			where: and(eq(schema.journalEntries.companionId, C), eq(schema.journalEntries.date, DATE))
+		});
+		await db.insert(schema.media).values({
+			id: 'jm-jps',
+			entryId: entry!.id,
+			filename: 'jm-jps.jpg',
+			storageKey: null,
+			mimeType: 'image/jpeg',
+			sizeBytes: 1,
+			caption: 'keep me too',
+			loggedBy: USER.id
+		});
+		const other = (method: string, opts: Parameters<typeof event>[1]) => {
+			const e = event(method, opts) as unknown as { params: { date: string } };
+			e.params.date = '2026-05-02';
+			return e as never;
+		};
+		expect(
+			await statusOf(PATCH(other('PATCH', { photoId: 'jm-jps', json: { notes: 'hijack' } })))
+		).toBe(404);
+		expect(await statusOf(DELETE(other('DELETE', { photoId: 'jm-jps' })))).toBe(404);
+		const row = await db.query.media.findFirst({ where: eq(schema.media.id, 'jm-jps') });
+		expect(row?.caption).toBe('keep me too');
+	});
+
+	it('from-immich POST returns the media item without storage keys', async () => {
+		const assetId = '123e4567-e89b-12d3-a456-426614174000';
+		const e = event('POST', { json: { assetId } }) as unknown as { params: object };
+		const res = await POST_IMMICH(e as never);
+		const body = await res.json();
+		expect(body).toMatchObject({ mediaType: 'photo' });
+		expect(body).not.toHaveProperty('storageKey');
+		expect(body).not.toHaveProperty('originalKey');
+		expect(body).not.toHaveProperty('provider');
+		const row = await db.query.media.findFirst({ where: eq(schema.media.id, body.id) });
+		expect(row?.entryId).not.toBeNull();
+		expect(row?.provider).toBe('immich');
 	});
 
 	it('PATCH writes the body notes field to caption', async () => {

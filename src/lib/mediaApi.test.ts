@@ -30,9 +30,7 @@ const journalRow = {
 	status: 'ready',
 	posterKey: null,
 	loggedBy: 'u1',
-	logger: { displayName: 'Jet' },
-	storageKey: 'journal/c1/2026-06-01/p1.jpg',
-	provider: 'local'
+	logger: { displayName: 'Jet' }
 };
 
 const noteItem: MediaItem & { url: string } = {

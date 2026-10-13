@@ -183,7 +183,7 @@ export async function upsertJournalEntry(
 }
 
 /**
- * A journal media row by id, with its entry's companion for the caller's
+ * A journal media row by id, with its entry's companion and date for the caller's
  * scope check. Undefined for unknown ids and for media of other parent kinds
  * (note or health event), so a note media id can't be edited or deleted
  * through the journal endpoints.
@@ -191,6 +191,6 @@ export async function upsertJournalEntry(
 export async function getJournalMediaItem(mediaId: string) {
 	return db.query.media.findFirst({
 		where: and(eq(schema.media.id, mediaId), isNotNull(schema.media.entryId)),
-		with: { entry: { columns: { companionId: true } } }
+		with: { entry: { columns: { companionId: true, date: true } } }
 	});
 }

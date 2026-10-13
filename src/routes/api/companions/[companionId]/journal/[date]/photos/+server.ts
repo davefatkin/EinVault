@@ -165,7 +165,8 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
 	const item = await getJournalMediaItem(photoId);
-	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item || item.entry?.date !== params.date)
+		error(404, t(locals.locale, 'error.photoNotFound'));
 	if (!item.entry || item.entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
@@ -192,7 +193,8 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
 	const item = await getJournalMediaItem(photoId);
-	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item || item.entry?.date !== params.date)
+		error(404, t(locals.locale, 'error.photoNotFound'));
 	if (!item.entry || item.entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
