@@ -197,6 +197,17 @@ describe('refreshDemoContent', () => {
 		expect(second.length).toBe(first.length);
 	});
 
+	it('seeds one journal-to-health-event link, once', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, DATA_DIR);
+		refreshDemoContent(db, true, DATA_DIR);
+		const links = await db.select().from(schema.journalEntryHealthEvents);
+		expect(links).toEqual([
+			expect.objectContaining({ entryId: 'seed-journal-ein-d1', healthEventId: 'seed-health-1' })
+		]);
+	});
+
 	it('re-seeds content anchored to now after wiping old rows', async () => {
 		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
 		// Seed users first (refreshDemoContent only touches content, not users)
