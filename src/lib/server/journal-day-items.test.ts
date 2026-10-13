@@ -211,7 +211,18 @@ describe('documents and their health events', () => {
 		const items = await getDayItems(c, { from: '2026-04-01', to: '2026-04-03' });
 		const event = items.get('2026-04-01')![0];
 		const doc = items.get('2026-04-03')![0];
-		expect(Object.keys(event).sort()).toEqual(['at', 'documents', 'id', 'kind', 'title', 'type']);
+		expect(Object.keys(event).sort()).toEqual([
+			'at',
+			'documents',
+			'id',
+			'kind',
+			'logger',
+			'notes',
+			'title',
+			'type',
+			'vetClinic',
+			'vetName'
+		]);
 		expect(event.kind === 'health' && Object.keys(event.documents[0]).sort()).toEqual(
 			['category', 'date', 'filename', 'id', 'mimeType', 'title'].sort()
 		);
@@ -224,6 +235,49 @@ describe('documents and their health events', () => {
 	it('lists day keys that match the standalone placement', async () => {
 		const dates = await listDayItemDates(c, { before: '2026-04-30', limit: 20 });
 		expect(dates).toEqual(['2026-04-09', '2026-04-08', '2026-04-03', '2026-04-02', '2026-04-01']);
+	});
+
+	it('carries the detail fields with the logger display name only', async () => {
+		await db.insert(schema.users).values({
+			id: 'u-di-logger',
+			username: 'di-logger',
+			displayName: 'Dr Logger',
+			role: 'member'
+		} as typeof schema.users.$inferInsert);
+		const hid = nextId('he');
+		await db.insert(schema.healthEvents).values({
+			id: hid,
+			companionId: c,
+			type: 'vet_visit',
+			title: 'Detail visit',
+			notes: 'Ear **infection**',
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure',
+			occurredAt: noon(2026, 4, 25),
+			loggedBy: 'u-di-logger'
+		});
+		const wid = nextId('w');
+		await db.insert(schema.weightEntries).values({
+			id: wid,
+			companionId: c,
+			weight: 11,
+			unit: 'kg',
+			notes: 'after breakfast',
+			recordedAt: noon(2026, 4, 25)
+		});
+
+		const [health, weight] = (await getDayItems(c, { from: '2026-04-25', to: '2026-04-25' })).get(
+			'2026-04-25'
+		)!;
+		expect(health).toMatchObject({
+			kind: 'health',
+			notes: 'Ear **infection**',
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure',
+			logger: { displayName: 'Dr Logger' }
+		});
+		expect(health.kind === 'health' && Object.keys(health.logger!)).toEqual(['displayName']);
+		expect(weight).toMatchObject({ kind: 'weight', notes: 'after breakfast', logger: null });
 	});
 });
 

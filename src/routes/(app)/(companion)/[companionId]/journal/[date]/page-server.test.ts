@@ -139,7 +139,18 @@ describe('load health records', () => {
 		expect(data.dayItems).toHaveLength(1);
 		expect(data.dayItems[0]).toMatchObject({ kind: 'health', id: 'ps-items-health' });
 		expect(Object.keys(data.dayItems[0]).sort()).toEqual(
-			['at', 'documents', 'id', 'kind', 'title', 'type'].sort()
+			[
+				'at',
+				'documents',
+				'id',
+				'kind',
+				'logger',
+				'notes',
+				'title',
+				'type',
+				'vetClinic',
+				'vetName'
+			].sort()
 		);
 	});
 

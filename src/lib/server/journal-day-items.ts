@@ -58,9 +58,14 @@ export async function getDayItems(
 				type: schema.healthEvents.type,
 				title: schema.healthEvents.title,
 				occurredAt: schema.healthEvents.occurredAt,
+				vetName: schema.healthEvents.vetName,
+				vetClinic: schema.healthEvents.vetClinic,
+				notes: schema.healthEvents.notes,
+				loggerName: schema.users.displayName,
 				day: healthDay
 			})
 			.from(schema.healthEvents)
+			.leftJoin(schema.users, eq(schema.users.id, schema.healthEvents.loggedBy))
 			.where(and(eq(schema.healthEvents.companionId, companionId), inRange(healthDay, range)))
 			.orderBy(asc(schema.healthEvents.occurredAt), asc(schema.healthEvents.id)),
 		db
@@ -69,9 +74,12 @@ export async function getDayItems(
 				weight: schema.weightEntries.weight,
 				unit: schema.weightEntries.unit,
 				recordedAt: schema.weightEntries.recordedAt,
+				notes: schema.weightEntries.notes,
+				loggerName: schema.users.displayName,
 				day: weightDay
 			})
 			.from(schema.weightEntries)
+			.leftJoin(schema.users, eq(schema.users.id, schema.weightEntries.loggedBy))
 			.where(and(eq(schema.weightEntries.companionId, companionId), inRange(weightDay, range)))
 			.orderBy(asc(schema.weightEntries.recordedAt), asc(schema.weightEntries.id)),
 		db
@@ -123,6 +131,10 @@ export async function getDayItems(
 			at: e.occurredAt.toISOString(),
 			type: e.type,
 			title: e.title,
+			vetName: e.vetName,
+			vetClinic: e.vetClinic,
+			notes: e.notes,
+			logger: e.loggerName ? { displayName: e.loggerName } : null,
 			documents: docsByEvent.get(e.id) ?? []
 		});
 	}
@@ -132,7 +144,9 @@ export async function getDayItems(
 			id: w.id,
 			at: w.recordedAt.toISOString(),
 			weight: w.weight,
-			unit: w.unit
+			unit: w.unit,
+			notes: w.notes,
+			logger: w.loggerName ? { displayName: w.loggerName } : null
 		});
 	}
 	for (const d of docs) {
