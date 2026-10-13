@@ -10,7 +10,7 @@ import {
 	check
 } from 'drizzle-orm/sqlite-core';
 // Relative, not $lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
-import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES } from '../../activityTypes';
+import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES, DOCUMENT_CATEGORIES } from '../../activityTypes';
 
 // users
 
@@ -283,11 +283,7 @@ export const documents = sqliteTable(
 			.default('local'),
 		storageKey: text('storage_key').notNull(),
 		title: text('title').notNull(),
-		category: text('category', {
-			enum: ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other']
-		})
-			.notNull()
-			.default('other'),
+		category: text('category', { enum: DOCUMENT_CATEGORIES }).notNull().default('other'),
 		// User-set document date (receipt date), not upload date. YYYY-MM-DD.
 		documentDate: text('document_date'),
 		originalName: text('original_name'),
