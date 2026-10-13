@@ -191,4 +191,19 @@ describe('media_table migration', () => {
 		expect(hits).toEqual([{ entity_id: 'jp-1' }]);
 		sqlite.close();
 	});
+
+	it('drops the old tables', () => {
+		const sqlite = dbAtPreMedia();
+		migrateAll(sqlite);
+		const tables = (
+			sqlite
+				.prepare(
+					"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('journal_photos', 'note_media')"
+				)
+				.all() as Row[]
+		).map((r) => r.name);
+		expect(tables).toEqual([]);
+		expect(sqlite.pragma('foreign_key_check')).toEqual([]);
+		sqlite.close();
+	});
 });
