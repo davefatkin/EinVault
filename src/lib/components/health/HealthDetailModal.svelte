@@ -20,7 +20,9 @@
 		onclose,
 		onPreviewDocument,
 		healthHref = null,
-		footer
+		footer,
+		journalHref,
+		currentDate
 	}: {
 		detail: HealthDetail;
 		documents?: D[];
@@ -30,6 +32,10 @@
 		healthHref?: string | null;
 		/** Custom footer (e.g. Edit/Delete); overrides healthHref. */
 		footer?: Snippet;
+		/** Builds the journal day URL for a date; the Journal list shows only when set. */
+		journalHref?: (date: string) => string;
+		/** The journal day being viewed, rendered as plain text instead of a link. */
+		currentDate?: string;
 	} = $props();
 
 	const locale = getLocale();
@@ -195,6 +201,28 @@
 									<FileText class="h-4 w-4 shrink-0 text-muted-foreground" />
 									<span class="truncate">{doc.title}</span>
 								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+				{#if h.journalDates?.length && journalHref}
+					<div class="pt-1" data-testid="health-detail-journal">
+						<p class="text-xs font-medium text-muted-foreground mb-1">{t(locale, 'nav.journal')}</p>
+						<div class="flex flex-wrap gap-1.5">
+							{#each h.journalDates as d (d)}
+								{#if d === currentDate}
+									<span
+										class="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground"
+										>{d}</span
+									>
+								{:else}
+									<a
+										href={journalHref(d)}
+										onclick={onclose}
+										class="rounded-lg border border-border px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-accent"
+										>{d}</a
+									>
+								{/if}
 							{/each}
 						</div>
 					</div>

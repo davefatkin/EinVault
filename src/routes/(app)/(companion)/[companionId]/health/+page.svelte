@@ -236,6 +236,7 @@
 		onclose={closeDetail}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		footer={data.companion.isActive !== false ? detailActions : undefined}
+		journalHref={(d) => `/${data.companion.id}/journal/${d}`}
 	/>
 {/if}
 

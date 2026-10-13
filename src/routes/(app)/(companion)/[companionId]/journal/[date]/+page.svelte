@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
 	import { onMount, tick } from 'svelte';
@@ -25,7 +25,10 @@
 		Plus,
 		Pencil,
 		NotebookPen,
-		Activity
+		Activity,
+		Link2,
+		Unlink,
+		HeartPulse
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -48,6 +51,7 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import {
+		healthTypeLabel,
 		moodOptions,
 		activityDisplayIcon,
 		activityDisplayLabel,
@@ -62,13 +66,15 @@
 		toSpecies
 	} from '$lib/species';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
 
 	let media = $state<MediaItem[]>([]);
 	let companion = $derived(data.companion);
 	let previewDoc = $state<DayItemDocument | null>(null);
 	let detailRecord = $state<DayRecordItem | null>(null);
+	let showLinkForm = $state(false);
+	const canLink = $derived(companion.isActive !== false);
 
 	let body = $state('');
 	let mood = $state('');
@@ -76,6 +82,8 @@
 	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error' | 'signedOut'>('idle');
 	let saveTimer: ReturnType<typeof setTimeout>;
 	let savedTimer: ReturnType<typeof setTimeout>;
+	let savePending = false;
+	let inflightSave: Promise<void> | null = null;
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
@@ -85,11 +93,16 @@
 	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
-	// Sync local state when data changes (navigation between dates)
+	// Copy the server copy into the editor only when the date changes. Any other
+	// refresh (an action, invalidateAll) would otherwise overwrite text that is
+	// typed but not yet saved, or a draft whose save failed.
+	let syncedDate = '';
 	$effect(() => {
+		media = [...(data.photos ?? [])];
+		if (data.date === syncedDate) return;
+		syncedDate = data.date;
 		body = data.entry?.body ?? '';
 		mood = data.entry?.mood ?? '';
-		media = [...(data.photos ?? [])];
 		saveStatus = 'idle';
 	});
 
@@ -119,15 +132,34 @@
 	let isNextDisabled = $derived(data.date >= data.today);
 
 	async function saveNow() {
-		saveStatus = 'saving';
-		const fd = new FormData();
-		fd.set('body', body);
-		fd.set('mood', mood);
-		clearTimeout(savedTimer);
-		const outcome = await postFormAction('?/save', fd);
-		saveStatus = outcome === 'failed' ? 'error' : outcome;
-		// Keep a stale "Saved" fade-out from hiding a later failure.
-		if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
+		savePending = false;
+		const run = (async () => {
+			saveStatus = 'saving';
+			const fd = new FormData();
+			fd.set('body', body);
+			fd.set('mood', mood);
+			clearTimeout(savedTimer);
+			const outcome = await postFormAction('?/save', fd);
+			saveStatus = outcome === 'failed' ? 'error' : outcome;
+			// Keep a stale "Saved" fade-out from hiding a later failure.
+			if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
+		})();
+		inflightSave = run;
+		try {
+			await run;
+		} finally {
+			if (inflightSave === run) inflightSave = null;
+		}
+	}
+
+	/** Write pending journal text before an action refreshes the page data. */
+	async function flushSave() {
+		if (savePending) {
+			clearTimeout(saveTimer);
+			await saveNow();
+		} else if (inflightSave) {
+			await inflightSave;
+		}
 	}
 
 	// The sign-in link opens in a new tab so the draft survives; save again
@@ -140,6 +172,7 @@
 		clearTimeout(saveTimer);
 		clearTimeout(savedTimer);
 		saveStatus = 'saving';
+		savePending = true;
 		saveTimer = setTimeout(saveNow, 800);
 	}
 
@@ -875,11 +908,12 @@
 			{/if}
 		</div>
 
-		{#if data.dayItems.length > 0}
+		{#if data.dayItems.length > 0 || canLink}
 			<DayHealthRecords
 				items={data.dayItems}
 				onOpenRecord={(item) => (detailRecord = item)}
 				onPreviewDocument={(doc) => (previewDoc = doc)}
+				actions={canLink ? healthActions : undefined}
 			/>
 		{/if}
 
@@ -948,5 +982,94 @@
 		onclose={() => (detailRecord = null)}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		healthHref={healthRecordHref(companion.id, detailRecord)}
+		journalHref={(d) => `/${companion.id}/journal/${d}`}
+		currentDate={data.date}
+		footer={detailRecord.kind === 'health' && detailRecord.linkedHere && canLink
+			? linkedFooter
+			: undefined}
 	/>
 {/if}
+
+{#snippet healthActions()}
+	<div class="flex flex-wrap gap-2">
+		<button
+			type="button"
+			onclick={() => (showLinkForm = !showLinkForm)}
+			class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+		>
+			<Link2 class="h-3.5 w-3.5" />
+			{t(locale, 'page.journal.day.linkHealthEvent')}
+		</button>
+	</div>
+	{#if showLinkForm}
+		<form
+			method="POST"
+			action="?/linkHealth"
+			use:enhance={async () => {
+				await flushSave();
+				return async ({ result, update }) => {
+					if (result.type === 'success') showLinkForm = false;
+					await update({ reset: false });
+				};
+			}}
+			class="mt-2 space-y-2 rounded-lg border border-border px-4 py-3 animate-slide-up"
+		>
+			{#if data.linkableHealthEvents.length === 0}
+				<p class="text-sm text-muted-foreground">
+					{t(locale, 'page.journal.day.noLinkableEvents')}
+				</p>
+			{:else}
+				<label for="link-health-event" class="text-xs font-medium text-muted-foreground"
+					>{t(locale, 'page.journal.day.linkHealthEventLabel')}</label
+				>
+				<div class="flex gap-2">
+					<select
+						id="link-health-event"
+						name="healthEventId"
+						required
+						class="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+					>
+						{#each data.linkableHealthEvents as ev (ev.id)}
+							<option value={ev.id}
+								>{healthTypeLabel(locale, ev.type)} · {ev.day} · {ev.title}</option
+							>
+						{/each}
+					</select>
+					<Button type="submit" size="sm">{t(locale, 'page.journal.day.link')}</Button>
+				</div>
+			{/if}
+			{#if form?.linkError}
+				<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
+			{/if}
+		</form>
+	{/if}
+{/snippet}
+
+{#snippet linkedFooter()}
+	{#if detailRecord}
+		<Button
+			href={healthRecordHref(companion.id, detailRecord)}
+			variant="soft"
+			size="sm"
+			onclick={() => (detailRecord = null)}
+		>
+			<HeartPulse class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.openHealthLog')}
+		</Button>
+		<form
+			method="POST"
+			action="?/unlinkHealth"
+			use:enhance={async () => {
+				await flushSave();
+				return async ({ result, update }) => {
+					if (result.type === 'success') detailRecord = null;
+					await update({ reset: false });
+				};
+			}}
+		>
+			<input type="hidden" name="healthEventId" value={detailRecord.id} />
+			<Button type="submit" variant="softDestructive" size="sm">
+				<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
+			</Button>
+		</form>
+	{/if}
+{/snippet}

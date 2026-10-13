@@ -175,6 +175,7 @@
 		onclose={() => (detailRecord = null)}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		healthHref={healthRecordHref(companion.id, detailRecord)}
+		journalHref={(d) => `/${companion.id}/journal/${d}`}
 	/>
 {/if}
 

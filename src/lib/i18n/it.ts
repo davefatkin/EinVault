@@ -447,6 +447,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Apri nel registro salute',
+	'component.healthDetail.unlink': 'Scollega da questo giorno',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Annulla',
@@ -739,7 +740,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noActivities': 'Nessuna attività registrata.',
 	'page.journal.day.recentEntries': 'Voci recenti',
 	'page.journal.day.healthRecords': 'Dati sanitari',
+	'page.journal.day.linkHealthEvent': 'Collega evento sanitario',
+	'page.journal.day.linkHealthEventLabel': 'Evento sanitario di un altro giorno',
+	'page.journal.day.link': 'Collega',
+	'page.journal.day.noLinkableEvents': 'Nessun altro evento sanitario da collegare.',
 	'page.journal.dayItem.health': 'evento sanitario',
+	'page.journal.dayItem.linked': 'collegato',
 	'page.journal.dayItem.weight': 'peso',
 	'page.journal.dayItem.document': 'documento',
 	'page.journal.dayItem.attachments.one': '{count} documento allegato',
