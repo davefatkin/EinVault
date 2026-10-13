@@ -198,7 +198,7 @@ describe('journal', () => {
 			name: 'Snappy'
 		} as typeof schema.companions.$inferInsert);
 		const entryId = await upsertJournalEntry('c-j4', '2026-07-01', 'photo day', null, 'u-j');
-		await db.insert(schema.journalPhotos).values({
+		await db.insert(schema.media).values({
 			id: 'p-j4',
 			entryId,
 			filename: 'p-j4.jpg',
@@ -207,9 +207,9 @@ describe('journal', () => {
 			originalName: 'beach.jpg',
 			mimeType: 'image/jpeg',
 			sizeBytes: 10,
-			notes: 'at the beach',
+			caption: 'at the beach',
 			loggedBy: 'u-j'
-		} as typeof schema.journalPhotos.$inferInsert);
+		} as typeof schema.media.$inferInsert);
 
 		const page = await getEnrichedJournalEntries('c-j4');
 		const [photo] = page.entries[0].photos;

@@ -1,27 +1,13 @@
 import { db, schema } from '$lib/server/db';
-import { eq, lt, gte, and, inArray, sql, desc } from 'drizzle-orm';
+import { eq, lt, gte, and, inArray, isNotNull, sql, desc } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { generateId } from '$lib/server/utils';
 import type { Mood } from '$lib/mood';
 import type { UserRef } from '$lib/types';
 import { toMediaItem, type MediaItem } from '$lib/media';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 
 const PAGE_SIZE = 20;
-
-/**
- * journal_photos columns that build a MediaItem (see toMediaItem). Loads that
- * feed the browser select only these, so storage keys never leave the server.
- */
-export const JOURNAL_MEDIA_ITEM_COLUMNS = {
-	id: true,
-	filename: true,
-	originalName: true,
-	mediaType: true,
-	notes: true,
-	status: true,
-	posterKey: true,
-	loggedBy: true
-} as const;
 
 export async function getEnrichedJournalEntries(
 	companionId: string,
@@ -89,12 +75,12 @@ export async function getEnrichedJournalEntries(
 		const rangeEnd = new Date(ny, nm - 1, nd + 1); // next local midnight after newest
 
 		const [allMedia, allEvents] = await Promise.all([
-			db.query.journalPhotos.findMany({
-				where: inArray(schema.journalPhotos.entryId, entryIds),
+			db.query.media.findMany({
+				where: inArray(schema.media.entryId, entryIds),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
 				// entryId only groups rows below; the browser gets MediaItem fields.
-				columns: { ...JOURNAL_MEDIA_ITEM_COLUMNS, entryId: true },
-				with: { logger: { columns: { displayName: true } } }
+				columns: { ...MEDIA_ITEM_COLUMNS, entryId: true },
+				with: WITH_LOGGER
 			}),
 			db.query.dailyEvents.findMany({
 				where: and(
@@ -108,6 +94,7 @@ export async function getEnrichedJournalEntries(
 		]);
 
 		for (const item of allMedia) {
+			if (!item.entryId) continue; // inArray guarantees it; narrows the type
 			if (!mediaByEntry.has(item.entryId)) mediaByEntry.set(item.entryId, []);
 			mediaByEntry.get(item.entryId)!.push(toMediaItem(item));
 		}
@@ -193,4 +180,17 @@ export async function upsertJournalEntry(
 		loggedBy: userId
 	});
 	return id;
+}
+
+/**
+ * A journal media row by id, with its entry's companion and date for the caller's
+ * scope check. Undefined for unknown ids and for media of other parent kinds
+ * (note or health event), so a note media id can't be edited or deleted
+ * through the journal endpoints.
+ */
+export async function getJournalMediaItem(mediaId: string) {
+	return db.query.media.findFirst({
+		where: and(eq(schema.media.id, mediaId), isNotNull(schema.media.entryId)),
+		with: { entry: { columns: { companionId: true, date: true } } }
+	});
 }

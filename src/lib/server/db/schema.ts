@@ -6,7 +6,8 @@ import {
 	uniqueIndex,
 	index,
 	real,
-	primaryKey
+	primaryKey,
+	check
 } from 'drizzle-orm/sqlite-core';
 // Relative, not $lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
 import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES } from '../../activityTypes';
@@ -232,56 +233,7 @@ export const journalEntries = sqliteTable(
 	})
 );
 
-export const journalPhotos = sqliteTable(
-	'journal_photos',
-	{
-		id: text('id').primaryKey(),
-		entryId: text('entry_id')
-			.notNull()
-			.references(() => journalEntries.id, { onDelete: 'cascade' }),
-		filename: text('filename').notNull(),
-		provider: text('provider', { enum: ['local', 's3', 'immich'] })
-			.notNull()
-			.default('local'),
-		storageKey: text('storage_key'),
-		originalName: text('original_name'),
-		mediaType: text('media_type', { enum: ['photo', 'video'] })
-			.notNull()
-			.default('photo'),
-		mimeType: text('mime_type').notNull(),
-		sizeBytes: integer('size_bytes').notNull(),
-		notes: text('notes'),
-		// Transcode lifecycle. 'ready' = playable as stored (the default for
-		// every pre-existing row and for any media that isn't queued for
-		// transcoding). 'processing' = enqueued, awaiting the worker. 'claimed'
-		// = a worker has atomically taken the job (crash-recovery marker).
-		// 'failed' = transcode gave up; UI falls back to a download link. Only
-		// VIDEO_TRANSCODE=true ever produces non-'ready' values.
-		status: text('status', { enum: ['ready', 'processing', 'claimed', 'failed'] })
-			.notNull()
-			.default('ready'),
-		// Storage key of the kept source video (VIDEO_KEEP_ORIGINAL=true). Never
-		// served to clients; retained for re-encode/backup only.
-		originalKey: text('original_key'),
-		// Storage key of the generated poster/thumbnail JPEG.
-		posterKey: text('poster_key'),
-		// Times the worker has attempted this job. Bounds retries so a poison
-		// input can't be requeued forever on every boot.
-		transcodeAttempts: integer('transcode_attempts').notNull().default(0),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
-	},
-	(t) => ({
-		entryIdx: index('photo_entry_idx').on(t.entryId),
-		// The worker scans for queued jobs by status; index it.
-		statusIdx: index('photo_status_idx').on(t.status)
-	})
-);
-
 // health log
-
 export const healthEvents = sqliteTable(
 	'health_events',
 	{
@@ -392,15 +344,22 @@ export const noteTags = sqliteTable(
 	(t) => [primaryKey({ columns: [t.noteId, t.tag] }), index('note_tag_idx').on(t.tag)]
 );
 
-// Photos and videos attached to a note (issue #321). Mirrors journal_photos,
-// with `caption` in place of journal's `notes` column.
-export const noteMedia = sqliteTable(
-	'note_media',
+// Photos and videos for every parent kind: journal entries, notes and (later)
+// health events. Replaced journal_photos and note_media. Exactly one parent
+// column is set (media_one_parent).
+//
+// A drizzle-kit rebuild of this table (any change it can't ALTER in place)
+// drops the search_media_* triggers. Re-add them in the same migration; see
+// drizzle/0035_media_table.sql.
+export const media = sqliteTable(
+	'media',
 	{
 		id: text('id').primaryKey(),
-		noteId: text('note_id')
-			.notNull()
-			.references(() => notes.id, { onDelete: 'cascade' }),
+		entryId: text('entry_id').references(() => journalEntries.id, { onDelete: 'cascade' }),
+		noteId: text('note_id').references(() => notes.id, { onDelete: 'cascade' }),
+		healthEventId: text('health_event_id').references(() => healthEvents.id, {
+			onDelete: 'cascade'
+		}),
 		filename: text('filename').notNull(),
 		provider: text('provider', { enum: ['local', 's3', 'immich'] })
 			.notNull()
@@ -413,13 +372,21 @@ export const noteMedia = sqliteTable(
 		mimeType: text('mime_type').notNull(),
 		sizeBytes: integer('size_bytes').notNull(),
 		caption: text('caption'),
-		// Same transcode lifecycle as journal_photos.status.
+		// Transcode lifecycle. 'ready' = playable as stored (the default for any
+		// media that isn't queued for transcoding). 'processing' = enqueued,
+		// awaiting the worker. 'claimed' = a worker has atomically taken the job
+		// (crash-recovery marker). 'failed' = transcode gave up; UI falls back to a
+		// download link. Only VIDEO_TRANSCODE=true ever produces non-'ready' values.
 		status: text('status', { enum: ['ready', 'processing', 'claimed', 'failed'] })
 			.notNull()
 			.default('ready'),
-		// Kept source video (VIDEO_KEEP_ORIGINAL=true). Never served to clients.
+		// Storage key of the kept source video (VIDEO_KEEP_ORIGINAL=true). Never
+		// served to clients; retained for re-encode/backup only.
 		originalKey: text('original_key'),
+		// Storage key of the generated poster/thumbnail JPEG.
 		posterKey: text('poster_key'),
+		// Times the worker has attempted this job. Bounds retries so a poison
+		// input can't be requeued forever on every boot.
 		transcodeAttempts: integer('transcode_attempts').notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
@@ -427,9 +394,17 @@ export const noteMedia = sqliteTable(
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => [
-		index('note_media_note_idx').on(t.noteId, t.createdAt),
-		// The video worker scans for queued jobs by status.
-		index('note_media_status_idx').on(t.status)
+		index('media_entry_idx').on(t.entryId, t.createdAt),
+		index('media_note_idx').on(t.noteId, t.createdAt),
+		index('media_health_event_idx').on(t.healthEventId, t.createdAt),
+		// The worker scans WHERE status = 'processing' ORDER BY created_at, id.
+		index('media_status_idx').on(t.status, t.createdAt),
+		// Bare column names on purpose: `${t.entryId}` renders as "media"."entry_id",
+		// which breaks drizzle-kit's __new_media table rebuild.
+		check(
+			'media_one_parent',
+			sql`(entry_id IS NOT NULL) + (note_id IS NOT NULL) + (health_event_id IS NOT NULL) = 1`
+		)
 	]
 );
 
@@ -674,12 +649,11 @@ export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NotificationOutboxRow = typeof notificationOutbox.$inferSelect;
 export type Companion = typeof companions.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
-export type JournalPhoto = typeof journalPhotos.$inferSelect;
 export type HealthEvent = typeof healthEvents.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type NoteTag = typeof noteTags.$inferSelect;
-export type NoteMedia = typeof noteMedia.$inferSelect;
+export type Media = typeof media.$inferSelect;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
@@ -712,8 +686,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 	shifts: many(caretakerShifts),
 	loggedJournalEntries: many(journalEntries, { relationName: 'journalLogger' }),
 	updatedJournalEntries: many(journalEntries, { relationName: 'journalUpdater' }),
-	loggedJournalPhotos: many(journalPhotos),
-	loggedNoteMedia: many(noteMedia),
+	loggedMedia: many(media),
 	loggedDailyEvents: many(dailyEvents),
 	loggedHealthEvents: many(healthEvents),
 	loggedWeightEntries: many(weightEntries),
@@ -772,15 +745,7 @@ export const journalEntriesRelations = relations(journalEntries, ({ one, many })
 		references: [users.id],
 		relationName: 'journalUpdater'
 	}),
-	photos: many(journalPhotos)
-}));
-
-export const journalPhotosRelations = relations(journalPhotos, ({ one }) => ({
-	entry: one(journalEntries, {
-		fields: [journalPhotos.entryId],
-		references: [journalEntries.id]
-	}),
-	logger: one(users, { fields: [journalPhotos.loggedBy], references: [users.id] })
+	photos: many(media)
 }));
 
 export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
@@ -789,7 +754,8 @@ export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
 
 export const healthEventsRelations = relations(healthEvents, ({ one, many }) => ({
 	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] }),
-	documents: many(documents)
+	documents: many(documents),
+	media: many(media)
 }));
 
 export const documentsRelations = relations(documents, ({ one }) => ({
@@ -804,7 +770,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export const notesRelations = relations(notes, ({ one, many }) => ({
 	companion: one(companions, { fields: [notes.companionId], references: [companions.id] }),
 	tags: many(noteTags),
-	media: many(noteMedia),
+	media: many(media),
 	logger: one(users, {
 		fields: [notes.loggedBy],
 		references: [users.id],
@@ -817,9 +783,11 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
 	})
 }));
 
-export const noteMediaRelations = relations(noteMedia, ({ one }) => ({
-	note: one(notes, { fields: [noteMedia.noteId], references: [notes.id] }),
-	logger: one(users, { fields: [noteMedia.loggedBy], references: [users.id] })
+export const mediaRelations = relations(media, ({ one }) => ({
+	entry: one(journalEntries, { fields: [media.entryId], references: [journalEntries.id] }),
+	note: one(notes, { fields: [media.noteId], references: [notes.id] }),
+	healthEvent: one(healthEvents, { fields: [media.healthEventId], references: [healthEvents.id] }),
+	logger: one(users, { fields: [media.loggedBy], references: [users.id] })
 }));
 
 export const noteTagsRelations = relations(noteTags, ({ one }) => ({

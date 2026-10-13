@@ -38,7 +38,7 @@ beforeAll(async () => {
 			{ companionId: C1, userId: CT_ASSIGNED.id }
 		] as (typeof schema.companionCaretakers.$inferInsert)[]);
 	await db.insert(schema.journalEntries).values({ id: ENTRY, companionId: C1, date: DATE });
-	await db.insert(schema.journalPhotos).values([
+	await db.insert(schema.media).values([
 		{
 			id: 'jp-1',
 			entryId: ENTRY,
@@ -68,12 +68,26 @@ beforeAll(async () => {
 			sizeBytes: 10,
 			posterKey: `journal/${C1}/${DATE}/jp-vid.poster.jpg`
 		}
-	] as (typeof schema.journalPhotos.$inferInsert)[]);
+	] as (typeof schema.media.$inferInsert)[]);
+	await db.insert(schema.notes).values({ id: 'n-ma-cross', companionId: C1, title: 'X' });
+	await db.insert(schema.media).values({
+		id: 'nm-cross',
+		noteId: 'n-ma-cross',
+		filename: 'nm-cross.jpg',
+		provider: 'local',
+		storageKey: `notes/${C1}/n-ma-cross/nm-cross.jpg`,
+		mimeType: 'image/jpeg',
+		sizeBytes: 10
+	});
 });
 
 const seg = (file: string, companionId = C1, date = DATE) => ['journal', companionId, date, file];
 
 describe('resolveJournalMedia', () => {
+	it('404s for a note media filename under a journal URL', async () => {
+		expect(await statusOf(resolveJournalMedia(seg('nm-cross.jpg'), MEMBER, 'en', false))).toBe(404);
+	});
+
 	it('resolves the stored key and mime type for members and admins', async () => {
 		for (const user of [MEMBER, ADMIN]) {
 			expect(await resolveJournalMedia(seg('jp-1.jpg'), user, 'en', false)).toEqual({
@@ -139,7 +153,7 @@ describe('resolveNoteMedia', () => {
 			{ id: N_PRIVATE, companionId: C1, title: 'Private', sharedWithCaretakers: false },
 			{ id: N_ARCHIVED, companionId: C2, title: 'Old', sharedWithCaretakers: true }
 		] as (typeof schema.notes.$inferInsert)[]);
-		await db.insert(schema.noteMedia).values([
+		await db.insert(schema.media).values([
 			{
 				id: 'nm-1',
 				noteId: N_SHARED,
@@ -178,7 +192,7 @@ describe('resolveNoteMedia', () => {
 				mimeType: 'image/jpeg',
 				sizeBytes: 10
 			}
-		] as (typeof schema.noteMedia.$inferInsert)[]);
+		] as (typeof schema.media.$inferInsert)[]);
 	});
 
 	const nseg = (noteId: string, file: string, companionId = C1) => [

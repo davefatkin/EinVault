@@ -15,7 +15,8 @@ import {
 } from '$lib/server/validation';
 import { localDateISO } from '$lib/date';
 import { toMediaItem } from '$lib/media';
-import { upsertJournalEntry, JOURNAL_MEDIA_ITEM_COLUMNS } from '$lib/server/journal';
+import { upsertJournalEntry } from '$lib/server/journal';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
 import { failCareError } from '$lib/server/care-errors';
 import { resolveActivityUpdate } from '$lib/server/journal-activity';
@@ -49,11 +50,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	// Load media for this date. Only the fields the UI needs, so storage keys
 	// and transcode bookkeeping never reach the browser.
 	const media = entry
-		? await db.query.journalPhotos.findMany({
-				where: eq(schema.journalPhotos.entryId, entry.id),
+		? await db.query.media.findMany({
+				where: eq(schema.media.entryId, entry.id),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
-				columns: JOURNAL_MEDIA_ITEM_COLUMNS,
-				with: { logger: { columns: { displayName: true } } }
+				columns: MEDIA_ITEM_COLUMNS,
+				with: WITH_LOGGER
 			})
 		: [];
 

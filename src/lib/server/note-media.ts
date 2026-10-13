@@ -1,6 +1,7 @@
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import type { NoteMedia } from '$lib/server/db/schema';
+import type { Media } from '$lib/server/db/schema';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { toMediaItem, type MediaItem, type MediaStatus } from '$lib/media';
 import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
 import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
@@ -16,24 +17,11 @@ export function noteMediaKey(companionId: string, noteId: string, filename: stri
 	return `notes/${companionId}/${noteId}/${filename}`;
 }
 
-// Columns the browser may see. Never add storage keys or provider here.
-export const MEDIA_ITEM_COLUMNS = {
-	id: true,
-	filename: true,
-	originalName: true,
-	mediaType: true,
-	caption: true,
-	status: true,
-	posterKey: true,
-	loggedBy: true
-} as const;
-
-const WITH_LOGGER = { logger: { columns: { displayName: true } } } as const;
-const MEDIA_ORDER = [asc(schema.noteMedia.createdAt), asc(schema.noteMedia.id)];
+const MEDIA_ORDER = [asc(schema.media.createdAt), asc(schema.media.id)];
 
 export async function listNoteMedia(noteId: string): Promise<MediaItem[]> {
-	const rows = await db.query.noteMedia.findMany({
-		where: eq(schema.noteMedia.noteId, noteId),
+	const rows = await db.query.media.findMany({
+		where: eq(schema.media.noteId, noteId),
 		columns: MEDIA_ITEM_COLUMNS,
 		with: WITH_LOGGER,
 		orderBy: MEDIA_ORDER
@@ -45,24 +33,25 @@ export async function countMediaForNotes(noteIds: string[]): Promise<Map<string,
 	const counts = new Map<string, number>();
 	if (noteIds.length === 0) return counts;
 	const rows = await db
-		.select({ noteId: schema.noteMedia.noteId, n: count() })
-		.from(schema.noteMedia)
-		.where(inArray(schema.noteMedia.noteId, noteIds))
-		.groupBy(schema.noteMedia.noteId);
-	for (const r of rows) counts.set(r.noteId, r.n);
+		.select({ noteId: schema.media.noteId, n: count() })
+		.from(schema.media)
+		.where(inArray(schema.media.noteId, noteIds))
+		.groupBy(schema.media.noteId);
+	for (const r of rows) if (r.noteId) counts.set(r.noteId, r.n);
 	return counts;
 }
 
 export async function listMediaForNotes(noteIds: string[]): Promise<Map<string, MediaItem[]>> {
 	const byNote = new Map<string, MediaItem[]>();
 	if (noteIds.length === 0) return byNote;
-	const rows = await db.query.noteMedia.findMany({
-		where: inArray(schema.noteMedia.noteId, noteIds),
+	const rows = await db.query.media.findMany({
+		where: inArray(schema.media.noteId, noteIds),
 		columns: { ...MEDIA_ITEM_COLUMNS, noteId: true },
 		with: WITH_LOGGER,
 		orderBy: MEDIA_ORDER
 	});
 	for (const r of rows) {
+		if (!r.noteId) continue;
 		const list = byNote.get(r.noteId);
 		if (list) list.push(toMediaItem(r));
 		else byNote.set(r.noteId, [toMediaItem(r)]);
@@ -73,22 +62,22 @@ export async function listMediaForNotes(noteIds: string[]): Promise<Map<string, 
 export async function listNoteMediaStatus(noteId: string): Promise<MediaStatus[]> {
 	return db
 		.select({
-			id: schema.noteMedia.id,
-			status: schema.noteMedia.status,
-			filename: schema.noteMedia.filename,
-			posterKey: schema.noteMedia.posterKey
+			id: schema.media.id,
+			status: schema.media.status,
+			filename: schema.media.filename,
+			posterKey: schema.media.posterKey
 		})
-		.from(schema.noteMedia)
-		.where(eq(schema.noteMedia.noteId, noteId))
+		.from(schema.media)
+		.where(eq(schema.media.noteId, noteId))
 		.orderBy(...MEDIA_ORDER);
 }
 
 export async function getNoteMediaItem(
 	noteId: string,
 	mediaId: string
-): Promise<NoteMedia | undefined> {
-	return db.query.noteMedia.findFirst({
-		where: and(eq(schema.noteMedia.id, mediaId), eq(schema.noteMedia.noteId, noteId))
+): Promise<Media | undefined> {
+	return db.query.media.findFirst({
+		where: and(eq(schema.media.id, mediaId), eq(schema.media.noteId, noteId))
 	});
 }
 
@@ -97,8 +86,8 @@ export async function getNoteMediaView(
 	noteId: string,
 	mediaId: string
 ): Promise<MediaItem | undefined> {
-	const row = await db.query.noteMedia.findFirst({
-		where: and(eq(schema.noteMedia.id, mediaId), eq(schema.noteMedia.noteId, noteId)),
+	const row = await db.query.media.findFirst({
+		where: and(eq(schema.media.id, mediaId), eq(schema.media.noteId, noteId)),
 		columns: MEDIA_ITEM_COLUMNS,
 		with: WITH_LOGGER
 	});
@@ -108,8 +97,8 @@ export async function getNoteMediaView(
 export async function countNoteMedia(noteId: string): Promise<number> {
 	const [{ value }] = await db
 		.select({ value: count() })
-		.from(schema.noteMedia)
-		.where(eq(schema.noteMedia.noteId, noteId));
+		.from(schema.media)
+		.where(eq(schema.media.noteId, noteId));
 	return value;
 }
 
@@ -118,10 +107,13 @@ export async function countNoteMedia(noteId: string): Promise<number> {
 // and a note deleted between the upload's checks and this insert reads as
 // 'noteGone' instead of a foreign-key 500. better-sqlite3 transactions are
 // synchronous, so storage I/O stays outside.
-export function insertNoteMedia(
-	row: typeof schema.noteMedia.$inferInsert,
-	max: number
-): InsertOutcome {
+// A note media insert: noteId required, no other parent.
+export type NoteMediaInsert = Omit<
+	typeof schema.media.$inferInsert,
+	'noteId' | 'entryId' | 'healthEventId'
+> & { noteId: string };
+
+export function insertNoteMedia(row: NoteMediaInsert, max: number): InsertOutcome {
 	return db.transaction(
 		(tx): InsertOutcome => {
 			const note = tx
@@ -132,11 +124,11 @@ export function insertNoteMedia(
 			if (!note) return 'noteGone';
 			const [{ value }] = tx
 				.select({ value: count() })
-				.from(schema.noteMedia)
-				.where(eq(schema.noteMedia.noteId, row.noteId))
+				.from(schema.media)
+				.where(eq(schema.media.noteId, row.noteId))
 				.all();
 			if (value >= max) return 'cap';
-			tx.insert(schema.noteMedia).values(row).run();
+			tx.insert(schema.media).values(row).run();
 			return 'ok';
 		},
 		{ behavior: 'immediate' }
@@ -192,26 +184,31 @@ export async function saveNoteMediaUpload(input: {
 	return outcome;
 }
 
-export async function setNoteMediaCaption(mediaId: string, caption: string): Promise<void> {
+export async function setNoteMediaCaption(
+	noteId: string,
+	mediaId: string,
+	caption: string
+): Promise<void> {
 	await db
-		.update(schema.noteMedia)
+		.update(schema.media)
 		.set({ caption: caption.trim() || null })
-		.where(eq(schema.noteMedia.id, mediaId));
+		.where(and(eq(schema.media.id, mediaId), eq(schema.media.noteId, noteId)));
 }
 
 // Row first, then objects: the row is the source of truth, and an orphaned
 // object is recoverable while a row pointing at a deleted object is not.
-export async function deleteNoteMediaItem(item: NoteMedia): Promise<void> {
+export async function deleteNoteMediaItem(item: Media): Promise<void> {
+	if (!item.noteId) return;
 	// Blob keys come from the row as deleted: a worker may have marked it ready
 	// (new MP4 and poster) after the caller read it.
 	const deleted = await db
-		.delete(schema.noteMedia)
-		.where(eq(schema.noteMedia.id, item.id))
+		.delete(schema.media)
+		.where(and(eq(schema.media.id, item.id), eq(schema.media.noteId, item.noteId)))
 		.returning({
-			provider: schema.noteMedia.provider,
-			storageKey: schema.noteMedia.storageKey,
-			originalKey: schema.noteMedia.originalKey,
-			posterKey: schema.noteMedia.posterKey
+			provider: schema.media.provider,
+			storageKey: schema.media.storageKey,
+			originalKey: schema.media.originalKey,
+			posterKey: schema.media.posterKey
 		});
 	if (deleted.length > 0) await deleteMediaBlobs(deleted, 'note-media');
 }

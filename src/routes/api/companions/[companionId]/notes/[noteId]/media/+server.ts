@@ -77,7 +77,7 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	const body = (await request.json().catch(() => null)) as { caption?: unknown } | null;
 	const caption = typeof body?.caption === 'string' ? body.caption : '';
 
-	await setNoteMediaCaption(item.id, caption);
+	await setNoteMediaCaption(params.noteId, item.id, caption);
 	return new Response(null, { status: 204 });
 };
 

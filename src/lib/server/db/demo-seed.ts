@@ -364,7 +364,7 @@ export function seedContent(
 
 	// ---- Note media (#321): one photo each on a shared note, a private note,
 	// and a shared note of a companion the caretaker isn't assigned to ----
-	db.insert(schema.noteMedia)
+	db.insert(schema.media)
 		.values(
 			buildNoteMediaManifest().map(
 				({ id, noteId, filename, sourceAsset, caption, storageKey }, i) => ({
@@ -1021,7 +1021,7 @@ export function seedContent(
 		loggedBy: jet
 	}));
 
-	db.insert(schema.journalPhotos).values(photoRows).run();
+	db.insert(schema.media).values(photoRows).run();
 
 	// ---- Quick logs: one-tap buttons on the dashboard and log pages. The member
 	// gets a few across both companions; the caretaker gets one for their
@@ -1115,8 +1115,8 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// quick_logs hangs off users, so the companion cascade below doesn't reach
 		// it; delete explicitly (this cascades to quick_log_companions).
 		tx.delete(schema.quickLogs).run();
-		// companions cascade to: journalEntries -> journalPhotos, healthEvents,
-		// weightEntries, dailyEvents, reminders, notes -> noteTags, noteMedia
+		// companions cascade to: journalEntries -> media, healthEvents -> media,
+		// weightEntries, dailyEvents, reminders, notes -> noteTags, media
 		tx.delete(schema.companions).run();
 		// Shift runs past the 24h reseed interval so the caretaker stays on-shift
 		// for the whole window between refreshes (issue #158).

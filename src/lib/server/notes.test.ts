@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import {
 	listNotes,
@@ -24,9 +24,9 @@ const { deleteMediaBlobs } = await import('$lib/server/storage/media-blobs');
 async function addMedia(
 	noteId: string,
 	id: string,
-	extra: Partial<typeof schema.noteMedia.$inferInsert> = {}
+	extra: Partial<typeof schema.media.$inferInsert> = {}
 ) {
-	await db.insert(schema.noteMedia).values({
+	await db.insert(schema.media).values({
 		id,
 		noteId,
 		filename: `${id}.jpg`,
@@ -171,7 +171,7 @@ describe('deleteNote', () => {
 		await addMedia(id, 'i1', { provider: 'immich', storageKey: 'immich:abc' });
 
 		expect(await deleteNote(id)).toBe(true);
-		expect(await db.query.noteMedia.findMany()).toEqual([]);
+		expect(await db.query.media.findMany({ where: isNotNull(schema.media.noteId) })).toEqual([]);
 		expect(deleteMediaBlobs).toHaveBeenCalledTimes(1);
 		const [rows, tag] = vi.mocked(deleteMediaBlobs).mock.calls[0];
 		expect(tag).toBe('note-media');

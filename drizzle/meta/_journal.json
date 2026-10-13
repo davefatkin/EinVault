@@ -246,6 +246,20 @@
       "when": 1791296730628,
       "tag": "0034_note_media",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1791896491294,
+      "tag": "0035_media_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1791897285922,
+      "tag": "0036_drop_old_media_tables",
+      "breakpoints": true
     }
   ]
 }

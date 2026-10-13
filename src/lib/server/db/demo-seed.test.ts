@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { isNotNull } from 'drizzle-orm';
 import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { db, schema } from '$server/db';
@@ -40,7 +41,7 @@ describe('seedRows', () => {
 
 	it('seeds a rich dataset: photos, varied moods, weight trend, mixed reminders', async () => {
 		seedRows(db as never, { now: 1_700_000_000_000 });
-		const photos = await db.query.journalPhotos.findMany();
+		const photos = await db.query.media.findMany({ where: isNotNull(schema.media.entryId) });
 		expect(photos.length).toBeGreaterThanOrEqual(5);
 
 		const entries = await db.query.journalEntries.findMany();
@@ -76,12 +77,12 @@ describe('seedRows', () => {
 		const now = 1_700_000_000_000;
 		seedRows(db as never, { now });
 
-		const photos = await db.query.journalPhotos.findMany();
+		const photos = await db.query.media.findMany({ where: isNotNull(schema.media.entryId) });
 		const entries = await db.query.journalEntries.findMany();
 		const entryById = new Map(entries.map((e) => [e.id, e]));
 
 		for (const photo of photos) {
-			const entry = entryById.get(photo.entryId);
+			const entry = entryById.get(photo.entryId!);
 			expect(
 				entry,
 				`no journal entry found for photo ${photo.id} (entryId=${photo.entryId})`
@@ -109,7 +110,7 @@ describe('seedRows', () => {
 
 	it('seeds note media on shared, private, and unassigned-companion notes (#321)', async () => {
 		seedRows(db as never, { now: 1_700_000_000_000 });
-		const rows = await db.query.noteMedia.findMany();
+		const rows = await db.query.media.findMany({ where: isNotNull(schema.media.noteId) });
 		const byId = new Map(rows.map((r) => [r.id, r]));
 		for (const m of Object.values(SEED.noteMedia)) {
 			const row = byId.get(m.id);
@@ -183,6 +184,17 @@ describe('refreshDemoContent', () => {
 	it('refuses to run when demoMode is false (fail closed)', async () => {
 		const { refreshDemoContent } = await import('$server/db/demo-seed');
 		expect(() => refreshDemoContent(db, false, DATA_DIR)).toThrow(/DEMO_MODE/);
+	});
+
+	it('leaves exactly one seed worth of media after a second refresh', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, DATA_DIR);
+		const first = await db.query.media.findMany({ columns: { id: true } });
+		refreshDemoContent(db, true, DATA_DIR);
+		const second = await db.query.media.findMany({ columns: { id: true } });
+		expect(first.length).toBeGreaterThan(0);
+		expect(second.length).toBe(first.length);
 	});
 
 	it('re-seeds content anchored to now after wiping old rows', async () => {

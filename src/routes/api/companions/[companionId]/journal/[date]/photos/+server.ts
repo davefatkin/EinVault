@@ -10,6 +10,8 @@ import { prepareMediaUpload } from '$lib/server/storage/media-upload';
 import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
 import { kickWorker } from '$lib/server/video/worker';
 import { canModifyMedia } from '$lib/permissions';
+import { getJournalMediaItem } from '$lib/server/journal';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { assertCanWriteJournalMedia } from '$lib/server/permissions';
 import { isValidDate } from '$lib/server/validation';
 
@@ -49,14 +51,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	const rows = await db
 		.select({
-			id: schema.journalPhotos.id,
-			status: schema.journalPhotos.status,
-			filename: schema.journalPhotos.filename,
-			mimeType: schema.journalPhotos.mimeType,
-			posterKey: schema.journalPhotos.posterKey
+			id: schema.media.id,
+			status: schema.media.status,
+			filename: schema.media.filename,
+			mimeType: schema.media.mimeType,
+			posterKey: schema.media.posterKey
 		})
-		.from(schema.journalPhotos)
-		.where(eq(schema.journalPhotos.entryId, entry.id));
+		.from(schema.media)
+		.where(eq(schema.media.entryId, entry.id));
 
 	return json({ photos: rows });
 };
@@ -101,8 +103,8 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	// Check current media count for this entry
 	const [{ value: mediaCount }] = await db
 		.select({ value: count() })
-		.from(schema.journalPhotos)
-		.where(eq(schema.journalPhotos.entryId, entry.id));
+		.from(schema.media)
+		.where(eq(schema.media.entryId, entry.id));
 
 	if (mediaCount >= MAX_DAILY_MEDIA) {
 		error(400, t(locals.locale, 'error.maxMediaExceeded', { max: MAX_DAILY_MEDIA }));
@@ -126,7 +128,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
 
-	await db.insert(schema.journalPhotos).values({
+	await db.insert(schema.media).values({
 		id: mediaId,
 		entryId: entry.id,
 		filename,
@@ -142,9 +144,10 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	if (prepared.willTranscode) kickWorker();
 
-	const created = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.id, mediaId),
-		with: { logger: { columns: { displayName: true } } }
+	const created = await db.query.media.findFirst({
+		where: eq(schema.media.id, mediaId),
+		columns: MEDIA_ITEM_COLUMNS,
+		with: WITH_LOGGER
 	});
 
 	return json({
@@ -161,16 +164,10 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	const photoId = url.searchParams.get('photoId');
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
-	const item = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.id, photoId)
-	});
-	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
-
-	const entry = await db.query.journalEntries.findFirst({
-		where: eq(schema.journalEntries.id, item.entryId),
-		columns: { companionId: true }
-	});
-	if (!entry || entry.companionId !== params.companionId)
+	const item = await getJournalMediaItem(photoId);
+	if (!item || item.entry?.date !== params.date)
+		error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item.entry || item.entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
 	if (!canModifyMedia(locals.user, item)) error(403, t(locals.locale, 'error.forbidden'));
@@ -180,9 +177,9 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 	const { notes } = await request.json();
 
 	await db
-		.update(schema.journalPhotos)
-		.set({ notes: notes?.trim() || null })
-		.where(eq(schema.journalPhotos.id, photoId));
+		.update(schema.media)
+		.set({ caption: notes?.trim() || null })
+		.where(eq(schema.media.id, photoId));
 
 	return json({ success: true });
 };
@@ -195,16 +192,10 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 	const photoId = url.searchParams.get('photoId');
 	if (!photoId) error(400, t(locals.locale, 'error.missingPhotoId'));
 
-	const item = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.id, photoId)
-	});
-	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
-
-	const entry = await db.query.journalEntries.findFirst({
-		where: eq(schema.journalEntries.id, item.entryId),
-		columns: { companionId: true }
-	});
-	if (!entry || entry.companionId !== params.companionId)
+	const item = await getJournalMediaItem(photoId);
+	if (!item || item.entry?.date !== params.date)
+		error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!item.entry || item.entry.companionId !== params.companionId)
 		error(403, t(locals.locale, 'error.forbidden'));
 
 	if (!canModifyMedia(locals.user, item)) error(403, t(locals.locale, 'error.forbidden'));
@@ -226,7 +217,7 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 		'journal-media'
 	);
 
-	await db.delete(schema.journalPhotos).where(eq(schema.journalPhotos.id, photoId));
+	await db.delete(schema.media).where(eq(schema.media.id, photoId));
 
 	return json({ success: true });
 };

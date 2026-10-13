@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
+import type { NoteMediaInsert } from './note-media';
 import { db, schema } from '$lib/server/db';
 
 // Fake storage: records puts/deletes; a put can be made to fail.
@@ -62,7 +63,7 @@ beforeEach(async () => {
 	]);
 });
 
-function row(id: string, noteId = N1, extra: Partial<typeof schema.noteMedia.$inferInsert> = {}) {
+function row(id: string, noteId = N1, extra: Partial<NoteMediaInsert> = {}) {
 	return {
 		id,
 		noteId,
@@ -84,12 +85,12 @@ const prepared = (filename: string, willTranscode = false) => ({
 	sizeBytes: 4
 });
 
-describe('note_media schema', () => {
+describe('note media on media', () => {
 	it('fills defaults in SQL, including created_at', async () => {
 		db.run(
-			sql`INSERT INTO note_media (id, note_id, filename, mime_type, size_bytes) VALUES ('m-raw', ${N1}, 'm-raw.jpg', 'image/jpeg', 1)`
+			sql`INSERT INTO media (id, note_id, filename, mime_type, size_bytes) VALUES ('m-raw', ${N1}, 'm-raw.jpg', 'image/jpeg', 1)`
 		);
-		const row = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'm-raw') });
+		const row = await db.query.media.findFirst({ where: eq(schema.media.id, 'm-raw') });
 		expect(row).toMatchObject({
 			provider: 'local',
 			mediaType: 'photo',
@@ -102,7 +103,7 @@ describe('note_media schema', () => {
 	});
 
 	it('cascades media rows when the note is deleted', async () => {
-		await db.insert(schema.noteMedia).values({
+		await db.insert(schema.media).values({
 			id: 'm-1',
 			noteId: N1,
 			filename: 'm-1.jpg',
@@ -112,11 +113,11 @@ describe('note_media schema', () => {
 			loggedBy: U1
 		});
 		await db.delete(schema.notes).where(eq(schema.notes.id, N1));
-		expect(await db.query.noteMedia.findMany()).toEqual([]);
+		expect(await db.query.media.findMany()).toEqual([]);
 	});
 
 	it('loads the note and logger relations', async () => {
-		await db.insert(schema.noteMedia).values({
+		await db.insert(schema.media).values({
 			id: 'm-2',
 			noteId: N1,
 			filename: 'm-2.jpg',
@@ -124,11 +125,11 @@ describe('note_media schema', () => {
 			sizeBytes: 10,
 			loggedBy: U1
 		});
-		const row = await db.query.noteMedia.findFirst({
-			where: eq(schema.noteMedia.id, 'm-2'),
+		const row = await db.query.media.findFirst({
+			where: eq(schema.media.id, 'm-2'),
 			with: { note: { columns: { companionId: true } }, logger: { columns: { displayName: true } } }
 		});
-		expect(row?.note.companionId).toBe(C1);
+		expect(row?.note?.companionId).toBe(C1);
 		expect(row?.logger?.displayName).toBe('Jet');
 	});
 });
@@ -182,7 +183,7 @@ describe('saveNoteMediaUpload', () => {
 			await saveNoteMediaUpload({ ...base, mediaId: 'm2', prepared: prepared('m2.jpg') })
 		).toBe('noteGone');
 		expect(store.deletes).toEqual([`notes/${C1}/${N1}/m2.jpg`]);
-		expect(await db.query.noteMedia.findMany()).toEqual([]);
+		expect(await db.query.media.findMany()).toEqual([]);
 	});
 
 	it('lets exactly one of two concurrent uploads take the last slot', async () => {
@@ -266,10 +267,33 @@ describe('listing', () => {
 describe('captions and deletes', () => {
 	it('trims captions and stores blank as null', async () => {
 		insertNoteMedia(row('a'), 10);
-		await setNoteMediaCaption('a', '  paw  ');
+		await setNoteMediaCaption(N1, 'a', '  paw  ');
 		expect((await getNoteMediaItem(N1, 'a'))?.caption).toBe('paw');
-		await setNoteMediaCaption('a', '   ');
+		await setNoteMediaCaption(N1, 'a', '   ');
 		expect((await getNoteMediaItem(N1, 'a'))?.caption).toBeNull();
+	});
+
+	it('leaves journal media and other notes alone', async () => {
+		await db
+			.insert(schema.journalEntries)
+			.values({ id: 'je-x', companionId: C1, date: '2026-05-01' });
+		await db.insert(schema.media).values({
+			id: 'jm',
+			entryId: 'je-x',
+			filename: 'jm.jpg',
+			mimeType: 'image/jpeg',
+			sizeBytes: 1,
+			caption: 'keep'
+		});
+		insertNoteMedia(row('a', N2), 10);
+		await setNoteMediaCaption(N1, 'jm', 'hijack');
+		await setNoteMediaCaption(N1, 'a', 'hijack');
+		const jm = await db.query.media.findFirst({ where: eq(schema.media.id, 'jm') });
+		expect(jm?.caption).toBe('keep');
+		expect((await getNoteMediaItem(N2, 'a'))?.caption).toBeNull();
+		await deleteNoteMediaItem(jm!);
+		expect(await db.query.media.findFirst({ where: eq(schema.media.id, 'jm') })).toBeDefined();
+		expect(store.deletes).toEqual([]);
 	});
 
 	it('deletes the row and its objects', async () => {
@@ -300,13 +324,13 @@ describe('deleteNoteMediaItem staleness', () => {
 		const stale = (await getNoteMediaItem(N1, 'w'))!;
 		// A worker finishes the transcode between the read and the delete.
 		await db
-			.update(schema.noteMedia)
+			.update(schema.media)
 			.set({
 				storageKey: `notes/${C1}/${N1}/w.mp4`,
 				originalKey: `notes/${C1}/${N1}/w.orig.mov`,
 				posterKey: `notes/${C1}/${N1}/w.poster.jpg`
 			})
-			.where(eq(schema.noteMedia.id, 'w'));
+			.where(eq(schema.media.id, 'w'));
 		await deleteNoteMediaItem(stale);
 		expect(store.deletes.sort()).toEqual(
 			[
@@ -320,7 +344,7 @@ describe('deleteNoteMediaItem staleness', () => {
 	it('deletes no blobs when the row is already gone', async () => {
 		insertNoteMedia(row('x', N1, { storageKey: `notes/${C1}/${N1}/x.jpg` }), 10);
 		const item = (await getNoteMediaItem(N1, 'x'))!;
-		await db.delete(schema.noteMedia).where(eq(schema.noteMedia.id, 'x'));
+		await db.delete(schema.media).where(eq(schema.media.id, 'x'));
 		await deleteNoteMediaItem(item);
 		expect(store.deletes).toEqual([]);
 	});
@@ -357,7 +381,7 @@ describe('countMediaForNotes', () => {
 	});
 
 	it('counts media per note and omits notes without media', async () => {
-		await db.insert(schema.noteMedia).values([row('cm-1'), row('cm-2')]);
+		await db.insert(schema.media).values([row('cm-1'), row('cm-2')]);
 		const counts = await countMediaForNotes([N1, N2]);
 		expect(counts.get(N1)).toBe(2);
 		expect(counts.has(N2)).toBe(false);

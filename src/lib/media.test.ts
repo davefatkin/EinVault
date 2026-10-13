@@ -27,8 +27,8 @@ describe('toMediaItem', () => {
 		});
 	});
 
-	it('maps a journal row, taking the caption from notes', () => {
-		expect(toMediaItem({ ...base, notes: 'paw', status: 'ready', logger: null })).toMatchObject({
+	it('maps a journal row', () => {
+		expect(toMediaItem({ ...base, caption: 'paw', status: 'ready', logger: null })).toMatchObject({
 			caption: 'paw',
 			logger: null
 		});
