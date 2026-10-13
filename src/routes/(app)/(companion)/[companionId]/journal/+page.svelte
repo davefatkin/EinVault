@@ -13,7 +13,13 @@
 	import { toSpecies } from '$lib/species';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { journalMediaUrl, type MediaItem } from '$lib/media';
-	import { documentUrl, type DayItemDocument } from '$lib/dayItems';
+	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import {
+		documentUrl,
+		healthRecordHref,
+		type DayItemDocument,
+		type DayRecordItem
+	} from '$lib/dayItems';
 
 	const locale = getLocale();
 
@@ -67,6 +73,7 @@
 	};
 
 	let previewDoc = $state<DayItemDocument | null>(null);
+	let detailRecord = $state<DayRecordItem | null>(null);
 
 	async function loadMore() {
 		if (!oldestDate || loadingMore) return;
@@ -161,6 +168,16 @@
 	/>
 {/if}
 
+{#if detailRecord}
+	<HealthDetailModal
+		detail={detailRecord}
+		documents={detailRecord.kind === 'health' ? detailRecord.documents : []}
+		onclose={() => (detailRecord = null)}
+		onPreviewDocument={(doc) => (previewDoc = doc)}
+		healthHref={healthRecordHref(companion.id, detailRecord)}
+	/>
+{/if}
+
 <div class="max-w-3xl mx-auto space-y-6 pb-24 md:pb-0">
 	{#if !companion.isActive}
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground mb-4">
@@ -224,6 +241,7 @@
 						canEdit={companion.isActive !== false}
 						onOpenLightbox={openLightbox}
 						onOpenActivity={openDetail}
+						onOpenRecord={(item) => (detailRecord = item)}
 						onPreviewDocument={(doc) => (previewDoc = doc)}
 						{species}
 					/>

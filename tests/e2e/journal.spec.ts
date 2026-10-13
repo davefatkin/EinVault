@@ -270,8 +270,8 @@ test.describe('journal day editor', () => {
 		// Timeline chips. Located by unique text, never by day number or count.
 		await asMember.goto(`/${COMP}/journal`);
 		await waitForHydration(asMember);
-		const healthChip = asMember.getByRole('link', { name: new RegExp(`^${esc(eventTitle)}`) });
-		const weightChip = asMember.getByRole('link', { name: /^27\.4 / });
+		const healthChip = asMember.getByRole('button', { name: new RegExp(`^${esc(eventTitle)}`) });
+		const weightChip = asMember.getByRole('button', { name: /^27\.4 / });
 		const docChip = asMember.getByRole('button', { name: new RegExp(`^${esc(docName)}`) });
 		await expect(healthChip).toBeVisible();
 		await expect(weightChip).toBeVisible();
@@ -283,8 +283,20 @@ test.describe('journal day editor', () => {
 		await asMember.keyboard.press('Escape');
 		await expect(asMember.getByRole('dialog', { name: docName })).toHaveCount(0);
 
-		// The health chip opens the health detail; Back returns to the journal.
+		// The health chip opens the detail in place; its link opens the Health Log.
 		await healthChip.click();
+		const detail = asMember.getByRole('dialog', { name: eventTitle });
+		await expect(detail).toBeVisible({ timeout: 8_000 });
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
+		await asMember.keyboard.press('Escape');
+		await expect(detail).toHaveCount(0);
+
+		await weightChip.click();
+		await expect(asMember.getByRole('dialog').getByText(/27\.4/)).toBeVisible();
+		await asMember.keyboard.press('Escape');
+
+		await healthChip.click();
+		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health`));
 		await expect(asMember.locator('[role="dialog"]').getByText(eventTitle)).toBeVisible({
 			timeout: 8_000
@@ -302,6 +314,8 @@ test.describe('journal day editor', () => {
 		const section = asMember.getByTestId('day-health-records');
 		await expect(section.getByText('Health records')).toBeVisible({ timeout: 8_000 });
 		await expect(section.getByText(eventTitle)).toBeVisible();
+		await section.getByRole('button', { name: new RegExp(`^${esc(eventTitle)}`) }).click();
+		await expect(asMember.getByRole('dialog', { name: eventTitle })).toBeVisible();
 	});
 
 	test('Back from a health record keeps days loaded with Load more', async ({ asMember }) => {
@@ -326,7 +340,7 @@ test.describe('journal day editor', () => {
 		const firstPage = await days.count();
 
 		// Load pages until the oldest health chip is rendered.
-		const oldChip = asMember.getByRole('link', { name: new RegExp(`^e2e-old-${stamp}-402`) });
+		const oldChip = asMember.getByRole('button', { name: new RegExp(`^e2e-old-${stamp}-402`) });
 		let prev = firstPage;
 		for (let i = 0; i < 5 && !(await oldChip.isVisible()); i++) {
 			await asMember.getByRole('button', { name: 'Load older entries' }).click();
@@ -337,12 +351,11 @@ test.describe('journal day editor', () => {
 		const loaded = await days.count();
 
 		await oldChip.click();
+		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
 		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 8_000 });
 		await asMember.goBack();
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
 		await expect(days).toHaveCount(loaded);
-		await expect(
-			asMember.getByRole('link', { name: new RegExp(`^e2e-old-${stamp}-402`) })
-		).toBeInViewport();
+		await expect(oldChip).toBeInViewport();
 	});
 });

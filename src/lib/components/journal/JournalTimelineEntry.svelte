@@ -10,7 +10,7 @@
 	import type { Species } from '$lib/activityTypes';
 	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
 	import DayItemChip from '$lib/components/journal/DayItemChip.svelte';
-	import type { DayItem, DayItemDocument } from '$lib/dayItems';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
 	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
 	type Activity = DailyEvent & { logger: UserRef };
@@ -30,6 +30,7 @@
 		canEdit: boolean;
 		onOpenLightbox: (items: MediaItem[], date: string, index: number) => void;
 		onOpenActivity: (event: Activity, date: string) => void;
+		onOpenRecord: (item: DayRecordItem) => void;
 		onPreviewDocument: (doc: DayItemDocument) => void;
 		species?: Species;
 	}
@@ -41,6 +42,7 @@
 		canEdit,
 		onOpenLightbox,
 		onOpenActivity,
+		onOpenRecord,
 		onPreviewDocument,
 		species
 	}: Props = $props();
@@ -151,7 +153,7 @@
 		{#if entry.items.length > 0}
 			<div class="mt-3 flex flex-wrap gap-1.5">
 				{#each entry.items as item (`${item.kind}:${item.id}`)}
-					<DayItemChip {item} {companionId} {onPreviewDocument} />
+					<DayItemChip {item} {onOpenRecord} {onPreviewDocument} />
 				{/each}
 			</div>
 		{/if}

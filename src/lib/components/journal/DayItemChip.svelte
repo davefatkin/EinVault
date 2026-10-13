@@ -3,15 +3,15 @@
 	import { badgeVariants } from '$lib/components/ui/badge/index.js';
 	import { cn } from '$lib/utils';
 	import { t, getLocale } from '$lib/i18n';
-	import type { DayItem, DayItemDocument } from '$lib/dayItems';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
 
 	interface Props {
 		item: DayItem;
-		companionId: string;
+		onOpenRecord: (item: DayRecordItem) => void;
 		onPreviewDocument: (doc: DayItemDocument) => void;
 	}
 
-	let { item, companionId, onPreviewDocument }: Props = $props();
+	let { item, onOpenRecord, onPreviewDocument }: Props = $props();
 	const locale = getLocale();
 
 	// Outline badge tokens keep health records visually apart from the gold
@@ -24,7 +24,7 @@
 </script>
 
 {#if item.kind === 'health'}
-	<a href="/{companionId}/health?detailHealth={item.id}" class={chipClass}>
+	<button type="button" class={chipClass} onclick={() => onOpenRecord(item)}>
 		<HeartPulse class="h-3 w-3 shrink-0" aria-hidden="true" />
 		<span class="max-w-48 truncate">{item.title}</span>
 		<span class="sr-only">, {t(locale, 'page.journal.dayItem.health')}</span>
@@ -45,13 +45,13 @@
 				)}</span
 			>
 		{/if}
-	</a>
+	</button>
 {:else if item.kind === 'weight'}
-	<a href="/{companionId}/health?detailWeight={item.id}" class={chipClass}>
+	<button type="button" class={chipClass} onclick={() => onOpenRecord(item)}>
 		<Scale class="h-3 w-3 shrink-0" aria-hidden="true" />
 		<span>{item.weight} {item.unit}</span>
 		<span class="sr-only">, {t(locale, 'page.journal.dayItem.weight')}</span>
-	</a>
+	</button>
 {:else}
 	<button type="button" class={chipClass} onclick={() => onPreviewDocument(item)}>
 		<FileText class="h-3 w-3 shrink-0" aria-hidden="true" />

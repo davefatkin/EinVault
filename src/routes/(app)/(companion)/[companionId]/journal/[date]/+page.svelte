@@ -37,7 +37,13 @@
 	import ByLine from '$lib/components/ByLine.svelte';
 	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import { documentUrl, type DayItemDocument } from '$lib/dayItems';
+	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import {
+		documentUrl,
+		healthRecordHref,
+		type DayItemDocument,
+		type DayRecordItem
+	} from '$lib/dayItems';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -62,6 +68,7 @@
 	let media = $state<MediaItem[]>([]);
 	let companion = $derived(data.companion);
 	let previewDoc = $state<DayItemDocument | null>(null);
+	let detailRecord = $state<DayRecordItem | null>(null);
 
 	let body = $state('');
 	let mood = $state('');
@@ -871,7 +878,7 @@
 		{#if data.dayItems.length > 0}
 			<DayHealthRecords
 				items={data.dayItems}
-				companionId={companion.id}
+				onOpenRecord={(item) => (detailRecord = item)}
 				onPreviewDocument={(doc) => (previewDoc = doc)}
 			/>
 		{/if}
@@ -931,5 +938,15 @@
 		mimeType={previewDoc.mimeType}
 		title={previewDoc.title}
 		onclose={() => (previewDoc = null)}
+	/>
+{/if}
+
+{#if detailRecord}
+	<HealthDetailModal
+		detail={detailRecord}
+		documents={detailRecord.kind === 'health' ? detailRecord.documents : []}
+		onclose={() => (detailRecord = null)}
+		onPreviewDocument={(doc) => (previewDoc = doc)}
+		healthHref={healthRecordHref(companion.id, detailRecord)}
 	/>
 {/if}

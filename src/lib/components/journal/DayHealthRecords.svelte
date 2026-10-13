@@ -3,15 +3,15 @@
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
-	import type { DayItem, DayItemDocument } from '$lib/dayItems';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
 
 	interface Props {
 		items: DayItem[];
-		companionId: string;
+		onOpenRecord: (item: DayRecordItem) => void;
 		onPreviewDocument: (doc: DayItemDocument) => void;
 	}
 
-	let { items, companionId, onPreviewDocument }: Props = $props();
+	let { items, onOpenRecord, onPreviewDocument }: Props = $props();
 	const locale = getLocale();
 
 	const rowClass = 'flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent';
@@ -25,7 +25,7 @@
 		{#each items as item (`${item.kind}:${item.id}`)}
 			<li>
 				{#if item.kind === 'health'}
-					<a href="/{companionId}/health?detailHealth={item.id}" class={rowClass}>
+					<button type="button" class="{rowClass} w-full" onclick={() => onOpenRecord(item)}>
 						<HeartPulse class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium text-foreground">{item.title}</span>
@@ -36,7 +36,7 @@
 								/></span
 							>
 						</span>
-					</a>
+					</button>
 					{#if item.documents.length > 0}
 						<ul class="space-y-1 pb-3 pl-11 pr-4">
 							{#each item.documents as doc (doc.id)}
@@ -54,7 +54,7 @@
 						</ul>
 					{/if}
 				{:else if item.kind === 'weight'}
-					<a href="/{companionId}/health?detailWeight={item.id}" class={rowClass}>
+					<button type="button" class="{rowClass} w-full" onclick={() => onOpenRecord(item)}>
 						<Scale class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block text-sm font-medium text-foreground"
@@ -64,7 +64,7 @@
 								><LocalTime date={item.at} format="time" /></span
 							>
 						</span>
-					</a>
+					</button>
 				{:else}
 					<button type="button" class="{rowClass} w-full" onclick={() => onPreviewDocument(item)}>
 						<FileText class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
