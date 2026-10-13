@@ -398,7 +398,7 @@ test.describe('journal day editor', () => {
 		await expect(oldChip).toBeInViewport();
 	});
 
-	test('an empty day shows the health records empty state and the link toggle', async ({
+	test('an empty day shows the health records empty state and the add menu', async ({
 		asMember
 	}) => {
 		const empty = new Date(Date.now() - 3000 * 86_400_000).toISOString().slice(0, 10);
@@ -408,13 +408,29 @@ test.describe('journal day editor', () => {
 		const emptyState = section.getByText('No health records for this day.');
 		await expect(emptyState).toBeVisible();
 
-		const toggle = section.getByRole('button', { name: 'Link health event' });
-		await toggle.click();
+		await section.getByRole('button', { name: 'Add', exact: true }).click();
+		await asMember.getByRole('menuitem', { name: 'Link health event' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toBeVisible();
 		await expect(emptyState).toBeHidden();
 		await section.getByRole('button', { name: 'Cancel' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);
 		await expect(emptyState).toBeVisible();
+	});
+
+	test('the add menu works from the keyboard', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-13`);
+		await waitForHydration(asMember);
+		const trigger = asMember
+			.getByTestId('day-health-records')
+			.getByRole('button', { name: 'Add', exact: true });
+		await trigger.focus();
+		await asMember.keyboard.press('Enter');
+		await expect(asMember.getByRole('menuitem').first()).toBeFocused();
+		await asMember.keyboard.press('End');
+		await expect(asMember.getByRole('menuitem', { name: 'Link health event' })).toBeFocused();
+		await asMember.keyboard.press('Escape');
+		await expect(asMember.getByRole('menu')).toHaveCount(0);
+		await expect(trigger).toBeFocused();
 	});
 
 	test('links an older health event from a day and unlinks it (#291)', async ({ asMember }) => {
@@ -436,7 +452,11 @@ test.describe('journal day editor', () => {
 		await waitForHydration(asMember);
 		const note = `e2e link note ${stamp}`;
 		await asMember.locator('textarea').first().fill(note);
-		await asMember.getByRole('button', { name: 'Link health event' }).click();
+		await asMember
+			.getByTestId('day-health-records')
+			.getByRole('button', { name: 'Add', exact: true })
+			.click();
+		await asMember.getByRole('menuitem', { name: 'Link health event' }).click();
 		const select = asMember.locator('#link-health-event');
 		const value = await select.locator('option', { hasText: title }).getAttribute('value');
 		await select.selectOption(value!);

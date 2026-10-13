@@ -37,6 +37,8 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import ActionMenu, { type ActionMenuItem } from '$lib/components/ActionMenu.svelte';
+	import DayLinkHealthPanel from '$lib/components/journal/DayLinkHealthPanel.svelte';
 	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
@@ -50,7 +52,6 @@
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
 	import {
-		healthTypeLabel,
 		moodOptions,
 		activityDisplayIcon,
 		activityDisplayLabel,
@@ -73,7 +74,18 @@
 	let previewDoc = $state<DayItemDocument | null>(null);
 	let detailRecord = $state<DayRecordItem | null>(null);
 	let showLinkForm = $state(false);
-	const canLink = $derived(companion.isActive !== false);
+	const canEditRecords = $derived(companion.isActive !== false);
+
+	// Tasks 7 and 8 add Health event, Weight, Upload document and Paperless
+	// ahead of Link.
+	let addItems = $derived<ActionMenuItem[]>([
+		{
+			label: t(locale, 'page.journal.day.linkHealthEvent'),
+			icon: Link2,
+			separated: false,
+			onselect: () => (showLinkForm = true)
+		}
+	]);
 
 	let body = $state('');
 	let mood = $state('');
@@ -868,8 +880,8 @@
 			items={data.dayItems}
 			onOpenRecord={(item) => (detailRecord = item)}
 			onPreviewDocument={(doc) => (previewDoc = doc)}
-			headerAction={canLink ? linkHealthButton : undefined}
-			panel={canLink && showLinkForm ? linkHealthPanel : undefined}
+			headerAction={canEditRecords ? addMenu : undefined}
+			panel={canEditRecords && showLinkForm ? linkHealthPanel : undefined}
 		/>
 
 		<!-- Recent entries -->
@@ -947,64 +959,23 @@
 		healthHref={healthRecordHref(companion.id, detailRecord)}
 		journalHref={(d) => `/${companion.id}/journal/${d}`}
 		currentDate={data.date}
-		footerExtra={detailRecord.kind === 'health' && detailRecord.linkedHere && canLink
+		footerExtra={detailRecord.kind === 'health' && detailRecord.linkedHere && canEditRecords
 			? unlinkAction
 			: undefined}
 	/>
 {/if}
 
-{#snippet linkHealthButton()}
-	<button
-		type="button"
-		aria-expanded={showLinkForm}
-		onclick={() => (showLinkForm = !showLinkForm)}
-		class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-	>
-		{#if showLinkForm}{t(locale, 'common.cancel')}{:else}<Link2 class="h-3.5 w-3.5" />
-			{t(locale, 'page.journal.day.linkHealthEvent')}{/if}
-	</button>
+{#snippet addMenu()}
+	<ActionMenu label={t(locale, 'page.journal.day.add')} items={addItems} />
 {/snippet}
 
 {#snippet linkHealthPanel()}
-	<form
-		method="POST"
-		action="?/linkHealth"
-		use:enhance={async () => {
-			await autosave.flush();
-			return async ({ result, update }) => {
-				if (result.type === 'success') showLinkForm = false;
-				await update({ reset: false });
-			};
-		}}
-		class="space-y-2 rounded-lg border border-border px-4 py-3 animate-slide-up"
-	>
-		{#if data.linkableHealthEvents.length === 0}
-			<p class="text-sm text-muted-foreground">
-				{t(locale, 'page.journal.day.noLinkableEvents')}
-			</p>
-		{:else}
-			<label for="link-health-event" class="text-xs font-medium text-muted-foreground"
-				>{t(locale, 'page.journal.day.linkHealthEventLabel')}</label
-			>
-			<div class="flex gap-2">
-				<select
-					id="link-health-event"
-					name="healthEventId"
-					required
-					class="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-				>
-					{#each data.linkableHealthEvents as ev (ev.id)}
-						<option value={ev.id}>{healthTypeLabel(locale, ev.type)} · {ev.day} · {ev.title}</option
-						>
-					{/each}
-				</select>
-				<Button type="submit" size="sm">{t(locale, 'page.journal.day.link')}</Button>
-			</div>
-		{/if}
-		{#if form?.linkError}
-			<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
-		{/if}
-	</form>
+	<DayLinkHealthPanel
+		events={data.linkableHealthEvents}
+		error={form?.linkError}
+		beforeSubmit={() => autosave.flush()}
+		onclose={() => (showLinkForm = false)}
+	/>
 {/snippet}
 
 {#snippet unlinkAction()}
