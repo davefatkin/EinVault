@@ -71,7 +71,7 @@ vi.mock('./transcode', async () => {
 });
 
 const { db, schema } = await import('$lib/server/db');
-const { drain, journalQueue, noteQueue, __resetWorkerForTests } = await import('./worker');
+const { drain, mediaQueue, __resetWorkerForTests } = await import('./worker');
 
 const C = 'c-vw';
 const ENTRY = 'e-vw';
@@ -83,7 +83,7 @@ const nKey = (f: string) => `notes/${C}/${NOTE}/${f}`;
 async function addJournalVideo(id: string, createdAtSec: number, attempts = 0) {
 	const key = jKey(`${id}.orig.mov`);
 	store.set(key, Buffer.from('SRC'));
-	await db.insert(schema.journalPhotos).values({
+	await db.insert(schema.media).values({
 		id,
 		entryId: ENTRY,
 		filename: `${id}.orig.mov`,
@@ -102,7 +102,7 @@ async function addJournalVideo(id: string, createdAtSec: number, attempts = 0) {
 async function addNoteVideo(id: string, createdAtSec: number) {
 	const key = nKey(`${id}.orig.mov`);
 	store.set(key, Buffer.from('SRC'));
-	await db.insert(schema.noteMedia).values({
+	await db.insert(schema.media).values({
 		id,
 		noteId: NOTE,
 		filename: `${id}.orig.mov`,
@@ -134,7 +134,7 @@ beforeEach(async () => {
 	ctl.duringTranscode = null;
 	ctl.transcodeCalls = 0;
 	cfg.keepOriginal = true;
-	await db.delete(schema.journalPhotos);
+	await db.delete(schema.media);
 	await db.delete(schema.notes);
 	await db.insert(schema.notes).values({ id: NOTE, companionId: C, title: 'Tricks' });
 	vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -143,15 +143,15 @@ beforeEach(async () => {
 });
 
 describe('video worker', () => {
-	it('drains both tables oldest first', async () => {
+	it('drains journal and note media oldest first', async () => {
 		const journalSrc = await addJournalVideo('jv-new', 2000);
 		const noteSrc = await addNoteVideo('nv-old', 1000);
 		await drain();
 		expect(gets).toEqual([noteSrc, journalSrc]);
-		const j = await db.query.journalPhotos.findFirst({
-			where: eq(schema.journalPhotos.id, 'jv-new')
+		const j = await db.query.media.findFirst({
+			where: eq(schema.media.id, 'jv-new')
 		});
-		const n = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-old') });
+		const n = await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-old') });
 		expect(j?.status).toBe('ready');
 		expect(n?.status).toBe('ready');
 	});
@@ -159,7 +159,7 @@ describe('video worker', () => {
 	it('rewrites a note row on success and keeps the original when configured', async () => {
 		const src = await addNoteVideo('nv-ok', 1000);
 		await drain();
-		const n = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-ok') });
+		const n = await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-ok') });
 		expect(n).toMatchObject({
 			status: 'ready',
 			filename: 'nv-ok.mp4',
@@ -179,8 +179,8 @@ describe('video worker', () => {
 		cfg.keepOriginal = false;
 		const src = await addJournalVideo('jv-drop', 1000);
 		await drain();
-		const j = await db.query.journalPhotos.findFirst({
-			where: eq(schema.journalPhotos.id, 'jv-drop')
+		const j = await db.query.media.findFirst({
+			where: eq(schema.media.id, 'jv-drop')
 		});
 		expect(j?.originalKey).toBeNull();
 		expect(store.has(src)).toBe(false);
@@ -191,7 +191,7 @@ describe('video worker', () => {
 		ctl.fail = true;
 		const src = await addNoteVideo('nv-fail', 1000);
 		await drain();
-		const n = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-fail') });
+		const n = await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-fail') });
 		expect(n).toMatchObject({ status: 'failed', storageKey: src, transcodeAttempts: 1 });
 		expect(store.has(nKey('nv-fail.mp4'))).toBe(false);
 		expect(store.has(nKey('nv-fail.poster.jpg'))).toBe(false);
@@ -201,8 +201,8 @@ describe('video worker', () => {
 	it('fails a job that has exhausted its attempts without transcoding it', async () => {
 		await addJournalVideo('jv-tired', 1000, 3);
 		await drain();
-		const j = await db.query.journalPhotos.findFirst({
-			where: eq(schema.journalPhotos.id, 'jv-tired')
+		const j = await db.query.media.findFirst({
+			where: eq(schema.media.id, 'jv-tired')
 		});
 		expect(j).toMatchObject({ status: 'failed', transcodeAttempts: 4 });
 		expect(ctl.transcodeCalls).toBe(0);
@@ -215,7 +215,7 @@ describe('video worker', () => {
 		};
 		await drain();
 		expect(
-			await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-gone') })
+			await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-gone') })
 		).toBeUndefined();
 		expect(store.has(nKey('nv-gone.mp4'))).toBe(false);
 		expect(store.has(nKey('nv-gone.poster.jpg'))).toBe(false);
@@ -225,7 +225,7 @@ describe('video worker', () => {
 	it('keeps the source of a row reset mid-job and leaves no outputs', async () => {
 		const src = await addNoteVideo('nv-reset', 1000);
 		ctl.duringTranscode = async () => {
-			await noteQueue.resetClaimed();
+			await mediaQueue.resetClaimed();
 			ctl.duringTranscode = null;
 			ctl.fail = true; // stop the retry from completing
 		};
@@ -234,28 +234,33 @@ describe('video worker', () => {
 		expect(store.has(nKey('nv-reset.mp4'))).toBe(false);
 		expect(store.has(nKey('nv-reset.poster.jpg'))).toBe(false);
 		expect(
-			await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-reset') })
+			await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-reset') })
 		).toBeDefined();
 	});
 
-	it('resets claimed rows to processing on boot for both tables', async () => {
+	it('breaks createdAt ties by id', async () => {
+		const b = await addNoteVideo('tie-b', 1000);
+		const a = await addJournalVideo('tie-a', 1000);
+		await drain();
+		expect(gets).toEqual([a, b]);
+	});
+
+	it('resets claimed rows to processing on boot for both parents', async () => {
 		await addJournalVideo('jv-claimed', 1000);
 		await addNoteVideo('nv-claimed', 1000);
-		await db.update(schema.journalPhotos).set({ status: 'claimed' });
-		await db.update(schema.noteMedia).set({ status: 'claimed' });
-		expect(await journalQueue.resetClaimed()).toBe(1);
-		expect(await noteQueue.resetClaimed()).toBe(1);
-		const j = await db.query.journalPhotos.findFirst({
-			where: eq(schema.journalPhotos.id, 'jv-claimed')
+		await db.update(schema.media).set({ status: 'claimed' });
+		expect(await mediaQueue.resetClaimed()).toBe(2);
+		const j = await db.query.media.findFirst({
+			where: eq(schema.media.id, 'jv-claimed')
 		});
-		const n = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-claimed') });
+		const n = await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-claimed') });
 		expect(j?.status).toBe('processing');
 		expect(n?.status).toBe('processing');
 	});
 
 	it('markReady reports false for a row that is no longer claimed', async () => {
 		await addNoteVideo('nv-race', 1000);
-		const ok = await noteQueue.markReady('nv-race', {
+		const ok = await mediaQueue.markReady('nv-race', {
 			filename: 'x.mp4',
 			storageKey: nKey('x.mp4'),
 			posterKey: nKey('x.poster.jpg'),
@@ -264,7 +269,7 @@ describe('video worker', () => {
 			sizeBytes: 1
 		});
 		expect(ok).toBe(false);
-		const n = await db.query.noteMedia.findFirst({ where: eq(schema.noteMedia.id, 'nv-race') });
+		const n = await db.query.media.findFirst({ where: eq(schema.media.id, 'nv-race') });
 		expect(n?.status).toBe('processing');
 	});
 });
