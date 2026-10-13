@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData, Snapshot } from './$types';
-	import { tick } from 'svelte';
+	import { tick, onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
@@ -42,15 +42,20 @@
 	// reached again, then scrolls. SvelteKit scrolls before it restores snapshots,
 	// while the DOM still holds only the first page, so the scroll has to happen
 	// here once the older days are rendered.
+	let destroyed = false;
+	onDestroy(() => (destroyed = true));
+
 	async function restoreLoaded(value: { oldestDate: string | null; scrollY: number }) {
 		const target = value.oldestDate;
 		if (!target || !oldestDate || oldestDate <= target) return;
-		while (hasMore && oldestDate && oldestDate > target) {
+		// Bail out if the user left the page while older days were loading.
+		while (!destroyed && hasMore && oldestDate && oldestDate > target) {
 			const before: string = oldestDate;
 			await loadMore();
 			if (oldestDate === before) break;
 		}
 		await tick();
+		if (destroyed) return;
 		window.scrollTo(0, value.scrollY);
 	}
 
