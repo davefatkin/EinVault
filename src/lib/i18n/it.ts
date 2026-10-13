@@ -728,6 +728,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Salvataggio…',
 	'page.journal.day.saveFailedStatus': 'Salvataggio non riuscito',
 	'page.journal.day.saveFailedRetry': 'Riprova',
+	'page.journal.day.leaveUnsaved':
+		'Il testo del diario non è salvato. Lasciare comunque la pagina?',
+	'page.journal.day.leave': 'Esci',
 	'page.journal.signedOutStatus': 'Disconnesso, non salvato',
 	'page.journal.signInToSave': 'Accedi',
 	'page.journal.day.activitiesTitle': 'Attività',
@@ -1100,6 +1103,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextMedia': 'Contenuto successivo',
 	'aria.previousPage': 'Pagina precedente',
 	'aria.nextPage': 'Pagina successiva',
+	'aria.previousDay': 'Giorno precedente',
+	'aria.nextDay': 'Giorno successivo',
 	'aria.viewPhoto': 'Vedi la foto di {name}',
 	'aria.openSearch': 'Apri ricerca',
 	'aria.closeQuickAdd': 'Chiudi menu di aggiunta',

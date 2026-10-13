@@ -57,6 +57,45 @@ test.describe('journal day editor', () => {
 		await expect(asMember.locator('textarea')).toHaveValue('e2e written while signed out');
 	});
 
+	test('typing then changing the day right away keeps the text on its own day', async ({
+		asMember
+	}) => {
+		const text = `e2e nav ${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-06`);
+		await waitForHydration(asMember);
+		await asMember.locator('textarea').first().fill(text);
+		// Well inside the 800 ms debounce.
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-05$`));
+		await expect(asMember.locator('textarea').first()).not.toHaveValue(text);
+
+		await asMember.goto(`/${COMP}/journal/2026-05-06`);
+		await expect(asMember.locator('textarea').first()).toHaveValue(text);
+	});
+
+	test('a failed save holds navigation and asks before leaving', async ({ asMember }) => {
+		const text = `e2e unsaved ${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-07`);
+		await waitForHydration(asMember);
+		await asMember.route(/\?\/save$/, (route) => route.abort());
+		await asMember.locator('textarea').first().fill(text);
+		await expect(asMember.getByText('Save failed')).toBeVisible({ timeout: 5_000 });
+
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		const dialog = asMember.getByRole('dialog');
+		await expect(
+			dialog.getByText("Your journal text isn't saved.", { exact: false })
+		).toBeVisible();
+		await dialog.getByRole('button', { name: 'Cancel' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-07$`));
+		await expect(asMember.locator('textarea').first()).toHaveValue(text);
+
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await asMember.getByRole('dialog').getByRole('button', { name: 'Leave' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-06$`));
+		await asMember.unroute(/\?\/save$/);
+	});
+
 	test('photo upload', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/journal/2026-05-02`);
 		await waitForHydration(asMember);

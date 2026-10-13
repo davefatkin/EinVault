@@ -730,6 +730,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Guardando…',
 	'page.journal.day.saveFailedStatus': 'Error al guardar',
 	'page.journal.day.saveFailedRetry': 'Reintentar',
+	'page.journal.day.leaveUnsaved':
+		'El texto del diario no se ha guardado. ¿Salir de esta página de todos modos?',
+	'page.journal.day.leave': 'Salir',
 	'page.journal.signedOutStatus': 'Sesión cerrada, no guardado',
 	'page.journal.signInToSave': 'Iniciar sesión',
 	'page.journal.day.activitiesTitle': 'Actividades',
@@ -1100,6 +1103,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextMedia': 'Contenido siguiente',
 	'aria.previousPage': 'Página anterior',
 	'aria.nextPage': 'Página siguiente',
+	'aria.previousDay': 'Día anterior',
+	'aria.nextDay': 'Día siguiente',
 	'aria.viewPhoto': 'Ver foto de {name}',
 	'aria.openSearch': 'Abrir búsqueda',
 	'aria.closeQuickAdd': 'Cerrar menú de añadir',

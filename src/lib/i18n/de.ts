@@ -732,6 +732,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Speichern…',
 	'page.journal.day.saveFailedStatus': 'Speichern fehlgeschlagen',
 	'page.journal.day.saveFailedRetry': 'Erneut versuchen',
+	'page.journal.day.leaveUnsaved':
+		'Dein Journaltext ist nicht gespeichert. Seite trotzdem verlassen?',
+	'page.journal.day.leave': 'Verlassen',
 	'page.journal.signedOutStatus': 'Abgemeldet, nicht gespeichert',
 	'page.journal.signInToSave': 'Anmelden',
 	'page.journal.day.activitiesTitle': 'Aktivitäten',
@@ -1105,6 +1108,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextMedia': 'Nächstes Medium',
 	'aria.previousPage': 'Vorherige Seite',
 	'aria.nextPage': 'Nächste Seite',
+	'aria.previousDay': 'Vorheriger Tag',
+	'aria.nextDay': 'Nächster Tag',
 	'aria.viewPhoto': '{name}s Foto anzeigen',
 	'aria.openSearch': 'Suche öffnen',
 	'aria.closeQuickAdd': 'Schnellmenü schließen',

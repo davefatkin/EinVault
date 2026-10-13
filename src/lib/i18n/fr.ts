@@ -733,6 +733,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.savingStatus': 'Enregistrement…',
 	'page.journal.day.saveFailedStatus': "Échec de l'enregistrement",
 	'page.journal.day.saveFailedRetry': 'Réessayer',
+	'page.journal.day.leaveUnsaved':
+		"Le texte du journal n'est pas enregistré. Quitter cette page quand même ?",
+	'page.journal.day.leave': 'Quitter',
 	'page.journal.signedOutStatus': 'Déconnecté, non enregistré',
 	'page.journal.signInToSave': 'Se connecter',
 	'page.journal.day.activitiesTitle': 'Activités',
@@ -1105,6 +1108,8 @@ const messages: Record<keyof Messages, string> = {
 	'aria.nextMedia': 'Média suivant',
 	'aria.previousPage': 'Page précédente',
 	'aria.nextPage': 'Page suivante',
+	'aria.previousDay': 'Jour précédent',
+	'aria.nextDay': 'Jour suivant',
 	'aria.viewPhoto': 'Voir la photo de {name}',
 	'aria.openSearch': 'Ouvrir la recherche',
 	'aria.closeQuickAdd': "Fermer le menu d'ajout",

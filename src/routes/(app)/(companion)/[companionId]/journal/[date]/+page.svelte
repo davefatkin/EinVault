@@ -12,7 +12,7 @@
 	import type { MediaItem } from '$lib/media';
 	import { journalMediaApi } from '$lib/mediaApi';
 	import { localDateISO } from '$lib/date';
-	import { postFormAction } from '$lib/postFormAction';
+	import { createJournalAutosave } from '$lib/journalAutosave.svelte';
 	import { getContext } from 'svelte';
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
@@ -78,11 +78,10 @@
 	let body = $state('');
 	let mood = $state('');
 	let viewMode = $state<'write' | 'preview'>('write');
-	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error' | 'signedOut'>('idle');
-	let saveTimer: ReturnType<typeof setTimeout>;
-	let savedTimer: ReturnType<typeof setTimeout>;
-	let savePending = false;
-	let inflightSave: Promise<void> | null = null;
+	const autosave = createJournalAutosave({
+		action: () => `/${data.companion.id}/journal/${data.date}?/save`,
+		fields: () => ({ body, mood })
+	});
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
@@ -103,7 +102,7 @@
 		syncedKey = key;
 		body = data.entry?.body ?? '';
 		mood = data.entry?.mood ?? '';
-		saveStatus = 'idle';
+		autosave.reset();
 	});
 
 	let renderedMarkdown = $derived(renderMarkdown(body || '*Nothing written yet.*'));
@@ -130,50 +129,6 @@
 	}
 
 	let isNextDisabled = $derived(data.date >= data.today);
-
-	async function saveNow() {
-		savePending = false;
-		const run = (async () => {
-			saveStatus = 'saving';
-			const fd = new FormData();
-			fd.set('body', body);
-			fd.set('mood', mood);
-			clearTimeout(savedTimer);
-			const outcome = await postFormAction('?/save', fd);
-			saveStatus = outcome === 'failed' ? 'error' : outcome;
-			// Keep a stale "Saved" fade-out from hiding a later failure.
-			if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
-		})();
-		inflightSave = run;
-		try {
-			await run;
-		} finally {
-			if (inflightSave === run) inflightSave = null;
-		}
-	}
-
-	/** Write pending journal text before an action refreshes the page data. */
-	async function flushSave() {
-		if (inflightSave) await inflightSave;
-		if (savePending) {
-			clearTimeout(saveTimer);
-			await saveNow();
-		}
-	}
-
-	// The sign-in link opens in a new tab so the draft survives; save again
-	// when the user comes back to this one.
-	function retryAfterSignIn() {
-		if (saveStatus === 'signedOut') saveNow();
-	}
-
-	function triggerSave() {
-		clearTimeout(saveTimer);
-		clearTimeout(savedTimer);
-		saveStatus = 'saving';
-		savePending = true;
-		saveTimer = setTimeout(saveNow, 800);
-	}
 
 	let mediaApi = $derived(journalMediaApi(data.companion.id, data.date, locale));
 
@@ -296,7 +251,7 @@
 	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} onfocus={retryAfterSignIn} />
+<svelte:window onkeydown={handleKeydown} onfocus={() => autosave.retryAfterSignIn()} />
 
 <!-- Activity detail modal -->
 {#if detailEvent}
@@ -337,6 +292,7 @@
 			<div class="flex items-center gap-2">
 				<a
 					href="/{companion.id}/journal/{prevDate(data.date)}"
+					aria-label={t(locale, 'aria.previousDay')}
 					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					><ChevronLeft class="h-4 w-4" /></a
 				>
@@ -345,6 +301,7 @@
 				</div>
 				<a
 					href="/{companion.id}/journal/{nextDate(data.date)}"
+					aria-label={t(locale, 'aria.nextDay')}
 					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring {isNextDisabled
 						? 'opacity-30 pointer-events-none'
 						: ''}"><ChevronRight class="h-4 w-4" /></a
@@ -385,23 +342,23 @@
 			<div class="flex min-h-5 basis-full items-center justify-end gap-3 sm:ml-auto sm:basis-auto">
 				<!-- Save status (inline, right of date nav) -->
 				<div class="flex items-center gap-2 text-sm shrink-0">
-					{#if saveStatus === 'saving'}
+					{#if autosave.status === 'saving'}
 						<span class="animate-pulse text-muted-foreground"
 							>{t(locale, 'page.journal.day.savingStatus')}</span
 						>
-					{:else if saveStatus === 'saved'}
+					{:else if autosave.status === 'saved'}
 						<span class="text-green-600 dark:text-green-400"
 							>{t(locale, 'page.journal.day.savedStatus')}</span
 						>
-					{:else if saveStatus === 'error'}
+					{:else if autosave.status === 'error'}
 						<span class="text-red-500">{t(locale, 'page.journal.day.saveFailedStatus')}</span>
 						<button
 							type="button"
-							onclick={saveNow}
+							onclick={() => autosave.saveNow()}
 							class="text-xs text-red-500 underline hover:no-underline"
 							>{t(locale, 'page.journal.day.saveFailedRetry')}</button
 						>
-					{:else if saveStatus === 'signedOut'}
+					{:else if autosave.status === 'signedOut'}
 						<span class="text-red-500">{t(locale, 'page.journal.signedOutStatus')}</span>
 						<a
 							href="/auth/login"
@@ -451,7 +408,7 @@
 							type="button"
 							onclick={() => {
 								mood = mood === m.value ? '' : m.value;
-								triggerSave();
+								autosave.schedule();
 							}}
 							title={m.label}
 							aria-pressed={mood === m.value}
@@ -566,7 +523,7 @@
 					<textarea
 						bind:this={textareaEl}
 						bind:value={body}
-						oninput={triggerSave}
+						oninput={() => autosave.schedule()}
 						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 						dir="ltr"
 						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -963,6 +920,14 @@
 	oncancel={() => (confirmOpen = false)}
 />
 
+<ConfirmDialog
+	open={autosave.leaveTarget !== null}
+	message={t(locale, 'page.journal.day.leaveUnsaved')}
+	confirmLabel={t(locale, 'page.journal.day.leave')}
+	onconfirm={() => autosave.confirmLeave()}
+	oncancel={() => autosave.stay()}
+/>
+
 {#if previewDoc}
 	<DocumentPreview
 		open={true}
@@ -1005,7 +970,7 @@
 		method="POST"
 		action="?/linkHealth"
 		use:enhance={async () => {
-			await flushSave();
+			await autosave.flush();
 			return async ({ result, update }) => {
 				if (result.type === 'success') showLinkForm = false;
 				await update({ reset: false });
@@ -1048,7 +1013,7 @@
 			method="POST"
 			action="?/unlinkHealth"
 			use:enhance={async () => {
-				await flushSave();
+				await autosave.flush();
 				return async ({ result, update }) => {
 					if (result.type === 'success') detailRecord = null;
 					await update({ reset: false });
