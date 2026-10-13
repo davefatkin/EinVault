@@ -14,7 +14,10 @@
 	let { items, onOpenRecord, onPreviewDocument }: Props = $props();
 	const locale = getLocale();
 
-	const rowClass = 'flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent';
+	// The row (li) owns the hover, so a health event and its attached documents
+	// highlight as one card. The event button's after: overlay makes the whole
+	// row open the event; document buttons sit above it.
+	const rowClass = 'flex w-full items-center gap-3 px-4 py-3 text-left';
 </script>
 
 <div class="space-y-2" data-testid="day-health-records">
@@ -23,9 +26,13 @@
 	</p>
 	<ul class="divide-y divide-border overflow-hidden rounded-lg border border-border">
 		{#each items as item (`${item.kind}:${item.id}`)}
-			<li>
+			<li class="relative transition-colors hover:bg-accent">
 				{#if item.kind === 'health'}
-					<button type="button" class="{rowClass} w-full" onclick={() => onOpenRecord(item)}>
+					<button
+						type="button"
+						class="{rowClass} after:absolute after:inset-0"
+						onclick={() => onOpenRecord(item)}
+					>
 						<HeartPulse class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium text-foreground">{item.title}</span>
@@ -38,12 +45,12 @@
 						</span>
 					</button>
 					{#if item.documents.length > 0}
-						<ul class="space-y-1 pb-3 pl-11 pr-4">
+						<ul class="-mt-1 space-y-1 pb-3 pl-11 pr-4">
 							{#each item.documents as doc (doc.id)}
 								<li>
 									<button
 										type="button"
-										class="flex max-w-full items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+										class="relative z-10 flex max-w-full items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
 										onclick={() => onPreviewDocument(doc)}
 									>
 										<FileText class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -54,7 +61,7 @@
 						</ul>
 					{/if}
 				{:else if item.kind === 'weight'}
-					<button type="button" class="{rowClass} w-full" onclick={() => onOpenRecord(item)}>
+					<button type="button" class={rowClass} onclick={() => onOpenRecord(item)}>
 						<Scale class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block text-sm font-medium text-foreground"
@@ -66,7 +73,7 @@
 						</span>
 					</button>
 				{:else}
-					<button type="button" class="{rowClass} w-full" onclick={() => onPreviewDocument(item)}>
+					<button type="button" class={rowClass} onclick={() => onPreviewDocument(item)}>
 						<FileText class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium text-foreground">{item.title}</span>
