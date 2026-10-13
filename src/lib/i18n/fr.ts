@@ -745,6 +745,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noActivities': 'Aucune activité enregistrée.',
 	'page.journal.day.recentEntries': 'Entrées récentes',
 	'page.journal.day.healthRecords': 'Dossiers de santé',
+	'page.journal.day.noHealthRecords': 'Aucun dossier de santé pour ce jour.',
 	'page.journal.day.linkHealthEvent': 'Lier un événement de santé',
 	'page.journal.day.linkHealthEventLabel': "Événement de santé d'un autre jour",
 	'page.journal.day.link': 'Lier',

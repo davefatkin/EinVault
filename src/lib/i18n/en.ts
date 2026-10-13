@@ -733,6 +733,7 @@ const messages = {
 	'page.journal.day.noActivities': 'No activities logged yet.',
 	'page.journal.day.recentEntries': 'Recent entries',
 	'page.journal.day.healthRecords': 'Health records',
+	'page.journal.day.noHealthRecords': 'No health records for this day.',
 	'page.journal.day.linkHealthEvent': 'Link health event',
 	'page.journal.day.linkHealthEventLabel': 'Health event from another day',
 	'page.journal.day.link': 'Link',

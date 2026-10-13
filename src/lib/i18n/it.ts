@@ -740,6 +740,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noActivities': 'Nessuna attività registrata.',
 	'page.journal.day.recentEntries': 'Voci recenti',
 	'page.journal.day.healthRecords': 'Dati sanitari',
+	'page.journal.day.noHealthRecords': 'Nessun dato sanitario per questo giorno.',
 	'page.journal.day.linkHealthEvent': 'Collega evento sanitario',
 	'page.journal.day.linkHealthEventLabel': 'Evento sanitario di un altro giorno',
 	'page.journal.day.link': 'Collega',

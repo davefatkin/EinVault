@@ -2,6 +2,7 @@
 	import { HeartPulse, Scale, FileText, Paperclip } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
 	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
@@ -10,11 +11,13 @@
 		items: DayItem[];
 		onOpenRecord: (item: DayRecordItem) => void;
 		onPreviewDocument: (doc: DayItemDocument) => void;
-		/** Rendered under the list, e.g. the "Link health event" button. */
-		actions?: Snippet;
+		/** Rendered right of the title, e.g. the "Link health event" button. */
+		headerAction?: Snippet;
+		/** An open form, rendered above the list. Hides the empty state. */
+		panel?: Snippet;
 	}
 
-	let { items, onOpenRecord, onPreviewDocument, actions }: Props = $props();
+	let { items, onOpenRecord, onPreviewDocument, headerAction, panel }: Props = $props();
 	const locale = getLocale();
 
 	// One action per row. A health event's attached documents open from its
@@ -24,10 +27,18 @@
 </script>
 
 <div class="space-y-2" data-testid="day-health-records">
-	<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-		{t(locale, 'page.journal.day.healthRecords')}
-	</p>
-	{#if items.length > 0}
+	<div class="flex items-center justify-between">
+		<p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+			{t(locale, 'page.journal.day.healthRecords')}
+		</p>
+		{#if headerAction}{@render headerAction()}{/if}
+	</div>
+	{#if panel}{@render panel()}{/if}
+	{#if items.length === 0 && !panel}
+		<EmptyState tint="teal" title={t(locale, 'page.journal.day.noHealthRecords')}>
+			{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
+		</EmptyState>
+	{:else if items.length > 0}
 		<ul class="divide-y divide-border overflow-hidden rounded-lg border border-border">
 			{#each items as item (`${item.kind}:${item.id}`)}
 				<li>
@@ -93,5 +104,4 @@
 			{/each}
 		</ul>
 	{/if}
-	{#if actions}<div class="pt-1">{@render actions()}</div>{/if}
 </div>

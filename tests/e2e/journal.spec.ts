@@ -359,6 +359,25 @@ test.describe('journal day editor', () => {
 		await expect(oldChip).toBeInViewport();
 	});
 
+	test('an empty day shows the health records empty state and the link toggle', async ({
+		asMember
+	}) => {
+		const empty = new Date(Date.now() - 3000 * 86_400_000).toISOString().slice(0, 10);
+		await asMember.goto(`/${COMP}/journal/${empty}`);
+		await waitForHydration(asMember);
+		const section = asMember.getByTestId('day-health-records');
+		const emptyState = section.getByText('No health records for this day.');
+		await expect(emptyState).toBeVisible();
+
+		const toggle = section.getByRole('button', { name: 'Link health event' });
+		await toggle.click();
+		await expect(section.locator('form[action="?/linkHealth"]')).toBeVisible();
+		await expect(emptyState).toBeHidden();
+		await section.getByRole('button', { name: 'Cancel' }).click();
+		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);
+		await expect(emptyState).toBeVisible();
+	});
+
 	test('links an older health event from a day and unlinks it (#291)', async ({ asMember }) => {
 		const stamp = Date.now().toString(36);
 		const title = `e2e-link-${stamp}`;

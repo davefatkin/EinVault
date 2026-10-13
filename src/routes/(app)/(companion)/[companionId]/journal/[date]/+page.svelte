@@ -907,14 +907,13 @@
 			{/if}
 		</div>
 
-		{#if data.dayItems.length > 0 || canLink}
-			<DayHealthRecords
-				items={data.dayItems}
-				onOpenRecord={(item) => (detailRecord = item)}
-				onPreviewDocument={(doc) => (previewDoc = doc)}
-				actions={canLink ? healthActions : undefined}
-			/>
-		{/if}
+		<DayHealthRecords
+			items={data.dayItems}
+			onOpenRecord={(item) => (detailRecord = item)}
+			onPreviewDocument={(doc) => (previewDoc = doc)}
+			headerAction={canLink ? linkHealthButton : undefined}
+			panel={canLink && showLinkForm ? linkHealthPanel : undefined}
+		/>
 
 		<!-- Recent entries -->
 		{#if data.recentEntries.length > 0}
@@ -989,60 +988,58 @@
 	/>
 {/if}
 
-{#snippet healthActions()}
-	<div class="flex flex-wrap gap-2">
-		<button
-			type="button"
-			aria-expanded={showLinkForm}
-			onclick={() => (showLinkForm = !showLinkForm)}
-			class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-		>
-			<Link2 class="h-3.5 w-3.5" />
-			{t(locale, 'page.journal.day.linkHealthEvent')}
-		</button>
-	</div>
-	{#if showLinkForm}
-		<form
-			method="POST"
-			action="?/linkHealth"
-			use:enhance={async () => {
-				await flushSave();
-				return async ({ result, update }) => {
-					if (result.type === 'success') showLinkForm = false;
-					await update({ reset: false });
-				};
-			}}
-			class="mt-2 space-y-2 rounded-lg border border-border px-4 py-3 animate-slide-up"
-		>
-			{#if data.linkableHealthEvents.length === 0}
-				<p class="text-sm text-muted-foreground">
-					{t(locale, 'page.journal.day.noLinkableEvents')}
-				</p>
-			{:else}
-				<label for="link-health-event" class="text-xs font-medium text-muted-foreground"
-					>{t(locale, 'page.journal.day.linkHealthEventLabel')}</label
+{#snippet linkHealthButton()}
+	<button
+		type="button"
+		aria-expanded={showLinkForm}
+		onclick={() => (showLinkForm = !showLinkForm)}
+		class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+	>
+		{#if showLinkForm}{t(locale, 'common.cancel')}{:else}<Link2 class="h-3.5 w-3.5" />
+			{t(locale, 'page.journal.day.linkHealthEvent')}{/if}
+	</button>
+{/snippet}
+
+{#snippet linkHealthPanel()}
+	<form
+		method="POST"
+		action="?/linkHealth"
+		use:enhance={async () => {
+			await flushSave();
+			return async ({ result, update }) => {
+				if (result.type === 'success') showLinkForm = false;
+				await update({ reset: false });
+			};
+		}}
+		class="space-y-2 rounded-lg border border-border px-4 py-3 animate-slide-up"
+	>
+		{#if data.linkableHealthEvents.length === 0}
+			<p class="text-sm text-muted-foreground">
+				{t(locale, 'page.journal.day.noLinkableEvents')}
+			</p>
+		{:else}
+			<label for="link-health-event" class="text-xs font-medium text-muted-foreground"
+				>{t(locale, 'page.journal.day.linkHealthEventLabel')}</label
+			>
+			<div class="flex gap-2">
+				<select
+					id="link-health-event"
+					name="healthEventId"
+					required
+					class="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
 				>
-				<div class="flex gap-2">
-					<select
-						id="link-health-event"
-						name="healthEventId"
-						required
-						class="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-					>
-						{#each data.linkableHealthEvents as ev (ev.id)}
-							<option value={ev.id}
-								>{healthTypeLabel(locale, ev.type)} · {ev.day} · {ev.title}</option
-							>
-						{/each}
-					</select>
-					<Button type="submit" size="sm">{t(locale, 'page.journal.day.link')}</Button>
-				</div>
-			{/if}
-			{#if form?.linkError}
-				<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
-			{/if}
-		</form>
-	{/if}
+					{#each data.linkableHealthEvents as ev (ev.id)}
+						<option value={ev.id}>{healthTypeLabel(locale, ev.type)} · {ev.day} · {ev.title}</option
+						>
+					{/each}
+				</select>
+				<Button type="submit" size="sm">{t(locale, 'page.journal.day.link')}</Button>
+			</div>
+		{/if}
+		{#if form?.linkError}
+			<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
+		{/if}
+	</form>
 {/snippet}
 
 {#snippet unlinkAction()}
