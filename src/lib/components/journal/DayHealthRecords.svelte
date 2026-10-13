@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { HeartPulse, Scale, FileText } from '@lucide/svelte';
+	import { HeartPulse, Scale, FileText, Paperclip } from '@lucide/svelte';
 	import LocalTime from '$lib/components/LocalTime.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
@@ -14,10 +14,10 @@
 	let { items, onOpenRecord, onPreviewDocument }: Props = $props();
 	const locale = getLocale();
 
-	// The row (li) owns the hover, so a health event and its attached documents
-	// highlight as one card. The event button's after: overlay makes the whole
-	// row open the event; document buttons sit above it.
-	const rowClass = 'flex w-full items-center gap-3 px-4 py-3 text-left';
+	// One action per row. A health event's attached documents open from its
+	// detail modal; the row shows their count, like the timeline chip.
+	const rowClass =
+		'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent';
 </script>
 
 <div class="space-y-2" data-testid="day-health-records">
@@ -26,13 +26,9 @@
 	</p>
 	<ul class="divide-y divide-border overflow-hidden rounded-lg border border-border">
 		{#each items as item (`${item.kind}:${item.id}`)}
-			<li class="relative transition-colors hover:bg-accent">
+			<li>
 				{#if item.kind === 'health'}
-					<button
-						type="button"
-						class="{rowClass} after:absolute after:inset-0"
-						onclick={() => onOpenRecord(item)}
-					>
+					<button type="button" class={rowClass} onclick={() => onOpenRecord(item)}>
 						<HeartPulse class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium text-foreground">{item.title}</span>
@@ -43,23 +39,24 @@
 								/></span
 							>
 						</span>
+						{#if item.documents.length > 0}
+							<span
+								class="inline-flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground"
+								aria-hidden="true"
+							>
+								<Paperclip class="h-3.5 w-3.5" />{item.documents.length}
+							</span>
+							<span class="sr-only"
+								>, {t(
+									locale,
+									item.documents.length === 1
+										? 'page.journal.dayItem.attachments.one'
+										: 'page.journal.dayItem.attachments.other',
+									{ count: item.documents.length }
+								)}</span
+							>
+						{/if}
 					</button>
-					{#if item.documents.length > 0}
-						<ul class="-mt-1 space-y-1 pb-3 pl-11 pr-4">
-							{#each item.documents as doc (doc.id)}
-								<li>
-									<button
-										type="button"
-										class="relative z-10 flex max-w-full items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
-										onclick={() => onPreviewDocument(doc)}
-									>
-										<FileText class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-										<span class="truncate">{doc.title}</span>
-									</button>
-								</li>
-							{/each}
-						</ul>
-					{/if}
 				{:else if item.kind === 'weight'}
 					<button type="button" class={rowClass} onclick={() => onOpenRecord(item)}>
 						<Scale class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
