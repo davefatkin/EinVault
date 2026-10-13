@@ -446,6 +446,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.error.goHome': 'Ir al inicio',
 	'page.error.goBack': 'Volver',
 
+	// Component: HealthDetailModal
+	'component.healthDetail.openHealthLog': 'Abrir en el registro de salud',
+
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancelar',
 	'component.confirmDialog.delete': 'Eliminar',
@@ -756,7 +759,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': 'Error al guardar',
 
 	// Page: Health
-	'component.healthDetail.openHealthLog': 'Abrir en el registro de salud',
 	'page.health.title': 'Registro de salud',
 	'page.health.archivedNotice': '{name} está archivado. Modo de solo lectura.',
 	'page.health.logWeight': 'Registrar peso',

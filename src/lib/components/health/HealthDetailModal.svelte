@@ -202,8 +202,6 @@
 			{/if}
 		</div>
 
-		<Separator />
-
 		{#if footer}
 			<Separator />
 			<div class="flex gap-2 px-5 py-4">{@render footer()}</div>

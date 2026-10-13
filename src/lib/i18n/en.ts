@@ -437,6 +437,9 @@ const messages = {
 	'page.error.goHome': 'Go home',
 	'page.error.goBack': 'Go back',
 
+	// Component: HealthDetailModal
+	'component.healthDetail.openHealthLog': 'Open in Health Log',
+
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancel',
 	'component.confirmDialog.delete': 'Delete',
@@ -747,7 +750,6 @@ const messages = {
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
 
 	// Page: Health
-	'component.healthDetail.openHealthLog': 'Open in Health Log',
 	'page.health.title': 'Health Log',
 	'page.health.archivedNotice': '{name} is archived. Viewing in read-only mode.',
 	'page.health.logWeight': 'Log Weight',
