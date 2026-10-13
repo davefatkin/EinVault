@@ -13,8 +13,8 @@ export function isVideoMime(mime: string | null | undefined): boolean {
 
 /**
  * One photo or video as the UI sees it, for journal and note media alike.
- * Journal rows map their `notes` column to `caption`. Server loads select only
- * these fields so storage keys never reach the browser.
+ * Server loads select only these fields so storage keys never reach the
+ * browser.
  */
 export type MediaItem = {
 	id: string;
@@ -31,16 +31,12 @@ export type MediaItem = {
 /** One row of the transcode status poll. */
 export type MediaStatus = Pick<MediaItem, 'id' | 'status' | 'filename' | 'posterKey'>;
 
-/**
- * A media row selection from either table: note media carries `caption`,
- * journal media carries `notes`. `status` and `logger` may be left out.
- */
+/** A media row selection. `status` and `logger` may be left out. */
 export type MediaItemSource = Pick<
 	MediaItem,
 	'id' | 'filename' | 'originalName' | 'mediaType' | 'posterKey' | 'loggedBy'
 > & {
 	caption?: string | null;
-	notes?: string | null;
 	status?: MediaItem['status'];
 	logger?: UserRef;
 };
@@ -52,7 +48,7 @@ export function toMediaItem(row: MediaItemSource): MediaItem {
 		filename: row.filename,
 		originalName: row.originalName,
 		mediaType: row.mediaType,
-		caption: row.caption ?? row.notes ?? null,
+		caption: row.caption ?? null,
 		status: row.status ?? 'ready',
 		posterKey: row.posterKey,
 		loggedBy: row.loggedBy,

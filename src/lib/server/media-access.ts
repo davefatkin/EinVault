@@ -72,22 +72,25 @@ export async function resolveJournalMedia(
 	if (segments.length !== 4) notFound(locale);
 	const [, urlCompanionId, urlDate, filename] = segments;
 
-	// Look up by filename, then verify the row belongs to the companion + date
-	// asserted in the URL. Without this scoping, two rows sharing a filename
-	// (unlikely for local/S3, possible across providers) could let one URL
-	// surface another row's content.
-	const photo = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.filename, filename),
-		with: { entry: { columns: { companionId: true, date: true } } }
+	// Entry first via (companion_id, date), then the file within that entry, so
+	// the lookup is indexed and a row can only be reached through its own
+	// companion + date URL.
+	const entry = await db.query.journalEntries.findFirst({
+		where: and(
+			eq(schema.journalEntries.companionId, urlCompanionId),
+			eq(schema.journalEntries.date, urlDate)
+		),
+		columns: { id: true }
 	});
-	if (!photo || !photo.entry) notFound(locale);
-	if (photo.entry.companionId !== urlCompanionId || photo.entry.date !== urlDate) {
-		notFound(locale);
-	}
+	if (!entry) notFound(locale);
+	const photo = await db.query.media.findFirst({
+		where: and(eq(schema.media.entryId, entry.id), eq(schema.media.filename, filename))
+	});
+	if (!photo) notFound(locale);
 
 	// Caretakers must be assigned to the companion that owns this photo. Reads
 	// have no shift, date or active-companion rule.
-	if (user.role === 'caretaker' && !(await isAssigned(photo.entry.companionId, user.id))) {
+	if (user.role === 'caretaker' && !(await isAssigned(urlCompanionId, user.id))) {
 		error(403, t(locale, 'error.forbidden'));
 	}
 

@@ -1021,7 +1021,7 @@ export function seedContent(
 		loggedBy: jet
 	}));
 
-	db.insert(schema.journalPhotos).values(photoRows).run();
+	db.insert(schema.media).values(photoRows).run();
 
 	// ---- Quick logs: one-tap buttons on the dashboard and log pages. The member
 	// gets a few across both companions; the caretaker gets one for their

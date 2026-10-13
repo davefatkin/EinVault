@@ -26,7 +26,7 @@ const journalRow = {
 	filename: 'p1.jpg',
 	originalName: 'dog.png',
 	mediaType: 'photo',
-	notes: 'a caption',
+	caption: 'a caption',
 	status: 'ready',
 	posterKey: null,
 	loggedBy: 'u1',
@@ -55,7 +55,7 @@ afterEach(() => {
 describe('journalMediaApi', () => {
 	const api = journalMediaApi('c1', '2026-06-01', 'en');
 
-	it('uploads with the photo field and maps notes to caption', async () => {
+	it('uploads with the photo field and returns the caption', async () => {
 		const fetchMock = stubFetch(journalRow);
 		const file = new File(['x'], 'dog.png', { type: 'image/png' });
 		const item = await api.upload(file);
@@ -95,7 +95,7 @@ describe('journalMediaApi', () => {
 	});
 
 	it('imports from Immich', async () => {
-		const fetchMock = stubFetch({ ...journalRow, notes: null });
+		const fetchMock = stubFetch({ ...journalRow, caption: null });
 		const item = await api.importImmich('11111111-1111-4111-8111-111111111111');
 		const [url, init] = call(fetchMock);
 		expect(url).toBe('/api/companions/c1/journal/2026-06-01/photos/from-immich');

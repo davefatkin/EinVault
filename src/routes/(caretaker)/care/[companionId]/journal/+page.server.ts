@@ -6,7 +6,8 @@ import { eq, and } from 'drizzle-orm';
 import { parseMood } from '$lib/server/validation';
 import { getShiftStatus } from '$lib/server/shifts';
 import { localDateISO } from '$lib/date';
-import { upsertJournalEntry, JOURNAL_MEDIA_ITEM_COLUMNS } from '$lib/server/journal';
+import { upsertJournalEntry } from '$lib/server/journal';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
 import { toMediaItem } from '$lib/media';
 
@@ -48,11 +49,11 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 
 	// Only the fields the UI needs: no storage keys or transcode bookkeeping.
 	const media = todayEntry
-		? await db.query.journalPhotos.findMany({
-				where: eq(schema.journalPhotos.entryId, todayEntry.id),
+		? await db.query.media.findMany({
+				where: eq(schema.media.entryId, todayEntry.id),
 				orderBy: (p, { asc }) => [asc(p.createdAt)],
-				columns: JOURNAL_MEDIA_ITEM_COLUMNS,
-				with: { logger: { columns: { displayName: true } } }
+				columns: MEDIA_ITEM_COLUMNS,
+				with: WITH_LOGGER
 			})
 		: [];
 

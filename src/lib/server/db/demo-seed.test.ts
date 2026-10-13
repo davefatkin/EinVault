@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { isNotNull } from 'drizzle-orm';
 import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { db, schema } from '$server/db';
@@ -40,7 +41,7 @@ describe('seedRows', () => {
 
 	it('seeds a rich dataset: photos, varied moods, weight trend, mixed reminders', async () => {
 		seedRows(db as never, { now: 1_700_000_000_000 });
-		const photos = await db.query.journalPhotos.findMany();
+		const photos = await db.query.media.findMany({ where: isNotNull(schema.media.entryId) });
 		expect(photos.length).toBeGreaterThanOrEqual(5);
 
 		const entries = await db.query.journalEntries.findMany();
@@ -76,12 +77,12 @@ describe('seedRows', () => {
 		const now = 1_700_000_000_000;
 		seedRows(db as never, { now });
 
-		const photos = await db.query.journalPhotos.findMany();
+		const photos = await db.query.media.findMany({ where: isNotNull(schema.media.entryId) });
 		const entries = await db.query.journalEntries.findMany();
 		const entryById = new Map(entries.map((e) => [e.id, e]));
 
 		for (const photo of photos) {
-			const entry = entryById.get(photo.entryId);
+			const entry = entryById.get(photo.entryId!);
 			expect(
 				entry,
 				`no journal entry found for photo ${photo.id} (entryId=${photo.entryId})`

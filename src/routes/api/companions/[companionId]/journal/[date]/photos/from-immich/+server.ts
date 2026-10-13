@@ -8,6 +8,7 @@ import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/stor
 import { isAllowedPhotoMime, safeExtFromMime } from '$lib/server/storage/mime';
 import { MAX_DAILY_MEDIA } from '$lib/server/env';
 import { isValidDate } from '$lib/server/validation';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -73,14 +74,14 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		(tx) => {
 			const rows = tx
 				.select({ value: count() })
-				.from(schema.journalPhotos)
-				.where(eq(schema.journalPhotos.entryId, entryId))
+				.from(schema.media)
+				.where(eq(schema.media.entryId, entryId))
 				.all();
 			const mediaCount = rows[0]?.value ?? 0;
 			if (mediaCount >= MAX_DAILY_MEDIA) {
 				return { ok: false as const };
 			}
-			tx.insert(schema.journalPhotos)
+			tx.insert(schema.media)
 				.values({
 					id: mediaId,
 					entryId,
@@ -105,9 +106,10 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		error(400, t(locals.locale, 'error.maxMediaExceeded', { max: MAX_DAILY_MEDIA }));
 	}
 
-	const created = await db.query.journalPhotos.findFirst({
-		where: eq(schema.journalPhotos.id, mediaId),
-		with: { logger: { columns: { displayName: true } } }
+	const created = await db.query.media.findFirst({
+		where: eq(schema.media.id, mediaId),
+		columns: MEDIA_ITEM_COLUMNS,
+		with: WITH_LOGGER
 	});
 
 	return json({
