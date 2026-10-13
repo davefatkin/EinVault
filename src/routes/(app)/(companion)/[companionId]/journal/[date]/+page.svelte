@@ -35,6 +35,9 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
+	import { documentUrl, type DayItemDocument } from '$lib/dayItems';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { localDatetimes } from '$lib/actions/localDatetimes';
 	import { t, getLocale } from '$lib/i18n';
@@ -58,6 +61,7 @@
 
 	let media = $state<MediaItem[]>([]);
 	let companion = $derived(data.companion);
+	let previewDoc = $state<DayItemDocument | null>(null);
 
 	let body = $state('');
 	let mood = $state('');
@@ -864,6 +868,14 @@
 			{/if}
 		</div>
 
+		{#if data.dayItems.length > 0}
+			<DayHealthRecords
+				items={data.dayItems}
+				companionId={companion.id}
+				onPreviewDocument={(doc) => (previewDoc = doc)}
+			/>
+		{/if}
+
 		<!-- Recent entries -->
 		{#if data.recentEntries.length > 0}
 			<div class="space-y-2 pt-2 border-t border-border">
@@ -911,3 +923,13 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={documentUrl(companion.id, previewDoc.filename)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
+	/>
+{/if}
