@@ -87,9 +87,11 @@ export function unlinkHealthEvent(companionId: string, date: string, healthEvent
 			)
 			.get();
 		if (!entry) return;
-		tx.delete(links)
+		const { changes } = tx
+			.delete(links)
 			.where(and(eq(links.entryId, entry.id), eq(links.healthEventId, healthEventId)))
 			.run();
+		if (changes === 0) return;
 		if (entry.body !== '' || entry.mood !== null) return;
 		const hasMedia = tx
 			.select({ id: schema.media.id })

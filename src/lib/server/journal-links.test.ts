@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { upsertJournalEntry } from './journal';
+import { upsertJournalEntry, ensureJournalEntry } from './journal';
 import { linkHealthEvent, unlinkHealthEvent, listLinkableHealthEvents } from './journal-links';
 
 const ORIGINAL_TZ = process.env.TZ;
@@ -140,5 +140,11 @@ describe('journal links', () => {
 		expect(open.map((e) => e.id)).toEqual(['ev-late', 'ev-old']);
 		expect(Object.keys(open[0]).sort()).toEqual(['day', 'id', 'title', 'type']);
 		expect(open[0].day).toBe('2026-05-10');
+	});
+
+	it('unlinking a pair that does not exist leaves an empty entry alone', async () => {
+		await ensureJournalEntry(C, '2026-05-26', 'u-jlk');
+		unlinkHealthEvent(C, '2026-05-26', 'nope');
+		expect(await entryOn('2026-05-26')).toBeDefined();
 	});
 });
