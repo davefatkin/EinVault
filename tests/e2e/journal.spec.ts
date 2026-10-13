@@ -325,12 +325,18 @@ test.describe('journal day editor', () => {
 		const days = asMember.getByTestId('journal-day');
 		const firstPage = await days.count();
 
-		await asMember.getByRole('button', { name: 'Load older entries' }).click();
-		await expect.poll(() => days.count()).toBeGreaterThan(firstPage);
+		// Load pages until the oldest health chip is rendered.
+		const oldChip = asMember.getByRole('link', { name: new RegExp(`^e2e-old-${stamp}-402`) });
+		let prev = firstPage;
+		for (let i = 0; i < 5 && !(await oldChip.isVisible()); i++) {
+			await asMember.getByRole('button', { name: 'Load older entries' }).click();
+			await expect.poll(() => days.count()).toBeGreaterThan(prev);
+			prev = await days.count();
+		}
+		await expect(oldChip).toBeVisible();
 		const loaded = await days.count();
 
-		// The oldest health chip sits on the appended page.
-		await asMember.getByRole('link', { name: new RegExp(`^e2e-old-${stamp}-402`) }).click();
+		await oldChip.click();
 		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 8_000 });
 		await asMember.goBack();
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));
