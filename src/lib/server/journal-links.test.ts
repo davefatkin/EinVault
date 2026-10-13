@@ -2,7 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { upsertJournalEntry, ensureJournalEntry } from './journal';
-import { linkHealthEvent, unlinkHealthEvent, listLinkableHealthEvents } from './journal-links';
+import {
+	linkHealthEvent,
+	unlinkHealthEvent,
+	deleteHealthEvent,
+	listLinkableHealthEvents
+} from './journal-links';
 
 const ORIGINAL_TZ = process.env.TZ;
 beforeAll(() => {
@@ -146,5 +151,57 @@ describe('journal links', () => {
 		await ensureJournalEntry(C, '2026-05-26', 'u-jlk');
 		unlinkHealthEvent(C, '2026-05-26', 'nope');
 		expect(await entryOn('2026-05-26')).toBeDefined();
+	});
+});
+
+describe('deleting a linked health event', () => {
+	const D = 'c-jlk-del';
+	beforeAll(async () => {
+		await db.insert(schema.users).values({
+			id: 'u-jld',
+			username: 'u-jld',
+			displayName: 'U',
+			role: 'member'
+		} as typeof schema.users.$inferInsert);
+		await db
+			.insert(schema.companions)
+			.values({ id: D, name: 'Deleter' } as typeof schema.companions.$inferInsert);
+		await db.insert(schema.healthEvents).values(
+			['ev-d1', 'ev-d2', 'ev-d3', 'ev-d4'].map((id) => ({
+				id,
+				companionId: D,
+				type: 'vet_visit' as const,
+				title: id,
+				occurredAt: new Date(2026, 3, 1, 12)
+			}))
+		);
+	});
+	const entry = (date: string) =>
+		db.query.journalEntries.findFirst({
+			where: and(eq(schema.journalEntries.companionId, D), eq(schema.journalEntries.date, date))
+		});
+
+	it('removes an entry that existed only for the link', async () => {
+		await linkHealthEvent(D, '2026-04-10', 'ev-d1', 'u-jld');
+		expect(deleteHealthEvent(D, 'ev-d1')).toBe(true);
+		expect(await entry('2026-04-10')).toBeUndefined();
+	});
+
+	it('keeps an entry with text', async () => {
+		await upsertJournalEntry(D, '2026-04-11', 'notes', null, 'u-jld');
+		await linkHealthEvent(D, '2026-04-11', 'ev-d2', 'u-jld');
+		expect(deleteHealthEvent(D, 'ev-d2')).toBe(true);
+		expect(await entry('2026-04-11')).toBeDefined();
+	});
+
+	it('keeps an empty entry that still has another link', async () => {
+		await linkHealthEvent(D, '2026-04-12', 'ev-d3', 'u-jld');
+		await linkHealthEvent(D, '2026-04-12', 'ev-d4', 'u-jld');
+		expect(deleteHealthEvent(D, 'ev-d3')).toBe(true);
+		expect(await entry('2026-04-12')).toBeDefined();
+	});
+
+	it("does not delete another companion's event", () => {
+		expect(deleteHealthEvent(D, 'ev-foreign')).toBe(false);
 	});
 });

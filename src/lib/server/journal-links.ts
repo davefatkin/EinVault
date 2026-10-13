@@ -66,6 +66,33 @@ export async function linkHealthEvent(
 	return 'linked';
 }
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Delete the entry when nothing keeps it: empty body, no mood, no media, no links. */
+function deleteEntryIfEmpty(tx: Tx, entryId: string): void {
+	const entry = tx
+		.select({ body: schema.journalEntries.body, mood: schema.journalEntries.mood })
+		.from(schema.journalEntries)
+		.where(eq(schema.journalEntries.id, entryId))
+		.get();
+	if (!entry || entry.body !== '' || entry.mood !== null) return;
+	const hasMedia = tx
+		.select({ id: schema.media.id })
+		.from(schema.media)
+		.where(eq(schema.media.entryId, entryId))
+		.limit(1)
+		.get();
+	const hasLink = tx
+		.select({ id: links.healthEventId })
+		.from(links)
+		.where(eq(links.entryId, entryId))
+		.limit(1)
+		.get();
+	if (!hasMedia && !hasLink) {
+		tx.delete(schema.journalEntries).where(eq(schema.journalEntries.id, entryId)).run();
+	}
+}
+
 /**
  * Remove one link from the day's entry. The entry goes too when the link was
  * all that kept it: empty body, no mood, no media and no other links.
@@ -73,11 +100,7 @@ export async function linkHealthEvent(
 export function unlinkHealthEvent(companionId: string, date: string, healthEventId: string): void {
 	db.transaction((tx) => {
 		const entry = tx
-			.select({
-				id: schema.journalEntries.id,
-				body: schema.journalEntries.body,
-				mood: schema.journalEntries.mood
-			})
+			.select({ id: schema.journalEntries.id })
 			.from(schema.journalEntries)
 			.where(
 				and(
@@ -92,22 +115,39 @@ export function unlinkHealthEvent(companionId: string, date: string, healthEvent
 			.where(and(eq(links.entryId, entry.id), eq(links.healthEventId, healthEventId)))
 			.run();
 		if (changes === 0) return;
-		if (entry.body !== '' || entry.mood !== null) return;
-		const hasMedia = tx
-			.select({ id: schema.media.id })
-			.from(schema.media)
-			.where(eq(schema.media.entryId, entry.id))
-			.limit(1)
-			.get();
-		const hasLink = tx
-			.select({ id: links.healthEventId })
+		deleteEntryIfEmpty(tx, entry.id);
+	});
+}
+
+/**
+ * Delete a health event of this companion. Entries that existed only to link
+ * it go with it. Returns whether the event was deleted.
+ */
+export function deleteHealthEvent(companionId: string, healthEventId: string): boolean {
+	return db.transaction((tx) => {
+		const entryIds = tx
+			.select({ id: links.entryId })
 			.from(links)
-			.where(eq(links.entryId, entry.id))
-			.limit(1)
-			.get();
-		if (!hasMedia && !hasLink) {
-			tx.delete(schema.journalEntries).where(eq(schema.journalEntries.id, entry.id)).run();
-		}
+			.innerJoin(schema.journalEntries, eq(schema.journalEntries.id, links.entryId))
+			.where(
+				and(
+					eq(links.healthEventId, healthEventId),
+					eq(schema.journalEntries.companionId, companionId)
+				)
+			)
+			.all()
+			.map((r) => r.id);
+		const { changes } = tx
+			.delete(schema.healthEvents)
+			.where(
+				and(
+					eq(schema.healthEvents.id, healthEventId),
+					eq(schema.healthEvents.companionId, companionId)
+				)
+			)
+			.run();
+		for (const id of entryIds) deleteEntryIfEmpty(tx, id);
+		return changes > 0;
 	});
 }
 

@@ -7,7 +7,7 @@ import { parseHealthEventType, parseWeightUnit } from '$lib/server/validation';
 import { reminderPrefillUrl } from '$lib/health';
 import { createHealthEvent } from '$lib/server/health';
 import { createWeightEntry } from '$lib/server/weight';
-import { getJournalDatesByEvent } from '$lib/server/journal-links';
+import { getJournalDatesByEvent, deleteHealthEvent } from '$lib/server/journal-links';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -142,7 +142,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { healthError: t(locals.locale, 'error.eventNotFound') });
 
-		await db.delete(schema.healthEvents).where(eq(schema.healthEvents.id, id));
+		deleteHealthEvent(params.companionId, id);
 		return { deleteHealthSuccess: true };
 	},
 
