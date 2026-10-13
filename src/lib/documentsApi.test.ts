@@ -63,6 +63,31 @@ describe('uploadDocument', () => {
 	});
 });
 
+describe('malformed responses', () => {
+	it('upload returns a failure when a 200 body is not JSON', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response('<html>', { status: 200 }))
+		);
+		const file = new File(['x'], 'a.pdf', { type: 'application/pdf' });
+		expect(await uploadDocument('c1', file, {}, 'en')).toEqual({
+			ok: false,
+			message: 'Upload failed.'
+		});
+	});
+
+	it('import returns the fallback on a 502 with a non-JSON body', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response('bad gateway', { status: 502 }))
+		);
+		expect(await importFromPaperless('c1', 7, 'en')).toEqual({
+			ok: false,
+			message: 'Could not attach Paperless document.'
+		});
+	});
+});
+
 describe('attachDocument', () => {
 	it('patches the healthEventId', async () => {
 		const fetchMock = stubFetch(created);

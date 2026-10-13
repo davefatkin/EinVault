@@ -26,9 +26,12 @@ async function send(
 	return { ok: true, value: await res.json().catch(() => null) };
 }
 
-function toCreated(r: DocResult<unknown>): DocResult<CreatedDocument> {
+function toCreated(r: DocResult<unknown>, fallback: string): DocResult<CreatedDocument> {
 	if (!r.ok) return r;
-	const d = r.value as CreatedDocument;
+	const d = r.value as Partial<CreatedDocument> | null;
+	if (!d || typeof d !== 'object' || typeof d.id !== 'string' || typeof d.title !== 'string') {
+		return { ok: false, message: fallback };
+	}
 	return { ok: true, value: { id: d.id, title: d.title, documentDate: d.documentDate ?? null } };
 }
 
@@ -42,12 +45,10 @@ export async function uploadDocument(
 	body.set('file', file);
 	if (opts.healthEventId) body.set('healthEventId', opts.healthEventId);
 	if (opts.documentDate) body.set('documentDate', opts.documentDate);
+	const fallback = t(locale, 'page.documents.uploadFailed');
 	return toCreated(
-		await send(
-			`/api/companions/${companionId}/documents`,
-			{ method: 'POST', body },
-			t(locale, 'page.documents.uploadFailed')
-		)
+		await send(`/api/companions/${companionId}/documents`, { method: 'POST', body }, fallback),
+		fallback
 	);
 }
 
@@ -74,6 +75,7 @@ export async function importFromPaperless(
 	paperlessId: number,
 	locale: Locale
 ): Promise<DocResult<CreatedDocument>> {
+	const fallback = t(locale, 'paperless.picker.pickFailed');
 	return toCreated(
 		await send(
 			`/api/companions/${companionId}/documents/from-paperless`,
@@ -82,7 +84,8 @@ export async function importFromPaperless(
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ paperlessId })
 			},
-			t(locale, 'paperless.picker.pickFailed')
-		)
+			fallback
+		),
+		fallback
 	);
 }
