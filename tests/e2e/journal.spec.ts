@@ -358,4 +358,109 @@ test.describe('journal day editor', () => {
 		await expect(days).toHaveCount(loaded);
 		await expect(oldChip).toBeInViewport();
 	});
+
+	test('an empty day shows the health records empty state and the link toggle', async ({
+		asMember
+	}) => {
+		const empty = new Date(Date.now() - 3000 * 86_400_000).toISOString().slice(0, 10);
+		await asMember.goto(`/${COMP}/journal/${empty}`);
+		await waitForHydration(asMember);
+		const section = asMember.getByTestId('day-health-records');
+		const emptyState = section.getByText('No health records for this day.');
+		await expect(emptyState).toBeVisible();
+
+		const toggle = section.getByRole('button', { name: 'Link health event' });
+		await toggle.click();
+		await expect(section.locator('form[action="?/linkHealth"]')).toBeVisible();
+		await expect(emptyState).toBeHidden();
+		await section.getByRole('button', { name: 'Cancel' }).click();
+		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);
+		await expect(emptyState).toBeVisible();
+	});
+
+	test('links an older health event from a day and unlinks it (#291)', async ({ asMember }) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-link-${stamp}`;
+		const old = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+
+		// An older health event this test owns.
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		await asMember.locator('#title').fill(title);
+		await asMember.locator('#occurredAt').fill(`${old}T12:00`);
+		await asMember.getByRole('button', { name: 'Save Event' }).click();
+		await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
+
+		// Type, then link right away: the text must survive the link's refresh.
+		await asMember.goto(`/${COMP}/journal/${todayUTC()}`);
+		await waitForHydration(asMember);
+		const note = `e2e link note ${stamp}`;
+		await asMember.locator('textarea').first().fill(note);
+		await asMember.getByRole('button', { name: 'Link health event' }).click();
+		const select = asMember.locator('#link-health-event');
+		const value = await select.locator('option', { hasText: title }).getAttribute('value');
+		await select.selectOption(value!);
+		await asMember.getByRole('button', { name: 'Link', exact: true }).click();
+
+		const section = asMember.getByTestId('day-health-records');
+		const row = section.locator('[data-linked="true"]').filter({ hasText: title });
+		await expect(row).toBeVisible({ timeout: 8_000 });
+		await asMember.reload();
+		await expect(asMember.locator('textarea').first()).toHaveValue(note);
+
+		// Timeline: the chip is marked as linked.
+		await asMember.goto(`/${COMP}/journal`);
+		await waitForHydration(asMember);
+		const chip = asMember.locator('button[data-linked="true"]').filter({ hasText: title });
+		await expect(chip).toBeVisible();
+
+		// The health page modal lists the linking day.
+		await asMember.goto(`/${COMP}/health`);
+		await asMember.getByText(title).first().click();
+		await expect(
+			asMember.getByTestId('health-detail-journal').locator(`a[href$="/journal/${todayUTC()}"]`)
+		).toBeVisible({ timeout: 8_000 });
+		await asMember.keyboard.press('Escape');
+
+		// Unlink from the day page.
+		await asMember.goto(`/${COMP}/journal/${todayUTC()}`);
+		await waitForHydration(asMember);
+		await asMember
+			.getByTestId('day-health-records')
+			.locator('[data-linked="true"]')
+			.filter({ hasText: title })
+			.click();
+		await asMember.getByRole('button', { name: 'Unlink from this day' }).click();
+		await expect(
+			asMember
+				.getByTestId('day-health-records')
+				.locator('[data-linked="true"]')
+				.filter({ hasText: title })
+		).toHaveCount(0);
+		await asMember.goto(`/${COMP}/journal`);
+		await expect(
+			asMember.locator('button[data-linked="true"]').filter({ hasText: title })
+		).toHaveCount(0);
+	});
+
+	test('switching companion on the same date does not carry the entry text over', async ({
+		asMember
+	}) => {
+		const text = `e2e switch ${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/${todayUTC()}`);
+		await waitForHydration(asMember);
+		await asMember.locator('textarea').first().fill(text);
+		await asMember.locator('h1').first().click();
+		await expect(asMember.getByText('✓ Saved')).toBeVisible({ timeout: 5_000 });
+
+		await asMember.getByRole('button', { name: 'Switch companion' }).click();
+		await asMember
+			.getByRole('listbox', { name: 'Switch companion' })
+			.getByRole('button', { name: 'Edward' })
+			.first()
+			.click();
+		await expect(asMember).toHaveURL(/\/seed-comp-edward\/journal\//);
+		await expect(asMember.locator('textarea').first()).not.toHaveValue(text);
+	});
 });

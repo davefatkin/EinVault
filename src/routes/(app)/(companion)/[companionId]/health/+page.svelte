@@ -200,7 +200,8 @@
 				vetName: h.vetName,
 				vetClinic: h.vetClinic,
 				notes: h.notes,
-				logger: h.logger
+				logger: h.logger,
+				journalDates: data.journalDatesByEvent[h.id] ?? []
 			};
 		}
 		const w = s.item;
@@ -235,6 +236,7 @@
 		onclose={closeDetail}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		footer={data.companion.isActive !== false ? detailActions : undefined}
+		journalHref={(d) => `/${data.companion.id}/journal/${d}`}
 	/>
 {/if}
 

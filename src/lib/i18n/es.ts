@@ -176,6 +176,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Usuario no encontrado.',
 	'error.companionNotFound': 'Compañero no encontrado',
 	'error.eventNotFound': 'Evento no encontrado.',
+	'error.sameDayLink': 'Este evento de salud ya está en este día.',
 	'error.reminderNotFound': 'Recordatorio no encontrado.',
 	'error.alreadyCompleted': 'Este recordatorio ya está completado.',
 	'error.entryNotFound': 'Entrada no encontrada.',
@@ -448,6 +449,7 @@ const messages: Record<keyof Messages, string> = {
 
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Abrir en el registro de salud',
+	'component.healthDetail.unlink': 'Desvincular de este día',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancelar',
@@ -740,7 +742,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noActivities': 'Sin actividades registradas.',
 	'page.journal.day.recentEntries': 'Entradas recientes',
 	'page.journal.day.healthRecords': 'Registros de salud',
+	'page.journal.day.noHealthRecords': 'No hay registros de salud para este día.',
+	'page.journal.day.linkHealthEvent': 'Vincular evento de salud',
+	'page.journal.day.linkHealthEventLabel': 'Evento de salud de otro día',
+	'page.journal.day.link': 'Vincular',
+	'page.journal.day.noLinkableEvents': 'No hay otros eventos de salud para vincular.',
 	'page.journal.dayItem.health': 'evento de salud',
+	'page.journal.dayItem.linked': 'vinculado',
 	'page.journal.dayItem.weight': 'peso',
 	'page.journal.dayItem.document': 'documento',
 	'page.journal.dayItem.attachments.one': '{count} documento adjunto',

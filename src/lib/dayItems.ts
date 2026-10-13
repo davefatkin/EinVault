@@ -25,6 +25,9 @@ export type DayItem =
 			vetClinic: string | null;
 			notes: string | null;
 			logger: UserRef;
+			linkedHere: boolean; // this day's entry links the event
+			fromLink: boolean; // shown on this day only because of a link (its own day is another day)
+			journalDates: string[]; // days whose entries link this event, ascending
 			documents: DayItemDocument[]; // every document attached to this event
 	  }
 	| {

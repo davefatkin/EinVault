@@ -214,8 +214,11 @@ describe('documents and their health events', () => {
 		expect(Object.keys(event).sort()).toEqual([
 			'at',
 			'documents',
+			'fromLink',
 			'id',
+			'journalDates',
 			'kind',
+			'linkedHere',
 			'logger',
 			'notes',
 			'title',
@@ -356,5 +359,91 @@ describe('listDayItemDates', () => {
 		const future = localDateISO(new Date(Date.now() + 2 * day));
 		const items = await getDayItems(c, { from: future, to: future });
 		expect(items.get(future)?.map((i) => i.kind)).toEqual(['weight']);
+	});
+});
+
+describe('linked health events', () => {
+	const c = 'c-di-links';
+	const other = 'c-di-links-other';
+	let visit: string;
+	let sameDay: string;
+	let foreign: string;
+
+	const link = (entryId: string, healthEventId: string) =>
+		db.insert(schema.journalEntryHealthEvents).values({ entryId, healthEventId });
+
+	beforeAll(async () => {
+		await addCompanion(c);
+		await addCompanion(other);
+		visit = await addHealth(c, noon(2026, 7, 1), 'Knee visit');
+		await addDoc(c, { title: 'xray', healthEventId: visit, createdAt: noon(2026, 7, 1) });
+		sameDay = await addHealth(c, new Date(2026, 6, 20, 9, 0), 'Same-day recheck');
+		foreign = await addHealth(other, noon(2026, 7, 2), 'Not ours');
+		await db.insert(schema.journalEntries).values([
+			{ id: 'e-di-l20', companionId: c, date: '2026-07-20', body: 'follow-up' },
+			{ id: 'e-di-l25', companionId: c, date: '2026-07-25', body: 'second follow-up' }
+		]);
+		await link('e-di-l20', visit);
+		await link('e-di-l20', sameDay);
+		await link('e-di-l20', foreign); // cross-companion row: must be ignored
+		await link('e-di-l25', visit);
+		await addWeight(c, new Date(2026, 6, 20, 8, 0));
+	});
+
+	it('adds a linked event to the linking day with its own date and documents', async () => {
+		const items = (await getDayItems(c, { from: '2026-07-20', to: '2026-07-20' })).get(
+			'2026-07-20'
+		)!;
+		expect(items.map((i) => [i.kind, i.id])).toEqual([
+			['health', sameDay], // own-day event first
+			['health', visit], // then linked events from other days
+			['weight', expect.any(String)]
+		]);
+		const linked = items[1];
+		expect(linked).toMatchObject({ kind: 'health', fromLink: true, linkedHere: true });
+		expect(linked.kind === 'health' && linked.at).toBe(noon(2026, 7, 1).toISOString());
+		expect(linked.kind === 'health' && linked.documents.map((d) => d.title)).toEqual(['xray']);
+	});
+
+	it('marks a same-day linked event without duplicating it', async () => {
+		const items = (await getDayItems(c, { from: '2026-07-20', to: '2026-07-20' })).get(
+			'2026-07-20'
+		)!;
+		const own = items.filter((i) => i.id === sameDay);
+		expect(own).toHaveLength(1);
+		expect(own[0]).toMatchObject({ fromLink: false, linkedHere: true });
+	});
+
+	it('lists the linking days on every health item, ascending', async () => {
+		const items = await getDayItems(c, { from: '2026-07-01', to: '2026-07-01' });
+		const own = items.get('2026-07-01')!.find((i) => i.id === visit)!;
+		expect(own).toMatchObject({ fromLink: false, linkedHere: false });
+		expect(own.kind === 'health' && own.journalDates).toEqual(['2026-07-20', '2026-07-25']);
+	});
+
+	it('places the event on its own day and each linking day across a wide range', async () => {
+		const days = await getDayItems(c, { from: '2026-07-01', to: '2026-07-31' });
+		const pick = (day: string) => days.get(day)!.find((i) => i.id === visit);
+		expect(pick('2026-07-01')).toMatchObject({ kind: 'health', fromLink: false });
+		expect(pick('2026-07-20')).toMatchObject({ fromLink: true, linkedHere: true });
+		expect(pick('2026-07-25')).toMatchObject({ fromLink: true, linkedHere: true });
+	});
+
+	it('ignores a link to another companion', async () => {
+		const all = [
+			...(await getDayItems(c, { from: '2026-07-01', to: '2026-07-31' })).values()
+		].flat();
+		expect(all.some((i) => i.id === foreign)).toBe(false);
+		const theirs = (await getDayItems(other, { from: '2026-07-02', to: '2026-07-02' })).get(
+			'2026-07-02'
+		)!;
+		expect(theirs[0].kind === 'health' && theirs[0].journalDates).toEqual([]);
+	});
+
+	it('survives the Load more JSON round trip', async () => {
+		const items = (await getDayItems(c, { from: '2026-07-20', to: '2026-07-20' })).get(
+			'2026-07-20'
+		)!;
+		expect(JSON.parse(JSON.stringify(items))).toEqual(items);
 	});
 });

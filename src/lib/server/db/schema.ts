@@ -233,6 +233,27 @@ export const journalEntries = sqliteTable(
 	})
 );
 
+// Links a day's journal entry to health events on other days (#291), e.g. a
+// follow-up weeks after a vet visit. Same companion is enforced in app code.
+export const journalEntryHealthEvents = sqliteTable(
+	'journal_entry_health_events',
+	{
+		entryId: text('entry_id')
+			.notNull()
+			.references(() => journalEntries.id, { onDelete: 'cascade' }),
+		healthEventId: text('health_event_id')
+			.notNull()
+			.references(() => healthEvents.id, { onDelete: 'cascade' }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => [
+		primaryKey({ columns: [t.entryId, t.healthEventId] }),
+		index('journal_entry_health_event_idx').on(t.healthEventId)
+	]
+);
+
 // health log
 export const healthEvents = sqliteTable(
 	'health_events',
@@ -646,6 +667,7 @@ export type NotificationOutboxRow = typeof notificationOutbox.$inferSelect;
 export type Companion = typeof companions.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type HealthEvent = typeof healthEvents.$inferSelect;
+export type JournalEntryHealthEvent = typeof journalEntryHealthEvents.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type NoteTag = typeof noteTags.$inferSelect;
@@ -741,7 +763,8 @@ export const journalEntriesRelations = relations(journalEntries, ({ one, many })
 		references: [users.id],
 		relationName: 'journalUpdater'
 	}),
-	photos: many(media)
+	photos: many(media),
+	healthEventLinks: many(journalEntryHealthEvents)
 }));
 
 export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
@@ -751,7 +774,19 @@ export const dailyEventsRelations = relations(dailyEvents, ({ one }) => ({
 export const healthEventsRelations = relations(healthEvents, ({ one, many }) => ({
 	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] }),
 	documents: many(documents),
-	media: many(media)
+	media: many(media),
+	journalLinks: many(journalEntryHealthEvents)
+}));
+
+export const journalEntryHealthEventsRelations = relations(journalEntryHealthEvents, ({ one }) => ({
+	entry: one(journalEntries, {
+		fields: [journalEntryHealthEvents.entryId],
+		references: [journalEntries.id]
+	}),
+	healthEvent: one(healthEvents, {
+		fields: [journalEntryHealthEvents.healthEventId],
+		references: [healthEvents.id]
+	})
 }));
 
 export const documentsRelations = relations(documents, ({ one }) => ({

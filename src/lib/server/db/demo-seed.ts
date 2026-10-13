@@ -910,6 +910,11 @@ export function seedContent(
 		])
 		.run();
 
+	// A follow-up entry pointing back at the vet visit (#291).
+	db.insert(schema.journalEntryHealthEvents)
+		.values({ entryId: 'seed-journal-ein-d1', healthEventId: 'seed-health-1' })
+		.run();
+
 	// Edward journal entries
 	db.insert(schema.journalEntries)
 		.values([

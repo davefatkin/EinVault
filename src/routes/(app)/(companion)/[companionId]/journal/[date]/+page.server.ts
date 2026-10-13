@@ -22,6 +22,11 @@ import { failCareError } from '$lib/server/care-errors';
 import { resolveActivityUpdate } from '$lib/server/journal-activity';
 import { getDayItems } from '$lib/server/journal-day-items';
 import {
+	listLinkableHealthEvents,
+	linkHealthEvent,
+	unlinkHealthEvent
+} from '$lib/server/journal-links';
+import {
 	MAX_DAILY_MEDIA,
 	UPLOAD_MAX_MB,
 	VIDEO_MAX_MB,
@@ -82,6 +87,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 
 	const dayItems = (await getDayItems(companionId, { from: date, to: date })).get(date) ?? [];
 
+	const linkableHealthEvents =
+		companion.isActive === false
+			? []
+			: await listLinkableHealthEvents(companionId, date, entry?.id ?? null);
+
 	const today = localDateISO();
 
 	return {
@@ -91,6 +101,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		recentEntries,
 		dailyEvents,
 		dayItems,
+		linkableHealthEvents,
 		date,
 		today,
 		isToday: date === today,
@@ -99,6 +110,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		maxDailyMedia: MAX_DAILY_MEDIA
 	};
 };
+
+async function isArchived(companionId: string): Promise<boolean> {
+	const row = await db.query.companions.findFirst({
+		where: eq(schema.companions.id, companionId),
+		columns: { isActive: true }
+	});
+	return !row || row.isActive === false;
+}
 
 export const actions: Actions = {
 	save: async ({ params, request, locals }) => {
@@ -231,5 +250,32 @@ export const actions: Actions = {
 
 		await db.delete(schema.dailyEvents).where(eq(schema.dailyEvents.id, id));
 		return { deleteActivitySuccess: true };
+	},
+
+	linkHealth: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { linkError: t(locals.locale, 'error.unauthorized') });
+		const { companionId, date } = params;
+		if (!isValidDate(date)) return fail(400, { linkError: t(locals.locale, 'error.invalidDate') });
+		if (await isArchived(companionId))
+			return fail(403, { linkError: t(locals.locale, 'error.forbidden') });
+		const healthEventId = String((await request.formData()).get('healthEventId') ?? '');
+		const result = await linkHealthEvent(companionId, date, healthEventId, locals.user.id);
+		if (result === 'notFound')
+			return fail(404, { linkError: t(locals.locale, 'error.eventNotFound') });
+		if (result === 'sameDay')
+			return fail(400, { linkError: t(locals.locale, 'error.sameDayLink') });
+		return { linkSuccess: true };
+	},
+
+	unlinkHealth: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { unlinkError: t(locals.locale, 'error.unauthorized') });
+		const { companionId, date } = params;
+		if (!isValidDate(date))
+			return fail(400, { unlinkError: t(locals.locale, 'error.invalidDate') });
+		if (await isArchived(companionId))
+			return fail(403, { unlinkError: t(locals.locale, 'error.forbidden') });
+		const healthEventId = String((await request.formData()).get('healthEventId') ?? '');
+		unlinkHealthEvent(companionId, date, healthEventId);
+		return { unlinkSuccess: true };
 	}
 };

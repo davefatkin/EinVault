@@ -142,8 +142,11 @@ describe('load health records', () => {
 			[
 				'at',
 				'documents',
+				'fromLink',
 				'id',
+				'journalDates',
 				'kind',
+				'linkedHere',
 				'logger',
 				'notes',
 				'title',
@@ -156,5 +159,88 @@ describe('load health records', () => {
 
 	it('returns an empty list for a day without items', async () => {
 		expect((await loadDate('2026-01-05')).dayItems).toEqual([]);
+	});
+});
+
+describe('linkHealth / unlinkHealth actions', () => {
+	const active = 'ps-link-active';
+	const archived = 'ps-link-archived';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: active, name: 'Active', species: 'dog' },
+			{ id: archived, name: 'Archived', species: 'dog', isActive: false }
+		] as (typeof schema.companions.$inferInsert)[]);
+		await db.insert(schema.healthEvents).values([
+			{
+				id: 'ps-link-ev',
+				companionId: active,
+				type: 'vet_visit',
+				title: 'V',
+				occurredAt: new Date(2026, 0, 1, 12)
+			},
+			{
+				id: 'ps-link-ev-arch',
+				companionId: archived,
+				type: 'vet_visit',
+				title: 'A',
+				occurredAt: new Date(2026, 0, 1, 12)
+			}
+		]);
+	});
+
+	const call = (
+		action: 'linkHealth' | 'unlinkHealth',
+		companionId: string,
+		date: string,
+		id: string
+	) => {
+		const form = new FormData();
+		form.set('healthEventId', id);
+		return actions[action]({
+			params: { companionId, date },
+			request: { formData: async () => form },
+			locals: { user: { id: 'ps-member', role: 'member' as const }, locale: 'en' as const }
+		} as Parameters<typeof actions.linkHealth>[0]);
+	};
+
+	it('links, maps errors to status codes, and unlinks', async () => {
+		expect(await call('linkHealth', active, '2026-01-10', 'ps-link-ev')).toEqual({
+			linkSuccess: true
+		});
+		expect(await call('linkHealth', active, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 404
+		});
+		expect(await call('linkHealth', active, '2026-01-01', 'ps-link-ev')).toMatchObject({
+			status: 400
+		});
+		expect(await call('linkHealth', active, 'not-a-date', 'ps-link-ev')).toMatchObject({
+			status: 400
+		});
+		expect(await call('unlinkHealth', active, '2026-01-10', 'ps-link-ev')).toEqual({
+			unlinkSuccess: true
+		});
+	});
+
+	it('rejects archived companions with 403', async () => {
+		expect(await call('linkHealth', archived, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 403
+		});
+		expect(await call('unlinkHealth', archived, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 403
+		});
+	});
+
+	it('load returns linkableHealthEvents, empty for archived companions', async () => {
+		const loadFor = async (companionId: string, isActive: boolean) =>
+			(await load({
+				params: { companionId, date: '2026-01-20' },
+				locals: { user: { id: 'ps-member', role: 'member' }, locale: 'en' },
+				parent: async () => ({ companion: { id: companionId, isActive } })
+			} as unknown as Parameters<typeof load>[0])) as { linkableHealthEvents: { id: string }[] };
+		expect((await loadFor(active, true)).linkableHealthEvents.map((e) => e.id)).toEqual([
+			'ps-link-ev'
+		]);
+		expect((await loadFor(archived, false)).linkableHealthEvents).toEqual([]);
 	});
 });

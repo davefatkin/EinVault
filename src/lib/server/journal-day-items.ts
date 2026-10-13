@@ -2,13 +2,14 @@ import { db, schema } from '$lib/server/db';
 import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { alias, union } from 'drizzle-orm/sqlite-core';
 import { localDateISO } from '$lib/date';
+import { getJournalDatesByEvent } from './journal-links';
 import type { DayItem, DayItemDocument } from '$lib/dayItems';
 
 export type { DayItem, DayItemDocument } from '$lib/dayItems';
 
 // Server-local day keys. 'localtime' follows the process TZ, the same zone
 // localDateISO uses, so these match the activities' bucketing in journal.ts.
-const healthDay = sql<string>`date(${schema.healthEvents.occurredAt}, 'unixepoch', 'localtime')`;
+export const healthDay = sql<string>`date(${schema.healthEvents.occurredAt}, 'unixepoch', 'localtime')`;
 const weightDay = sql<string>`date(${schema.weightEntries.recordedAt}, 'unixepoch', 'localtime')`;
 const documentDay = sql<string>`coalesce(${schema.documents.documentDate}, date(${schema.documents.createdAt}, 'unixepoch', 'localtime'))`;
 
@@ -43,6 +44,26 @@ const toDocument = (d: DayItemDocument): DayItemDocument => ({
 	filename: d.filename
 });
 
+const healthColumns = {
+	id: schema.healthEvents.id,
+	type: schema.healthEvents.type,
+	title: schema.healthEvents.title,
+	occurredAt: schema.healthEvents.occurredAt,
+	vetName: schema.healthEvents.vetName,
+	vetClinic: schema.healthEvents.vetClinic,
+	notes: schema.healthEvents.notes,
+	loggerName: schema.users.displayName,
+	day: healthDay
+};
+
+const selectHealthEvents = (where: SQL | undefined) =>
+	db
+		.select(healthColumns)
+		.from(schema.healthEvents)
+		.leftJoin(schema.users, eq(schema.users.id, schema.healthEvents.loggedBy))
+		.where(where)
+		.orderBy(asc(schema.healthEvents.occurredAt), asc(schema.healthEvents.id));
+
 const inRange = (day: SQL, range: { from: string; to: string }) =>
 	sql`${day} between ${range.from} and ${range.to}`;
 
@@ -51,23 +72,26 @@ export async function getDayItems(
 	companionId: string,
 	range: { from: string; to: string }
 ): Promise<Map<string, DayItem[]>> {
-	const [events, weights, docs] = await Promise.all([
+	const [events, linkRows, weights, docs] = await Promise.all([
+		selectHealthEvents(
+			and(eq(schema.healthEvents.companionId, companionId), inRange(healthDay, range))
+		),
 		db
 			.select({
-				id: schema.healthEvents.id,
-				type: schema.healthEvents.type,
-				title: schema.healthEvents.title,
-				occurredAt: schema.healthEvents.occurredAt,
-				vetName: schema.healthEvents.vetName,
-				vetClinic: schema.healthEvents.vetClinic,
-				notes: schema.healthEvents.notes,
-				loggerName: schema.users.displayName,
-				day: healthDay
+				date: schema.journalEntries.date,
+				healthEventId: schema.journalEntryHealthEvents.healthEventId
 			})
-			.from(schema.healthEvents)
-			.leftJoin(schema.users, eq(schema.users.id, schema.healthEvents.loggedBy))
-			.where(and(eq(schema.healthEvents.companionId, companionId), inRange(healthDay, range)))
-			.orderBy(asc(schema.healthEvents.occurredAt), asc(schema.healthEvents.id)),
+			.from(schema.journalEntryHealthEvents)
+			.innerJoin(
+				schema.journalEntries,
+				eq(schema.journalEntries.id, schema.journalEntryHealthEvents.entryId)
+			)
+			.where(
+				and(
+					eq(schema.journalEntries.companionId, companionId),
+					sql`${schema.journalEntries.date} between ${range.from} and ${range.to}`
+				)
+			),
 		db
 			.select({
 				id: schema.weightEntries.id,
@@ -92,8 +116,25 @@ export async function getDayItems(
 			.orderBy(asc(schema.documents.createdAt), asc(schema.documents.id))
 	]);
 
+	// Linked events from other days, same companion only (drops cross-companion rows).
+	const ownIds = new Set(events.map((e) => e.id));
+	const linkedIds = [...new Set(linkRows.map((l) => l.healthEventId))].filter(
+		(id) => !ownIds.has(id)
+	);
+	const linkedEvents =
+		linkedIds.length === 0
+			? []
+			: await selectHealthEvents(
+					and(
+						eq(schema.healthEvents.companionId, companionId),
+						inArray(schema.healthEvents.id, linkedIds)
+					)
+				);
+	const eventById = new Map([...events, ...linkedEvents].map((e) => [e.id, e]));
+	const linkedPairs = new Set(linkRows.map((l) => `${l.date}:${l.healthEventId}`));
+
 	const attached =
-		events.length === 0
+		eventById.size === 0
 			? []
 			: await db
 					.select({ ...documentColumns, healthEventId: schema.documents.healthEventId })
@@ -101,10 +142,7 @@ export async function getDayItems(
 					.where(
 						and(
 							eq(schema.documents.companionId, companionId),
-							inArray(
-								schema.documents.healthEventId,
-								events.map((e) => e.id)
-							)
+							inArray(schema.documents.healthEventId, [...eventById.keys()])
 						)
 					)
 					.orderBy(asc(schema.documents.createdAt), asc(schema.documents.id));
@@ -123,21 +161,37 @@ export async function getDayItems(
 		list.push(item);
 		byDay.set(day, list);
 	};
-	// Push order is the within-day order: health, then weights, then documents.
-	for (const e of events) {
-		push(e.day, {
-			kind: 'health',
-			id: e.id,
-			at: e.occurredAt.toISOString(),
-			type: e.type,
-			title: e.title,
-			vetName: e.vetName,
-			vetClinic: e.vetClinic,
-			notes: e.notes,
-			logger: e.loggerName ? { displayName: e.loggerName } : null,
-			documents: docsByEvent.get(e.id) ?? []
-		});
-	}
+	const journalDates = await getJournalDatesByEvent(companionId, [...eventById.keys()]);
+	const toHealthItem = (e: (typeof events)[number], day: string, fromLink: boolean): DayItem => ({
+		kind: 'health',
+		id: e.id,
+		at: e.occurredAt.toISOString(),
+		type: e.type,
+		title: e.title,
+		vetName: e.vetName,
+		vetClinic: e.vetClinic,
+		notes: e.notes,
+		logger: e.loggerName ? { displayName: e.loggerName } : null,
+		linkedHere: linkedPairs.has(`${day}:${e.id}`),
+		fromLink,
+		journalDates: journalDates.get(e.id) ?? [],
+		documents: docsByEvent.get(e.id) ?? []
+	});
+	// Push order is the within-day order: own-day health, linked health from
+	// other days, then weights, then documents.
+	for (const e of events) push(e.day, toHealthItem(e, e.day, false));
+	const linkedFromElsewhere = linkRows
+		.map((l) => ({ date: l.date, event: eventById.get(l.healthEventId) }))
+		.filter(
+			(l): l is { date: string; event: (typeof events)[number] } =>
+				!!l.event && l.event.day !== l.date
+		)
+		.sort(
+			(a, b) =>
+				a.event.occurredAt.getTime() - b.event.occurredAt.getTime() ||
+				a.event.id.localeCompare(b.event.id)
+		);
+	for (const l of linkedFromElsewhere) push(l.date, toHealthItem(l.event, l.date, true));
 	for (const w of weights) {
 		push(w.day, {
 			kind: 'weight',

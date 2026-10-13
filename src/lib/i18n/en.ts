@@ -164,6 +164,7 @@ const messages = {
 	'error.userNotFound': 'User not found.',
 	'error.companionNotFound': 'Companion not found',
 	'error.eventNotFound': 'Event not found.',
+	'error.sameDayLink': 'This health event is already on this day.',
 	'error.reminderNotFound': 'Reminder not found.',
 	'error.alreadyCompleted': 'This reminder is already completed.',
 	'error.entryNotFound': 'Entry not found.',
@@ -439,6 +440,7 @@ const messages = {
 
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Open in Health Log',
+	'component.healthDetail.unlink': 'Unlink from this day',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancel',
@@ -731,7 +733,13 @@ const messages = {
 	'page.journal.day.noActivities': 'No activities logged yet.',
 	'page.journal.day.recentEntries': 'Recent entries',
 	'page.journal.day.healthRecords': 'Health records',
+	'page.journal.day.noHealthRecords': 'No health records for this day.',
+	'page.journal.day.linkHealthEvent': 'Link health event',
+	'page.journal.day.linkHealthEventLabel': 'Health event from another day',
+	'page.journal.day.link': 'Link',
+	'page.journal.day.noLinkableEvents': 'No other health events to link.',
 	'page.journal.dayItem.health': 'health event',
+	'page.journal.dayItem.linked': 'linked',
 	'page.journal.dayItem.weight': 'weight',
 	'page.journal.dayItem.document': 'document',
 	'page.journal.dayItem.attachments.one': '{count} attached document',

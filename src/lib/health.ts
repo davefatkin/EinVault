@@ -82,6 +82,7 @@ export type HealthDetail =
 			vetClinic: string | null;
 			notes: string | null;
 			logger: UserRef;
+			journalDates?: string[];
 	  }
 	| {
 			kind: 'weight';
