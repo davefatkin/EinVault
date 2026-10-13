@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, Snapshot } from './$types';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
@@ -10,7 +10,9 @@
 	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { toSpecies } from '$lib/species';
+	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { journalMediaUrl, type MediaItem } from '$lib/media';
+	import { documentUrl, type DayItemDocument } from '$lib/dayItems';
 
 	const locale = getLocale();
 
@@ -30,6 +32,24 @@
 		hasMore = data.hasMore;
 		oldestDate = data.oldestDate;
 	});
+
+	// Back from a health or weight detail re-runs the load and the effect above
+	// resets the list, dropping pages added with Load more. The snapshot keeps
+	// them, so Back lands on the same loaded days.
+	export const snapshot: Snapshot<{
+		entries: Entry[];
+		hasMore: boolean;
+		oldestDate: string | null;
+	}> = {
+		capture: () => ({ entries: $state.snapshot(entries) as Entry[], hasMore, oldestDate }),
+		restore: (value) => {
+			entries = value.entries;
+			hasMore = value.hasMore;
+			oldestDate = value.oldestDate;
+		}
+	};
+
+	let previewDoc = $state<DayItemDocument | null>(null);
 
 	async function loadMore() {
 		if (!oldestDate || loadingMore) return;
@@ -77,8 +97,14 @@
 	type EventItem = Entry['events'][0];
 	let detailEvent = $state<EventItem | null>(null);
 
-	function openDetail(event: EventItem) {
+	// The timeline day the activity is filed under (server-local), for the
+	// modal's journal link. Converting loggedAt in the browser would use the
+	// browser's timezone instead.
+	let detailDate = $state('');
+
+	function openDetail(event: EventItem, date: string) {
 		detailEvent = event;
+		detailDate = date;
 	}
 
 	function closeDetail() {
@@ -103,10 +129,18 @@
 	<ActivityDetailModal
 		event={detailEvent}
 		onclose={closeDetail}
-		journalHref={companion.isActive !== false
-			? `/${companion.id}/journal/${new Date(detailEvent.loggedAt).toISOString().slice(0, 10)}`
-			: null}
+		journalHref={companion.isActive !== false ? `/${companion.id}/journal/${detailDate}` : null}
 		{species}
+	/>
+{/if}
+
+{#if previewDoc}
+	<DocumentPreview
+		open={true}
+		url={documentUrl(companion.id, previewDoc.filename)}
+		mimeType={previewDoc.mimeType}
+		title={previewDoc.title}
+		onclose={() => (previewDoc = null)}
 	/>
 {/if}
 
@@ -173,6 +207,7 @@
 						canEdit={companion.isActive !== false}
 						onOpenLightbox={openLightbox}
 						onOpenActivity={openDetail}
+						onPreviewDocument={(doc) => (previewDoc = doc)}
 						{species}
 					/>
 				{/each}

@@ -9,6 +9,8 @@
 	import type { UserRef } from '$lib/types';
 	import type { Species } from '$lib/activityTypes';
 	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
+	import DayItemChip from '$lib/components/journal/DayItemChip.svelte';
+	import type { DayItem, DayItemDocument } from '$lib/dayItems';
 	import { journalMediaUrl, type MediaItem } from '$lib/media';
 
 	type Activity = DailyEvent & { logger: UserRef };
@@ -18,6 +20,7 @@
 		updater: { displayName: string } | null;
 		photos: MediaItem[];
 		events: Activity[];
+		items: DayItem[];
 	};
 
 	interface Props {
@@ -26,12 +29,21 @@
 		today: string;
 		canEdit: boolean;
 		onOpenLightbox: (items: MediaItem[], date: string, index: number) => void;
-		onOpenActivity: (event: Activity) => void;
+		onOpenActivity: (event: Activity, date: string) => void;
+		onPreviewDocument: (doc: DayItemDocument) => void;
 		species?: Species;
 	}
 
-	let { entry, companionId, today, canEdit, onOpenLightbox, onOpenActivity, species }: Props =
-		$props();
+	let {
+		entry,
+		companionId,
+		today,
+		canEdit,
+		onOpenLightbox,
+		onOpenActivity,
+		onPreviewDocument,
+		species
+	}: Props = $props();
 
 	const locale = getLocale();
 	let isToday = $derived(entry.date === today);
@@ -44,7 +56,7 @@
 	}
 </script>
 
-<div class="flex gap-3">
+<div class="flex gap-3" data-testid="journal-day">
 	<div class="relative flex w-12 shrink-0 flex-col items-center">
 		<div
 			class="font-display text-xl font-bold leading-none {isToday
@@ -114,7 +126,7 @@
 			<div class="prose prose-sm dark:prose-invert mt-3 max-w-none leading-relaxed">
 				{@html renderMarkdown(entry.body)}
 			</div>
-		{:else if !entry.photos.length && !entry.events.length}
+		{:else if !entry.photos.length && !entry.events.length && !entry.items.length}
 			<p class="mt-3 text-sm italic text-muted-foreground">{t(locale, 'page.journal.noNotes')}</p>
 		{/if}
 
@@ -123,7 +135,7 @@
 				{#each entry.events as event (event.id)}
 					<button
 						type="button"
-						onclick={() => onOpenActivity(event)}
+						onclick={() => onOpenActivity(event, entry.date)}
 						class="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold transition-colors hover:bg-gold/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					>
 						{activityDisplayIcon(event.type, event.subtypes, species)}
@@ -132,6 +144,14 @@
 								>· {event.durationMinutes}m</span
 							>{/if}
 					</button>
+				{/each}
+			</div>
+		{/if}
+
+		{#if entry.items.length > 0}
+			<div class="mt-3 flex flex-wrap gap-1.5">
+				{#each entry.items as item (`${item.kind}:${item.id}`)}
+					<DayItemChip {item} {companionId} {onPreviewDocument} />
 				{/each}
 			</div>
 		{/if}

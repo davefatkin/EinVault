@@ -31,6 +31,7 @@
 		activityDisplayIcon,
 		activityDisplayLabel,
 		healthTypeLabel,
+		documentCategoryLabel,
 		reminderTypeLabel,
 		speciesLabels
 	} from '$lib/i18n/labels';
@@ -38,7 +39,6 @@
 	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { formatAge } from '$lib/age';
-	import type { MessageKey } from '$lib/i18n/en';
 	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
 	import { registerDismissForm } from '$lib/actions/registerDismissForm';
 	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
@@ -943,7 +943,7 @@
 							<div class="flex items-center justify-between gap-3 text-sm">
 								<span class="truncate text-foreground text-sm">{doc.title}</span>
 								<Badge variant="secondary" class="capitalize shrink-0"
-									>{t(locale, `documents.category.${doc.category}` as MessageKey)}</Badge
+									>{documentCategoryLabel(locale, doc.category)}</Badge
 								>
 							</div>
 						</button>

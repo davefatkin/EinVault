@@ -82,6 +82,10 @@ export function healthTypeLabel(locale: Locale, type: string): string {
 	return t(locale, `enum.healthType.${type}` as MessageKey);
 }
 
+export function documentCategoryLabel(locale: Locale, category: string): string {
+	return t(locale, `documents.category.${category}` as MessageKey);
+}
+
 export function activityLabel(locale: Locale, type: string): string {
 	return t(locale, `enum.activityType.${type}` as MessageKey);
 }

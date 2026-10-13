@@ -12,8 +12,8 @@
 	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { t, getLocale } from '$lib/i18n';
-	import { healthTypeLabel } from '$lib/i18n/labels';
-	import type { MessageKey } from '$lib/i18n/en';
+	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
+	import { DOCUMENT_CATEGORIES } from '$lib/activityTypes';
 	import { localDateISO } from '$lib/date';
 	import { FileText, Upload, Download, Trash2, Pencil, Loader2 } from '@lucide/svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
@@ -21,12 +21,9 @@
 
 	let { data } = $props();
 	const locale = getLocale();
-	const categoryLabel = (c: string) => t(locale, `documents.category.${c}` as MessageKey);
 	// Type · date · title — title alone is often ambiguous across visits.
 	const healthEventLabel = (e: (typeof data.healthEvents)[number]) =>
 		`${healthTypeLabel(locale, e.type)} · ${localDateISO(e.occurredAt)} · ${e.title}`;
-
-	const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 
 	type Doc = (typeof data.documents)[number];
 	const docUrl = (doc: Doc) => `/api/documents/${data.companion.id}/${doc.filename}`;
@@ -219,7 +216,7 @@
 			>
 				{t(locale, 'page.documents.filterAll')}
 			</button>
-			{#each CATEGORIES as c (c)}
+			{#each DOCUMENT_CATEGORIES as c (c)}
 				<button
 					type="button"
 					onclick={() => (filter = c)}
@@ -228,7 +225,7 @@
 						? 'border-primary/40 bg-primary/10 text-primary font-medium'
 						: 'border-border bg-card text-muted-foreground hover:bg-accent'}"
 				>
-					{categoryLabel(c)}
+					{documentCategoryLabel(locale, c)}
 				</button>
 			{/each}
 		</div>
@@ -266,8 +263,8 @@
 										<Label for="doc-cat-{doc.id}">{t(locale, 'page.documents.labelCategory')}</Label
 										>
 										<Select id="doc-cat-{doc.id}" bind:value={editCategory}>
-											{#each CATEGORIES as c (c)}
-												<option value={c}>{categoryLabel(c)}</option>
+											{#each DOCUMENT_CATEGORIES as c (c)}
+												<option value={c}>{documentCategoryLabel(locale, c)}</option>
 											{/each}
 										</Select>
 									</div>
@@ -314,7 +311,9 @@
 										<p
 											class="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5"
 										>
-											<Badge variant="secondary">{categoryLabel(doc.category)}</Badge>
+											<Badge variant="secondary"
+												>{documentCategoryLabel(locale, doc.category)}</Badge
+											>
 											{#if doc.provider === 'paperless'}
 												<Badge variant="outline">{t(locale, 'page.documents.fromPaperless')}</Badge>
 											{/if}

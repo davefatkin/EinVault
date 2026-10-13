@@ -736,6 +736,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.logIt': 'Registrar',
 	'page.journal.day.noActivities': 'Sin actividades registradas.',
 	'page.journal.day.recentEntries': 'Entradas recientes',
+	'page.journal.day.healthRecords': 'Registros de salud',
+	'page.journal.dayItem.health': 'evento de salud',
+	'page.journal.dayItem.weight': 'peso',
+	'page.journal.dayItem.document': 'documento',
+	'page.journal.dayItem.attachments.one': '{count} documento adjunto',
+	'page.journal.dayItem.attachments.other': '{count} documentos adjuntos',
 
 	// Page: Journal (caretaker)
 	'page.journal.caretaker.todaysNotes': 'Notas de hoy',
