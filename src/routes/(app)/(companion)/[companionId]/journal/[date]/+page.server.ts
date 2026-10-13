@@ -20,7 +20,10 @@ import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
 import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
 import { failCareError } from '$lib/server/care-errors';
 import { resolveActivityUpdate } from '$lib/server/journal-activity';
-import { getDayItems } from '$lib/server/journal-day-items';
+import { getDayItems, listAttachableDocuments } from '$lib/server/journal-day-items';
+import { createHealthEvent, parseHealthEventForm } from '$lib/server/health';
+import { createWeightEntry, parseWeightForm } from '$lib/server/weight';
+import { reminderPrefillUrl } from '$lib/health';
 import {
 	listLinkableHealthEvents,
 	linkHealthEvent,
@@ -92,6 +95,9 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			? []
 			: await listLinkableHealthEvents(companionId, date, entry?.id ?? null);
 
+	const attachableDocuments =
+		companion.isActive === false ? [] : await listAttachableDocuments(companionId);
+
 	const today = localDateISO();
 
 	return {
@@ -102,6 +108,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		dailyEvents,
 		dayItems,
 		linkableHealthEvents,
+		attachableDocuments,
 		date,
 		today,
 		isToday: date === today,
@@ -277,5 +284,51 @@ export const actions: Actions = {
 		const healthEventId = String((await request.formData()).get('healthEventId') ?? '');
 		unlinkHealthEvent(companionId, date, healthEventId);
 		return { unlinkSuccess: true };
+	},
+
+	addHealth: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
+		const { companionId, date } = params;
+		if (!isValidDate(date))
+			return fail(400, { healthError: t(locals.locale, 'error.invalidDate') });
+		if (await isArchived(companionId))
+			return fail(403, { healthError: t(locals.locale, 'error.forbidden') });
+
+		const data = await request.formData();
+		const parsed = parseHealthEventForm(data, locals.locale);
+		if (!parsed.ok) return fail(400, { healthError: parsed.message });
+
+		const healthEventId = await createHealthEvent(companionId, parsed.value, locals.user.id);
+		// Saved onto another day: link it here, so it still shows on this page.
+		const day = localDateISO(parsed.value.occurredAt);
+		if (day !== date) await linkHealthEvent(companionId, date, healthEventId, locals.user.id);
+
+		const { type, title, notes } = parsed.value;
+		const reminderUrl =
+			data.get('andReminder') === '1' ? reminderPrefillUrl(companionId, type, title, notes) : null;
+		return { healthEventId, day, reminderUrl };
+	},
+
+	addWeight: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
+		const { companionId, date } = params;
+		if (!isValidDate(date))
+			return fail(400, { weightError: t(locals.locale, 'error.invalidDate') });
+		if (await isArchived(companionId))
+			return fail(403, { weightError: t(locals.locale, 'error.forbidden') });
+
+		const companion = await db.query.companions.findFirst({
+			where: eq(schema.companions.id, companionId),
+			columns: { weightUnit: true }
+		});
+		const parsed = parseWeightForm(
+			await request.formData(),
+			companion?.weightUnit ?? 'lbs',
+			locals.locale
+		);
+		if (!parsed.ok) return fail(400, { weightError: parsed.message });
+
+		await createWeightEntry(companionId, parsed.value, locals.user.id);
+		return { weightSuccess: true };
 	}
 };
