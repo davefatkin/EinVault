@@ -54,10 +54,26 @@
 		return failed;
 	}
 
-	const submit: SubmitFunction = async () => {
-		await flush();
+	let failedPanel = $state<HTMLDivElement | undefined>(undefined);
+	$effect(() => {
+		if (phase === 'failed') failedPanel?.focus();
+	});
+
+	const submit: SubmitFunction = async ({ cancel }) => {
+		if (phase !== 'form') {
+			cancel();
+			return;
+		}
 		phase = 'saving';
 		error = null;
+		try {
+			await flush();
+		} catch {
+			phase = 'form';
+			error = t(locale, 'media.actionFailed');
+			cancel();
+			return;
+		}
 		return async ({ result }) => {
 			if (result.type !== 'success' || !result.data) {
 				phase = 'form';
@@ -67,28 +83,36 @@
 						: t(locale, 'media.actionFailed');
 				return;
 			}
+			// The event exists from here on: never return to the form.
 			const saved = result.data as {
 				healthEventId: string;
 				day: string;
 				reminderUrl: string | null;
 			};
-			const failed = await attachAll(saved.healthEventId, saved.day);
-			await invalidateAll();
-			if (failed.length === 0) {
-				if (saved.reminderUrl) await goto(saved.reminderUrl);
-				else onclose();
-				return;
+			let failed: { name: string; message: string }[] = [];
+			try {
+				failed = await attachAll(saved.healthEventId, saved.day);
+				await invalidateAll();
+				if (failed.length === 0 && saved.reminderUrl) await goto(saved.reminderUrl);
+			} catch {
+				// Fall through: the finally block leaves the saving phase.
+			} finally {
+				if (failed.length > 0) {
+					failures = failed;
+					reminderUrl = saved.reminderUrl;
+					phase = 'failed';
+				} else {
+					// Saved, or a cancelled navigation: close rather than stay locked.
+					onclose();
+				}
 			}
-			failures = failed;
-			reminderUrl = saved.reminderUrl;
-			phase = 'failed';
 		};
 	};
 </script>
 
 <Modal title={t(locale, 'page.health.newHealthEventTitle')} {onclose} locked={phase === 'saving'}>
 	{#if phase === 'failed'}
-		<div class="space-y-3 text-sm">
+		<div class="space-y-3 text-sm outline-none" tabindex="-1" bind:this={failedPanel}>
 			<p role="alert">{t(locale, 'page.journal.day.attachFailedTitle')}</p>
 			<ul class="list-disc space-y-1 pl-5 text-destructive">
 				{#each failures as f, i (i)}

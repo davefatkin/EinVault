@@ -23,15 +23,29 @@
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 
-	const submit: SubmitFunction = async () => {
-		await flush();
+	const submit: SubmitFunction = async ({ cancel }) => {
+		if (submitting) {
+			cancel();
+			return;
+		}
 		submitting = true;
 		error = null;
+		try {
+			await flush();
+		} catch {
+			submitting = false;
+			error = t(locale, 'media.actionFailed');
+			cancel();
+			return;
+		}
 		return async ({ result }) => {
 			if (result.type === 'success') {
-				await invalidateAll();
-				submitting = false;
-				onclose();
+				try {
+					await invalidateAll();
+				} finally {
+					submitting = false;
+					onclose();
+				}
 				return;
 			}
 			submitting = false;
