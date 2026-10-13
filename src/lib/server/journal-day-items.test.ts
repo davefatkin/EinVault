@@ -253,7 +253,7 @@ describe('documents and their health events', () => {
 			notes: 'Ear **infection**',
 			vetName: 'Dr. Bacchus',
 			vetClinic: 'Animal Treasure',
-			occurredAt: noon(2026, 4, 25),
+			occurredAt: noon(2026, 5, 2),
 			loggedBy: 'u-di-logger'
 		});
 		const wid = nextId('w');
@@ -263,11 +263,20 @@ describe('documents and their health events', () => {
 			weight: 11,
 			unit: 'kg',
 			notes: 'after breakfast',
-			recordedAt: noon(2026, 4, 25)
+			recordedAt: new Date(2026, 4, 2, 12, 0),
+			loggedBy: 'u-di-logger'
+		});
+		const wid2 = nextId('w');
+		await db.insert(schema.weightEntries).values({
+			id: wid2,
+			companionId: c,
+			weight: 12,
+			unit: 'kg',
+			recordedAt: new Date(2026, 4, 2, 18, 0)
 		});
 
-		const [health, weight] = (await getDayItems(c, { from: '2026-04-25', to: '2026-04-25' })).get(
-			'2026-04-25'
+		const [health, ...rest] = (await getDayItems(c, { from: '2026-05-02', to: '2026-05-02' })).get(
+			'2026-05-02'
 		)!;
 		expect(health).toMatchObject({
 			kind: 'health',
@@ -277,7 +286,15 @@ describe('documents and their health events', () => {
 			logger: { displayName: 'Dr Logger' }
 		});
 		expect(health.kind === 'health' && Object.keys(health.logger!)).toEqual(['displayName']);
-		expect(weight).toMatchObject({ kind: 'weight', notes: 'after breakfast', logger: null });
+		const weight = rest.find((i) => i.id === wid)!;
+		const bare = rest.find((i) => i.id === wid2)!;
+		expect(weight).toMatchObject({
+			kind: 'weight',
+			notes: 'after breakfast',
+			logger: { displayName: 'Dr Logger' }
+		});
+		expect(weight.kind === 'weight' && Object.keys(weight.logger!)).toEqual(['displayName']);
+		expect(bare).toMatchObject({ kind: 'weight', logger: null });
 	});
 });
 

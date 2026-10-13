@@ -1,4 +1,5 @@
-// Client-safe helpers for the Health Events ↔ Reminders bridge. Imported by
+// Client-safe helpers for the Health Events ↔ Reminders bridge, plus the shared
+// HealthDetail shape for the detail modal. Imported by
 // the health page (button hrefs), the health server action (redirect on
 // "Save & Add Reminder"), and the reminder complete actions (redirect on
 // "Log event"). Must not import $env or $lib/server modules so the browser
