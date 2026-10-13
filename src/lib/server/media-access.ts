@@ -111,8 +111,8 @@ export async function resolveNoteMedia(
 	if (segments.length !== 4) notFound(locale);
 	const [, urlCompanionId, urlNoteId, filename] = segments;
 
-	const item = await db.query.noteMedia.findFirst({
-		where: and(eq(schema.noteMedia.noteId, urlNoteId), eq(schema.noteMedia.filename, filename)),
+	const item = await db.query.media.findFirst({
+		where: and(eq(schema.media.noteId, urlNoteId), eq(schema.media.filename, filename)),
 		with: {
 			note: {
 				columns: { companionId: true, sharedWithCaretakers: true },

@@ -153,7 +153,7 @@ describe('resolveNoteMedia', () => {
 			{ id: N_PRIVATE, companionId: C1, title: 'Private', sharedWithCaretakers: false },
 			{ id: N_ARCHIVED, companionId: C2, title: 'Old', sharedWithCaretakers: true }
 		] as (typeof schema.notes.$inferInsert)[]);
-		await db.insert(schema.noteMedia).values([
+		await db.insert(schema.media).values([
 			{
 				id: 'nm-1',
 				noteId: N_SHARED,
@@ -192,7 +192,7 @@ describe('resolveNoteMedia', () => {
 				mimeType: 'image/jpeg',
 				sizeBytes: 10
 			}
-		] as (typeof schema.noteMedia.$inferInsert)[]);
+		] as (typeof schema.media.$inferInsert)[]);
 	});
 
 	const nseg = (noteId: string, file: string, companionId = C1) => [

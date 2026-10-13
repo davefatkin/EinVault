@@ -28,9 +28,9 @@ async function addNote(
 async function addMedia(
 	id: string,
 	noteId: string,
-	extra: Partial<typeof schema.noteMedia.$inferInsert> = {}
+	extra: Partial<typeof schema.media.$inferInsert> = {}
 ) {
-	await db.insert(schema.noteMedia).values({
+	await db.insert(schema.media).values({
 		id,
 		noteId,
 		filename: `${id}.jpg`,

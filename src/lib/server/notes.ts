@@ -194,13 +194,13 @@ export async function deleteNote(id: string): Promise<boolean> {
 		(tx): { deleted: boolean; media: StoredMediaRef[] } => {
 			const media = tx
 				.select({
-					provider: schema.noteMedia.provider,
-					storageKey: schema.noteMedia.storageKey,
-					originalKey: schema.noteMedia.originalKey,
-					posterKey: schema.noteMedia.posterKey
+					provider: schema.media.provider,
+					storageKey: schema.media.storageKey,
+					originalKey: schema.media.originalKey,
+					posterKey: schema.media.posterKey
 				})
-				.from(schema.noteMedia)
-				.where(eq(schema.noteMedia.noteId, id))
+				.from(schema.media)
+				.where(eq(schema.media.noteId, id))
 				.all();
 			const rows = tx
 				.delete(schema.notes)
