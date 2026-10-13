@@ -175,6 +175,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Utilisateur introuvable.',
 	'error.companionNotFound': 'Compagnon introuvable',
 	'error.eventNotFound': 'Événement introuvable.',
+	'error.sameDayLink': 'Cet événement de santé a déjà lieu ce jour-là.',
 	'error.reminderNotFound': 'Rappel introuvable.',
 	'error.alreadyCompleted': 'Ce rappel est déjà terminé.',
 	'error.entryNotFound': 'Entrée introuvable.',

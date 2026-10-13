@@ -173,6 +173,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Utilizador não encontrado.',
 	'error.companionNotFound': 'Companheiro não encontrado',
 	'error.eventNotFound': 'Evento não encontrado.',
+	'error.sameDayLink': 'Este evento de saúde já está neste dia.',
 	'error.reminderNotFound': 'Lembrete não encontrado.',
 	'error.alreadyCompleted': 'Este lembrete já foi concluído.',
 	'error.entryNotFound': 'Entrada não encontrada.',

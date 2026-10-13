@@ -164,6 +164,7 @@ const messages = {
 	'error.userNotFound': 'User not found.',
 	'error.companionNotFound': 'Companion not found',
 	'error.eventNotFound': 'Event not found.',
+	'error.sameDayLink': 'This health event is already on this day.',
 	'error.reminderNotFound': 'Reminder not found.',
 	'error.alreadyCompleted': 'This reminder is already completed.',
 	'error.entryNotFound': 'Entry not found.',

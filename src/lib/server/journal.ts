@@ -205,3 +205,29 @@ export async function getJournalMediaItem(mediaId: string) {
 		with: { entry: { columns: { companionId: true, date: true } } }
 	});
 }
+
+/**
+ * The (companion, date) entry's id, creating an empty entry when there is none.
+ * Unlike upsertJournalEntry it never writes body, mood, updatedAt or updatedBy,
+ * so linking can't blank the day's text or race autosave.
+ */
+export async function ensureJournalEntry(
+	companionId: string,
+	date: string,
+	userId: string
+): Promise<string> {
+	await db
+		.insert(schema.journalEntries)
+		.values({ id: generateId(15), companionId, date, body: '', mood: null, loggedBy: userId })
+		.onConflictDoNothing({
+			target: [schema.journalEntries.companionId, schema.journalEntries.date]
+		});
+	const row = await db.query.journalEntries.findFirst({
+		where: and(
+			eq(schema.journalEntries.companionId, companionId),
+			eq(schema.journalEntries.date, date)
+		),
+		columns: { id: true }
+	});
+	return row!.id;
+}

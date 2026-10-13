@@ -1,5 +1,8 @@
 import { db, schema } from '$lib/server/db';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
+import type { HealthEventType } from '$lib/health';
+import { ensureJournalEntry } from './journal';
+import { healthDay } from './journal-day-items';
 
 const links = schema.journalEntryHealthEvents;
 
@@ -37,4 +40,97 @@ export async function getJournalDatesByEvent(
 		byEvent.set(r.healthEventId, list);
 	}
 	return byEvent;
+}
+
+/** Link a health event of this companion, on another day, to the day's entry. */
+export async function linkHealthEvent(
+	companionId: string,
+	date: string,
+	healthEventId: string,
+	userId: string
+): Promise<'linked' | 'notFound' | 'sameDay'> {
+	const event = await db
+		.select({ id: schema.healthEvents.id, day: healthDay })
+		.from(schema.healthEvents)
+		.where(
+			and(
+				eq(schema.healthEvents.id, healthEventId),
+				eq(schema.healthEvents.companionId, companionId)
+			)
+		)
+		.get();
+	if (!event) return 'notFound';
+	if (event.day === date) return 'sameDay';
+	const entryId = await ensureJournalEntry(companionId, date, userId);
+	await db.insert(links).values({ entryId, healthEventId }).onConflictDoNothing();
+	return 'linked';
+}
+
+/**
+ * Remove one link from the day's entry. The entry goes too when the link was
+ * all that kept it: empty body, no mood, no media and no other links.
+ */
+export function unlinkHealthEvent(companionId: string, date: string, healthEventId: string): void {
+	db.transaction((tx) => {
+		const entry = tx
+			.select({
+				id: schema.journalEntries.id,
+				body: schema.journalEntries.body,
+				mood: schema.journalEntries.mood
+			})
+			.from(schema.journalEntries)
+			.where(
+				and(
+					eq(schema.journalEntries.companionId, companionId),
+					eq(schema.journalEntries.date, date)
+				)
+			)
+			.get();
+		if (!entry) return;
+		tx.delete(links)
+			.where(and(eq(links.entryId, entry.id), eq(links.healthEventId, healthEventId)))
+			.run();
+		if (entry.body !== '' || entry.mood !== null) return;
+		const hasMedia = tx
+			.select({ id: schema.media.id })
+			.from(schema.media)
+			.where(eq(schema.media.entryId, entry.id))
+			.limit(1)
+			.get();
+		const hasLink = tx
+			.select({ id: links.healthEventId })
+			.from(links)
+			.where(eq(links.entryId, entry.id))
+			.limit(1)
+			.get();
+		if (!hasMedia && !hasLink) {
+			tx.delete(schema.journalEntries).where(eq(schema.journalEntries.id, entry.id)).run();
+		}
+	});
+}
+
+/** Events the day's entry can link: this companion's, not on this day, not linked yet. */
+export async function listLinkableHealthEvents(
+	companionId: string,
+	date: string,
+	entryId: string | null
+): Promise<{ id: string; type: HealthEventType; title: string; day: string }[]> {
+	const linked = entryId
+		? new Set(
+				(
+					await db.select({ id: links.healthEventId }).from(links).where(eq(links.entryId, entryId))
+				).map((l) => l.id)
+			)
+		: new Set<string>();
+	const rows = await db
+		.select({
+			id: schema.healthEvents.id,
+			type: schema.healthEvents.type,
+			title: schema.healthEvents.title,
+			day: healthDay
+		})
+		.from(schema.healthEvents)
+		.where(and(eq(schema.healthEvents.companionId, companionId), ne(healthDay, date)))
+		.orderBy(desc(schema.healthEvents.occurredAt), desc(schema.healthEvents.id));
+	return rows.filter((r) => !linked.has(r.id));
 }
