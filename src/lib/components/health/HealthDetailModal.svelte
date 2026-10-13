@@ -21,6 +21,7 @@
 		onPreviewDocument,
 		healthHref = null,
 		footer,
+		footerExtra,
 		journalHref,
 		currentDate
 	}: {
@@ -32,6 +33,8 @@
 		healthHref?: string | null;
 		/** Custom footer (e.g. Edit/Delete); overrides healthHref. */
 		footer?: Snippet;
+		/** Extra actions beside the "Open in Health Log" link; ignored when footer is set. */
+		footerExtra?: Snippet;
 		/** Builds the journal day URL for a date; the Journal list shows only when set. */
 		journalHref?: (date: string) => string;
 		/** The journal day being viewed, rendered as plain text instead of a link. */
@@ -235,13 +238,14 @@
 			<div class="flex gap-2 px-5 py-4">{@render footer()}</div>
 		{:else if healthHref}
 			<Separator />
-			<div class="flex gap-2 px-5 py-4">
+			<div class="flex flex-wrap items-start gap-2 px-5 py-4">
 				<Button href={healthHref} variant="soft" size="sm" onclick={onclose}>
 					<HeartPulse class="h-3.5 w-3.5 mr-1.5" />{t(
 						locale,
 						'component.healthDetail.openHealthLog'
 					)}
 				</Button>
+				{@render footerExtra?.()}
 			</div>
 		{/if}
 	</div>

@@ -27,8 +27,7 @@
 		NotebookPen,
 		Activity,
 		Link2,
-		Unlink,
-		HeartPulse
+		Unlink
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -985,8 +984,8 @@
 		healthHref={healthRecordHref(companion.id, detailRecord)}
 		journalHref={(d) => `/${companion.id}/journal/${d}`}
 		currentDate={data.date}
-		footer={detailRecord.kind === 'health' && detailRecord.linkedHere && canLink
-			? linkedFooter
+		footerExtra={detailRecord.kind === 'health' && detailRecord.linkedHere && canLink
+			? unlinkAction
 			: undefined}
 	/>
 {/if}
@@ -1046,41 +1045,26 @@
 	{/if}
 {/snippet}
 
-{#snippet linkedFooter()}
+{#snippet unlinkAction()}
 	{#if detailRecord}
-		<div class="flex w-full flex-col gap-2">
-			<div class="flex gap-2">
-				<Button
-					href={healthRecordHref(companion.id, detailRecord)}
-					variant="soft"
-					size="sm"
-					onclick={() => (detailRecord = null)}
-				>
-					<HeartPulse class="h-3.5 w-3.5 mr-1.5" />{t(
-						locale,
-						'component.healthDetail.openHealthLog'
-					)}
-				</Button>
-				<form
-					method="POST"
-					action="?/unlinkHealth"
-					use:enhance={async () => {
-						await flushSave();
-						return async ({ result, update }) => {
-							if (result.type === 'success') detailRecord = null;
-							await update({ reset: false });
-						};
-					}}
-				>
-					<input type="hidden" name="healthEventId" value={detailRecord.id} />
-					<Button type="submit" variant="softDestructive" size="sm">
-						<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
-					</Button>
-				</form>
-			</div>
-			{#if form?.linkError}
-				<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
-			{/if}
-		</div>
+		<form
+			method="POST"
+			action="?/unlinkHealth"
+			use:enhance={async () => {
+				await flushSave();
+				return async ({ result, update }) => {
+					if (result.type === 'success') detailRecord = null;
+					await update({ reset: false });
+				};
+			}}
+		>
+			<input type="hidden" name="healthEventId" value={detailRecord.id} />
+			<Button type="submit" variant="softDestructive" size="sm">
+				<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
+			</Button>
+		</form>
+		{#if form?.linkError}
+			<p role="alert" class="w-full text-sm text-destructive">{form.linkError}</p>
+		{/if}
 	{/if}
 {/snippet}
