@@ -93,14 +93,15 @@
 	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
-	// Copy the server copy into the editor only when the date changes. Any other
+	// Copy the server copy into the editor only when the companion or date changes. Any other
 	// refresh (an action, invalidateAll) would otherwise overwrite text that is
 	// typed but not yet saved, or a draft whose save failed.
-	let syncedDate = '';
+	let syncedKey = '';
 	$effect(() => {
 		media = [...(data.photos ?? [])];
-		if (data.date === syncedDate) return;
-		syncedDate = data.date;
+		const key = `${data.companion.id}:${data.date}`;
+		if (key === syncedKey) return;
+		syncedKey = key;
 		body = data.entry?.body ?? '';
 		mood = data.entry?.mood ?? '';
 		saveStatus = 'idle';
@@ -1047,29 +1048,39 @@
 
 {#snippet linkedFooter()}
 	{#if detailRecord}
-		<Button
-			href={healthRecordHref(companion.id, detailRecord)}
-			variant="soft"
-			size="sm"
-			onclick={() => (detailRecord = null)}
-		>
-			<HeartPulse class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.openHealthLog')}
-		</Button>
-		<form
-			method="POST"
-			action="?/unlinkHealth"
-			use:enhance={async () => {
-				await flushSave();
-				return async ({ result, update }) => {
-					if (result.type === 'success') detailRecord = null;
-					await update({ reset: false });
-				};
-			}}
-		>
-			<input type="hidden" name="healthEventId" value={detailRecord.id} />
-			<Button type="submit" variant="softDestructive" size="sm">
-				<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
-			</Button>
-		</form>
+		<div class="flex w-full flex-col gap-2">
+			<div class="flex gap-2">
+				<Button
+					href={healthRecordHref(companion.id, detailRecord)}
+					variant="soft"
+					size="sm"
+					onclick={() => (detailRecord = null)}
+				>
+					<HeartPulse class="h-3.5 w-3.5 mr-1.5" />{t(
+						locale,
+						'component.healthDetail.openHealthLog'
+					)}
+				</Button>
+				<form
+					method="POST"
+					action="?/unlinkHealth"
+					use:enhance={async () => {
+						await flushSave();
+						return async ({ result, update }) => {
+							if (result.type === 'success') detailRecord = null;
+							await update({ reset: false });
+						};
+					}}
+				>
+					<input type="hidden" name="healthEventId" value={detailRecord.id} />
+					<Button type="submit" variant="softDestructive" size="sm">
+						<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
+					</Button>
+				</form>
+			</div>
+			{#if form?.linkError}
+				<p role="alert" class="text-sm text-destructive">{form.linkError}</p>
+			{/if}
+		</div>
 	{/if}
 {/snippet}
