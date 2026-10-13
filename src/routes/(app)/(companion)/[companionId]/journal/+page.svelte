@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData, Snapshot } from './$types';
+	import { tick } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
@@ -33,19 +34,30 @@
 		oldestDate = data.oldestDate;
 	});
 
-	// Back from a health or weight detail re-runs the load and the effect above
-	// resets the list, dropping pages added with Load more. The snapshot keeps
-	// them, so Back lands on the same loaded days.
-	export const snapshot: Snapshot<{
-		entries: Entry[];
-		hasMore: boolean;
-		oldestDate: string | null;
-	}> = {
-		capture: () => ({ entries: $state.snapshot(entries) as Entry[], hasMore, oldestDate }),
+	// Back from a health or weight detail re-runs the load, which resets the list
+	// to the first page. The snapshot stores only how far back the list had been
+	// loaded and the scroll position, never the entries themselves: restoring
+	// stored entries would overwrite fresh data (edited days, changed records)
+	// with stale copies. Instead restore refetches older pages until that day is
+	// reached again, then scrolls. SvelteKit scrolls before it restores snapshots,
+	// while the DOM still holds only the first page, so the scroll has to happen
+	// here once the older days are rendered.
+	async function restoreLoaded(value: { oldestDate: string | null; scrollY: number }) {
+		const target = value.oldestDate;
+		if (!target || !oldestDate || oldestDate <= target) return;
+		while (hasMore && oldestDate && oldestDate > target) {
+			const before: string = oldestDate;
+			await loadMore();
+			if (oldestDate === before) break;
+		}
+		await tick();
+		window.scrollTo(0, value.scrollY);
+	}
+
+	export const snapshot: Snapshot<{ oldestDate: string | null; scrollY: number }> = {
+		capture: () => ({ oldestDate, scrollY: window.scrollY }),
 		restore: (value) => {
-			entries = value.entries;
-			hasMore = value.hasMore;
-			oldestDate = value.oldestDate;
+			void restoreLoaded(value);
 		}
 	};
 
