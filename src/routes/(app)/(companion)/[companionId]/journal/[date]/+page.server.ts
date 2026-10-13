@@ -268,11 +268,12 @@ export const actions: Actions = {
 	},
 
 	unlinkHealth: async ({ params, request, locals }) => {
-		if (!locals.user) return fail(401, { linkError: t(locals.locale, 'error.unauthorized') });
+		if (!locals.user) return fail(401, { unlinkError: t(locals.locale, 'error.unauthorized') });
 		const { companionId, date } = params;
-		if (!isValidDate(date)) return fail(400, { linkError: t(locals.locale, 'error.invalidDate') });
+		if (!isValidDate(date))
+			return fail(400, { unlinkError: t(locals.locale, 'error.invalidDate') });
 		if (await isArchived(companionId))
-			return fail(403, { linkError: t(locals.locale, 'error.forbidden') });
+			return fail(403, { unlinkError: t(locals.locale, 'error.forbidden') });
 		const healthEventId = String((await request.formData()).get('healthEventId') ?? '');
 		unlinkHealthEvent(companionId, date, healthEventId);
 		return { unlinkSuccess: true };

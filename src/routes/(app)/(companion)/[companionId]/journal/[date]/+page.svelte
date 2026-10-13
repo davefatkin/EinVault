@@ -154,11 +154,10 @@
 
 	/** Write pending journal text before an action refreshes the page data. */
 	async function flushSave() {
+		if (inflightSave) await inflightSave;
 		if (savePending) {
 			clearTimeout(saveTimer);
 			await saveNow();
-		} else if (inflightSave) {
-			await inflightSave;
 		}
 	}
 
@@ -994,6 +993,7 @@
 	<div class="flex flex-wrap gap-2">
 		<button
 			type="button"
+			aria-expanded={showLinkForm}
 			onclick={() => (showLinkForm = !showLinkForm)}
 			class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
 		>
@@ -1063,8 +1063,8 @@
 				<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
 			</Button>
 		</form>
-		{#if form?.linkError}
-			<p role="alert" class="w-full text-sm text-destructive">{form.linkError}</p>
+		{#if form?.unlinkError}
+			<p role="alert" class="w-full text-sm text-destructive">{form.unlinkError}</p>
 		{/if}
 	{/if}
 {/snippet}
