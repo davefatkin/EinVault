@@ -425,9 +425,17 @@ test.describe('journal day editor', () => {
 			.getByRole('button', { name: 'Add', exact: true });
 		await trigger.focus();
 		await asMember.keyboard.press('Enter');
-		await expect(asMember.getByRole('menuitem').first()).toBeFocused();
+		await expect(
+			asMember.getByRole('menuitem', { name: 'Health event', exact: true })
+		).toBeFocused();
+		await asMember.keyboard.press('ArrowDown');
+		await expect(asMember.getByRole('menuitem', { name: 'Weight' })).toBeFocused();
 		await asMember.keyboard.press('End');
 		await expect(asMember.getByRole('menuitem', { name: 'Link health event' })).toBeFocused();
+		await asMember.keyboard.press('Home');
+		await expect(
+			asMember.getByRole('menuitem', { name: 'Health event', exact: true })
+		).toBeFocused();
 		await asMember.keyboard.press('Escape');
 		await expect(asMember.getByRole('menu')).toHaveCount(0);
 		await expect(trigger).toBeFocused();
@@ -522,4 +530,108 @@ test.describe('journal day editor', () => {
 		await expect(asMember).toHaveURL(/\/seed-comp-edward\/journal\//);
 		await expect(asMember.locator('textarea').first()).not.toHaveValue(text);
 	});
+});
+
+async function openAdd(page: import('@playwright/test').Page, item: string) {
+	await page
+		.getByTestId('day-health-records')
+		.getByRole('button', { name: 'Add', exact: true })
+		.click();
+	await page.getByRole('menuitem', { name: item, exact: true }).click();
+}
+
+test('logs a vet visit with a new file and an existing document from the day page', async ({
+	asMember
+}) => {
+	const stamp = Date.now().toString(36);
+	const existing = `e2e-existing-${stamp}.pdf`;
+	const fresh = `e2e-new-${stamp}.pdf`;
+	const title = `e2e-visit-${stamp}`;
+
+	// An unattached document this test owns.
+	await asMember.goto(`/${COMP}/documents`);
+	await waitForHydration(asMember);
+	await asMember.locator('input[type="file"]').setInputFiles(pdfUpload(existing));
+	await expect(asMember.getByText(existing)).toBeVisible({ timeout: 8_000 });
+
+	await asMember.goto(`/${COMP}/journal/2026-05-09`);
+	await waitForHydration(asMember);
+	await openAdd(asMember, 'Health event');
+	const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+	await dialog.locator('#title').fill(title);
+	await dialog.locator('#type').selectOption('vet_visit');
+	await dialog.getByTestId('attach-files').setInputFiles(pdfUpload(fresh));
+	await dialog.getByRole('checkbox', { name: new RegExp(existing) }).check();
+	await dialog.getByRole('button', { name: 'Save Event' }).click();
+	await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+
+	const row = asMember.getByTestId('day-health-records').getByRole('button', {
+		name: new RegExp(`^${title}`)
+	});
+	await expect(row).toContainText('2 attached documents');
+	await row.click();
+	const detail = asMember.getByRole('dialog', { name: title });
+	await expect(detail.getByText(existing)).toBeVisible();
+	await expect(detail.getByText(fresh)).toBeVisible();
+});
+
+test('a failed attachment keeps the event and names the file', async ({ asMember }) => {
+	const stamp = Date.now().toString(36);
+	const title = `e2e-partial-${stamp}`;
+	await asMember.goto(`/${COMP}/journal/2026-05-14`);
+	await waitForHydration(asMember);
+	await openAdd(asMember, 'Health event');
+	const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+	await dialog.locator('#title').fill(title);
+	await dialog
+		.getByTestId('attach-files')
+		.setInputFiles([
+			pdfUpload(`e2e-ok-${stamp}.pdf`),
+			{ name: `e2e-bad-${stamp}.txt`, mimeType: 'text/plain', buffer: Buffer.from('hello') }
+		]);
+	await dialog.getByRole('button', { name: 'Save Event' }).click();
+	await expect(dialog.getByText(`e2e-bad-${stamp}.txt`)).toBeVisible({ timeout: 10_000 });
+	await expect(dialog.getByRole('button', { name: 'Save Event' })).toHaveCount(0);
+	// The X is also named "Close" but has no text.
+	await dialog
+		.getByRole('button', { name: 'Close', exact: true })
+		.filter({ hasText: 'Close' })
+		.click();
+	await expect(
+		asMember
+			.getByTestId('day-health-records')
+			.getByRole('button', { name: new RegExp(`^${title}`) })
+	).toBeVisible();
+});
+
+test('an event dated another day is linked to the day it was added from', async ({ asMember }) => {
+	const title = `e2e-elsewhere-${Date.now().toString(36)}`;
+	await asMember.goto(`/${COMP}/journal/2026-05-10`);
+	await waitForHydration(asMember);
+	await openAdd(asMember, 'Health event');
+	const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+	await dialog.locator('#title').fill(title);
+	await dialog.locator('#occurredAt').fill('2026-05-02T09:00');
+	await dialog.getByRole('button', { name: 'Save Event' }).click();
+	await expect(
+		asMember
+			.getByTestId('day-health-records')
+			.locator('[data-linked="true"]')
+			.filter({ hasText: title })
+	).toBeVisible({ timeout: 10_000 });
+});
+
+test('logging a weight right after typing keeps the journal text', async ({ asMember }) => {
+	const text = `e2e weight note ${Date.now().toString(36)}`;
+	await asMember.goto(`/${COMP}/journal/2026-05-08`);
+	await waitForHydration(asMember);
+	await asMember.locator('textarea').first().fill(text);
+	await openAdd(asMember, 'Weight');
+	const dialog = asMember.getByRole('dialog', { name: 'Log Weight' });
+	await dialog.locator('#weight').fill('12.3');
+	await dialog.getByRole('button', { name: 'Log Weight' }).click();
+	await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+	await expect(asMember.getByTestId('day-health-records').getByText('12.3')).toBeVisible();
+	await asMember.reload();
+	await expect(asMember.locator('textarea').first()).toHaveValue(text);
 });

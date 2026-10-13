@@ -749,6 +749,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.add': 'Añadir',
 	'page.journal.day.addHealthEvent': 'Evento de salud',
 	'page.journal.day.addWeight': 'Peso',
+	'page.journal.day.attachFiles': 'Adjuntar archivos',
+	'page.journal.day.attachExisting': 'Adjuntar documentos existentes',
+	'page.journal.day.attachFailedTitle':
+		'El evento de salud se guardó, pero estos archivos no se adjuntaron:',
+	'page.journal.day.fileFailed': '{name}: {message}',
+	'page.journal.day.continueToReminder': 'Continuar al recordatorio',
 	'page.journal.day.linkHealthEvent': 'Vincular evento de salud',
 	'page.journal.day.linkHealthEventLabel': 'Evento de salud de otro día',
 	'page.journal.day.link': 'Vincular',

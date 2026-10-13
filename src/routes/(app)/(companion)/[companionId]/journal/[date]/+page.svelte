@@ -27,7 +27,9 @@
 		NotebookPen,
 		Activity,
 		Link2,
-		Unlink
+		Unlink,
+		HeartPulse,
+		Scale
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -42,6 +44,8 @@
 	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import DayHealthEventModal from '$lib/components/journal/DayHealthEventModal.svelte';
+	import DayWeightModal from '$lib/components/journal/DayWeightModal.svelte';
 	import {
 		documentUrl,
 		healthRecordHref,
@@ -76,13 +80,25 @@
 	let showLinkForm = $state(false);
 	const canEditRecords = $derived(companion.isActive !== false);
 
-	// Tasks 7 and 8 add Health event, Weight, Upload document and Paperless
-	// ahead of Link.
+	let showHealthModal = $state(false);
+	let showWeightModal = $state(false);
+
+	// Items for the Health records + Add menu.
 	let addItems = $derived<ActionMenuItem[]>([
+		{
+			label: t(locale, 'page.journal.day.addHealthEvent'),
+			icon: HeartPulse,
+			onselect: () => (showHealthModal = true)
+		},
+		{
+			label: t(locale, 'page.journal.day.addWeight'),
+			icon: Scale,
+			onselect: () => (showWeightModal = true)
+		},
 		{
 			label: t(locale, 'page.journal.day.linkHealthEvent'),
 			icon: Link2,
-			separated: false,
+			separated: true,
 			onselect: () => (showLinkForm = true)
 		}
 	]);
@@ -962,6 +978,26 @@
 		footerExtra={detailRecord.kind === 'health' && detailRecord.linkedHere && canEditRecords
 			? unlinkAction
 			: undefined}
+	/>
+{/if}
+
+{#if showHealthModal && canEditRecords}
+	<DayHealthEventModal
+		companionId={data.companion.id}
+		defaultAt={defaultLoggedAt()}
+		documents={data.attachableDocuments}
+		uploadMaxMb={data.uploadMaxMb}
+		flush={() => autosave.flush()}
+		onclose={() => (showHealthModal = false)}
+	/>
+{/if}
+
+{#if showWeightModal && canEditRecords}
+	<DayWeightModal
+		defaultAt={defaultLoggedAt()}
+		defaultUnit={companion.weightUnit}
+		flush={() => autosave.flush()}
+		onclose={() => (showWeightModal = false)}
 	/>
 {/if}
 

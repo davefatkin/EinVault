@@ -739,6 +739,12 @@ const messages = {
 	'page.journal.day.add': 'Add',
 	'page.journal.day.addHealthEvent': 'Health event',
 	'page.journal.day.addWeight': 'Weight',
+	'page.journal.day.attachFiles': 'Attach files',
+	'page.journal.day.attachExisting': 'Attach existing documents',
+	'page.journal.day.attachFailedTitle':
+		'The health event was saved, but these files were not attached:',
+	'page.journal.day.fileFailed': '{name}: {message}',
+	'page.journal.day.continueToReminder': 'Continue to reminder',
 	'page.journal.day.linkHealthEvent': 'Link health event',
 	'page.journal.day.linkHealthEventLabel': 'Health event from another day',
 	'page.journal.day.link': 'Link',
