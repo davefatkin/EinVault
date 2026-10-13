@@ -759,6 +759,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
 
 	// Page: Health
+	'component.healthDetail.openHealthLog': 'Ouvrir dans le dossier santé',
 	'page.health.title': 'Dossier santé',
 	'page.health.archivedNotice': '{name} est archivé. Mode lecture seule.',
 	'page.health.logWeight': 'Enregistrer le poids',

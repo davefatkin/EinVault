@@ -758,6 +758,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': 'Speichern fehlgeschlagen',
 
 	// Page: Health
+	'component.healthDetail.openHealthLog': 'Im Gesundheitsprotokoll öffnen',
 	'page.health.title': 'Gesundheitsprotokoll',
 	'page.health.archivedNotice': '{name} ist archiviert. Nur-Lese-Modus.',
 	'page.health.logWeight': 'Gewicht erfassen',

@@ -4,6 +4,8 @@
 // "Log event"). Must not import $env or $lib/server modules so the browser
 // bundle stays clean.
 
+import type { UserRef } from '$lib/types';
+
 export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';
 export type ReminderType = 'vet' | 'medication' | 'vaccination' | 'grooming' | 'other';
 
@@ -66,3 +68,26 @@ export function healthEventPrefillUrl(
 		parts.push(`description=${encodeURIComponent(opts.description.slice(0, 2000))}`);
 	return `/${companionId}/health?${parts.join('&')}`;
 }
+
+/** What the shared health/weight detail modal renders. */
+export type HealthDetail =
+	| {
+			kind: 'health';
+			id: string;
+			type: string;
+			title: string;
+			at: Date | string;
+			vetName: string | null;
+			vetClinic: string | null;
+			notes: string | null;
+			logger: UserRef;
+	  }
+	| {
+			kind: 'weight';
+			id: string;
+			weight: number;
+			unit: string;
+			at: Date | string;
+			notes: string | null;
+			logger: UserRef;
+	  };

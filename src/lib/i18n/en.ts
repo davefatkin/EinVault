@@ -747,6 +747,7 @@ const messages = {
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
 
 	// Page: Health
+	'component.healthDetail.openHealthLog': 'Open in Health Log',
 	'page.health.title': 'Health Log',
 	'page.health.archivedNotice': '{name} is archived. Viewing in read-only mode.',
 	'page.health.logWeight': 'Log Weight',
