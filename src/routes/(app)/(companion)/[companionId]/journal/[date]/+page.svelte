@@ -197,6 +197,14 @@
 		showLinkForm = false;
 		detailRecord = null;
 		previewDoc = null;
+		showActivityForm = false;
+		duration = '';
+		addActivitySubtypes = [];
+		editingActivityId = null;
+		detailEvent = null;
+		confirmOpen = false;
+		confirmAction = null;
+		lightboxOpen = false;
 		docFailures = [];
 		paperlessError = null;
 		filedUnder = null;

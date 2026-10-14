@@ -57,6 +57,13 @@
 		return failed;
 	}
 
+	// Set when the modal unmounts, e.g. Back changed the day mid-save. A save
+	// that finishes after that keeps its records but leaves the new day alone.
+	let gone = false;
+	$effect(() => () => {
+		gone = true;
+	});
+
 	let failedPanel = $state<HTMLDivElement | undefined>(undefined);
 	$effect(() => {
 		if (phase === 'failed') failedPanel?.focus();
@@ -95,18 +102,23 @@
 			let failed: { name: string; message: string }[] = [];
 			try {
 				failed = await attachAll(saved.healthEventId, saved.day);
+				if (gone) return;
 				await invalidateAll();
 				if (failed.length === 0 && saved.reminderUrl) await goto(saved.reminderUrl);
 			} catch {
 				// Fall through: the finally block leaves the saving phase.
 			} finally {
-				if (failed.length > 0) {
-					failures = failed;
-					reminderUrl = saved.reminderUrl;
-					phase = 'failed';
-				} else {
-					// Saved, or a canceled navigation: close rather than stay locked.
-					onclose();
+				// Once unmounted (Back mid-save, or the reminder page opened)
+				// there is nothing left to show or close.
+				if (!gone) {
+					if (failed.length > 0) {
+						failures = failed;
+						reminderUrl = saved.reminderUrl;
+						phase = 'failed';
+					} else {
+						// Saved, or a canceled navigation: close rather than stay locked.
+						onclose();
+					}
 				}
 			}
 		};
