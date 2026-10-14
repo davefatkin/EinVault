@@ -10,6 +10,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { stripMarkdown } from '$lib/markdown';
 	import { MEDIA_ACCEPT, type MediaItem } from '$lib/media';
 	import type { MediaApi } from '$lib/mediaApi';
@@ -50,12 +51,13 @@
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let uploadErrorTimer: ReturnType<typeof setTimeout> | undefined;
-	$effect(() => () => clearTimeout(uploadErrorTimer));
-	// Set on unmount. A request that finishes after that (the page moved to
-	// another day) must not write its item into the new list.
+	// Set on unmount. A request that finishes after that (the page moved on)
+	// must not write into the bound list; it refreshes the page data instead,
+	// so a page that shows this list again picks the change up.
 	let gone = false;
 	$effect(() => () => {
 		gone = true;
+		clearTimeout(uploadErrorTimer);
 	});
 	let immichPickerOpen = $state(false);
 	let editingId = $state<string | null>(null);
@@ -64,6 +66,7 @@
 	let pendingDeleteId = $state<string | null>(null);
 
 	function setUploadError(msg: string) {
+		if (gone) return;
 		uploadError = msg;
 		clearTimeout(uploadErrorTimer);
 		uploadErrorTimer = setTimeout(() => (uploadError = ''), 5000);
@@ -76,7 +79,11 @@
 	// Skip an item already present (page data may refresh mid-upload), which
 	// would otherwise trip the keyed each block.
 	function addItem(item: MediaItem) {
-		if (gone || items.some((m) => m.id === item.id)) return;
+		if (gone) {
+			void invalidateAll();
+			return;
+		}
+		if (items.some((m) => m.id === item.id)) return;
 		items = [...items, item];
 	}
 
@@ -130,7 +137,8 @@
 		if (!id) return;
 		try {
 			await api.remove(id);
-			if (!gone) items = items.filter((m) => m.id !== id);
+			if (gone) void invalidateAll();
+			else items = items.filter((m) => m.id !== id);
 		} catch (err) {
 			// Leave the item in place; a reload shows the true state.
 			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
@@ -150,7 +158,10 @@
 			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
 			return;
 		}
-		if (gone) return;
+		if (gone) {
+			void invalidateAll();
+			return;
+		}
 		const caption = editingCaption.trim() || null;
 		items = items.map((m) => (m.id === id ? { ...m, caption } : m));
 		editingId = null;
