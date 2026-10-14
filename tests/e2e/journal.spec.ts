@@ -707,11 +707,12 @@ test.describe('journal day editor', () => {
 		await openAdd(asMember, 'Health event');
 		const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
 		await expect(dialog).toBeVisible();
-		const response = asMember.waitForResponse(action);
+		// The late save refreshes the page data as its last step before closing.
+		const refreshed = asMember.waitForResponse(/\/journal\/2026-05-24\/__data\.json/);
 		release();
-		await response;
-		// The late save's callback runs right after its response; give it a moment.
-		await asMember.waitForTimeout(500);
+		await refreshed;
+		// Then it would close the modal; leave it time to (wrongly) do so.
+		await asMember.waitForTimeout(800);
 		await expect(dialog).toBeVisible();
 		await asMember.unroute(action);
 

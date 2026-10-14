@@ -102,9 +102,8 @@
 			let failed: { name: string; message: string }[] = [];
 			try {
 				failed = await attachAll(saved.healthEventId, saved.day);
-				if (gone) return;
 				await invalidateAll();
-				if (failed.length === 0 && saved.reminderUrl) await goto(saved.reminderUrl);
+				if (!gone && failed.length === 0 && saved.reminderUrl) await goto(saved.reminderUrl);
 			} catch {
 				// Fall through: the finally block leaves the saving phase.
 			} finally {
