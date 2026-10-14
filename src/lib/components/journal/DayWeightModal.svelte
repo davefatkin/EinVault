@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import Modal from '$lib/components/Modal.svelte';
 	import WeightForm from '$lib/components/health/WeightForm.svelte';
@@ -19,6 +20,8 @@
 		onclose: () => void;
 	} = $props();
 	const locale = getLocale();
+	// Read once: a background refresh must not reset a date typed by hand.
+	const initialAt = untrack(() => defaultAt);
 
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
@@ -63,7 +66,7 @@
 	{/if}
 	<WeightForm
 		action="?/addWeight"
-		{defaultAt}
+		defaultAt={initialAt}
 		{defaultUnit}
 		{submit}
 		{submitting}

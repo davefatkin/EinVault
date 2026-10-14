@@ -637,6 +637,21 @@ test.describe('journal day editor', () => {
 		await expect(asMember.locator('textarea').first()).toHaveValue(text);
 	});
 
+	test('Back closes an open add modal instead of carrying it to the other day', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-16`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-15$`));
+		await openAdd(asMember, 'Health event');
+		const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+		await expect(dialog).toBeVisible();
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-16$`));
+		await expect(dialog).toHaveCount(0);
+	});
+
 	test('uploads a document from the day page', async ({ asMember }) => {
 		const name = `e2e-day-doc-${Date.now().toString(36)}.pdf`;
 		await asMember.goto(`/${COMP}/journal/2026-05-11`);

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Modal from '$lib/components/Modal.svelte';
 	import HealthEventForm from '$lib/components/health/HealthEventForm.svelte';
@@ -27,6 +28,8 @@
 		onclose: () => void;
 	} = $props();
 	const locale = getLocale();
+	// Read once: a background refresh must not reset a date typed by hand.
+	const initialAt = untrack(() => defaultAt);
 
 	let phase = $state<'form' | 'saving' | 'failed'>('form');
 	let error = $state<string | null>(null);
@@ -102,7 +105,7 @@
 					reminderUrl = saved.reminderUrl;
 					phase = 'failed';
 				} else {
-					// Saved, or a cancelled navigation: close rather than stay locked.
+					// Saved, or a canceled navigation: close rather than stay locked.
 					onclose();
 				}
 			}
@@ -134,7 +137,7 @@
 		{/if}
 		<HealthEventForm
 			action="?/addHealth"
-			{defaultAt}
+			defaultAt={initialAt}
 			{submit}
 			submitting={phase === 'saving'}
 			oncancel={onclose}

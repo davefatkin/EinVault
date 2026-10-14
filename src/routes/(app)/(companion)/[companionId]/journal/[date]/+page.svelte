@@ -184,6 +184,14 @@
 		const key = `${data.companion.id}:${data.date}`;
 		if (key === syncedKey) return;
 		syncedKey = key;
+		// A Back gesture can change the day under an open overlay; close them
+		// so nothing posts to, or sits over, the new day.
+		showHealthModal = false;
+		showWeightModal = false;
+		paperlessOpen = false;
+		showLinkForm = false;
+		detailRecord = null;
+		previewDoc = null;
 		docFailures = [];
 		paperlessError = null;
 		filedUnder = null;
@@ -1045,14 +1053,6 @@
 	oncancel={() => (confirmOpen = false)}
 />
 
-<ConfirmDialog
-	open={autosave.leaveTarget !== null}
-	message={t(locale, 'page.journal.day.leaveUnsaved')}
-	confirmLabel={t(locale, 'page.journal.day.leave')}
-	onconfirm={() => autosave.confirmLeave()}
-	oncancel={() => autosave.stay()}
-/>
-
 {#if previewDoc}
 	<DocumentPreview
 		open={true}
@@ -1105,6 +1105,15 @@
 		onclose={() => (paperlessOpen = false)}
 	/>
 {/if}
+
+<!-- After the add modals so it stacks on top of them. -->
+<ConfirmDialog
+	open={autosave.leaveTarget !== null}
+	message={t(locale, 'page.journal.day.leaveUnsaved')}
+	confirmLabel={t(locale, 'page.journal.day.leave')}
+	onconfirm={() => autosave.confirmLeave()}
+	oncancel={() => autosave.stay()}
+/>
 
 {#snippet addMenu()}
 	<ActionMenu label={t(locale, 'page.journal.day.add')} items={addItems} />
