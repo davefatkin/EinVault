@@ -759,7 +759,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.fileFailed': '{name} : {message}',
 	'page.journal.day.continueToReminder': 'Continuer vers le rappel',
 	'page.journal.day.uploadFailedTitle': "Ces fichiers n'ont pas été téléversés :",
-	'page.journal.day.filedUnder': 'Importé, classé au {date}.',
+	'page.journal.day.filedUnder': 'Importé, classé à la date du {date}.',
 	'page.journal.day.openDay': 'Ouvrir ce jour',
 	'page.journal.day.linkHealthEvent': 'Lier un événement de santé',
 	'page.journal.day.linkHealthEventLabel': "Événement de santé d'un autre jour",

@@ -730,7 +730,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.saveFailedRetry': 'Riprova',
 	'page.journal.day.leaveUnsaved':
 		'Il testo del diario non è salvato. Lasciare comunque la pagina?',
-	'page.journal.day.leave': 'Esci',
+	'page.journal.day.leave': 'Lascia la pagina',
 	'page.journal.signedOutStatus': 'Disconnesso, non salvato',
 	'page.journal.signInToSave': 'Accedi',
 	'page.journal.day.activitiesTitle': 'Attività',
