@@ -47,6 +47,14 @@ export function documentUrl(companionId: string, filename: string): string {
 
 export type DayRecordItem = Extract<DayItem, { kind: 'health' | 'weight' }>;
 
+/** A document with no health event, offered by the day page's attach list. */
+export type AttachableDocument = {
+	id: string;
+	title: string;
+	date: string; // YYYY-MM-DD, same rule as DayItemDocument.date
+	category: DocumentCategory;
+};
+
 /** The record's detail on the health page, where it can be edited. */
 export function healthRecordHref(companionId: string, item: DayRecordItem): string {
 	const param = item.kind === 'health' ? 'detailHealth' : 'detailWeight';

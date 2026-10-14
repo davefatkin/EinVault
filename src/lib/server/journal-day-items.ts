@@ -1,9 +1,9 @@
 import { db, schema } from '$lib/server/db';
-import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { alias, union } from 'drizzle-orm/sqlite-core';
 import { localDateISO } from '$lib/date';
 import { getJournalDatesByEvent } from './journal-links';
-import type { DayItem, DayItemDocument } from '$lib/dayItems';
+import type { AttachableDocument, DayItem, DayItemDocument } from '$lib/dayItems';
 
 export type { DayItem, DayItemDocument } from '$lib/dayItems';
 
@@ -237,4 +237,20 @@ export async function listDayItemDates(
 		.limit(opts.limit);
 
 	return rows.map((r) => r.day);
+}
+
+/** The companion's documents with no health event, newest first. */
+export async function listAttachableDocuments(companionId: string): Promise<AttachableDocument[]> {
+	return db
+		.select({
+			id: schema.documents.id,
+			title: schema.documents.title,
+			date: documentDay,
+			category: schema.documents.category
+		})
+		.from(schema.documents)
+		.where(
+			and(eq(schema.documents.companionId, companionId), isNull(schema.documents.healthEventId))
+		)
+		.orderBy(desc(documentDay), desc(schema.documents.createdAt));
 }
