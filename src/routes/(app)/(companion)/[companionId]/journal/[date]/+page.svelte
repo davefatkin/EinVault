@@ -95,19 +95,24 @@
 	let filedUnder = $state<string | null>(null);
 
 	async function uploadDocs(files: FileList | null) {
-		if (!files || files.length === 0) return;
+		if (uploadingDocs || !files || files.length === 0) return;
+		const companionId = data.companion.id;
+		const date = data.date;
 		uploadingDocs = true;
 		docFailures = [];
 		filedUnder = null;
 		const failed: { name: string; message: string }[] = [];
-		for (const file of Array.from(files)) {
-			const r = await uploadDocument(data.companion.id, file, { documentDate: data.date }, locale);
-			if (!r.ok) failed.push({ name: file.name, message: r.message });
+		try {
+			for (const file of Array.from(files)) {
+				const r = await uploadDocument(companionId, file, { documentDate: date }, locale);
+				if (!r.ok) failed.push({ name: file.name, message: r.message });
+			}
+			await invalidateAll();
+		} finally {
+			if (docInput) docInput.value = '';
+			uploadingDocs = false;
+			if (data.companion.id === companionId && data.date === date) docFailures = failed;
 		}
-		if (docInput) docInput.value = '';
-		await invalidateAll();
-		docFailures = failed;
-		uploadingDocs = false;
 	}
 
 	async function pickFromPaperless(paperlessId: number) {
