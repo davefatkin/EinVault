@@ -3,7 +3,7 @@
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
 	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
@@ -29,7 +29,9 @@
 		Link2,
 		Unlink,
 		HeartPulse,
-		Scale
+		Scale,
+		Upload,
+		FileText
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -42,6 +44,8 @@
 	import ActionMenu, { type ActionMenuItem } from '$lib/components/ActionMenu.svelte';
 	import DayLinkHealthPanel from '$lib/components/journal/DayLinkHealthPanel.svelte';
 	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
+	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
+	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '$lib/documentsApi';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
 	import DayHealthEventModal from '$lib/components/journal/DayHealthEventModal.svelte';
@@ -83,6 +87,44 @@
 	let showHealthModal = $state(false);
 	let showWeightModal = $state(false);
 
+	let docInput = $state<HTMLInputElement | null>(null);
+	let uploadingDocs = $state(false);
+	let docFailures = $state<{ name: string; message: string }[]>([]);
+	let paperlessOpen = $state(false);
+	let paperlessError = $state<string | null>(null);
+	let filedUnder = $state<string | null>(null);
+
+	async function uploadDocs(files: FileList | null) {
+		if (!files || files.length === 0) return;
+		uploadingDocs = true;
+		docFailures = [];
+		filedUnder = null;
+		const failed: { name: string; message: string }[] = [];
+		for (const file of Array.from(files)) {
+			const r = await uploadDocument(data.companion.id, file, { documentDate: data.date }, locale);
+			if (!r.ok) failed.push({ name: file.name, message: r.message });
+		}
+		if (docInput) docInput.value = '';
+		await invalidateAll();
+		docFailures = failed;
+		uploadingDocs = false;
+	}
+
+	async function pickFromPaperless(paperlessId: number) {
+		paperlessError = null;
+		filedUnder = null;
+		const r = await importFromPaperless(data.companion.id, paperlessId, locale);
+		if (!r.ok) {
+			paperlessError = r.message;
+			return;
+		}
+		paperlessOpen = false;
+		// Undated imports land on their upload day, the server's today.
+		const day = r.value.documentDate ?? data.today;
+		if (day !== data.date) filedUnder = day;
+		await invalidateAll();
+	}
+
 	// Items for the Health records + Add menu.
 	let addItems = $derived<ActionMenuItem[]>([
 		{
@@ -95,6 +137,20 @@
 			icon: Scale,
 			onselect: () => (showWeightModal = true)
 		},
+		{
+			label: t(locale, 'page.documents.upload'),
+			icon: Upload,
+			onselect: () => docInput?.click()
+		},
+		...(data.paperlessEnabled
+			? [
+					{
+						label: t(locale, 'paperless.picker.button'),
+						icon: FileText,
+						onselect: () => (paperlessOpen = true)
+					}
+				]
+			: []),
 		{
 			label: t(locale, 'page.journal.day.linkHealthEvent'),
 			icon: Link2,
@@ -128,6 +184,9 @@
 		const key = `${data.companion.id}:${data.date}`;
 		if (key === syncedKey) return;
 		syncedKey = key;
+		docFailures = [];
+		paperlessError = null;
+		filedUnder = null;
 		body = data.entry?.body ?? '';
 		mood = data.entry?.mood ?? '';
 		autosave.reset();
@@ -899,6 +958,44 @@
 			headerAction={canEditRecords ? addMenu : undefined}
 			panel={canEditRecords && showLinkForm ? linkHealthPanel : undefined}
 		/>
+		{#if canEditRecords}
+			<input
+				bind:this={docInput}
+				type="file"
+				multiple
+				accept={DOCUMENT_ACCEPT}
+				class="hidden"
+				onchange={(e) => uploadDocs(e.currentTarget.files)}
+			/>
+		{/if}
+		{#if uploadingDocs}
+			<p class="text-sm text-muted-foreground" aria-live="polite">
+				{t(locale, 'page.documents.uploading')}
+			</p>
+		{/if}
+		{#if docFailures.length > 0}
+			<div role="alert" class="space-y-1 text-sm">
+				<p>{t(locale, 'page.journal.day.uploadFailedTitle')}</p>
+				<ul class="list-disc pl-5 text-destructive">
+					{#each docFailures as f, i (i)}
+						<li>
+							{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+		{#if paperlessError}
+			<p role="alert" class="text-sm text-destructive">{paperlessError}</p>
+		{/if}
+		{#if filedUnder}
+			<p class="text-sm text-muted-foreground" aria-live="polite">
+				{t(locale, 'page.journal.day.filedUnder', { date: filedUnder })}
+				<a class="underline hover:text-foreground" href="/{companion.id}/journal/{filedUnder}"
+					>{t(locale, 'page.journal.day.openDay')}</a
+				>
+			</p>
+		{/if}
 
 		<!-- Recent entries -->
 		{#if data.recentEntries.length > 0}
@@ -998,6 +1095,14 @@
 		defaultUnit={companion.weightUnit}
 		flush={() => autosave.flush()}
 		onclose={() => (showWeightModal = false)}
+	/>
+{/if}
+
+{#if data.paperlessEnabled && canEditRecords}
+	<PaperlessPicker
+		open={paperlessOpen}
+		onpick={pickFromPaperless}
+		onclose={() => (paperlessOpen = false)}
 	/>
 {/if}
 

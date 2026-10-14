@@ -636,4 +636,16 @@ test.describe('journal day editor', () => {
 		await asMember.reload();
 		await expect(asMember.locator('textarea').first()).toHaveValue(text);
 	});
+
+	test('uploads a document from the day page', async ({ asMember }) => {
+		const name = `e2e-day-doc-${Date.now().toString(36)}.pdf`;
+		await asMember.goto(`/${COMP}/journal/2026-05-11`);
+		await waitForHydration(asMember);
+		const chooser = asMember.waitForEvent('filechooser');
+		await openAdd(asMember, 'Upload document');
+		await (await chooser).setFiles(pdfUpload(name));
+		await expect(asMember.getByTestId('day-health-records').getByText(name)).toBeVisible({
+			timeout: 10_000
+		});
+	});
 });
