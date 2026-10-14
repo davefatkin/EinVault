@@ -652,6 +652,138 @@ test.describe('journal day editor', () => {
 		await expect(dialog).toHaveCount(0);
 	});
 
+	test('Back closes an open Log activity form (#363)', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-21`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-20$`));
+		await asMember.getByRole('button', { name: 'Log activity' }).click();
+		await expect(asMember.locator('#act-notes')).toBeVisible();
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-21$`));
+		await expect(asMember.locator('#act-notes')).toHaveCount(0);
+	});
+
+	test('switching companion closes an open Log activity form (#363)', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-22`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Log activity' }).click();
+		await asMember.locator('#act-notes').fill(`e2e switch note ${Date.now().toString(36)}`);
+
+		await asMember.getByRole('button', { name: 'Switch companion' }).click();
+		await asMember
+			.getByRole('listbox', { name: 'Switch companion' })
+			.getByRole('button', { name: 'Edward' })
+			.first()
+			.click();
+		await expect(asMember).toHaveURL(/\/seed-comp-edward\/journal\/2026-05-22$/);
+		await expect(asMember.locator('#act-notes')).toHaveCount(0);
+	});
+
+	async function uploadPhoto(page: import('@playwright/test').Page) {
+		await page.locator('textarea').first().fill('e2e photo day');
+		await page.locator('h1').first().click();
+		await expect(page.getByText('✓ Saved')).toBeVisible({ timeout: 5_000 });
+		await page.locator('input[type="file"][name="photos"]').first().setInputFiles(pngUpload());
+	}
+
+	test('Back closes an open media delete confirm (#363)', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-28`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-27$`));
+		await uploadPhoto(asMember);
+		const photo = asMember
+			.locator('div.group')
+			.filter({ has: asMember.locator('img[src*="/api/photos/journal/"]') })
+			.first();
+		await expect(photo).toBeVisible({ timeout: 15_000 });
+		await photo.hover();
+		await photo.getByRole('button', { name: 'Delete media' }).click();
+		await expect(asMember.getByRole('dialog')).toBeVisible();
+
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-28$`));
+		await expect(asMember.getByRole('dialog')).toHaveCount(0);
+	});
+
+	test('a photo upload that finishes after Back stays off the new day (#363)', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${COMP}/journal/2026-05-30`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-29$`));
+
+		let release!: () => void;
+		const held = new Promise<void>((resolve) => (release = resolve));
+		const upload = /\/journal\/2026-05-29\/photos$/;
+		await asMember.route(upload, async (route) => {
+			if (route.request().method() === 'POST') await held;
+			await route.continue();
+		});
+		await uploadPhoto(asMember);
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-30$`));
+
+		const response = asMember.waitForResponse(
+			(r) => upload.test(r.url()) && r.request().method() === 'POST'
+		);
+		release();
+		await response;
+		// Leave the late upload time to (wrongly) add itself to this day's list.
+		await asMember.waitForTimeout(800);
+		await expect(asMember.locator('img[src*="/api/photos/journal/"]')).toHaveCount(0);
+		await asMember.unroute(upload);
+
+		// It still saved to the day it was added on.
+		await asMember.goto(`/${COMP}/journal/2026-05-29`);
+		await expect(asMember.locator('img[src*="/api/photos/journal/"]').first()).toBeVisible({
+			timeout: 10_000
+		});
+	});
+
+	test('a health event save that finishes after Back leaves the new day alone (#363)', async ({
+		asMember
+	}) => {
+		const title = `e2e-late-save-${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-24`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-23$`));
+
+		// Hold the save until the user is on the other day.
+		let release!: () => void;
+		const held = new Promise<void>((resolve) => (release = resolve));
+		const action = /\/journal\/2026-05-23\?\/addHealth$/;
+		await asMember.route(action, async (route) => {
+			await held;
+			await route.continue();
+		});
+
+		await openAdd(asMember, 'Health event');
+		await asMember.getByRole('dialog', { name: 'New Health Event' }).locator('#title').fill(title);
+		await asMember.getByRole('button', { name: 'Save Event' }).click();
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-24$`));
+
+		await openAdd(asMember, 'Health event');
+		const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+		await expect(dialog).toBeVisible();
+		// The late save refreshes the page data as its last step before closing.
+		const refreshed = asMember.waitForResponse(/\/journal\/2026-05-24\/__data\.json/);
+		release();
+		await refreshed;
+		// Then it would close the modal; leave it time to (wrongly) do so.
+		await asMember.waitForTimeout(800);
+		await expect(dialog).toBeVisible();
+		await asMember.unroute(action);
+
+		// The event still saved to the day it was added from.
+		await asMember.goto(`/${COMP}/journal/2026-05-23`);
+		await expect(asMember.getByTestId('day-health-records').getByText(title)).toBeVisible();
+	});
+
 	test('browser Back right after typing keeps the text on its own day', async ({ asMember }) => {
 		const text = `e2e back ${Date.now().toString(36)}`;
 		await asMember.goto(`/${COMP}/journal/2026-05-18`);

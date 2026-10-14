@@ -23,6 +23,13 @@
 	// Read once: a background refresh must not reset a date typed by hand.
 	const initialAt = untrack(() => defaultAt);
 
+	// Set when the modal unmounts, e.g. Back changed the day mid-save, so a
+	// late save can't close a modal opened on the new day.
+	let gone = false;
+	$effect(() => () => {
+		gone = true;
+	});
+
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 
@@ -47,7 +54,7 @@
 					await invalidateAll();
 				} finally {
 					submitting = false;
-					onclose();
+					if (!gone) onclose();
 				}
 				return;
 			}

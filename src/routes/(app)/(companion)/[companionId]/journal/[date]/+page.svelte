@@ -183,10 +183,11 @@
 	// Copy the server copy into the editor only when the companion or date changes. Any other
 	// refresh (an action, invalidateAll) would otherwise overwrite text that is
 	// typed but not yet saved, or a draft whose save failed.
+	const dayKey = () => `${data.companion.id}:${data.date}`;
 	let syncedKey = '';
 	$effect(() => {
 		media = [...(data.photos ?? [])];
-		const key = `${data.companion.id}:${data.date}`;
+		const key = dayKey();
 		if (key === syncedKey) return;
 		syncedKey = key;
 		// A Back gesture can change the day under an open overlay; close them
@@ -197,6 +198,14 @@
 		showLinkForm = false;
 		detailRecord = null;
 		previewDoc = null;
+		showActivityForm = false;
+		resetActivityDraft();
+		editingActivityId = null;
+		detailEvent = null;
+		confirmOpen = false;
+		confirmAction = null;
+		// The ?media= deep-link effect below runs after this one and can reopen it.
+		lightboxOpen = false;
 		docFailures = [];
 		paperlessError = null;
 		filedUnder = null;
@@ -301,6 +310,12 @@
 		)
 	);
 	let selectedAdditionalIds = $state<string[]>([]);
+	function resetActivityDraft() {
+		selectedType = defaultActivityType(species);
+		addActivitySubtypes = [];
+		selectedAdditionalIds = [];
+		duration = '';
+	}
 	// Drop "also log for" picks that can't take the newly selected type.
 	$effect(() => {
 		const kept = selectedAdditionalIds.filter((id) => siblingCompanions.some((c) => c.id === id));
@@ -639,18 +654,22 @@
 		</div>
 
 		<!-- Photos & Videos -->
-		<MediaManager
-			bind:items={media}
-			api={mediaApi}
-			max={data.maxDailyMedia}
-			canModify={(item) => canModifyMedia(data.user, item)}
-			immichEnabled={data.immichEnabled ?? false}
-			uploadMaxMb={data.uploadMaxMb}
-			videoMaxMb={data.videoMaxMb}
-			title={t(locale, 'media.title')}
-			bind:lightboxOpen
-			bind:lightboxIndex
-		/>
+		<!-- Remount per day, so its delete confirm, caption editor and Immich
+		     picker never carry over to another day or companion. -->
+		{#key dayKey()}
+			<MediaManager
+				bind:items={media}
+				api={mediaApi}
+				max={data.maxDailyMedia}
+				canModify={(item) => canModifyMedia(data.user, item)}
+				immichEnabled={data.immichEnabled ?? false}
+				uploadMaxMb={data.uploadMaxMb}
+				videoMaxMb={data.videoMaxMb}
+				title={t(locale, 'media.title')}
+				bind:lightboxOpen
+				bind:lightboxIndex
+			/>
+		{/key}
 
 		<!-- Activities -->
 		<div class="space-y-2">
@@ -673,15 +692,16 @@
 						method="POST"
 						action="?/addActivity"
 						use:localDatetimes
-						use:enhance={() =>
-							({ update }) => {
+						use:enhance={() => {
+							const key = dayKey();
+							return ({ update }) => {
 								update();
+								// A late response after a day change must not close the new day's form.
+								if (key !== dayKey()) return;
 								showActivityForm = false;
-								selectedType = defaultActivityType(species);
-								addActivitySubtypes = [];
-								selectedAdditionalIds = [];
-								duration = '';
-							}}
+								resetActivityDraft();
+							};
+						}}
 						class="space-y-4"
 					>
 						<ActivityTypePills
@@ -804,11 +824,13 @@
 									method="POST"
 									action="?/updateActivity"
 									use:localDatetimes
-									use:enhance={() =>
-										({ update }) => {
+									use:enhance={() => {
+										const key = dayKey();
+										return ({ update }) => {
 											update();
-											editingActivityId = null;
-										}}
+											if (key === dayKey()) editingActivityId = null;
+										};
+									}}
 									class="space-y-4"
 								>
 									<input type="hidden" name="id" value={event.id} />
