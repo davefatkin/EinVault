@@ -654,18 +654,22 @@
 		</div>
 
 		<!-- Photos & Videos -->
-		<MediaManager
-			bind:items={media}
-			api={mediaApi}
-			max={data.maxDailyMedia}
-			canModify={(item) => canModifyMedia(data.user, item)}
-			immichEnabled={data.immichEnabled ?? false}
-			uploadMaxMb={data.uploadMaxMb}
-			videoMaxMb={data.videoMaxMb}
-			title={t(locale, 'media.title')}
-			bind:lightboxOpen
-			bind:lightboxIndex
-		/>
+		<!-- Remount per day, so its delete confirm, caption editor and Immich
+		     picker never carry over to another day or companion. -->
+		{#key dayKey()}
+			<MediaManager
+				bind:items={media}
+				api={mediaApi}
+				max={data.maxDailyMedia}
+				canModify={(item) => canModifyMedia(data.user, item)}
+				immichEnabled={data.immichEnabled ?? false}
+				uploadMaxMb={data.uploadMaxMb}
+				videoMaxMb={data.videoMaxMb}
+				title={t(locale, 'media.title')}
+				bind:lightboxOpen
+				bind:lightboxIndex
+			/>
+		{/key}
 
 		<!-- Activities -->
 		<div class="space-y-2">

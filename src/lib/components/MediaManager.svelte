@@ -51,6 +51,12 @@
 	let uploadError = $state('');
 	let uploadErrorTimer: ReturnType<typeof setTimeout> | undefined;
 	$effect(() => () => clearTimeout(uploadErrorTimer));
+	// Set on unmount. A request that finishes after that (the page moved to
+	// another day) must not write its item into the new list.
+	let gone = false;
+	$effect(() => () => {
+		gone = true;
+	});
 	let immichPickerOpen = $state(false);
 	let editingId = $state<string | null>(null);
 	let editingCaption = $state('');
@@ -70,7 +76,7 @@
 	// Skip an item already present (page data may refresh mid-upload), which
 	// would otherwise trip the keyed each block.
 	function addItem(item: MediaItem) {
-		if (items.some((m) => m.id === item.id)) return;
+		if (gone || items.some((m) => m.id === item.id)) return;
 		items = [...items, item];
 	}
 
@@ -124,7 +130,7 @@
 		if (!id) return;
 		try {
 			await api.remove(id);
-			items = items.filter((m) => m.id !== id);
+			if (!gone) items = items.filter((m) => m.id !== id);
 		} catch (err) {
 			// Leave the item in place; a reload shows the true state.
 			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
@@ -144,6 +150,7 @@
 			setUploadError(messageOf(err, t(locale, 'media.actionFailed')));
 			return;
 		}
+		if (gone) return;
 		const caption = editingCaption.trim() || null;
 		items = items.map((m) => (m.id === id ? { ...m, caption } : m));
 		editingId = null;
@@ -182,7 +189,7 @@
 					changed = true;
 					return { ...m, status: s.status, filename: s.filename, posterKey: s.posterKey };
 				});
-				if (changed) items = next;
+				if (changed && !gone) items = next;
 			} catch {
 				// transient; next tick retries
 			} finally {
