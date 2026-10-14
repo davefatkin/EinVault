@@ -668,6 +668,25 @@ test.describe('journal day editor', () => {
 		await expect(asMember.locator('textarea').first()).toHaveValue(text);
 	});
 
+	test('Save & Add Reminder from the day page opens a prefilled reminder', async ({ asMember }) => {
+		const title = `e2e-day-reminder-${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-19`);
+		await waitForHydration(asMember);
+		await openAdd(asMember, 'Health event');
+		const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+		await dialog.locator('#title').fill(title);
+		// The reminders page strips ?new=1 right after reading it, so wait from before the click.
+		const toReminders = asMember.waitForURL(
+			(url) =>
+				url.pathname === `/${COMP}/reminders` &&
+				url.searchParams.get('new') === '1' &&
+				url.searchParams.get('title') === title
+		);
+		await dialog.getByRole('button', { name: 'Save & Add Reminder' }).click();
+		await toReminders;
+		await expect(asMember.locator('#title')).toHaveValue(title, { timeout: 8_000 });
+	});
+
 	test('uploads a document from the day page', async ({ asMember }) => {
 		const name = `e2e-day-doc-${Date.now().toString(36)}.pdf`;
 		await asMember.goto(`/${COMP}/journal/2026-05-11`);
