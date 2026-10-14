@@ -7,6 +7,7 @@ const COMP = 'seed-comp-ein';
 test.describe('health events and weight log', () => {
 	test('add health event', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
 		await asMember.locator('#title').fill('e2e-health-vacc');
@@ -19,6 +20,7 @@ test.describe('health events and weight log', () => {
 
 	test('edit event', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 
 		// Create the event this test owns
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
@@ -46,6 +48,7 @@ test.describe('health events and weight log', () => {
 
 	test('delete event', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 
 		// Create a dedicated row for this test
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
@@ -71,6 +74,7 @@ test.describe('health events and weight log', () => {
 
 	test('log weight', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 
 		await asMember.getByRole('button', { name: 'Log Weight' }).click();
 		await asMember.locator('#weight').fill('13.7');
@@ -84,6 +88,7 @@ test.describe('health events and weight log', () => {
 
 	test('health page shows the weight trend section', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 		// The featured weight-trend section renders (its label is always present).
 		// Don't assert a count-dependent state here: the `log weight` test shares
 		// this worker's DB and may have added an entry, changing the chart state.
@@ -106,6 +111,7 @@ test.describe('health events and weight log', () => {
 
 		// On the health page, open the "Wellness checkup" event detail modal.
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 		await asMember.getByText('Wellness checkup').first().click();
 		const dialog = asMember.locator('[role="dialog"]');
 		await expect(dialog).toBeVisible({ timeout: 8_000 });
@@ -119,6 +125,7 @@ test.describe('health events and weight log', () => {
 
 	test('title required', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
 
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
 		// Leave title empty, submit immediately
@@ -138,6 +145,7 @@ test.describe('health events and weight log', () => {
 	}) => {
 		// The dashboard weight detail modal's "Edit" button links here.
 		await asMember.goto(`/${COMP}/health?edit=seed-weight-1`);
+		await waitForHydration(asMember);
 
 		const weightInput = asMember.locator('#edit-weight-seed-weight-1');
 		await expect(weightInput).toBeVisible({ timeout: 8_000 });
