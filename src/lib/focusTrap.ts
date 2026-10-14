@@ -9,10 +9,13 @@ export function trapTab(container: HTMLElement, e: KeyboardEvent): void {
 	if (!focusable.length) return;
 	const first = focusable[0];
 	const last = focusable[focusable.length - 1];
-	if (e.shiftKey && document.activeElement === first) {
+	// Focus on the container itself (e.g. after a click on its padding) counts
+	// as the edge in both directions.
+	const onContainer = document.activeElement === container;
+	if (e.shiftKey && (onContainer || document.activeElement === first)) {
 		e.preventDefault();
 		last.focus();
-	} else if (!e.shiftKey && document.activeElement === last) {
+	} else if (!e.shiftKey && (onContainer || document.activeElement === last)) {
 		e.preventDefault();
 		first.focus();
 	}
