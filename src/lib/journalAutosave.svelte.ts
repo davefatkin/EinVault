@@ -12,7 +12,7 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'signedOut';
  * - in-app navigation waits for the pending save, then continues;
  * - if that save fails, `leaveTarget` holds the destination so the page can
  *   ask, then call confirmLeave() or stay();
- * - a page unload sends a pending save with keepalive, and is cancelled (the
+ * - a page unload sends a pending save with keepalive, and is canceled (the
  *   browser's own prompt) only when a save already failed.
  */
 export function createJournalAutosave(opts: {
@@ -68,8 +68,10 @@ export function createJournalAutosave(opts: {
 
 	/** Write pending text before an action refreshes the page data. */
 	async function flush() {
-		if (inflight) await inflight;
-		if (pendingAction !== null) await saveNow();
+		while (inflight || pendingAction !== null) {
+			if (inflight) await inflight;
+			else await saveNow();
+		}
 	}
 
 	const failed = () => status === 'error' || status === 'signedOut';
@@ -91,6 +93,8 @@ export function createJournalAutosave(opts: {
 			if (pendingAction !== null) {
 				clearTimeout(timer);
 				// The page is going away; send it without holding the unload.
+				// Browsers cap keepalive bodies at 64 KiB in total, so a very long
+				// entry may not go out here; the catch swallows that rejection.
 				fetch(pendingAction, {
 					method: 'POST',
 					body: formData(),
@@ -110,6 +114,8 @@ export function createJournalAutosave(opts: {
 			await flush();
 			// One more try for a draft whose earlier save failed.
 			if (status === 'error') await saveNow();
+			// Text typed while waiting goes out before the page changes.
+			await flush();
 			if (failed()) leaveTarget = to;
 			else await leave(to);
 		})();

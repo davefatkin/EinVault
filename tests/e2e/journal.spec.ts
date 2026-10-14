@@ -652,6 +652,22 @@ test.describe('journal day editor', () => {
 		await expect(dialog).toHaveCount(0);
 	});
 
+	test('browser Back right after typing keeps the text on its own day', async ({ asMember }) => {
+		const text = `e2e back ${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-18`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('link', { name: 'Previous day' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-17$`));
+		await asMember.locator('textarea').first().fill(text);
+		// Well inside the 800 ms debounce.
+		await asMember.goBack();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal/2026-05-18$`));
+		await expect(asMember.locator('textarea').first()).not.toHaveValue(text);
+
+		await asMember.goto(`/${COMP}/journal/2026-05-17`);
+		await expect(asMember.locator('textarea').first()).toHaveValue(text);
+	});
+
 	test('uploads a document from the day page', async ({ asMember }) => {
 		const name = `e2e-day-doc-${Date.now().toString(36)}.pdf`;
 		await asMember.goto(`/${COMP}/journal/2026-05-11`);
