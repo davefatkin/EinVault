@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { upsertJournalEntry, getEnrichedJournalEntries } from './journal';
+import { upsertJournalEntry, getEnrichedJournalEntries, ensureJournalEntry } from './journal';
 
 describe('journal', () => {
 	beforeAll(async () => {
@@ -325,5 +325,38 @@ describe('journal', () => {
 		});
 		const page = await getEnrichedJournalEntries('c-j7');
 		expect(page.entries).toEqual([]);
+	});
+
+	it('ensureJournalEntry creates a missing entry and never touches an existing one', async () => {
+		await db
+			.insert(schema.companions)
+			.values({ id: 'c-j8', name: 'Ensure' } as typeof schema.companions.$inferInsert);
+		const created = await ensureJournalEntry('c-j8', '2026-09-01', 'u-j');
+		const row = await db.query.journalEntries.findFirst({
+			where: eq(schema.journalEntries.id, created)
+		});
+		expect(row).toMatchObject({ body: '', mood: null, loggedBy: 'u-j', updatedBy: null });
+
+		await upsertJournalEntry('c-j8', '2026-09-02', 'keep me', 'good', 'u-j');
+		const before = await db.query.journalEntries.findFirst({
+			where: and(
+				eq(schema.journalEntries.companionId, 'c-j8'),
+				eq(schema.journalEntries.date, '2026-09-02')
+			)
+		});
+		const id = await ensureJournalEntry('c-j8', '2026-09-02', 'u-j2');
+		const after = await db.query.journalEntries.findFirst({
+			where: eq(schema.journalEntries.id, id)
+		});
+		expect(id).toBe(before!.id);
+		expect(after).toEqual(before); // body, mood, updatedAt, updatedBy unchanged
+	});
+
+	it('ensureJournalEntry called twice at once yields one entry', async () => {
+		const [a, b] = await Promise.all([
+			ensureJournalEntry('c-j8', '2026-09-03', 'u-j'),
+			ensureJournalEntry('c-j8', '2026-09-03', 'u-j2')
+		]);
+		expect(a).toBe(b);
 	});
 });

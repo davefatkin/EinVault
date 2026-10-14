@@ -260,6 +260,13 @@
       "when": 1791897285922,
       "tag": "0036_drop_old_media_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1791920317625,
+      "tag": "0037_journal_entry_health_events",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
 	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
@@ -12,7 +12,7 @@
 	import type { MediaItem } from '$lib/media';
 	import { journalMediaApi } from '$lib/mediaApi';
 	import { localDateISO } from '$lib/date';
-	import { postFormAction } from '$lib/postFormAction';
+	import { createJournalAutosave } from '$lib/journalAutosave.svelte';
 	import { getContext } from 'svelte';
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
@@ -25,7 +25,13 @@
 		Plus,
 		Pencil,
 		NotebookPen,
-		Activity
+		Activity,
+		Link2,
+		Unlink,
+		HeartPulse,
+		Scale,
+		Upload,
+		FileText
 	} from '@lucide/svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
@@ -35,9 +41,15 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import ByLine from '$lib/components/ByLine.svelte';
+	import ActionMenu, { type ActionMenuItem } from '$lib/components/ActionMenu.svelte';
+	import DayLinkHealthPanel from '$lib/components/journal/DayLinkHealthPanel.svelte';
 	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
+	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
+	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '$lib/documentsApi';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import DayHealthEventModal from '$lib/components/journal/DayHealthEventModal.svelte';
+	import DayWeightModal from '$lib/components/journal/DayWeightModal.svelte';
 	import {
 		documentUrl,
 		healthRecordHref,
@@ -62,20 +74,103 @@
 		toSpecies
 	} from '$lib/species';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
 
 	let media = $state<MediaItem[]>([]);
 	let companion = $derived(data.companion);
 	let previewDoc = $state<DayItemDocument | null>(null);
 	let detailRecord = $state<DayRecordItem | null>(null);
+	let showLinkForm = $state(false);
+	const canEditRecords = $derived(companion.isActive !== false);
+
+	let showHealthModal = $state(false);
+	let showWeightModal = $state(false);
+
+	let docInput = $state<HTMLInputElement | null>(null);
+	let uploadingDocs = $state(false);
+	let docFailures = $state<{ name: string; message: string }[]>([]);
+	let paperlessOpen = $state(false);
+	let paperlessError = $state<string | null>(null);
+	let filedUnder = $state<string | null>(null);
+
+	async function uploadDocs(files: FileList | null) {
+		if (uploadingDocs || !files || files.length === 0) return;
+		const companionId = data.companion.id;
+		const date = data.date;
+		uploadingDocs = true;
+		docFailures = [];
+		filedUnder = null;
+		const failed: { name: string; message: string }[] = [];
+		try {
+			for (const file of Array.from(files)) {
+				const r = await uploadDocument(companionId, file, { documentDate: date }, locale);
+				if (!r.ok) failed.push({ name: file.name, message: r.message });
+			}
+			await invalidateAll();
+		} finally {
+			if (docInput) docInput.value = '';
+			uploadingDocs = false;
+			if (data.companion.id === companionId && data.date === date) docFailures = failed;
+		}
+	}
+
+	async function pickFromPaperless(paperlessId: number) {
+		paperlessError = null;
+		filedUnder = null;
+		const r = await importFromPaperless(data.companion.id, paperlessId, locale);
+		if (!r.ok) {
+			paperlessError = r.message;
+			return;
+		}
+		paperlessOpen = false;
+		// Undated imports land on their upload day, the server's today.
+		const day = r.value.documentDate ?? data.today;
+		if (day !== data.date) filedUnder = day;
+		await invalidateAll();
+	}
+
+	// Items for the Health records + Add menu.
+	let addItems = $derived<ActionMenuItem[]>([
+		{
+			label: t(locale, 'page.journal.day.addHealthEvent'),
+			icon: HeartPulse,
+			onselect: () => (showHealthModal = true)
+		},
+		{
+			label: t(locale, 'page.journal.day.addWeight'),
+			icon: Scale,
+			onselect: () => (showWeightModal = true)
+		},
+		{
+			label: t(locale, 'page.documents.upload'),
+			icon: Upload,
+			onselect: () => docInput?.click()
+		},
+		...(data.paperlessEnabled
+			? [
+					{
+						label: t(locale, 'paperless.picker.button'),
+						icon: FileText,
+						onselect: () => (paperlessOpen = true)
+					}
+				]
+			: []),
+		{
+			label: t(locale, 'page.journal.day.linkHealthEvent'),
+			icon: Link2,
+			separated: true,
+			onselect: () => (showLinkForm = true)
+		}
+	]);
 
 	let body = $state('');
 	let mood = $state('');
 	let viewMode = $state<'write' | 'preview'>('write');
-	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error' | 'signedOut'>('idle');
-	let saveTimer: ReturnType<typeof setTimeout>;
-	let savedTimer: ReturnType<typeof setTimeout>;
+	const autosave = createJournalAutosave({
+		action: () => `/${data.companion.id}/journal/${data.date}?/save`,
+		fields: () => ({ body, mood })
+	});
 
 	// bind:this targets must be $state in Svelte 5
 	let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
@@ -85,12 +180,29 @@
 	});
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
-	// Sync local state when data changes (navigation between dates)
+	// Copy the server copy into the editor only when the companion or date changes. Any other
+	// refresh (an action, invalidateAll) would otherwise overwrite text that is
+	// typed but not yet saved, or a draft whose save failed.
+	let syncedKey = '';
 	$effect(() => {
+		media = [...(data.photos ?? [])];
+		const key = `${data.companion.id}:${data.date}`;
+		if (key === syncedKey) return;
+		syncedKey = key;
+		// A Back gesture can change the day under an open overlay; close them
+		// so nothing posts to, or sits over, the new day.
+		showHealthModal = false;
+		showWeightModal = false;
+		paperlessOpen = false;
+		showLinkForm = false;
+		detailRecord = null;
+		previewDoc = null;
+		docFailures = [];
+		paperlessError = null;
+		filedUnder = null;
 		body = data.entry?.body ?? '';
 		mood = data.entry?.mood ?? '';
-		media = [...(data.photos ?? [])];
-		saveStatus = 'idle';
+		autosave.reset();
 	});
 
 	let renderedMarkdown = $derived(renderMarkdown(body || '*Nothing written yet.*'));
@@ -117,31 +229,6 @@
 	}
 
 	let isNextDisabled = $derived(data.date >= data.today);
-
-	async function saveNow() {
-		saveStatus = 'saving';
-		const fd = new FormData();
-		fd.set('body', body);
-		fd.set('mood', mood);
-		clearTimeout(savedTimer);
-		const outcome = await postFormAction('?/save', fd);
-		saveStatus = outcome === 'failed' ? 'error' : outcome;
-		// Keep a stale "Saved" fade-out from hiding a later failure.
-		if (outcome === 'saved') savedTimer = setTimeout(() => (saveStatus = 'idle'), 2000);
-	}
-
-	// The sign-in link opens in a new tab so the draft survives; save again
-	// when the user comes back to this one.
-	function retryAfterSignIn() {
-		if (saveStatus === 'signedOut') saveNow();
-	}
-
-	function triggerSave() {
-		clearTimeout(saveTimer);
-		clearTimeout(savedTimer);
-		saveStatus = 'saving';
-		saveTimer = setTimeout(saveNow, 800);
-	}
 
 	let mediaApi = $derived(journalMediaApi(data.companion.id, data.date, locale));
 
@@ -264,7 +351,7 @@
 	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} onfocus={retryAfterSignIn} />
+<svelte:window onkeydown={handleKeydown} onfocus={() => autosave.retryAfterSignIn()} />
 
 <!-- Activity detail modal -->
 {#if detailEvent}
@@ -305,6 +392,7 @@
 			<div class="flex items-center gap-2">
 				<a
 					href="/{companion.id}/journal/{prevDate(data.date)}"
+					aria-label={t(locale, 'aria.previousDay')}
 					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					><ChevronLeft class="h-4 w-4" /></a
 				>
@@ -313,6 +401,7 @@
 				</div>
 				<a
 					href="/{companion.id}/journal/{nextDate(data.date)}"
+					aria-label={t(locale, 'aria.nextDay')}
 					class="inline-flex items-center justify-center rounded-md h-8 w-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring {isNextDisabled
 						? 'opacity-30 pointer-events-none'
 						: ''}"><ChevronRight class="h-4 w-4" /></a
@@ -353,23 +442,23 @@
 			<div class="flex min-h-5 basis-full items-center justify-end gap-3 sm:ml-auto sm:basis-auto">
 				<!-- Save status (inline, right of date nav) -->
 				<div class="flex items-center gap-2 text-sm shrink-0">
-					{#if saveStatus === 'saving'}
+					{#if autosave.status === 'saving'}
 						<span class="animate-pulse text-muted-foreground"
 							>{t(locale, 'page.journal.day.savingStatus')}</span
 						>
-					{:else if saveStatus === 'saved'}
+					{:else if autosave.status === 'saved'}
 						<span class="text-green-600 dark:text-green-400"
 							>{t(locale, 'page.journal.day.savedStatus')}</span
 						>
-					{:else if saveStatus === 'error'}
+					{:else if autosave.status === 'error'}
 						<span class="text-red-500">{t(locale, 'page.journal.day.saveFailedStatus')}</span>
 						<button
 							type="button"
-							onclick={saveNow}
+							onclick={() => autosave.saveNow()}
 							class="text-xs text-red-500 underline hover:no-underline"
 							>{t(locale, 'page.journal.day.saveFailedRetry')}</button
 						>
-					{:else if saveStatus === 'signedOut'}
+					{:else if autosave.status === 'signedOut'}
 						<span class="text-red-500">{t(locale, 'page.journal.signedOutStatus')}</span>
 						<a
 							href="/auth/login"
@@ -419,7 +508,7 @@
 							type="button"
 							onclick={() => {
 								mood = mood === m.value ? '' : m.value;
-								triggerSave();
+								autosave.schedule();
 							}}
 							title={m.label}
 							aria-pressed={mood === m.value}
@@ -534,7 +623,7 @@
 					<textarea
 						bind:this={textareaEl}
 						bind:value={body}
-						oninput={triggerSave}
+						oninput={() => autosave.schedule()}
 						placeholder={t(locale, 'page.journal.day.writePlaceholder', { name: companion.name })}
 						dir="ltr"
 						class="w-full min-h-[360px] resize-none p-4 text-sm font-mono leading-relaxed bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -875,12 +964,50 @@
 			{/if}
 		</div>
 
-		{#if data.dayItems.length > 0}
-			<DayHealthRecords
-				items={data.dayItems}
-				onOpenRecord={(item) => (detailRecord = item)}
-				onPreviewDocument={(doc) => (previewDoc = doc)}
+		<DayHealthRecords
+			items={data.dayItems}
+			onOpenRecord={(item) => (detailRecord = item)}
+			onPreviewDocument={(doc) => (previewDoc = doc)}
+			headerAction={canEditRecords ? addMenu : undefined}
+			panel={canEditRecords && showLinkForm ? linkHealthPanel : undefined}
+		/>
+		{#if canEditRecords}
+			<input
+				bind:this={docInput}
+				type="file"
+				multiple
+				accept={DOCUMENT_ACCEPT}
+				class="hidden"
+				onchange={(e) => uploadDocs(e.currentTarget.files)}
 			/>
+		{/if}
+		{#if uploadingDocs}
+			<p class="text-sm text-muted-foreground" aria-live="polite">
+				{t(locale, 'page.documents.uploading')}
+			</p>
+		{/if}
+		{#if docFailures.length > 0}
+			<div role="alert" class="space-y-1 text-sm">
+				<p>{t(locale, 'page.journal.day.uploadFailedTitle')}</p>
+				<ul class="list-disc pl-5 text-destructive">
+					{#each docFailures as f, i (i)}
+						<li>
+							{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+		{#if paperlessError}
+			<p role="alert" class="text-sm text-destructive">{paperlessError}</p>
+		{/if}
+		{#if filedUnder}
+			<p class="text-sm text-muted-foreground" aria-live="polite">
+				{t(locale, 'page.journal.day.filedUnder', { date: filedUnder })}
+				<a class="underline hover:text-foreground" href="/{companion.id}/journal/{filedUnder}"
+					>{t(locale, 'page.journal.day.openDay')}</a
+				>
+			</p>
 		{/if}
 
 		<!-- Recent entries -->
@@ -948,5 +1075,84 @@
 		onclose={() => (detailRecord = null)}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		healthHref={healthRecordHref(companion.id, detailRecord)}
+		journalHref={(d) => `/${companion.id}/journal/${d}`}
+		currentDate={data.date}
+		footerExtra={detailRecord.kind === 'health' && detailRecord.linkedHere && canEditRecords
+			? unlinkAction
+			: undefined}
 	/>
 {/if}
+
+{#if showHealthModal && canEditRecords}
+	<DayHealthEventModal
+		companionId={data.companion.id}
+		defaultAt={defaultLoggedAt()}
+		documents={data.attachableDocuments}
+		uploadMaxMb={data.uploadMaxMb}
+		flush={() => autosave.flush()}
+		onclose={() => (showHealthModal = false)}
+	/>
+{/if}
+
+{#if showWeightModal && canEditRecords}
+	<DayWeightModal
+		defaultAt={defaultLoggedAt()}
+		defaultUnit={companion.weightUnit}
+		flush={() => autosave.flush()}
+		onclose={() => (showWeightModal = false)}
+	/>
+{/if}
+
+{#if data.paperlessEnabled && canEditRecords}
+	<PaperlessPicker
+		open={paperlessOpen}
+		onpick={pickFromPaperless}
+		onclose={() => (paperlessOpen = false)}
+	/>
+{/if}
+
+<!-- After the add modals so it stacks on top of them. -->
+<ConfirmDialog
+	open={autosave.leaveTarget !== null}
+	message={t(locale, 'page.journal.day.leaveUnsaved')}
+	confirmLabel={t(locale, 'page.journal.day.leave')}
+	onconfirm={() => autosave.confirmLeave()}
+	oncancel={() => autosave.stay()}
+/>
+
+{#snippet addMenu()}
+	<ActionMenu label={t(locale, 'page.journal.day.add')} items={addItems} />
+{/snippet}
+
+{#snippet linkHealthPanel()}
+	<DayLinkHealthPanel
+		events={data.linkableHealthEvents}
+		error={form?.linkError}
+		beforeSubmit={() => autosave.flush()}
+		onclose={() => (showLinkForm = false)}
+	/>
+{/snippet}
+
+{#snippet unlinkAction()}
+	{#if detailRecord}
+		<form
+			method="POST"
+			action="?/unlinkHealth"
+			use:enhance={async () => {
+				await autosave.flush();
+				return async ({ result, update }) => {
+					if (result.type === 'success') detailRecord = null;
+					await update({ reset: false });
+				};
+			}}
+		>
+			<input type="hidden" name="healthEventId" value={detailRecord.id} />
+			<Button type="submit" variant="softDestructive" size="sm">
+				<Unlink class="h-3.5 w-3.5 mr-1.5" />{t(locale, 'component.healthDetail.unlink')}
+			</Button>
+		</form>
+		{#if form?.unlinkError}
+			<p role="alert" class="w-full text-sm text-destructive">{form.unlinkError}</p>
+		{/if}
+	{/if}
+{/snippet}

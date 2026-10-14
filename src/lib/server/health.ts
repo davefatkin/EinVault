@@ -1,6 +1,14 @@
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
-import type { HealthEventType } from '$lib/server/validation';
+import { t, type Locale } from '$lib/i18n';
+import { MAX_NOTE_LEN } from '$lib/textLimits';
+import {
+	exceedsLen,
+	parseFormTimestamp,
+	parseHealthEventType,
+	type FormParse,
+	type HealthEventType
+} from '$lib/server/validation';
 
 export interface HealthEventInput {
 	type: HealthEventType;
@@ -22,4 +30,29 @@ export async function createHealthEvent(
 	const id = generateId(15);
 	await db.insert(schema.healthEvents).values({ id, companionId, ...input, loggedBy });
 	return id;
+}
+
+/** The health event form fields, shared by the Health Log and the journal day. */
+export function parseHealthEventForm(data: FormData, locale: Locale): FormParse<HealthEventInput> {
+	const title = String(data.get('title') ?? '').trim();
+	const type = parseHealthEventType(String(data.get('type') ?? ''));
+	const notes = String(data.get('notes') ?? '').trim();
+	const vetName = String(data.get('vetName') ?? '').trim();
+	const vetClinic = String(data.get('vetClinic') ?? '').trim();
+	if (!title || !type) return { ok: false, message: t(locale, 'error.titleAndTypeRequired') };
+	if ([title, notes, vetName, vetClinic].some((v) => exceedsLen(v, MAX_NOTE_LEN)))
+		return { ok: false, message: t(locale, 'error.fieldTooLong', { max: MAX_NOTE_LEN }) };
+	const occurredAt = parseFormTimestamp(data.get('occurredAt'));
+	if (!occurredAt) return { ok: false, message: t(locale, 'error.invalidDateTime') };
+	return {
+		ok: true,
+		value: {
+			type,
+			title,
+			notes: notes || null,
+			occurredAt,
+			vetName: vetName || null,
+			vetClinic: vetClinic || null
+		}
+	};
 }

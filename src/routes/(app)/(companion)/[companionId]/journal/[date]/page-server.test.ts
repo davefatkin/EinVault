@@ -142,8 +142,11 @@ describe('load health records', () => {
 			[
 				'at',
 				'documents',
+				'fromLink',
 				'id',
+				'journalDates',
 				'kind',
+				'linkedHere',
 				'logger',
 				'notes',
 				'title',
@@ -156,5 +159,246 @@ describe('load health records', () => {
 
 	it('returns an empty list for a day without items', async () => {
 		expect((await loadDate('2026-01-05')).dayItems).toEqual([]);
+	});
+});
+
+describe('linkHealth / unlinkHealth actions', () => {
+	const active = 'ps-link-active';
+	const archived = 'ps-link-archived';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: active, name: 'Active', species: 'dog' },
+			{ id: archived, name: 'Archived', species: 'dog', isActive: false }
+		] as (typeof schema.companions.$inferInsert)[]);
+		await db.insert(schema.healthEvents).values([
+			{
+				id: 'ps-link-ev',
+				companionId: active,
+				type: 'vet_visit',
+				title: 'V',
+				occurredAt: new Date(2026, 0, 1, 12)
+			},
+			{
+				id: 'ps-link-ev-arch',
+				companionId: archived,
+				type: 'vet_visit',
+				title: 'A',
+				occurredAt: new Date(2026, 0, 1, 12)
+			}
+		]);
+	});
+
+	const call = (
+		action: 'linkHealth' | 'unlinkHealth',
+		companionId: string,
+		date: string,
+		id: string
+	) => {
+		const form = new FormData();
+		form.set('healthEventId', id);
+		return actions[action]({
+			params: { companionId, date },
+			request: { formData: async () => form },
+			locals: { user: { id: 'ps-member', role: 'member' as const }, locale: 'en' as const }
+		} as Parameters<typeof actions.linkHealth>[0]);
+	};
+
+	it('links, maps errors to status codes, and unlinks', async () => {
+		expect(await call('linkHealth', active, '2026-01-10', 'ps-link-ev')).toEqual({
+			linkSuccess: true
+		});
+		expect(await call('linkHealth', active, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 404
+		});
+		expect(await call('linkHealth', active, '2026-01-01', 'ps-link-ev')).toMatchObject({
+			status: 400
+		});
+		expect(await call('linkHealth', active, 'not-a-date', 'ps-link-ev')).toMatchObject({
+			status: 400
+		});
+		expect(await call('unlinkHealth', active, '2026-01-10', 'ps-link-ev')).toEqual({
+			unlinkSuccess: true
+		});
+	});
+
+	it('rejects archived companions with 403', async () => {
+		expect(await call('linkHealth', archived, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 403
+		});
+		expect(await call('unlinkHealth', archived, '2026-01-10', 'ps-link-ev-arch')).toMatchObject({
+			status: 403
+		});
+	});
+
+	it('load returns linkableHealthEvents, empty for archived companions', async () => {
+		const loadFor = async (companionId: string, isActive: boolean) =>
+			(await load({
+				params: { companionId, date: '2026-01-20' },
+				locals: { user: { id: 'ps-member', role: 'member' }, locale: 'en' },
+				parent: async () => ({ companion: { id: companionId, isActive } })
+			} as unknown as Parameters<typeof load>[0])) as { linkableHealthEvents: { id: string }[] };
+		expect((await loadFor(active, true)).linkableHealthEvents.map((e) => e.id)).toEqual([
+			'ps-link-ev'
+		]);
+		expect((await loadFor(archived, false)).linkableHealthEvents).toEqual([]);
+	});
+});
+
+describe('addHealth / addWeight actions', () => {
+	const active = 'ps-add-active';
+	const archived = 'ps-add-archived';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: active, name: 'Active', species: 'dog', weightUnit: 'kg' },
+			{ id: archived, name: 'Archived', species: 'dog', isActive: false }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	const call = (
+		action: 'addHealth' | 'addWeight',
+		companionId: string,
+		date: string,
+		fields: Record<string, string>
+	) => {
+		const form = new FormData();
+		for (const [k, v] of Object.entries(fields)) form.set(k, v);
+		return actions[action]({
+			params: { companionId, date },
+			request: { formData: async () => form },
+			locals: { user: { id: 'ps-member', role: 'member' as const }, locale: 'en' as const }
+		} as Parameters<typeof actions.addHealth>[0]);
+	};
+
+	const linksFor = (healthEventId: string) =>
+		db.query.journalEntryHealthEvents.findMany({
+			where: eq(schema.journalEntryHealthEvents.healthEventId, healthEventId),
+			with: { entry: { columns: { date: true } } }
+		});
+
+	it('creates a same-day event without a link', async () => {
+		const result = (await call('addHealth', active, '2026-02-10', {
+			title: 'Same day',
+			type: 'vet_visit',
+			occurredAt: new Date(2026, 1, 10, 12).toISOString()
+		})) as { healthEventId: string; day: string; reminderUrl: string | null };
+		expect(result).toMatchObject({ day: '2026-02-10', reminderUrl: null });
+		expect(await linksFor(result.healthEventId)).toEqual([]);
+	});
+
+	it('links an event dated another day to this day', async () => {
+		const result = (await call('addHealth', active, '2026-02-10', {
+			title: 'Earlier',
+			type: 'vet_visit',
+			occurredAt: new Date(2026, 1, 3, 9).toISOString()
+		})) as { healthEventId: string; day: string };
+		expect(result.day).toBe('2026-02-03');
+		const links = await linksFor(result.healthEventId);
+		expect(links.map((l) => l.entry.date)).toEqual(['2026-02-10']);
+	});
+
+	it('returns the reminder URL instead of redirecting', async () => {
+		const result = (await call('addHealth', active, '2026-02-10', {
+			title: 'Shot',
+			type: 'vaccination',
+			occurredAt: new Date(2026, 1, 10, 12).toISOString(),
+			andReminder: '1'
+		})) as { reminderUrl: string };
+		expect(result.reminderUrl).toMatch(new RegExp(`^/${active}/reminders\\?new=1`));
+	});
+
+	it('rejects bad input, bad dates and archived companions', async () => {
+		expect(
+			await call('addHealth', active, '2026-02-10', { title: '', type: 'vet_visit' })
+		).toMatchObject({
+			status: 400,
+			data: { healthError: 'Title and a valid type are required.' }
+		});
+		expect(
+			await call('addHealth', active, 'not-a-date', { title: 'T', type: 'vet_visit' })
+		).toMatchObject({ status: 400 });
+		expect(
+			await call('addHealth', archived, '2026-02-10', { title: 'T', type: 'vet_visit' })
+		).toMatchObject({ status: 403 });
+		expect(await call('addWeight', archived, '2026-02-10', { weight: '3' })).toMatchObject({
+			status: 403
+		});
+	});
+
+	it('creates a weight with the companion default unit', async () => {
+		expect(
+			await call('addWeight', active, '2026-02-10', {
+				weight: '12.5',
+				recordedAt: new Date(2026, 1, 10, 12).toISOString()
+			})
+		).toEqual({ weightSuccess: true });
+		const rows = await db.query.weightEntries.findMany({
+			where: eq(schema.weightEntries.companionId, active)
+		});
+		expect(rows.map((r) => [r.weight, r.unit])).toEqual([[12.5, 'kg']]);
+		expect(await call('addWeight', active, '2026-02-10', { weight: '0' })).toMatchObject({
+			status: 400,
+			data: { weightError: 'Valid weight is required.' }
+		});
+	});
+});
+
+describe('load attachableDocuments', () => {
+	const companionId = 'ps-attach';
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({
+			id: companionId,
+			name: 'Attach Dog',
+			species: 'dog'
+		} as typeof schema.companions.$inferInsert);
+		await db.insert(schema.healthEvents).values({
+			id: 'ps-attach-ev',
+			companionId,
+			type: 'vet_visit',
+			title: 'Visit',
+			occurredAt: new Date(2026, 0, 2, 12)
+		});
+		const doc = (id: string, documentDate: string, healthEventId: string | null = null) => ({
+			id,
+			companionId,
+			healthEventId,
+			filename: `${id}.pdf`,
+			provider: 'local',
+			storageKey: `documents/${companionId}/${id}.pdf`,
+			title: id,
+			category: 'invoice' as const,
+			documentDate,
+			mimeType: 'application/pdf'
+		});
+		await db
+			.insert(schema.documents)
+			.values([
+				doc('ps-attach-old', '2026-01-01'),
+				doc('ps-attach-new', '2026-01-05'),
+				doc('ps-attach-taken', '2026-01-03', 'ps-attach-ev')
+			] as (typeof schema.documents.$inferInsert)[]);
+	});
+
+	const loadFor = async (isActive: boolean) =>
+		(await load({
+			params: { companionId, date: '2026-01-10' },
+			locals: { user: { id: 'ps-member', role: 'member' }, locale: 'en' },
+			parent: async () => ({ companion: { id: companionId, isActive } })
+		} as unknown as Parameters<typeof load>[0])) as {
+			attachableDocuments: Record<string, unknown>[];
+		};
+
+	it('lists unattached documents newest first, display fields only', async () => {
+		const docs = (await loadFor(true)).attachableDocuments;
+		expect(docs).toEqual([
+			{ id: 'ps-attach-new', title: 'ps-attach-new', date: '2026-01-05', category: 'invoice' },
+			{ id: 'ps-attach-old', title: 'ps-attach-old', date: '2026-01-01', category: 'invoice' }
+		]);
+	});
+
+	it('is empty for an archived companion', async () => {
+		expect((await loadFor(false)).attachableDocuments).toEqual([]);
 	});
 });

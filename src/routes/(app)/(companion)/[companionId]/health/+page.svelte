@@ -18,6 +18,8 @@
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import HealthEventForm from '$lib/components/health/HealthEventForm.svelte';
+	import WeightForm from '$lib/components/health/WeightForm.svelte';
 	import { stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
@@ -200,7 +202,8 @@
 				vetName: h.vetName,
 				vetClinic: h.vetClinic,
 				notes: h.notes,
-				logger: h.logger
+				logger: h.logger,
+				journalDates: data.journalDatesByEvent[h.id] ?? []
 			};
 		}
 		const w = s.item;
@@ -235,6 +238,7 @@
 		onclose={closeDetail}
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		footer={data.companion.isActive !== false ? detailActions : undefined}
+		journalHref={(d) => `/${data.companion.id}/journal/${d}`}
 	/>
 {/if}
 
@@ -364,11 +368,12 @@
 				<CardTitle>{t(locale, 'page.health.newHealthEventTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form
-					method="POST"
+				<HealthEventForm
 					action="?/addHealth"
-					use:localDatetimes
-					use:enhance={() => {
+					defaultAt={todayISO}
+					submitting={submittingHealth}
+					prefill={{ title: prefillTitle, type: prefillType, notes: prefillDescription }}
+					submit={() => {
 						submittingHealth = true;
 						return async ({ update }) => {
 							await update();
@@ -377,98 +382,11 @@
 							resetHealthPrefill();
 						};
 					}}
-					class="space-y-4"
-				>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<div class="space-y-1.5">
-							<Label for="title">{t(locale, 'page.health.labelTitle')}</Label>
-							<Input
-								id="title"
-								name="title"
-								type="text"
-								autocomplete="off"
-								placeholder={t(locale, 'page.health.placeholderTitle')}
-								value={prefillTitle}
-								required
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="type">{t(locale, 'page.health.labelType')}</Label>
-							<Select id="type" name="type" required>
-								{#each HEALTH_TYPES as ht (ht.value)}
-									<option value={ht.value} selected={ht.value === prefillType}>{ht.label}</option>
-								{/each}
-							</Select>
-						</div>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="occurredAt">{t(locale, 'page.health.labelDate')}</Label>
-						<Input
-							id="occurredAt"
-							name="occurredAt"
-							type="datetime-local"
-							autocomplete="off"
-							value={todayISO}
-						/>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<div class="space-y-1.5">
-							<Label for="vetName">{t(locale, 'page.health.labelVetName')}</Label>
-							<Input
-								id="vetName"
-								name="vetName"
-								type="text"
-								autocomplete="off"
-								placeholder={t(locale, 'page.health.placeholderVetName')}
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="vetClinic">{t(locale, 'page.health.labelClinic')}</Label>
-							<Input
-								id="vetClinic"
-								name="vetClinic"
-								type="text"
-								autocomplete="off"
-								placeholder={t(locale, 'page.health.placeholderClinic')}
-							/>
-						</div>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="notes">{t(locale, 'page.health.labelNotes')}</Label>
-						<MarkdownTextarea
-							id="notes"
-							name="notes"
-							value={prefillDescription}
-							placeholder={t(locale, 'page.health.placeholderNotes')}
-							rows={4}
-						/>
-					</div>
-					<div class="flex flex-wrap gap-3">
-						<Button type="submit" disabled={submittingHealth}>
-							{submittingHealth
-								? t(locale, 'page.health.savingEvent')
-								: t(locale, 'page.health.saveEvent')}
-						</Button>
-						<Button
-							type="submit"
-							name="andReminder"
-							value="1"
-							variant="outline"
-							disabled={submittingHealth}
-						>
-							<Plus class="h-3.5 w-3.5 mr-1.5" />
-							{t(locale, 'page.health.saveAndAddReminder')}
-						</Button>
-						<Button
-							type="button"
-							variant="outline"
-							onclick={() => {
-								showHealthForm = false;
-								resetHealthPrefill();
-							}}>{t(locale, 'common.cancel')}</Button
-						>
-					</div>
-				</form>
+					oncancel={() => {
+						showHealthForm = false;
+						resetHealthPrefill();
+					}}
+				/>
 			</CardContent>
 		</Card>
 	{/if}
@@ -479,11 +397,12 @@
 				<CardTitle>{t(locale, 'page.health.logWeightTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form
-					method="POST"
+				<WeightForm
 					action="?/addWeight"
-					use:localDatetimes
-					use:enhance={() => {
+					defaultAt={todayISO}
+					submitting={submittingWeight}
+					defaultUnit={data.companion.weightUnit}
+					submit={() => {
 						submittingWeight = true;
 						return async ({ update }) => {
 							await update();
@@ -491,61 +410,8 @@
 							showWeightForm = false;
 						};
 					}}
-					class="space-y-4"
-				>
-					<div class="grid grid-cols-3 gap-4">
-						<div class="space-y-1.5 col-span-2">
-							<Label for="weight">{t(locale, 'page.health.labelWeight')}</Label>
-							<Input
-								id="weight"
-								name="weight"
-								type="number"
-								step="0.1"
-								min="0"
-								autocomplete="off"
-								placeholder={t(locale, 'page.health.placeholderWeight')}
-								required
-							/>
-						</div>
-						<div class="space-y-1.5">
-							<Label for="unit">{t(locale, 'page.health.labelUnit')}</Label>
-							<Select id="unit" name="unit">
-								{#each WEIGHT_UNITS as u (u)}
-									<option value={u} selected={u === data.companion.weightUnit}>{u}</option>
-								{/each}
-							</Select>
-						</div>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="recordedAt">{t(locale, 'page.health.labelRecordedAt')}</Label>
-						<Input
-							id="recordedAt"
-							name="recordedAt"
-							type="datetime-local"
-							autocomplete="off"
-							value={todayISO}
-						/>
-					</div>
-					<div class="space-y-1.5">
-						<Label for="weightNotes">{t(locale, 'page.health.labelNotes')}</Label>
-						<MarkdownTextarea
-							id="weightNotes"
-							name="notes"
-							placeholder={t(locale, 'page.health.placeholderWeightNotes')}
-							rows={3}
-						/>
-					</div>
-					<div class="flex gap-3">
-						<Button type="submit" disabled={submittingWeight}>
-							{submittingWeight
-								? t(locale, 'page.health.savingWeight')
-								: t(locale, 'page.health.logWeightSubmit')}
-						</Button>
-						<Button type="button" variant="outline" onclick={() => (showWeightForm = false)}
-							>{t(locale, 'common.cancel')}</Button
-						>
-					</div>
-				</form>
+					oncancel={() => (showWeightForm = false)}
+				/>
 			</CardContent>
 		</Card>
 	{/if}

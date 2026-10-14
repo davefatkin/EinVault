@@ -12,6 +12,7 @@
 	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
 	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
 	import { t, getLocale } from '$lib/i18n';
+	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '$lib/documentsApi';
 	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
 	import { DOCUMENT_CATEGORIES } from '$lib/activityTypes';
 	import { localDateISO } from '$lib/date';
@@ -52,15 +53,9 @@
 		uploadError = '';
 		try {
 			for (const file of files) {
-				const form = new FormData();
-				form.set('file', file);
-				const res = await fetch(`/api/companions/${data.companion.id}/documents`, {
-					method: 'POST',
-					body: form
-				});
-				if (!res.ok) {
-					const body = await res.json().catch(() => null);
-					uploadError = body?.message ?? t(locale, 'page.documents.uploadFailed');
+				const r = await uploadDocument(data.companion.id, file, {}, locale);
+				if (!r.ok) {
+					uploadError = r.message;
 					break;
 				}
 			}
@@ -72,12 +67,8 @@
 	}
 
 	async function pickFromPaperless(paperlessId: number) {
-		const res = await fetch(`/api/companions/${data.companion.id}/documents/from-paperless`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ paperlessId })
-		});
-		if (!res.ok) {
+		const r = await importFromPaperless(data.companion.id, paperlessId, locale);
+		if (!r.ok) {
 			uploadError = t(locale, 'paperless.picker.pickFailed');
 			return;
 		}
@@ -179,7 +170,7 @@
 				<input
 					bind:this={fileInput}
 					type="file"
-					accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
+					accept={DOCUMENT_ACCEPT}
 					multiple
 					class="hidden"
 					onchange={(e) => upload(e.currentTarget.files)}

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
+import { waitForHydration } from '../lib/hydration';
 import { startPaperlessFake, makePaperlessDoc, type PaperlessFake } from '../fakes/paperless';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -93,6 +94,37 @@ test('picker lists tagged docs and imports one', async ({ world, page }) => {
 	expect(res.status()).toBe(200);
 	const body = await res.body();
 	expect(body.subarray(0, 4).toString()).toBe('%PDF');
+});
+
+test('imports from Paperless on a journal day and says where it was filed', async ({
+	world,
+	page
+}) => {
+	world.fake.setDocuments([
+		makePaperlessDoc(11, { title: 'Same day scan', tags: [7], created: '2026-05-12T12:00:00Z' }),
+		makePaperlessDoc(12, { title: 'Older scan', tags: [7], created: '2026-01-01T00:00:00Z' })
+	]);
+	await login(page, world.server.baseURL, SEED.member.username);
+	const dayUrl = `${world.server.baseURL}/${SEED.companions.ein.id}/journal/2026-05-12`;
+	await page.goto(dayUrl);
+	await waitForHydration(page);
+	const section = page.getByTestId('day-health-records');
+
+	await section.getByRole('button', { name: 'Add', exact: true }).click();
+	await page.getByRole('menuitem', { name: /add from paperless/i }).click();
+	await page.getByRole('button', { name: /same day scan/i }).click();
+	await expect(section.getByText('Same day scan')).toBeVisible({ timeout: 10_000 });
+
+	await section.getByRole('button', { name: 'Add', exact: true }).click();
+	await page.getByRole('menuitem', { name: /add from paperless/i }).click();
+	await page.getByRole('button', { name: /older scan/i }).click();
+	await expect(page.getByText('Imported, filed under 2026-01-01.')).toBeVisible({
+		timeout: 10_000
+	});
+	await expect(page.getByRole('link', { name: 'Open that day' })).toHaveAttribute(
+		'href',
+		`/${SEED.companions.ein.id}/journal/2026-01-01`
+	);
 });
 
 test('search filters documents in the picker', async ({ world, page }) => {

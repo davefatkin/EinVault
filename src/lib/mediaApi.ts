@@ -26,7 +26,7 @@ export type MediaApi = {
 	capMessage(max: number): string;
 };
 
-async function failureMessage(res: Response, fallback: string): Promise<string> {
+export async function failureMessage(res: Response, fallback: string): Promise<string> {
 	try {
 		const body: unknown = await res.json();
 		if (
