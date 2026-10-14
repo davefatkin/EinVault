@@ -27,6 +27,11 @@
 ![Health dark](screenshots/member_health_dark.png)
 ![Health light](screenshots/member_health_light.png)
 
+### Journal day
+
+![Journal day dark](screenshots/member_journal_day_dark.png)
+![Journal day light](screenshots/member_journal_day_light.png)
+
 ### Notes
 
 ![Notes dark](screenshots/member_notes_dark.png)

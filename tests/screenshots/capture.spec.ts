@@ -13,6 +13,8 @@ import { SEED, type Role } from '../lib/seed';
 
 const OUT = path.resolve(import.meta.dirname, '../../docs/screenshots');
 const EIN = SEED.companions.ein.id;
+// Same date the seed gives Ein's newest journal entry, which links the wellness checkup.
+const EIN_JOURNAL_DAY = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 interface Shot {
 	name: string;
@@ -27,6 +29,7 @@ const SHOTS: Shot[] = [
 	{ name: 'member_companion', role: 'member', path: `/${EIN}` },
 	{ name: 'member_companion_mobile', role: 'member', path: `/${EIN}`, mobile: true },
 	{ name: 'member_health', role: 'member', path: `/${EIN}/health` },
+	{ name: 'member_journal_day', role: 'member', path: `/${EIN}/journal/${EIN_JOURNAL_DAY}` },
 	{ name: 'member_notes', role: 'member', path: `/${EIN}/notes` },
 	{ name: 'member_note', role: 'member', path: `/${EIN}/notes/${SEED.notes.einCommands.id}` },
 	{ name: 'member_sheet', role: 'member', path: `/${EIN}/sheet` },
