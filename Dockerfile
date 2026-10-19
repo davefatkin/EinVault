@@ -14,7 +14,7 @@
 
 # pkgmeta: zero out the version field so version-bump commits don't invalidate
 # the npm ci layer in deps; nothing in the install depends on the real version.
-FROM node:26.11.1-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS pkgmeta
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS pkgmeta
 
 WORKDIR /meta
 
@@ -29,7 +29,7 @@ RUN node -e "const fs = require('fs'); \
 
 
 # deps
-FROM node:26.11.1-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS deps
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS deps
 
 WORKDIR /build
 
@@ -43,7 +43,7 @@ RUN npm ci --ignore-scripts \
 
 
 # builder
-FROM node:26.11.1-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS builder
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS builder
 
 WORKDIR /build
 
@@ -58,7 +58,7 @@ RUN npm prune --omit=dev
 
 
 # runner
-FROM node:26.11.1-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS runner
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS runner
 
 WORKDIR /app
 
