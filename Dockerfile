@@ -62,22 +62,26 @@ FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb
 
 WORKDIR /app
 
+# The apk layers below never change text, so BuildKit would reuse them from the
+# build cache forever and ship whatever Alpine packages were current when the
+# layer was first built. The release workflow passes a fresh value per run so
+# these layers (and everything after them in this stage) rebuild every release.
+ARG APK_CACHE_BUST=unset
+
 # ffmpeg/ffprobe for optional server-side video transcoding (issue #86). The
 # feature is off by default (VIDEO_TRANSCODE unset); the binaries ship anyway so
 # operators can enable it by flipping one env var without rebuilding. Alpine's
 # ffmpeg includes the native HEVC decoder (reads Apple-recorded source) and
 # libx264 for H.264 encode. Adds ~100-150MB to the image.
 # tzdata: musl needs zoneinfo for TZ; without it SQLite's 'localtime' stays UTC while Node follows TZ.
-RUN apk add --no-cache ffmpeg tzdata
+RUN echo "apk cache bust: $APK_CACHE_BUST" && apk add --no-cache ffmpeg tzdata
 
 # Pull in OS security fixes published after the pinned base digest. The node
 # image only picks these up when the alpine base image itself is rebuilt, which
 # does not happen for every Alpine package release, so a digest bump alone is
-# not enough. Covers CVE-2026-14456 (libcrypto3/libssl3 3.5.8-r0),
-# CVE-2026-93990 (libexpat 2.8.5-r0) and CVE-2026-103111 (pcre2 10.49-r0). Keep
-# targeted so the layer stays deterministic-ish; drop entries once the base
-# image catches up.
-RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat pcre2
+# not enough. Upgrade everything rather than a hand-kept list so a newly
+# flagged base package doesn't need a Dockerfile edit.
+RUN apk upgrade --no-cache
 
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
 # app starts with `node build` and never invokes a package manager at runtime;

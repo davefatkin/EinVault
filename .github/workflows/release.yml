@@ -88,6 +88,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: APK_CACHE_BUST=${{ github.run_id }}
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/einvault,push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=build-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
