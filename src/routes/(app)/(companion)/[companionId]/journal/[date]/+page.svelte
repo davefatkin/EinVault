@@ -262,7 +262,7 @@
 			lightboxOpen = true;
 		}
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('media');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});

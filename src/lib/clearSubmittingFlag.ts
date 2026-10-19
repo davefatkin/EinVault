@@ -1,4 +1,4 @@
-import type { SubmitFunction } from '@sveltejs/kit';
+import type { SubmitFunction } from '$app/forms';
 
 /**
  * `use:enhance` callback for forms whose submit path goes through

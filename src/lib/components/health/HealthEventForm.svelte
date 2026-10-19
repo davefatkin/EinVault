@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import { enhance } from '$app/forms';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { Plus } from '@lucide/svelte';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';

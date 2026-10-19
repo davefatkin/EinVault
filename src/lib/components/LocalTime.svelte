@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { getContext } from 'svelte';
 	import { t, getLocale } from '$lib/i18n';
 

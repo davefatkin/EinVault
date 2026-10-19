@@ -122,7 +122,7 @@
 			}
 		}
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('edit');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});
@@ -151,7 +151,7 @@
 		}
 		prefillApplied = true;
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});
@@ -176,7 +176,7 @@
 			if (match) openDetail({ kind: 'weight', item: match });
 		}
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('detailHealth');
 			url.searchParams.delete('detailWeight');
 			history.replaceState(history.state, '', url.pathname + url.search);

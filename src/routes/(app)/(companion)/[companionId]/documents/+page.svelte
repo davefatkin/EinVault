@@ -130,7 +130,7 @@
 		const match = data.documents.find((d) => d.id === previewId);
 		if (match) preview = match;
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('preview');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});

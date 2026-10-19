@@ -114,7 +114,7 @@
 			tick().then(() => startEdit(match));
 		}
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('edit');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});
@@ -136,7 +136,7 @@
 		prefillApplied = true;
 		// Strip the query so a reload doesn't re-open the form with stale values.
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});
@@ -152,7 +152,7 @@
 		const match = data.reminders.find((r) => r.id === detailId);
 		if (match) openDetail(match);
 		tick().then(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.delete('detail');
 			history.replaceState(history.state, '', url.pathname + url.search);
 		});

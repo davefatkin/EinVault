@@ -1,6 +1,5 @@
 import { redirect, json } from '@sveltejs/kit';
-import type { Handle } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { validateAuth, isSecureRequest } from '$server/auth';
 import { env } from '$env/dynamic/private';
 import { t, resolveLocale, parseAcceptLanguage } from '$lib/i18n';
@@ -99,7 +98,7 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-	// CSP is normally emitted by SvelteKit (see svelte.config.js `kit.csp`) so
+	// CSP is normally emitted by SvelteKit (see the `csp` option in vite.config.ts) so
 	// the per-render nonce flows through `%sveltekit.nonce%`. If a `+server.ts`
 	// returns HTML without going through SvelteKit's renderer, fall back to a
 	// strict no-inline baseline so it doesn't ship without any CSP at all.

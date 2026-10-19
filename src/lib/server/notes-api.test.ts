@@ -54,14 +54,14 @@ describe('notes api guards', () => {
 	it('maps note error codes to 400 with a localized message', () => {
 		expect(caught(() => throwNoteError('tooManyTags', 'en'))).toEqual({
 			status: 400,
-			body: { code: 'tooManyTags', message: 'Too many tags (max 10).' }
+			body: { status: 400, code: 'tooManyTags', message: 'Too many tags (max 10).' }
 		});
 	});
 
 	it('maps a missing note to a localized 404', () => {
 		expect(caught(() => throwNoteNotFound('en'))).toEqual({
 			status: 404,
-			body: { code: 'notFound', message: 'Note not found.' }
+			body: { status: 404, code: 'notFound', message: 'Note not found.' }
 		});
 	});
 
@@ -83,7 +83,7 @@ describe('notes api guards', () => {
 		for (const bad of ['match=bogus', 'match=', 'match=ALL']) {
 			expect(caught(() => parseTagFilterParams(new URLSearchParams(bad), 'en'))).toEqual({
 				status: 400,
-				body: { code: 'invalidMatch', message: 'match must be "any" or "all".' }
+				body: { status: 400, code: 'invalidMatch', message: 'match must be "any" or "all".' }
 			});
 		}
 		const many = new URLSearchParams(
@@ -91,7 +91,7 @@ describe('notes api guards', () => {
 		);
 		expect(caught(() => parseTagFilterParams(many, 'en'))).toEqual({
 			status: 400,
-			body: { code: 'tooManyFilterTags', message: 'Filter by at most 20 tags.' }
+			body: { status: 400, code: 'tooManyFilterTags', message: 'Filter by at most 20 tags.' }
 		});
 	});
 
@@ -101,7 +101,7 @@ describe('notes api guards', () => {
 		expect(parsePinnedParam('false', 'en')).toBe(false);
 		expect(caught(() => parsePinnedParam('yes', 'en'))).toEqual({
 			status: 400,
-			body: { code: 'invalidPinned', message: 'pinned must be "true" or "false".' }
+			body: { status: 400, code: 'invalidPinned', message: 'pinned must be "true" or "false".' }
 		});
 	});
 });
@@ -134,14 +134,14 @@ describe('loadAllowedNote', () => {
 	it('reads a note on an archived companion as 404', async () => {
 		expect(await caughtAsync(() => loadAllowedNote(archivedNote, member, 'en'))).toEqual({
 			status: 404,
-			body: { code: 'notFound', message: 'Note not found.' }
+			body: { status: 404, code: 'notFound', message: 'Note not found.' }
 		});
 	});
 
 	it('reads an unknown id as 404', async () => {
 		expect(await caughtAsync(() => loadAllowedNote('no-such-note', member, 'en'))).toEqual({
 			status: 404,
-			body: { code: 'notFound', message: 'Note not found.' }
+			body: { status: 404, code: 'notFound', message: 'Note not found.' }
 		});
 	});
 });
