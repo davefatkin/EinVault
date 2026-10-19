@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { ChevronLeft, Pencil, Trash2, StickyNote } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import NoteContent from '$lib/components/notes/NoteContent.svelte';
-	import NoteEditor from '$lib/components/notes/NoteEditor.svelte';
-	import PinToggle from '$lib/components/notes/PinToggle.svelte';
-	import MediaManager from '$lib/components/MediaManager.svelte';
-	import { noteMediaApi } from '$lib/mediaApi';
-	import type { MediaItem } from '$lib/media';
-	import { t, getLocale } from '$lib/i18n';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import NoteContent from '#lib/components/notes/NoteContent.svelte';
+	import NoteEditor from '#lib/components/notes/NoteEditor.svelte';
+	import PinToggle from '#lib/components/notes/PinToggle.svelte';
+	import MediaManager from '#lib/components/MediaManager.svelte';
+	import { noteMediaApi } from '#lib/mediaApi.js';
+	import type { MediaItem } from '#lib/media.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data, form } = $props();
 	const locale = getLocale();

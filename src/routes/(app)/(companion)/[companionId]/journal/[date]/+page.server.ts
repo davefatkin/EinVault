@@ -1,9 +1,9 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, gte, lt, inArray } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
+import { generateId } from '#lib/server/utils.js';
 import {
 	parseMood,
 	parseDailyEventType,
@@ -12,30 +12,30 @@ import {
 	parseDurationMinutes,
 	parseLoggedAt,
 	exceedsLen
-} from '$lib/server/validation';
-import { localDateISO } from '$lib/date';
-import { toMediaItem } from '$lib/media';
-import { upsertJournalEntry } from '$lib/server/journal';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
-import { checkSpeciesAndNarrow } from '$lib/server/daily-events';
-import { failCareError } from '$lib/server/care-errors';
-import { resolveActivityUpdate } from '$lib/server/journal-activity';
-import { getDayItems, listAttachableDocuments } from '$lib/server/journal-day-items';
-import { createHealthEvent, parseHealthEventForm } from '$lib/server/health';
-import { createWeightEntry, parseWeightForm } from '$lib/server/weight';
-import { reminderPrefillUrl } from '$lib/health';
+} from '#lib/server/validation.js';
+import { localDateISO } from '#lib/date.js';
+import { toMediaItem } from '#lib/media.js';
+import { upsertJournalEntry } from '#lib/server/journal.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
+import { checkSpeciesAndNarrow } from '#lib/server/daily-events.js';
+import { failCareError } from '#lib/server/care-errors.js';
+import { resolveActivityUpdate } from '#lib/server/journal-activity.js';
+import { getDayItems, listAttachableDocuments } from '#lib/server/journal-day-items.js';
+import { createHealthEvent, parseHealthEventForm } from '#lib/server/health.js';
+import { createWeightEntry, parseWeightForm } from '#lib/server/weight.js';
+import { reminderPrefillUrl } from '#lib/health.js';
 import {
 	listLinkableHealthEvents,
 	linkHealthEvent,
 	unlinkHealthEvent
-} from '$lib/server/journal-links';
+} from '#lib/server/journal-links.js';
 import {
 	MAX_DAILY_MEDIA,
 	UPLOAD_MAX_MB,
 	VIDEO_MAX_MB,
 	MAX_NOTE_LEN,
 	MAX_JOURNAL_BODY_LEN
-} from '$lib/server/env';
+} from '#lib/server/env.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

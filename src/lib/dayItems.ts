@@ -1,9 +1,9 @@
 // Client-safe shapes for a journal day's health records. Built server-side by
-// $lib/server/journal-day-items; rendered by DayItemChip, DayHealthRecords and HealthDetailModal.
+// #lib/server/journal-day-items; rendered by DayItemChip, DayHealthRecords and HealthDetailModal.
 // Display fields only: no storage keys, providers or upload bookkeeping.
-import type { HealthEventType } from '$lib/health';
-import type { DocumentCategory, WeightUnit } from '$lib/activityTypes';
-import type { UserRef } from '$lib/types';
+import type { HealthEventType } from '#lib/health.js';
+import type { DocumentCategory, WeightUnit } from '#lib/activityTypes.js';
+import type { UserRef } from '#lib/types.js';
 
 export type DayItemDocument = {
 	id: string;

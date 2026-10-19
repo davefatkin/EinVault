@@ -1,4 +1,4 @@
-import { IMMICH_CONFIG, PAPERLESS_CONFIG, S3_CONFIG, STORAGE_BACKEND } from '$lib/server/env';
+import { IMMICH_CONFIG, PAPERLESS_CONFIG, S3_CONFIG, STORAGE_BACKEND } from '#lib/server/env.js';
 import { LocalBackend } from './local';
 import { createS3Backend } from './s3';
 import { createImmichBackend, createImmichClient, type ImmichClient } from './immich';

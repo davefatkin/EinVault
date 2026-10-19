@@ -1,4 +1,4 @@
-import type { UserRef } from '$lib/types';
+import type { UserRef } from '#lib/types.js';
 
 // Client-safe helpers for journal and note media. The server stores photos and videos
 // in the same table; the row's mimeType (or mediaType) tells them apart.

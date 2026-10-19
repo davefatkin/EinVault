@@ -1,8 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import { t } from '$lib/i18n';
-import type { Locale } from '$lib/i18n';
-import { failCareError } from '$lib/server/care-errors';
+import { t } from '#lib/i18n/index.js';
+import type { Locale } from '#lib/i18n/index.js';
+import { failCareError } from '#lib/server/care-errors.js';
 import {
 	parseDailyEventType,
 	parseDurationMinutes,
@@ -10,8 +10,8 @@ import {
 	parseShortName,
 	exceedsLen,
 	type UserRole
-} from '$lib/server/validation';
-import { MAX_NOTE_LEN } from '$lib/server/env';
+} from '#lib/server/validation.js';
+import { MAX_NOTE_LEN } from '#lib/server/env.js';
 import {
 	createQuickLog,
 	updateQuickLog,
@@ -21,7 +21,7 @@ import {
 	shareQuickLog,
 	executeQuickLog,
 	type QuickLogInput
-} from '$lib/server/quick-logs';
+} from '#lib/server/quick-logs.js';
 
 // Shared form-action bodies (account.ts pattern): the (app) settings route and
 // the caretaker /care/settings twin both delegate here so behavior can't drift.

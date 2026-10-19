@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { getStorage, type GetResult } from '$lib/server/storage';
-import { isAssigned } from '$lib/server/media-access';
+import { getStorage, type GetResult } from '#lib/server/storage/index.js';
+import { isAssigned } from '#lib/server/media-access.js';
 
 export const GET: RequestHandler = async ({ params, locals, request, url }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));

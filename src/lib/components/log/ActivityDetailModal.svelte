@@ -1,16 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { X, NotebookPen } from '@lucide/svelte';
-	import { renderMarkdown } from '$lib/markdown';
-	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
-	import { t, getLocale } from '$lib/i18n';
-	import type { UserRef } from '$lib/types';
-	import type { Species } from '$lib/activityTypes';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { activityDisplayIcon, activityDisplayLabel } from '#lib/i18n/labels.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { UserRef } from '#lib/types.js';
+	import type { Species } from '#lib/activityTypes.js';
 
 	// The shared shape every activity-detail surface renders: icon/label with
 	// subtypes, logged time + byline, optional duration, markdown notes.

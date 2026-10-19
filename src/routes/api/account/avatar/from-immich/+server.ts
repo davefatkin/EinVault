@@ -1,15 +1,20 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { getImmichClient, getStorage, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
+import {
+	getImmichClient,
+	getStorage,
+	immichKey,
+	IMMICH_ASSET_ID_RE
+} from '#lib/server/storage/index.js';
 import {
 	AVATAR_LEGACY_EXTS,
 	avatarLegacyKey,
 	resolveExistingAvatarKey
-} from '$lib/server/storage/avatarKeys';
-import type { StorageProvider } from '$lib/server/storage/types';
+} from '#lib/server/storage/avatarKeys.js';
+import type { StorageProvider } from '#lib/server/storage/types.js';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));

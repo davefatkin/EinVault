@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { DEMO_MODE } from '$lib/server/env';
-import { demoUserIdForRole } from '$lib/server/demo';
+import { DEMO_MODE } from '#lib/server/env.js';
+import { demoUserIdForRole } from '#lib/server/demo.js';
 import {
 	generateSessionToken,
 	createSession,
@@ -9,9 +9,9 @@ import {
 	invalidateSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { checkRateLimit } from '$lib/server/auth/rate-limit';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { checkRateLimit } from '#lib/server/auth/rate-limit.js';
 
 export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
 	if (!DEMO_MODE) error(404, 'Not found');

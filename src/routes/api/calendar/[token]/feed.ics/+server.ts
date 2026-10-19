@@ -1,10 +1,10 @@
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
-import { t } from '$lib/i18n';
-import { CALENDAR_FEED_ENABLED, CALENDAR_FEED_HISTORY_DAYS } from '$lib/server/env';
-import { userByFeedToken } from '$lib/server/calendarToken';
-import { getCalendarItems, type CalendarKind } from '$lib/server/calendar';
-import { buildCalendar } from '$lib/server/calendarIcs';
+import { t } from '#lib/i18n/index.js';
+import { CALENDAR_FEED_ENABLED, CALENDAR_FEED_HISTORY_DAYS } from '#lib/server/env.js';
+import { userByFeedToken } from '#lib/server/calendarToken.js';
+import { getCalendarItems, type CalendarKind } from '#lib/server/calendar.js';
+import { buildCalendar } from '#lib/server/calendarIcs.js';
 
 const KNOWN_KINDS: CalendarKind[] = ['health', 'reminder', 'shift'];
 

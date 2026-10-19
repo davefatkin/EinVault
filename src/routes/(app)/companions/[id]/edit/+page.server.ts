@@ -1,11 +1,11 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { parseSex } from '$lib/server/validation';
-import { parseCompanionSpeciesAndUnit } from '$lib/server/companion-form';
-import { toSpecies } from '$lib/species';
+import { parseSex } from '#lib/server/validation.js';
+import { parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
+import { toSpecies } from '#lib/species.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');

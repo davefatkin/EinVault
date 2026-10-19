@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/db';
-import type { StorageBackend } from '$lib/server/storage';
+import { db, schema } from '#lib/server/db/index.js';
+import type { StorageBackend } from '#lib/server/storage/index.js';
 
 // Storage is not under test: any read that gets past the access checks
 // answers 304, so "served" is easy to tell apart from 403 and 404.
@@ -9,7 +9,7 @@ const backend = vi.hoisted(() => ({
 	get: vi.fn(async () => ({ kind: 'notModified', etag: '"e1"' })),
 	provider: 'local'
 }));
-vi.mock('$lib/server/storage', () => ({
+vi.mock('#lib/server/storage/index.js', () => ({
 	getStorage: () => backend as unknown as StorageBackend
 }));
 

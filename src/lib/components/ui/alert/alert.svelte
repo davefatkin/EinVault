@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type VariantProps, cva } from 'class-variance-authority';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 
 	const alertVariants = cva('relative w-full rounded-xl border border-border p-4 text-sm', {
 		variants: {

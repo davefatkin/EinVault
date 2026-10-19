@@ -1,9 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getAppSettings } from '$lib/server/app-settings';
-import { requiresTwoFactor } from '$lib/server/auth/two-factor';
-import { isTwoFactorConfigured } from '$lib/server/auth/totp-crypto';
-import { totpBegin, totpConfirm } from '$lib/server/auth/two-factor-actions';
+import { getAppSettings } from '#lib/server/app-settings.js';
+import { requiresTwoFactor } from '#lib/server/auth/two-factor.js';
+import { isTwoFactorConfigured } from '#lib/server/auth/totp-crypto.js';
+import { totpBegin, totpConfirm } from '#lib/server/auth/two-factor-actions.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {

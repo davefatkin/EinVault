@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import CaretakerSheet from '$lib/components/CaretakerSheet.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import CaretakerSheet from '#lib/components/CaretakerSheet.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();

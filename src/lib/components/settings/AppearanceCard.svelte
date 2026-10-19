@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { t, getLocale, type MessageKey } from '$lib/i18n';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { t, getLocale, type MessageKey } from '#lib/i18n/index.js';
 	import {
 		applyTheme,
 		saveTheme,
@@ -9,7 +9,7 @@
 		THEMES,
 		THEME_ICONS,
 		type Theme
-	} from '$lib/theme';
+	} from '#lib/theme.js';
 
 	let {
 		currentTheme: initialTheme,

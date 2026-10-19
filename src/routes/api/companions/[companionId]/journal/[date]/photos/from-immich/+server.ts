@@ -1,14 +1,14 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, count } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
-import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
-import { isAllowedPhotoMime, safeExtFromMime } from '$lib/server/storage/mime';
-import { MAX_DAILY_MEDIA } from '$lib/server/env';
-import { isValidDate } from '$lib/server/validation';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
+import { generateId } from '#lib/server/utils.js';
+import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '#lib/server/storage/index.js';
+import { isAllowedPhotoMime, safeExtFromMime } from '#lib/server/storage/mime.js';
+import { MAX_DAILY_MEDIA } from '#lib/server/env.js';
+import { isValidDate } from '#lib/server/validation.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));

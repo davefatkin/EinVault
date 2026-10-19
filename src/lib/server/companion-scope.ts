@@ -1,8 +1,8 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { getShiftStatus } from '$lib/server/shifts';
-import type { UserRole } from '$lib/server/validation';
-import type { CareErrorCode } from '$lib/server/care-errors';
+import { db, schema } from '#lib/server/db/index.js';
+import { getShiftStatus } from '#lib/server/shifts.js';
+import type { UserRole } from '#lib/server/validation.js';
+import type { CareErrorCode } from '#lib/server/care-errors.js';
 
 // The canonical companion-authorization layer. Every companion-scoped feature
 // (quick logs, daily events, journal, and future models) resolves "which

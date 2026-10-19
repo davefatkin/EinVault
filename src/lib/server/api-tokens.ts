@@ -2,8 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 import { and, count, eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
 
 export type ApiTokenScope = 'full' | 'write';
 

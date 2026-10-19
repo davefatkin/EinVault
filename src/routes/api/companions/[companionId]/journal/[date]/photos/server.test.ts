@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { and, eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 
 // Storage, upload prep and the worker are not under test.
-vi.mock('$lib/server/storage', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/storage')>()),
+vi.mock('#lib/server/storage/index.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/storage/index.js')>()),
 	getImmichClient: () => ({
 		getAsset: async () => ({
 			originalMimeType: 'image/jpeg',
@@ -15,7 +15,7 @@ vi.mock('$lib/server/storage', async (importOriginal) => ({
 	getStorage: () => ({ put: vi.fn(async () => {}), delete: vi.fn(async () => {}) }),
 	STORAGE_BACKEND: 'local'
 }));
-vi.mock('$lib/server/storage/media-upload', () => ({
+vi.mock('#lib/server/storage/media-upload.js', () => ({
 	prepareMediaUpload: vi.fn(async (_file: unknown, mediaId: string) => ({
 		body: Buffer.from('x'),
 		contentType: 'image/jpeg',
@@ -25,8 +25,8 @@ vi.mock('$lib/server/storage/media-upload', () => ({
 		sizeBytes: 1
 	}))
 }));
-vi.mock('$lib/server/storage/media-blobs', () => ({ deleteMediaBlobs: vi.fn(async () => {}) }));
-vi.mock('$lib/server/video/worker', () => ({ kickWorker: vi.fn() }));
+vi.mock('#lib/server/storage/media-blobs.js', () => ({ deleteMediaBlobs: vi.fn(async () => {}) }));
+vi.mock('#lib/server/video/worker.js', () => ({ kickWorker: vi.fn() }));
 
 const { POST, PATCH, DELETE } = await import('./+server');
 const { POST: POST_IMMICH } = await import('./from-immich/+server');

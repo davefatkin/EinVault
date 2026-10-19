@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { Zap } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import QuickLogsManager from '$lib/components/settings/QuickLogsManager.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import QuickLogsManager from '#lib/components/settings/QuickLogsManager.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import type { MessageKey } from '$lib/i18n';
-	import Ein from '$lib/components/Ein.svelte';
+	import { Card, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { MessageKey } from '#lib/i18n/index.js';
+	import Ein from '#lib/components/Ein.svelte';
 
 	const locale = getLocale();
 

@@ -1,16 +1,16 @@
 import { json } from '@sveltejs/kit';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { deleteNote, getNote, updateNote } from '$lib/server/notes';
-import { toApiNote } from '$lib/server/api-serializers';
-import { NoteUpdate } from '$lib/server/openapi/schemas';
-import { validateNotePatch } from '$lib/notes';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { deleteNote, getNote, updateNote } from '#lib/server/notes.js';
+import { toApiNote } from '#lib/server/api-serializers.js';
+import { NoteUpdate } from '#lib/server/openapi/schemas.js';
+import { validateNotePatch } from '#lib/notes.js';
 import {
 	loadAllowedNote,
 	noteCodeFor,
 	requireNoteOwnerScope,
 	throwNoteError,
 	throwNoteNotFound
-} from '$lib/server/notes-api';
+} from '#lib/server/notes-api.js';
 
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	requireNoteOwnerScope(scope, user, locale);

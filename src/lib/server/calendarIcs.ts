@@ -5,8 +5,8 @@ import {
 	icsDateOnly,
 	foldLine,
 	vtimezoneBlock
-} from '$lib/server/ics';
-import type { CalendarItem } from '$lib/server/calendar';
+} from '#lib/server/ics.js';
+import type { CalendarItem } from '#lib/server/calendar.js';
 
 interface EventFields {
 	uid: string;

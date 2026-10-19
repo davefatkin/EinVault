@@ -2,23 +2,23 @@
 	import type { PageData, ActionData } from './$types';
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { t, getLocale } from '$lib/i18n';
-	import { formatAge } from '$lib/age';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatAge } from '#lib/age.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Plus, Zap, Check, Pencil, Bell, X, House, Activity, ChevronDown } from '@lucide/svelte';
-	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
-	import QuickLogButtons from '$lib/components/log/QuickLogButtons.svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import Ein from '$lib/components/Ein.svelte';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { renderMarkdown } from '$lib/markdown';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
-	import { registerDismissForm } from '$lib/actions/registerDismissForm';
-	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
+	import DailyLogForm from '#lib/components/log/DailyLogForm.svelte';
+	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Ein from '#lib/components/Ein.svelte';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
+	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
+	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
 	import {
 		REMINDER_ICONS,
 		MOOD_ICONS,
@@ -26,13 +26,13 @@
 		activityDisplayLabel,
 		healthTypeLabel,
 		reminderTypeLabel
-	} from '$lib/i18n/labels';
-	import { careStatus } from '$lib/careStatus';
-	import { reminderUrgency, type ReminderUrgency } from '$lib/reminderBuckets';
-	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
-	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
-	import { formatRecurrence } from '$lib/reminderRecurrence';
-	import { SPECIES_ICON, toSpecies } from '$lib/species';
+	} from '#lib/i18n/labels.js';
+	import { careStatus } from '#lib/careStatus.js';
+	import { reminderUrgency, type ReminderUrgency } from '#lib/reminderBuckets.js';
+	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import { formatRecurrence } from '#lib/reminderRecurrence.js';
+	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();

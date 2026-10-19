@@ -1,10 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { getStorage } from '$lib/server/storage';
-import { isValidDate } from '$lib/server/validation';
+import { getStorage } from '#lib/server/storage/index.js';
+import { isValidDate } from '#lib/server/validation.js';
 
 const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 type Category = (typeof CATEGORIES)[number];

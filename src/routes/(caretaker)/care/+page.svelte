@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import Ein from '$lib/components/Ein.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Ein from '#lib/components/Ein.svelte';
 	const locale = getLocale();
 </script>
 

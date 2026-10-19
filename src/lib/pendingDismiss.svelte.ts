@@ -1,5 +1,5 @@
-import { t, type Locale } from '$lib/i18n';
-import { addToast, removeToast, suppressNextPause } from '$lib/components/ui/toast';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { addToast, removeToast, suppressNextPause } from '#lib/components/ui/toast/index.js';
 
 export const DISMISS_DELAY_MS = 7000;
 
@@ -21,7 +21,7 @@ type PendingEntry = {
  * confirmation toast.
  *
  * IMPORTANT: `getLocale` is invoked from event handlers (click, focus, etc.)
- * AFTER component setup. Do not pass the raw `getLocale` from `$lib/i18n`,
+ * AFTER component setup. Do not pass the raw `getLocale` from `#lib/i18n/index.js`,
  * which calls `getContext` and throws `lifecycle_outside_component` when run
  * outside setup. Cache the locale in your component (`const locale =
  * getLocale();`) and pass `() => locale` instead.

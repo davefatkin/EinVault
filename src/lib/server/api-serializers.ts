@@ -7,9 +7,9 @@ import type {
 	reminders,
 	caretakerShifts,
 	users
-} from '$lib/server/db/schema';
-import type { NoteWithTags } from '$lib/server/notes';
-import type { QuickLogButton } from '$lib/server/quick-logs';
+} from '#lib/server/db/schema.js';
+import type { NoteWithTags } from '#lib/server/notes.js';
+import type { QuickLogButton } from '#lib/server/quick-logs.js';
 
 type CompanionRow = typeof companions.$inferSelect;
 type DailyEventRow = typeof dailyEvents.$inferSelect;

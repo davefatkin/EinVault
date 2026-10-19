@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Images } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { count, class: className = '' }: { count: number; class?: string } = $props();
 	const locale = getLocale();

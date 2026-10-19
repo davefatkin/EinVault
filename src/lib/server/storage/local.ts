@@ -2,7 +2,7 @@ import { createReadStream } from 'fs';
 import { mkdir, stat, unlink, writeFile } from 'fs/promises';
 import { dirname, join, normalize, resolve, sep } from 'path';
 import { Readable } from 'stream';
-import { DATA_DIR } from '$lib/server/paths';
+import { DATA_DIR } from '#lib/server/paths.js';
 import type { BlobStat, GetOptions, GetResult, PutInput, StorageBackend } from './types';
 
 const ROOT = join(DATA_DIR, 'uploads');

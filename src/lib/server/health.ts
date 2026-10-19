@@ -1,14 +1,14 @@
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
-import { t, type Locale } from '$lib/i18n';
-import { MAX_NOTE_LEN } from '$lib/textLimits';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import {
 	exceedsLen,
 	parseFormTimestamp,
 	parseHealthEventType,
 	type FormParse,
 	type HealthEventType
-} from '$lib/server/validation';
+} from '#lib/server/validation.js';
 
 export interface HealthEventInput {
 	type: HealthEventType;

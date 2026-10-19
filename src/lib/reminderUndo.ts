@@ -1,6 +1,6 @@
 // Client-safe constants for the Reminder undo window. Imported by both
 // server-only code (src/lib/server/env.ts, server actions) and the
-// client-side ReminderUndoCard. Must not import any $env or $lib/server
+// client-side ReminderUndoCard. Must not import any $env or #lib/server
 // modules so it stays browser-bundle safe.
 
 export const REMINDER_UNDO_PRESETS: readonly number[] = [0, 3, 7, 15];

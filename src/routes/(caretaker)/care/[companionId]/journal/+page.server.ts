@@ -1,15 +1,15 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { parseMood } from '$lib/server/validation';
-import { getShiftStatus } from '$lib/server/shifts';
-import { localDateISO } from '$lib/date';
-import { upsertJournalEntry } from '$lib/server/journal';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
-import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
-import { toMediaItem } from '$lib/media';
+import { parseMood } from '#lib/server/validation.js';
+import { getShiftStatus } from '#lib/server/shifts.js';
+import { localDateISO } from '#lib/date.js';
+import { upsertJournalEntry } from '#lib/server/journal.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
+import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '#lib/server/env.js';
+import { toMediaItem } from '#lib/media.js';
 
 export const load: PageServerLoad = async ({ params, parent, locals }) => {
 	const { companions, isOnShift } = await parent();

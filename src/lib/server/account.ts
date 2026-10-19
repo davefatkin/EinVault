@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import {
@@ -8,21 +8,21 @@ import {
 	createSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
 import type { Cookies } from '@sveltejs/kit';
-import { t } from '$lib/i18n';
-import type { Locale } from '$lib/i18n';
+import { t } from '#lib/i18n/index.js';
+import type { Locale } from '#lib/i18n/index.js';
 import {
 	REMINDER_UNDO_PRESETS,
 	REMINDER_UNDO_DEFAULT_SENTINEL,
 	REMINDER_UNDO_SECONDS_DEFAULT
-} from '$lib/server/env';
-import { parseRecurrenceUnit, EMAIL_RE } from '$lib/server/validation';
-import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '$lib/server/notify/ntfy';
-import { isMailEnabled, sendMail } from '$lib/server/mail';
-import { buildTestEmail } from '$lib/server/mail/templates';
-import { isMoodTrendRange } from '$lib/moodTrend';
+} from '#lib/server/env.js';
+import { parseRecurrenceUnit, EMAIL_RE } from '#lib/server/validation.js';
+import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '#lib/server/notify/ntfy.js';
+import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
+import { buildTestEmail } from '#lib/server/mail/templates.js';
+import { isMoodTrendRange } from '#lib/moodTrend.js';
 
 export async function handleAccountUpdate(
 	userId: string,

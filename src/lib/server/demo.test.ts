@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { demoUserIdForRole, isDemoBlockedRequest, DEMO_ROLES } from '$server/demo';
-import { SEED } from '$server/db/demo-seed';
+import { demoUserIdForRole, isDemoBlockedRequest, DEMO_ROLES } from '#lib/server/demo.js';
+import { SEED } from '#lib/server/db/demo-seed.js';
 
 describe('demoUserIdForRole', () => {
 	it('maps the three roles to their Bebop seed users', () => {

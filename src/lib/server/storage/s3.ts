@@ -1,5 +1,5 @@
 import { AwsClient } from 'aws4fetch';
-import type { S3Config } from '$lib/server/env';
+import type { S3Config } from '#lib/server/env.js';
 import type { GetResult, PutInput, StorageBackend } from './types';
 
 function encodeKey(key: string): string {

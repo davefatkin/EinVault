@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { badgeVariants, type Variant } from './index.js';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 
 	interface Props {
 		variant?: Variant;

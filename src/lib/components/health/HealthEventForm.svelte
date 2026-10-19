@@ -2,15 +2,15 @@
 	import type { Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { Plus } from '@lucide/svelte';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { healthTypeOptions } from '$lib/i18n/labels';
-	import type { HealthEventType } from '$lib/health';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { healthTypeOptions } from '#lib/i18n/labels.js';
+	import type { HealthEventType } from '#lib/health.js';
 
 	// The new-health-event form, shared by the Health Log and the journal day.
 	// e2e targets its element ids, so render one per page.

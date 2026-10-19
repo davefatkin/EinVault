@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { t, type Locale } from '$lib/i18n';
+import { t, type Locale } from '#lib/i18n/index.js';
 
 export const PAGE_DEFAULT_LIMIT = 50;
 export const PAGE_MAX_LIMIT = 200;

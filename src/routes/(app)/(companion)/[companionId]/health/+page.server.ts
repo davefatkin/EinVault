@@ -1,12 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { reminderPrefillUrl } from '$lib/health';
-import { createHealthEvent, parseHealthEventForm } from '$lib/server/health';
-import { createWeightEntry, parseWeightForm } from '$lib/server/weight';
-import { getJournalDatesByEvent, deleteHealthEvent } from '$lib/server/journal-links';
+import { reminderPrefillUrl } from '#lib/health.js';
+import { createHealthEvent, parseHealthEventForm } from '#lib/server/health.js';
+import { createWeightEntry, parseWeightForm } from '#lib/server/weight.js';
+import { getJournalDatesByEvent, deleteHealthEvent } from '#lib/server/journal-links.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import sharp from 'sharp';
-import { t, type Locale } from '$lib/i18n';
-import { UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '$lib/server/env';
-import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '#lib/server/env.js';
+import { demuxerForMime, transcodeAvailable } from '#lib/server/video/transcode.js';
 import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from './mime';
 
 // Validation and processing shared by every photo/video upload (journal media,

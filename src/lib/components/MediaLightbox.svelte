@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { ChevronLeft, ChevronRight, X, Download } from '@lucide/svelte';
-	import JournalVideo from '$lib/components/JournalVideo.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { renderMarkdown } from '$lib/markdown';
-	import { t, getLocale } from '$lib/i18n';
-	import type { MediaItem } from '$lib/media';
+	import JournalVideo from '#lib/components/JournalVideo.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { MediaItem } from '#lib/media.js';
 
 	const locale = getLocale();
 

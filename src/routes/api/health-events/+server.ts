@@ -1,18 +1,18 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq, gte, lt } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions } from '$lib/server/companion-scope';
-import { requireFullScope, requireAllowedCompanion } from '$lib/server/api-guards';
-import { createHealthEvent } from '$lib/server/health';
-import { toApiHealthEvent } from '$lib/server/api-serializers';
-import { isValidDate, parseRecordTimestamp } from '$lib/server/validation';
-import { HealthRequest } from '$lib/server/openapi/schemas';
-import { MAX_NOTE_LEN } from '$lib/server/env';
-import { paginate } from '$lib/server/pagination';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { authorizeCompanions } from '#lib/server/companion-scope.js';
+import { requireFullScope, requireAllowedCompanion } from '#lib/server/api-guards.js';
+import { createHealthEvent } from '#lib/server/health.js';
+import { toApiHealthEvent } from '#lib/server/api-serializers.js';
+import { isValidDate, parseRecordTimestamp } from '#lib/server/validation.js';
+import { HealthRequest } from '#lib/server/openapi/schemas.js';
+import { MAX_NOTE_LEN } from '#lib/server/env.js';
+import { paginate } from '#lib/server/pagination.js';
 
 // GET /api/health-events?companionId=&date=YYYY-MM-DD (date optional). Full-scope only.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {

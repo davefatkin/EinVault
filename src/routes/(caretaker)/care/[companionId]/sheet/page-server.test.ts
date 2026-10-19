@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { db, schema } from '$lib/server/db';
-import type { CaretakerSheet } from '$lib/caretakerSheet';
+import { db, schema } from '#lib/server/db/index.js';
+import type { CaretakerSheet } from '#lib/caretakerSheet.js';
 import { load } from './+page.server';
 
 // #280: the caretaker sheet route. parent().companions is the (caretaker)

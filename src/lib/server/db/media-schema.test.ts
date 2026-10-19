@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 
 const C = 'c-msch';
 const base = { filename: 'f.jpg', mimeType: 'image/jpeg', sizeBytes: 1 } as const;

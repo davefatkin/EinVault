@@ -1,16 +1,16 @@
 import { env } from '$env/dynamic/private';
 import { join } from 'path';
-import { REMINDER_UNDO_MAX_SECONDS } from '$lib/reminderUndo';
-import { DATA_DIR } from '$lib/server/paths';
-import type { StorageProvider } from '$lib/server/storage/types';
+import { REMINDER_UNDO_MAX_SECONDS } from '#lib/reminderUndo.js';
+import { DATA_DIR } from '#lib/server/paths.js';
+import type { StorageProvider } from '#lib/server/storage/types.js';
 
 export {
 	REMINDER_UNDO_MAX_SECONDS,
 	REMINDER_UNDO_PRESETS,
 	REMINDER_UNDO_DEFAULT_SENTINEL
-} from '$lib/reminderUndo';
+} from '#lib/reminderUndo.js';
 
-export { MAX_NOTE_LEN, MAX_JOURNAL_BODY_LEN } from '$lib/textLimits';
+export { MAX_NOTE_LEN, MAX_JOURNAL_BODY_LEN } from '#lib/textLimits.js';
 
 /**
  * Parse an env var as a positive integer (n > 0). Falls back to
@@ -374,7 +374,7 @@ const smtpResult = readSmtpConfig();
 export const SMTP_CONFIG = smtpResult.config;
 
 export function logTwoFactorBootStatus(): void {
-	import('$lib/server/auth/totp-crypto').then(({ isTwoFactorConfigured }) => {
+	import('#lib/server/auth/totp-crypto.js').then(({ isTwoFactorConfigured }) => {
 		console.info(
 			isTwoFactorConfigured()
 				? '[einvault] 2FA available (TWOFA_ENC_KEY set)'

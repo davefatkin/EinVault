@@ -1,20 +1,20 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import SpeciesPicker from '$lib/components/companion/SpeciesPicker.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import SpeciesPicker from '#lib/components/companion/SpeciesPicker.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
 	import { ChevronLeft, PawPrint } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { speciesLabels } from '$lib/i18n/labels';
-	import { defaultWeightUnit } from '$lib/species';
-	import { WEIGHT_UNITS, type Species, type WeightUnit } from '$lib/activityTypes';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { speciesLabels } from '#lib/i18n/labels.js';
+	import { defaultWeightUnit } from '#lib/species.js';
+	import { WEIGHT_UNITS, type Species, type WeightUnit } from '#lib/activityTypes.js';
 
 	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);

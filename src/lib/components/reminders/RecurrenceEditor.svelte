@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 	import { untrack } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		RECURRENCE_INTERVAL_MAX,
 		unpackMonthDay,
 		type RecurrenceUnit,
 		type RecurrenceAnchor
-	} from '$lib/reminderRecurrence';
-	import type { Reminder } from '$lib/server/db/schema';
+	} from '#lib/reminderRecurrence.js';
+	import type { Reminder } from '#lib/server/db/schema.js';
 
 	type EditorValue = Pick<
 		Reminder,

@@ -1,14 +1,14 @@
 import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import type { z } from 'zod';
-import { t, type Locale } from '$lib/i18n';
-import { API_TOKENS_ENABLED, API_RATE_LIMIT_PER_MINUTE } from '$lib/server/env';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { API_TOKENS_ENABLED, API_RATE_LIMIT_PER_MINUTE } from '#lib/server/env.js';
 import {
 	resolveApiToken,
 	touchApiToken,
 	type ApiTokenUser,
 	type ApiTokenScope
-} from '$lib/server/api-tokens';
-import { checkRateLimit } from '$lib/server/auth/rate-limit';
+} from '#lib/server/api-tokens.js';
+import { checkRateLimit } from '#lib/server/auth/rate-limit.js';
 
 // Per-endpoint Bearer resolution, deliberately NOT a hooks handle: token
 // requests never populate locals.user, so the twoFactorGate (which only acts
@@ -83,7 +83,7 @@ export function apiRouteJson<B>(
 }
 
 // apiRoute + a zod schema: parses and validates the JSON body before the handler
-// runs. The same schema feeds the OpenAPI spec (see $server/openapi), so
+// runs. The same schema feeds the OpenAPI spec (see #lib/server/openapi), so
 // validation and documentation share one source of truth.
 //
 // Zod on its own would collapse every failure into one generic code. The

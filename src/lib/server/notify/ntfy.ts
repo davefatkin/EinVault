@@ -1,4 +1,4 @@
-import { NTFY_CONFIG } from '$lib/server/env';
+import { NTFY_CONFIG } from '#lib/server/env.js';
 
 // ntfy publisher (issue #12). Uses the JSON publish endpoint (POST to the
 // server base with the topic in the body) instead of topic-URL PUT with

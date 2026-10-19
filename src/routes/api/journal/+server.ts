@@ -1,17 +1,17 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { localDateISO } from '$lib/date';
-import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { JournalRequest } from '$lib/server/openapi/schemas';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
-import { throwCareError } from '$lib/server/care-errors';
-import { upsertJournalEntry } from '$lib/server/journal';
-import { toApiJournalEntry } from '$lib/server/api-serializers';
-import { isValidDate, parseMood, exceedsLen } from '$lib/server/validation';
-import { MAX_JOURNAL_BODY_LEN } from '$lib/server/env';
+import { t } from '#lib/i18n/index.js';
+import { localDateISO } from '#lib/date.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { JournalRequest } from '#lib/server/openapi/schemas.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { authorizeCompanions, listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { upsertJournalEntry } from '#lib/server/journal.js';
+import { toApiJournalEntry } from '#lib/server/api-serializers.js';
+import { isValidDate, parseMood, exceedsLen } from '#lib/server/validation.js';
+import { MAX_JOURNAL_BODY_LEN } from '#lib/server/env.js';
 
 // Read-back: GET /api/journal?companionId=&date=YYYY-MM-DD (date defaults to
 // today). Returns the day's entry or { entry: null }.

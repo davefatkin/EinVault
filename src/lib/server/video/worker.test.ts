@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import { rm } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
-import type { StorageBackend } from '$lib/server/storage';
+import type { StorageBackend } from '#lib/server/storage/index.js';
 
 // In-memory object store standing in for every storage provider.
 const store = vi.hoisted(() => new Map<string, Buffer>());
@@ -23,12 +23,12 @@ const cfg = vi.hoisted(() => ({
 	tmpDir: `${process.env.TMPDIR ?? '/tmp'}/einvault-worker-test-${process.pid}`
 }));
 
-vi.mock('$lib/server/env', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/env')>()),
+vi.mock('#lib/server/env.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/env.js')>()),
 	VIDEO_TRANSCODE: cfg
 }));
 
-vi.mock('$lib/server/storage', () => {
+vi.mock('#lib/server/storage/index.js', () => {
 	const backend = {
 		provider: 'local',
 		async put({ key, body }: { key: string; body: Buffer }) {
@@ -70,7 +70,7 @@ vi.mock('./transcode', async () => {
 	};
 });
 
-const { db, schema } = await import('$lib/server/db');
+const { db, schema } = await import('#lib/server/db/index.js');
 const { drain, mediaQueue, __resetWorkerForTests } = await import('./worker');
 
 const C = 'c-vw';

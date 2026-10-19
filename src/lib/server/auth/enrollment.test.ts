@@ -24,7 +24,7 @@ function codeFor(secret: string, timestamp = Date.now()): string {
 
 describe('enrollment', () => {
 	it('begins, confirms, disables', async () => {
-		const { db, schema } = await import('$lib/server/db');
+		const { db, schema } = await import('#lib/server/db/index.js');
 		const { beginEnrollment, confirmEnrollment, disableTwoFactor } = await import('./enrollment');
 		await db
 			.insert(schema.users)

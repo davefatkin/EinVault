@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
-import { t, type Locale } from '$lib/i18n';
-import { throwCareError } from '$lib/server/care-errors';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import type { ApiTokenScope } from '$lib/server/api-tokens';
-import type { UserRole } from '$lib/server/validation';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import type { ApiTokenScope } from '#lib/server/api-tokens.js';
+import type { UserRole } from '#lib/server/validation.js';
 
 // Shared guards for the Bearer API's read GETs, factored out so the same
 // scope/companion checks can't drift across logs/health-events/weight/

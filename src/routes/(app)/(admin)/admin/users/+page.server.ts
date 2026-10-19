@@ -1,18 +1,18 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, ne, lt, gt } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
+import { generateId } from '#lib/server/utils.js';
 import bcrypt from 'bcryptjs';
-import { invalidateAllUserSessions } from '$lib/server/auth/session';
-import { parseRole, EMAIL_RE } from '$lib/server/validation';
-import { getAppSettings, setRequire2fa } from '$lib/server/app-settings';
-import type { Require2fa } from '$lib/server/app-settings';
-import { adminResetTwoFactor } from '$lib/server/auth/enrollment';
-import { isTwoFactorConfigured } from '$lib/server/auth/totp-crypto';
-import { notifyApiAccessChanged } from '$lib/server/api-access';
-import { API_TOKENS_ENABLED } from '$lib/server/env';
+import { invalidateAllUserSessions } from '#lib/server/auth/session.js';
+import { parseRole, EMAIL_RE } from '#lib/server/validation.js';
+import { getAppSettings, setRequire2fa } from '#lib/server/app-settings.js';
+import type { Require2fa } from '#lib/server/app-settings.js';
+import { adminResetTwoFactor } from '#lib/server/auth/enrollment.js';
+import { isTwoFactorConfigured } from '#lib/server/auth/totp-crypto.js';
+import { notifyApiAccessChanged } from '#lib/server/api-access.js';
+import { API_TOKENS_ENABLED } from '#lib/server/env.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');

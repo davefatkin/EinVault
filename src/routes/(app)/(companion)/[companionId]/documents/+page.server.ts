@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { UPLOAD_MAX_MB } from '$lib/server/env';
+import { UPLOAD_MAX_MB } from '#lib/server/env.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

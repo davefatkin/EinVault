@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 import { and, eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 
 // Hash mirrors the session-token model: store sha256(raw), never the raw value.
 export function hashFeedToken(token: string): string {

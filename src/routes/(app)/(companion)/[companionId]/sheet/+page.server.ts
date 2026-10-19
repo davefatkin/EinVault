@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { formatPrintedOn, loadCaretakerSheet } from '$lib/server/caretaker-sheet';
+import { t } from '#lib/i18n/index.js';
+import { formatPrintedOn, loadCaretakerSheet } from '#lib/server/caretaker-sheet.js';
 
 // Printable caretaker sheet (#280) for owners. GET only, no actions. The
 // (companion) layout 404s unknown ids; archived companions print too.

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
 	import { Trash2, X } from '@lucide/svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { SPECIES_ICON, toSpecies } from '$lib/species';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
 
 	interface UserRow {
 		id: string;

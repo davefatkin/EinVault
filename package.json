@@ -81,5 +81,8 @@
 		"deepmerge-ts": "^8.0.1",
 		"esbuild": "^0.28.1",
 		"postcss-selector-parser": "^7.1.6"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
 	}
 }

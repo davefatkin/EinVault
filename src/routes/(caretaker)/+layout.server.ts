@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, inArray } from 'drizzle-orm';
-import { getShiftStatus } from '$lib/server/shifts';
+import { getShiftStatus } from '#lib/server/shifts.js';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {

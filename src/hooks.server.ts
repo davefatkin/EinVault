@@ -1,9 +1,9 @@
 import { redirect, json } from '@sveltejs/kit';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
-import { validateAuth, isSecureRequest } from '$server/auth';
+import { validateAuth, isSecureRequest } from '#lib/server/auth/index.js';
 import { env } from '$env/dynamic/private';
-import { t, resolveLocale, parseAcceptLanguage } from '$lib/i18n';
-import { logOidcBootStatus } from '$lib/server/auth/oidc';
+import { t, resolveLocale, parseAcceptLanguage } from '#lib/i18n/index.js';
+import { logOidcBootStatus } from '#lib/server/auth/oidc.js';
 import {
 	S3_CONFIG,
 	DEMO_MODE,
@@ -16,14 +16,14 @@ import {
 	logNtfyBootStatus,
 	logTwoFactorBootStatus,
 	logDemoBootStatus
-} from '$lib/server/env';
-import { isDemoBlockedRequest } from '$lib/server/demo';
-import { DATA_DIR } from '$lib/server/paths';
-import { recoverAndStart } from '$lib/server/video/worker';
-import { startNotifyScheduler } from '$lib/server/notify/scheduler';
-import { getAppSettings } from '$lib/server/app-settings';
-import { requiresTwoFactor } from '$lib/server/auth/two-factor';
-import { routeGroupDecision } from '$lib/server/auth/route-guard';
+} from '#lib/server/env.js';
+import { isDemoBlockedRequest } from '#lib/server/demo.js';
+import { DATA_DIR } from '#lib/server/paths.js';
+import { recoverAndStart } from '#lib/server/video/worker.js';
+import { startNotifyScheduler } from '#lib/server/notify/scheduler.js';
+import { getAppSettings } from '#lib/server/app-settings.js';
+import { requiresTwoFactor } from '#lib/server/auth/two-factor.js';
+import { routeGroupDecision } from '#lib/server/auth/route-guard.js';
 
 logOidcBootStatus();
 logStorageBootStatus();

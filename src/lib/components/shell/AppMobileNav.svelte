@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import CompanionSwitcher from './CompanionSwitcher.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import PawLogo from '$lib/components/PawLogo.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import PawLogo from '#lib/components/PawLogo.svelte';
 	import {
 		House,
 		NotebookPen,
@@ -18,9 +18,9 @@
 		FileText,
 		StickyNote
 	} from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { currentFabSection, orderFabActions } from '$lib/nav/fabSections';
-	import type { CareStatus } from '$lib/careStatus';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
+	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
 
 	type Companion = {

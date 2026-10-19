@@ -1,6 +1,6 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { z } from './z';
-import { NOTE_FILTER_MAX_TAGS } from '$lib/notes';
+import { NOTE_FILTER_MAX_TAGS } from '#lib/notes.js';
 import {
 	LogRequest,
 	LogResponse,

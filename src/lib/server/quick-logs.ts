@@ -1,12 +1,12 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
-import { logDailyEvent } from '$lib/server/daily-events';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import type { DailyEventType, UserRole } from '$lib/server/validation';
-import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
-import { parseSubtypes } from '$lib/activitySubtypes';
-import { isActivityAllowed, toSpecies } from '$lib/species';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
+import { logDailyEvent } from '#lib/server/daily-events.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import type { DailyEventType, UserRole } from '#lib/server/validation.js';
+import { ACTIVITY_HAS_DURATION } from '#lib/i18n/labels.js';
+import { parseSubtypes } from '#lib/activitySubtypes.js';
+import { isActivityAllowed, toSpecies } from '#lib/species.js';
 
 export interface QuickLogInput {
 	name: string;

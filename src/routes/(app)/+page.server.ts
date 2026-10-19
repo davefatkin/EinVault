@@ -1,23 +1,23 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
-import { localDateISO } from '$lib/date';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
-import { t } from '$lib/i18n';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { localDateISO } from '#lib/date.js';
+import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { t } from '#lib/i18n/index.js';
+import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 import {
 	parseDailyEventType,
 	parseDurationMinutes,
 	parseLoggedAt,
 	parseIdArray,
 	exceedsLen
-} from '$lib/server/validation';
-import { MAX_NOTE_LEN } from '$lib/server/env';
-import { logDailyEvent } from '$lib/server/daily-events';
-import { listQuickLogButtons } from '$lib/server/quick-logs';
-import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
-import { failCareError } from '$lib/server/care-errors';
+} from '#lib/server/validation.js';
+import { MAX_NOTE_LEN } from '#lib/server/env.js';
+import { logDailyEvent } from '#lib/server/daily-events.js';
+import { listQuickLogButtons } from '#lib/server/quick-logs.js';
+import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
+import { failCareError } from '#lib/server/care-errors.js';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;

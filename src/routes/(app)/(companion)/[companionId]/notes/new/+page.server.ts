@@ -1,16 +1,16 @@
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { createNote, listTags } from '$lib/server/notes';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { createNote, listTags } from '#lib/server/notes.js';
 import {
 	noteErrorText,
 	noteFail,
 	noteFieldsFromForm,
 	noteFormValues
-} from '$lib/server/note-actions';
-import { validateNewNote } from '$lib/notes';
+} from '#lib/server/note-actions.js';
+import { validateNewNote } from '#lib/notes.js';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

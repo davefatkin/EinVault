@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
-import type { Locale } from '$lib/i18n';
-import { t } from '$lib/i18n';
+import type { Locale } from '#lib/i18n/index.js';
+import { t } from '#lib/i18n/index.js';
 import { isTwoFactorConfigured, decryptSecret } from './totp-crypto';
 import { verifyCode } from './totp';
 import {
@@ -9,9 +9,9 @@ import {
 	regenerateBackupCodes,
 	disableTwoFactor
 } from './enrollment';
-import { getAppSettings } from '$lib/server/app-settings';
+import { getAppSettings } from '#lib/server/app-settings.js';
 import { requiresTwoFactor } from './two-factor';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 
 interface TwoFactorActionContext {

@@ -1,18 +1,18 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { isOidcEnabled, getOidcProviderName } from '$lib/server/auth/oidc';
-import { isMailEnabled } from '$lib/server/mail';
-import { DEMO_MODE } from '$lib/server/env';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { isOidcEnabled, getOidcProviderName } from '#lib/server/auth/oidc.js';
+import { isMailEnabled } from '#lib/server/mail/index.js';
+import { DEMO_MODE } from '#lib/server/env.js';
+import { db, schema } from '#lib/server/db/index.js';
 import {
 	generateSessionToken,
 	createSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { checkRateLimit, clearRateLimit } from '$lib/server/auth/rate-limit';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { checkRateLimit, clearRateLimit } from '#lib/server/auth/rate-limit.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -87,7 +87,7 @@ export const actions: Actions = {
 			.where(eq(schema.users.id, user.id));
 
 		if (user.totpEnabledAt) {
-			const { setPendingMfaCookie } = await import('$lib/server/auth/two-factor');
+			const { setPendingMfaCookie } = await import('#lib/server/auth/two-factor.js');
 			await setPendingMfaCookie(cookies, user.id, isSecureRequest(request));
 			redirect(302, '/auth/2fa');
 		}

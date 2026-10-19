@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { version, year }: { version?: string; year?: number } = $props();
 	const locale = getLocale();

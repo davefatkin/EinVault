@@ -1,8 +1,8 @@
 // Allowed subtype values per daily-event type. Client-safe (imported by Svelte
-// components AND server validation) — must not import from $lib/server.
+// components AND server validation) — must not import from #lib/server.
 // The i18n namespace is flat (enum.activitySubtype.*), so a key that appears
 // under two types must mean the same thing in both (pee/poop under bathroom
-// and litter). Per-species narrowing lives in $lib/species.
+// and litter). Per-species narrowing lives in #lib/species.
 export const ACTIVITY_SUBTYPES = {
 	bathroom: ['pee', 'poop'],
 	litter: ['pee', 'poop', 'scoop', 'change'],

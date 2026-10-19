@@ -1,13 +1,13 @@
 import { error, json } from '@sveltejs/kit';
 import { and, inArray, isNull } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { throwCareError } from '$lib/server/care-errors';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { requireFullScope } from '$lib/server/api-guards';
-import { toApiReminder } from '$lib/server/api-serializers';
-import { parsePagination, paginate } from '$lib/server/pagination';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { requireFullScope } from '#lib/server/api-guards.js';
+import { toApiReminder } from '#lib/server/api-serializers.js';
+import { parsePagination, paginate } from '#lib/server/pagination.js';
 
 // GET /api/reminders?companionId=&status=due|all. Full-scope only. Without
 // companionId, lists across every companion the token user may access.

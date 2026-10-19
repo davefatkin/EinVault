@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { t, getLocale } from '$lib/i18n';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { href }: { href: string } = $props();
 	const locale = getLocale();

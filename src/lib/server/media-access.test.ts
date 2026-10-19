@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { resolveJournalMedia, resolveNoteMedia, type MediaViewer } from './media-access';
 
 const C1 = 'c-ma-1';

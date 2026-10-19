@@ -1,12 +1,12 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq, gte, lte, type SQL } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { requireFullScope } from '$lib/server/api-guards';
-import { toApiShift } from '$lib/server/api-serializers';
-import { isValidDate } from '$lib/server/validation';
-import { paginate } from '$lib/server/pagination';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { requireFullScope } from '#lib/server/api-guards.js';
+import { toApiShift } from '#lib/server/api-serializers.js';
+import { isValidDate } from '#lib/server/validation.js';
+import { paginate } from '#lib/server/pagination.js';
 
 // GET /api/shifts?from=YYYY-MM-DD&to=YYYY-MM-DD. Full-scope only. admin/member
 // see all shifts; a caretaker sees only their own.

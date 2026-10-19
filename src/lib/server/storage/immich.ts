@@ -1,4 +1,4 @@
-import type { ImmichConfig } from '$lib/server/env';
+import type { ImmichConfig } from '#lib/server/env.js';
 import type { GetResult, StorageBackend } from './types';
 
 const KEY_PREFIX = 'immich:';

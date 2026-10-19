@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import { and, eq, isNotNull, lt } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
-import { completeReminder } from '$lib/server/reminders';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { authorizeCompanions, listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { completeReminder } from '#lib/server/reminders.js';
 
 // POST /api/reminders/{id}/complete: mark a reminder done. Recurring reminders
 // spawn their next occurrence (via completeReminder). The token acts as its

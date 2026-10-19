@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import PawLogo from '$lib/components/PawLogo.svelte';
+	import PawLogo from '#lib/components/PawLogo.svelte';
 
 	let { children, linkLabel }: { children: Snippet; linkLabel: string } = $props();
 </script>

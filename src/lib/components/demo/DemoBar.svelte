@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { currentRole, showNotice }: { currentRole: string; showNotice: boolean } = $props();
 

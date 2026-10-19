@@ -1,5 +1,5 @@
 import { beforeNavigate, goto } from '$app/navigation';
-import { postFormAction } from '$lib/postFormAction';
+import { postFormAction } from '#lib/postFormAction.js';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'signedOut';
 

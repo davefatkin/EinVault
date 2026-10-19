@@ -2,13 +2,13 @@
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import AppFooter from '$lib/components/AppFooter.svelte';
-	import { ToastRegion } from '$lib/components/ui/toast';
-	import SearchPalette from '$lib/components/SearchPalette.svelte';
-	import AppSidebar from '$lib/components/shell/AppSidebar.svelte';
-	import AppMobileNav from '$lib/components/shell/AppMobileNav.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { isModShortcut } from '$lib/shortcuts';
+	import AppFooter from '#lib/components/AppFooter.svelte';
+	import { ToastRegion } from '#lib/components/ui/toast/index.js';
+	import SearchPalette from '#lib/components/SearchPalette.svelte';
+	import AppSidebar from '#lib/components/shell/AppSidebar.svelte';
+	import AppMobileNav from '#lib/components/shell/AppMobileNav.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { isModShortcut } from '#lib/shortcuts.js';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 

@@ -1,4 +1,4 @@
-// Media columns that build a MediaItem (see toMediaItem in $lib/media). Loads
+// Media columns that build a MediaItem (see toMediaItem in #lib/media). Loads
 // and responses that feed the browser select only these, so storage keys and
 // provider never leave the server. Never add storage keys or provider here.
 export const MEDIA_ITEM_COLUMNS = {

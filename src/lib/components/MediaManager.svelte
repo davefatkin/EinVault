@@ -4,17 +4,17 @@
 	// outer wrapper. The DOM hooks below (name="photos", div.group, "Delete
 	// media", "Edit Caption", name="photo-notes") are relied on by e2e specs.
 	import { ImageIcon, Plus, Trash2 } from '@lucide/svelte';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import JournalVideo from '$lib/components/JournalVideo.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import MediaLightbox from '#lib/components/MediaLightbox.svelte';
+	import JournalVideo from '#lib/components/JournalVideo.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import ImmichPicker from '#lib/components/ImmichPicker.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { stripMarkdown } from '$lib/markdown';
-	import { MEDIA_ACCEPT, type MediaItem } from '$lib/media';
-	import type { MediaApi } from '$lib/mediaApi';
-	import { t, getLocale } from '$lib/i18n';
+	import { stripMarkdown } from '#lib/markdown.js';
+	import { MEDIA_ACCEPT, type MediaItem } from '#lib/media.js';
+	import type { MediaApi } from '#lib/mediaApi.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	interface Props {
 		/** The media list. Bound so the page sees uploads, deletes and caption edits. */

@@ -1,22 +1,22 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
-	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
+	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
+	import { isPreviewToggle, modKeyLabel } from '#lib/shortcuts.js';
 	import { onMount, tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import MediaManager from '$lib/components/MediaManager.svelte';
-	import { canModifyMedia } from '$lib/permissions';
-	import type { MediaItem } from '$lib/media';
-	import { journalMediaApi } from '$lib/mediaApi';
-	import { localDateISO } from '$lib/date';
-	import { createJournalAutosave } from '$lib/journalAutosave.svelte';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import MediaManager from '#lib/components/MediaManager.svelte';
+	import { canModifyMedia } from '#lib/permissions.js';
+	import type { MediaItem } from '#lib/media.js';
+	import { journalMediaApi } from '#lib/mediaApi.js';
+	import { localDateISO } from '#lib/date.js';
+	import { createJournalAutosave } from '#lib/journalAutosave.svelte.js';
 	import { getContext } from 'svelte';
 
 	const serverTimezone = getContext<string | undefined>('serverTimezone');
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import {
 		Trash2,
 		ChevronLeft,
@@ -33,46 +33,46 @@
 		Upload,
 		FileText
 	} from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
-	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
-	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import ActionMenu, { type ActionMenuItem } from '$lib/components/ActionMenu.svelte';
-	import DayLinkHealthPanel from '$lib/components/journal/DayLinkHealthPanel.svelte';
-	import DayHealthRecords from '$lib/components/journal/DayHealthRecords.svelte';
-	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
-	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '$lib/documentsApi';
-	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
-	import DayHealthEventModal from '$lib/components/journal/DayHealthEventModal.svelte';
-	import DayWeightModal from '$lib/components/journal/DayWeightModal.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import SubtypePills from '#lib/components/log/SubtypePills.svelte';
+	import ActivityTypePills from '#lib/components/log/ActivityTypePills.svelte';
+	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import ActionMenu, { type ActionMenuItem } from '#lib/components/ActionMenu.svelte';
+	import DayLinkHealthPanel from '#lib/components/journal/DayLinkHealthPanel.svelte';
+	import DayHealthRecords from '#lib/components/journal/DayHealthRecords.svelte';
+	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
+	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '#lib/documentsApi.js';
+	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
+	import DayHealthEventModal from '#lib/components/journal/DayHealthEventModal.svelte';
+	import DayWeightModal from '#lib/components/journal/DayWeightModal.svelte';
 	import {
 		documentUrl,
 		healthRecordHref,
 		type DayItemDocument,
 		type DayRecordItem
-	} from '$lib/dayItems';
+	} from '#lib/dayItems.js';
 	import { SvelteDate } from 'svelte/reactivity';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		moodOptions,
 		activityDisplayIcon,
 		activityDisplayLabel,
 		ACTIVITY_HAS_DURATION
-	} from '$lib/i18n/labels';
-	import type { DailyEventType } from '$lib/activityTypes';
+	} from '#lib/i18n/labels.js';
+	import type { DailyEventType } from '#lib/activityTypes.js';
 	import {
 		SPECIES_ACTIVITY_TYPES,
 		defaultActivityType,
 		isActivityAllowed,
 		subtypesKeepingSaved,
 		toSpecies
-	} from '$lib/species';
+	} from '#lib/species.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();

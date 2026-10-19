@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/db';
-import { createNote } from '$lib/server/notes';
-import { NoteCreate, NoteUpdate } from '$lib/server/openapi/schemas';
+import { db, schema } from '#lib/server/db/index.js';
+import { createNote } from '#lib/server/notes.js';
+import { NoteCreate, NoteUpdate } from '#lib/server/openapi/schemas.js';
 import {
 	NOTE_BODY_MAX_LEN,
 	NOTE_FILTER_MAX_TAGS,
 	NOTE_MAX_TAGS,
 	NOTE_TITLE_MAX_LEN
-} from '$lib/notes';
+} from '#lib/notes.js';
 import {
 	loadAllowedNote,
 	noteCodeFor,

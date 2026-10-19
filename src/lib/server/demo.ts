@@ -1,4 +1,4 @@
-import { SEED } from '$server/db/demo-seed';
+import { SEED } from '#lib/server/db/demo-seed.js';
 
 export const DEMO_ROLES = ['admin', 'member', 'caretaker'] as const;
 export type DemoRole = (typeof DEMO_ROLES)[number];

@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
-import { skipReminder } from '$lib/server/reminders';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { authorizeCompanions, listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { skipReminder } from '#lib/server/reminders.js';
 
 // POST /api/reminders/{id}/skip: skip the current occurrence of a recurring
 // reminder — resolves it without a done record and spawns the next occurrence.

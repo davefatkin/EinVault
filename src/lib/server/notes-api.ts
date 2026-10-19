@@ -1,18 +1,18 @@
 import { error } from '@sveltejs/kit';
 import type { z } from 'zod';
-import { t, type Locale } from '$lib/i18n';
+import { t, type Locale } from '#lib/i18n/index.js';
 import {
 	NOTE_ERROR,
 	NOTE_FILTER_MAX_TAGS,
 	parseTagFilter,
 	type NoteErrorCode,
 	type TagFilter
-} from '$lib/notes';
-import { requireFullScope } from '$lib/server/api-guards';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { getNote, type NoteWithAuthors } from '$lib/server/notes';
-import type { ApiTokenScope } from '$lib/server/api-tokens';
-import type { UserRole } from '$lib/server/validation';
+} from '#lib/notes.js';
+import { requireFullScope } from '#lib/server/api-guards.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { getNote, type NoteWithAuthors } from '#lib/server/notes.js';
+import type { ApiTokenScope } from '#lib/server/api-tokens.js';
+import type { UserRole } from '#lib/server/validation.js';
 
 // Shared guards for /api/notes. Notes are owner data: write-scope tokens and
 // caretakers get 403 (caretakers read shared notes on the care page only).

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { t, type Locale } from '$lib/i18n';
-import { getStorage, type GetResult } from '$lib/server/storage';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { getStorage, type GetResult } from '#lib/server/storage/index.js';
 import type { ResolvedMedia } from './media-access';
 
 // Shared response half of /api/photos/[...path]: conditional GET, byte ranges,

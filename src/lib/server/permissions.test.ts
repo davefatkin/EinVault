@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { db, schema } from '$lib/server/db';
-import { localDateISO } from '$lib/date';
+import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 import { assertCanWriteJournalMedia, assertCanWriteNoteMedia } from './permissions';
 
 type Locals = Parameters<typeof assertCanWriteJournalMedia>[0];

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
-import { SMTP_CONFIG } from '$lib/server/env';
+import { SMTP_CONFIG } from '#lib/server/env.js';
 
 // Lazy singleton: the transporter holds a connection pool config but opens
 // sockets only when a message is sent, so creating it at first use is cheap

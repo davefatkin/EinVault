@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import { healthTypeLabel } from '$lib/i18n/labels';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { healthTypeLabel } from '#lib/i18n/labels.js';
 
 	// The journal day's "Link health event" form: a select of the companion's
 	// events from other days.

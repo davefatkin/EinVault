@@ -1,4 +1,4 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, gte, lte, gt } from 'drizzle-orm';
 
 export async function getUpcomingShifts(userId: string) {

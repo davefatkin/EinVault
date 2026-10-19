@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { t, getLocale } from '$lib/i18n';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let {
 		reminderEnabled,

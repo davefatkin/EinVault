@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import Ein from '$lib/components/Ein.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import Ein from '#lib/components/Ein.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	const locale = getLocale();
 </script>

@@ -1,4 +1,4 @@
-import { t, type Locale } from '$lib/i18n';
+import { t, type Locale } from '#lib/i18n/index.js';
 
 // Companion age from a "YYYY-MM-DD" dob (#280), replacing three English-only
 // page helpers and keeping their two formats:

@@ -1,10 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import * as client from 'openid-client';
-import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '$lib/server/auth/oidc';
-import { setOidcStateCookie, isValidReturnTo } from '$lib/server/auth/oidc-state';
-import { isSecureRequest } from '$lib/server/auth';
-import { DEMO_MODE } from '$lib/server/env';
+import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '#lib/server/auth/oidc.js';
+import { setOidcStateCookie, isValidReturnTo } from '#lib/server/auth/oidc-state.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { DEMO_MODE } from '#lib/server/env.js';
 
 export const GET: RequestHandler = async ({ url, cookies, locals, request }) => {
 	if (DEMO_MODE) error(404, 'Not found');

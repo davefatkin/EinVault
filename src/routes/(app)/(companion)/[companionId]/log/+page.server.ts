@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, gte } from 'drizzle-orm';
 import {
 	parseDailyEventType,
@@ -9,10 +9,10 @@ import {
 	parseLoggedAt,
 	parseIdArray,
 	exceedsLen
-} from '$lib/server/validation';
-import { MAX_NOTE_LEN } from '$lib/server/env';
-import { logDailyEvent } from '$lib/server/daily-events';
-import { failCareError } from '$lib/server/care-errors';
+} from '#lib/server/validation.js';
+import { MAX_NOTE_LEN } from '#lib/server/env.js';
+import { logDailyEvent } from '#lib/server/daily-events.js';
+import { failCareError } from '#lib/server/care-errors.js';
 
 export const load: PageServerLoad = async ({ params }) => {
 	// Companion existence is guaranteed by the (companion) layout (404s otherwise).

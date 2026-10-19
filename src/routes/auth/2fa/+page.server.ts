@@ -1,19 +1,19 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, isNull } from 'drizzle-orm';
-import { t } from '$lib/i18n';
+import { t } from '#lib/i18n/index.js';
 import {
 	createSession,
 	generateSessionToken,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { readPendingMfaCookie, clearPendingMfaCookie } from '$lib/server/auth/two-factor';
-import { decryptSecret } from '$lib/server/auth/totp-crypto';
-import { verifyCode, hashBackupCode } from '$lib/server/auth/totp';
-import { checkRateLimit, clearRateLimit } from '$lib/server/auth/rate-limit';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { readPendingMfaCookie, clearPendingMfaCookie } from '#lib/server/auth/two-factor.js';
+import { decryptSecret } from '#lib/server/auth/totp-crypto.js';
+import { verifyCode, hashBackupCode } from '#lib/server/auth/totp.js';
+import { checkRateLimit, clearRateLimit } from '#lib/server/auth/rate-limit.js';
 
 export const load: PageServerLoad = async ({ cookies }) => {
 	const pending = await readPendingMfaCookie(cookies);

@@ -1,6 +1,6 @@
-import type { Reminder } from '$lib/server/db/schema';
-import { unpackMonthDay } from '$lib/reminderRecurrence';
-import { computeNextDueAt } from '$lib/server/reminders';
+import type { Reminder } from '#lib/server/db/schema.js';
+import { unpackMonthDay } from '#lib/reminderRecurrence.js';
+import { computeNextDueAt } from '#lib/server/reminders.js';
 
 const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 

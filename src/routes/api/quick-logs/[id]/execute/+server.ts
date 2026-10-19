@@ -1,8 +1,8 @@
-import { apiRoute } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { executeQuickLog } from '$lib/server/quick-logs';
-import { parseIdArray, parseLoggedAt } from '$lib/server/validation';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { executeQuickLog } from '#lib/server/quick-logs.js';
+import { parseIdArray, parseLoggedAt } from '#lib/server/validation.js';
 
 // Bearer-token endpoint: run one of the token user's configured quick logs.
 // Body optional: { companionIds?, loggedAt? }. With no body the remembered/

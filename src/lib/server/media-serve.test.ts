@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { GetResult, StorageBackend } from '$lib/server/storage';
+import type { GetResult, StorageBackend } from '#lib/server/storage/index.js';
 
 const backend = vi.hoisted(() => ({
 	get: vi.fn<(key: string, opts?: unknown) => Promise<unknown>>(),
 	provider: 'local'
 }));
 
-vi.mock('$lib/server/storage', () => ({
+vi.mock('#lib/server/storage/index.js', () => ({
 	getStorage: () => backend as unknown as StorageBackend
 }));
 

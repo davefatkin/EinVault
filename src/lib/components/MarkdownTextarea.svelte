@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { renderMarkdown } from '$lib/markdown';
-	import { isPreviewToggle, modKeyLabel } from '$lib/shortcuts';
-	import { t, getLocale } from '$lib/i18n';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { isPreviewToggle, modKeyLabel } from '#lib/shortcuts.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	interface Props {
 		name: string;

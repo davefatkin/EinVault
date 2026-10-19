@@ -8,7 +8,7 @@ vi.mock('$env/dynamic/private', () => ({
 
 async function loadEnvModule() {
 	vi.resetModules();
-	return await import('$lib/server/env');
+	return await import('#lib/server/env.js');
 }
 
 describe('reminder undo resolution', () => {

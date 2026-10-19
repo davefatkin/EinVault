@@ -463,7 +463,7 @@ const messages = {
 	'time.hoursAgo': '{count}h ago',
 	'time.daysAgo': '{count}d ago',
 
-	// $lib/age.ts
+	// #lib/age.ts
 	'age.unknown': 'Unknown age',
 	'age.monthsOld.one': '{count}mo old',
 	'age.monthsOld.other': '{count}mo old',

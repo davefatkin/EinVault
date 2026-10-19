@@ -1,7 +1,7 @@
-import type { Locale } from '$lib/i18n';
-import type { Mood } from '$lib/mood';
+import type { Locale } from '#lib/i18n/index.js';
+import type { Mood } from '#lib/mood.js';
 
-export type { Mood } from '$lib/mood';
+export type { Mood } from '#lib/mood.js';
 
 export const MOOD_TREND_RANGES = [7, 30, 90] as const;
 export type MoodTrendRange = (typeof MOOD_TREND_RANGES)[number];

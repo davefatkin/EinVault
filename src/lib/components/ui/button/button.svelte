@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLButtonAttributes, HTMLAnchorAttributes } from 'svelte/elements';
 	import { buttonVariants, type Variant, type Size } from './index.js';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 
 	type Props = (HTMLButtonAttributes | HTMLAnchorAttributes) & {
 		variant?: Variant;

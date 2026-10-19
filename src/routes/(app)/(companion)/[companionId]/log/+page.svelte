@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { page } from '$app/state';
-	import { Card, CardHeader, CardContent } from '$lib/components/ui/card/index.js';
+	import { Card, CardHeader, CardContent } from '#lib/components/ui/card/index.js';
 	import { Activity } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import DailyLogForm from '$lib/components/log/DailyLogForm.svelte';
-	import TodayEventsList from '$lib/components/log/TodayEventsList.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { toSpecies } from '$lib/species';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import DailyLogForm from '#lib/components/log/DailyLogForm.svelte';
+	import TodayEventsList from '#lib/components/log/TodayEventsList.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { toSpecies } from '#lib/species.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();

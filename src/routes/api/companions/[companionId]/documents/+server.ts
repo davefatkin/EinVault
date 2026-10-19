@@ -1,18 +1,18 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t, type Locale } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, count, desc } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
+import { generateId } from '#lib/server/utils.js';
 import sharp from 'sharp';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { MAX_DOCUMENTS_PER_COMPANION, UPLOAD_MAX_MB } from '$lib/server/env';
+import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { MAX_DOCUMENTS_PER_COMPANION, UPLOAD_MAX_MB } from '#lib/server/env.js';
 import {
 	documentExtFromMime,
 	isAllowedDocumentMime,
 	looksLikeDocument
-} from '$lib/server/storage/mime';
-import { isValidDate } from '$lib/server/validation';
+} from '#lib/server/storage/mime.js';
+import { isValidDate } from '#lib/server/validation.js';
 
 const MAX_DOCUMENT_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 // Bound decoded pixels so a small, highly-compressible image can't decode to

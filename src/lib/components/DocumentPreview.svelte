@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { tick } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { X, ChevronLeft, ChevronRight, Download, Loader2 } from '@lucide/svelte';
 
 	interface Props {

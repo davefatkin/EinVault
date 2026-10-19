@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { HeartPulse, Scale, FileText, Paperclip } from '@lucide/svelte';
-	import { badgeVariants } from '$lib/components/ui/badge/index.js';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { cn } from '$lib/utils';
-	import { t, getLocale } from '$lib/i18n';
-	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
+	import { badgeVariants } from '#lib/components/ui/badge/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import { cn } from '#lib/utils.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '#lib/dayItems.js';
 
 	interface Props {
 		item: DayItem;

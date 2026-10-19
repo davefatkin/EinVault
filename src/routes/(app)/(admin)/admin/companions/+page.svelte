@@ -1,16 +1,16 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Card } from '$lib/components/ui/card/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { PawPrint, RotateCcw, Pencil } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { SPECIES_ICON, toSpecies } from '$lib/species';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
 
 	const locale = getLocale();
 

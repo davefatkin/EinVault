@@ -4,10 +4,10 @@ import {
 	invalidateSession,
 	SESSION_COOKIE_NAME,
 	makeBlankCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '$lib/server/auth/oidc';
-import { db, schema } from '$lib/server/db';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '#lib/server/auth/oidc.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 

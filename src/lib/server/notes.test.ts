@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq, isNotNull } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import {
 	listNotes,
 	getNote,
@@ -12,14 +12,14 @@ import {
 	listSharedNotes,
 	sharedNotesMarkdown
 } from './notes';
-import type { NewNote } from '$lib/notes';
+import type { NewNote } from '#lib/notes.js';
 
 // Note deletion hands the note's media objects to deleteMediaBlobs; record the
 // call instead of touching real storage.
-vi.mock('$lib/server/storage/media-blobs', () => ({
+vi.mock('#lib/server/storage/media-blobs.js', () => ({
 	deleteMediaBlobs: vi.fn(async () => {})
 }));
-const { deleteMediaBlobs } = await import('$lib/server/storage/media-blobs');
+const { deleteMediaBlobs } = await import('#lib/server/storage/media-blobs.js');
 
 async function addMedia(
 	noteId: string,

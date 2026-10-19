@@ -1,6 +1,6 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
-import type { HealthEventType } from '$lib/health';
+import type { HealthEventType } from '#lib/health.js';
 import { ensureJournalEntry } from './journal';
 import { healthDay } from './journal-day-items';
 

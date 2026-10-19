@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import { ChevronDown, LayoutGrid } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import type { CareStatus } from '$lib/careStatus';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { CareStatus } from '#lib/careStatus.js';
 
 	type Companion = { id: string; name: string; avatarPath?: string | null };
 

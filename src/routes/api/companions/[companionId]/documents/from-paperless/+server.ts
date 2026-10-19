@@ -1,13 +1,17 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, count } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
-import { getPaperlessClient, paperlessKey, PAPERLESS_DOC_ID_RE } from '$lib/server/storage';
-import { documentExtFromMime, isAllowedDocumentMime } from '$lib/server/storage/mime';
-import { MAX_DOCUMENTS_PER_COMPANION, PAPERLESS_CONFIG } from '$lib/server/env';
-import { isValidDate } from '$lib/server/validation';
+import { generateId } from '#lib/server/utils.js';
+import {
+	getPaperlessClient,
+	paperlessKey,
+	PAPERLESS_DOC_ID_RE
+} from '#lib/server/storage/index.js';
+import { documentExtFromMime, isAllowedDocumentMime } from '#lib/server/storage/mime.js';
+import { MAX_DOCUMENTS_PER_COMPANION, PAPERLESS_CONFIG } from '#lib/server/env.js';
+import { isValidDate } from '#lib/server/validation.js';
 
 const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 type Category = (typeof CATEGORIES)[number];

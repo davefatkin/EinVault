@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 
 	interface Props extends HTMLInputAttributes {
 		class?: string;

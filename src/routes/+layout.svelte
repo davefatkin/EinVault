@@ -4,8 +4,8 @@
 	import { onMount, setContext, untrack } from 'svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { applyTheme, readThemeCookie } from '$lib/theme';
-	import DemoBar from '$components/demo/DemoBar.svelte';
+	import { applyTheme, readThemeCookie } from '#lib/theme.js';
+	import DemoBar from '#lib/components/demo/DemoBar.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 

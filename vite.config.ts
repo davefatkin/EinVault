@@ -43,11 +43,6 @@ export default defineConfig(({ command }) => {
 						'base-uri': ['self'],
 						'form-action': ['self']
 					}
-				},
-				alias: {
-					$lib: './src/lib',
-					$components: './src/lib/components',
-					$server: './src/lib/server'
 				}
 			})
 		],

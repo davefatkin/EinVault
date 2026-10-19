@@ -1,15 +1,15 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
-import { localDateISO } from '$lib/date';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
-import { listQuickLogButtons } from '$lib/server/quick-logs';
-import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
-import { handleMoodTrendDaysUpdate } from '$lib/server/account';
-import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '$lib/moodTrend';
+import { localDateISO } from '#lib/date.js';
+import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { listQuickLogButtons } from '#lib/server/quick-logs.js';
+import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
+import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
+import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

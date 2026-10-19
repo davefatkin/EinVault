@@ -1,10 +1,10 @@
 import { json, error, type RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { avatarLegacyKey } from '$lib/server/storage/avatarKeys';
-import { processAvatarUpload, deletePreviousAvatar, deleteAvatar } from '$lib/server/avatar';
+import { avatarLegacyKey } from '#lib/server/storage/avatarKeys.js';
+import { processAvatarUpload, deletePreviousAvatar, deleteAvatar } from '#lib/server/avatar.js';
 
 // Companion profile edits are for members and admins; caretakers have no
 // avatar UI (the Immich picker route rejects them too).

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import { REMINDER_UNDO_DEFAULT_SENTINEL, REMINDER_UNDO_PRESETS } from '$lib/reminderUndo';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { REMINDER_UNDO_DEFAULT_SENTINEL, REMINDER_UNDO_PRESETS } from '#lib/reminderUndo.js';
 
 	let {
 		currentValue,

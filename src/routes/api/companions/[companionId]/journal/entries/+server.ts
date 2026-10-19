@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { isValidDate } from '$lib/server/validation';
-import { getEnrichedJournalEntries } from '$lib/server/journal';
+import { t } from '#lib/i18n/index.js';
+import { isValidDate } from '#lib/server/validation.js';
+import { getEnrichedJournalEntries } from '#lib/server/journal.js';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));

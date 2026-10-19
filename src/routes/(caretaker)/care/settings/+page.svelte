@@ -1,23 +1,23 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
 	import { SvelteDate } from 'svelte/reactivity';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { CalendarClock, Settings } from '@lucide/svelte';
-	import AccountCard from '$lib/components/settings/AccountCard.svelte';
-	import LanguageCard from '$lib/components/settings/LanguageCard.svelte';
-	import AppearanceCard from '$lib/components/settings/AppearanceCard.svelte';
-	import CalendarFeedCard from '$lib/components/settings/CalendarFeedCard.svelte';
-	import ApiTokensCard from '$lib/components/settings/ApiTokensCard.svelte';
-	import QuickLogsLinkCard from '$lib/components/settings/QuickLogsLinkCard.svelte';
-	import ReminderUndoCard from '$lib/components/settings/ReminderUndoCard.svelte';
-	import NotificationsCard from '$lib/components/settings/NotificationsCard.svelte';
-	import SecurityCard from '$lib/components/settings/SecurityCard.svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { t, getLocale, type MessageKey } from '$lib/i18n';
-	import type { Theme } from '$lib/theme';
+	import AccountCard from '#lib/components/settings/AccountCard.svelte';
+	import LanguageCard from '#lib/components/settings/LanguageCard.svelte';
+	import AppearanceCard from '#lib/components/settings/AppearanceCard.svelte';
+	import CalendarFeedCard from '#lib/components/settings/CalendarFeedCard.svelte';
+	import ApiTokensCard from '#lib/components/settings/ApiTokensCard.svelte';
+	import QuickLogsLinkCard from '#lib/components/settings/QuickLogsLinkCard.svelte';
+	import ReminderUndoCard from '#lib/components/settings/ReminderUndoCard.svelte';
+	import NotificationsCard from '#lib/components/settings/NotificationsCard.svelte';
+	import SecurityCard from '#lib/components/settings/SecurityCard.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { t, getLocale, type MessageKey } from '#lib/i18n/index.js';
+	import type { Theme } from '#lib/theme.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

@@ -1,6 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import type { Require2fa } from '$lib/server/app-settings';
+import type { Require2fa } from '#lib/server/app-settings.js';
 
 export function requiresTwoFactor(
 	user: { role: 'admin' | 'member' | 'caretaker'; isOidc: boolean; totpEnabled: boolean },
