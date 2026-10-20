@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { variables } from './env';
 
@@ -26,6 +26,9 @@ function walk(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
+// Files that read env by index (env[name]) from arrays of names.
+const INDEXED_READERS = ['lib/server/env.ts', 'lib/server/auth/oidc.ts'];
+
 function usedNames(): Set<string> {
 	const names = new Set<string>();
 	for (const file of walk(SRC)) {
@@ -35,7 +38,7 @@ function usedNames(): Set<string> {
 	}
 	// Names read by index (env[name]) from arrays in src/lib/server/env.ts
 	// and src/lib/server/auth/oidc.ts.
-	for (const file of ['lib/server/env.ts', 'lib/server/auth/oidc.ts']) {
+	for (const file of INDEXED_READERS) {
 		const text = readFileSync(join(SRC, file), 'utf8');
 		for (const m of text.matchAll(/\[([^\]]*)\]/g)) {
 			for (const s of m[1].matchAll(/'([A-Z][A-Z0-9_]+)'/g)) names.add(s[1]);
@@ -55,6 +58,18 @@ describe('src/env.ts', () => {
 	it('declares every variable read through $env/dynamic/private', () => {
 		const missing = [...usedNames()].filter((n) => !(n in variables)).sort();
 		expect(missing, `undeclared in src/env.ts: ${missing.join(', ')}`).toEqual([]);
+	});
+
+	it('reads env by index only in the known files', () => {
+		const unknown = walk(SRC)
+			.filter((f) => readFileSync(f, 'utf8').includes('$env/dynamic/private'))
+			.filter((f) => /\benv\[/.test(readFileSync(f, 'utf8')))
+			.map((f) => relative(SRC, f).split(sep).join('/'))
+			.filter((f) => !INDEXED_READERS.includes(f));
+		expect(
+			unknown,
+			`indexed env reads in ${unknown.join(', ')}: add the file to INDEXED_READERS and its array names to src/env.ts`
+		).toEqual([]);
 	});
 
 	it('declares every variable documented in .env.example that the app reads', () => {

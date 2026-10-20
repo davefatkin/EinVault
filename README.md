@@ -320,6 +320,7 @@ No `.env` needed. The database defaults to `./data/einvault.db` and migrations r
 ```bash
 npm run dev            # dev server at http://localhost:5173
 npm run build          # production build
+node serve.js          # start the build outside Docker (not `node build`: serve.js applies ORIGIN and the API Content-Type shim)
 npm run check          # SvelteKit type checking
 npm run lint           # ESLint + Prettier check
 npm run format         # auto-format with Prettier

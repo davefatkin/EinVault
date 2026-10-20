@@ -55,7 +55,6 @@ export const variables = defineEnvVars({
 	SMTP_SECURE: optional,
 	SMTP_USER: optional,
 	STORAGE_BACKEND: optional,
-	TMPDIR: optional,
 	TWOFA_ENC_KEY: optional,
 	TZ: optional,
 	UPLOAD_MAX_MB: optional,
