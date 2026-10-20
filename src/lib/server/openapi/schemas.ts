@@ -50,7 +50,8 @@ export const LogResponse = z
 export const ApiError = z
 	.object({
 		code: z.string().openapi({ example: 'noteTooLong' }),
-		message: z.string()
+		message: z.string(),
+		status: z.number().int().optional().openapi({ example: 400 })
 	})
 	.openapi('ApiError');
 
