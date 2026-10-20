@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { join } from 'path';
 import { REMINDER_UNDO_MAX_SECONDS } from '#lib/reminderUndo.js';
 import { DATA_DIR } from '#lib/server/paths.js';
@@ -465,14 +465,16 @@ export function logDemoBootStatus(): void {
 	console.log(
 		'[demo] DEMO_MODE is ON — read-only; OIDC, password login, and the Bearer-token API disabled.'
 	);
-	const leaks = [
-		'OIDC_ISSUER_URL',
-		'S3_ENDPOINT',
-		'IMMICH_URL',
-		'PAPERLESS_URL',
-		'SMTP_HOST',
-		'NTFY_URL'
-	].filter((k) => env[k]?.trim());
+	const leaks = (
+		[
+			'OIDC_ISSUER_URL',
+			'S3_ENDPOINT',
+			'IMMICH_URL',
+			'PAPERLESS_URL',
+			'SMTP_HOST',
+			'NTFY_URL'
+		] as const
+	).filter((k) => env[k]?.trim());
 	if (leaks.length) {
 		console.warn(
 			`[demo] WARNING: DEMO_MODE is on but these integration vars are set and should be unset: ${leaks.join(', ')}`

@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 
 const COOKIE_NAME = 'einvault_oidc_state';
 const COOKIE_PATH = '/auth/oidc';

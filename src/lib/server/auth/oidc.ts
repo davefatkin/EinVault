@@ -1,5 +1,5 @@
 import * as client from 'openid-client';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 
 export interface OidcConfig {
 	issuerUrl: string;

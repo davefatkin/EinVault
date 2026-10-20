@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_, key: string) => process.env[key]
-	})
-}));
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_, key: string) => process.env[key],
+			has: () => true
+		})
+);
 
 async function loadEnvModule() {
 	vi.resetModules();

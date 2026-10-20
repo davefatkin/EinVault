@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import type { Require2fa } from '#lib/server/app-settings.js';
 
 export function requiresTwoFactor(

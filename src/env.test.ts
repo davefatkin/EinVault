@@ -7,7 +7,7 @@ const SRC = __dirname;
 const ROOT = join(SRC, '..');
 
 // Names in .env.example that the app never reads through
-// $env/dynamic/private: they configure the docker-compose files and the
+// $app/env/private: they configure the docker-compose files and the
 // container user, not the server.
 const NOT_READ_BY_APP = new Set([
 	'EINVAULT_DATA',
@@ -33,7 +33,7 @@ function usedNames(): Set<string> {
 	const names = new Set<string>();
 	for (const file of walk(SRC)) {
 		const text = readFileSync(file, 'utf8');
-		if (!text.includes('$env/dynamic/private')) continue;
+		if (!text.includes('$app/env/private')) continue;
 		for (const m of text.matchAll(/\benv\.([A-Z][A-Z0-9_]*)/g)) names.add(m[1]);
 	}
 	// Names read by index (env[name]) from arrays in src/lib/server/env.ts
@@ -55,14 +55,14 @@ function exampleNames(): Set<string> {
 }
 
 describe('src/env.ts', () => {
-	it('declares every variable read through $env/dynamic/private', () => {
+	it('declares every variable read through $app/env/private', () => {
 		const missing = [...usedNames()].filter((n) => !(n in variables)).sort();
 		expect(missing, `undeclared in src/env.ts: ${missing.join(', ')}`).toEqual([]);
 	});
 
 	it('reads env by index only in the known files', () => {
 		const unknown = walk(SRC)
-			.filter((f) => readFileSync(f, 'utf8').includes('$env/dynamic/private'))
+			.filter((f) => readFileSync(f, 'utf8').includes('$app/env/private'))
 			.filter((f) => /\benv\[/.test(readFileSync(f, 'utf8')))
 			.map((f) => relative(SRC, f).split(sep).join('/'))
 			.filter((f) => !INDEXED_READERS.includes(f));

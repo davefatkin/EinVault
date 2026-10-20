@@ -10,7 +10,7 @@ import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '#lib/server/au
 import { idpRedirectTarget } from '#lib/server/auth/oidc-state.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 
 export const actions: Actions = {
 	default: async ({ locals, cookies, request }) => {

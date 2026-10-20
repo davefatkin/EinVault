@@ -1,5 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { db, schema } from '#lib/server/db/index.js';
 import { getUpcomingShifts } from '#lib/server/shifts.js';
 import { reminderRecurrence, type Recurrence } from '#lib/server/calendarRrule.js';

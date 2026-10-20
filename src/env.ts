@@ -1,9 +1,9 @@
 import { defineEnvVars } from '@sveltejs/kit/env';
 
-// Every variable the server reads through $env/dynamic/private. Kit 3 only
-// exposes declared variables, so a name missing here reads as undefined at
-// runtime. All are optional and passed through unchanged, as in Kit 2;
-// src/lib/server/env.ts does the parsing and defaults.
+// Every variable the server reads through $app/env/private. Kit 3 only
+// exposes declared variables, so a name missing here is a type error and
+// reads as undefined at runtime. All are optional and passed through
+// unchanged, as in Kit 2; src/lib/server/env.ts does the parsing and defaults.
 const optional = { schema: (value: string | undefined) => value };
 
 export const variables = defineEnvVars({

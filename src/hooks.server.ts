@@ -1,7 +1,7 @@
 import { redirect, json } from '@sveltejs/kit';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { validateAuth, isSecureRequest } from '#lib/server/auth/index.js';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { t, resolveLocale, parseAcceptLanguage } from '#lib/i18n/index.js';
 import { logOidcBootStatus } from '#lib/server/auth/oidc.js';
 import {

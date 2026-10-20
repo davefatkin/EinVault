@@ -28,9 +28,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run check
-      # Build-once-run-anywhere in e2e only holds with dynamic env reads.
-      - name: forbid static private env
-        run: "! grep -rn '$env/static/private' src/"
+      # Env reads go through $app/env/private. The $env/* modules are
+      # deprecated in Kit 3, and e2e builds once and varies env per server.
+      - name: forbid $env imports
+        run: "! grep -rnF '$env/' src/"
 
   test-unit:
     runs-on: ubuntu-latest

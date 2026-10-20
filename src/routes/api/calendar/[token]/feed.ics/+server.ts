@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { t } from '#lib/i18n/index.js';
 import { CALENDAR_FEED_ENABLED, CALENDAR_FEED_HISTORY_DAYS } from '#lib/server/env.js';
 import { userByFeedToken } from '#lib/server/calendarToken.js';

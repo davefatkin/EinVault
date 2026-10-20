@@ -20,7 +20,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { t } from '#lib/i18n/index.js';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { DEMO_MODE } from '#lib/server/env.js';
 
 // Same in-process rate limiter pattern as the password login route.

@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_t, key: string) => process.env[key]
-	})
-}));
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_t, key: string) => process.env[key],
+			has: () => true
+		})
+);
 
 beforeAll(() => {
 	process.env.TWOFA_ENC_KEY = Buffer.from(new Uint8Array(32).fill(7)).toString('base64');

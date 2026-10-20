@@ -7,7 +7,7 @@
 // video worker.
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
 import { and, eq, gt, isNull, lte } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
