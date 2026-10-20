@@ -22,6 +22,8 @@
 		"tests",
 		"vite.config.ts",
 		"drizzle.config.ts",
-		"playwright.config.ts"
+		"playwright.config.ts",
+		"serve.js",
+		"serve-origin.js"
 	]
 }
