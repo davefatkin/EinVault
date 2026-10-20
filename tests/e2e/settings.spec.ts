@@ -29,6 +29,7 @@ async function createUser(
 	{ displayName, username }: { displayName: string; username: string }
 ): Promise<void> {
 	await asAdmin.goto('/admin/users');
+	await waitForHydration(asAdmin);
 	await expect(asAdmin).toHaveURL(/\/admin\/users/, { timeout: 10_000 });
 
 	await asAdmin.getByRole('button', { name: /new user/i }).click();
@@ -50,6 +51,7 @@ test.describe('settings', () => {
 	// -------------------------------------------------------------------------
 	test('account fields persist', async ({ asMember }) => {
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await expect(asMember).toHaveURL(/\/settings/, { timeout: 10_000 });
 
 		// Fill in the phone field only (do not touch username).
@@ -66,6 +68,7 @@ test.describe('settings', () => {
 
 		// Reload and check the value persisted.
 		await asMember.reload();
+		await waitForHydration(asMember);
 		await expect(asMember.locator('input[name="phone"]')).toHaveValue('555-0100', {
 			timeout: 6_000
 		});
@@ -89,6 +92,7 @@ test.describe('settings', () => {
 	// -------------------------------------------------------------------------
 	test('theme switch persists', async ({ asMember }) => {
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await expect(asMember).toHaveURL(/\/settings/, { timeout: 10_000 });
 
 		// Click the "Dark mode" button in the header theme toggle.
@@ -99,6 +103,7 @@ test.describe('settings', () => {
 
 		// Reload: the layout $effect should re-apply dark based on the saved theme.
 		await asMember.reload();
+		await waitForHydration(asMember);
 		await expect(asMember.locator('html')).toHaveClass(/dark/, { timeout: 6_000 });
 
 		// Reset to system so the shared session is not left in dark mode. The
@@ -131,6 +136,7 @@ test.describe('settings', () => {
 			await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
 
 			await page.goto('/settings');
+			await waitForHydration(page);
 			await expect(page).toHaveURL(/\/settings/, { timeout: 6_000 });
 
 			// Open password change fields.
@@ -191,6 +197,7 @@ test.describe('settings', () => {
 			await expect(page).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
 
 			await page.goto('/settings');
+			await waitForHydration(page);
 			await expect(page).toHaveURL(/\/settings/, { timeout: 6_000 });
 
 			// Open password change fields.
@@ -278,6 +285,7 @@ test.describe('settings', () => {
 	// -------------------------------------------------------------------------
 	test('notification checkbox persists', async ({ asMember }) => {
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await expect(asMember).toHaveURL(/\/settings/, { timeout: 10_000 });
 
 		const reminderCheckbox = asMember.locator('input[name="notifyReminderEmail"]');
@@ -293,6 +301,7 @@ test.describe('settings', () => {
 				timeout: 8_000
 			});
 			await asMember.reload();
+			await waitForHydration(asMember);
 		}
 
 		// Now check the box (should trigger auto-submit).
@@ -303,6 +312,7 @@ test.describe('settings', () => {
 
 		// Reload and verify still checked.
 		await asMember.reload();
+		await waitForHydration(asMember);
 		await expect(asMember.locator('input[name="notifyReminderEmail"]')).toBeChecked({
 			timeout: 6_000
 		});

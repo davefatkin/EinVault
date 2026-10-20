@@ -34,6 +34,7 @@ test.describe('i18n', () => {
 
 		// Seed health events are weeks old and fall outside Recent Activity; log a fresh one
 		await asMember.goto(`${app.server.baseURL}/${COMP}/health`);
+		await waitForHydration(asMember);
 		await asMember.getByRole('button', { name: 'Add Event' }).click();
 		await asMember.locator('#title').fill(title);
 		await asMember.locator('select[name="type"]').selectOption('vet_visit');
@@ -41,12 +42,14 @@ test.describe('i18n', () => {
 		await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
 
 		await asMember.goto(app.server.baseURL + '/settings');
+		await waitForHydration(asMember);
 		await asMember.locator('select[name="locale"]').selectOption('de');
 		await asMember.waitForLoadState('networkidle');
 		await expect(asMember.locator('html')).toHaveAttribute('lang', 'de');
 
 		try {
 			await asMember.goto(`${app.server.baseURL}/${COMP}`);
+			await waitForHydration(asMember);
 			// 'Tierarztbesuch' is enum.healthType.vet_visit in de.ts
 			const row = asMember.getByRole('button').filter({ hasText: title });
 			await expect(row.getByText('Tierarztbesuch', { exact: true })).toBeVisible();
@@ -56,6 +59,7 @@ test.describe('i18n', () => {
 			await expect(dialog.getByText('Tierarztbesuch', { exact: true })).toBeVisible();
 		} finally {
 			await asMember.goto(app.server.baseURL + '/settings');
+			await waitForHydration(asMember);
 			await asMember.locator('select[name="locale"]').selectOption('en');
 			await asMember.waitForLoadState('networkidle');
 		}

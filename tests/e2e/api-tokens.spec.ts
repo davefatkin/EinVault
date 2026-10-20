@@ -5,6 +5,7 @@ import { test, expect } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { bearerCall, createToken } from '../lib/api-tokens';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = 'seed-comp-ein';
 const JULIA = 'seed-comp-julia';
@@ -46,6 +47,7 @@ test.describe('api tokens', () => {
 
 		// Revoke via UI → token stops working.
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await asMember
 			.locator('div')
 			.filter({ hasText: 'Door button' })
@@ -67,6 +69,7 @@ test.describe('api tokens', () => {
 	}) => {
 		// Configure a quick log in the UI.
 		await asMember.goto('/settings/quick-logs');
+		await waitForHydration(asMember);
 		await asMember.getByRole('button', { name: 'Add quick log' }).click();
 		await asMember.locator('input[name="name"]').fill('Api treat');
 		await asMember.locator('label').filter({ hasText: /Treat/i }).first().click();
@@ -633,6 +636,7 @@ test.describe('api tokens', () => {
 		// discover their ids through the read endpoint under test above.
 		async function addOneOffReminder(title: string) {
 			await asMember.goto(`/${EIN}/reminders`);
+			await waitForHydration(asMember);
 			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
 			await asMember.locator('#title').fill(title);
 			await asMember.locator('#dueAt').fill('2099-01-15T10:00');
@@ -711,6 +715,7 @@ test.describe('api tokens', () => {
 		// Create a recurring reminder via the app's own form (same UI a member
 		// would use), then discover its id through the read endpoint.
 		await asMember.goto(`/${EIN}/reminders`);
+		await waitForHydration(asMember);
 		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
 		await asMember.locator('#title').fill('Api complete recurring');
 		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
@@ -757,6 +762,7 @@ test.describe('api tokens', () => {
 		// Create a recurring reminder via the app's own form, then discover its
 		// id through the read endpoint (mirrors the complete-endpoint recurring test).
 		await asMember.goto(`/${EIN}/reminders`);
+		await waitForHydration(asMember);
 		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
 		await asMember.locator('#title').fill('Api skip recurring');
 		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
@@ -809,6 +815,7 @@ test.describe('api tokens', () => {
 		const headers = { Authorization: `Bearer ${raw}` };
 
 		await asMember.goto(`/${EIN}/reminders`);
+		await waitForHydration(asMember);
 		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
 		await asMember.locator('#title').fill('Api skip one-off');
 		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
@@ -1019,6 +1026,7 @@ test.describe('api tokens', () => {
 
 		// Admin revokes API access for the member (jet) via the users Manage drawer.
 		await asAdmin.goto('/admin/users');
+		await waitForHydration(asAdmin);
 		const row = asAdmin.locator('div.px-6.py-4').filter({ hasText: 'jet' });
 		await expect(row).toBeVisible({ timeout: 6_000 });
 		await row.getByRole('button', { name: /manage/i }).click();
@@ -1034,6 +1042,7 @@ test.describe('api tokens', () => {
 
 		// …and the member's settings card shows the revoked notice.
 		await asMember.goto('/settings');
+		await waitForHydration(asMember);
 		await expect(asMember.getByText(/revoked your API access/)).toBeVisible();
 
 		// A grant/revoke notification email reached the fake SMTP sink if the
