@@ -57,7 +57,7 @@
 					const next = Number((submitter as HTMLButtonElement | null)?.value);
 					if (isMoodTrendRange(next)) days = next;
 					// A failed save stays silent; the next load shows the stored value.
-					return async ({ update }) => update({ invalidateAll: false, reset: false });
+					return async ({ update }) => update({ refreshAll: false, reset: false });
 				}}
 			>
 				{#each MOOD_TREND_RANGES as r (r)}
