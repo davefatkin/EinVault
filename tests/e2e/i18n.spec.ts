@@ -1,8 +1,10 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 test.describe('i18n', () => {
 	test('user pref persists across reload and can be restored', async ({ asMember, app }) => {
 		await asMember.goto(app.server.baseURL + '/settings');
+		await waitForHydration(asMember);
 
 		// Switch to German
 		await asMember.locator('select[name="locale"]').selectOption('de');
@@ -16,6 +18,7 @@ test.describe('i18n', () => {
 
 		// Preference persists after reload
 		await asMember.reload();
+		await waitForHydration(asMember);
 		await expect(asMember.locator('html')).toHaveAttribute('lang', 'de');
 		await expect(asMember.getByRole('heading', { name: 'Sprache' })).toBeVisible();
 

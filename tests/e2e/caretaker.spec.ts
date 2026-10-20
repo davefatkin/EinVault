@@ -68,7 +68,7 @@ test.describe('caretaker', () => {
 			'complete',
 			'seed-reminder-edward-overdue'
 		);
-		expect(res.status()).toBe(200); // SvelteKit's JSON action response always 200s a fail()
+		expect(res.status()).toBe(403); // Kit 3 sends the fail() status as the HTTP status
 		expect(body.type).toBe('failure');
 		expect(body.status).toBe(403);
 	});
@@ -84,7 +84,7 @@ test.describe('caretaker', () => {
 			'skip',
 			'seed-reminder-edward-recurring'
 		);
-		expect(res.status()).toBe(200);
+		expect(res.status()).toBe(403);
 		expect(body.type).toBe('failure');
 		expect(body.status).toBe(403);
 	});
