@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 	import { Plus, Users } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import UserManageDrawer from '$lib/components/admin/UserManageDrawer.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import UserManageDrawer from '#lib/components/admin/UserManageDrawer.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	const locale = getLocale();
 

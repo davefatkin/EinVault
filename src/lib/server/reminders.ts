@@ -1,12 +1,12 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, isNull } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
+import { generateId } from '#lib/server/utils.js';
 import {
 	clampDayOfMonth,
 	unpackMonthDay,
 	type RecurrenceUnit,
 	type RecurrenceAnchor
-} from '$lib/reminderRecurrence';
+} from '#lib/reminderRecurrence.js';
 
 type Reminder = typeof schema.reminders.$inferSelect;
 

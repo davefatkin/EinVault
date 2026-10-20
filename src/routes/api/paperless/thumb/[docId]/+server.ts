@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { getPaperlessClient, PAPERLESS_DOC_ID_RE } from '$lib/server/storage';
+import { t } from '#lib/i18n/index.js';
+import { getPaperlessClient, PAPERLESS_DOC_ID_RE } from '#lib/server/storage/index.js';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));

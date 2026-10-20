@@ -1,4 +1,4 @@
-import { getStorage } from '$lib/server/storage';
+import { getStorage } from '#lib/server/storage/index.js';
 
 // Stored objects owned by one media row (journal or note). Immich rows point
 // at the user's library and are never deleted.

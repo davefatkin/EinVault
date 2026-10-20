@@ -1,4 +1,4 @@
-import type { UserRole } from '$lib/server/validation';
+import type { UserRole } from '#lib/server/validation.js';
 
 // Role enforcement for writes to the owner and caretaker UIs. The (app),
 // (admin) and (caretaker) layouts check roles in load(), but SvelteKit runs a

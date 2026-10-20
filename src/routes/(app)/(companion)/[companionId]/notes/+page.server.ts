@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { listNotes, listTags } from '$lib/server/notes';
-import { togglePinAction } from '$lib/server/note-actions';
-import { NOTE_FILTER_MAX_TAGS, buildTagFilter, tagFilterMatchesNothing } from '$lib/notes';
+import { listNotes, listTags } from '#lib/server/notes.js';
+import { togglePinAction } from '#lib/server/note-actions.js';
+import { NOTE_FILTER_MAX_TAGS, buildTagFilter, tagFilterMatchesNothing } from '#lib/notes.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	if (!locals.user) redirect(302, '/auth/login');

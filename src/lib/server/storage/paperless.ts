@@ -1,4 +1,4 @@
-import type { PaperlessConfig } from '$lib/server/env';
+import type { PaperlessConfig } from '#lib/server/env.js';
 import type { GetResult, StorageBackend } from './types';
 
 const KEY_PREFIX = 'paperless:';

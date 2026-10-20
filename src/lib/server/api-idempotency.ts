@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { json } from '@sveltejs/kit';
 import { and, eq, lt } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
 
 // Idempotency-Key header bound: long enough for a UUID or a device's own scheme,
 // short enough that a hostile header can't bloat the row.

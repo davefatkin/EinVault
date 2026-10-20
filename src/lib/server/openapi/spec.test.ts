@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NOTE_FILTER_MAX_TAGS } from '$lib/notes';
+import { NOTE_FILTER_MAX_TAGS } from '#lib/notes.js';
 import { buildOpenApiDocument } from './spec';
 
 describe('buildOpenApiDocument', () => {

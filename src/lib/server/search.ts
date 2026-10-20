@@ -1,6 +1,6 @@
-import { db } from '$lib/server/db';
-import type { SearchEntityType } from '$lib/searchTypes';
-export { SEARCH_ENTITY_TYPES, type SearchEntityType } from '$lib/searchTypes';
+import { db } from '#lib/server/db/index.js';
+import type { SearchEntityType } from '#lib/searchTypes.js';
+export { SEARCH_ENTITY_TYPES, type SearchEntityType } from '#lib/searchTypes.js';
 
 export interface SearchFilters {
 	text: string;

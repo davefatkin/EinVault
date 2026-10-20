@@ -1,16 +1,16 @@
 import { fail } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { t, type Locale } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { API_TOKENS_ENABLED } from '$lib/server/env';
-import { parseShortName } from '$lib/server/validation';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { API_TOKENS_ENABLED } from '#lib/server/env.js';
+import { parseShortName } from '#lib/server/validation.js';
 import {
 	createApiToken,
 	revokeApiToken,
 	countApiTokens,
 	MAX_API_TOKENS_PER_USER,
 	type ApiTokenScope
-} from '$lib/server/api-tokens';
+} from '#lib/server/api-tokens.js';
 
 // Shared bodies for the api-token settings actions (account.ts pattern): the
 // (app) settings route and the caretaker /care/settings twin delegate here so

@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { TagInput } from '$lib/components/ui/tag-input';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { createDirtyGuard } from '$lib/dirtyGuard.svelte';
-	import { NOTE_ERROR, NOTE_TITLE_MAX_LEN, NOTE_MAX_TAGS, normalizeTag } from '$lib/notes';
-	import { t, getLocale } from '$lib/i18n';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { TagInput } from '#lib/components/ui/tag-input/index.js';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import { createDirtyGuard } from '#lib/dirtyGuard.svelte.js';
+	import { NOTE_ERROR, NOTE_TITLE_MAX_LEN, NOTE_MAX_TAGS, normalizeTag } from '#lib/notes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let {
 		note,

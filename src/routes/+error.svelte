@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import type { MessageKey } from '$lib/i18n';
-	import Ein from '$lib/components/Ein.svelte';
+	import { page } from '$app/state';
+	import { Card, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { MessageKey } from '#lib/i18n/index.js';
+	import Ein from '#lib/components/Ein.svelte';
 
 	const locale = getLocale();
 
@@ -15,13 +15,13 @@
 		500: { title: 'page.error.500.title', description: 'page.error.500.description' }
 	};
 
-	let status = $derived($page.status);
+	let status = $derived(page.status);
 	let keys = $derived(STATUS_KEYS[status]);
 	let title = $derived(keys ? t(locale, keys.title) : t(locale, 'page.error.unexpected.title'));
 	let description = $derived(
 		keys
 			? t(locale, keys.description)
-			: ($page.error?.message ?? t(locale, 'page.error.unexpected.description'))
+			: (page.error?.message ?? t(locale, 'page.error.unexpected.description'))
 	);
 </script>
 

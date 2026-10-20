@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { renderMarkdown } from '$lib/markdown';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import ByLine from '$lib/components/ByLine.svelte';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import ByLine from '#lib/components/ByLine.svelte';
 	import { Pencil, NotebookPen } from '@lucide/svelte';
-	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
-	import { t, getLocale } from '$lib/i18n';
-	import type { JournalEntry, DailyEvent } from '$server/db/schema';
-	import type { UserRef } from '$lib/types';
-	import type { Species } from '$lib/activityTypes';
-	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
-	import DayItemChip from '$lib/components/journal/DayItemChip.svelte';
-	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
-	import { journalMediaUrl, type MediaItem } from '$lib/media';
+	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '#lib/i18n/labels.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { JournalEntry, DailyEvent } from '#lib/server/db/schema.js';
+	import type { UserRef } from '#lib/types.js';
+	import type { Species } from '#lib/activityTypes.js';
+	import MediaThumbs from '#lib/components/MediaThumbs.svelte';
+	import DayItemChip from '#lib/components/journal/DayItemChip.svelte';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '#lib/dayItems.js';
+	import { journalMediaUrl, type MediaItem } from '#lib/media.js';
 
 	type Activity = DailyEvent & { logger: UserRef };
 

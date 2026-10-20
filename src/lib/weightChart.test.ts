@@ -7,7 +7,7 @@ import {
 	convertWeight,
 	type WeightPoint
 } from './weightChart';
-import type { WeightUnit } from '$lib/activityTypes';
+import type { WeightUnit } from '#lib/activityTypes.js';
 
 const P = (recordedAt: string, weight: number, unit: WeightUnit = 'lbs'): WeightPoint => ({
 	recordedAt: new Date(recordedAt),

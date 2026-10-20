@@ -1,11 +1,11 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import type { Note } from '$lib/server/db/schema';
-import { generateId } from '$lib/server/utils';
-import type { NewNote, NotePatch, TagMatch } from '$lib/notes';
-import type { MediaItem } from '$lib/media';
-import { countMediaForNotes, listMediaForNotes } from '$lib/server/note-media';
-import { deleteMediaBlobs, type StoredMediaRef } from '$lib/server/storage/media-blobs';
+import { db, schema } from '#lib/server/db/index.js';
+import type { Note } from '#lib/server/db/schema.js';
+import { generateId } from '#lib/server/utils.js';
+import type { NewNote, NotePatch, TagMatch } from '#lib/notes.js';
+import type { MediaItem } from '#lib/media.js';
+import { countMediaForNotes, listMediaForNotes } from '#lib/server/note-media.js';
+import { deleteMediaBlobs, type StoredMediaRef } from '#lib/server/storage/media-blobs.js';
 
 // Companion notes (issue #310). Pure data access: callers (form actions, the
 // Bearer API) do the role and companion checks.

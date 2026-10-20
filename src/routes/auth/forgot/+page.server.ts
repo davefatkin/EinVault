@@ -1,13 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import * as env from '$app/env/private';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { isMailEnabled, sendMail } from '$lib/server/mail';
-import { buildResetEmail } from '$lib/server/mail/templates';
-import { createResetToken, cleanupExpiredResetTokens } from '$lib/server/auth/password-reset';
-import { EMAIL_RE } from '$lib/server/validation';
+import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
+import { buildResetEmail } from '#lib/server/mail/templates.js';
+import { createResetToken, cleanupExpiredResetTokens } from '#lib/server/auth/password-reset.js';
+import { EMAIL_RE } from '#lib/server/validation.js';
 
 // In-process per-IP limiter, same caveats as the login limiter: state resets on
 // restart, single-instance only. A DB-backed per-user cooldown lives in

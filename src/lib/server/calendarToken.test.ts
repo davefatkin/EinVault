@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import { enableFeedToken, disableFeedToken, userByFeedToken, hashFeedToken } from './calendarToken';
 

@@ -1,6 +1,6 @@
-import { parseSpecies, parseWeightUnit } from '$lib/server/validation';
-import { defaultWeightUnit } from '$lib/species';
-import type { Species, WeightUnit } from '$lib/activityTypes';
+import { parseSpecies, parseWeightUnit } from '#lib/server/validation.js';
+import { defaultWeightUnit } from '#lib/species.js';
+import type { Species, WeightUnit } from '#lib/activityTypes.js';
 
 // Species + weight unit from the companion form. Create (no `current`) requires
 // a species and defaults the unit from it; edit keeps stored values for any

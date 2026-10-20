@@ -1,4 +1,4 @@
-import type { MessageKey } from '$lib/i18n/en';
+import type { MessageKey } from '#lib/i18n/en.js';
 
 // Shape caps for companion notes (issue #310). Client-safe so the editor and
 // the server enforce the same numbers. Storage guarantees, not operator
@@ -76,7 +76,7 @@ export function notesFilterHref(base: string, tags: string[], match: TagMatch): 
 
 // Typed or pasted tag text: commas separate tags. One implementation, owned by
 // the generic tag input.
-export { splitTagText as splitTagInput } from '$lib/components/ui/tag-input/commit';
+export { splitTagText as splitTagInput } from '#lib/components/ui/tag-input/commit.js';
 
 export type NoteErrorCode =
 	'titleRequired' | 'titleTooLong' | 'invalidTitle' | 'bodyTooLong' | 'tooManyTags' | 'invalidTag';

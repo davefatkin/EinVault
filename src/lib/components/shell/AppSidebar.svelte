@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import PawLogo from '$lib/components/PawLogo.svelte';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import PawLogo from '#lib/components/PawLogo.svelte';
 	import {
 		House,
 		NotebookPen,
@@ -17,9 +17,9 @@
 		PlusCircle
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { modKeyLabel } from '$lib/shortcuts';
-	import type { CareStatus } from '$lib/careStatus';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { modKeyLabel } from '#lib/shortcuts.js';
+	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
 
 	type Companion = {

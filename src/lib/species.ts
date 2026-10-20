@@ -1,13 +1,13 @@
 // Per-species activity rules. Client-safe: imported by Svelte components and
-// server write paths alike. Must not import from $lib/server.
+// server write paths alike. Must not import from #lib/server.
 import {
 	DAILY_EVENT_TYPES,
 	SPECIES,
 	type DailyEventType,
 	type Species,
 	type WeightUnit
-} from '$lib/activityTypes';
-import { activitySubtypesFor } from '$lib/activitySubtypes';
+} from '#lib/activityTypes.js';
+import { activitySubtypesFor } from '#lib/activitySubtypes.js';
 
 export const SPECIES_ICON: Record<Species, string> = { dog: '🐕', cat: '🐈', other: '🐾' };
 

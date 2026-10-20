@@ -1,4 +1,4 @@
-import { localDateISO } from '$lib/date';
+import { localDateISO } from '#lib/date.js';
 
 export type CareStatus = 'up-to-date' | 'due-today' | 'needs-attention';
 

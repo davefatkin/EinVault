@@ -1,25 +1,26 @@
 <script lang="ts">
-	import type { PageData, Snapshot } from './$types';
+	import type { PageData } from './$types';
 	import { tick, onDestroy } from 'svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { snapshot } from '$app/navigation';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import JournalTimelineEntry from '$lib/components/journal/JournalTimelineEntry.svelte';
-	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { toSpecies } from '$lib/species';
-	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import { journalMediaUrl, type MediaItem } from '$lib/media';
-	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import JournalTimelineEntry from '#lib/components/journal/JournalTimelineEntry.svelte';
+	import MediaLightbox from '#lib/components/MediaLightbox.svelte';
+	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { toSpecies } from '#lib/species.js';
+	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import { journalMediaUrl, type MediaItem } from '#lib/media.js';
+	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
 	import {
 		documentUrl,
 		healthRecordHref,
 		type DayItemDocument,
 		type DayRecordItem
-	} from '$lib/dayItems';
+	} from '#lib/dayItems.js';
 
 	const locale = getLocale();
 
@@ -65,12 +66,16 @@
 		window.scrollTo(0, value.scrollY);
 	}
 
-	export const snapshot: Snapshot<{ oldestDate: string | null; scrollY: number }> = {
-		capture: () => ({ oldestDate, scrollY: window.scrollY }),
+	snapshot({
+		id: 'journal-timeline',
+		capture: (): { oldestDate: string | null; scrollY: number } => ({
+			oldestDate,
+			scrollY: window.scrollY
+		}),
 		restore: (value) => {
 			void restoreLoaded(value);
 		}
-	};
+	});
 
 	let previewDoc = $state<DayItemDocument | null>(null);
 	let detailRecord = $state<DayRecordItem | null>(null);

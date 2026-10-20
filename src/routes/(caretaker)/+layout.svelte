@@ -2,11 +2,11 @@
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import PawLogo from '$lib/components/PawLogo.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import PawLogo from '#lib/components/PawLogo.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import {
 		Home,
 		ClipboardList,
@@ -17,11 +17,11 @@
 		ChevronRight,
 		Plus
 	} from '@lucide/svelte';
-	import AppFooter from '$lib/components/AppFooter.svelte';
-	import { ToastRegion } from '$lib/components/ui/toast';
-	import { t, getLocale } from '$lib/i18n';
-	import CompanionSwitcher from '$lib/components/shell/CompanionSwitcher.svelte';
-	import { currentFabSection, orderFabActions } from '$lib/nav/fabSections';
+	import AppFooter from '#lib/components/AppFooter.svelte';
+	import { ToastRegion } from '#lib/components/ui/toast/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import CompanionSwitcher from '#lib/components/shell/CompanionSwitcher.svelte';
+	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 

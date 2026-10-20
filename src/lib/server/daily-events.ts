@@ -1,11 +1,11 @@
 import { inArray } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
-import { authorizeCompanions } from '$lib/server/companion-scope';
-import { ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
-import { isActivityAllowed, subtypesFor, toSpecies } from '$lib/species';
-import type { DailyEventType, UserRole } from '$lib/server/validation';
-import type { CareErrorCode } from '$lib/server/care-errors';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
+import { authorizeCompanions } from '#lib/server/companion-scope.js';
+import { ACTIVITY_HAS_DURATION } from '#lib/i18n/labels.js';
+import { isActivityAllowed, subtypesFor, toSpecies } from '#lib/species.js';
+import type { DailyEventType, UserRole } from '#lib/server/validation.js';
+import type { CareErrorCode } from '#lib/server/care-errors.js';
 
 export interface DailyEventInput {
 	type: DailyEventType;

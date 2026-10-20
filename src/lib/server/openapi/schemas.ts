@@ -1,7 +1,7 @@
 import { z } from './z';
-import { MAX_NOTE_LEN } from '$lib/textLimits';
-import { NOTE_TITLE_MAX_LEN, NOTE_BODY_MAX_LEN, NOTE_MAX_TAGS } from '$lib/notes';
-import { DAILY_EVENT_TYPES, SPECIES, WEIGHT_UNITS } from '$lib/activityTypes';
+import { MAX_NOTE_LEN } from '#lib/textLimits.js';
+import { NOTE_TITLE_MAX_LEN, NOTE_BODY_MAX_LEN, NOTE_MAX_TAGS } from '#lib/notes.js';
+import { DAILY_EVENT_TYPES, SPECIES, WEIGHT_UNITS } from '#lib/activityTypes.js';
 
 // Shared zod schemas for the Bearer API. Single source of truth: the route
 // validates against these AND the OpenAPI spec is generated from them, so the
@@ -50,7 +50,8 @@ export const LogResponse = z
 export const ApiError = z
 	.object({
 		code: z.string().openapi({ example: 'noteTooLong' }),
-		message: z.string()
+		message: z.string(),
+		status: z.number().int().optional().openapi({ example: 400 })
 	})
 	.openapi('ApiError');
 
@@ -217,7 +218,7 @@ export const NoteWriteResponse = z
 
 // Shape only. The title is trimmed before its length check so the cap matches
 // the form. The single-line title rule and tag normalization run in
-// validateNewNote/validateNotePatch ($lib/notes), shared with the form actions.
+// validateNewNote/validateNotePatch (#lib/notes), shared with the form actions.
 export const NoteCreate = z
 	.object({
 		companionId: z.string().min(1),

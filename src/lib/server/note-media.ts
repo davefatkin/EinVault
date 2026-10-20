@@ -1,11 +1,11 @@
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import type { Media } from '$lib/server/db/schema';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
-import { toMediaItem, type MediaItem, type MediaStatus } from '$lib/media';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
-import type { PreparedMedia } from '$lib/server/storage/media-upload';
+import { db, schema } from '#lib/server/db/index.js';
+import type { Media } from '#lib/server/db/schema.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
+import { toMediaItem, type MediaItem, type MediaStatus } from '#lib/media.js';
+import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { deleteMediaBlobs } from '#lib/server/storage/media-blobs.js';
+import type { PreparedMedia } from '#lib/server/storage/media-upload.js';
 
 // Note media (issue #321). Pure data access plus the upload commit; callers
 // (the /api/companions/.../notes/[noteId]/media routes, note pages) run

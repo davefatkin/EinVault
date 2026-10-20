@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import { enhance } from '$app/forms';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { WEIGHT_UNITS, type WeightUnit } from '$lib/activityTypes';
+	import { enhance, type SubmitFunction } from '$app/forms';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { WEIGHT_UNITS, type WeightUnit } from '#lib/activityTypes.js';
 
 	// The log-weight form, shared by the Health Log and the journal day.
 	let {

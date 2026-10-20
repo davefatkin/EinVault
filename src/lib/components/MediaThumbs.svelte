@@ -2,8 +2,8 @@
 	// Read-only thumbnail row. The page owns the lightbox and opens it via
 	// `onopen`, so a page with many rows (care page) has one lightbox.
 	import { Play } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import type { MediaItem } from '$lib/media';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { MediaItem } from '#lib/media.js';
 
 	interface Props {
 		items: MediaItem[];

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import ByLine from '$lib/components/ByLine.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import ByLine from '#lib/components/ByLine.svelte';
 	import NoteMediaCount from './NoteMediaCount.svelte';
 	import NoteTags from './NoteTags.svelte';
 	import PinToggle from './PinToggle.svelte';
-	import { stripMarkdown } from '$lib/markdown';
-	import { t, getLocale } from '$lib/i18n';
-	import type { UserRef } from '$lib/types';
+	import { stripMarkdown } from '#lib/markdown.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { UserRef } from '#lib/types.js';
 
 	let {
 		note,

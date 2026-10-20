@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { t, getLocale } from '$lib/i18n';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	// One-time 2FA backup codes display with copy/download. The acknowledge /
 	// continue action is left to the caller, since it differs per surface

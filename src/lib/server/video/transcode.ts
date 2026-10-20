@@ -30,7 +30,7 @@
 // shipped docker-compose files — and documented as deploy guidance.
 
 import { spawn } from 'node:child_process';
-import { VIDEO_TRANSCODE } from '$lib/server/env';
+import { VIDEO_TRANSCODE } from '#lib/server/env.js';
 
 // Map an accepted upload MIME to the exact ffmpeg input demuxer(s) we force via
 // -f. Derived from our own allowlist (the upload handler already validated MIME

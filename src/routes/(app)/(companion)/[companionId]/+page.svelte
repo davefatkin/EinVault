@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import QuickLogButtons from '$lib/components/log/QuickLogButtons.svelte';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import WeightSparkline from '$lib/components/WeightSparkline.svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { localDateISO } from '$lib/date';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { localDateISO } from '#lib/date.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import {
 		ClipboardList,
 		Bell,
@@ -21,10 +21,10 @@
 		X,
 		Activity
 	} from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
-	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
+	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
 	import {
 		REMINDER_ICONS,
 		activityTypeOptions,
@@ -34,22 +34,22 @@
 		documentCategoryLabel,
 		reminderTypeLabel,
 		speciesLabels
-	} from '$lib/i18n/labels';
-	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
-	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { formatAge } from '$lib/age';
-	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
-	import { registerDismissForm } from '$lib/actions/registerDismissForm';
-	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
-	import { formatRecurrence } from '$lib/reminderRecurrence';
-	import { reminderUrgency } from '$lib/reminderBuckets';
-	import { careStatus } from '$lib/careStatus';
-	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
-	import { convertWeight } from '$lib/weightChart';
-	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
-	import MoodTrendCard from '$lib/components/companion/MoodTrendCard.svelte';
+	} from '#lib/i18n/labels.js';
+	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatAge } from '#lib/age.js';
+	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
+	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
+	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
+	import { formatRecurrence } from '#lib/reminderRecurrence.js';
+	import { reminderUrgency } from '#lib/reminderBuckets.js';
+	import { careStatus } from '#lib/careStatus.js';
+	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
+	import { convertWeight } from '#lib/weightChart.js';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '#lib/species.js';
+	import MoodTrendCard from '#lib/components/companion/MoodTrendCard.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {

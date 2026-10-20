@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Card, CardContent } from '#lib/components/ui/card/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import {
 		ArrowDown,
 		ArrowUp,
@@ -18,17 +18,17 @@
 		Trash2,
 		Zap
 	} from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
-	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import type { DailyEventType, Species } from '$lib/activityTypes';
-	import { allowedTypesFor, isActivityAllowed } from '$lib/species';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import ActivityTypePills from '#lib/components/log/ActivityTypePills.svelte';
+	import SubtypePills from '#lib/components/log/SubtypePills.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { DailyEventType, Species } from '#lib/activityTypes.js';
+	import { allowedTypesFor, isActivityAllowed } from '#lib/species.js';
 	import {
 		ACTIVITY_HAS_DURATION,
 		activityDisplayIcon,
 		activityDisplayLabel
-	} from '$lib/i18n/labels';
+	} from '#lib/i18n/labels.js';
 
 	interface QuickLogRow {
 		id: string;

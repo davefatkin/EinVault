@@ -1,14 +1,14 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t, type Locale } from '$lib/i18n';
-import type { MessageKey } from '$lib/i18n/en';
-import { db, schema } from '$lib/server/db';
+import { t, type Locale } from '#lib/i18n/index.js';
+import type { MessageKey } from '#lib/i18n/en.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, ne, gte, isNull } from 'drizzle-orm';
-import { getShiftStatus } from '$lib/server/shifts';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
-import { listQuickLogButtons } from '$lib/server/quick-logs';
-import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
-import { listSharedNotes } from '$lib/server/notes';
+import { getShiftStatus } from '#lib/server/shifts.js';
+import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { listQuickLogButtons } from '#lib/server/quick-logs.js';
+import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
+import { listSharedNotes } from '#lib/server/notes.js';
 
 // Actions need their own assignment + shift gate: the load()'s assignment
 // check does not protect POSTs, so without this an on-shift caretaker could

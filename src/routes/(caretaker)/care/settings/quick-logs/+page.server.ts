@@ -1,12 +1,12 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, ne } from 'drizzle-orm';
-import { listQuickLogs } from '$lib/server/quick-logs';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { toSpecies } from '$lib/species';
+import { listQuickLogs } from '#lib/server/quick-logs.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { toSpecies } from '#lib/species.js';
 
-export { quickLogActions as actions } from '$lib/server/quick-log-actions';
+export { quickLogActions as actions } from '#lib/server/quick-log-actions.js';
 
 // Caretaker twin of /settings/quick-logs: same shared handlers, but the
 // companion picker is limited to the caretaker's assigned active companions.

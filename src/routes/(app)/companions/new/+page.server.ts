@@ -1,10 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
-import { parseSex, parseSpecies, parseWeightUnitStrict } from '$lib/server/validation';
-import { parseCompanionSpeciesAndUnit } from '$lib/server/companion-form';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
+import { parseSex, parseSpecies, parseWeightUnitStrict } from '#lib/server/validation.js';
+import { parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');

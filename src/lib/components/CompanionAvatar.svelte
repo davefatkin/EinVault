@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { avatarCacheBusts, bustAvatarCache } from '$lib/avatarCache.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { avatarCacheBusts, bustAvatarCache } from '#lib/avatarCache.svelte.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { Camera, ImagePlus, Loader2, AlertTriangle } from '@lucide/svelte';
 	const locale = getLocale();
 

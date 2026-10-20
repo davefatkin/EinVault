@@ -1,6 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
-import { t, type Locale } from '$lib/i18n';
-import type { MessageKey } from '$lib/i18n/en';
+import { t, type Locale } from '#lib/i18n/index.js';
+import type { MessageKey } from '#lib/i18n/en.js';
 
 // The single source of truth for how a companion-care failure maps to an HTTP
 // status and a localized message. Both the form actions and the Bearer API map
@@ -30,7 +30,7 @@ export const CARE_ERROR: Record<CareErrorCode, { status: number; key: MessageKey
 // gives devices a stable, locale-independent branch key.
 export function throwCareError(code: CareErrorCode, locale: Locale): never {
 	const { status, key } = CARE_ERROR[code];
-	error(status, { code, message: t(locale, key) });
+	error(status, t(locale, key), { code });
 }
 
 // Form-action path: returns a fail() with the localized message under the

@@ -1,21 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import sharp from 'sharp';
-import { t } from '$lib/i18n';
+import { t } from '#lib/i18n/index.js';
 
 // Small caps so the size tests don't allocate 100 MB. env.ts reads
-// $env/dynamic/private once at import; a live proxy plus these values set
+// $app/env/private once at import; a live proxy plus these values set
 // before the dynamic import below makes UPLOAD_MAX_MB/VIDEO_MAX_MB = 1.
 process.env.UPLOAD_MAX_MB = '1';
 process.env.VIDEO_MAX_MB = '1';
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_, key: string) => process.env[key]
-	})
-}));
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_, key: string) => process.env[key],
+			has: () => true
+		})
+);
 
 // The transcode decision depends on ffmpeg being present; control it directly.
 const transcode = vi.hoisted(() => ({ available: false }));
-vi.mock('$lib/server/video/transcode', () => ({
+vi.mock('#lib/server/video/transcode.js', () => ({
 	transcodeAvailable: vi.fn(async () => transcode.available),
 	demuxerForMime: (mime: string) =>
 		mime === 'video/webm' ? 'matroska,webm' : mime.startsWith('video/') ? 'mov,mp4' : null

@@ -6,7 +6,7 @@ import { test, expect, type AppWorker } from '../lib/fixtures';
 import { createSeededDb, createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
-import { createToken } from '../lib/api-tokens';
+import { bearerCall, createToken } from '../lib/api-tokens';
 import { pngUpload, mp4Upload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
 
@@ -348,6 +348,7 @@ test.describe('notes (owner)', () => {
 
 	test('fixing leftover invalid tags does not commit them mid-edit', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
+		await waitForHydration(asMember);
 		const tagBox = asMember.getByRole('combobox');
 		const chips = asMember.getByRole('button', { name: /^Remove tag/ });
 		const x = 'x'.repeat(33);
@@ -458,6 +459,7 @@ test.describe('notes (owner)', () => {
 
 	test('closing the tab with unsaved changes triggers the browser prompt', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
+		await waitForHydration(asMember);
 		await asMember.getByLabel('Title', { exact: true }).fill('Unsaved');
 		let prompted = false;
 		asMember.once('dialog', async (d) => {
@@ -477,10 +479,8 @@ test.describe('notes (owner)', () => {
 
 	test('search finds a note by tag', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}`);
-		// The search button proves the layout hydrated, so Ctrl+K won't race mount.
-		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
-			timeout: 8_000
-		});
+		// The search button is server-rendered; wait for hydration before Ctrl+K.
+		await waitForHydration(asMember);
 		await asMember.evaluate(() => document.body.focus());
 		await asMember.keyboard.press('Control+k');
 		const dialog = asMember.locator('[role="dialog"]');
@@ -884,7 +884,7 @@ apiWorld(
 			expect(padded.status()).toBe(200);
 			expect((await padded.json()).title).toBe('t'.repeat(200));
 
-			const del = await page.request.delete(api(`/api/notes/${id}`), { headers: auth });
+			const del = await bearerCall('DELETE', api(`/api/notes/${id}`), { headers: auth });
 			expect(del.status()).toBe(204);
 			const gone = await page.request.get(api(`/api/notes/${id}`), { headers: auth });
 			expect(gone.status()).toBe(404);

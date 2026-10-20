@@ -4,7 +4,7 @@ import path from 'node:path';
 import { test, expect } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { createToken } from '../lib/api-tokens';
+import { bearerCall, createToken } from '../lib/api-tokens';
 
 const EIN = 'seed-comp-ein';
 const JULIA = 'seed-comp-julia';
@@ -85,7 +85,8 @@ test.describe('api tokens', () => {
 		expect(target).toBeTruthy();
 
 		// Fire it with no body; all config lives in the app.
-		const exec = await asMember.request.post(
+		const exec = await bearerCall(
+			'POST',
 			app.server.baseURL + `/api/quick-logs/${target.id}/execute`,
 			{ headers: { Authorization: `Bearer ${raw}` } }
 		);
@@ -94,7 +95,8 @@ test.describe('api tokens', () => {
 		expect(ids.length).toBeGreaterThan(0);
 
 		// Unknown id → 404 (no existence leak).
-		const nope = await asMember.request.post(
+		const nope = await bearerCall(
+			'POST',
 			app.server.baseURL + '/api/quick-logs/does-not-exist/execute',
 			{ headers: { Authorization: `Bearer ${raw}` } }
 		);
@@ -654,7 +656,8 @@ test.describe('api tokens', () => {
 		await addOneOffReminder('Api complete one-off');
 		const id = await findReminderId('Api complete one-off');
 
-		const complete = await asMember.request.post(
+		const complete = await bearerCall(
+			'POST',
 			app.server.baseURL + `/api/reminders/${id}/complete`,
 			{ headers }
 		);
@@ -665,15 +668,15 @@ test.describe('api tokens', () => {
 		expect(body.nextReminderId).toBeNull();
 
 		// Completing the same (now-completed) reminder again → 409.
-		const again = await asMember.request.post(
-			app.server.baseURL + `/api/reminders/${id}/complete`,
-			{ headers }
-		);
+		const again = await bearerCall('POST', app.server.baseURL + `/api/reminders/${id}/complete`, {
+			headers
+		});
 		expect(again.status()).toBe(409);
 		expect((await again.json()).code).toBe('alreadyCompleted');
 
 		// Unknown id → 404, same shape as the not-owned case (no enumeration oracle).
-		const unknown = await asMember.request.post(
+		const unknown = await bearerCall(
+			'POST',
 			app.server.baseURL + '/api/reminders/does-not-exist/complete',
 			{ headers }
 		);
@@ -690,7 +693,8 @@ test.describe('api tokens', () => {
 			'/settings',
 			'write'
 		);
-		const writeComplete = await asMember.request.post(
+		const writeComplete = await bearerCall(
+			'POST',
 			app.server.baseURL + `/api/reminders/${secondId}/complete`,
 			{ headers: { Authorization: `Bearer ${writeRaw}` } }
 		);
@@ -727,7 +731,7 @@ test.describe('api tokens', () => {
 		expect(match).toBeTruthy();
 		const id = match.id;
 
-		const done = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/complete`, {
+		const done = await bearerCall('POST', app.server.baseURL + `/api/reminders/${id}/complete`, {
 			headers
 		});
 		expect(done.status()).toBe(200);
@@ -773,7 +777,7 @@ test.describe('api tokens', () => {
 		expect(match).toBeTruthy();
 		const id = match.id;
 
-		const skip = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/skip`, {
+		const skip = await bearerCall('POST', app.server.baseURL + `/api/reminders/${id}/skip`, {
 			headers
 		});
 		expect(skip.status()).toBe(200);
@@ -793,7 +797,7 @@ test.describe('api tokens', () => {
 		expect(skipped.outcome).toBe('skipped');
 
 		// Skipping the same (now-resolved) reminder again → 409.
-		const again = await asMember.request.post(app.server.baseURL + `/api/reminders/${id}/skip`, {
+		const again = await bearerCall('POST', app.server.baseURL + `/api/reminders/${id}/skip`, {
 			headers
 		});
 		expect(again.status()).toBe(409);
@@ -821,10 +825,9 @@ test.describe('api tokens', () => {
 		const match = reminders.find((r: { title: string }) => r.title === 'Api skip one-off');
 		expect(match).toBeTruthy();
 
-		const skip = await asMember.request.post(
-			app.server.baseURL + `/api/reminders/${match.id}/skip`,
-			{ headers }
-		);
+		const skip = await bearerCall('POST', app.server.baseURL + `/api/reminders/${match.id}/skip`, {
+			headers
+		});
 		expect(skip.status()).toBe(400);
 		expect((await skip.json()).code).toBe('notRecurring');
 	});
@@ -1100,7 +1103,8 @@ offShiftTest(
 		// as 404 (not the 403 noActiveShift an off-shift caretaker would otherwise
 		// get for ANY existing reminder id — which would let a token distinguish
 		// "exists" from "unknown" without ever being assigned to the companion).
-		const unassigned = await page.request.post(
+		const unassigned = await bearerCall(
+			'POST',
 			world.server.baseURL + '/api/reminders/seed-reminder-4/complete',
 			{ headers }
 		);
@@ -1110,7 +1114,8 @@ offShiftTest(
 		// Defense-in-depth check: a reminder on the companion the caretaker IS
 		// assigned to (Ein) still passes the assignment pre-check and reaches the
 		// real 403 noActiveShift — the fix must not over-mask a genuine shift error.
-		const assigned = await page.request.post(
+		const assigned = await bearerCall(
+			'POST',
 			world.server.baseURL + '/api/reminders/seed-reminder-1/complete',
 			{ headers }
 		);

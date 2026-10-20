@@ -22,11 +22,9 @@ async function selectSigilOption(page: Page, fullSigil: string, optionLabel: str
 test.describe('global search palette', () => {
 	test('shortcut opens palette and seed journal entry navigates on Enter', async ({ asMember }) => {
 		await asMember.goto('/');
-		// The search button rendering proves the layout (and its window keydown
-		// handler) has hydrated, so the Ctrl+K below won't race mount.
-		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
-			timeout: 8_000
-		});
+		// The search button is server-rendered, so its presence does not mean the
+		// window keydown handler is attached. Wait for hydration before Ctrl+K.
+		await waitForHydration(asMember);
 		await asMember.evaluate(() => document.body.focus());
 
 		await asMember.keyboard.press('Control+k');

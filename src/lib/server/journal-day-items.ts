@@ -1,11 +1,11 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { alias, union } from 'drizzle-orm/sqlite-core';
-import { localDateISO } from '$lib/date';
+import { localDateISO } from '#lib/date.js';
 import { getJournalDatesByEvent } from './journal-links';
-import type { AttachableDocument, DayItem, DayItemDocument } from '$lib/dayItems';
+import type { AttachableDocument, DayItem, DayItemDocument } from '#lib/dayItems.js';
 
-export type { DayItem, DayItemDocument } from '$lib/dayItems';
+export type { DayItem, DayItemDocument } from '#lib/dayItems.js';
 
 // Server-local day keys. 'localtime' follows the process TZ, the same zone
 // localDateISO uses, so these match the activities' bucketing in journal.ts.

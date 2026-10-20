@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
-	import { addToast } from '$lib/components/ui/toast';
-	import { t, getLocale } from '$lib/i18n';
-	import { bustUserAvatarCache } from '$lib/avatarCache.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import ImmichPicker from '#lib/components/ImmichPicker.svelte';
+	import { addToast } from '#lib/components/ui/toast/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { bustUserAvatarCache } from '#lib/avatarCache.svelte.js';
 	import { Camera, ImagePlus, Loader2, Trash2 } from '@lucide/svelte';
 
 	const locale = getLocale();

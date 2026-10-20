@@ -7,21 +7,21 @@ import {
 	handleCallback,
 	evaluateRole,
 	isAdminGroupsConfigured
-} from '$lib/server/auth/oidc';
-import { readAndClearOidcStateCookie } from '$lib/server/auth/oidc-state';
-import { isSecureRequest } from '$lib/server/auth';
+} from '#lib/server/auth/oidc.js';
+import { readAndClearOidcStateCookie } from '#lib/server/auth/oidc-state.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
 import {
 	generateSessionToken,
 	createSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { db, schema } from '$lib/server/db';
+} from '#lib/server/auth/session.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
-import { t } from '$lib/i18n';
-import { env } from '$env/dynamic/private';
-import { DEMO_MODE } from '$lib/server/env';
+import { generateId } from '#lib/server/utils.js';
+import { t } from '#lib/i18n/index.js';
+import * as env from '$app/env/private';
+import { DEMO_MODE } from '#lib/server/env.js';
 
 // Same in-process rate limiter pattern as the password login route.
 const callbackAttempts = new Map<string, { count: number; resetAt: number }>();

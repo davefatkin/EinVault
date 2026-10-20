@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { eq, ne } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { requireFullScope } from '$lib/server/api-guards';
-import { toApiUser, toApiUserPublic } from '$lib/server/api-serializers';
-import { paginate } from '$lib/server/pagination';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { requireFullScope } from '#lib/server/api-guards.js';
+import { toApiUser, toApiUserPublic } from '#lib/server/api-serializers.js';
+import { paginate } from '#lib/server/pagination.js';
 
 // GET /api/users. Full-scope only. Role-scoped visibility: admin sees everyone;
 // member sees everyone except admins; caretaker sees only themselves. A

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { userAvatarCacheBusts } from '$lib/avatarCache.svelte';
+	import { userAvatarCacheBusts } from '#lib/avatarCache.svelte.js';
 
 	interface Props {
 		userId: string;

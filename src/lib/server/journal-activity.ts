@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { parseSubtypes } from '$lib/activitySubtypes';
-import { isActivityAllowed, subtypesFor, toSpecies } from '$lib/species';
-import type { DailyEventType } from '$lib/activityTypes';
+import { db, schema } from '#lib/server/db/index.js';
+import { parseSubtypes } from '#lib/activitySubtypes.js';
+import { isActivityAllowed, subtypesFor, toSpecies } from '#lib/species.js';
+import type { DailyEventType } from '#lib/activityTypes.js';
 
 // Journal edit rules: an event keeps its stored type even if the companion's
 // species no longer allows it (validated against the global subtype list so

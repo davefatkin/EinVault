@@ -1,14 +1,14 @@
 import { error, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import type { z } from 'zod';
-import { t, type Locale } from '$lib/i18n';
-import { API_TOKENS_ENABLED, API_RATE_LIMIT_PER_MINUTE } from '$lib/server/env';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { API_TOKENS_ENABLED, API_RATE_LIMIT_PER_MINUTE } from '#lib/server/env.js';
 import {
 	resolveApiToken,
 	touchApiToken,
 	type ApiTokenUser,
 	type ApiTokenScope
-} from '$lib/server/api-tokens';
-import { checkRateLimit } from '$lib/server/auth/rate-limit';
+} from '#lib/server/api-tokens.js';
+import { checkRateLimit } from '#lib/server/auth/rate-limit.js';
 
 // Per-endpoint Bearer resolution, deliberately NOT a hooks handle: token
 // requests never populate locals.user, so the twoFactorGate (which only acts
@@ -19,7 +19,7 @@ export async function requireApiToken(
 ): Promise<{ user: ApiTokenUser; tokenId: string; scope: ApiTokenScope }> {
 	// Killswitch off → the route doesn't exist (same posture as the calendar feed).
 	if (!API_TOKENS_ENABLED) {
-		error(404, { code: 'notFound', message: t(event.locals.locale, 'error.notFound') });
+		error(404, t(event.locals.locale, 'error.notFound'), { code: 'notFound' });
 	}
 
 	// Pre-auth limiter by client IP so unknown-token spray stays cheap to shrug off.
@@ -30,20 +30,20 @@ export async function requireApiToken(
 		// adapter can throw when the address is unavailable; fall back to a shared bucket
 	}
 	if (!checkRateLimit(`api-ip:${ip}`, API_RATE_LIMIT_PER_MINUTE, 60 * 1000)) {
-		error(429, { code: 'rateLimited', message: t(event.locals.locale, 'error.rateLimited') });
+		error(429, t(event.locals.locale, 'error.rateLimited'), { code: 'rateLimited' });
 	}
 
 	const header = event.request.headers.get('authorization') ?? '';
 	const match = /^Bearer\s+(.+)$/i.exec(header.trim());
 	const resolved = match ? await resolveApiToken(match[1].trim()) : null;
 	if (!resolved) {
-		error(401, { code: 'invalidToken', message: t(event.locals.locale, 'error.invalidToken') });
+		error(401, t(event.locals.locale, 'error.invalidToken'), { code: 'invalidToken' });
 	}
 
 	// Per-token limiter: generous enough for any sane device, tight enough to
 	// keep a runaway loop from flooding the log tables.
 	if (!checkRateLimit(`api-token:${resolved.tokenId}`, 120, 60 * 1000)) {
-		error(429, { code: 'rateLimited', message: t(event.locals.locale, 'error.rateLimited') });
+		error(429, t(event.locals.locale, 'error.rateLimited'), { code: 'rateLimited' });
 	}
 
 	await touchApiToken(resolved.tokenId);
@@ -76,14 +76,14 @@ export function apiRouteJson<B>(
 	return apiRoute(async (ctx) => {
 		const raw = await ctx.event.request.json().catch(() => null);
 		if (!guard(raw)) {
-			error(400, { code: 'invalidBody', message: t(ctx.locale, 'error.invalidRequestBody') });
+			error(400, t(ctx.locale, 'error.invalidRequestBody'), { code: 'invalidBody' });
 		}
 		return handler({ ...ctx, body: raw });
 	});
 }
 
 // apiRoute + a zod schema: parses and validates the JSON body before the handler
-// runs. The same schema feeds the OpenAPI spec (see $server/openapi), so
+// runs. The same schema feeds the OpenAPI spec (see #lib/server/openapi), so
 // validation and documentation share one source of truth.
 //
 // Zod on its own would collapse every failure into one generic code. The
@@ -105,13 +105,11 @@ export function apiRouteZod<S extends z.ZodType>(
 			const issue = parsed.error.issues[0];
 			const mapped = issue && codeFor?.(issue, ctx.locale);
 			const where = issue?.path.join('.') || 'body';
-			error(
-				400,
-				mapped ?? {
-					code: 'invalidBody',
-					message: `${where}: ${issue?.message ?? t(ctx.locale, 'error.invalidRequestBody')}`
-				}
-			);
+			const { message, ...properties } = mapped ?? {
+				code: 'invalidBody',
+				message: `${where}: ${issue?.message ?? t(ctx.locale, 'error.invalidRequestBody')}`
+			};
+			error(400, message, properties);
 		}
 		return handler({ ...ctx, body: parsed.data });
 	});

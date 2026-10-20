@@ -1,10 +1,9 @@
 import { redirect, json } from '@sveltejs/kit';
-import type { Handle } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-import { validateAuth, isSecureRequest } from '$server/auth';
-import { env } from '$env/dynamic/private';
-import { t, resolveLocale, parseAcceptLanguage } from '$lib/i18n';
-import { logOidcBootStatus } from '$lib/server/auth/oidc';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { validateAuth, isSecureRequest } from '#lib/server/auth/index.js';
+import * as env from '$app/env/private';
+import { t, resolveLocale, parseAcceptLanguage } from '#lib/i18n/index.js';
+import { logOidcBootStatus } from '#lib/server/auth/oidc.js';
 import {
 	S3_CONFIG,
 	DEMO_MODE,
@@ -17,14 +16,14 @@ import {
 	logNtfyBootStatus,
 	logTwoFactorBootStatus,
 	logDemoBootStatus
-} from '$lib/server/env';
-import { isDemoBlockedRequest } from '$lib/server/demo';
-import { DATA_DIR } from '$lib/server/paths';
-import { recoverAndStart } from '$lib/server/video/worker';
-import { startNotifyScheduler } from '$lib/server/notify/scheduler';
-import { getAppSettings } from '$lib/server/app-settings';
-import { requiresTwoFactor } from '$lib/server/auth/two-factor';
-import { routeGroupDecision } from '$lib/server/auth/route-guard';
+} from '#lib/server/env.js';
+import { isDemoBlockedRequest, demoReturnPath } from '#lib/server/demo.js';
+import { DATA_DIR } from '#lib/server/paths.js';
+import { recoverAndStart } from '#lib/server/video/worker.js';
+import { startNotifyScheduler } from '#lib/server/notify/scheduler.js';
+import { getAppSettings } from '#lib/server/app-settings.js';
+import { requiresTwoFactor } from '#lib/server/auth/two-factor.js';
+import { routeGroupDecision } from '#lib/server/auth/route-guard.js';
 
 logOidcBootStatus();
 logStorageBootStatus();
@@ -99,7 +98,7 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-	// CSP is normally emitted by SvelteKit (see svelte.config.js `kit.csp`) so
+	// CSP is normally emitted by SvelteKit (see the `csp` option in vite.config.ts) so
 	// the per-render nonce flows through `%sveltekit.nonce%`. If a `+server.ts`
 	// returns HTML without going through SvelteKit's renderer, fall back to a
 	// strict no-inline baseline so it doesn't ship without any CSP at all.
@@ -182,10 +181,7 @@ const demoReadOnly: Handle = async ({ event, resolve }) => {
 			secure: isSecureRequest(event.request),
 			maxAge: 30
 		});
-		const referer = event.request.headers.get('referer');
-		const back =
-			referer && URL.canParse(referer) ? new URL(referer).pathname + new URL(referer).search : '/';
-		redirect(303, back);
+		redirect(303, demoReturnPath(event.request.headers.get('referer'), event.url.origin));
 	}
 	// Read path: prevent any CDN/proxy from caching authenticated HTML, so one
 	// visitor's session-rendered page can never be served to another. This

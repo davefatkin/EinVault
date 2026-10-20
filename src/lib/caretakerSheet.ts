@@ -1,8 +1,8 @@
-import type { Species } from '$lib/activityTypes';
-import type { MediaItem } from '$lib/media';
+import type { Species } from '#lib/activityTypes.js';
+import type { MediaItem } from '#lib/media.js';
 
 // Printable caretaker sheet (#280). Client-safe: CaretakerSheet.svelte reads
-// these types and $lib/server/caretaker-sheet.ts builds the value, mapping
+// these types and #lib/server/caretaker-sheet.ts builds the value, mapping
 // rows to exactly these fields so storage keys, author ids and timestamps
 // never reach the browser.
 

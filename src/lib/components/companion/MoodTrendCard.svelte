@@ -2,19 +2,19 @@
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { Smile } from '@lucide/svelte';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import MoodStrip from './MoodStrip.svelte';
 	import MoodGrid from './MoodGrid.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		MOOD_TREND_RANGES,
 		buildMoodDays,
 		isMoodTrendRange,
 		type Mood,
 		type MoodTrendRange
-	} from '$lib/moodTrend';
+	} from '#lib/moodTrend.js';
 
 	interface Props {
 		companionId: string;
@@ -57,7 +57,7 @@
 					const next = Number((submitter as HTMLButtonElement | null)?.value);
 					if (isMoodTrendRange(next)) days = next;
 					// A failed save stays silent; the next load shows the stored value.
-					return async ({ update }) => update({ invalidateAll: false, reset: false });
+					return async ({ update }) => update({ refreshAll: false, reset: false });
 				}}
 			>
 				{#each MOOD_TREND_RANGES as r (r)}

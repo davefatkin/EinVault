@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { isNotNull } from 'drizzle-orm';
 import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { db, schema } from '$server/db';
-import { seedRows, SEED, copyDemoPhotoFiles } from '$server/db/demo-seed';
+import { db, schema } from '#lib/server/db/index.js';
+import { seedRows, SEED, copyDemoPhotoFiles } from '#lib/server/db/demo-seed.js';
 
 // copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
 // a developer's journal photos in the ./data directory. Stub the fs operations
@@ -154,7 +154,7 @@ describe('ensureDemoUsers', () => {
 	});
 
 	it('inserts four demo users on first call', async () => {
-		const { ensureDemoUsers } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers } = await import('#lib/server/db/demo-seed.js');
 		const inserted = await ensureDemoUsers(db);
 		expect(inserted).toBe(4);
 		const users = await db.query.users.findMany();
@@ -162,7 +162,7 @@ describe('ensureDemoUsers', () => {
 	});
 
 	it('is idempotent — second call inserts 0', async () => {
-		const { ensureDemoUsers } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers } = await import('#lib/server/db/demo-seed.js');
 		await ensureDemoUsers(db);
 		const inserted = await ensureDemoUsers(db);
 		expect(inserted).toBe(0);
@@ -182,12 +182,12 @@ describe('refreshDemoContent', () => {
 	});
 
 	it('refuses to run when demoMode is false (fail closed)', async () => {
-		const { refreshDemoContent } = await import('$server/db/demo-seed');
+		const { refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
 		expect(() => refreshDemoContent(db, false, DATA_DIR)).toThrow(/DEMO_MODE/);
 	});
 
 	it('leaves exactly one seed worth of media after a second refresh', async () => {
-		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
 		await ensureDemoUsers(db);
 		refreshDemoContent(db, true, DATA_DIR);
 		const first = await db.query.media.findMany({ columns: { id: true } });
@@ -198,7 +198,7 @@ describe('refreshDemoContent', () => {
 	});
 
 	it('seeds one journal-to-health-event link, once', async () => {
-		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
 		await ensureDemoUsers(db);
 		refreshDemoContent(db, true, DATA_DIR);
 		refreshDemoContent(db, true, DATA_DIR);
@@ -209,7 +209,7 @@ describe('refreshDemoContent', () => {
 	});
 
 	it('re-seeds content anchored to now after wiping old rows', async () => {
-		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
 		// Seed users first (refreshDemoContent only touches content, not users)
 		await ensureDemoUsers(db);
 		refreshDemoContent(db, true, DATA_DIR);
@@ -227,7 +227,7 @@ describe('refreshDemoContent', () => {
 	});
 
 	it('is idempotent — calling twice leaves one set of content rows', async () => {
-		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
 		await ensureDemoUsers(db);
 		refreshDemoContent(db, true, DATA_DIR);
 		refreshDemoContent(db, true, DATA_DIR);
@@ -240,7 +240,7 @@ describe('refreshDemoContent', () => {
 describe('startDemoRefreshScheduler', () => {
 	it('can be called multiple times without throwing', async () => {
 		// Just verify idempotency — don't wait for the 24h timer to fire
-		const { startDemoRefreshScheduler } = await import('$server/db/demo-seed');
+		const { startDemoRefreshScheduler } = await import('#lib/server/db/demo-seed.js');
 		expect(() => {
 			startDemoRefreshScheduler(db, true, '/tmp/einvault-demo-test');
 			startDemoRefreshScheduler(db, true, '/tmp/einvault-demo-test'); // second call is no-op

@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { SubmitFunction } from '$app/forms';
 	import { untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
-	import Modal from '$lib/components/Modal.svelte';
-	import HealthEventForm from '$lib/components/health/HealthEventForm.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { DOCUMENT_ACCEPT, attachDocument, uploadDocument } from '$lib/documentsApi';
-	import type { AttachableDocument } from '$lib/dayItems';
-	import { t, getLocale } from '$lib/i18n';
+	import Modal from '#lib/components/Modal.svelte';
+	import HealthEventForm from '#lib/components/health/HealthEventForm.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { DOCUMENT_ACCEPT, attachDocument, uploadDocument } from '#lib/documentsApi.js';
+	import type { AttachableDocument } from '#lib/dayItems.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	// "+ Health event" on the journal day. Saves the event through ?/addHealth,
 	// then uploads new files and attaches picked documents to it. The event

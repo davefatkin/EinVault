@@ -1,8 +1,8 @@
 import { and, eq, ne } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { listSharedNotes } from '$lib/server/notes';
-import type { Locale } from '$lib/i18n';
-import type { CaretakerSheet } from '$lib/caretakerSheet';
+import { db, schema } from '#lib/server/db/index.js';
+import { listSharedNotes } from '#lib/server/notes.js';
+import type { Locale } from '#lib/i18n/index.js';
+import type { CaretakerSheet } from '#lib/caretakerSheet.js';
 
 // Printable caretaker sheet (#280). Pure data access: callers do the role,
 // assignment and active checks (same split as notes.ts).

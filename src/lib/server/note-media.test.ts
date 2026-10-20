@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import type { NoteMediaInsert } from './note-media';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 
 // Fake storage: records puts/deletes; a put can be made to fail.
 const store = vi.hoisted(() => ({
@@ -9,7 +9,7 @@ const store = vi.hoisted(() => ({
 	deletes: [] as string[],
 	failPut: false
 }));
-vi.mock('$lib/server/storage', () => {
+vi.mock('#lib/server/storage/index.js', () => {
 	const backend = {
 		provider: 'local',
 		put: vi.fn(async ({ key }: { key: string }) => {

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Check } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { activityDisplayIcon } from '$lib/i18n/labels';
-	import type { Species } from '$lib/activityTypes';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { activityDisplayIcon } from '#lib/i18n/labels.js';
+	import type { Species } from '#lib/activityTypes.js';
 
 	interface QuickLogButton {
 		id: string;

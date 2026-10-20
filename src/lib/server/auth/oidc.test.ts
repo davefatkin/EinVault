@@ -1,12 +1,16 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
-// $env/dynamic/private snapshots process.env at module import, which is before
-// any test body runs. Replace it with a live proxy so per-test env mutation works.
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_, key: string) => process.env[key]
-	})
-}));
+// $app/env/private values are fixed when vite starts, before any test body
+// runs. Replace it with a live proxy so per-test env mutation works.
+// The `has` trap matters: vitest rejects reads of names not `in` the mock.
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_, key: string) => process.env[key],
+			has: () => true
+		})
+);
 
 const { evaluateRole, isAdminGroupsConfigured, isOidcEnabled } = await import('./oidc');
 

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
-	import AuthBrandPanel from '$lib/components/auth/AuthBrandPanel.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
-	import { Select } from '$lib/components/ui/select/index.js';
+	import AuthBrandPanel from '#lib/components/auth/AuthBrandPanel.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '#lib/i18n/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 
 	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);

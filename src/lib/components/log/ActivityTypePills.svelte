@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Check } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { activityTypeOptions } from '$lib/i18n/labels';
-	import type { DailyEventType, Species } from '$lib/activityTypes';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { activityTypeOptions } from '#lib/i18n/labels.js';
+	import type { DailyEventType, Species } from '#lib/activityTypes.js';
 
 	// `current` is an existing value to keep visible even when it's not in
 	// `types` (an event or quick log saved before a species change).

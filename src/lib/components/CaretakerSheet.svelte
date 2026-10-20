@@ -12,23 +12,23 @@
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { Printer, Video } from '@lucide/svelte';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import NoteContent from '$lib/components/notes/NoteContent.svelte';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { renderMarkdown } from '$lib/markdown';
-	import { noteMediaUrl } from '$lib/media';
-	import { formatAge } from '$lib/age';
-	import { sexLabel, speciesLabel, speciesLabels } from '$lib/i18n/labels';
-	import { t, getLocale } from '$lib/i18n';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import NoteContent from '#lib/components/notes/NoteContent.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { noteMediaUrl } from '#lib/media.js';
+	import { formatAge } from '#lib/age.js';
+	import { sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		photoSelection,
 		sheetPhotoIds,
 		type CaretakerSheet,
 		type SheetMedia,
 		type SheetSection
-	} from '$lib/caretakerSheet';
+	} from '#lib/caretakerSheet.js';
 
 	let {
 		sheet,

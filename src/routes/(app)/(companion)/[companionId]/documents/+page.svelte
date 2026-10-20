@@ -2,23 +2,24 @@
 	import { invalidateAll } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import PaperlessPicker from '$lib/components/PaperlessPicker.svelte';
-	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '$lib/documentsApi';
-	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
-	import { DOCUMENT_CATEGORIES } from '$lib/activityTypes';
-	import { localDateISO } from '$lib/date';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
+	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '#lib/documentsApi.js';
+	import { healthTypeLabel, documentCategoryLabel } from '#lib/i18n/labels.js';
+	import { DOCUMENT_CATEGORIES } from '#lib/activityTypes.js';
+	import { localDateISO } from '#lib/date.js';
 	import { FileText, Upload, Download, Trash2, Pencil, Loader2 } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 
 	let { data } = $props();
 	const locale = getLocale();
@@ -129,11 +130,7 @@
 		lastDeepLinkId = previewId;
 		const match = data.documents.find((d) => d.id === previewId);
 		if (match) preview = match;
-		tick().then(() => {
-			const url = new URL(page.url);
-			url.searchParams.delete('preview');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('preview'));
 	});
 </script>
 

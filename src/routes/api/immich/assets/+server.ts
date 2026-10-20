@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { IMMICH_CONFIG } from '$lib/server/env';
-import { getImmichClient } from '$lib/server/storage';
+import { t } from '#lib/i18n/index.js';
+import { IMMICH_CONFIG } from '#lib/server/env.js';
+import { getImmichClient } from '#lib/server/storage/index.js';
 
 const DEFAULT_PAGE_SIZE = 60;
 const MAX_PAGE_SIZE = 200;

@@ -1,38 +1,38 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import QuickLogButtons from '$lib/components/log/QuickLogButtons.svelte';
-	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import NoteMediaCount from '$lib/components/notes/NoteMediaCount.svelte';
-	import NoteContent from '$lib/components/notes/NoteContent.svelte';
-	import MediaThumbs from '$lib/components/MediaThumbs.svelte';
-	import MediaLightbox from '$lib/components/MediaLightbox.svelte';
-	import { noteMediaApi } from '$lib/mediaApi';
-	import type { MediaItem } from '$lib/media';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
+	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import NoteMediaCount from '#lib/components/notes/NoteMediaCount.svelte';
+	import NoteContent from '#lib/components/notes/NoteContent.svelte';
+	import MediaThumbs from '#lib/components/MediaThumbs.svelte';
+	import MediaLightbox from '#lib/components/MediaLightbox.svelte';
+	import { noteMediaApi } from '#lib/mediaApi.js';
+	import type { MediaItem } from '#lib/media.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Phone, Mail, X, Bell, Activity, Printer } from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
 	import {
 		activityTypeOptions,
 		activityDisplayIcon,
 		activityDisplayLabel,
 		speciesLabels
-	} from '$lib/i18n/labels';
-	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '$lib/species';
+	} from '#lib/i18n/labels.js';
+	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '#lib/species.js';
 	import { tick } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { formatAge } from '$lib/age';
-	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
-	import { registerDismissForm } from '$lib/actions/registerDismissForm';
-	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
-	import { formatRecurrence } from '$lib/reminderRecurrence';
-	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
-	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatAge } from '#lib/age.js';
+	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
+	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
+	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
+	import { formatRecurrence } from '#lib/reminderRecurrence.js';
+	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { StickyNote } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import NoteEditor from '$lib/components/notes/NoteEditor.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import NoteEditor from '#lib/components/notes/NoteEditor.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data, form } = $props();
 	const locale = getLocale();

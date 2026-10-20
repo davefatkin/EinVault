@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { getCalendarItems } from './calendar';
 
 const MEMBER = { id: 'm1', role: 'member' as const };

@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 	import { Check } from '@lucide/svelte';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { activityTypeOptions, ACTIVITY_HAS_DURATION } from '$lib/i18n/labels';
-	import type { DailyEventType, Species } from '$lib/activityTypes';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { activityTypeOptions, ACTIVITY_HAS_DURATION } from '#lib/i18n/labels.js';
+	import type { DailyEventType, Species } from '#lib/activityTypes.js';
 	import {
 		SPECIES_ACTIVITY_TYPES,
 		allowedTypesFor,
 		defaultActivityType,
 		isActivityAllowed,
 		subtypesForAny
-	} from '$lib/species';
-	import ActivityTypePills from '$lib/components/log/ActivityTypePills.svelte';
-	import SubtypePills from '$lib/components/log/SubtypePills.svelte';
+	} from '#lib/species.js';
+	import ActivityTypePills from '#lib/components/log/ActivityTypePills.svelte';
+	import SubtypePills from '#lib/components/log/SubtypePills.svelte';
 
 	interface CompanionOption {
 		id: string;

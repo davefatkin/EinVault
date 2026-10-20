@@ -1,15 +1,15 @@
 <script lang="ts" generics="D extends { id: string; title: string }">
 	import type { Snippet } from 'svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { X, FileText, HeartPulse } from '@lucide/svelte';
-	import { renderMarkdown } from '$lib/markdown';
-	import { healthTypeLabel } from '$lib/i18n/labels';
-	import { t, getLocale } from '$lib/i18n';
-	import type { HealthDetail } from '$lib/health';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { healthTypeLabel } from '#lib/i18n/labels.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { HealthDetail } from '#lib/health.js';
 
 	// The shared health event / weight detail. The health page passes its
 	// Edit/Delete actions as `footer`; journal surfaces pass `healthHref` for a

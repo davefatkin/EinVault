@@ -1,10 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import { validateResetToken } from '$lib/server/auth/password-reset';
+import { validateResetToken } from '#lib/server/auth/password-reset.js';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	if (locals.user) redirect(302, '/');

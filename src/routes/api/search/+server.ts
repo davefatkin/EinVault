@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { search, SEARCH_ENTITY_TYPES, type SearchEntityType } from '$lib/server/search';
+import { t } from '#lib/i18n/index.js';
+import { search, SEARCH_ENTITY_TYPES, type SearchEntityType } from '#lib/server/search.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

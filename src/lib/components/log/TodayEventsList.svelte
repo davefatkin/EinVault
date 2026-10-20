@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Trash2, Activity } from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import ActivityDetailModal from '$lib/components/log/ActivityDetailModal.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { activityDisplayIcon, activityDisplayLabel } from '$lib/i18n/labels';
-	import { stripMarkdown } from '$lib/markdown';
-	import type { Species } from '$lib/activityTypes';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { activityDisplayIcon, activityDisplayLabel } from '#lib/i18n/labels.js';
+	import { stripMarkdown } from '#lib/markdown.js';
+	import type { Species } from '#lib/activityTypes.js';
 
 	interface TodayEvent {
 		id: string;

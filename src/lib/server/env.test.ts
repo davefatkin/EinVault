@@ -1,14 +1,18 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// $env/dynamic/private snapshots process.env at module import. env.ts then bakes
+// $app/env/private values are fixed when vite starts, so process.env changes
+// made in a test never reach it. env.ts then bakes
 // its exported consts (DEMO_MODE, etc.) at evaluation time. Use a live proxy plus
 // vi.resetModules() so each test re-evaluates env.ts against the process.env it
 // sets, independent of import order / pollution from other test files.
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_, key: string) => process.env[key]
-	})
-}));
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_, key: string) => process.env[key],
+			has: () => true
+		})
+);
 
 describe('calendar feed env', () => {
 	it('exports a default 90-day history and enabled flag', async () => {

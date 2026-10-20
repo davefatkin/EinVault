@@ -28,9 +28,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run check
-      # Build-once-run-anywhere in e2e only holds with dynamic env reads.
-      - name: forbid static private env
-        run: "! grep -rn '$env/static/private' src/"
+      # Env reads go through $app/env/private. The $env/* modules are
+      # deprecated in Kit 3, and e2e builds once and varies env per server.
+      - name: forbid $env imports
+        run: "! grep -rnF '$env/' src/"
 
   test-unit:
     runs-on: ubuntu-latest
@@ -87,9 +88,9 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm rebuild better-sqlite3
-      # --ignore-scripts skips the prepare hook, so .svelte-kit/tsconfig.json
-      # (extended by tsconfig.json) never exists; Playwright >=1.62 errors on
-      # the unresolvable extends when loading its config.
+      # --ignore-scripts install never runs svelte-kit sync, so the generated
+      # $app/tsconfig (extended by tsconfig.json) never exists; Playwright
+      # >=1.62 errors on the unresolvable extends when loading its config.
       - run: npx svelte-kit sync
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:

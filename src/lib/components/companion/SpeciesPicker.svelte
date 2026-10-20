@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Check } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { speciesOptions } from '$lib/i18n/labels';
-	import type { Species } from '$lib/activityTypes';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { speciesOptions } from '#lib/i18n/labels.js';
+	import type { Species } from '#lib/activityTypes.js';
 
 	let {
 		value = $bindable<Species | ''>(''),

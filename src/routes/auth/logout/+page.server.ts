@@ -4,12 +4,13 @@ import {
 	invalidateSession,
 	SESSION_COOKIE_NAME,
 	makeBlankCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '$lib/server/auth/oidc';
-import { db, schema } from '$lib/server/db';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { isOidcEnabled, discoverOidcClient, getOidcConfig } from '#lib/server/auth/oidc.js';
+import { idpRedirectTarget } from '#lib/server/auth/oidc-state.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 
 export const actions: Actions = {
 	default: async ({ locals, cookies, request }) => {
@@ -46,6 +47,9 @@ export const actions: Actions = {
 			}
 		}
 
-		redirect(302, logoutHref ?? '/auth/login');
+		// A non-http(s) end-session endpoint falls back to local logout.
+		const target = logoutHref ? idpRedirectTarget(logoutHref) : null;
+		if (target) redirect(302, target.location, target.options);
+		redirect(302, '/auth/login');
 	}
 };

@@ -1,9 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, inArray, isNull, lte } from 'drizzle-orm';
-import { localDateISO } from '$lib/date';
-import { careStatus, type CareStatus } from '$lib/careStatus';
+import { localDateISO } from '#lib/date.js';
+import { careStatus, type CareStatus } from '#lib/careStatus.js';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {

@@ -1,4 +1,4 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 
 export type Require2fa = 'off' | 'admins' | 'everyone';

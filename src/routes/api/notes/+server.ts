@@ -1,21 +1,21 @@
 import { json } from '@sveltejs/kit';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { authorizeCompanions } from '$lib/server/companion-scope';
-import { requireAllowedCompanion } from '$lib/server/api-guards';
-import { paginate } from '$lib/server/pagination';
-import { createNote, listNotes } from '$lib/server/notes';
-import { toApiNote } from '$lib/server/api-serializers';
-import { NoteCreate } from '$lib/server/openapi/schemas';
-import { tagFilterMatchesNothing, validateNewNote } from '$lib/notes';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { authorizeCompanions } from '#lib/server/companion-scope.js';
+import { requireAllowedCompanion } from '#lib/server/api-guards.js';
+import { paginate } from '#lib/server/pagination.js';
+import { createNote, listNotes } from '#lib/server/notes.js';
+import { toApiNote } from '#lib/server/api-serializers.js';
+import { NoteCreate } from '#lib/server/openapi/schemas.js';
+import { tagFilterMatchesNothing, validateNewNote } from '#lib/notes.js';
 import {
 	noteCodeFor,
 	parsePinnedParam,
 	parseTagFilterParams,
 	requireNoteOwnerScope,
 	throwNoteError
-} from '$lib/server/notes-api';
+} from '#lib/server/notes-api.js';
 
 // GET /api/notes?companionId=&tag=&match=&pinned=&limit=&offset=. Full scope,
 // owners only. Repeat tag for several; match=all requires every one.

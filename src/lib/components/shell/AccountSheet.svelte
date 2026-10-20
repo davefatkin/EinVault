@@ -1,8 +1,8 @@
 <script lang="ts">
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import { Settings, LogOut, ShieldCheck, PawPrint, X } from '@lucide/svelte';
 	import { tick } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	type User = {
 		id: string;

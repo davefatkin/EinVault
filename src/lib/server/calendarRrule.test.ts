@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { reminderRecurrence } from './calendarRrule';
-import type { Reminder } from '$lib/server/db/schema';
+import type { Reminder } from '#lib/server/db/schema.js';
 
 const TZ = 'America/New_York';
 function rem(partial: Partial<Reminder>): Reminder {

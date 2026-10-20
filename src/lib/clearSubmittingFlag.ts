@@ -1,8 +1,8 @@
-import type { SubmitFunction } from '@sveltejs/kit';
+import type { SubmitFunction } from '$app/forms';
 
 /**
  * `use:enhance` callback for forms whose submit path goes through
- * `$lib/pendingDismiss.safeSubmit`. `safeSubmit` sets
+ * `#lib/pendingDismiss.safeSubmit`. `safeSubmit` sets
  * `form.dataset.submitting = '1'` to block double-submits while the request
  * is in flight. The flag is normally cleared by the form unmounting on the
  * 303 redirect that follows a successful action, but if the server returns

@@ -1,17 +1,17 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq, gte, lt } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { throwCareError } from '$lib/server/care-errors';
-import { logDailyEvent } from '$lib/server/daily-events';
-import { requireFullScope, requireAllowedCompanion } from '$lib/server/api-guards';
-import { toApiDailyEvent } from '$lib/server/api-serializers';
-import { isValidDate, parseCompanionTargets, parseLoggedAt } from '$lib/server/validation';
-import { LogRequest } from '$lib/server/openapi/schemas';
-import { MAX_NOTE_LEN } from '$lib/server/env';
-import { paginate } from '$lib/server/pagination';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { logDailyEvent } from '#lib/server/daily-events.js';
+import { requireFullScope, requireAllowedCompanion } from '#lib/server/api-guards.js';
+import { toApiDailyEvent } from '#lib/server/api-serializers.js';
+import { isValidDate, parseCompanionTargets, parseLoggedAt } from '#lib/server/validation.js';
+import { LogRequest } from '#lib/server/openapi/schemas.js';
+import { MAX_NOTE_LEN } from '#lib/server/env.js';
+import { paginate } from '#lib/server/pagination.js';
 
 // Read-back: GET /api/logs?companionId=&date=YYYY-MM-DD (date optional). Returns
 // the token user's readable daily events for that companion, newest first.
@@ -24,7 +24,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const filters = [eq(schema.dailyEvents.companionId, companionId)];
 	if (dateParam) {
 		if (!isValidDate(dateParam)) {
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+			error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 		}
 		const start = new Date(`${dateParam}T00:00:00`);
 		const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
@@ -52,14 +52,14 @@ export const POST = apiRouteZod(
 	async ({ event, user, tokenId, locale, body }) => {
 		const companionIds = parseCompanionTargets(body);
 		if (companionIds.length === 0) {
-			error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+			error(400, t(locale, 'error.noCompanionsSelected'), { code: 'noCompanions' });
 		}
 
 		let loggedAt = new Date();
 		if (body.loggedAt !== undefined) {
 			const parsed = parseLoggedAt(body.loggedAt);
 			if (!parsed) {
-				error(400, { code: 'invalidLoggedAt', message: t(locale, 'error.invalidLoggedAt') });
+				error(400, t(locale, 'error.invalidLoggedAt'), { code: 'invalidLoggedAt' });
 			}
 			loggedAt = parsed;
 		}

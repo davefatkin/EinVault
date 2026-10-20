@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { Sun, Moon, Monitor } from '@lucide/svelte';
 
 export type Theme = 'light' | 'dark' | 'system';

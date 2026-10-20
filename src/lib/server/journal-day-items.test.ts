@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { localDateISO } from '$lib/date';
+import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 import { getDayItems, listDayItemDates } from './journal-day-items';
 
 // Day bucketing must follow the server TZ. Node re-reads TZ on assignment

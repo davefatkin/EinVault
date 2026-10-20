@@ -35,12 +35,12 @@ describe('postFormAction', () => {
 	});
 
 	it('reports an action fail(401) as signed out', async () => {
-		stubFetch(JSON.stringify({ type: 'failure', status: 401, data: '[{"error":1},"x"]' }));
+		stubFetch(JSON.stringify({ type: 'failure', status: 401, data: '[{"error":1},"x"]' }), 401);
 		expect(await postFormAction('?/save', new FormData())).toBe('signedOut');
 	});
 
 	it('reports other failures as failed', async () => {
-		stubFetch(JSON.stringify({ type: 'failure', status: 400, data: '[{"error":1},"x"]' }));
+		stubFetch(JSON.stringify({ type: 'failure', status: 400, data: '[{"error":1},"x"]' }), 400);
 		expect(await postFormAction('?/save', new FormData())).toBe('failed');
 	});
 

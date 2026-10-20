@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { localDateISO } from '$lib/date';
-import { getEnrichedJournalEntries } from '$lib/server/journal';
+import { localDateISO } from '#lib/date.js';
+import { getEnrichedJournalEntries } from '#lib/server/journal.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

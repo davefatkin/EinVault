@@ -1,20 +1,20 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import MediaManager from '$lib/components/MediaManager.svelte';
-	import { canModifyMedia } from '$lib/permissions';
-	import type { MediaItem } from '$lib/media';
-	import { journalMediaApi } from '$lib/mediaApi';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import MediaManager from '#lib/components/MediaManager.svelte';
+	import { canModifyMedia } from '#lib/permissions.js';
+	import type { MediaItem } from '#lib/media.js';
+	import { journalMediaApi } from '#lib/mediaApi.js';
 	import { NotebookPen, Lock } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
 	import { untrack } from 'svelte';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import { moodOptions } from '$lib/i18n/labels';
-	import { postFormAction } from '$lib/postFormAction';
+	import { Card, CardContent } from '#lib/components/ui/card/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { moodOptions } from '#lib/i18n/labels.js';
+	import { postFormAction } from '#lib/postFormAction.js';
 
 	let { data }: { data: PageData } = $props();
 	const locale = getLocale();

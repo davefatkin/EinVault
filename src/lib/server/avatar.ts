@@ -1,16 +1,16 @@
 import { error } from '@sveltejs/kit';
-import type { Locale } from '$lib/i18n';
-import { t } from '$lib/i18n';
+import type { Locale } from '#lib/i18n/index.js';
+import { t } from '#lib/i18n/index.js';
 import sharp from 'sharp';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
+import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
 import {
 	AVATAR_LEGACY_EXTS,
 	avatarLegacyKey,
 	resolveExistingAvatarKey
-} from '$lib/server/storage/avatarKeys';
-import { isAllowedAvatarMime } from '$lib/server/storage/mime';
-import { UPLOAD_MAX_MB, type StorageBackendName } from '$lib/server/env';
-import type { StorageProvider } from '$lib/server/storage/types';
+} from '#lib/server/storage/avatarKeys.js';
+import { isAllowedAvatarMime } from '#lib/server/storage/mime.js';
+import { UPLOAD_MAX_MB, type StorageBackendName } from '#lib/server/env.js';
+import type { StorageProvider } from '#lib/server/storage/types.js';
 
 const MAX_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
 

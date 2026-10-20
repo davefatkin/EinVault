@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { Check, HeartPulse, SkipForward } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		onDone: () => void;

@@ -1,16 +1,16 @@
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 import { join } from 'path';
-import { REMINDER_UNDO_MAX_SECONDS } from '$lib/reminderUndo';
-import { DATA_DIR } from '$lib/server/paths';
-import type { StorageProvider } from '$lib/server/storage/types';
+import { REMINDER_UNDO_MAX_SECONDS } from '#lib/reminderUndo.js';
+import { DATA_DIR } from '#lib/server/paths.js';
+import type { StorageProvider } from '#lib/server/storage/types.js';
 
 export {
 	REMINDER_UNDO_MAX_SECONDS,
 	REMINDER_UNDO_PRESETS,
 	REMINDER_UNDO_DEFAULT_SENTINEL
-} from '$lib/reminderUndo';
+} from '#lib/reminderUndo.js';
 
-export { MAX_NOTE_LEN, MAX_JOURNAL_BODY_LEN } from '$lib/textLimits';
+export { MAX_NOTE_LEN, MAX_JOURNAL_BODY_LEN } from '#lib/textLimits.js';
 
 /**
  * Parse an env var as a positive integer (n > 0). Falls back to
@@ -374,7 +374,7 @@ const smtpResult = readSmtpConfig();
 export const SMTP_CONFIG = smtpResult.config;
 
 export function logTwoFactorBootStatus(): void {
-	import('$lib/server/auth/totp-crypto').then(({ isTwoFactorConfigured }) => {
+	import('#lib/server/auth/totp-crypto.js').then(({ isTwoFactorConfigured }) => {
 		console.info(
 			isTwoFactorConfigured()
 				? '[einvault] 2FA available (TWOFA_ENC_KEY set)'
@@ -465,14 +465,16 @@ export function logDemoBootStatus(): void {
 	console.log(
 		'[demo] DEMO_MODE is ON — read-only; OIDC, password login, and the Bearer-token API disabled.'
 	);
-	const leaks = [
-		'OIDC_ISSUER_URL',
-		'S3_ENDPOINT',
-		'IMMICH_URL',
-		'PAPERLESS_URL',
-		'SMTP_HOST',
-		'NTFY_URL'
-	].filter((k) => env[k]?.trim());
+	const leaks = (
+		[
+			'OIDC_ISSUER_URL',
+			'S3_ENDPOINT',
+			'IMMICH_URL',
+			'PAPERLESS_URL',
+			'SMTP_HOST',
+			'NTFY_URL'
+		] as const
+	).filter((k) => env[k]?.trim());
 	if (leaks.length) {
 		console.warn(
 			`[demo] WARNING: DEMO_MODE is on but these integration vars are set and should be unset: ${leaks.join(', ')}`

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { SubmitFunction } from '$app/forms';
 	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
-	import Modal from '$lib/components/Modal.svelte';
-	import WeightForm from '$lib/components/health/WeightForm.svelte';
-	import type { WeightUnit } from '$lib/activityTypes';
-	import { t, getLocale } from '$lib/i18n';
+	import Modal from '#lib/components/Modal.svelte';
+	import WeightForm from '#lib/components/health/WeightForm.svelte';
+	import type { WeightUnit } from '#lib/activityTypes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	// "+ Weight" on the journal day, saved through ?/addWeight.
 	let {

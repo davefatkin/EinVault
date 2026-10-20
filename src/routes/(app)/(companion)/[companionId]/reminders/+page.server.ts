@@ -1,12 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
-import { parseReminderType, parseRecurrence } from '$lib/server/validation';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { generateId } from '#lib/server/utils.js';
+import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
+import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');

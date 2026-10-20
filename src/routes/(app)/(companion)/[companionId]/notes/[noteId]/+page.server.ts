@@ -1,17 +1,17 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { deleteNote, getNote, listTags, updateNote } from '$lib/server/notes';
+import { t } from '#lib/i18n/index.js';
+import { deleteNote, getNote, listTags, updateNote } from '#lib/server/notes.js';
 import {
 	noteErrorText,
 	noteFail,
 	noteFieldsFromForm,
 	noteFormValues,
 	togglePinAction
-} from '$lib/server/note-actions';
-import { listNoteMedia } from '$lib/server/note-media';
-import { MAX_NOTE_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
-import { validateNotePatch } from '$lib/notes';
+} from '#lib/server/note-actions.js';
+import { listNoteMedia } from '#lib/server/note-media.js';
+import { MAX_NOTE_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '#lib/server/env.js';
+import { validateNotePatch } from '#lib/notes.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	if (!locals.user) redirect(302, '/auth/login');

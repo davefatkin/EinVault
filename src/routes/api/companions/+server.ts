@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { inArray } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { apiRoute } from '$lib/server/auth/api-request';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { sharedNotesMarkdown } from '$lib/server/notes';
-import { toApiCompanion, toApiCompanionMinimal } from '$lib/server/api-serializers';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute } from '#lib/server/auth/api-request.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { sharedNotesMarkdown } from '#lib/server/notes.js';
+import { toApiCompanion, toApiCompanionMinimal } from '#lib/server/api-serializers.js';
 
 // Bearer-token endpoint: list the companions the token user may target, so a
 // device can discover ids for /api/logs and /api/journal. Scope matches the

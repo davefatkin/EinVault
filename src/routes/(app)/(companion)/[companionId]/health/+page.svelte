@@ -1,33 +1,34 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
 	import { enhance } from '$app/forms';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
 	import { Scale, Plus, Pencil, Trash2, FileText, HeartPulse } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import WeightChart from '$lib/components/WeightChart.svelte';
-	import DocumentPreview from '$lib/components/DocumentPreview.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import HealthDetailModal from '$lib/components/health/HealthDetailModal.svelte';
-	import HealthEventForm from '$lib/components/health/HealthEventForm.svelte';
-	import WeightForm from '$lib/components/health/WeightForm.svelte';
-	import { stripMarkdown } from '$lib/markdown';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import WeightChart from '#lib/components/WeightChart.svelte';
+	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
+	import HealthEventForm from '#lib/components/health/HealthEventForm.svelte';
+	import WeightForm from '#lib/components/health/WeightForm.svelte';
+	import { stripMarkdown } from '#lib/markdown.js';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { healthTypeOptions, healthTypeLabel } from '$lib/i18n/labels';
-	import { reminderPrefillUrl, type HealthEventType, type HealthDetail } from '$lib/health';
-	import { WEIGHT_UNITS } from '$lib/activityTypes';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { healthTypeOptions, healthTypeLabel } from '#lib/i18n/labels.js';
+	import { reminderPrefillUrl, type HealthEventType, type HealthDetail } from '#lib/health.js';
+	import { WEIGHT_UNITS } from '#lib/activityTypes.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -121,11 +122,7 @@
 				editingHealthId = editId;
 			}
 		}
-		tick().then(() => {
-			const url = new URL(page.url);
-			url.searchParams.delete('edit');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('edit'));
 	});
 
 	$effect(() => {
@@ -150,11 +147,7 @@
 			showWeightForm = false;
 		}
 		prefillApplied = true;
-		tick().then(() => {
-			const url = new URL(page.url);
-			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('new', 'title', 'type', 'description'));
 	});
 
 	// Track the last id we opened so the effect re-fires when a search result
@@ -175,12 +168,7 @@
 			const match = data.weightEntries.find((e) => e.id === weightId);
 			if (match) openDetail({ kind: 'weight', item: match });
 		}
-		tick().then(() => {
-			const url = new URL(page.url);
-			url.searchParams.delete('detailHealth');
-			url.searchParams.delete('detailWeight');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('detailHealth', 'detailWeight'));
 	});
 
 	// Detail modal

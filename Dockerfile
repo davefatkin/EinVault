@@ -84,7 +84,7 @@ RUN echo "apk cache bust: $APK_CACHE_BUST" && apk add --no-cache ffmpeg tzdata
 RUN apk upgrade --no-cache
 
 # Strip npm, npx, corepack, and the bundled yarn from the runtime image. The
-# app starts with `node build` and never invokes a package manager at runtime;
+# app starts with `node serve.js` and never invokes a package manager at runtime;
 # keeping them adds attack surface and CVE noise (npm's transitives, etc.).
 RUN rm -rf \
     /usr/local/lib/node_modules/npm \
@@ -99,6 +99,7 @@ RUN rm -rf \
 # Copy only what's needed to run
 # node:alpine ships a `node` user at 1000:1000, reuse it rather than creating a duplicate
 COPY --from=builder --chown=node:node /build/build ./build
+COPY --from=builder --chown=node:node /build/serve.js /build/serve-origin.js ./
 COPY --from=builder --chown=node:node /build/node_modules ./node_modules
 COPY --from=builder --chown=node:node /build/drizzle ./drizzle
 COPY --from=builder --chown=node:node /build/package.json ./
@@ -125,4 +126,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 # BODY_SIZE_LIMIT is derived from the larger of UPLOAD_MAX_MB and VIDEO_MAX_MB
 # so a single request body can carry either an image or a (larger) video.
-CMD ["sh", "-c", "if [ \"${VIDEO_MAX_MB:-0}\" -gt \"${UPLOAD_MAX_MB:-0}\" ]; then LIMIT=$VIDEO_MAX_MB; else LIMIT=$UPLOAD_MAX_MB; fi; BODY_SIZE_LIMIT=${LIMIT}M exec node build"]
+CMD ["sh", "-c", "if [ \"${VIDEO_MAX_MB:-0}\" -gt \"${UPLOAD_MAX_MB:-0}\" ]; then LIMIT=$VIDEO_MAX_MB; else LIMIT=$UPLOAD_MAX_MB; fi; BODY_SIZE_LIMIT=${LIMIT}M exec node serve.js"]

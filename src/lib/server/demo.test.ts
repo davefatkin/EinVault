@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { demoUserIdForRole, isDemoBlockedRequest, DEMO_ROLES } from '$server/demo';
-import { SEED } from '$server/db/demo-seed';
+import {
+	demoUserIdForRole,
+	isDemoBlockedRequest,
+	demoReturnPath,
+	DEMO_ROLES
+} from '#lib/server/demo.js';
+import { SEED } from '#lib/server/db/demo-seed.js';
 
 describe('demoUserIdForRole', () => {
 	it('maps the three roles to their Bebop seed users', () => {
@@ -43,5 +48,23 @@ describe('isDemoBlockedRequest', () => {
 		expect(isDemoBlockedRequest('POST', '/auth/demo/')).toBe(true);
 		expect(isDemoBlockedRequest('POST', '/AUTH/DEMO')).toBe(true);
 		expect(isDemoBlockedRequest('POST', '/auth/demo/../login')).toBe(true);
+	});
+});
+
+describe('demoReturnPath', () => {
+	const self = 'https://demo.einvault.app';
+
+	it.each([
+		[null, '/'],
+		['', '/'],
+		['not a url', '/'],
+		['https://demo.einvault.app/settings?tab=2', '/settings?tab=2'],
+		['https://demo.einvault.app/journal#today', '/journal'],
+		['https://evil.test/settings', '/'],
+		['http://demo.einvault.app/settings', '/'],
+		['https://demo.einvault.app//evil.test/x', '/'],
+		['https://demo.einvault.app/\\evil.test/x', '/']
+	])('referer %j returns %s', (referer, expected) => {
+		expect(demoReturnPath(referer, self)).toBe(expected);
 	});
 });

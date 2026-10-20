@@ -1,6 +1,6 @@
 <script lang="ts">
-	import PawLogo from '$lib/components/PawLogo.svelte';
-	import Ein from '$lib/components/Ein.svelte';
+	import PawLogo from '#lib/components/PawLogo.svelte';
+	import Ein from '#lib/components/Ein.svelte';
 
 	let { tagline, subtext, footer }: { tagline: string; subtext: string; footer: string } = $props();
 </script>

@@ -1,8 +1,8 @@
 import { error, type RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { t, type Locale } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
-import type { StorageProvider } from '$lib/server/storage';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
+import type { StorageProvider } from '#lib/server/storage/index.js';
 
 // Per-prefix lookups for /api/photos/[...path]. Each resolver maps URL segments
 // to the stored object the request may read, or throws 404/403. The serve step

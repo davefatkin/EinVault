@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { loadCaretakerSheet, formatPrintedOn } from './caretaker-sheet';
 
 const FULL = 'cs-full';

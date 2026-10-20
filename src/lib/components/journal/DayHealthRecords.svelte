@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { HeartPulse, Scale, FileText, Paperclip } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { t, getLocale } from '$lib/i18n';
-	import { healthTypeLabel, documentCategoryLabel } from '$lib/i18n/labels';
-	import type { DayItem, DayItemDocument, DayRecordItem } from '$lib/dayItems';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { healthTypeLabel, documentCategoryLabel } from '#lib/i18n/labels.js';
+	import type { DayItem, DayItemDocument, DayRecordItem } from '#lib/dayItems.js';
 
 	interface Props {
 		items: DayItem[];

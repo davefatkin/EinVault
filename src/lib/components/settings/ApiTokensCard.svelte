@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	interface TokenRow {
 		id: string;

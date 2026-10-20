@@ -1,10 +1,10 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { version } from '../../package.json';
-import { t } from '$lib/i18n';
-import { resolveReminderUndoSeconds, DEMO_MODE } from '$lib/server/env';
-import { isImmichEnabled, isPaperlessEnabled } from '$lib/server/storage';
+import { t } from '#lib/i18n/index.js';
+import { resolveReminderUndoSeconds, DEMO_MODE } from '#lib/server/env.js';
+import { isImmichEnabled, isPaperlessEnabled } from '#lib/server/storage/index.js';
 
 export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	const isApiRoute = url.pathname.startsWith('/api');

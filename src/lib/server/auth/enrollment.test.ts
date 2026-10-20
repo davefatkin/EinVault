@@ -2,11 +2,14 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { TOTP, Secret } from 'otpauth';
 
-vi.mock('$env/dynamic/private', () => ({
-	env: new Proxy({} as Record<string, string | undefined>, {
-		get: (_t, k: string) => process.env[k]
-	})
-}));
+vi.mock(
+	'$app/env/private',
+	() =>
+		new Proxy({} as Record<string, string | undefined>, {
+			get: (_t, k: string) => process.env[k],
+			has: () => true
+		})
+);
 
 beforeAll(() => {
 	process.env.TWOFA_ENC_KEY = Buffer.from(new Uint8Array(32).fill(9)).toString('base64');
@@ -24,7 +27,7 @@ function codeFor(secret: string, timestamp = Date.now()): string {
 
 describe('enrollment', () => {
 	it('begins, confirms, disables', async () => {
-		const { db, schema } = await import('$lib/server/db');
+		const { db, schema } = await import('#lib/server/db/index.js');
 		const { beginEnrollment, confirmEnrollment, disableTwoFactor } = await import('./enrollment');
 		await db
 			.insert(schema.users)

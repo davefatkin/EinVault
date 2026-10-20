@@ -1,4 +1,4 @@
-import type { WeightUnit } from '$lib/activityTypes';
+import type { WeightUnit } from '#lib/activityTypes.js';
 
 export interface WeightPoint {
 	recordedAt: Date;

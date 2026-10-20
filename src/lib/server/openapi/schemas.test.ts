@@ -12,8 +12,8 @@ import {
 	toApiShift,
 	toApiUser,
 	toApiUserPublic
-} from '$lib/server/api-serializers';
-import { DAILY_EVENT_TYPES } from '$lib/activityTypes';
+} from '#lib/server/api-serializers.js';
+import { DAILY_EVENT_TYPES } from '#lib/activityTypes.js';
 import {
 	DailyEventType,
 	LoggedEvent,

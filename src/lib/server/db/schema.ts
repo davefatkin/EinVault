@@ -9,7 +9,7 @@ import {
 	primaryKey,
 	check
 } from 'drizzle-orm/sqlite-core';
-// Relative, not $lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
+// Relative, not #lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
 import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES, DOCUMENT_CATEGORIES } from '../../activityTypes';
 
 // users

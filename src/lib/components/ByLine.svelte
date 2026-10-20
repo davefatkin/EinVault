@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
-	import type { UserRef } from '$lib/types';
-	import { cn } from '$lib/utils';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { UserRef } from '#lib/types.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		user,

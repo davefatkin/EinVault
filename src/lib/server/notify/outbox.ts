@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, lt, notInArray, sql } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { generateId } from '$lib/server/utils';
-import type { OutboxPayload, NotificationOutboxRow } from '$lib/server/db/schema';
+import { db, schema } from '#lib/server/db/index.js';
+import { generateId } from '#lib/server/utils.js';
+import type { OutboxPayload, NotificationOutboxRow } from '#lib/server/db/schema.js';
 
 // Give up on a row after this many claims. The counter increments on each
 // atomic claim, so a row that keeps failing (SMTP rejects, render crash)

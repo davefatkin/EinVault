@@ -2,7 +2,7 @@
 // note media use different URLs, form fields and caption keys; components only
 // see MediaApi and MediaItem. Built from plain closures (no `this`), so a
 // method like `api.urlFor` can be passed around on its own.
-import { t, type Locale } from '$lib/i18n';
+import { t, type Locale } from '#lib/i18n/index.js';
 import {
 	journalMediaUrl,
 	noteMediaUrl,
@@ -10,7 +10,7 @@ import {
 	type MediaItem,
 	type MediaItemSource,
 	type MediaStatus
-} from '$lib/media';
+} from '#lib/media.js';
 
 type FetchInit = NonNullable<Parameters<typeof fetch>[1]>;
 

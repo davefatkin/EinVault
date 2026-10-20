@@ -1,19 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { t } from '#lib/i18n/index.js';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, and, count } from 'drizzle-orm';
-import { generateId } from '$lib/server/utils';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
-import { MAX_DAILY_MEDIA } from '$lib/server/env';
-import { prepareMediaUpload } from '$lib/server/storage/media-upload';
-import { deleteMediaBlobs } from '$lib/server/storage/media-blobs';
-import { kickWorker } from '$lib/server/video/worker';
-import { canModifyMedia } from '$lib/permissions';
-import { getJournalMediaItem } from '$lib/server/journal';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
-import { assertCanWriteJournalMedia } from '$lib/server/permissions';
-import { isValidDate } from '$lib/server/validation';
+import { generateId } from '#lib/server/utils.js';
+import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { MAX_DAILY_MEDIA } from '#lib/server/env.js';
+import { prepareMediaUpload } from '#lib/server/storage/media-upload.js';
+import { deleteMediaBlobs } from '#lib/server/storage/media-blobs.js';
+import { kickWorker } from '#lib/server/video/worker.js';
+import { canModifyMedia } from '#lib/permissions.js';
+import { getJournalMediaItem } from '#lib/server/journal.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
+import { assertCanWriteJournalMedia } from '#lib/server/permissions.js';
+import { isValidDate } from '#lib/server/validation.js';
 
 function journalKey(companionId: string, date: string, filename: string): string {
 	return `journal/${companionId}/${date}/${filename}`;

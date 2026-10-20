@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card/index.js';
-	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '$lib/i18n';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
+	import { t, getLocale, SUPPORTED_LOCALES, LOCALE_LABELS } from '#lib/i18n/index.js';
 
 	let { currentLocale, demoMode = false }: { currentLocale: string; demoMode?: boolean } = $props();
 

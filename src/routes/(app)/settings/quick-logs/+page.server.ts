@@ -1,11 +1,11 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, ne } from 'drizzle-orm';
-import { listQuickLogs } from '$lib/server/quick-logs';
-import { toSpecies } from '$lib/species';
+import { listQuickLogs } from '#lib/server/quick-logs.js';
+import { toSpecies } from '#lib/species.js';
 
-export { quickLogActions as actions } from '$lib/server/quick-log-actions';
+export { quickLogActions as actions } from '#lib/server/quick-log-actions.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');

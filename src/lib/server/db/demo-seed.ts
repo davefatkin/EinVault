@@ -3,9 +3,9 @@ import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
-// Import schema via a relative leaf path, NOT the `$server/db` alias. This module
+// Import schema via a relative leaf path, NOT the `#lib/server/db` import. This module
 // is loaded by the Playwright test runner (through tests/lib/seed.ts) outside
-// Vite, where `$server` and `$env` do not resolve. The live `db` instance is
+// Vite, where `#lib` and `$env` do not resolve. The live `db` instance is
 // passed in by the boot caller instead, so this module pulls in no alias/$env.
 import * as schema from './schema';
 
@@ -161,7 +161,7 @@ export const SEED = {
 // The demo photo source files live in `static/demo-assets/`, which SvelteKit
 // copies into `build/client/demo-assets/` at build time. Resolve at runtime
 // from cwd-relative candidates so it works in every context: `npm run dev`
-// (static/), a built server / `node build` / Docker (build/client/, shipped
+// (static/), a built server / `node serve.js` / Docker (build/client/, shipped
 // because the whole build/ dir is copied), and the Playwright runner. Falls
 // back to the path next to this module for safety. Resolved at call time so
 // process.cwd() and existence reflect the running process.
@@ -238,7 +238,7 @@ export function buildPhotoManifest(now: number): Array<{
 
 /**
  * Demo note media rows AND files (#321). The key mirrors noteMediaKey() in
- * $lib/server/note-media.ts, which this module can't import (it loads outside
+ * #lib/server/note-media.ts, which this module can't import (it loads outside
  * Vite in the Playwright runner). Note keys don't depend on `now`.
  */
 export function buildNoteMediaManifest(): Array<{

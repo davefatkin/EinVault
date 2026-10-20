@@ -2,10 +2,10 @@
 // HealthDetail shape for the detail modal. Imported by
 // the health page (button hrefs), the health server action (redirect on
 // "Save & Add Reminder"), and the reminder complete actions (redirect on
-// "Log event"). Must not import $env or $lib/server modules so the browser
+// "Log event"). Must not import $env or #lib/server modules so the browser
 // bundle stays clean.
 
-import type { UserRef } from '$lib/types';
+import type { UserRef } from '#lib/types.js';
 
 export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';
 export type ReminderType = 'vet' | 'medication' | 'vaccination' | 'grooming' | 'other';

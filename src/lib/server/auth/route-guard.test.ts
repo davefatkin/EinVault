@@ -140,9 +140,11 @@ describe('remote functions', () => {
 	// takes from a client-supplied header. See the note on routeGroupGuard in
 	// hooks.server.ts before adopting them, then update this test.
 	it('are not in use', () => {
-		const remoteFiles = listFiles(SRC_DIR).filter((f) => /\.remote\.[jt]s$/.test(f));
+		const remoteFiles = listFiles(SRC_DIR).filter((f) =>
+			/(^|[/\\])remote\.[jt]s$|\.remote\.[jt]s$/.test(f)
+		);
 		expect(remoteFiles).toEqual([]);
-		const config = readFileSync(join(SRC_DIR, '../svelte.config.js'), 'utf8');
+		const config = readFileSync(join(SRC_DIR, '../vite.config.ts'), 'utf8');
 		expect(config).not.toMatch(/remoteFunctions/);
 	});
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { db, schema } from '$lib/server/db';
-import type { CaretakerSheet } from '$lib/caretakerSheet';
+import { db, schema } from '#lib/server/db/index.js';
+import type { CaretakerSheet } from '#lib/caretakerSheet.js';
 import { load } from './+page.server';
 
 // #280: the owner sheet route. The (companion) layout 404s unknown ids and

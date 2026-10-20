@@ -1,4 +1,4 @@
-import type { ActionResult } from '@sveltejs/kit';
+import type { ActionResult } from '$app/forms';
 
 export type PostFormActionOutcome = 'saved' | 'signedOut' | 'failed';
 
@@ -7,8 +7,7 @@ export type PostFormActionOutcome = 'saved' | 'signedOut' | 'failed';
  * report what happened. Without `accept: application/json` SvelteKit answers
  * with HTML: a signed-out post redirects to the login page, fetch follows it,
  * and the 200 looks like a successful save. With it, the action returns an
- * ActionResult, where a `fail()` still arrives as HTTP 200, so the result
- * type is what decides success.
+ * ActionResult, and the result type is what decides success.
  */
 export async function postFormAction(
 	action: string,
@@ -35,7 +34,7 @@ export async function postFormAction(
 	}
 	if (result.type === 'success') return 'saved';
 	// The owner route guard answers 401 with an `error` result; actions outside
-	// it return fail(401), which arrives as HTTP 200 with the status in the body.
+	// it return fail(401). Both arrive as HTTP 401; the body check is a fallback.
 	if (res.status === 401 || (result.type === 'failure' && result.status === 401)) {
 		return 'signedOut';
 	}

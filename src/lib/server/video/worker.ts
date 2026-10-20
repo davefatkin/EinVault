@@ -27,11 +27,11 @@
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { db, schema } from '$lib/server/db';
-import { getStorage } from '$lib/server/storage';
-import { videoExtFromMime } from '$lib/server/storage/mime';
-import { VIDEO_TRANSCODE } from '$lib/server/env';
-import type { StorageProvider } from '$lib/server/storage/types';
+import { db, schema } from '#lib/server/db/index.js';
+import { getStorage } from '#lib/server/storage/index.js';
+import { videoExtFromMime } from '#lib/server/storage/mime.js';
+import { VIDEO_TRANSCODE } from '#lib/server/env.js';
+import type { StorageProvider } from '#lib/server/storage/types.js';
 import { transcodeAvailable, transcodeToWebProfile } from './transcode';
 
 // Give up after this many attempts. The counter increments on each atomic claim,

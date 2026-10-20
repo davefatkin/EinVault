@@ -1,12 +1,12 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq, lt, gte, and, inArray, isNotNull, sql, desc } from 'drizzle-orm';
-import { localDateISO } from '$lib/date';
-import { generateId } from '$lib/server/utils';
-import type { Mood } from '$lib/mood';
-import type { UserRef } from '$lib/types';
-import { toMediaItem, type MediaItem } from '$lib/media';
-import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '$lib/server/media-columns';
-import { getDayItems, listDayItemDates, type DayItem } from '$lib/server/journal-day-items';
+import { localDateISO } from '#lib/date.js';
+import { generateId } from '#lib/server/utils.js';
+import type { Mood } from '#lib/mood.js';
+import type { UserRef } from '#lib/types.js';
+import { toMediaItem, type MediaItem } from '#lib/media.js';
+import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
+import { getDayItems, listDayItemDates, type DayItem } from '#lib/server/journal-day-items.js';
 
 const PAGE_SIZE = 20;
 

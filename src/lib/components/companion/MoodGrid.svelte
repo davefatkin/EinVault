@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t, type Locale } from '$lib/i18n';
-	import { moodLabel } from '$lib/i18n/labels';
-	import { MOODS } from '$lib/mood';
+	import { t, type Locale } from '#lib/i18n/index.js';
+	import { moodLabel } from '#lib/i18n/labels.js';
+	import { MOODS } from '#lib/mood.js';
 	import {
 		MOOD_TONE,
 		WEEK_START,
@@ -10,7 +10,7 @@
 		toWeekColumns,
 		weekdayRowLabels,
 		type MoodDay
-	} from '$lib/moodTrend';
+	} from '#lib/moodTrend.js';
 
 	let { companionId, days, locale }: { companionId: string; days: MoodDay[]; locale: Locale } =
 		$props();

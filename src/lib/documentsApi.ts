@@ -1,8 +1,8 @@
 // Client calls to the documents API for the documents page and the journal
 // day. Each returns a result instead of throwing, so a caller can try every
 // file and report each failure by name.
-import { t, type Locale } from '$lib/i18n';
-import { failureMessage } from '$lib/mediaApi';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { failureMessage } from '#lib/mediaApi.js';
 
 /** File types the documents endpoint accepts; the server re-checks the bytes. */
 export const DOCUMENT_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp,image/heic';

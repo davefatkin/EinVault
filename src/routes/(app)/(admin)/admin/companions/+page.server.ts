@@ -1,8 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { t } from '$lib/i18n';
+import { t } from '#lib/i18n/index.js';
 
 export const load: PageServerLoad = async () => {
 	const companions = await db.query.companions.findMany({

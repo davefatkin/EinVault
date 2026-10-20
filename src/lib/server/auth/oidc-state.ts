@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import * as env from '$app/env/private';
 
 const COOKIE_NAME = 'einvault_oidc_state';
 const COOKIE_PATH = '/auth/oidc';
@@ -136,4 +136,19 @@ export function isValidReturnTo(returnTo: string): boolean {
 	// eslint-disable-next-line no-control-regex
 	if (/[\s\x00-\x1f]/.test(returnTo)) return false;
 	return true;
+}
+
+/**
+ * Kit 3 refuses external redirects unless the call opts in. IdP endpoints come
+ * from discovery metadata, not user input; this only refuses a non-http(s)
+ * scheme. The allowlist is the endpoint's own origin rather than the issuer's,
+ * since some IdPs host the authorization endpoint on another domain.
+ */
+export function idpRedirectTarget(
+	href: string
+): { location: string; options: { external: string[] } } | null {
+	if (!URL.canParse(href)) return null;
+	const url = new URL(href);
+	if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+	return { location: url.href, options: { external: [url.origin] } };
 }

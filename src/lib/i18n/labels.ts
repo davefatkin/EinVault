@@ -1,8 +1,13 @@
 import { t } from './index';
 import type { Locale, MessageKey } from './index';
-import { activitySubtypesFor } from '$lib/activitySubtypes';
-import { DAILY_EVENT_TYPES, SPECIES, type DailyEventType, type Species } from '$lib/activityTypes';
-import { SPECIES_ICON, speciesIcon, subtypesFor } from '$lib/species';
+import { activitySubtypesFor } from '#lib/activitySubtypes.js';
+import {
+	DAILY_EVENT_TYPES,
+	SPECIES,
+	type DailyEventType,
+	type Species
+} from '#lib/activityTypes.js';
+import { SPECIES_ICON, speciesIcon, subtypesFor } from '#lib/species.js';
 
 // Icons are not translatable — they stay constant across locales.
 

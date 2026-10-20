@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import {
 	handleAccountUpdate,
@@ -9,30 +9,30 @@ import {
 	handleNotificationsUpdate,
 	handleTestEmail,
 	handleTestNtfy
-} from '$lib/server/account';
-import { isMailEnabled } from '$lib/server/mail';
-import { isNtfyEnabled } from '$lib/server/notify/ntfy';
-import { isSecureRequest } from '$lib/server/auth';
-import { t, SUPPORTED_LOCALES } from '$lib/i18n';
-import type { Locale } from '$lib/i18n';
+} from '#lib/server/account.js';
+import { isMailEnabled } from '#lib/server/mail/index.js';
+import { isNtfyEnabled } from '#lib/server/notify/ntfy.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { t, SUPPORTED_LOCALES } from '#lib/i18n/index.js';
+import type { Locale } from '#lib/i18n/index.js';
 import {
 	REMINDER_UNDO_SECONDS_DEFAULT,
 	CALENDAR_FEED_ENABLED,
 	API_TOKENS_ENABLED
-} from '$lib/server/env';
-import { enableFeedToken, disableFeedToken } from '$lib/server/calendarToken';
-import { listApiTokens } from '$lib/server/api-tokens';
+} from '#lib/server/env.js';
+import { enableFeedToken, disableFeedToken } from '#lib/server/calendarToken.js';
+import { listApiTokens } from '#lib/server/api-tokens.js';
 import {
 	handleApiTokenCreate,
 	handleApiTokenRevoke,
 	handleApiTokenRotate
-} from '$lib/server/api-token-actions';
+} from '#lib/server/api-token-actions.js';
 import {
 	totpBegin,
 	totpConfirm,
 	totpRegenerate,
 	totpDisable
-} from '$lib/server/auth/two-factor-actions';
+} from '#lib/server/auth/two-factor-actions.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -55,9 +55,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const calUser = await db.query.users.findFirst({ where: eq(schema.users.id, locals.user.id) });
 
-	const { isTwoFactorConfigured } = await import('$lib/server/auth/totp-crypto');
-	const { getAppSettings } = await import('$lib/server/app-settings');
-	const { requiresTwoFactor } = await import('$lib/server/auth/two-factor');
+	const { isTwoFactorConfigured } = await import('#lib/server/auth/totp-crypto.js');
+	const { getAppSettings } = await import('#lib/server/app-settings.js');
+	const { requiresTwoFactor } = await import('#lib/server/auth/two-factor.js');
 	const { require2fa } = await getAppSettings();
 	const twoFactorAvailable = isTwoFactorConfigured();
 	const twoFactorEnforced = requiresTwoFactor(

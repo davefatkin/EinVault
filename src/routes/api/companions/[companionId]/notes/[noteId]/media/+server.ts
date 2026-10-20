@@ -1,12 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { noteMediaUrl } from '$lib/media';
-import { generateId } from '$lib/server/utils';
-import { MAX_NOTE_MEDIA } from '$lib/server/env';
-import { assertCanWriteNoteMedia } from '$lib/server/permissions';
-import { prepareMediaUpload } from '$lib/server/storage/media-upload';
-import { kickWorker } from '$lib/server/video/worker';
+import { t } from '#lib/i18n/index.js';
+import { noteMediaUrl } from '#lib/media.js';
+import { generateId } from '#lib/server/utils.js';
+import { MAX_NOTE_MEDIA } from '#lib/server/env.js';
+import { assertCanWriteNoteMedia } from '#lib/server/permissions.js';
+import { prepareMediaUpload } from '#lib/server/storage/media-upload.js';
+import { kickWorker } from '#lib/server/video/worker.js';
 import {
 	countNoteMedia,
 	deleteNoteMediaItem,
@@ -15,7 +15,7 @@ import {
 	listNoteMediaStatus,
 	saveNoteMediaUpload,
 	setNoteMediaCaption
-} from '$lib/server/note-media';
+} from '#lib/server/note-media.js';
 
 // Session-only endpoint for note media (issue #321). It sits outside every
 // route group routeGroupGuard covers, so each handler starts with

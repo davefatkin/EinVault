@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
+import { t } from '#lib/i18n/index.js';
 import {
 	resolveJournalMedia,
 	resolveNoteMedia,
 	type ResolvedMedia
-} from '$lib/server/media-access';
-import { serveStoredMedia } from '$lib/server/media-serve';
+} from '#lib/server/media-access.js';
+import { serveStoredMedia } from '#lib/server/media-serve.js';
 
 // URL shapes:
 //   /api/photos/journal/{companionId}/{date}/{filename}

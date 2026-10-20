@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { t } from '$lib/i18n';
-import { formatPrintedOn, loadCaretakerSheet } from '$lib/server/caretaker-sheet';
+import { t } from '#lib/i18n/index.js';
+import { formatPrintedOn, loadCaretakerSheet } from '#lib/server/caretaker-sheet.js';
 
 // Printable caretaker sheet (#280) for an assigned caretaker, e.g. to hand to
 // a backup sitter. Same rule as the care page: assigned and active (the

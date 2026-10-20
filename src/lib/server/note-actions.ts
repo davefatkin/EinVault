@@ -1,7 +1,7 @@
 import { fail, type Action } from '@sveltejs/kit';
-import { t, type Locale } from '$lib/i18n';
-import { NOTE_ERROR, splitTagInput, type NoteErrorCode, type NoteFieldsInput } from '$lib/notes';
-import { getNote, setPinned } from '$lib/server/notes';
+import { t, type Locale } from '#lib/i18n/index.js';
+import { NOTE_ERROR, splitTagInput, type NoteErrorCode, type NoteFieldsInput } from '#lib/notes.js';
+import { getNote, setPinned } from '#lib/server/notes.js';
 
 // Every field is always present: an unchecked box and an empty tag list submit
 // nothing, which must mean "off" / "no tags", not "unchanged". Text typed into

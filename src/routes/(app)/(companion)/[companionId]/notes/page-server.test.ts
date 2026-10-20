@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { db, schema } from '$lib/server/db';
-import { createNote } from '$lib/server/notes';
-import { NOTE_FILTER_MAX_TAGS } from '$lib/notes';
+import { db, schema } from '#lib/server/db/index.js';
+import { createNote } from '#lib/server/notes.js';
+import { NOTE_FILTER_MAX_TAGS } from '#lib/notes.js';
 import { load } from './+page.server';
 
 // #342: the notes list filters by several tags. The page never errors on a

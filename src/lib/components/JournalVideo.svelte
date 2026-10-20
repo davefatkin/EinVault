@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Download, Loader2 } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	interface Props {
 		src: string;

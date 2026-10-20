@@ -1,8 +1,8 @@
-import type { User } from '$lib/server/db/schema';
-import { isMailEnabled, sendMail } from '$lib/server/mail';
-import { buildApiAccessChangedEmail } from '$lib/server/mail/templates';
-import { isNtfyEnabled, sendNtfy } from '$lib/server/notify/ntfy';
-import { t } from '$lib/i18n';
+import type { User } from '#lib/server/db/schema.js';
+import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
+import { buildApiAccessChangedEmail } from '#lib/server/mail/templates.js';
+import { isNtfyEnabled, sendNtfy } from '#lib/server/notify/ntfy.js';
+import { t } from '#lib/i18n/index.js';
 
 // Best-effort notification when an admin grants/revokes a user's API access.
 // Rendered in the recipient's stored locale. Failures are logged, never

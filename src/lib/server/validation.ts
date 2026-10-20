@@ -10,7 +10,7 @@ export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Mood
 
-import { MOODS, type Mood } from '$lib/mood';
+import { MOODS, type Mood } from '#lib/mood.js';
 export type { Mood };
 
 export function parseMood(value: string | null | undefined): Mood | null {
@@ -27,7 +27,7 @@ import {
 	type DailyEventType,
 	type WeightUnit,
 	type Species
-} from '$lib/activityTypes';
+} from '#lib/activityTypes.js';
 export { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES };
 export type { DailyEventType, WeightUnit, Species };
 
@@ -98,7 +98,7 @@ export function parseShortName(value: unknown): string | null {
 	return name.length >= 1 && name.length <= 60 ? name : null;
 }
 
-// True when a string exceeds a hard character cap (see $lib/textLimits). Shared
+// True when a string exceeds a hard character cap (see #lib/textLimits). Shared
 // by the API and form write paths so oversized free-text is rejected before it
 // reaches storage.
 export function exceedsLen(value: unknown, max: number): boolean {
@@ -169,7 +169,7 @@ import {
 	packMonthDay,
 	type RecurrenceUnit,
 	type RecurrenceAnchor
-} from '$lib/reminderRecurrence';
+} from '#lib/reminderRecurrence.js';
 
 export function parseRecurrenceUnit(value: string | null | undefined): RecurrenceUnit | null {
 	if (!value) return null;

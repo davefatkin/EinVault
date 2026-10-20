@@ -1,9 +1,9 @@
 // Client-safe types, constants, and formatting helpers for reminder recurrence.
 // Imported by both server validators/advancement code and client UI. Must not
-// import $env or $lib/server modules so the browser bundle stays clean.
+// import $env or #lib/server modules so the browser bundle stays clean.
 
-import type { Locale } from '$lib/i18n';
-import { t } from '$lib/i18n';
+import type { Locale } from '#lib/i18n/index.js';
+import { t } from '#lib/i18n/index.js';
 
 export type RecurrenceUnit = 'day' | 'week' | 'month' | 'year';
 export const RECURRENCE_UNITS = [

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { PageTint } from '$lib/pageIdentity';
-	import { pageIconClass } from '$lib/pageIdentity';
+	import type { PageTint } from '#lib/pageIdentity.js';
+	import { pageIconClass } from '#lib/pageIdentity.js';
 
 	let {
 		title,

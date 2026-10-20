@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { tick } from 'svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { X, ChevronLeft, ChevronRight, Download, Loader2 } from '@lucide/svelte';
 
 	interface Props {
@@ -96,7 +96,12 @@
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
+		if (e.key === 'Escape') {
+			// Callers unmount the preview from onclose, so its props (and isPdf)
+			// can no longer be read. Kit 3 renders the error page for that throw.
+			onclose();
+			return;
+		}
 		if (isPdf && e.key === 'ArrowRight' && pageNum < pageCount) renderPage(pageNum + 1);
 		if (isPdf && e.key === 'ArrowLeft' && pageNum > 1) renderPage(pageNum - 1);
 	}

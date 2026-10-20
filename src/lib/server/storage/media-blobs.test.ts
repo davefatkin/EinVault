@@ -19,7 +19,7 @@ const fake = vi.hoisted(() => {
 	return { deleted, failKeys, backends };
 });
 
-vi.mock('$lib/server/storage', () => ({
+vi.mock('#lib/server/storage/index.js', () => ({
 	getStorage: vi.fn((provider: string) => {
 		const b = fake.backends[provider];
 		if (!b) throw new Error(`Storage provider '${provider}' is not configured.`);
@@ -28,7 +28,7 @@ vi.mock('$lib/server/storage', () => ({
 }));
 
 const { deleteMediaBlobs } = await import('./media-blobs');
-const { getStorage } = await import('$lib/server/storage');
+const { getStorage } = await import('#lib/server/storage/index.js');
 
 let warn: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {

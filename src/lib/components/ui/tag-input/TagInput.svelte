@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { X } from '@lucide/svelte';
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { commitTags, matchSuggestions, splitTagText, type TagCommitError } from './commit';
 
 	interface Props {

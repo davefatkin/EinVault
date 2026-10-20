@@ -1,10 +1,10 @@
 import { error, type RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { localDateISO } from '$lib/date';
-import { db, schema } from '$lib/server/db';
-import { authorizeCompanions } from '$lib/server/companion-scope';
-import { throwCareError } from '$lib/server/care-errors';
+import { t } from '#lib/i18n/index.js';
+import { localDateISO } from '#lib/date.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { authorizeCompanions } from '#lib/server/companion-scope.js';
+import { throwCareError } from '#lib/server/care-errors.js';
 
 // Journal media writes (upload, caption edit, delete). Members and admins may
 // write for any companion. Caretakers follow the care journal rules: an active

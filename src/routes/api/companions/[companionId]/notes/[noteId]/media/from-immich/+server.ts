@@ -1,13 +1,13 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { t } from '$lib/i18n';
-import { noteMediaUrl } from '$lib/media';
-import { generateId } from '$lib/server/utils';
-import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
-import { isAllowedPhotoMime, safeExtFromMime } from '$lib/server/storage/mime';
-import { MAX_NOTE_MEDIA } from '$lib/server/env';
-import { assertCanWriteNoteMedia } from '$lib/server/permissions';
-import { getNoteMediaView, insertNoteMedia } from '$lib/server/note-media';
+import { t } from '#lib/i18n/index.js';
+import { noteMediaUrl } from '#lib/media.js';
+import { generateId } from '#lib/server/utils.js';
+import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '#lib/server/storage/index.js';
+import { isAllowedPhotoMime, safeExtFromMime } from '#lib/server/storage/mime.js';
+import { MAX_NOTE_MEDIA } from '#lib/server/env.js';
+import { assertCanWriteNoteMedia } from '#lib/server/permissions.js';
+import { getNoteMediaView, insertNoteMedia } from '#lib/server/note-media.js';
 
 // Attach an Immich photo to a note. No bytes are stored: the row points at the
 // asset and /api/photos proxies Immich's preview. Photos only, since the

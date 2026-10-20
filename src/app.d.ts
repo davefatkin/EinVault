@@ -1,5 +1,5 @@
-import type { Locale } from '$lib/i18n';
-import type { RecurrenceUnit } from '$lib/reminderRecurrence';
+import type { Locale } from '#lib/i18n/index.js';
+import type { RecurrenceUnit } from '#lib/reminderRecurrence.js';
 
 declare global {
 	namespace App {
@@ -37,7 +37,7 @@ declare global {
 			user?: App.Locals['user'];
 		}
 		// Bearer-API error bodies carry a stable machine-parseable `code` alongside
-		// the localized message (see $server/care-errors).
+		// the localized message (see #lib/server/care-errors).
 		interface Error {
 			message: string;
 			code?: string;

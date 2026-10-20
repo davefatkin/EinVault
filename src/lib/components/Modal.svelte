@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { X } from '@lucide/svelte';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { trapTab } from '$lib/focusTrap';
-	import { t, getLocale } from '$lib/i18n';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { trapTab } from '#lib/focusTrap.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 
 	// Dialog shell for a form opened in place. Parents mount it only while
 	// open. `locked` keeps Escape, the backdrop and the X from closing it

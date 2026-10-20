@@ -472,7 +472,7 @@ const messages: Record<keyof Messages, string> = {
 	'time.hoursAgo': 'hace {count}h',
 	'time.daysAgo': 'hace {count}d',
 
-	// $lib/age.ts
+	// #lib/age.ts
 	'age.unknown': 'Edad desconocida',
 	'age.monthsOld.one': '{count} mes',
 	'age.monthsOld.other': '{count} meses',

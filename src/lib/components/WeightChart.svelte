@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t, getLocale } from '$lib/i18n';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		filterByRange,
 		buildAreaPath,
@@ -8,11 +8,11 @@
 		convertWeight,
 		type WeightPoint,
 		type WeightRange
-	} from '$lib/weightChart';
-	import type { WeightUnit } from '$lib/activityTypes';
+	} from '#lib/weightChart.js';
+	import type { WeightUnit } from '#lib/activityTypes.js';
 	import { Scale, TrendingUp, TrendingDown } from '@lucide/svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		/** Weight entries, ascending by recordedAt. */

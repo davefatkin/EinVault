@@ -1,17 +1,17 @@
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema } from '#lib/server/db/index.js';
 import {
 	generateSessionToken,
 	createSession,
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
-} from '$lib/server/auth/session';
-import { isSecureRequest } from '$lib/server/auth';
-import { generateId } from '$lib/server/utils';
+} from '#lib/server/auth/session.js';
+import { isSecureRequest } from '#lib/server/auth/index.js';
+import { generateId } from '#lib/server/utils.js';
 import bcrypt from 'bcryptjs';
 import { count } from 'drizzle-orm';
-import { t, DEFAULT_LOCALE } from '$lib/i18n';
+import { t, DEFAULT_LOCALE } from '#lib/i18n/index.js';
 
 export const load: PageServerLoad = async () => {
 	try {

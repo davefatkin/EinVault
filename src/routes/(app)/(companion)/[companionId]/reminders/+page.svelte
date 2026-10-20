@@ -1,35 +1,36 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import LocalTime from '$lib/components/LocalTime.svelte';
-	import ByLine from '$lib/components/ByLine.svelte';
-	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
-	import { renderMarkdown } from '$lib/markdown';
-	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { Select } from '$lib/components/ui/select/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import LocalTime from '#lib/components/LocalTime.svelte';
+	import ByLine from '#lib/components/ByLine.svelte';
+	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { Card, CardContent } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { Plus, Pencil, Trash2, RotateCcw, X, Bell, ArrowUp, ArrowDown } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
-	import { localDatetimes } from '$lib/actions/localDatetimes';
-	import { t, getLocale } from '$lib/i18n';
-	import { reminderTypeOptions, reminderTypeLabel } from '$lib/i18n/labels';
-	import { createPendingDismissals } from '$lib/pendingDismiss.svelte';
-	import { registerDismissForm } from '$lib/actions/registerDismissForm';
-	import { clearSubmittingFlag } from '$lib/clearSubmittingFlag';
-	import RecurrenceEditor from '$lib/components/reminders/RecurrenceEditor.svelte';
-	import ReminderCompleteButtons from '$lib/components/reminders/ReminderCompleteButtons.svelte';
-	import { formatRecurrence } from '$lib/reminderRecurrence';
-	import { REMINDER_TO_HEALTH_TYPE } from '$lib/health';
-	import { reminderBuckets } from '$lib/reminderBuckets';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
+	import { localDatetimes } from '#lib/actions/localDatetimes.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { reminderTypeOptions, reminderTypeLabel } from '#lib/i18n/labels.js';
+	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
+	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
+	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
+	import RecurrenceEditor from '#lib/components/reminders/RecurrenceEditor.svelte';
+	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import { formatRecurrence } from '#lib/reminderRecurrence.js';
+	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import { reminderBuckets } from '#lib/reminderBuckets.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const locale = getLocale();
@@ -47,8 +48,7 @@
 	let prefillType = $state('');
 	let prefillDescription = $state('');
 	// One-shot guard: prevents the ?new=1 effect from re-firing when the form
-	// closes. `history.replaceState` strips the URL for reload semantics but
-	// doesn't update SvelteKit's reactive page store.
+	// closes, even before stripUrlParams has removed the params.
 	let prefillApplied = $state(false);
 
 	function resetPrefill() {
@@ -113,11 +113,7 @@
 		if (match) {
 			tick().then(() => startEdit(match));
 		}
-		tick().then(() => {
-			const url = new URL(page.url);
-			url.searchParams.delete('edit');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('edit'));
 	});
 
 	$effect(() => {
@@ -135,11 +131,7 @@
 		showForm = true;
 		prefillApplied = true;
 		// Strip the query so a reload doesn't re-open the form with stale values.
-		tick().then(() => {
-			const url = new URL(page.url);
-			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('new', 'title', 'type', 'description'));
 	});
 
 	// Re-fires for a different reminder/companion (page component is reused
@@ -151,11 +143,7 @@
 		lastDeepLinkId = detailId;
 		const match = data.reminders.find((r) => r.id === detailId);
 		if (match) openDetail(match);
-		tick().then(() => {
-			const url = new URL(page.url);
-			url.searchParams.delete('detail');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('detail'));
 	});
 
 	function startEdit(reminder: (typeof data.reminders)[0]) {

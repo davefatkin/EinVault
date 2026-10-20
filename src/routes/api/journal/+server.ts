@@ -1,35 +1,34 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { t } from '$lib/i18n';
-import { localDateISO } from '$lib/date';
-import { db, schema } from '$lib/server/db';
-import { apiRoute, apiRouteZod } from '$lib/server/auth/api-request';
-import { JournalRequest } from '$lib/server/openapi/schemas';
-import { withIdempotency } from '$lib/server/api-idempotency';
-import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companion-scope';
-import { throwCareError } from '$lib/server/care-errors';
-import { upsertJournalEntry } from '$lib/server/journal';
-import { toApiJournalEntry } from '$lib/server/api-serializers';
-import { isValidDate, parseMood, exceedsLen } from '$lib/server/validation';
-import { MAX_JOURNAL_BODY_LEN } from '$lib/server/env';
+import { t } from '#lib/i18n/index.js';
+import { localDateISO } from '#lib/date.js';
+import { db, schema } from '#lib/server/db/index.js';
+import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
+import { JournalRequest } from '#lib/server/openapi/schemas.js';
+import { withIdempotency } from '#lib/server/api-idempotency.js';
+import { authorizeCompanions, listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { throwCareError } from '#lib/server/care-errors.js';
+import { upsertJournalEntry } from '#lib/server/journal.js';
+import { toApiJournalEntry } from '#lib/server/api-serializers.js';
+import { isValidDate, parseMood, exceedsLen } from '#lib/server/validation.js';
+import { MAX_JOURNAL_BODY_LEN } from '#lib/server/env.js';
 
 // Read-back: GET /api/journal?companionId=&date=YYYY-MM-DD (date defaults to
 // today). Returns the day's entry or { entry: null }.
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	// Write-only tokens (log-only devices) must not read back private journal text.
 	if (scope === 'write') {
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+		error(403, t(locale, 'error.forbidden'), { code: 'writeScopeReadOnly' });
 	}
 	const companionId = event.url.searchParams.get('companionId');
 	if (!companionId) {
-		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+		error(400, t(locale, 'error.noCompanionsSelected'), { code: 'noCompanions' });
 	}
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 
 	const date = event.url.searchParams.get('date') ?? localDateISO();
-	if (!isValidDate(date))
-		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+	if (!isValidDate(date)) error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 
 	const row = await db.query.journalEntries.findFirst({
 		where: and(
@@ -49,12 +48,11 @@ export const POST = apiRouteZod(
 	JournalRequest,
 	async ({ event, user, tokenId, locale, body }) => {
 		const date = body.date ?? localDateISO();
-		if (!isValidDate(date))
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+		if (!isValidDate(date)) error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 
 		// Caretakers may only write today's journal via the API, matching the web UI.
 		if (user.role === 'caretaker' && date !== localDateISO()) {
-			error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
+			error(403, t(locale, 'error.forbidden'), { code: 'forbidden' });
 		}
 
 		// Absent keys preserve the stored value (partial update). Zod has already
@@ -62,9 +60,8 @@ export const POST = apiRouteZod(
 		// member of the enum, so parseMood below can no longer observe an invalid value.
 		const text = body.body;
 		if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
-			error(400, {
-				code: 'journalTooLong',
-				message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
+			error(400, t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN }), {
+				code: 'journalTooLong'
 			});
 		}
 		const mood = body.mood !== undefined ? parseMood(body.mood) : undefined;

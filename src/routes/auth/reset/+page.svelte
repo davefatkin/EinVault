@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import type { ActionData, PageData } from './$types';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert/index.js';
-	import { t, getLocale } from '$lib/i18n';
-	import AuthBackdrop from '$lib/components/auth/AuthBackdrop.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import AuthBackdrop from '#lib/components/auth/AuthBackdrop.svelte';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	let loading = $state(false);

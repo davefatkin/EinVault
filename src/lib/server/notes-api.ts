@@ -1,18 +1,18 @@
 import { error } from '@sveltejs/kit';
 import type { z } from 'zod';
-import { t, type Locale } from '$lib/i18n';
+import { t, type Locale } from '#lib/i18n/index.js';
 import {
 	NOTE_ERROR,
 	NOTE_FILTER_MAX_TAGS,
 	parseTagFilter,
 	type NoteErrorCode,
 	type TagFilter
-} from '$lib/notes';
-import { requireFullScope } from '$lib/server/api-guards';
-import { listAllowedCompanions } from '$lib/server/companion-scope';
-import { getNote, type NoteWithAuthors } from '$lib/server/notes';
-import type { ApiTokenScope } from '$lib/server/api-tokens';
-import type { UserRole } from '$lib/server/validation';
+} from '#lib/notes.js';
+import { requireFullScope } from '#lib/server/api-guards.js';
+import { listAllowedCompanions } from '#lib/server/companion-scope.js';
+import { getNote, type NoteWithAuthors } from '#lib/server/notes.js';
+import type { ApiTokenScope } from '#lib/server/api-tokens.js';
+import type { UserRole } from '#lib/server/validation.js';
 
 // Shared guards for /api/notes. Notes are owner data: write-scope tokens and
 // caretakers get 403 (caretakers read shared notes on the care page only).
@@ -22,8 +22,7 @@ export function requireNoteOwnerScope(
 	locale: Locale
 ): void {
 	requireFullScope(scope, locale);
-	if (user.role === 'caretaker')
-		error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
+	if (user.role === 'caretaker') error(403, t(locale, 'error.forbidden'), { code: 'forbidden' });
 }
 
 // A missing note and a note on a companion the token can't access (archived)
@@ -40,12 +39,12 @@ export async function loadAllowedNote(
 }
 
 export function throwNoteNotFound(locale: Locale): never {
-	error(404, { code: 'notFound', message: t(locale, 'error.noteNotFound') });
+	error(404, t(locale, 'error.noteNotFound'), { code: 'notFound' });
 }
 
 export function throwNoteError(code: NoteErrorCode, locale: Locale): never {
 	const { key, params } = NOTE_ERROR[code];
-	error(400, { code, message: t(locale, key, params) });
+	error(400, t(locale, key, params), { code });
 }
 
 // Maps zod shape failures on NoteCreate/NoteUpdate to the same codes the
@@ -72,7 +71,7 @@ export function parsePinnedParam(raw: string | null, locale: Locale): boolean | 
 	if (raw === null) return undefined;
 	if (raw === 'true') return true;
 	if (raw === 'false') return false;
-	error(400, { code: 'invalidPinned', message: t(locale, 'error.invalidPinned') });
+	error(400, t(locale, 'error.invalidPinned'), { code: 'invalidPinned' });
 }
 
 // GET /api/notes tag filter: repeated ?tag= plus ?match=any|all.
@@ -80,10 +79,9 @@ export function parseTagFilterParams(params: URLSearchParams, locale: Locale): T
 	const parsed = parseTagFilter(params.getAll('tag'), params.get('match'));
 	if (parsed.ok) return parsed.value;
 	if (parsed.code === 'invalidMatch') {
-		error(400, { code: 'invalidMatch', message: t(locale, 'error.invalidMatch') });
+		error(400, t(locale, 'error.invalidMatch'), { code: 'invalidMatch' });
 	}
-	error(400, {
-		code: 'tooManyFilterTags',
-		message: t(locale, 'error.noteTooManyFilterTags', { max: NOTE_FILTER_MAX_TAGS })
+	error(400, t(locale, 'error.noteTooManyFilterTags', { max: NOTE_FILTER_MAX_TAGS }), {
+		code: 'tooManyFilterTags'
 	});
 }
