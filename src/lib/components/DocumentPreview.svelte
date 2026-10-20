@@ -96,7 +96,12 @@
 	});
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
+		if (e.key === 'Escape') {
+			// Callers unmount the preview from onclose, so its props (and isPdf)
+			// can no longer be read. Kit 3 renders the error page for that throw.
+			onclose();
+			return;
+		}
 		if (isPdf && e.key === 'ArrowRight' && pageNum < pageCount) renderPage(pageNum + 1);
 		if (isPdf && e.key === 'ArrowLeft' && pageNum > 1) renderPage(pageNum - 1);
 	}
