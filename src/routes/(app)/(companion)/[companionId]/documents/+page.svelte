@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Select } from '#lib/components/ui/select/index.js';
@@ -129,11 +130,7 @@
 		lastDeepLinkId = previewId;
 		const match = data.documents.find((d) => d.id === previewId);
 		if (match) preview = match;
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('preview');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('preview'));
 	});
 </script>
 

@@ -19,6 +19,7 @@
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { localDatetimes } from '#lib/actions/localDatetimes.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { reminderTypeOptions, reminderTypeLabel } from '#lib/i18n/labels.js';
@@ -47,8 +48,7 @@
 	let prefillType = $state('');
 	let prefillDescription = $state('');
 	// One-shot guard: prevents the ?new=1 effect from re-firing when the form
-	// closes. `history.replaceState` strips the URL for reload semantics but
-	// doesn't update SvelteKit's reactive page store.
+	// closes, even before stripUrlParams has removed the params.
 	let prefillApplied = $state(false);
 
 	function resetPrefill() {
@@ -113,11 +113,7 @@
 		if (match) {
 			tick().then(() => startEdit(match));
 		}
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('edit');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('edit'));
 	});
 
 	$effect(() => {
@@ -135,11 +131,7 @@
 		showForm = true;
 		prefillApplied = true;
 		// Strip the query so a reload doesn't re-open the form with stale values.
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('new', 'title', 'type', 'description'));
 	});
 
 	// Re-fires for a different reminder/companion (page component is reused
@@ -151,11 +143,7 @@
 		lastDeepLinkId = detailId;
 		const match = data.reminders.find((r) => r.id === detailId);
 		if (match) openDetail(match);
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('detail');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('detail'));
 	});
 
 	function startEdit(reminder: (typeof data.reminders)[0]) {

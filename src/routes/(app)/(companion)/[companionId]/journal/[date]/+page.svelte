@@ -5,6 +5,7 @@
 	import { onMount, tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { enhance } from '$app/forms';
 	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
 	import MediaManager from '#lib/components/MediaManager.svelte';
@@ -261,11 +262,7 @@
 			lightboxIndex = idx;
 			lightboxOpen = true;
 		}
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('media');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('media'));
 	});
 
 	function handleKeydown(e: KeyboardEvent) {

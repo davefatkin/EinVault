@@ -23,6 +23,7 @@
 	import { stripMarkdown } from '#lib/markdown.js';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { localDatetimes } from '#lib/actions/localDatetimes.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { healthTypeOptions, healthTypeLabel } from '#lib/i18n/labels.js';
@@ -121,11 +122,7 @@
 				editingHealthId = editId;
 			}
 		}
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('edit');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('edit'));
 	});
 
 	$effect(() => {
@@ -150,11 +147,7 @@
 			showWeightForm = false;
 		}
 		prefillApplied = true;
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			['new', 'title', 'type', 'description'].forEach((k) => url.searchParams.delete(k));
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('new', 'title', 'type', 'description'));
 	});
 
 	// Track the last id we opened so the effect re-fires when a search result
@@ -175,12 +168,7 @@
 			const match = data.weightEntries.find((e) => e.id === weightId);
 			if (match) openDetail({ kind: 'weight', item: match });
 		}
-		tick().then(() => {
-			const url = new URL(page.url.href);
-			url.searchParams.delete('detailHealth');
-			url.searchParams.delete('detailWeight');
-			history.replaceState(history.state, '', url.pathname + url.search);
-		});
+		tick().then(() => stripUrlParams('detailHealth', 'detailWeight'));
 	});
 
 	// Detail modal
