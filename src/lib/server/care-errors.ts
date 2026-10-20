@@ -30,7 +30,7 @@ export const CARE_ERROR: Record<CareErrorCode, { status: number; key: MessageKey
 // gives devices a stable, locale-independent branch key.
 export function throwCareError(code: CareErrorCode, locale: Locale): never {
 	const { status, key } = CARE_ERROR[code];
-	error(status, { code, message: t(locale, key) });
+	error(status, t(locale, key), { code });
 }
 
 // Form-action path: returns a fail() with the localized message under the

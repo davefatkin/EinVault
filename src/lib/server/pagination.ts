@@ -26,7 +26,7 @@ export function parsePagination(url: URL, locale: Locale): { limit: number; offs
 		offset < 0 ||
 		offset > PAGE_MAX_OFFSET
 	) {
-		error(400, { code: 'invalidPagination', message: t(locale, 'error.invalidPagination') });
+		error(400, t(locale, 'error.invalidPagination'), { code: 'invalidPagination' });
 	}
 	return { limit, offset };
 }

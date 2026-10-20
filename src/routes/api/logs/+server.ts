@@ -24,7 +24,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const filters = [eq(schema.dailyEvents.companionId, companionId)];
 	if (dateParam) {
 		if (!isValidDate(dateParam)) {
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+			error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 		}
 		const start = new Date(`${dateParam}T00:00:00`);
 		const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
@@ -52,14 +52,14 @@ export const POST = apiRouteZod(
 	async ({ event, user, tokenId, locale, body }) => {
 		const companionIds = parseCompanionTargets(body);
 		if (companionIds.length === 0) {
-			error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+			error(400, t(locale, 'error.noCompanionsSelected'), { code: 'noCompanions' });
 		}
 
 		let loggedAt = new Date();
 		if (body.loggedAt !== undefined) {
 			const parsed = parseLoggedAt(body.loggedAt);
 			if (!parsed) {
-				error(400, { code: 'invalidLoggedAt', message: t(locale, 'error.invalidLoggedAt') });
+				error(400, t(locale, 'error.invalidLoggedAt'), { code: 'invalidLoggedAt' });
 			}
 			loggedAt = parsed;
 		}

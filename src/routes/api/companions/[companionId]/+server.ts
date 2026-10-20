@@ -13,13 +13,12 @@ import { toApiCompanion, toApiCompanionMinimal } from '#lib/server/api-serialize
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const companionId = event.params.companionId!;
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
-	if (!allowed.includes(companionId))
-		error(404, { code: 'notFound', message: t(locale, 'error.notFound') });
+	if (!allowed.includes(companionId)) error(404, t(locale, 'error.notFound'), { code: 'notFound' });
 
 	const row = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, companionId)
 	});
-	if (!row) error(404, { code: 'notFound', message: t(locale, 'error.notFound') });
+	if (!row) error(404, t(locale, 'error.notFound'), { code: 'notFound' });
 
 	if (scope === 'write') return json({ companion: toApiCompanionMinimal(row) });
 	const sitterNotes = await sharedNotesMarkdown([row.id]);

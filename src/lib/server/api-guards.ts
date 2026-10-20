@@ -11,8 +11,7 @@ import type { UserRole } from '#lib/server/validation.js';
 
 // Reads require a full-scope token; write-only (log-only device) tokens get 403.
 export function requireFullScope(scope: ApiTokenScope, locale: Locale): void {
-	if (scope === 'write')
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+	if (scope === 'write') error(403, t(locale, 'error.forbidden'), { code: 'writeScopeReadOnly' });
 }
 
 // Reads scoped to one companion: require a `companionId` query param the token
@@ -23,8 +22,7 @@ export async function requireAllowedCompanion(
 	locale: Locale
 ): Promise<string> {
 	const companionId = url.searchParams.get('companionId');
-	if (!companionId)
-		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+	if (!companionId) error(400, t(locale, 'error.noCompanionsSelected'), { code: 'noCompanions' });
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 	return companionId;

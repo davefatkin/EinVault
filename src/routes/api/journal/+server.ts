@@ -18,18 +18,17 @@ import { MAX_JOURNAL_BODY_LEN } from '#lib/server/env.js';
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	// Write-only tokens (log-only devices) must not read back private journal text.
 	if (scope === 'write') {
-		error(403, { code: 'writeScopeReadOnly', message: t(locale, 'error.forbidden') });
+		error(403, t(locale, 'error.forbidden'), { code: 'writeScopeReadOnly' });
 	}
 	const companionId = event.url.searchParams.get('companionId');
 	if (!companionId) {
-		error(400, { code: 'noCompanions', message: t(locale, 'error.noCompanionsSelected') });
+		error(400, t(locale, 'error.noCompanionsSelected'), { code: 'noCompanions' });
 	}
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 
 	const date = event.url.searchParams.get('date') ?? localDateISO();
-	if (!isValidDate(date))
-		error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+	if (!isValidDate(date)) error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 
 	const row = await db.query.journalEntries.findFirst({
 		where: and(
@@ -49,12 +48,11 @@ export const POST = apiRouteZod(
 	JournalRequest,
 	async ({ event, user, tokenId, locale, body }) => {
 		const date = body.date ?? localDateISO();
-		if (!isValidDate(date))
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+		if (!isValidDate(date)) error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 
 		// Caretakers may only write today's journal via the API, matching the web UI.
 		if (user.role === 'caretaker' && date !== localDateISO()) {
-			error(403, { code: 'forbidden', message: t(locale, 'error.forbidden') });
+			error(403, t(locale, 'error.forbidden'), { code: 'forbidden' });
 		}
 
 		// Absent keys preserve the stored value (partial update). Zod has already
@@ -62,9 +60,8 @@ export const POST = apiRouteZod(
 		// member of the enum, so parseMood below can no longer observe an invalid value.
 		const text = body.body;
 		if (exceedsLen(text, MAX_JOURNAL_BODY_LEN)) {
-			error(400, {
-				code: 'journalTooLong',
-				message: t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN })
+			error(400, t(locale, 'error.journalTooLong', { max: MAX_JOURNAL_BODY_LEN }), {
+				code: 'journalTooLong'
 			});
 		}
 		const mood = body.mood !== undefined ? parseMood(body.mood) : undefined;

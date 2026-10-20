@@ -19,13 +19,12 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const fromParam = event.url.searchParams.get('from');
 	if (fromParam) {
 		if (!isValidDate(fromParam))
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+			error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 		filters.push(gte(schema.caretakerShifts.endAt, new Date(`${fromParam}T00:00:00`)));
 	}
 	const toParam = event.url.searchParams.get('to');
 	if (toParam) {
-		if (!isValidDate(toParam))
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+		if (!isValidDate(toParam)) error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 		filters.push(lte(schema.caretakerShifts.startAt, new Date(`${toParam}T23:59:59`)));
 	}
 

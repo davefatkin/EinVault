@@ -19,14 +19,14 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 	});
 	// Unknown id → 404. An id for a companion this token can't access ALSO reads
 	// as 404 below, so a token can't enumerate other users' reminder ids.
-	if (!reminder) error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
+	if (!reminder) error(404, t(locale, 'error.reminderNotFound'), { code: 'notFound' });
 
 	// Assignment-only gate first: an id on a companion this token isn't assigned to
 	// (or an archived companion) is a uniform 404 regardless of shift state, so an
 	// off-shift caretaker can't use the 403/404 split to probe reminder existence.
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	if (!allowed.includes(reminder.companionId))
-		error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
+		error(404, t(locale, 'error.reminderNotFound'), { code: 'notFound' });
 
 	const resolved = await authorizeCompanions({ id: user.id, role: user.role }, [
 		reminder.companionId
@@ -37,7 +37,7 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 		// id-scoped write can't be used to probe reminder ids. An assigned caretaker
 		// who is merely off-shift gets the real 403 noActiveShift.
 		if (resolved.code === 'notAssigned' || resolved.code === 'noTargets')
-			error(404, { code: 'notFound', message: t(locale, 'error.reminderNotFound') });
+			error(404, t(locale, 'error.reminderNotFound'), { code: 'notFound' });
 		throwCareError(resolved.code, locale);
 	}
 
@@ -47,11 +47,10 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 			// Inside the idempotency callback so a keyed retry returns the cached
 			// success instead of hitting this guard on the now-completed row.
 			if (reminder.completedAt)
-				error(409, { code: 'alreadyCompleted', message: t(locale, 'error.alreadyCompleted') });
+				error(409, t(locale, 'error.alreadyCompleted'), { code: 'alreadyCompleted' });
 
 			const result = completeReminder(reminder, user.id);
-			if (!result)
-				error(409, { code: 'alreadyCompleted', message: t(locale, 'error.alreadyCompleted') });
+			if (!result) error(409, t(locale, 'error.alreadyCompleted'), { code: 'alreadyCompleted' });
 			const { completedAt, nextReminderId } = result;
 
 			// Mirror the form: prune completed one-off reminders older than 30 days.

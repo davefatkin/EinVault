@@ -26,7 +26,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	// status/limit is still a 400, not a silent empty 200.
 	const statusParam = event.url.searchParams.get('status');
 	if (statusParam !== null && statusParam !== 'due' && statusParam !== 'all')
-		error(400, { code: 'invalidStatus', message: t(locale, 'error.invalidStatus') });
+		error(400, t(locale, 'error.invalidStatus'), { code: 'invalidStatus' });
 	const includeCompleted = statusParam === 'all';
 	// Runs parsePagination once here purely to validate before the empty-scope
 	// short-circuit below (a bad limit/offset must still be a 400, not a silent

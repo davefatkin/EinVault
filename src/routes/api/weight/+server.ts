@@ -51,10 +51,7 @@ export const POST = apiRouteZod(
 				if (body.recordedAt !== undefined) {
 					const parsed = parseRecordTimestamp(body.recordedAt);
 					if (!parsed)
-						error(400, {
-							code: 'invalidRecordedAt',
-							message: t(locale, 'error.invalidRecordedAt')
-						});
+						error(400, t(locale, 'error.invalidRecordedAt'), { code: 'invalidRecordedAt' });
 					recordedAt = parsed;
 				}
 

@@ -23,7 +23,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	const dateParam = event.url.searchParams.get('date');
 	if (dateParam) {
 		if (!isValidDate(dateParam))
-			error(400, { code: 'invalidDate', message: t(locale, 'error.invalidDate') });
+			error(400, t(locale, 'error.invalidDate'), { code: 'invalidDate' });
 		const start = new Date(`${dateParam}T00:00:00`);
 		const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
 		filters.push(
@@ -63,10 +63,7 @@ export const POST = apiRouteZod(
 				if (body.occurredAt !== undefined) {
 					const parsed = parseRecordTimestamp(body.occurredAt);
 					if (!parsed)
-						error(400, {
-							code: 'invalidOccurredAt',
-							message: t(locale, 'error.invalidOccurredAt')
-						});
+						error(400, t(locale, 'error.invalidOccurredAt'), { code: 'invalidOccurredAt' });
 					occurredAt = parsed;
 				}
 
