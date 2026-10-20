@@ -10,7 +10,7 @@
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import ImmichPicker from '#lib/components/ImmichPicker.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { stripMarkdown } from '#lib/markdown.js';
 	import { MEDIA_ACCEPT, type MediaItem } from '#lib/media.js';
 	import type { MediaApi } from '#lib/mediaApi.js';
@@ -80,7 +80,7 @@
 	// would otherwise trip the keyed each block.
 	function addItem(item: MediaItem) {
 		if (gone) {
-			void invalidateAll();
+			void refreshAll();
 			return;
 		}
 		if (items.some((m) => m.id === item.id)) return;
@@ -137,7 +137,7 @@
 		if (!id) return;
 		try {
 			await api.remove(id);
-			if (gone) void invalidateAll();
+			if (gone) void refreshAll();
 			else items = items.filter((m) => m.id !== id);
 		} catch (err) {
 			// Leave the item in place; a reload shows the true state.
@@ -159,7 +159,7 @@
 			return;
 		}
 		if (gone) {
-			void invalidateAll();
+			void refreshAll();
 			return;
 		}
 		const caption = editingCaption.trim() || null;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { untrack } from 'svelte';
 	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
@@ -69,7 +69,7 @@
 			}
 			bustAvatarCache(companion.id);
 			immichAvatarPickerOpen = false;
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			setImmichAvatarError(t(locale, 'immich.picker.pickFailed'));
 		}

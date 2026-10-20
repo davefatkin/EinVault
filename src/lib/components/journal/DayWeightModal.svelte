@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SubmitFunction } from '$app/forms';
 	import { untrack } from 'svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import Modal from '#lib/components/Modal.svelte';
 	import WeightForm from '#lib/components/health/WeightForm.svelte';
 	import type { WeightUnit } from '#lib/activityTypes.js';
@@ -51,7 +51,7 @@
 		return async ({ result }) => {
 			if (result.type === 'success') {
 				try {
-					await invalidateAll();
+					await refreshAll();
 				} finally {
 					submitting = false;
 					if (!gone) onclose();

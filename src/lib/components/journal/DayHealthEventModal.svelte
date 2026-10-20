@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SubmitFunction } from '$app/forms';
 	import { untrack } from 'svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import Modal from '#lib/components/Modal.svelte';
 	import HealthEventForm from '#lib/components/health/HealthEventForm.svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -102,7 +102,7 @@
 			let failed: { name: string; message: string }[] = [];
 			try {
 				failed = await attachAll(saved.healthEventId, saved.day);
-				await invalidateAll();
+				await refreshAll();
 				if (!gone && failed.length === 0 && saved.reminderUrl) await goto(saved.reminderUrl);
 			} catch {
 				// Fall through: the finally block leaves the saving phase.

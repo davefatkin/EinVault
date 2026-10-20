@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { stripUrlParams } from '#lib/stripUrlParams.js';
@@ -60,7 +60,7 @@
 					break;
 				}
 			}
-			await invalidateAll();
+			await refreshAll();
 		} finally {
 			uploading = false;
 			if (fileInput) fileInput.value = '';
@@ -74,7 +74,7 @@
 			return;
 		}
 		pickerOpen = false;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function startEdit(doc: Doc) {
@@ -103,7 +103,7 @@
 			return;
 		}
 		editingId = null;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function confirmDelete() {
@@ -112,7 +112,7 @@
 			method: 'DELETE'
 		});
 		deleteTarget = null;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function formatSize(bytes: number | null): string {

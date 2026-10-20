@@ -3,7 +3,7 @@
 	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
 	import { isPreviewToggle, modKeyLabel } from '#lib/shortcuts.js';
 	import { onMount, tick } from 'svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { enhance } from '$app/forms';
@@ -108,7 +108,7 @@
 				const r = await uploadDocument(companionId, file, { documentDate: date }, locale);
 				if (!r.ok) failed.push({ name: file.name, message: r.message });
 			}
-			await invalidateAll();
+			await refreshAll();
 		} finally {
 			if (docInput) docInput.value = '';
 			uploadingDocs = false;
@@ -128,7 +128,7 @@
 		// Undated imports land on their upload day, the server's today.
 		const day = r.value.documentDate ?? data.today;
 		if (day !== data.date) filedUnder = day;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	// Items for the Health records + Add menu.
@@ -182,7 +182,7 @@
 	let datePickerEl = $state<HTMLInputElement | undefined>(undefined);
 
 	// Copy the server copy into the editor only when the companion or date changes. Any other
-	// refresh (an action, invalidateAll) would otherwise overwrite text that is
+	// refresh (an action, refreshAll) would otherwise overwrite text that is
 	// typed but not yet saved, or a draft whose save failed.
 	const dayKey = () => `${data.companion.id}:${data.date}`;
 	let syncedKey = '';

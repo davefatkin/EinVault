@@ -123,7 +123,7 @@ test.describe('activity subtypes', () => {
 		await expect(asMember.getByText(/Activity logged/)).toBeVisible();
 
 		// The recent-activity timeline (still on the companion page) picks up the
-		// new entry via invalidateAll and shows the subtype label, not just "Bathroom".
+		// new entry via refreshAll and shows the subtype label, not just "Bathroom".
 		await expect(asMember.getByText('Bathroom · Pee', { exact: true }).first()).toBeVisible();
 	});
 
