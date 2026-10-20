@@ -107,6 +107,16 @@ test.describe('API requests without a Content-Type', () => {
 		expect(res.status).toBe(401);
 	});
 
+	test('a Bearer call that carries a cookie keeps the CSRF check', async ({ app }) => {
+		const res = await post(app.server.port, EXECUTE, {
+			Authorization: 'Bearer evk_not-a-real-token',
+			Cookie: 'einvault_session=anything',
+			Origin: 'https://evil.example'
+		});
+		expect(res.status).toBe(403);
+		expect(res.body).toContain(CSRF_MESSAGE);
+	});
+
 	test('a cross-site call without Bearer is still blocked', async ({ app }) => {
 		const cases: Record<string, string>[] = [
 			{ Origin: 'http://evil.test' },

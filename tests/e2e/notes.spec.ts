@@ -6,7 +6,7 @@ import { test, expect, type AppWorker } from '../lib/fixtures';
 import { createSeededDb, createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
-import { createToken } from '../lib/api-tokens';
+import { bearerCall, createToken } from '../lib/api-tokens';
 import { pngUpload, mp4Upload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
 
@@ -884,7 +884,7 @@ apiWorld(
 			expect(padded.status()).toBe(200);
 			expect((await padded.json()).title).toBe('t'.repeat(200));
 
-			const del = await page.request.delete(api(`/api/notes/${id}`), { headers: auth });
+			const del = await bearerCall('DELETE', api(`/api/notes/${id}`), { headers: auth });
 			expect(del.status()).toBe(204);
 			const gone = await page.request.get(api(`/api/notes/${id}`), { headers: auth });
 			expect(gone.status()).toBe(404);

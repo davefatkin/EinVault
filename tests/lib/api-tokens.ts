@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, request as pwRequest, type Page } from '@playwright/test';
 
 // Creates a token via the settings UI and returns the raw value. Svelte sets
 // input values as DOM properties (not attributes), so read via evaluate after
@@ -20,4 +20,22 @@ export async function createToken(
 	});
 	expect(raw.startsWith('evk_')).toBe(true);
 	return raw;
+}
+
+// A body-less Bearer call from a context with no cookie jar, like a real
+// header-only API client. A logged-in browser context carries einvault_session,
+// and the server's Content-Type shim leaves those requests to Kit's CSRF check.
+export async function bearerCall(
+	method: 'POST' | 'DELETE',
+	url: string,
+	options: { headers: Record<string, string> }
+) {
+	const ctx = await pwRequest.newContext();
+	try {
+		const res = await ctx.fetch(url, { method, ...options });
+		const body = await res.body();
+		return { status: () => res.status(), json: async () => JSON.parse(body.toString()) };
+	} finally {
+		await ctx.dispose();
+	}
 }

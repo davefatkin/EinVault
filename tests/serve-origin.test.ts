@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { IncomingHttpHeaders } from 'node:http';
+import { SESSION_COOKIE_NAME as APP_SESSION_COOKIE_NAME } from '#lib/server/auth/session.js';
 import {
 	SYNTHETIC_PROTO_HEADER,
 	SYNTHETIC_HOST_HEADER,
@@ -7,7 +8,8 @@ import {
 	applyOriginEnv,
 	applyOriginHeaders,
 	isValidRequestTarget,
-	needsApiContentType
+	needsApiContentType,
+	SESSION_COOKIE_NAME
 } from '../serve-origin.js';
 
 describe('parseOrigin', () => {
@@ -152,6 +154,10 @@ describe('needsApiContentType', () => {
 		['/api/notes/n1', { authorization: 'bearer evk_abc' }, true],
 		['/api/notes/n1', { ...bearer, 'content-type': '' }, true],
 		['/api/notes/n1', { ...bearer, 'content-type': 'application/json' }, false],
+		['/api/notes/n1', { ...bearer, cookie: 'einvault_session=x' }, false],
+		['/api/notes/n1', { ...bearer, cookie: 'a=b; einvault_session=x' }, false],
+		['/api/notes/n1', { ...bearer, cookie: 'einvault_locale=en' }, true],
+		['/api/notes/n1', { ...bearer, cookie: 'other_einvault_session=x' }, true],
 		['/api/notes/n1', { authorization: 'Basic Zm9vOmJhcg==' }, false],
 		['/api/notes/n1', { authorization: 'Bearer' }, false],
 		['/api/notes/n1', {}, false],
@@ -162,5 +168,11 @@ describe('needsApiContentType', () => {
 		[undefined, bearer, false]
 	])('%j %j is %s', (target, headers, expected) => {
 		expect(needsApiContentType(target, headers)).toBe(expected);
+	});
+});
+
+describe('SESSION_COOKIE_NAME', () => {
+	it('matches the name the app sets', () => {
+		expect(SESSION_COOKIE_NAME).toBe(APP_SESSION_COOKIE_NAME);
 	});
 });
