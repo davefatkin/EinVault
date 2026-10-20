@@ -19,7 +19,10 @@ test.describe('security headers', () => {
 		expect(headers['x-content-type-options']).toBe('nosniff');
 		expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
 		expect(headers['permissions-policy']).toContain('camera=()');
-		expect(headers['content-security-policy'] ?? '').toBeTruthy();
+		// Production CSP: nonce-based scripts, no 'unsafe-inline' (dev-only).
+		const scriptSrc = /script-src[^;]*/.exec(headers['content-security-policy'] ?? '')?.[0] ?? '';
+		expect(scriptSrc).toContain("'nonce-");
+		expect(scriptSrc).not.toContain("'unsafe-inline'");
 		// Test server runs NODE_ENV=production so HSTS must be present
 		expect(headers['strict-transport-security'] ?? '').toContain('max-age=');
 

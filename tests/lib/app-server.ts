@@ -21,6 +21,8 @@ const MAX_PORT_ATTEMPTS = 3;
 export async function startAppServer(opts: {
 	dbPath: string;
 	env?: Record<string, string>;
+	/** Boot without ORIGIN, e.g. to test operator proxy headers. */
+	omitOrigin?: boolean;
 }): Promise<AppServer> {
 	// Caller may pre-allocate the port (needed when other env vars must embed
 	// it, e.g. OIDC_REDIRECT_URI); a collision on that port can't be retried here.
@@ -40,7 +42,7 @@ export async function startAppServer(opts: {
 
 async function launch(
 	port: number,
-	opts: { dbPath: string; env?: Record<string, string> }
+	opts: { dbPath: string; env?: Record<string, string>; omitOrigin?: boolean }
 ): Promise<AppServer> {
 	const baseURL = `http://localhost:${port}`;
 
@@ -49,16 +51,17 @@ async function launch(
 		// not leak real service URLs into tests. PATH is needed to find node.
 		PATH: process.env.PATH ?? '',
 		NODE_ENV: 'production',
-		ORIGIN: baseURL, // without this, SvelteKit CSRF rejects every form POST
+		ORIGIN: baseURL, // without this, SvelteKit CSRF rejects every form POST (serve.js applies it)
 		BODY_SIZE_LIMIT: '512M', // adapter-node defaults to 512KB; upload tests need room
 		DATABASE_URL: opts.dbPath, // absolute; dirname doubles as DATA_DIR
 		TZ: 'UTC',
 		...opts.env,
 		PORT: String(port)
 	};
+	if (opts.omitOrigin) delete childEnv.ORIGIN;
 
 	const logs: string[] = [];
-	const child: ChildProcess = spawn('node', ['build'], {
+	const child: ChildProcess = spawn('node', ['serve.js'], {
 		cwd: REPO_ROOT, // migrate-on-boot checks cwd-relative ./drizzle
 		env: childEnv,
 		stdio: ['ignore', 'pipe', 'pipe']

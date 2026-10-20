@@ -161,7 +161,7 @@ export const SEED = {
 // The demo photo source files live in `static/demo-assets/`, which SvelteKit
 // copies into `build/client/demo-assets/` at build time. Resolve at runtime
 // from cwd-relative candidates so it works in every context: `npm run dev`
-// (static/), a built server / `node build` / Docker (build/client/, shipped
+// (static/), a built server / `node serve.js` / Docker (build/client/, shipped
 // because the whole build/ dir is copied), and the Playwright runner. Falls
 // back to the path next to this module for safety. Resolved at call time so
 // process.cwd() and existence reflect the running process.

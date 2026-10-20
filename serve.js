@@ -34,6 +34,8 @@ if (origin) {
 	}
 }
 
+// The adapter is configured without envPrefix. If one is ever added, the env
+// writes above must use the prefixed names.
 // Imported dynamically so the env writes above land before the adapter reads
 // them; a static import would be hoisted above them.
 const entry = new URL('./build/index.js', import.meta.url).href;

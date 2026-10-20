@@ -97,6 +97,8 @@ Download [`docker-compose.prod.yml`](docker-compose.prod.yml) and set your domai
 ORIGIN: https://einvault.yourdomain.com
 ```
 
+The image starts through `serve.js`, a small wrapper around the SvelteKit server that applies `ORIGIN` at runtime.
+
 Then:
 
 ```bash
