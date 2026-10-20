@@ -14,9 +14,6 @@
 		"target": "ESNext"
 	},
 	"include": [
-		".svelte-kit/ambient.d.ts",
-		".svelte-kit/env.d.ts",
-		".svelte-kit/non-ambient.d.ts",
 		".svelte-kit/types/**/$types.d.ts",
 		"src",
 		"tests",
