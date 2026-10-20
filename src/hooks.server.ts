@@ -17,7 +17,7 @@ import {
 	logTwoFactorBootStatus,
 	logDemoBootStatus
 } from '#lib/server/env.js';
-import { isDemoBlockedRequest } from '#lib/server/demo.js';
+import { isDemoBlockedRequest, demoReturnPath } from '#lib/server/demo.js';
 import { DATA_DIR } from '#lib/server/paths.js';
 import { recoverAndStart } from '#lib/server/video/worker.js';
 import { startNotifyScheduler } from '#lib/server/notify/scheduler.js';
@@ -181,10 +181,7 @@ const demoReadOnly: Handle = async ({ event, resolve }) => {
 			secure: isSecureRequest(event.request),
 			maxAge: 30
 		});
-		const referer = event.request.headers.get('referer');
-		const back =
-			referer && URL.canParse(referer) ? new URL(referer).pathname + new URL(referer).search : '/';
-		redirect(303, back);
+		redirect(303, demoReturnPath(event.request.headers.get('referer'), event.url.origin));
 	}
 	// Read path: prevent any CDN/proxy from caching authenticated HTML, so one
 	// visitor's session-rendered page can never be served to another. This
