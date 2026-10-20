@@ -1,4 +1,5 @@
 import { expect, request as pwRequest, type Page } from '@playwright/test';
+import { waitForHydration } from './hydration';
 
 // Creates a token via the settings UI and returns the raw value. Svelte sets
 // input values as DOM properties (not attributes), so read via evaluate after
@@ -10,6 +11,7 @@ export async function createToken(
 	scope: 'full' | 'write' = 'full'
 ): Promise<string> {
 	await page.goto(settingsPath);
+	await waitForHydration(page);
 	await page.getByPlaceholder('e.g. Door button').fill(name);
 	if (scope === 'write') await page.locator('#api-token-scope').selectOption('write');
 	await page.getByRole('button', { name: 'Create token' }).click();

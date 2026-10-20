@@ -4,6 +4,7 @@ import path from 'node:path';
 import { test } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
+import { waitForHydration } from '../lib/hydration';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
@@ -29,6 +30,7 @@ test('mobile overview header is a companion dropdown that can jump into a compan
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto('/');
+	await waitForHydration(asMember);
 	const trigger = asMember.getByRole('button', { name: 'Switch companion' });
 	await expect(trigger).toBeVisible({ timeout: 8_000 });
 	await expect(trigger).toContainText('Overview');
@@ -43,6 +45,7 @@ test('member You tab opens account sheet with Settings + Sign Out only @mobile',
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto('/');
+	await waitForHydration(asMember);
 	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
 	await nav.getByRole('button', { name: 'You' }).click();
 
@@ -60,6 +63,7 @@ test('companion page top bar avatar opens account sheet @mobile', async ({
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto(`/${EIN}`);
+	await waitForHydration(asMember);
 	const avatarButton = asMember.getByRole('button', { name: 'Open account menu' });
 	await expect(avatarButton).toBeVisible({ timeout: 8_000 });
 	await avatarButton.click();
@@ -75,6 +79,7 @@ test('companion page account sheet Settings link navigates to /settings @mobile'
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto(`/${EIN}`);
+	await waitForHydration(asMember);
 	await asMember.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asMember.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -87,6 +92,7 @@ test('admin companion page account sheet shows Users and Companions @mobile', as
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto(`/${EIN}`);
+	await waitForHydration(asAdmin);
 	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -109,6 +115,7 @@ test('admin You tab account sheet shows Users and Companions @mobile', async ({
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
+	await waitForHydration(asAdmin);
 	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
 	await nav.getByRole('button', { name: 'You' }).click();
 
@@ -123,6 +130,7 @@ test('admin account sheet Users link navigates to /admin/users @mobile', async (
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
+	await waitForHydration(asAdmin);
 	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
 	await nav.getByRole('button', { name: 'You' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
@@ -136,6 +144,7 @@ test('admin account sheet Companions link navigates to /admin/companions @mobile
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
+	await waitForHydration(asAdmin);
 	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
 	await nav.getByRole('button', { name: 'You' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
@@ -153,6 +162,7 @@ test('admin sidebar account popover shows Settings + Users + Companions + Sign O
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'desktop', 'desktop sidebar only');
 	await asAdmin.goto('/');
+	await waitForHydration(asAdmin);
 	// The account trigger is the button with aria-haspopup="dialog" in the sidebar
 	const trigger = asAdmin.getByRole('button', { name: new RegExp(SEED.admin.displayName, 'i') });
 	await expect(trigger).toBeVisible({ timeout: 8_000 });
@@ -204,6 +214,7 @@ test('caretaker on-shift: Quick add FAB is present and opens Log activity + Add 
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asCaretaker.goto(`/care/${EIN}`);
+	await waitForHydration(asCaretaker);
 	// exact: true avoids matching the "Close quick add menu" backdrop button
 	const fab = asCaretaker.getByRole('button', { name: 'Quick add', exact: true });
 	await expect(fab).toBeVisible({ timeout: 8_000 });

@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
@@ -32,6 +33,7 @@ async function addReminder(
 	}
 ) {
 	await page.goto(`/${opts.companionId ?? COMP}/reminders`);
+	await waitForHydration(page);
 	// A freshly created companion shows a second "Add Reminder" in the empty state.
 	await page.getByRole('button', { name: 'Add Reminder' }).first().click();
 	await page.locator('#title').fill(opts.title);
@@ -101,6 +103,7 @@ test('recurring reminder in needs-attention: skip commits via toast and leaves t
 	});
 
 	await asMember.goto('/');
+	await waitForHydration(asMember);
 
 	const row = attentionRow(asMember, 'e2e-overview-skip-commit');
 	await expect(row).toBeVisible({ timeout: 8_000 });
@@ -129,6 +132,7 @@ test('needs-attention detail modal: skip commits via toast and leaves the list',
 	});
 
 	await asMember.goto('/');
+	await waitForHydration(asMember);
 
 	const titleButton = asMember
 		.locator('section[aria-label="Needs attention"]')
@@ -161,6 +165,7 @@ test('companion card pill shows date, not "Tomorrow", for a reminder 5 days out'
 	// Fresh companion so its only reminder is the one we add (seed companions
 	// have overdue reminders that would win the "next reminder" slot).
 	await asMember.goto('/companions/new');
+	await waitForHydration(asMember);
 	await asMember.locator('#name').fill('e2e-228-later');
 	await asMember.getByRole('button', { name: 'Add Companion' }).click();
 	await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
@@ -181,6 +186,7 @@ test('companion card pill shows date, not "Tomorrow", for a reminder 5 days out'
 
 test('companion card pill shows "Tomorrow" for a next-day reminder', async ({ asMember }) => {
 	await asMember.goto('/companions/new');
+	await waitForHydration(asMember);
 	await asMember.locator('#name').fill('e2e-228-nextday');
 	await asMember.getByRole('button', { name: 'Add Companion' }).click();
 	await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
@@ -206,6 +212,7 @@ test('one-off reminder in needs-attention has no skip button', async ({ asMember
 	});
 
 	await asMember.goto('/');
+	await waitForHydration(asMember);
 
 	const row = attentionRow(asMember, 'e2e-overview-skip-none');
 	await expect(row).toBeVisible({ timeout: 8_000 });

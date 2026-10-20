@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
 
@@ -28,6 +29,7 @@ async function addReminder(
 	}
 ) {
 	await page.goto(`/${COMP}/reminders`);
+	await waitForHydration(page);
 	await page.getByRole('button', { name: 'Add Reminder' }).click();
 	await page.locator('#title').fill(opts.title);
 	if (opts.type) {
@@ -76,6 +78,7 @@ test('companion dashboard renders hero and cards @mobile', async ({ asMember }) 
 test('mobile FAB deep-link hrefs @mobile', async ({ asMember }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'FAB is mobile-only');
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	await asMember.getByRole('button', { name: 'Quick add' }).click();
 	await expect(asMember.getByRole('link', { name: 'Add reminder' })).toHaveAttribute(
 		'href',
@@ -98,6 +101,7 @@ test('mobile quick-add journal links to today, not /new @mobile', async ({
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'FAB is mobile-only');
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	await asMember.getByRole('button', { name: 'Quick add' }).click();
 	const link = asMember.getByRole('link', { name: 'Add journal entry' });
 	await expect(link).toHaveAttribute('href', new RegExp(`/${COMP}/journal/\\d{4}-\\d{2}-\\d{2}$`));
@@ -114,6 +118,7 @@ test('mobile quick-add journal links to today, not /new @mobile', async ({
 test('mobile exposes Documents on a companion page @mobile', async ({ asMember }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'top-bar Documents link is mobile-only');
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	const docs = asMember.getByRole('link', { name: /documents/i });
 	await expect(docs.first()).toHaveAttribute('href', `/${COMP}/documents`);
 	await docs.first().click();
@@ -124,6 +129,7 @@ test('mobile exposes Documents on a companion page @mobile', async ({ asMember }
 // It should open that reminder's detail modal, like the sibling weight stat.
 test('Next vet stat opens the reminder detail modal (#143)', async ({ asMember }) => {
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 
 	// seed-reminder-overdue: "Dental check" is the soonest vet reminder for Ein
 	// (overdue by 5 days, so it sorts first among vet/vaccination reminders).
@@ -147,6 +153,7 @@ test('skip recurring reminder on the dashboard card commits and leaves the list'
 	});
 
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	const row = reminderRow(asMember, 'e2e-dash-skip-commit');
 	await expect(row).toBeVisible({ timeout: 8_000 });
 	await row.getByRole('button', { name: 'Skip this occurrence' }).click();
@@ -174,6 +181,7 @@ test('skip from the reminder detail modal commits and leaves the card', async ({
 	});
 
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	const row = reminderRow(asMember, 'e2e-dash-skip-modal');
 	await expect(row).toBeVisible({ timeout: 8_000 });
 	await row.locator('button').first().click();
@@ -203,6 +211,7 @@ test('one-off reminder on the dashboard has no skip button in list or modal', as
 	});
 
 	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
 	const row = reminderRow(asMember, 'e2e-dash-skip-none');
 	await expect(row).toBeVisible({ timeout: 8_000 });
 	await expect(row.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
@@ -236,6 +245,7 @@ test.describe('mood trend card', () => {
 		};
 
 		await asMember.goto(`/${COMP}`);
+		await waitForHydration(asMember);
 		try {
 			await saveRange(90);
 			await expect(card.locator('a[data-date]')).toHaveCount(90);
@@ -256,12 +266,14 @@ test.describe('mood trend card', () => {
 		} finally {
 			// Shared asMember user: always restore the default for later tests.
 			await asMember.goto(`/${COMP}`);
+			await waitForHydration(asMember);
 			await saveRange(7);
 		}
 	});
 
 	test('clicking a day opens that journal day', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}`);
+		await waitForHydration(asMember);
 		const cell = asMember.getByTestId('mood-trend').locator('a[data-date]').first();
 		const date = await cell.getAttribute('data-date');
 		expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -271,6 +283,7 @@ test.describe('mood trend card', () => {
 
 	test('companion without moods shows the empty state', async ({ asMember }) => {
 		await asMember.goto('/companions/new');
+		await waitForHydration(asMember);
 		await asMember.locator('#name').fill('e2e-mood-empty');
 		await asMember.getByRole('button', { name: 'Add Companion' }).click();
 		await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
@@ -283,6 +296,7 @@ test.describe('mood trend card', () => {
 
 	test('archived companion hides the log-mood CTA', async ({ asAdmin }) => {
 		await asAdmin.goto('/companions/new');
+		await waitForHydration(asAdmin);
 		await asAdmin.locator('#name').fill('e2e-mood-archived');
 		await asAdmin.getByRole('button', { name: 'Add Companion' }).click();
 		await expect(asAdmin).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
@@ -293,6 +307,7 @@ test.describe('mood trend card', () => {
 
 		// Archive the companion via the real UI flow (see companions.spec.ts).
 		await asAdmin.goto(`/companions/${id}/edit`);
+		await waitForHydration(asAdmin);
 		const triggerBtn = asAdmin.getByRole('button', { name: /Archive e2e-mood-archived/i });
 		await triggerBtn.scrollIntoViewIfNeeded();
 		await triggerBtn.click();
