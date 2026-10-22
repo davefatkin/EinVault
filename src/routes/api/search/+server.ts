@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { search, SEARCH_ENTITY_TYPES, type SearchEntityType } from '#lib/server/search.js';
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const before = p.get('before');
 
 	try {
-		return json({
+		return Response.json({
 			results: search({
 				text: p.get('q') ?? '',
 				companionIds: p.getAll('companion'),
@@ -28,6 +28,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		});
 	} catch (err) {
 		console.error('[search] query failed:', err);
-		return json({ results: [] });
+		return Response.json({ results: [] });
 	}
 };

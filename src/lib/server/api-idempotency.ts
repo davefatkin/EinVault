@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-import { json } from '@sveltejs/kit';
 import { and, eq, lt } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
@@ -20,7 +19,7 @@ function hashBody(body: unknown): string {
 }
 
 function inFlight(): Response {
-	return json(
+	return Response.json(
 		{ code: 'idempotencyInFlight', message: 'A request with this Idempotency-Key is in progress.' },
 		{ status: 409 }
 	);
@@ -41,10 +40,10 @@ export async function withIdempotency(
 	const key = opts.request.headers.get('idempotency-key')?.trim();
 	if (!key) {
 		const { status, data } = await produce();
-		return json(data, { status });
+		return Response.json(data, { status });
 	}
 	if (key.length > MAX_KEY_LEN) {
-		return json(
+		return Response.json(
 			{
 				code: 'idempotencyKeyTooLong',
 				message: `Idempotency-Key exceeds ${MAX_KEY_LEN} characters.`
@@ -82,7 +81,7 @@ export async function withIdempotency(
 		// Row vanished between the conflict and this read (e.g. concurrent rollback).
 		if (!existing) return inFlight();
 		if (existing.requestHash !== requestHash) {
-			return json(
+			return Response.json(
 				{
 					code: 'idempotencyKeyReused',
 					message: 'Idempotency-Key reused with a different request body.'

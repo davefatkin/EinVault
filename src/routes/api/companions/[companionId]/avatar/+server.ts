@@ -1,4 +1,4 @@
-import { json, error, type RequestEvent } from '@sveltejs/kit';
+import { error, type RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -51,7 +51,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		params.companionId
 	);
 
-	return json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
+	return Response.json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
@@ -76,5 +76,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		params.companionId
 	);
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };

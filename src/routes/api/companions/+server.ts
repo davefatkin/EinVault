@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import { inArray } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { apiRoute } from '#lib/server/auth/api-request.js';
@@ -13,14 +12,16 @@ import { toApiCompanion, toApiCompanionMinimal } from '#lib/server/api-serialize
 // `write`-scoped tokens get a minimal projection without companion PII.
 export const GET = apiRoute(async ({ user, scope }) => {
 	const ids = await listAllowedCompanions({ id: user.id, role: user.role });
-	if (ids.length === 0) return json({ companions: [] });
+	if (ids.length === 0) return Response.json({ companions: [] });
 
 	const rows = await db.query.companions.findMany({
 		where: inArray(schema.companions.id, ids),
 		orderBy: (c, { asc }) => [asc(c.name)]
 	});
 
-	if (scope === 'write') return json({ companions: rows.map(toApiCompanionMinimal) });
+	if (scope === 'write') return Response.json({ companions: rows.map(toApiCompanionMinimal) });
 	const sitterNotes = await sharedNotesMarkdown(rows.map((r) => r.id));
-	return json({ companions: rows.map((r) => toApiCompanion(r, sitterNotes.get(r.id) ?? null)) });
+	return Response.json({
+		companions: rows.map((r) => toApiCompanion(r, sitterNotes.get(r.id) ?? null))
+	});
 });

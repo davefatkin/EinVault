@@ -1,4 +1,4 @@
-import { redirect, json } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { validateAuth, isSecureRequest } from '#lib/server/auth/index.js';
 import * as env from '$app/env/private';
@@ -172,7 +172,7 @@ const twoFactorGate: Handle = async ({ event, resolve }) => {
 const demoReadOnly: Handle = async ({ event, resolve }) => {
 	if (DEMO_MODE && isDemoBlockedRequest(event.request.method, event.url.pathname)) {
 		if (event.url.pathname.startsWith('/api')) {
-			return json({ error: 'This is a read-only demo.', demo: true }, { status: 403 });
+			return Response.json({ error: 'This is a read-only demo.', demo: true }, { status: 403 });
 		}
 		event.cookies.set('einvault_demo_notice', '1', {
 			path: '/',
@@ -253,7 +253,7 @@ const routeGroupGuard: Handle = async ({ event, resolve }) => {
 	// use:enhance posts with Accept: application/json and reads an ActionResult;
 	// an `error` result makes the client show the error page with this status.
 	if ((event.request.headers.get('accept') ?? '').includes('application/json')) {
-		return json({ type: 'error', error: { message } }, { status });
+		return Response.json({ type: 'error', error: { message } }, { status });
 	}
 	// Plain form posts: send a signed-out user to the login page, as the layout
 	// load would for a page view.

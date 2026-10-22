@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { and, inArray, isNull } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -33,7 +33,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	// empty 200); paginate() below re-parses it for the actual fetch.
 	parsePagination(event.url, locale);
 
-	if (ids.length === 0) return json({ reminders: [], hasMore: false });
+	if (ids.length === 0) return Response.json({ reminders: [], hasMore: false });
 
 	const filters = [inArray(schema.reminders.companionId, ids)];
 	if (!includeCompleted) filters.push(isNull(schema.reminders.completedAt));
@@ -46,5 +46,5 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			offset
 		})
 	);
-	return json({ reminders: page.map(toApiReminder), hasMore });
+	return Response.json({ reminders: page.map(toApiReminder), hasMore });
 });

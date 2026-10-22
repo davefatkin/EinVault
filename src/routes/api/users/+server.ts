@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import { eq, ne } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { apiRoute } from '#lib/server/auth/api-request.js';
@@ -29,5 +28,5 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 		})
 	);
 	const serialize = user.role === 'member' ? toApiUserPublic : toApiUser;
-	return json({ users: page.map(serialize), hasMore });
+	return Response.json({ users: page.map(serialize), hasMore });
 });

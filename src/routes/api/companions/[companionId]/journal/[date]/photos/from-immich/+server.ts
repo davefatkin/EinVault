@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -112,7 +112,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		with: WITH_LOGGER
 	});
 
-	return json({
+	return Response.json({
 		...created,
 		url: `/api/photos/journal/${companionId}/${date}/${filename}`
 	});

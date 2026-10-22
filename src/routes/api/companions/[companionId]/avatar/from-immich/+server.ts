@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -84,5 +84,5 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		}
 	}
 
-	return json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
+	return Response.json({ avatarPath: filename, url: `/api/avatars/${params.companionId}` });
 };

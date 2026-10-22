@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -20,7 +20,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	});
 	if (!row) error(404, t(locale, 'error.notFound'), { code: 'notFound' });
 
-	if (scope === 'write') return json({ companion: toApiCompanionMinimal(row) });
+	if (scope === 'write') return Response.json({ companion: toApiCompanionMinimal(row) });
 	const sitterNotes = await sharedNotesMarkdown([row.id]);
-	return json({ companion: toApiCompanion(row, sitterNotes.get(row.id) ?? null) });
+	return Response.json({ companion: toApiCompanion(row, sitterNotes.get(row.id) ?? null) });
 });

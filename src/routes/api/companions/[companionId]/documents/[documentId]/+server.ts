@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -82,7 +82,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 		where: eq(schema.documents.id, doc.id),
 		with: { healthEvent: { columns: { id: true, title: true } } }
 	});
-	return json({ ...updated, url: `/api/documents/${params.companionId}/${doc.filename}` });
+	return Response.json({ ...updated, url: `/api/documents/${params.companionId}/${doc.filename}` });
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
@@ -105,5 +105,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	}
 	await db.delete(schema.documents).where(eq(schema.documents.id, doc.id));
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };

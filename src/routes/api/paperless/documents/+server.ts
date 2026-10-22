@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { PAPERLESS_CONFIG } from '#lib/server/env.js';
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	// Summaries only — the client already strips `content`/`__search_hit__`,
 	// but keep the explicit projection here as the second guard.
-	return json({
+	return Response.json({
 		items: result.items.map((d) => ({
 			id: d.id,
 			title: d.title,

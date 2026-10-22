@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -40,7 +40,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			offset
 		})
 	);
-	return json({ events: page.map(toApiDailyEvent), hasMore });
+	return Response.json({ events: page.map(toApiDailyEvent), hasMore });
 });
 
 // Bearer-token endpoint (never reads locals.user): create one or more daily
