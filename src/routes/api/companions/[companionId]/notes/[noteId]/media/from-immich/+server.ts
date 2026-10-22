@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { noteMediaUrl } from '#lib/media.js';
@@ -55,5 +55,5 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const item = await getNoteMediaView(noteId, mediaId);
 	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
-	return json({ ...item, url: noteMediaUrl(companionId, noteId, item) });
+	return Response.json({ ...item, url: noteMediaUrl(companionId, noteId, item) });
 };

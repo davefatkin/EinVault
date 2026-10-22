@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -27,7 +27,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			offset
 		})
 	);
-	return json({ entries: page.map(toApiWeightEntry), hasMore });
+	return Response.json({ entries: page.map(toApiWeightEntry), hasMore });
 });
 
 // POST /api/weight: create one weight entry. Token acts as its user, so

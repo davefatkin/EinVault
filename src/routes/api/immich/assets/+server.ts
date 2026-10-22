@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { IMMICH_CONFIG } from '#lib/server/env.js';
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		albumId: IMMICH_CONFIG.albumId
 	});
 
-	return json({
+	return Response.json({
 		items: result.items,
 		hasNextPage: result.hasNextPage,
 		page,

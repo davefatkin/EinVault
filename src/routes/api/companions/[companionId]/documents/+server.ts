@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t, type Locale } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -70,7 +70,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		}
 	});
 
-	return json({
+	return Response.json({
 		documents: rows.map((r) => ({
 			...r,
 			url: `/api/documents/${params.companionId}/${r.filename}`
@@ -213,5 +213,5 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		}
 	});
 
-	return json({ ...created, url: `/api/documents/${companionId}/${filename}` });
+	return Response.json({ ...created, url: `/api/documents/${companionId}/${filename}` });
 };

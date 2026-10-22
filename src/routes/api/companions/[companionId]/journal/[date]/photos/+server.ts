@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -47,7 +47,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		),
 		columns: { id: true }
 	});
-	if (!entry) return json({ photos: [] });
+	if (!entry) return Response.json({ photos: [] });
 
 	const rows = await db
 		.select({
@@ -60,7 +60,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.from(schema.media)
 		.where(eq(schema.media.entryId, entry.id));
 
-	return json({ photos: rows });
+	return Response.json({ photos: rows });
 };
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
@@ -150,7 +150,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		with: WITH_LOGGER
 	});
 
-	return json({
+	return Response.json({
 		...created,
 		url: `/api/photos/journal/${companionId}/${date}/${filename}`
 	});
@@ -181,7 +181,7 @@ export const PATCH: RequestHandler = async ({ url, request, params, locals }) =>
 		.set({ caption: notes?.trim() || null })
 		.where(eq(schema.media.id, photoId));
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };
 
 export const DELETE: RequestHandler = async ({ url, params, locals }) => {
@@ -219,5 +219,5 @@ export const DELETE: RequestHandler = async ({ url, params, locals }) => {
 
 	await db.delete(schema.media).where(eq(schema.media.id, photoId));
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };

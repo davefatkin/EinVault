@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -39,7 +39,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			offset
 		})
 	);
-	return json({ events: page.map(toApiHealthEvent), hasMore });
+	return Response.json({ events: page.map(toApiHealthEvent), hasMore });
 });
 
 // POST /api/health-events: create one health event. Token acts as its user, so

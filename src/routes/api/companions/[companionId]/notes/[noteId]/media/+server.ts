@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { noteMediaUrl } from '#lib/media.js';
@@ -25,7 +25,7 @@ import {
 // Transcode status poll for the note view page.
 export const GET: RequestHandler = async ({ params, locals }) => {
 	await assertCanWriteNoteMedia(locals, params.companionId, params.noteId);
-	return json({ media: await listNoteMediaStatus(params.noteId) });
+	return Response.json({ media: await listNoteMediaStatus(params.noteId) });
 };
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
@@ -63,7 +63,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const item = await getNoteMediaView(noteId, mediaId);
 	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
-	return json({ ...item, url: noteMediaUrl(companionId, noteId, item) });
+	return Response.json({ ...item, url: noteMediaUrl(companionId, noteId, item) });
 };
 
 export const PATCH: RequestHandler = async ({ url, request, params, locals }) => {

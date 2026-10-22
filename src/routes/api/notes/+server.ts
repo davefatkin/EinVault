@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
 import { withIdempotency } from '#lib/server/api-idempotency.js';
 import { throwCareError } from '#lib/server/care-errors.js';
@@ -36,7 +35,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 					offset
 				})
 	);
-	return json({ notes: page.map(toApiNote), hasMore });
+	return Response.json({ notes: page.map(toApiNote), hasMore });
 });
 
 // POST /api/notes: create one note. Idempotent with an Idempotency-Key header.

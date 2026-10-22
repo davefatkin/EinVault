@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { isValidDate } from '#lib/server/validation.js';
@@ -20,5 +20,5 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		before
 	});
 
-	return json({ entries, hasMore, oldestDate });
+	return Response.json({ entries, hasMore, oldestDate });
 };

@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { t } from '#lib/i18n/index.js';
 import { localDateISO } from '#lib/date.js';
@@ -36,7 +36,7 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 			eq(schema.journalEntries.date, date)
 		)
 	});
-	return json({ entry: row ? toApiJournalEntry(row) : null });
+	return Response.json({ entry: row ? toApiJournalEntry(row) : null });
 });
 
 // Bearer-token endpoint: upsert a journal entry. Body: { companionId, date?

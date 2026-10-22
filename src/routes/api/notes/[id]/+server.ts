@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import { apiRoute, apiRouteZod } from '#lib/server/auth/api-request.js';
 import { deleteNote, getNote, updateNote } from '#lib/server/notes.js';
 import { toApiNote } from '#lib/server/api-serializers.js';
@@ -15,7 +14,7 @@ import {
 export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 	requireNoteOwnerScope(scope, user, locale);
 	const note = await loadAllowedNote(event.params.id!, user, locale);
-	return json(toApiNote(note));
+	return Response.json(toApiNote(note));
 });
 
 // PATCH: partial update. Naturally idempotent; `tags` replaces the whole set.
@@ -30,7 +29,7 @@ export const PATCH = apiRouteZod(
 		const saved = await updateNote(note.id, checked.value, user.id);
 		const updated = saved ? await getNote(note.id) : null;
 		if (!updated) throwNoteNotFound(locale);
-		return json(toApiNote(updated));
+		return Response.json(toApiNote(updated));
 	},
 	noteCodeFor
 );
