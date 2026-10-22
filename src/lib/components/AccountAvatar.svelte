@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import ImmichPicker from '#lib/components/ImmichPicker.svelte';
 	import { addToast } from '#lib/components/ui/toast/index.js';
@@ -37,7 +37,7 @@
 			});
 			if (res.ok) {
 				bustUserAvatarCache(userId);
-				await invalidateAll();
+				await refreshAll();
 				addToast({
 					id: 'user-avatar-updated',
 					title: t(locale, 'page.settings.photoUpdated'),
@@ -69,7 +69,7 @@
 			const res = await fetch('/api/account/avatar', { method: 'DELETE' });
 			if (res.ok) {
 				bustUserAvatarCache(userId);
-				await invalidateAll();
+				await refreshAll();
 				addToast({
 					id: 'user-avatar-removed',
 					title: t(locale, 'page.settings.photoRemoved'),
@@ -104,7 +104,7 @@
 			if (res.ok) {
 				immichPickerOpen = false;
 				bustUserAvatarCache(userId);
-				await invalidateAll();
+				await refreshAll();
 				addToast({
 					id: 'user-avatar-updated',
 					title: t(locale, 'page.settings.photoUpdated'),

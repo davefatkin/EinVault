@@ -261,7 +261,7 @@ test.describe('settings', () => {
 		await expect(asMember.getByText(/profile photo updated/i)).toBeVisible({ timeout: 10_000 });
 
 		// An img element should now be visible in the UserAvatar area (may appear in
-		// multiple places — nav + settings card — after invalidateAll).
+		// multiple places — nav + settings card — after refreshAll).
 		await expect(asMember.locator(`img[src*="/api/users/"]`).first()).toBeVisible({
 			timeout: 6_000
 		});
