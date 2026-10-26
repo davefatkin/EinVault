@@ -105,11 +105,14 @@ jobs:
       - run: npx playwright test --shard=${{ matrix.shard }}/4
         env:
           PW_SKIP_BUILD: '1'
+      # Upload the blob zip as-is. Zipping a zip lets the inner zip's data
+      # descriptor land verbatim in the outer stream, and download-artifact's
+      # streaming unzip can mistake it for the outer entry's end.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: blob-report-${{ matrix.shard }}
-          path: blob-report/
+          path: blob-report/report-${{ matrix.shard }}.zip
+          archive: false
           retention-days: 7
 
   merge-report:
@@ -128,9 +131,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: blob-report-*
+          pattern: report-*.zip
           path: all-blob-reports/
           merge-multiple: true
+          skip-decompress: true
       - run: npx playwright merge-reports --reporter html ./all-blob-reports
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
