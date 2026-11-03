@@ -75,6 +75,26 @@ test('overview renders companion cards and needs-attention @mobile', async ({ as
 	await expect(asMember.getByRole('link', { name: /Edward/i }).first()).toBeVisible();
 });
 
+test('companion card keeps the age visible next to a long breed (#401) @mobile', async ({
+	asMember
+}) => {
+	await asMember.goto('/');
+	// Edward's seeded breed, "Mixed breed (mostly mischief)", overflows the card
+	// line at both the desktop and mobile widths.
+	const line = asMember
+		.locator('[role="link"] p')
+		.filter({ hasText: 'Mixed breed (mostly mischief)' });
+	const age = line.getByText(/^~?\d+y$/);
+	await expect(age).toBeVisible({ timeout: 8_000 });
+	// Precondition: the breed really is truncated, or the check below proves nothing.
+	const breed = line.locator('span.truncate');
+	expect(await breed.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+	const lineBox = await line.boundingBox();
+	const ageBox = await age.boundingBox();
+	expect(lineBox && ageBox).toBeTruthy();
+	expect(ageBox!.x + ageBox!.width).toBeLessThanOrEqual(lineBox!.x + lineBox!.width + 0.5);
+});
+
 test('overview shows care-status badge @mobile', async ({ asMember }) => {
 	await asMember.goto('/');
 	// Enriched seed has overdue reminders for both Ein ("Dental check", -5d) and

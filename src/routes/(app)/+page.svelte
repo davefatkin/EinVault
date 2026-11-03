@@ -550,19 +550,24 @@
 							<div class="min-w-0 flex-1">
 								<p class="font-semibold text-foreground truncate">{companion.name}</p>
 								{#if companion.breed || hasAge}
-									<p class="text-xs text-muted-foreground truncate">
+									<!-- Only the breed truncates; the short age always fits (#401). -->
+									<p class="flex gap-1 text-xs text-muted-foreground">
 										{#if companion.breed}
-											{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}
+											<span class="min-w-0 truncate"
+												>{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}</span
+											>
 										{/if}
 										{#if hasAge}
-											{#if companion.breed}·{/if}
-											<Age
-												dob={companion.dob}
-												approximate={companion.dobApproximate}
-												today={data.today}
-												style="short"
-												interactive={false}
-											/>
+											{#if companion.breed}<span class="shrink-0">·</span>{/if}
+											<span class="shrink-0 whitespace-nowrap">
+												<Age
+													dob={companion.dob}
+													approximate={companion.dobApproximate}
+													today={data.today}
+													style="short"
+													interactive={false}
+												/>
+											</span>
 										{/if}
 									</p>
 								{/if}
