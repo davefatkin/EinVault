@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { daysInMonth, formatDateOnly, parseYmd } from './date';
+import { daysInMonth, formatDateOnly, formatYmd, parseYmd } from './date';
 
 describe('parseYmd', () => {
 	it('parses real calendar dates', () => {
@@ -36,5 +36,26 @@ describe('formatDateOnly', () => {
 
 	it('is null for junk', () => {
 		expect(formatDateOnly('nope', 'en')).toBeNull();
+	});
+});
+
+describe('formatYmd', () => {
+	const tz = process.env.TZ;
+	afterEach(() => {
+		if (tz === undefined) delete process.env.TZ;
+		else process.env.TZ = tz;
+	});
+
+	it.each(['Asia/Tokyo', 'Pacific/Honolulu'])('does not shift the day in %s', (zone) => {
+		process.env.TZ = zone;
+		expect(formatYmd('2019-03-04', 'en', { weekday: 'short', day: 'numeric' })).toBe('4 Mon');
+	});
+
+	it('uses the given locale', () => {
+		expect(formatYmd('2019-03-04', 'de', { month: 'long', year: 'numeric' })).toBe('März 2019');
+	});
+
+	it('is null for junk', () => {
+		expect(formatYmd('2019-02-30', 'en', { day: 'numeric' })).toBeNull();
 	});
 });

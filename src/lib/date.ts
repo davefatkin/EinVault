@@ -22,11 +22,23 @@ export function daysInMonth(y: number, m: number): number {
 	return new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
 
-/** Formats a date-only string without any time zone shift. */
-export function formatDateOnly(ymd: string, locale: Locale): string | null {
+/**
+ * Formats a date-only `YYYY-MM-DD` string as a calendar day: noon UTC rendered
+ * in UTC, so the day never shifts with the runtime or household time zone.
+ */
+export function formatYmd(
+	ymd: string,
+	locale: Locale,
+	opts: Intl.DateTimeFormatOptions
+): string | null {
 	const p = parseYmd(ymd);
 	if (!p) return null;
-	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(
+	return new Intl.DateTimeFormat(locale, { ...opts, timeZone: 'UTC' }).format(
 		Date.UTC(p.y, p.m - 1, p.d, 12)
 	);
+}
+
+/** Formats a date-only string without any time zone shift. */
+export function formatDateOnly(ymd: string, locale: Locale): string | null {
+	return formatYmd(ymd, locale, { dateStyle: 'medium' });
 }

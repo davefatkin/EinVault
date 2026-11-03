@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { browser } from '$app/env';
 	import { getContext } from 'svelte';
-	import { t, getLocale } from '#lib/i18n/index.js';
+	import { getLocale } from '#lib/i18n/index.js';
+	import { formatLocalTime, type LocalTimeFormat, type LocalTimeInput } from './localTime.js';
 
 	interface Props {
-		date: Date | string | number | null | undefined;
-		format?: 'date' | 'datetime' | 'time' | 'relative';
+		date: LocalTimeInput;
+		format?: LocalTimeFormat;
 		fallback?: string;
 	}
 
@@ -13,65 +13,11 @@
 	const locale = getLocale();
 
 	// Use the server's timezone so all users see times in the household's timezone,
-	// regardless of where their browser is located.
-	const tz = getContext<string | undefined>('serverTimezone');
+	// regardless of where their browser is located. SSR formats with the same zone
+	// and locale, so the hydrated text matches the server-rendered text.
+	const timeZone = getContext<string | undefined>('serverTimezone');
 
-	function parseDate(raw: Date | string | number | null | undefined): Date | null {
-		if (!raw) return null;
-		if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
-		if (typeof raw === 'number') return new Date(raw);
-		// ISO date-only string "YYYY-MM-DD": parse as local midnight, not UTC midnight
-		if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-			const [y, m, d] = raw.split('-').map(Number);
-			return new Date(y, m - 1, d);
-		}
-		const d = new Date(raw);
-		return isNaN(d.getTime()) ? null : d;
-	}
-
-	function fmt(d: Date): string {
-		const tzOpt = tz ? { timeZone: tz } : {};
-		if (format === 'time') {
-			return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', ...tzOpt });
-		}
-		if (format === 'datetime') {
-			return d.toLocaleString(undefined, {
-				month: 'short',
-				day: 'numeric',
-				year: 'numeric',
-				hour: 'numeric',
-				minute: '2-digit',
-				...tzOpt
-			});
-		}
-		if (format === 'relative') {
-			const diff = Date.now() - d.getTime();
-			const mins = Math.floor(diff / 60000);
-			const hours = Math.floor(diff / 3600000);
-			const days = Math.floor(diff / 86400000);
-			if (mins < 1) return t(locale, 'time.justNow');
-			if (mins < 60) return t(locale, 'time.minutesAgo', { count: mins });
-			if (hours < 24) return t(locale, 'time.hoursAgo', { count: hours });
-			if (days < 7) return t(locale, 'time.daysAgo', { count: days });
-			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...tzOpt });
-		}
-		return d.toLocaleDateString(undefined, {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric',
-			...tzOpt
-		});
-	}
-
-	// Plain derived values (not wrapped in arrow functions)
-	let parsed = $derived(parseDate(date));
-	let display = $derived(
-		!parsed
-			? fallback
-			: !browser
-				? parsed.toISOString().slice(0, 10) // neutral SSR fallback
-				: fmt(parsed)
-	);
+	let formatted = $derived(formatLocalTime(date, { format, locale, timeZone }));
 </script>
 
-<time datetime={parsed?.toISOString()} class="tabular-nums">{display}</time>
+<time datetime={formatted?.datetime} class="tabular-nums">{formatted?.display ?? fallback}</time>
