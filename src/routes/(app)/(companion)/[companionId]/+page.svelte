@@ -2,10 +2,10 @@
 	import type { PageData, ActionData } from './$types';
 	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
-	import { localDateISO } from '#lib/date.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
@@ -32,13 +32,12 @@
 		activityDisplayLabel,
 		healthTypeLabel,
 		documentCategoryLabel,
-		reminderTypeLabel,
-		speciesLabels
+		reminderTypeLabel
 	} from '#lib/i18n/labels.js';
 	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import { formatAge } from '#lib/age.js';
+	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
 	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
@@ -64,14 +63,11 @@
 
 	const locale = getLocale();
 
-	let today = localDateISO();
-
 	// Quick log shortcuts: the species trio, same as the caretaker view offers.
 	let species = $derived(toSpecies(companion.species));
 	let quickLogTypes = $derived(
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
-	let labels = $derived(speciesLabels(locale, species));
 
 	// Care status derived from outstanding reminders
 	let status = $derived(
@@ -516,6 +512,8 @@
 		</div>
 	{/if}
 
+	<CelebrationBanner entries={data.celebrations} today={data.today} linked={false} />
+
 	<!-- Hero card: gradient wash, avatar, name, quick stats -->
 	<Card class="overflow-hidden">
 		<div
@@ -564,11 +562,7 @@
 							{/if}
 						</div>
 					</div>
-					<p class="text-sm text-muted-foreground mt-0.5">
-						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
-							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
-					</p>
+					<CompanionMeta {companion} today={data.today} />
 					<div class="mt-2">
 						{#if status === 'up-to-date'}
 							<Badge variant="teal" class="text-xs">
@@ -822,7 +816,7 @@
 				</CardTitle>
 				{#if companion.isActive !== false}
 					<Button
-						href="/{companion.id}/journal/{today}"
+						href="/{companion.id}/journal/{data.today}"
 						variant="ghost"
 						size="sm"
 						class="h-7 text-xs text-primary px-2"

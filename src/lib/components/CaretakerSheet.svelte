@@ -19,8 +19,8 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import { noteMediaUrl } from '#lib/media.js';
-	import { formatAge } from '#lib/age.js';
-	import { sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
+	import { formatAge, formatFullAge } from '#lib/age.js';
+	import { homeSinceLabel, sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		photoSelection,
@@ -33,10 +33,13 @@
 	let {
 		sheet,
 		printedOn,
+		today,
 		shell
 	}: {
 		sheet: CaretakerSheet;
 		printedOn: string;
+		// Server date (YYYY-MM-DD) the age is counted to.
+		today: string;
 		// The layout hosting the sheet; the sticky toolbar sits below its header.
 		shell: 'app' | 'care';
 	} = $props();
@@ -63,8 +66,12 @@
 		[
 			`${labels.icon} ${speciesLabel(locale, companion.species)}`,
 			companion.breed,
-			formatAge(companion.dob, locale),
-			companion.sex ? sexLabel(locale, companion.sex) : null
+			// Plain text, so an exact dob prints the full age at every age.
+			companion.dobApproximate
+				? formatAge(companion.dob, locale, { today, style: 'long', approximate: true })
+				: formatFullAge(companion.dob, locale, { today }),
+			companion.sex ? sexLabel(locale, companion.sex) : null,
+			homeSinceLabel(locale, companion.homecomingDate)
 		]
 			.filter(Boolean)
 			.join(' · ')

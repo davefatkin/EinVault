@@ -4,7 +4,8 @@ import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
 import { parseSex, parseSpecies, parseWeightUnitStrict } from '#lib/server/validation.js';
-import { parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
+import { localDateISO } from '#lib/date.js';
+import { parseCompanionDates, parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -20,7 +21,9 @@ export const actions: Actions = {
 		const name = String(data.get('name') ?? '').trim();
 		const breed = String(data.get('breed') ?? '').trim() || null;
 		const sex = parseSex(String(data.get('sex') ?? ''));
-		const dob = String(data.get('dob') ?? '') || null;
+		const dob = String(data.get('dob') ?? '').trim() || null;
+		const dobApproximate = data.has('dobApproximate');
+		const homecomingDate = String(data.get('homecomingDate') ?? '').trim() || null;
 		const microchip = String(data.get('microchip') ?? '').trim() || null;
 		const bio = String(data.get('bio') ?? '').trim() || null;
 		// Echoed on failure so the page restores the picker and unit select.
@@ -34,6 +37,8 @@ export const actions: Actions = {
 				breed,
 				sex,
 				dob,
+				dobApproximate,
+				homecomingDate,
 				microchip,
 				bio,
 				species,
@@ -49,6 +54,27 @@ export const actions: Actions = {
 				breed,
 				sex,
 				dob,
+				dobApproximate,
+				homecomingDate,
+				microchip,
+				bio,
+				species,
+				weightUnit
+			});
+
+		const dates = parseCompanionDates(data, localDateISO());
+		if (!dates.ok)
+			return fail(400, {
+				error: t(
+					locals.locale,
+					dates.error === 'invalidDob' ? 'error.invalidDob' : 'error.invalidHomecoming'
+				),
+				name,
+				breed,
+				sex,
+				dob,
+				dobApproximate,
+				homecomingDate,
 				microchip,
 				bio,
 				species,
@@ -63,7 +89,9 @@ export const actions: Actions = {
 			species: parsed.species,
 			breed,
 			sex,
-			dob,
+			dob: dates.dob,
+			dobApproximate: dates.dobApproximate,
+			homecomingDate: dates.homecomingDate,
 			weightUnit: parsed.weightUnit,
 			microchip,
 			bio

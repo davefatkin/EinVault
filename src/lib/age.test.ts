@@ -1,11 +1,39 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { formatAge } from './age';
+import { describe, expect, it } from 'vitest';
+import { ageParts, formatAge, formatFullAge } from './age';
 
-// Local calendar dates, so the expectations hold in any time zone.
-const NOW = new Date(2026, 9, 12, 12, 0);
+describe('ageParts', () => {
+	const P = (dob: string, today: string) => ageParts(dob, today);
 
-describe('formatAge (long)', () => {
-	const long = (dob: string | null | undefined) => formatAge(dob, 'en', { now: NOW });
+	it('counts whole calendar months and leftover days', () => {
+		expect(P('2026-06-29', '2026-10-03')).toEqual({ years: 0, months: 3, days: 4 });
+		expect(P('2026-01-31', '2026-02-28')).toEqual({ years: 0, months: 1, days: 0 });
+		expect(P('2026-01-31', '2026-03-01')).toEqual({ years: 0, months: 1, days: 1 });
+		expect(P('2026-01-31', '2026-03-30')).toEqual({ years: 0, months: 1, days: 30 });
+		expect(P('2026-01-31', '2026-03-31')).toEqual({ years: 0, months: 2, days: 0 });
+		for (const dob of ['2026-01-29', '2026-01-30', '2026-01-31'])
+			expect(P(dob, '2026-02-28')).toEqual({ years: 0, months: 1, days: 0 });
+	});
+
+	it('handles leap-day dobs', () => {
+		expect(P('2024-02-29', '2025-02-28')).toEqual({ years: 1, months: 0, days: 0 });
+		expect(P('2024-02-29', '2025-03-01')).toEqual({ years: 1, months: 0, days: 1 });
+		expect(P('2024-02-29', '2028-02-28')).toEqual({ years: 3, months: 11, days: 30 });
+		expect(P('2024-02-29', '2028-02-29')).toEqual({ years: 4, months: 0, days: 0 });
+	});
+
+	it('handles today, future, and junk', () => {
+		expect(P('2026-10-12', '2026-10-12')).toEqual({ years: 0, months: 0, days: 0 });
+		expect(P('2026-10-13', '2026-10-12')).toBeNull();
+		expect(P('not a date', '2026-10-12')).toBeNull();
+	});
+});
+
+describe('formatAge', () => {
+	const today = '2026-10-12';
+	const long = (dob: string | null | undefined) => formatAge(dob, 'en', { today });
+	const short = (dob: string, t = today) => formatAge(dob, 'en', { today: t, style: 'short' });
+	const approx = (dob: string, style?: 'long' | 'short') =>
+		formatAge(dob, 'en', { today, style, approximate: true });
 
 	it('is null without a usable dob', () => {
 		expect(long(null)).toBeNull();
@@ -14,63 +42,49 @@ describe('formatAge (long)', () => {
 		expect(long('not a date')).toBeNull();
 	});
 
-	it('counts calendar months under a year', () => {
-		expect(long('2026-03-15')).toBe('7mo old');
-		expect(long('2026-09-30')).toBe('1mo old');
-		expect(long('2026-10-01')).toBe('0mo old');
+	it('long', () => {
+		expect(long('2026-09-30')).toBe('12d old');
+		expect(long('2026-10-12')).toBe('0d old');
+		expect(long('2026-06-08')).toBe('4mo 4d old');
+		expect(long('2026-03-12')).toBe('7mo old');
+		expect(long('2022-03-15')).toBe('4y 6mo');
+		expect(long('2024-10-12')).toBe('2y old');
+		expect(long('2025-10-20')).toBe('11mo 22d old');
 	});
 
-	it('shows years, with the leftover months when there are any', () => {
-		expect(long('2022-03-15')).toBe('4y 7mo');
-		expect(long('2024-10-01')).toBe('2y old');
-		// The day of month is ignored, as the page helpers did.
-		expect(long('2025-10-20')).toBe('1y old');
-	});
-
-	it('translates, with singular and plural forms', () => {
-		const de = (dob: string) => formatAge(dob, 'de', { now: NOW });
-		expect(de('2026-09-30')).toBe('1 Monat alt');
-		expect(de('2026-03-15')).toBe('7 Monate alt');
-		expect(de('2025-10-20')).toBe('1 Jahr alt');
-		expect(de('2024-10-01')).toBe('2 Jahre alt');
-		expect(de('2022-03-15')).toBe('4 J. 7 Mon.');
-	});
-});
-
-describe('formatAge (short)', () => {
-	const short = (dob: string | null) => formatAge(dob, 'en', { style: 'short', now: NOW });
-
-	it('is null without a dob', () => {
-		expect(short(null)).toBeNull();
-	});
-
-	it('counts whole years from the last birthday', () => {
-		expect(short('2022-03-15')).toBe('4y');
+	it('short', () => {
+		expect(short('2026-09-30')).toBe('12d');
+		expect(short('2026-06-08')).toBe('4mo 4d');
 		expect(short('2022-10-20')).toBe('3y');
+		expect(short('2024-02-29', '2025-02-28')).toBe('1y');
 	});
 
-	it('uses 30-day months under a year', () => {
-		expect(short('2026-03-15')).toBe('7mo');
-		expect(short('2025-10-20')).toBe('11mo');
+	it('approximate', () => {
+		expect(approx('2026-10-01')).toBe('~1mo old');
+		expect(approx('2026-10-01', 'short')).toBe('~1mo');
+		expect(approx('2026-06-08')).toBe('~4mo old');
+		expect(approx('2026-06-08', 'short')).toBe('~4mo');
+		expect(approx('2017-01-01')).toBe('~9y old');
+		expect(approx('2017-01-01', 'short')).toBe('~9y');
 	});
 
 	it('translates', () => {
-		expect(formatAge('2022-03-15', 'it', { style: 'short', now: NOW })).toBe('4 a');
-		expect(formatAge('2026-03-15', 'it', { style: 'short', now: NOW })).toBe('7 m');
+		expect(formatAge('2026-09-12', 'de', { today })).toBe('1 Monat alt');
+		expect(formatAge('2022-03-15', 'de', { today })).toBe('4 J. 6 Mon.');
 	});
 });
 
-describe('formatAge in a time zone west of UTC', () => {
-	const tz = process.env.TZ;
-	afterEach(() => {
-		if (tz === undefined) delete process.env.TZ;
-		else process.env.TZ = tz;
+describe('formatFullAge', () => {
+	const today = '2026-11-03';
+	it('joins non-zero units', () => {
+		expect(formatFullAge('2024-04-22', 'en', { today })).toBe('2 years, 6 months, 12 days');
+		expect(formatFullAge('2025-11-03', 'en', { today })).toBe('1 year');
+		expect(formatFullAge('2024-10-03', 'en', { today })).toBe('2 years, 1 month');
+		expect(formatFullAge('2026-11-03', 'en', { today })).toBe('0 days');
+		expect(formatFullAge('junk', 'en', { today })).toBeNull();
 	});
-
-	it('reads a dob on the 1st as that day, not the evening before', () => {
-		process.env.TZ = 'America/Los_Angeles';
-		const now = new Date(2026, 2, 12, 12, 0);
-		expect(formatAge('2024-03-01', 'en', { now })).toBe('2y old');
-		expect(formatAge('2026-02-01', 'en', { now })).toBe('1mo old');
+	it('localizes', () => {
+		expect(formatFullAge('2024-04-22', 'de', { today })).toBe('2 Jahre, 6 Monate und 12 Tage');
+		expect(formatFullAge('2024-04-22', 'fr', { today })).toContain(' et 12 jours');
 	});
 });

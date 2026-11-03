@@ -30,6 +30,8 @@ export const SEED = {
 			breed: 'Pembroke Welsh Corgi',
 			sex: 'male',
 			dob: '2022-03-15',
+			dobApproximate: true,
+			homecomingDate: '2022-05-20',
 			weightUnit: 'lbs',
 			microchip: '981020012345678',
 			bio: 'A Pembroke Welsh Corgi with a quiet secret: he is a data dog, the product of a research lab that left him improbably, almost unnervingly intelligent. Patient, unbothered, and far more aware of what is going on than he ever lets show.',

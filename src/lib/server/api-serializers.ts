@@ -105,6 +105,8 @@ export function toApiCompanion(row: CompanionRow, sitterNotes: string | null = n
 		species: row.species,
 		breed: row.breed,
 		dob: row.dob,
+		dobApproximate: row.dobApproximate,
+		homecomingDate: row.homecomingDate,
 		sex: row.sex,
 		weightUnit: row.weightUnit,
 		microchip: row.microchip,

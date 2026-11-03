@@ -26,7 +26,7 @@
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '#lib/species.js';
 	import { tick } from 'svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import { formatAge } from '#lib/age.js';
+	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
 	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
@@ -324,11 +324,7 @@
 							{t(locale, 'page.sheet.openFromCare')}
 						</Button>
 					</div>
-					<p class="text-sm text-muted-foreground mt-0.5">
-						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
-							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
-					</p>
+					<CompanionMeta {companion} today={data.today} />
 					{#if companion.microchip}
 						<p class="text-xs text-muted-foreground mt-1">
 							{t(locale, 'page.dashboard.caretaker.microchip', { id: companion.microchip })}

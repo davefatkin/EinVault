@@ -4,7 +4,9 @@ import path from 'node:path';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { startSmtpSink, type SmtpSink } from '../fakes/smtp';
-import { startNtfyFake, type NtfyFake } from '../fakes/ntfy';
+import { startNtfyFake, type NtfyFake, type NtfyPublish } from '../fakes/ntfy';
+import { noonZone } from '../lib/dates';
+import Database from 'better-sqlite3';
 import type { ParsedMail } from 'mailparser';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -312,6 +314,132 @@ base('notifications card describes push when only ntfy is enabled', async ({ pag
 		await expect(page.getByLabel('ntfy topic')).toBeVisible({ timeout: 8_000 });
 	} finally {
 		await server.stop();
+		await ntfy.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+// ---------------------------------------------------------------------------
+// Mail unconfigured: saving an ntfy topic must not wipe the celebration flag
+// ---------------------------------------------------------------------------
+
+base(
+	'ntfy topic save keeps celebration flag when mail is unconfigured',
+	async ({ page }, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`notifications-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`
+		);
+		const ntfy = await startNtfyFake();
+		const dbPath = createSeededDb(dir);
+		const db = new Database(dbPath);
+		db.prepare('UPDATE users SET notify_celebration_email = 1 WHERE username = ?').run(
+			SEED.member.username
+		);
+		let server: AppServer | undefined;
+		try {
+			server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
+			await login(page, server.baseURL, SEED.member.username);
+			await page.goto(server.baseURL + '/settings');
+			await expect(
+				page.locator('input[name="notifyCelebrationEmail"][type="checkbox"]')
+			).toHaveCount(0);
+			const topic = page.locator('#ntfyTopic');
+			await topic.fill('e2e-celebration-keep');
+			await topic.blur();
+			await expect(page.getByText(/notification settings updated/i)).toBeVisible({
+				timeout: 8_000
+			});
+			const row = db
+				.prepare(
+					'SELECT notify_celebration_email AS c, ntfy_topic AS t FROM users WHERE username = ?'
+				)
+				.get(SEED.member.username) as { c: number; t: string };
+			expect(row.t).toBe('e2e-celebration-keep');
+			expect(row.c).toBe(1);
+		} finally {
+			db.close();
+			await server?.stop();
+			await ntfy.stop();
+			fs.rmSync(dir, { recursive: true, force: true });
+		}
+	}
+);
+
+// ---------------------------------------------------------------------------
+// Day-of celebration: email + ntfy to opted-in admin, nothing to caretakers
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line no-empty-pattern
+base('homecoming day sends celebration email and ntfy push', async ({}, testInfo) => {
+	const dir = path.join(
+		REPO_ROOT,
+		'.test-data',
+		`notifications-celebration-${testInfo.workerIndex}-${testInfo.testId}`
+	);
+	// Household local time is about noon, so the 09:00 gate is open and the
+	// date cannot roll over during the test.
+	const { tz, today } = noonZone();
+	const homecoming = `${Number(today.slice(0, 4)) - 4}${today.slice(4)}`;
+	const smtp = await startSmtpSink();
+	const ntfy = await startNtfyFake();
+	const dbPath = createSeededDb(dir);
+	const db = new Database(dbPath);
+	db.prepare('UPDATE companions SET homecoming_date = ? WHERE id = ?').run(
+		homecoming,
+		SEED.companions.edward.id
+	);
+	const setUser = db.prepare(
+		'UPDATE users SET notify_celebration_email = 1, ntfy_topic = ? WHERE id = ?'
+	);
+	setUser.run('e2e-celebration-admin', SEED.admin.id);
+	setUser.run('e2e-celebration-caretaker', SEED.caretaker.id);
+	db.close();
+	let server: AppServer | undefined;
+	try {
+		server = await startAppServer({
+			dbPath,
+			env: {
+				TZ: tz,
+				NOTIFY_SCAN_INTERVAL_MS: '250',
+				SMTP_HOST: '127.0.0.1',
+				SMTP_PORT: String(smtp.port),
+				SMTP_SECURE: 'false',
+				SMTP_FROM: 'einvault-test@example.com',
+				NTFY_URL: ntfy.url
+			}
+		});
+
+		const subject = 'Edward is celebrating today';
+		const adminMail = (m: ParsedMail) =>
+			toText(m.to).includes('spike@swordfish2.ship') && m.subject === subject;
+		const adminPush = (p: NtfyPublish) =>
+			p.topic === 'e2e-celebration-admin' && p.title === subject;
+
+		const mail = await smtp.waitForMail(adminMail, 20_000);
+		expect(mail.text ?? '').toContain("Edward's homecoming day: 4 years home!");
+		expect(mail.text ?? '').toContain(`/${SEED.companions.edward.id}`);
+		const push = await ntfy.waitForPublish(adminPush, 20_000);
+		expect(push.message).toBe("🏡 Edward's homecoming day: 4 years home!");
+
+		// Later scans must not resend, and the caretaker never hears about it.
+		await expect
+			.poll(() => smtp.messages.filter(adminMail).length, { timeout: 1_500, intervals: [200] })
+			.toBe(1);
+		expect(ntfy.publishes.filter(adminPush)).toHaveLength(1);
+		// Seeded reminders may reach the caretaker, so match on the celebration.
+		expect(
+			smtp.messages.filter(
+				(m) => toText(m.to).includes('faye@redtail.ship') && m.subject === subject
+			)
+		).toHaveLength(0);
+		expect(
+			ntfy.publishes.filter((p) => p.topic === 'e2e-celebration-caretaker' && p.title === subject)
+		).toHaveLength(0);
+	} finally {
+		await server?.stop();
+		await smtp.stop();
 		await ntfy.stop();
 		fs.rmSync(dir, { recursive: true, force: true });
 	}

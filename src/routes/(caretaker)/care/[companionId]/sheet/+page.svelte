@@ -12,5 +12,5 @@
 </svelte:head>
 
 {#key data.sheet.companion.id}
-	<CaretakerSheet sheet={data.sheet} printedOn={data.printedOn} shell="care" />
+	<CaretakerSheet sheet={data.sheet} printedOn={data.printedOn} today={data.today} shell="care" />
 {/key}

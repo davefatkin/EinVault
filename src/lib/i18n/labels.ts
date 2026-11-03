@@ -8,6 +8,7 @@ import {
 	type Species
 } from '#lib/activityTypes.js';
 import { SPECIES_ICON, speciesIcon, subtypesFor } from '#lib/species.js';
+import { formatDateOnly } from '#lib/date.js';
 
 // Icons are not translatable — they stay constant across locales.
 
@@ -144,6 +145,12 @@ export function roleLabel(locale: Locale, role: string): string {
 
 export function sexLabel(locale: Locale, sex: string): string {
 	return t(locale, `enum.sex.${sex}` as MessageKey);
+}
+
+// "Home since Mar 4, 2019"; null without a valid homecoming date.
+export function homeSinceLabel(locale: Locale, ymd: string | null | undefined): string | null {
+	const date = ymd ? formatDateOnly(ymd, locale) : null;
+	return date ? t(locale, 'page.companion.homeSince', { date }) : null;
 }
 
 // Pre-built option lists for <select> elements and filter UIs.

@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
-import { localDateISO } from '#lib/date.js';
+import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { t } from '#lib/i18n/index.js';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
@@ -22,10 +22,10 @@ import { failCareError } from '#lib/server/care-errors.js';
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 
-	const { companions } = await parent();
+	const { companions, today } = await parent();
 
 	// 0 companions → fall through to the dashboard's first-run welcome (SP7).
 	if (companions.length === 1) redirect(302, `/${companions[0].id}`);
@@ -33,7 +33,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const now = new Date();
 	const in7d = new Date(now.getTime() + SEVEN_DAYS_MS);
 	const ago7d = new Date(now.getTime() - SEVEN_DAYS_MS);
-	const today = localDateISO(now);
 	const ids = companions.map((c) => c.id);
 
 	const [upcomingReminders, recentDaily, recentHealth, todayJournal] = await Promise.all([
@@ -80,7 +79,10 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		role: locals.user.role
 	});
 
+	const celebrations = celebrationBanner(companions, today, cookies.get(CELEBRATION_COOKIE));
+
 	return {
+		celebrations,
 		upcomingReminders,
 		recentDaily,
 		recentHealth,

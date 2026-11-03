@@ -3,7 +3,8 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import { formatAge } from '#lib/age.js';
+	import { ageParts } from '#lib/age.js';
+	import Age from '#lib/components/Age.svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Plus, Zap, Check, Pencil, Bell, X, House, Activity, ChevronDown } from '@lucide/svelte';
@@ -15,6 +16,7 @@
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
@@ -38,7 +40,7 @@
 	const locale = getLocale();
 
 	// Use the server's notion of today so journal links don't drift on timezone boundary.
-	// The (app) layout server returns `today: localDateISO()` which SvelteKit merges into data.
+	// The root layout server returns `today: localDateISO()` which SvelteKit merges into data.
 	let today = $derived(data.today);
 
 	// Health type → emoji icon (no dedicated icon map exists; define inline)
@@ -386,6 +388,8 @@
 		{companionCountLabel(data.companions.length)}
 	</p>
 
+	<CelebrationBanner entries={data.celebrations} {today} />
+
 	<!-- 2. Needs-attention banner (hidden on first run) -->
 	{#if data.companions.length > 0}
 		{#if attentionItems.length > 0}
@@ -508,7 +512,7 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 				{#each data.companions as companion (companion.id)}
-					{@const age = formatAge(companion.dob, locale, { style: 'short' })}
+					{@const hasAge = ageParts(companion.dob, data.today) !== null}
 					{@const compReminders = remindersByCompanion[companion.id] ?? []}
 					{@const status = careStatus(
 						compReminders.map((r) => ({
@@ -545,16 +549,21 @@
 							/>
 							<div class="min-w-0 flex-1">
 								<p class="font-semibold text-foreground truncate">{companion.name}</p>
-								{#if companion.breed || age}
+								{#if companion.breed || hasAge}
 									<p class="text-xs text-muted-foreground truncate">
-										{[
-											companion.breed
-												? `${SPECIES_ICON[toSpecies(companion.species)]} ${companion.breed}`
-												: null,
-											age
-										]
-											.filter(Boolean)
-											.join(' · ')}
+										{#if companion.breed}
+											{SPECIES_ICON[toSpecies(companion.species)]} {companion.breed}
+										{/if}
+										{#if hasAge}
+											{#if companion.breed}·{/if}
+											<Age
+												dob={companion.dob}
+												approximate={companion.dobApproximate}
+												today={data.today}
+												style="short"
+												interactive={false}
+											/>
+										{/if}
 									</p>
 								{/if}
 							</div>

@@ -29,6 +29,8 @@ export type CaretakerSheet = {
 		breed: string | null;
 		sex: string | null;
 		dob: string | null;
+		dobApproximate: boolean;
+		homecomingDate: string | null;
 		microchip: string | null;
 		avatarPath: string | null; // CompanionAvatar builds the URL itself
 	};

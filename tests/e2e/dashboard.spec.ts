@@ -1,4 +1,11 @@
 import { test, expect } from '../lib/fixtures';
+import { test as base, expect as baseExpect } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from 'better-sqlite3';
+import { createSeededDb, SEED } from '../lib/seed';
+import { startAppServer, type AppServer } from '../lib/app-server';
+import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
@@ -321,3 +328,95 @@ test.describe('mood trend card', () => {
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toHaveCount(0);
 	});
 });
+
+test('the age tooltip opens on tap and closes on Escape @mobile', async ({ asMember }) => {
+	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
+	const trigger = asMember.getByTestId('companion-meta').getByRole('button', { name: /~\d+y old/ });
+	const tip = asMember.getByText('Approximate birth date', { exact: true });
+	await expect(tip).toBeHidden();
+	await trigger.click();
+	await expect(tip).toBeVisible();
+	// The popover sits in the viewport, not clipped off-screen.
+	const box = await tip.boundingBox();
+	const vp = asMember.viewportSize()!;
+	expect(box).not.toBeNull();
+	expect(box!.x).toBeGreaterThanOrEqual(0);
+	expect(box!.x + box!.width).toBeLessThanOrEqual(vp.width);
+	await asMember.keyboard.press('Escape');
+	await expect(tip).toBeHidden();
+});
+
+test('the default seeded world shows no celebrations banner', async ({ asAdmin }) => {
+	await asAdmin.goto('/');
+	await waitForHydration(asAdmin);
+	await expect(asAdmin.getByRole('heading', { level: 1 })).toBeVisible();
+	await expect(asAdmin.getByRole('region', { name: 'Celebrations' })).toHaveCount(0);
+});
+
+const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
+
+const celebrate = base.extend<{ world: AppServer }>({
+	// eslint-disable-next-line no-empty-pattern
+	world: async ({}, use, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`celebrate-${testInfo.workerIndex}-${testInfo.testId}`
+		);
+		const dbPath = createSeededDb(dir);
+		// Homecoming anniversary today, four years home (year shift keeps Feb 29 valid).
+		const { tz, today } = noonZone();
+		const [y, m, d] = today.split('-');
+		const raw = new Database(dbPath);
+		raw
+			.prepare('UPDATE companions SET homecoming_date = ? WHERE id = ?')
+			.run(`${Number(y) - 4}-${m}-${d}`, SEED.companions.edward.id);
+		raw.close();
+		const server = await startAppServer({ dbPath, env: { TZ: tz } });
+		await use(server);
+		await server.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+celebrate(
+	'celebration banner shows on both pages and dismisses per browser',
+	async ({ world, page }) => {
+		const base = world.baseURL;
+		await page.goto(base + '/auth/login');
+		await page.getByLabel('Username').fill(SEED.admin.username);
+		await page.getByLabel('Password').fill(SEED.password);
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		await baseExpect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+
+		const text = "Edward's homecoming day: 4 years home!";
+		const banner = page.getByRole('region', { name: 'Celebrations' });
+
+		await page.goto(base + '/');
+		await waitForHydration(page);
+		await baseExpect(banner.getByText(text)).toBeVisible();
+		await baseExpect(banner.getByRole('heading')).toHaveCount(0);
+		// On the overview the text links to the companion; the emoji stays outside the link.
+		const link = banner.getByRole('link', { name: text, exact: true });
+		await baseExpect(link).toHaveAttribute('href', `/${SEED.companions.edward.id}`);
+		await baseExpect(link).toHaveText(text);
+
+		await page.goto(`${base}/${SEED.companions.ein.id}`);
+		await baseExpect(banner).toHaveCount(0);
+
+		await page.goto(`${base}/${SEED.companions.edward.id}`);
+		await waitForHydration(page);
+		await baseExpect(banner.getByText(text)).toBeVisible();
+		// Already on Edward's dashboard: no link back to it.
+		await baseExpect(banner.getByRole('link')).toHaveCount(0);
+		await banner.getByRole('button', { name: 'Dismiss Edward' }).click();
+		await baseExpect(banner).toHaveCount(0);
+
+		await page.reload();
+		await baseExpect(banner).toHaveCount(0);
+		await page.goto(base + '/');
+		await baseExpect(page.getByRole('heading', { level: 1 })).toBeVisible();
+		await baseExpect(banner).toHaveCount(0);
+	}
+);

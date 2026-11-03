@@ -152,6 +152,8 @@ describe('loadCaretakerSheet', () => {
 			breed: 'Corgi',
 			sex: 'male',
 			dob: '2022-03-15',
+			dobApproximate: false,
+			homecomingDate: null,
 			microchip: '981020012345678',
 			avatarPath: 'avatars/ein.jpg'
 		});

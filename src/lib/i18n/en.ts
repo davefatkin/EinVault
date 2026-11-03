@@ -146,6 +146,8 @@ const messages = {
 	'error.invalidNtfyTopic':
 		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',
+	'error.invalidDob': 'Enter a real birth date that is not in the future.',
+	'error.invalidHomecoming': 'Enter a real homecoming date that is not in the future.',
 	'error.invalidArchiveDate': 'Invalid archive date.',
 	'error.invalidCompanionIds': 'One or more companion IDs are invalid.',
 	'error.invalidBeforeDate': 'Invalid before date',
@@ -306,19 +308,20 @@ const messages = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Default recurrence updated.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		'Get emails from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+		'Get emails from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Get push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+		'Get push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionBoth':
-		'Get emails and push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them.',
+		'Get emails and push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
+	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
 	'page.settings.notificationsUpdated': 'Notification settings updated.',
 	'page.settings.notificationsNeedEmail':
 		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
-		'Pushes cover due reminders and shift alerts for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
+		'Pushes cover due reminders, shift alerts, and celebrations (birthdays and homecoming days) for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
 	'page.settings.securityCard': 'Security',
 	'page.settings.twofaOn': 'Two-factor authentication is on.',
 	'page.settings.twofaOff': 'Add a second step at sign-in with an authenticator app.',
@@ -464,7 +467,6 @@ const messages = {
 	'time.daysAgo': '{count}d ago',
 
 	// #lib/age.ts
-	'age.unknown': 'Unknown age',
 	'age.monthsOld.one': '{count}mo old',
 	'age.monthsOld.other': '{count}mo old',
 	'age.yearsOld.one': '{count}y old',
@@ -472,6 +474,22 @@ const messages = {
 	'age.yearsMonths': '{years}y {months}mo',
 	'age.monthsShort': '{count}mo',
 	'age.yearsShort': '{count}y',
+	'age.daysOld': '{count}d old',
+	'age.monthsDaysOld': '{months}mo {days}d old',
+	'age.daysShort': '{count}d',
+	'age.monthsDaysShort': '{months}mo {days}d',
+	'age.approx.monthsOld': '~{count}mo old',
+	'age.approx.yearsOld': '~{count}y old',
+	'age.approx.monthsShort': '~{count}mo',
+	'age.approx.yearsShort': '~{count}y',
+	'age.unit.years.one': '{count} year',
+	'age.unit.years.other': '{count} years',
+	'age.unit.months.one': '{count} month',
+	'age.unit.months.other': '{count} months',
+	'age.unit.days.one': '{count} day',
+	'age.unit.days.other': '{count} days',
+	'age.approximateHint': 'Approximate birth date',
+	'age.bornOn': 'Born {date}',
 
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Write',
@@ -488,12 +506,15 @@ const messages = {
 	'component.markdown.cheatsheet.link': 'link text',
 
 	// Page: companion (shared form labels / placeholders)
+	'page.companion.homeSince': 'Home since {date}',
 	'page.companion.labelName': 'Name',
 	'page.companion.labelSpecies': 'Species',
 	'page.companion.labelBreed': 'Breed',
 	'page.companion.labelType': 'Type',
 	'page.companion.labelSex': 'Sex',
 	'page.companion.labelDob': 'Date of birth',
+	'page.companion.labelDobApproximate': 'Approximate',
+	'page.companion.labelHomecoming': 'Homecoming day',
 	'page.companion.labelWeightUnit': 'Weight unit',
 	'page.companion.labelMicrochip': 'Microchip number',
 	'page.companion.labelBio': 'Bio / notes',
@@ -564,6 +585,12 @@ const messages = {
 	'overview.title': 'Overview',
 	'overview.greeting': 'Hello, {name}',
 	'overview.needsAttention': 'Needs attention',
+	'celebration.label': 'Celebrations',
+	'celebration.birthday.one': '{name} turns {count} today!',
+	'celebration.birthday.other': '{name} turns {count} today!',
+	'celebration.homecoming.one': "{name}'s homecoming day: 1 year home!",
+	'celebration.homecoming.other': "{name}'s homecoming day: {count} years home!",
+	'celebration.dismissFor': 'Dismiss {name}',
 	'overview.allCaughtUp': 'All caught up',
 	'overview.heading.companions': 'Your companions',
 	'overview.companions.addStart': 'Start a new vault',
@@ -1138,6 +1165,13 @@ const messages = {
 	'email.shift.endBody': '{caretaker} finishes a care shift on {end}.',
 	'email.shift.footer':
 		'You are receiving this because shift email notifications are enabled in your EinVault settings.',
+
+	// Email and ntfy: day-of celebrations
+	'email.celebration.subject': '{name} is celebrating today',
+	'email.celebration.greeting': 'Hi {name},',
+	'email.celebration.cta': 'Open in EinVault',
+	'email.celebration.footer':
+		'You are receiving this because celebration emails are on in your EinVault settings.',
 
 	// Search palette
 	'search.placeholder': 'Search journals, notes, media, health, documents…',

@@ -150,7 +150,7 @@ export const actions: Actions = {
 
 	notifications: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
-		return handleNotificationsUpdate(locals.user.id, request, locals.locale);
+		return handleNotificationsUpdate(locals.user.id, locals.user.role, request, locals.locale);
 	},
 
 	testEmail: async ({ locals }) => {

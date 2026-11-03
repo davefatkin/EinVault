@@ -10,6 +10,14 @@ test.describe('admin-companions', () => {
 		await expect(asAdmin.locator('a[href="/companions/seed-comp-ein/edit"]').first()).toBeVisible();
 	});
 
+	test('the list shows the short approximate age', async ({ asAdmin }) => {
+		await asAdmin.goto('/admin/companions');
+		const row = asAdmin
+			.locator('div.px-6')
+			.filter({ has: asAdmin.getByText('Ein', { exact: true }) });
+		await expect(row.locator('[title="Approximate birth date"]')).toHaveText(/^~\d+y$/);
+	});
+
 	test('member gets 403 on admin/companions', async ({ asMember }) => {
 		const res = await asMember.request.get('/admin/companions');
 		expect(res.status()).toBe(403);

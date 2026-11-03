@@ -11,6 +11,7 @@
 	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
 	import { ChevronLeft, PawPrint } from '@lucide/svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { page } from '$app/state';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { speciesLabels } from '#lib/i18n/labels.js';
 	import { defaultWeightUnit } from '#lib/species.js';
@@ -117,7 +118,23 @@
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<div class="space-y-1.5">
 					<Label for="dob">{t(locale, 'page.companion.labelDob')}</Label>
-					<Input id="dob" name="dob" type="date" autocomplete="off" />
+					<Input
+						id="dob"
+						name="dob"
+						type="date"
+						autocomplete="off"
+						max={page.data.today}
+						value={form?.dob ?? ''}
+					/>
+					<label class="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+						<input
+							type="checkbox"
+							name="dobApproximate"
+							checked={form?.dobApproximate ?? false}
+							class="rounded border-input"
+						/>
+						{t(locale, 'page.companion.labelDobApproximate')}
+					</label>
 				</div>
 				<div class="space-y-1.5">
 					<Label for="weightUnit">{t(locale, 'page.companion.labelWeightUnit')}</Label>
@@ -135,6 +152,18 @@
 						{/each}
 					</Select>
 				</div>
+			</div>
+
+			<div class="space-y-1.5">
+				<Label for="homecomingDate">{t(locale, 'page.companion.labelHomecoming')}</Label>
+				<Input
+					id="homecomingDate"
+					name="homecomingDate"
+					type="date"
+					autocomplete="off"
+					max={page.data.today}
+					value={form?.homecomingDate ?? ''}
+				/>
 			</div>
 
 			<div class="space-y-1.5">

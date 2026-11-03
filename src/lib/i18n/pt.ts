@@ -149,6 +149,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		'O tópico só pode conter letras, números, hífens e sublinhados (máx. 64).',
 	'error.invalidDate': 'Data inválida',
+	'error.invalidDob': 'Insira uma data de nascimento real que não esteja no futuro.',
+	'error.invalidHomecoming': 'Insira uma data de chegada real que não esteja no futuro.',
 	'error.invalidArchiveDate': 'Data de arquivo inválida.',
 	'error.invalidCompanionIds': 'Um ou mais IDs de companheiro são inválidos.',
 	'error.invalidBeforeDate': 'Data anterior inválida',
@@ -318,20 +320,22 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Recorrência padrão atualizada.',
 	'page.settings.notificationsCard': 'Notificações',
 	'page.settings.notificationsDescription':
-		'Receba e-mails do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+		'Receba e-mails do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Receba notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+		'Receba notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionBoth':
-		'Receba e-mails e notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles.',
+		'Receba e-mails e notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
+	'page.settings.notifyCelebrationEmailLabel':
+		'Comemorações (aniversários exatos e dias de chegada a casa)',
 	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
 	'page.settings.notificationsNeedEmail':
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
-		'As notificações push cobrem lembretes vencidos e alertas de turno do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
+		'As notificações push cobrem lembretes vencidos, alertas de turno e comemorações (aniversários e dias de chegada a casa) do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
 	'page.settings.securityCard': 'Segurança',
 	'page.settings.twofaOn': 'A autenticação de dois fatores está ativa.',
 	'page.settings.twofaOff':
@@ -473,7 +477,6 @@ const messages: Record<keyof Messages, string> = {
 	'time.daysAgo': 'há {count}d',
 
 	// #lib/age.ts
-	'age.unknown': 'Idade desconhecida',
 	'age.monthsOld.one': '{count} mês',
 	'age.monthsOld.other': '{count} meses',
 	'age.yearsOld.one': '{count} ano',
@@ -481,6 +484,22 @@ const messages: Record<keyof Messages, string> = {
 	'age.yearsMonths': '{years} a {months} m',
 	'age.monthsShort': '{count} m',
 	'age.yearsShort': '{count} a',
+	'age.daysOld': '{count} d',
+	'age.monthsDaysOld': '{months} m {days} d',
+	'age.daysShort': '{count} d',
+	'age.monthsDaysShort': '{months} m {days} d',
+	'age.approx.monthsOld': '~{count} m',
+	'age.approx.yearsOld': '~{count} a',
+	'age.approx.monthsShort': '~{count} m',
+	'age.approx.yearsShort': '~{count} a',
+	'age.unit.years.one': '{count} ano',
+	'age.unit.years.other': '{count} anos',
+	'age.unit.months.one': '{count} mês',
+	'age.unit.months.other': '{count} meses',
+	'age.unit.days.one': '{count} dia',
+	'age.unit.days.other': '{count} dias',
+	'age.approximateHint': 'Data de nascimento aproximada',
+	'age.bornOn': 'Nascimento em {date}',
 
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Escrever',
@@ -497,12 +516,15 @@ const messages: Record<keyof Messages, string> = {
 	'component.markdown.cheatsheet.link': 'texto do link',
 
 	// Page: companion (shared form labels / placeholders)
+	'page.companion.homeSince': 'Em casa desde {date}',
 	'page.companion.labelName': 'Nome',
 	'page.companion.labelSpecies': 'Espécie',
 	'page.companion.labelBreed': 'Raça',
 	'page.companion.labelType': 'Tipo',
 	'page.companion.labelSex': 'Sexo',
 	'page.companion.labelDob': 'Data de nascimento',
+	'page.companion.labelDobApproximate': 'Aproximada',
+	'page.companion.labelHomecoming': 'Dia da chegada a casa',
 	'page.companion.labelWeightUnit': 'Unidade de peso',
 	'page.companion.labelMicrochip': 'Número do microchip',
 	'page.companion.labelBio': 'Bio / notas',
@@ -573,6 +595,12 @@ const messages: Record<keyof Messages, string> = {
 	'overview.title': 'Resumo',
 	'overview.greeting': 'Olá, {name}',
 	'overview.needsAttention': 'Requer atenção',
+	'celebration.label': 'Comemorações',
+	'celebration.birthday.one': '{name} faz 1 ano hoje!',
+	'celebration.birthday.other': '{name} faz {count} anos hoje!',
+	'celebration.homecoming.one': 'Dia de chegada de {name}: 1 ano em casa!',
+	'celebration.homecoming.other': 'Dia de chegada de {name}: {count} anos em casa!',
+	'celebration.dismissFor': 'Dispensar {name}',
 	'overview.allCaughtUp': 'Tudo em dia',
 	'overview.heading.companions': 'Os seus companheiros',
 	'overview.companions.addStart': 'Iniciar novo registo',
@@ -1156,6 +1184,13 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.endBody': '{caretaker} termina um turno de cuidado em {end}.',
 	'email.shift.footer':
 		'Você está recebendo este e-mail porque as notificações de turnos estão ativadas nas suas configurações do EinVault.',
+
+	// Email and ntfy: day-of celebrations
+	'email.celebration.subject': '{name} está comemorando hoje',
+	'email.celebration.greeting': 'Olá, {name}!',
+	'email.celebration.cta': 'Abrir no EinVault',
+	'email.celebration.footer':
+		'Você está recebendo este e-mail porque os e-mails de comemorações estão ativados nas suas configurações do EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Pesquisar diários, notas, mídia, saúde, documentos…',

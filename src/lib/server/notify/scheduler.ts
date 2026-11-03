@@ -8,10 +8,18 @@
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
 import { and, eq, gt, isNull, lte } from 'drizzle-orm';
 import * as env from '$app/env/private';
+import { celebrationLines, celebrationOn } from '#lib/celebrations.js';
+import { localDateISO } from '#lib/date.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
-import { buildReminderEmail, buildShiftEmail, formatWhen } from '#lib/server/mail/templates.js';
+import {
+	buildCelebrationEmail,
+	buildReminderEmail,
+	buildShiftEmail,
+	formatWhen
+} from '#lib/server/mail/templates.js';
+import { buildCelebrationRows } from './celebrations';
 import { isNtfyEnabled, sendNtfy } from './ntfy';
 import {
 	claimNext,
@@ -24,7 +32,8 @@ import {
 	reminderDedupeKey,
 	shiftDedupeKey,
 	type ClaimedNotification,
-	type EnqueueRow
+	type EnqueueRow,
+	type Recipient
 } from './outbox';
 
 // Overridable for tests (NOTIFY_SCAN_INTERVAL_MS=1000); floor prevents a
@@ -43,21 +52,16 @@ const SHIFT_LEAD_MS = 24 * 60 * 60 * 1000;
 let timer: ReturnType<typeof setInterval> | null = null;
 let scanning = false;
 
-interface Recipient {
-	id: string;
-	role: 'admin' | 'member' | 'caretaker';
-	email: string | null;
-	ntfyTopic: string | null;
-	flag: boolean;
-}
-
 /**
  * Users relevant to a notification category: active, with the category's
  * email flag and their ntfy topic. Channel filtering happens at the call
  * site: email rows need flag && email, ntfy rows need a topic.
  */
 async function categoryRecipients(
-	flagColumn: typeof schema.users.notifyReminderEmail | typeof schema.users.notifyShiftEmail
+	flagColumn:
+		| typeof schema.users.notifyReminderEmail
+		| typeof schema.users.notifyShiftEmail
+		| typeof schema.users.notifyCelebrationEmail
 ): Promise<Recipient[]> {
 	return db
 		.select({
@@ -198,9 +202,37 @@ async function produceShifts(now: Date): Promise<EnqueueRow[]> {
 	return rows;
 }
 
+/**
+ * Today's birthdays (exact dobs only) and homecoming anniversaries, from
+ * 09:00 household time. Admins and members only; caretakers are dropped in
+ * buildCelebrationRows and again at delivery.
+ */
+export async function produceCelebrations(now: Date): Promise<EnqueueRow[]> {
+	const companions = await db
+		.select({
+			id: schema.companions.id,
+			dob: schema.companions.dob,
+			dobApproximate: schema.companions.dobApproximate,
+			homecomingDate: schema.companions.homecomingDate,
+			isActive: schema.companions.isActive
+		})
+		.from(schema.companions)
+		.where(eq(schema.companions.isActive, true));
+	if (companions.length === 0) return [];
+	const recipients = await categoryRecipients(schema.users.notifyCelebrationEmail);
+	return buildCelebrationRows(companions, recipients, now, {
+		mailOn: isMailEnabled(),
+		ntfyOn: isNtfyEnabled()
+	});
+}
+
 async function produce(): Promise<void> {
 	const now = new Date();
-	const rows = [...(await produceReminders(now)), ...(await produceShifts(now))];
+	const rows = [
+		...(await produceReminders(now)),
+		...(await produceShifts(now)),
+		...(await produceCelebrations(now))
+	];
 	const fresh = await enqueue(rows);
 	if (fresh > 0) console.info(`[notify] enqueued ${fresh} notification(s)`);
 }
@@ -438,6 +470,72 @@ async function deliverShiftNtfy(
 	await markSent(row.id);
 }
 
+/**
+ * Delivery re-check for a celebration row: the row's date is still today (no
+ * catch-up into the next day), the companion is still active and still
+ * celebrates on that date, the recipient is still an active admin or member,
+ * and they still have the row's channel (email opt-in and address, or an
+ * ntfy topic). Returns what to render and where to send it, or null to skip.
+ */
+export async function celebrationContext(
+	row: Pick<ClaimedNotification, 'userId' | 'channel'>,
+	payload: { companionId: string; date: string }
+) {
+	if (payload.date !== localDateISO()) return null;
+	const companion = await db.query.companions.findFirst({
+		where: eq(schema.companions.id, payload.companionId)
+	});
+	if (!companion || !companion.isActive) return null;
+	const celebration = celebrationOn(companion, payload.date);
+	if (!celebration) return null;
+	const user = await eligibleRecipient(row.userId);
+	if (!user || user.role === 'caretaker') return null;
+	let address: string | null = null;
+	if (row.channel === 'email') address = user.notifyCelebrationEmail ? user.email : null;
+	else if (row.channel === 'ntfy') address = user.ntfyTopic;
+	if (!address) return null;
+	return { companion, celebration, user, address };
+}
+
+async function deliverCelebration(
+	row: ClaimedNotification,
+	payload: { companionId: string; date: string }
+): Promise<void> {
+	const ctx = await celebrationContext(row, payload);
+	if (!ctx) {
+		await markSkipped(row.id);
+		return;
+	}
+	const { companion, celebration, user, address } = ctx;
+	const message = buildCelebrationEmail(
+		user.locale,
+		{ displayName: user.displayName, email: address },
+		companion.name,
+		celebration,
+		publicLink(`/${companion.id}`)
+	);
+	await sendMail(message);
+	await markSent(row.id);
+}
+
+async function deliverCelebrationNtfy(
+	row: ClaimedNotification,
+	payload: { companionId: string; date: string }
+): Promise<void> {
+	const ctx = await celebrationContext(row, payload);
+	if (!ctx) {
+		await markSkipped(row.id);
+		return;
+	}
+	const { companion, celebration, user, address } = ctx;
+	await sendNtfy(address, {
+		title: t(user.locale, 'email.celebration.subject', { name: companion.name }),
+		message: celebrationLines(user.locale, companion.name, celebration).join('\n'),
+		click: publicLink(`/${companion.id}`)
+	});
+	await markSent(row.id);
+}
+
 /** Drain the queue until empty. Per-row errors requeue/fail that row only. */
 async function drain(): Promise<void> {
 	// One attempt per row per pass: rows requeued after a failure are excluded
@@ -451,12 +549,16 @@ async function drain(): Promise<void> {
 			if (row.channel === 'email') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminder(row, row.payload);
+				} else if (row.payload.kind === 'celebration') {
+					await deliverCelebration(row, row.payload);
 				} else {
 					await deliverShift(row, row.payload);
 				}
 			} else if (row.channel === 'ntfy') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminderNtfy(row, row.payload);
+				} else if (row.payload.kind === 'celebration') {
+					await deliverCelebrationNtfy(row, row.payload);
 				} else {
 					await deliverShiftNtfy(row, row.payload);
 				}

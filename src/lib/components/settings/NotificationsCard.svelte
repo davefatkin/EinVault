@@ -10,6 +10,8 @@
 	let {
 		reminderEnabled,
 		shiftEnabled,
+		celebrationEnabled,
+		showCelebrations,
 		hasEmail,
 		mailEnabled,
 		ntfyEnabled,
@@ -21,6 +23,8 @@
 	}: {
 		reminderEnabled: boolean;
 		shiftEnabled: boolean;
+		celebrationEnabled: boolean;
+		showCelebrations: boolean;
 		hasEmail: boolean;
 		mailEnabled: boolean;
 		ntfyEnabled: boolean;
@@ -128,15 +132,43 @@
 						>{t(locale, 'page.settings.notifyShiftEmailLabel')}</Label
 					>
 				</label>
+				{#if showCelebrations}
+					<label
+						class="flex items-center gap-2.5 {!hasEmail ? 'opacity-50' : ''}"
+						class:cursor-not-allowed={!hasEmail}
+					>
+						<input
+							type="checkbox"
+							name="notifyCelebrationEmail"
+							checked={celebrationEnabled}
+							disabled={emailControlsDisabled}
+							onchange={() => formEl.requestSubmit()}
+							class="h-4 w-4 rounded border-input accent-primary disabled:cursor-not-allowed"
+						/>
+						<Label class={hasEmail ? 'cursor-pointer' : 'cursor-not-allowed'}
+							>{t(locale, 'page.settings.notifyCelebrationEmailLabel')}</Label
+						>
+					</label>
+				{/if}
 				{#if !hasEmail}
 					<!-- Disabled checkboxes do not submit; preserve stored flags. -->
 					{#if reminderEnabled}<input type="hidden" name="notifyReminderEmail" value="on" />{/if}
 					{#if shiftEnabled}<input type="hidden" name="notifyShiftEmail" value="on" />{/if}
+					{#if showCelebrations && celebrationEnabled}<input
+							type="hidden"
+							name="notifyCelebrationEmail"
+							value="on"
+						/>{/if}
 				{/if}
 			{:else}
 				<!-- Email unconfigured: keep stored flags intact across topic edits. -->
 				{#if reminderEnabled}<input type="hidden" name="notifyReminderEmail" value="on" />{/if}
 				{#if shiftEnabled}<input type="hidden" name="notifyShiftEmail" value="on" />{/if}
+				{#if showCelebrations && celebrationEnabled}<input
+						type="hidden"
+						name="notifyCelebrationEmail"
+						value="on"
+					/>{/if}
 			{/if}
 			{#if ntfyEnabled}
 				<div class="space-y-1.5 pt-2">

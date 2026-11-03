@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { todayUTC } from '../lib/dates';
 
 // Helper: create a companion via the /companions/new form and return its id
 // extracted from the redirect URL.
@@ -133,5 +134,43 @@ test.describe('companion crud', () => {
 		await expect(asAdmin.locator('h1').filter({ hasText: 'e2e-comp-cat' })).toBeVisible();
 		// Hero subtitle leads with the species icon.
 		await expect(asAdmin.locator('p', { hasText: '🐈' }).first()).toBeVisible();
+	});
+
+	test('exact and approximate ages, homecoming day, and future dob rejection', async ({
+		asAdmin
+	}) => {
+		const hundredDaysAgo = new Date(`${todayUTC()}T00:00:00Z`);
+		hundredDaysAgo.setUTCDate(hundredDaysAgo.getUTCDate() - 100);
+		const dob = hundredDaysAgo.toISOString().slice(0, 10);
+
+		await asAdmin.goto('/companions/new');
+		await asAdmin.locator('#name').fill('e2e-comp-age');
+		await asAdmin.locator('#dob').fill(dob);
+		await asAdmin.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(asAdmin).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+		const id = asAdmin.url().split('/').filter(Boolean).pop()!;
+		const meta = asAdmin.getByTestId('companion-meta');
+		await expect(meta).toHaveText(/\b\d+mo \d+d old\b/);
+
+		await asAdmin.goto(`/companions/${id}/edit`);
+		await asAdmin.getByLabel('Approximate').check();
+		await asAdmin.locator('#homecomingDate').fill(dob);
+		await asAdmin.getByRole('button', { name: 'Save Changes' }).click();
+		await expect(asAdmin.getByText('Changes saved.')).toBeVisible({ timeout: 8_000 });
+		await asAdmin.goto(`/${id}`);
+		await expect(meta).toHaveText(/~\d+mo old/);
+		await expect(meta).toContainText('Home since');
+
+		// A future dob is rejected server-side (the date input's max is bypassed).
+		await asAdmin.goto(`/companions/${id}/edit`);
+		await asAdmin.locator('#dob').evaluate((el) => {
+			const input = el as HTMLInputElement;
+			input.removeAttribute('max');
+			input.value = '2999-01-01';
+		});
+		await asAdmin.getByRole('button', { name: 'Save Changes' }).click();
+		await expect(
+			asAdmin.getByText('Enter a real birth date that is not in the future.')
+		).toBeVisible({ timeout: 8_000 });
 	});
 });

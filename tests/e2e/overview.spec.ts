@@ -218,3 +218,44 @@ test('one-off reminder in needs-attention has no skip button', async ({ asMember
 	await expect(row).toBeVisible({ timeout: 8_000 });
 	await expect(row.getByRole('button', { name: 'Skip this occurrence' })).toHaveCount(0);
 });
+
+// Companion age (#398). Seeded dobs are all approximate (tests/lib/seed.ts),
+// so Ein reads as "~Ny old" on the companion page and "~Ny" on the card.
+test('companion page meta shows an approximate age with its hint', async ({ asMember }) => {
+	await asMember.goto(`/${COMP}`);
+	const meta = asMember.getByTestId('companion-meta');
+	await expect(meta).toHaveText(/~\d+y old/);
+	await expect(meta).toContainText('Male');
+	await expect(meta).not.toContainText('Unknown age');
+	await expect(meta.getByRole('button', { name: /^~\d+y old$/ })).toHaveAccessibleDescription(
+		'Approximate birth date'
+	);
+});
+
+test('a companion without a dob shows no age and no doubled separator', async ({ asMember }) => {
+	await asMember.goto('/companions/new');
+	await waitForHydration(asMember);
+	await asMember.locator('#name').fill('e2e-398-no-dob');
+	await asMember.getByRole('button', { name: 'Add Companion' }).click();
+	await expect(asMember).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+
+	const meta = asMember.getByTestId('companion-meta');
+	await expect(meta).toBeVisible();
+	await expect(meta).not.toContainText('Unknown age');
+	await expect(meta).not.toContainText(/\d+(y|mo|d) old/);
+	await expect(meta).not.toHaveText(/·\s*·|·\s*$/);
+	await expect(meta.getByRole('button')).toHaveCount(0);
+});
+
+test('companion card shows the short approximate age without a focusable child', async ({
+	asMember
+}) => {
+	await asMember.goto('/');
+	const card = asMember
+		.locator('div[role="link"]')
+		.filter({ has: asMember.getByText('Ein', { exact: true }) });
+	const age = card.locator('[title="Approximate birth date"]');
+	await expect(age).toHaveText(/^~\d+y$/);
+	await expect(card.getByRole('button', { name: /~\d+y/ })).toHaveCount(0);
+	await expect(card.locator('[tabindex]:not([role="link"])')).toHaveCount(0);
+});

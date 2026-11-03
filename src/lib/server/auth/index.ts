@@ -54,6 +54,7 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null,
 			notifyReminderEmail: user.notifyReminderEmail ?? false,
 			notifyShiftEmail: user.notifyShiftEmail ?? false,
+			notifyCelebrationEmail: user.notifyCelebrationEmail ?? false,
 			ntfyTopic: user.ntfyTopic ?? null,
 			avatarPath: user.avatarPath ?? null,
 			totpEnabled: user.totpEnabledAt != null,

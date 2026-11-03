@@ -18,7 +18,7 @@ import {
 	REMINDER_UNDO_DEFAULT_SENTINEL,
 	REMINDER_UNDO_SECONDS_DEFAULT
 } from '#lib/server/env.js';
-import { parseRecurrenceUnit, EMAIL_RE } from '#lib/server/validation.js';
+import { parseRecurrenceUnit, EMAIL_RE, type UserRole } from '#lib/server/validation.js';
 import { NTFY_TOPIC_RE, isNtfyEnabled, sendNtfy } from '#lib/server/notify/ntfy.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
 import { buildTestEmail } from '#lib/server/mail/templates.js';
@@ -202,10 +202,16 @@ export async function handleDefaultRecurrenceUpdate(
 	return { defaultRecurrenceSuccess: true };
 }
 
-export async function handleNotificationsUpdate(userId: string, request: Request, locale: Locale) {
+export async function handleNotificationsUpdate(
+	userId: string,
+	role: UserRole,
+	request: Request,
+	locale: Locale
+) {
 	const data = await request.formData();
 	const notifyReminderEmail = data.get('notifyReminderEmail') === 'on';
 	const notifyShiftEmail = data.get('notifyShiftEmail') === 'on';
+	const notifyCelebrationEmail = data.get('notifyCelebrationEmail') === 'on';
 	const rawTopic = String(data.get('ntfyTopic') ?? '').trim();
 	const ntfyTopic = rawTopic || null;
 
@@ -215,7 +221,13 @@ export async function handleNotificationsUpdate(userId: string, request: Request
 
 	await db
 		.update(schema.users)
-		.set({ notifyReminderEmail, notifyShiftEmail, ntfyTopic })
+		// Caretakers have no celebrations toggle; never touch their stored value.
+		.set({
+			notifyReminderEmail,
+			notifyShiftEmail,
+			ntfyTopic,
+			...(role !== 'caretaker' && { notifyCelebrationEmail })
+		})
 		.where(eq(schema.users.id, userId));
 
 	return { notificationsSuccess: true };

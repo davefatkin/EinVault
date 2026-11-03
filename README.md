@@ -112,24 +112,24 @@ Open your domain and follow the `/setup` prompt to create your admin account.
 
 Everything else in the compose file can be edited directly:
 
-|                               | Default             | Description                                                                                                                                                |
-| ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TZ`                          | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly.                            |
-| `UPLOAD_MAX_MB`               | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.       |
-| `VIDEO_MAX_MB`                | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                           |
-| `MAX_DAILY_MEDIA`             | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.) |
-| `MAX_NOTE_MEDIA`              | `10`                | Maximum number of photos and videos (combined) attached to a single note.                                                                                  |
-| `MAX_DOCUMENTS_PER_COMPANION` | `200`               | Maximum number of documents (uploads and Paperless references combined) stored per companion.                                                              |
-| `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                          |
-| `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                   |
-| `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                |
-| `API_TOKENS_ENABLED`          | `true`              | Set `false` to disable the Bearer-token API (token creation and the `/api/logs`, `/api/journal`, `/api/quick-logs` endpoints) entirely.                    |
-| `API_RATE_LIMIT_PER_MINUTE`   | `30`                | Bearer API requests allowed per client IP per minute. Behind a reverse proxy, set adapter-node's `ADDRESS_HEADER` so each client gets its own budget.      |
-| `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                |
-| `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                  |
-| `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                     |
-| `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                             |
-| `TWOFA_ENC_KEY`               | -                   | 32-byte base64 key (`openssl rand -base64 32`) that encrypts stored TOTP secrets. Required to enable two-factor authentication.                            |
+|                               | Default             | Description                                                                                                                                                                                            |
+| ----------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TZ`                          | `UTC`               | Container timezone. Set to your local timezone (e.g. `America/New_York`, `Europe/London`) so dates and times display correctly. Celebration notifications go out at 09:00 in this zone (UTC if unset). |
+| `UPLOAD_MAX_MB`               | `10`                | Maximum size in MB for image (photo and avatar) uploads. `BODY_SIZE_LIMIT` is derived from the larger of this and `VIDEO_MAX_MB` at container start.                                                   |
+| `VIDEO_MAX_MB`                | `100`               | Maximum size in MB for journal video uploads. Videos are stored as-is unless transcoding is enabled (see below).                                                                                       |
+| `MAX_DAILY_MEDIA`             | `5`                 | Maximum number of journal photos and videos (combined) per companion per day. (Renamed from `MAX_DAILY_PHOTOS`, still honored with a deprecation warning.)                                             |
+| `MAX_NOTE_MEDIA`              | `10`                | Maximum number of photos and videos (combined) attached to a single note.                                                                                                                              |
+| `MAX_DOCUMENTS_PER_COMPANION` | `200`               | Maximum number of documents (uploads and Paperless references combined) stored per companion.                                                                                                          |
+| `REMINDER_UNDO_SECONDS`       | `7`                 | Default undo window (seconds) when dismissing a Reminder. `0` disables the undo window. Each user can override in their settings.                                                                      |
+| `CALENDAR_FEED_HISTORY_DAYS`  | `90`                | Days of past events the calendar feed includes. `0` includes all history (larger feeds).                                                                                                               |
+| `CALENDAR_FEED_ENABLED`       | `true`              | Set `false` to disable the calendar feed endpoint entirely.                                                                                                                                            |
+| `API_TOKENS_ENABLED`          | `true`              | Set `false` to disable the Bearer-token API (token creation and the `/api/logs`, `/api/journal`, `/api/quick-logs` endpoints) entirely.                                                                |
+| `API_RATE_LIMIT_PER_MINUTE`   | `30`                | Bearer API requests allowed per client IP per minute. Behind a reverse proxy, set adapter-node's `ADDRESS_HEADER` so each client gets its own budget.                                                  |
+| `DEMO_MODE`                   | `false`             | Enable read-only public demo mode. See [Running a demo instance](#running-a-demo-instance).                                                                                                            |
+| `user`                        | `1000:1000`         | UID:GID the container runs as. Change if your `./data` directory has different ownership.                                                                                                              |
+| `./data` volume               | `./data`            | Where the database and uploads are stored on the host.                                                                                                                                                 |
+| `DATABASE_URL`                | `/data/einvault.db` | Database path inside the container. Unlikely to need changing.                                                                                                                                         |
+| `TWOFA_ENC_KEY`               | -                   | 32-byte base64 key (`openssl rand -base64 32`) that encrypts stored TOTP secrets. Required to enable two-factor authentication.                                                                        |
 
 The calendar feed URL contains a secret token that authenticates the subscriber. Avoid logging full `/api/calendar/` request URLs at the reverse proxy, as the token would appear in plain text in your access logs.
 
@@ -202,7 +202,7 @@ The token can read every document its Paperless user can see, and any member can
 
 ### SMTP email (optional)
 
-When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, and to an email 24 hours before a caretaker shift starts or ends. Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
+When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, to an email 24 hours before a caretaker shift starts or ends, and to an email on a companion's exact birthday or homecoming day (celebrations; members and admins only). Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
 
 `ORIGIN` must be set correctly: password reset links are built from it. Behind a reverse proxy, make sure `ORIGIN` matches the public URL users see.
 
@@ -217,15 +217,15 @@ When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email a
 
 ### ntfy push notifications (optional)
 
-When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https://ntfy.sh). This configures the server only (base URL and optional access token). Each user sets their own topic name under Settings -> Notifications; a non-empty topic is that user's opt-in for pushes scoped to what they can see in the app (reminders due, shift alerts). The notification scheduler runs when either SMTP or ntfy is configured. The forgot-password flow remains email-only.
+When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https://ntfy.sh). This configures the server only (base URL and optional access token). Each user sets their own topic name under Settings -> Notifications; a non-empty topic is that user's opt-in for pushes scoped to what they can see in the app (reminders due, shift alerts, celebrations). The notification scheduler runs when either SMTP or ntfy is configured. The forgot-password flow remains email-only.
 
 On public servers like ntfy.sh, the topic name is the only access control. Users should pick long, random topic names that are hard to guess.
 
-|                           | Default | Description                                                                                                                                                                   |
-| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NTFY_URL`                | -       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.                                                                                  |
-| `NTFY_TOKEN`              | -       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic.                                                                      |
-| `NOTIFY_SCAN_INTERVAL_MS` | `60000` | How often the notification scheduler scans for due reminders and shift alerts, in milliseconds. Values below 250 fall back to the default. Mainly useful for automated tests. |
+|                           | Default | Description                                                                                                                                                                                  |
+| ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NTFY_URL`                | -       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.                                                                                                 |
+| `NTFY_TOKEN`              | -       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic.                                                                                     |
+| `NOTIFY_SCAN_INTERVAL_MS` | `60000` | How often the notification scheduler scans for due reminders, shift alerts, and celebrations, in milliseconds. Values below 250 fall back to the default. Mainly useful for automated tests. |
 
 ### Data and backup
 

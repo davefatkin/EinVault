@@ -5,6 +5,7 @@ import {
 	activityTypeIcon,
 	activityTypeOptions,
 	activitySubtypeOptions,
+	homeSinceLabel,
 	speciesLabels
 } from './labels';
 
@@ -88,5 +89,16 @@ describe('speciesLabels', () => {
 			scheduleLabel: 'Care routine',
 			scheduleIcon: '🐾'
 		});
+	});
+});
+
+describe('homeSinceLabel', () => {
+	it('formats a homecoming date', () => {
+		expect(homeSinceLabel('en', '2019-03-04')).toBe('Home since Mar 4, 2019');
+	});
+	it('is null without a valid date', () => {
+		expect(homeSinceLabel('en', null)).toBeNull();
+		expect(homeSinceLabel('en', '')).toBeNull();
+		expect(homeSinceLabel('en', 'not-a-date')).toBeNull();
 	});
 });
