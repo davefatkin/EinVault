@@ -11,6 +11,7 @@
 	import MediaLightbox from '#lib/components/MediaLightbox.svelte';
 	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatYmd } from '#lib/date.js';
 	import { toSpecies } from '#lib/species.js';
 	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
 	import { journalMediaUrl, type MediaItem } from '#lib/media.js';
@@ -99,10 +100,7 @@
 	}
 
 	function formatMonth(d: string) {
-		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
-			month: 'long',
-			year: 'numeric'
-		});
+		return formatYmd(d, locale, { month: 'long', year: 'numeric' }) ?? d;
 	}
 
 	function monthKey(date: string) {

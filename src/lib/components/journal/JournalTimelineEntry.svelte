@@ -5,6 +5,7 @@
 	import { Pencil, NotebookPen } from '@lucide/svelte';
 	import { MOOD_ICONS, activityDisplayIcon, activityDisplayLabel } from '#lib/i18n/labels.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatYmd } from '#lib/date.js';
 	import type { JournalEntry, DailyEvent } from '#lib/server/db/schema.js';
 	import type { UserRef } from '#lib/types.js';
 	import type { Species } from '#lib/activityTypes.js';
@@ -51,10 +52,10 @@
 	let isToday = $derived(entry.date === today);
 
 	function dayNum(d: string) {
-		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric' });
+		return formatYmd(d, locale, { day: 'numeric' }) ?? d;
 	}
 	function weekday(d: string) {
-		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' });
+		return formatYmd(d, locale, { weekday: 'short' }) ?? '';
 	}
 </script>
 

@@ -13,6 +13,7 @@
 	import { untrack } from 'svelte';
 	import { Card, CardContent } from '#lib/components/ui/card/index.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatYmd } from '#lib/date.js';
 	import { moodOptions } from '#lib/i18n/labels.js';
 	import { postFormAction } from '#lib/postFormAction.js';
 
@@ -65,11 +66,9 @@
 	}
 
 	function formatDate(dateStr: string): string {
-		return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, {
-			weekday: 'short',
-			month: 'short',
-			day: 'numeric'
-		});
+		return (
+			formatYmd(dateStr, locale, { weekday: 'short', month: 'short', day: 'numeric' }) ?? dateStr
+		);
 	}
 </script>
 

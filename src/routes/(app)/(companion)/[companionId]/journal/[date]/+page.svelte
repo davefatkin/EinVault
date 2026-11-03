@@ -12,11 +12,9 @@
 	import { canModifyMedia } from '#lib/permissions.js';
 	import type { MediaItem } from '#lib/media.js';
 	import { journalMediaApi } from '#lib/mediaApi.js';
-	import { localDateISO } from '#lib/date.js';
+	import { formatYmd, localDateISO } from '#lib/date.js';
 	import { createJournalAutosave } from '#lib/journalAutosave.svelte.js';
-	import { getContext } from 'svelte';
-
-	const serverTimezone = getContext<string | undefined>('serverTimezone');
+	import LocalTime from '#lib/components/LocalTime.svelte';
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import {
 		Trash2,
@@ -230,12 +228,9 @@
 		return localDateISO(dt);
 	}
 	function formatDisplayDate(d: string) {
-		return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric'
-		});
+		return (
+			formatYmd(d, locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) ?? d
+		);
 	}
 
 	let isNextDisabled = $derived(data.date >= data.today);
@@ -943,13 +938,7 @@
 										{/if}
 									</div>
 									<div class="text-xs shrink-0 text-muted-foreground text-right">
-										<span
-											>{new Date(event.loggedAt).toLocaleTimeString(undefined, {
-												hour: 'numeric',
-												minute: '2-digit',
-												...(serverTimezone ? { timeZone: serverTimezone } : {})
-											})}</span
-										>
+										<LocalTime date={event.loggedAt} format="time" />
 										<ByLine user={event.logger} />
 									</div>
 								</button>
