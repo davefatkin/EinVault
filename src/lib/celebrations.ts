@@ -1,5 +1,6 @@
 import { browser } from '$app/env';
 import { parseYmd, daysInMonth } from '#lib/date.js';
+import { t, type Locale } from '#lib/i18n/index.js';
 
 export interface CelebrationInput {
 	id: string;
@@ -50,6 +51,24 @@ export function celebrationOn(
 	const h = anniversaryYears(c.homecomingDate, today);
 	if (h !== null) out.homecomingYears = h;
 	return out.birthdayYears !== undefined || out.homecomingYears !== undefined ? out : null;
+}
+
+/** Display lines for a celebration, birthday first. Banner, email, and ntfy share them. */
+export function celebrationLines(locale: Locale, name: string, c: Celebration): string[] {
+	const out: string[] = [];
+	if (c.birthdayYears !== undefined) {
+		out.push(t(locale, 'celebration.birthday', { name, count: c.birthdayYears }));
+	}
+	if (c.homecomingYears !== undefined) {
+		out.push(
+			t(
+				locale,
+				c.homecomingYears === 1 ? 'celebration.homecoming.one' : 'celebration.homecoming.other',
+				{ name, count: c.homecomingYears }
+			)
+		);
+	}
+	return out;
 }
 
 export function dismissToken(companionId: string, today: string): string {

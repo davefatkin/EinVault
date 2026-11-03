@@ -1,21 +1,17 @@
 // Day-of celebration notifications (birthdays with an exact dob, homecoming
-// anniversaries). Pure row building and rendering; the scheduler loads the
-// companions and recipients and does delivery.
-import { celebrationOn, type Celebration } from '#lib/celebrations.js';
+// anniversaries). Pure row building; the scheduler loads the companions and
+// recipients and does delivery.
+import { celebrationOn, type CelebrationInput } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';
-import { t, type Locale } from '#lib/i18n/index.js';
 import { celebrationDedupeKey, type EnqueueRow, type Recipient } from './outbox';
 
 /** Household-local hour from which the day's celebrations are enqueued. */
 export const CELEBRATION_HOUR = 9;
 
-export interface CelebrationCompanion {
-	id: string;
-	dob: string | null;
-	dobApproximate: boolean;
-	homecomingDate: string | null;
-	isActive: boolean;
-}
+export type CelebrationCompanion = Pick<
+	CelebrationInput,
+	'id' | 'dob' | 'dobApproximate' | 'homecomingDate' | 'isActive'
+>;
 
 /**
  * One row per celebrating companion per admin/member per channel for the
@@ -55,22 +51,4 @@ export function buildCelebrationRows(
 		}
 	}
 	return rows;
-}
-
-/** Body lines for a celebration, birthday first. Same wording as the banner. */
-export function celebrationLines(locale: Locale, name: string, c: Celebration): string[] {
-	const out: string[] = [];
-	if (c.birthdayYears !== undefined) {
-		out.push(t(locale, 'celebration.birthday', { name, count: c.birthdayYears }));
-	}
-	if (c.homecomingYears !== undefined) {
-		out.push(
-			t(
-				locale,
-				c.homecomingYears === 1 ? 'celebration.homecoming.one' : 'celebration.homecoming.other',
-				{ name, count: c.homecomingYears }
-			)
-		);
-	}
-	return out;
 }

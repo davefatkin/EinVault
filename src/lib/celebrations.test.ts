@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	celebrationOn,
 	celebrationBanner,
+	celebrationLines,
 	dismissToken,
 	type CelebrationInput
 } from './celebrations.js';
@@ -69,5 +70,20 @@ describe('celebrationBanner', () => {
 	});
 	it('ignores yesterday token', () => {
 		expect(celebrationBanner([mk('a')], today, dismissToken('a', '2026-03-03'))).toHaveLength(1);
+	});
+});
+
+describe('celebrationLines', () => {
+	it('renders birthday then homecoming', () => {
+		expect(celebrationLines('en', 'Ein', { birthdayYears: 8, homecomingYears: 7 })).toEqual([
+			'🎂 Ein turns 8 today!',
+			"🏡 Ein's homecoming day: 7 years home!"
+		]);
+	});
+
+	it('uses the singular homecoming line for one year', () => {
+		expect(celebrationLines('en', 'Ein', { homecomingYears: 1 })).toEqual([
+			"🏡 Ein's homecoming day: 1 year home!"
+		]);
 	});
 });

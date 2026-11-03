@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildCelebrationRows, celebrationLines, CELEBRATION_HOUR } from './celebrations';
+import { buildCelebrationRows, CELEBRATION_HOUR } from './celebrations';
 import { buildCelebrationEmail } from '#lib/server/mail/templates.js';
 import type { Recipient } from './outbox';
 
@@ -95,21 +95,6 @@ describe('buildCelebrationRows', () => {
 	it('carries ids and date only in the payload', () => {
 		const [row] = buildCelebrationRows([ein], [admin], new Date(2026, 3, 14, 12, 0), both);
 		expect(row.payload).toEqual({ kind: 'celebration', companionId: 'c-ein', date: '2026-04-14' });
-	});
-});
-
-describe('celebrationLines', () => {
-	it('renders birthday then homecoming', () => {
-		expect(celebrationLines('en', 'Ein', { birthdayYears: 8, homecomingYears: 7 })).toEqual([
-			'🎂 Ein turns 8 today!',
-			"🏡 Ein's homecoming day: 7 years home!"
-		]);
-	});
-
-	it('uses the singular homecoming line for one year', () => {
-		expect(celebrationLines('en', 'Ein', { homecomingYears: 1 })).toEqual([
-			"🏡 Ein's homecoming day: 1 year home!"
-		]);
 	});
 });
 

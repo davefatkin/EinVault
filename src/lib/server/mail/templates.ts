@@ -1,7 +1,6 @@
 import { t, type Locale } from '#lib/i18n/index.js';
 import type { MailMessage } from '#lib/server/mail/index.js';
-import type { Celebration } from '#lib/celebrations.js';
-import { celebrationLines } from '#lib/server/notify/celebrations.js';
+import { celebrationLines, type Celebration } from '#lib/celebrations.js';
 
 // displayName/username are user-controlled; escape anything interpolated into
 // the HTML body so a crafted name cannot inject markup into the email.

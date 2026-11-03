@@ -8,7 +8,7 @@
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
 import { and, eq, gt, isNull, lte } from 'drizzle-orm';
 import * as env from '$app/env/private';
-import { celebrationOn } from '#lib/celebrations.js';
+import { celebrationLines, celebrationOn } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -19,7 +19,7 @@ import {
 	buildShiftEmail,
 	formatWhen
 } from '#lib/server/mail/templates.js';
-import { buildCelebrationRows, celebrationLines } from './celebrations';
+import { buildCelebrationRows } from './celebrations';
 import { isNtfyEnabled, sendNtfy } from './ntfy';
 import {
 	claimNext,
@@ -471,25 +471,30 @@ async function deliverShiftNtfy(
 }
 
 /**
- * Shared delivery re-check for both celebration channels: the companion is
- * still active and still celebrates on the row's date, that date is still
- * today (no catch-up into the next day), and the recipient is still an
- * active admin or member. Returns what to render, or null to skip.
+ * Delivery re-check for a celebration row: the row's date is still today (no
+ * catch-up into the next day), the companion is still active and still
+ * celebrates on that date, the recipient is still an active admin or member,
+ * and they still have the row's channel (email opt-in and address, or an
+ * ntfy topic). Returns what to render and where to send it, or null to skip.
  */
-async function celebrationContext(
-	row: ClaimedNotification,
+export async function celebrationContext(
+	row: Pick<ClaimedNotification, 'userId' | 'channel'>,
 	payload: { companionId: string; date: string }
 ) {
+	if (payload.date !== localDateISO()) return null;
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, payload.companionId)
 	});
 	if (!companion || !companion.isActive) return null;
 	const celebration = celebrationOn(companion, payload.date);
 	if (!celebration) return null;
-	if (payload.date !== localDateISO()) return null;
 	const user = await eligibleRecipient(row.userId);
 	if (!user || user.role === 'caretaker') return null;
-	return { companion, celebration, user };
+	let address: string | null = null;
+	if (row.channel === 'email') address = user.notifyCelebrationEmail ? user.email : null;
+	else if (row.channel === 'ntfy') address = user.ntfyTopic;
+	if (!address) return null;
+	return { companion, celebration, user, address };
 }
 
 async function deliverCelebration(
@@ -497,15 +502,14 @@ async function deliverCelebration(
 	payload: { companionId: string; date: string }
 ): Promise<void> {
 	const ctx = await celebrationContext(row, payload);
-	const email = ctx?.user.notifyCelebrationEmail ? ctx.user.email : null;
-	if (!ctx || !email) {
+	if (!ctx) {
 		await markSkipped(row.id);
 		return;
 	}
-	const { companion, celebration, user } = ctx;
+	const { companion, celebration, user, address } = ctx;
 	const message = buildCelebrationEmail(
 		user.locale,
-		{ displayName: user.displayName, email },
+		{ displayName: user.displayName, email: address },
 		companion.name,
 		celebration,
 		publicLink(`/${companion.id}`)
@@ -519,13 +523,12 @@ async function deliverCelebrationNtfy(
 	payload: { companionId: string; date: string }
 ): Promise<void> {
 	const ctx = await celebrationContext(row, payload);
-	const topic = ctx?.user.ntfyTopic;
-	if (!ctx || !topic) {
+	if (!ctx) {
 		await markSkipped(row.id);
 		return;
 	}
-	const { companion, celebration, user } = ctx;
-	await sendNtfy(topic, {
+	const { companion, celebration, user, address } = ctx;
+	await sendNtfy(address, {
 		title: t(user.locale, 'email.celebration.subject', { name: companion.name }),
 		message: celebrationLines(user.locale, companion.name, celebration).join('\n'),
 		click: publicLink(`/${companion.id}`)

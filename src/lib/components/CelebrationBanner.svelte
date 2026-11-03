@@ -2,7 +2,7 @@
 	import { X } from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
-	import { writeDismissCookie, type BannerEntry } from '#lib/celebrations.js';
+	import { celebrationLines, writeDismissCookie, type BannerEntry } from '#lib/celebrations.js';
 
 	let { entries, today }: { entries: BannerEntry[]; today: string } = $props();
 	const locale = getLocale();
@@ -14,21 +14,6 @@
 	function dismiss(companionId: string) {
 		writeDismissCookie(companionId, today);
 		dismissed = [...dismissed, companionId];
-	}
-
-	function lines(e: BannerEntry): string[] {
-		const out: string[] = [];
-		if (e.birthdayYears !== undefined)
-			out.push(t(locale, 'celebration.birthday', { name: e.name, count: e.birthdayYears }));
-		if (e.homecomingYears !== undefined)
-			out.push(
-				t(
-					locale,
-					e.homecomingYears === 1 ? 'celebration.homecoming.one' : 'celebration.homecoming.other',
-					{ name: e.name, count: e.homecomingYears }
-				)
-			);
-		return out;
 	}
 </script>
 
@@ -53,7 +38,7 @@
 					href="/{e.companionId}"
 					class="min-w-0 flex-1 text-sm font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
 				>
-					{#each lines(e) as line (line)}
+					{#each celebrationLines(locale, e.name, e) as line (line)}
 						<span class="block">{line}</span>
 					{/each}
 				</a>
