@@ -508,7 +508,7 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 				{#each data.companions as companion (companion.id)}
-					{@const age = formatAge(companion.dob, locale, { style: 'short' })}
+					{@const age = formatAge(companion.dob, locale, { style: 'short', today: data.today })}
 					{@const compReminders = remindersByCompanion[companion.id] ?? []}
 					{@const status = careStatus(
 						compReminders.map((r) => ({

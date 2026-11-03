@@ -20,6 +20,7 @@
 	import { renderMarkdown } from '#lib/markdown.js';
 	import { noteMediaUrl } from '#lib/media.js';
 	import { formatAge } from '#lib/age.js';
+	import { page } from '$app/state';
 	import { sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
@@ -63,7 +64,7 @@
 		[
 			`${labels.icon} ${speciesLabel(locale, companion.species)}`,
 			companion.breed,
-			formatAge(companion.dob, locale),
+			formatAge(companion.dob, locale, { today: page.data.today }),
 			companion.sex ? sexLabel(locale, companion.sex) : null
 		]
 			.filter(Boolean)

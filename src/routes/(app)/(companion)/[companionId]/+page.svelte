@@ -566,8 +566,9 @@
 					</div>
 					<p class="text-sm text-muted-foreground mt-0.5">
 						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale) ??
-							t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
+						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale, {
+							today: data.today
+						}) ?? t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
 					</p>
 					<div class="mt-2">
 						{#if status === 'up-to-date'}
