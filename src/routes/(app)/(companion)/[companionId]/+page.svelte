@@ -512,7 +512,7 @@
 		</div>
 	{/if}
 
-	<CelebrationBanner entries={data.celebrations} today={data.today} />
+	<CelebrationBanner entries={data.celebrations} today={data.today} linked={false} />
 
 	<!-- Hero card: gradient wash, avatar, name, quick stats -->
 	<Card class="overflow-hidden">

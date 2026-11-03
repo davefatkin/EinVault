@@ -397,6 +397,10 @@ celebrate(
 		await waitForHydration(page);
 		await baseExpect(banner.getByText(text)).toBeVisible();
 		await baseExpect(banner.getByRole('heading')).toHaveCount(0);
+		// On the overview the text links to the companion; the emoji stays outside the link.
+		const link = banner.getByRole('link', { name: text, exact: true });
+		await baseExpect(link).toHaveAttribute('href', `/${SEED.companions.edward.id}`);
+		await baseExpect(link).toHaveText(text);
 
 		await page.goto(`${base}/${SEED.companions.ein.id}`);
 		await baseExpect(banner).toHaveCount(0);
@@ -404,6 +408,8 @@ celebrate(
 		await page.goto(`${base}/${SEED.companions.edward.id}`);
 		await waitForHydration(page);
 		await baseExpect(banner.getByText(text)).toBeVisible();
+		// Already on Edward's dashboard: no link back to it.
+		await baseExpect(banner.getByRole('link')).toHaveCount(0);
 		await banner.getByRole('button', { name: 'Dismiss Edward' }).click();
 		await baseExpect(banner).toHaveCount(0);
 

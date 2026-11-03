@@ -3,6 +3,7 @@ import {
 	celebrationOn,
 	celebrationBanner,
 	celebrationLines,
+	celebrationParts,
 	dismissToken,
 	type CelebrationInput
 } from './celebrations.js';
@@ -85,5 +86,25 @@ describe('celebrationLines', () => {
 		expect(celebrationLines('en', 'Ein', { homecomingYears: 1 })).toEqual([
 			"🏡 Ein's homecoming day: 1 year home!"
 		]);
+	});
+});
+
+describe('celebrationParts', () => {
+	it('keeps the icon out of the text, birthday first', () => {
+		expect(celebrationParts('en', 'Ein', { birthdayYears: 8, homecomingYears: 7 })).toEqual([
+			{ icon: '🎂', text: 'Ein turns 8 today!' },
+			{ icon: '🏡', text: "Ein's homecoming day: 7 years home!" }
+		]);
+	});
+
+	it('has no emoji in any locale string', () => {
+		for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt'] as const) {
+			for (const part of celebrationParts(locale, 'Ein', {
+				birthdayYears: 1,
+				homecomingYears: 2
+			})) {
+				expect(part.text).not.toMatch(/\p{Extended_Pictographic}/u);
+			}
+		}
 	});
 });

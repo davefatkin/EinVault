@@ -53,27 +53,40 @@ export function celebrationOn(
 	return out.birthdayYears !== undefined || out.homecomingYears !== undefined ? out : null;
 }
 
-/** Display lines for a celebration, birthday first. Banner, email, and ntfy share them. */
-export function celebrationLines(locale: Locale, name: string, c: Celebration): string[] {
-	const out: string[] = [];
+export interface CelebrationPart {
+	icon: string;
+	text: string;
+}
+
+/** Icon and text for each celebration, birthday first. The banner links only the text. */
+export function celebrationParts(locale: Locale, name: string, c: Celebration): CelebrationPart[] {
+	const out: CelebrationPart[] = [];
 	if (c.birthdayYears !== undefined) {
-		out.push(
-			t(locale, c.birthdayYears === 1 ? 'celebration.birthday.one' : 'celebration.birthday.other', {
-				name,
-				count: c.birthdayYears
-			})
-		);
+		out.push({
+			icon: '🎂',
+			text: t(
+				locale,
+				c.birthdayYears === 1 ? 'celebration.birthday.one' : 'celebration.birthday.other',
+				{ name, count: c.birthdayYears }
+			)
+		});
 	}
 	if (c.homecomingYears !== undefined) {
-		out.push(
-			t(
+		out.push({
+			icon: '🏡',
+			text: t(
 				locale,
 				c.homecomingYears === 1 ? 'celebration.homecoming.one' : 'celebration.homecoming.other',
 				{ name, count: c.homecomingYears }
 			)
-		);
+		});
 	}
 	return out;
+}
+
+/** Plain-text lines (icon included) for email and ntfy. */
+export function celebrationLines(locale: Locale, name: string, c: Celebration): string[] {
+	return celebrationParts(locale, name, c).map((p) => `${p.icon} ${p.text}`);
 }
 
 export function dismissToken(companionId: string, today: string): string {

@@ -2,9 +2,14 @@
 	import { X } from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
-	import { celebrationLines, writeDismissCookie, type BannerEntry } from '#lib/celebrations.js';
+	import { celebrationParts, writeDismissCookie, type BannerEntry } from '#lib/celebrations.js';
 
-	let { entries, today }: { entries: BannerEntry[]; today: string } = $props();
+	// `linked` is off on the companion's own overview, where a link back to it is a no-op.
+	let {
+		entries,
+		today,
+		linked = true
+	}: { entries: BannerEntry[]; today: string; linked?: boolean } = $props();
 	const locale = getLocale();
 
 	// Hidden locally right away; the cookie keeps them hidden on later loads and other pages.
@@ -26,22 +31,41 @@
 			<div
 				class="flex items-center gap-2 py-1.5 border-t border-border/40 first-of-type:border-t-0"
 			>
-				<a href="/{e.companionId}" class="shrink-0" tabindex="-1" aria-hidden="true">
-					<CompanionAvatar
-						companionId={e.companionId}
-						avatarPath={e.avatarPath}
-						name={e.name}
-						size="sm"
-					/>
-				</a>
-				<a
-					href="/{e.companionId}"
-					class="min-w-0 flex-1 text-sm font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-				>
-					{#each celebrationLines(locale, e.name, e) as line (line)}
-						<span class="block">{line}</span>
+				{#if linked}
+					<a href="/{e.companionId}" class="shrink-0" tabindex="-1" aria-hidden="true">
+						<CompanionAvatar
+							companionId={e.companionId}
+							avatarPath={e.avatarPath}
+							name={e.name}
+							size="sm"
+						/>
+					</a>
+				{:else}
+					<span class="shrink-0" aria-hidden="true">
+						<CompanionAvatar
+							companionId={e.companionId}
+							avatarPath={e.avatarPath}
+							name={e.name}
+							size="sm"
+						/>
+					</span>
+				{/if}
+				<div class="min-w-0 flex-1 text-sm font-medium">
+					{#each celebrationParts(locale, e.name, e) as part (part.icon)}
+						<p>
+							<span aria-hidden="true">{part.icon}</span>
+							{#if linked}
+								<a
+									href="/{e.companionId}"
+									class="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+									>{part.text}</a
+								>
+							{:else}
+								{part.text}
+							{/if}
+						</p>
 					{/each}
-				</a>
+				</div>
 				<button
 					type="button"
 					onclick={() => dismiss(e.companionId)}
