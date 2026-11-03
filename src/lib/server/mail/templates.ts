@@ -1,5 +1,7 @@
 import { t, type Locale } from '#lib/i18n/index.js';
 import type { MailMessage } from '#lib/server/mail/index.js';
+import type { Celebration } from '#lib/celebrations.js';
+import { celebrationLines } from '#lib/server/notify/celebrations.js';
 
 // displayName/username are user-controlled; escape anything interpolated into
 // the HTML body so a crafted name cannot inject markup into the email.
@@ -181,6 +183,43 @@ export function buildShiftEmail(
 	return {
 		to: user.email,
 		subject: t(locale, subjectKey, { caretaker: caretakerName }),
+		text: textParts.join('\n\n'),
+		html
+	};
+}
+
+export function buildCelebrationEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	companionName: string,
+	c: Celebration,
+	link: string | null
+): MailMessage {
+	const greeting = t(locale, 'email.celebration.greeting', { name: user.displayName });
+	const lines = celebrationLines(locale, companionName, c);
+	const cta = t(locale, 'email.celebration.cta');
+	const footer = t(locale, 'email.celebration.footer');
+
+	const textParts = [greeting, ...lines];
+	if (link) textParts.push(link);
+	textParts.push(footer);
+
+	const linesHtml = lines.map((line) => `\n\t\t<p>${escapeHtml(line)}</p>`).join('');
+	const ctaHtml = link
+		? `\n\t\t<p style="margin: 24px 0;">\n\t\t\t<a href="${escapeHtml(link)}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">${escapeHtml(cta)}</a>\n\t\t</p>`
+		: '';
+
+	const html = `<!doctype html>
+<html>
+	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
+		<p>${tHtml(locale, 'email.celebration.greeting', { name: user.displayName })}</p>${linesHtml}${ctaHtml}
+		<p style="font-size: 12px; color: #666;">${escapeHtml(footer)}</p>
+	</body>
+</html>`;
+
+	return {
+		to: user.email,
+		subject: t(locale, 'email.celebration.subject', { name: companionName }),
 		text: textParts.join('\n\n'),
 		html
 	};

@@ -1189,6 +1189,13 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.footer':
 		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages EinVault.',
 
+	// Email and ntfy: day-of celebrations
+	'email.celebration.subject': "{name} fait la fête aujourd'hui",
+	'email.celebration.greeting': 'Bonjour {name},',
+	'email.celebration.cta': 'Ouvrir dans EinVault',
+	'email.celebration.footer':
+		'Vous recevez cet e-mail car les e-mails de célébration sont activés dans vos réglages EinVault.',
+
 	// Search palette
 	'search.placeholder': 'Rechercher journaux, notes, médias, santé, documents…',
 	'search.hint': 'Saisissez au moins 2 caractères pour rechercher',

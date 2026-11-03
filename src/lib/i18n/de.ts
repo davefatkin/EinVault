@@ -1188,6 +1188,13 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.footer':
 		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
+	// Email and ntfy: day-of celebrations
+	'email.celebration.subject': '{name} feiert heute',
+	'email.celebration.greeting': 'Hallo {name},',
+	'email.celebration.cta': 'In EinVault öffnen',
+	'email.celebration.footer':
+		'Du erhältst diese E-Mail, weil Feier-E-Mails in deinen EinVault-Einstellungen aktiviert sind.',
+
 	// Search palette
 	'search.placeholder': 'Tagebücher, Notizen, Medien, Gesundheit, Dokumente durchsuchen…',
 	'search.hint': 'Mindestens 2 Zeichen eingeben',

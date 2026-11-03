@@ -33,6 +33,26 @@ export function shiftDedupeKey(
 	return `shift:${shiftId}:${kind === 'shiftStart' ? 'start' : 'end'}:${Math.floor(boundary.getTime() / 1000)}:${userId}:${channel}`;
 }
 
+// Keyed by household date, not year, so a birthday and a homecoming on
+// different days of the same year never collide.
+export function celebrationDedupeKey(
+	companionId: string,
+	date: string,
+	userId: string,
+	channel: OutboxChannel
+): string {
+	return `celebration:${companionId}:${date}:${userId}:${channel}`;
+}
+
+/** A user relevant to a notification category, as the producers load them. */
+export interface Recipient {
+	id: string;
+	role: 'admin' | 'member' | 'caretaker';
+	email: string | null;
+	ntfyTopic: string | null;
+	flag: boolean;
+}
+
 export interface EnqueueRow {
 	dedupeKey: string;
 	userId: string;

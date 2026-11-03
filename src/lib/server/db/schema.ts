@@ -138,7 +138,8 @@ export const passwordResetTokens = sqliteTable(
 export type OutboxPayload =
 	| { kind: 'reminderDue'; reminderId: string; dueAtEpoch: number }
 	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
-	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number };
+	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number }
+	| { kind: 'celebration'; companionId: string; date: string };
 
 export const notificationOutbox = sqliteTable(
 	'notification_outbox',

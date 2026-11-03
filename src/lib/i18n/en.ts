@@ -1165,6 +1165,13 @@ const messages = {
 	'email.shift.footer':
 		'You are receiving this because shift email notifications are enabled in your EinVault settings.',
 
+	// Email and ntfy: day-of celebrations
+	'email.celebration.subject': '{name} is celebrating today',
+	'email.celebration.greeting': 'Hi {name},',
+	'email.celebration.cta': 'Open in EinVault',
+	'email.celebration.footer':
+		'You are receiving this because celebration emails are on in your EinVault settings.',
+
 	// Search palette
 	'search.placeholder': 'Search journals, notes, media, health, documents…',
 	'search.hint': 'Type at least 2 characters to search',
