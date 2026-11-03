@@ -60,6 +60,8 @@
 		<NotificationsCard
 			reminderEnabled={data.user?.notifyReminderEmail ?? false}
 			shiftEnabled={data.user?.notifyShiftEmail ?? false}
+			celebrationEnabled={data.user?.notifyCelebrationEmail ?? false}
+			showCelebrations={data.user?.role !== 'caretaker'}
 			hasEmail={Boolean(data.user?.email)}
 			mailEnabled={data.mailEnabled}
 			ntfyEnabled={data.ntfyEnabled}

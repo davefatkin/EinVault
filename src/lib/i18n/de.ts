@@ -322,20 +322,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Standard-Wiederholung aktualisiert.',
 	'page.settings.notificationsCard': 'Benachrichtigungen',
 	'page.settings.notificationsDescription':
-		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Erhalte Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionBoth':
-		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
+	'page.settings.notifyCelebrationEmailLabel': 'Feiern (genaue Geburtstage und Ankunftstage)',
 	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
 	'page.settings.notificationsNeedEmail':
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten umfassen fällige Erinnerungen und Schichtmeldungen für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen, Schichtmeldungen und Feiern (Geburtstage und Ankunftstage) für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
 	'page.settings.securityCard': 'Sicherheit',
 	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
 	'page.settings.twofaOff':

@@ -322,20 +322,22 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Recurrencia predeterminada actualizada.',
 	'page.settings.notificationsCard': 'Notificaciones',
 	'page.settings.notificationsDescription':
-		'Recibe correos de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+		'Recibe correos de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Recibe notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+		'Recibe notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notificationsDescriptionBoth':
-		'Recibe correos y notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados.',
+		'Recibe correos y notificaciones push de EinVault. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notifyReminderEmailLabel': 'Enviarme un correo cuando venza un recordatorio',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviarme un correo 24 horas antes de que un turno empiece o termine',
+	'page.settings.notifyCelebrationEmailLabel':
+		'Celebraciones (cumpleaños exactos y días de llegada a casa)',
 	'page.settings.notificationsUpdated': 'Ajustes de notificaciones actualizados.',
 	'page.settings.notificationsNeedEmail':
 		'Añade un correo electrónico a tu cuenta para recibir notificaciones por correo.',
 	'page.settings.ntfyTopicLabel': 'Tema de ntfy',
 	'page.settings.ntfyTopicHint':
-		'Las notificaciones push cubren recordatorios vencidos y avisos de turnos de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse. Déjalo vacío para desactivar los push.',
+		'Las notificaciones push cubren recordatorios vencidos, avisos de turnos y celebraciones (cumpleaños y días de llegada a casa) de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse. Déjalo vacío para desactivar los push.',
 	'page.settings.securityCard': 'Seguridad',
 	'page.settings.twofaOn': 'La autenticación de dos factores está activada.',
 	'page.settings.twofaOff': 'Añade un segundo paso al iniciar sesión con una app autenticadora.',

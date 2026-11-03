@@ -323,4 +323,42 @@ test.describe('settings', () => {
 			timeout: 8_000
 		});
 	});
+	// Celebrations toggle persists for members and is absent for caretakers.
+	test('celebrations toggle persists', async ({ asMember }) => {
+		await asMember.goto('/settings');
+		await waitForHydration(asMember);
+		const box = asMember.locator('input[name="notifyCelebrationEmail"]');
+		await expect(box).toBeVisible({ timeout: 6_000 });
+		if (await box.isChecked()) {
+			await box.click();
+			await expect(asMember.getByText(/notification settings updated/i)).toBeVisible({
+				timeout: 8_000
+			});
+			await asMember.reload();
+			await waitForHydration(asMember);
+		}
+
+		await box.click();
+		await expect(asMember.getByText(/notification settings updated/i)).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.reload();
+		await waitForHydration(asMember);
+		await expect(box).toBeChecked({ timeout: 6_000 });
+
+		// Clean up.
+		await box.click();
+		await expect(asMember.getByText(/notification settings updated/i)).toBeVisible({
+			timeout: 8_000
+		});
+	});
+
+	test('caretaker settings has no celebrations toggle', async ({ asCaretaker }) => {
+		await asCaretaker.goto('/care/settings');
+		await waitForHydration(asCaretaker);
+		await expect(asCaretaker.locator('input[name="notifyReminderEmail"]')).toBeVisible({
+			timeout: 6_000
+		});
+		await expect(asCaretaker.locator('input[name="notifyCelebrationEmail"]')).toHaveCount(0);
+	});
 });
