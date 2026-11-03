@@ -3,6 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 import { localDateISO } from '#lib/date.js';
+import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { t } from '#lib/i18n/index.js';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
@@ -22,7 +23,7 @@ import { failCareError } from '#lib/server/care-errors.js';
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 
 	const { companions } = await parent();
@@ -80,7 +81,10 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		role: locals.user.role
 	});
 
+	const celebrations = celebrationBanner(companions, today, cookies.get(CELEBRATION_COOKIE));
+
 	return {
+		celebrations,
 		upcomingReminders,
 		recentDaily,
 		recentHealth,

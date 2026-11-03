@@ -2,6 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
@@ -513,6 +514,8 @@
 			{t(locale, 'page.dashboard.archivedBanner', { name: companion.name })}
 		</div>
 	{/if}
+
+	<CelebrationBanner entries={data.celebrations} today={data.today} />
 
 	<!-- Hero card: gradient wash, avatar, name, quick stats -->
 	<Card class="overflow-hidden">

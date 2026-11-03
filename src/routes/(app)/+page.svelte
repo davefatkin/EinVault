@@ -16,6 +16,7 @@
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
+	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
@@ -386,6 +387,8 @@
 		<LocalTime date={new Date()} format="date" /> &middot;
 		{companionCountLabel(data.companions.length)}
 	</p>
+
+	<CelebrationBanner entries={data.celebrations} {today} />
 
 	<!-- 2. Needs-attention banner (hidden on first run) -->
 	{#if data.companions.length > 0}

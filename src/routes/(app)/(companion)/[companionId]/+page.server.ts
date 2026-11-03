@@ -4,6 +4,7 @@ import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
 import { localDateISO } from '#lib/date.js';
+import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 import { listQuickLogButtons } from '#lib/server/quick-logs.js';
@@ -11,7 +12,7 @@ import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
-export const load: PageServerLoad = async ({ params, locals, parent }) => {
+export const load: PageServerLoad = async ({ params, locals, parent, cookies }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const { companion } = await parent();
 
@@ -107,8 +108,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		params.companionId
 	);
 
+	const celebrations = celebrationBanner([companion], moodToday, cookies.get(CELEBRATION_COOKIE));
+
 	return {
 		companion,
+		celebrations,
 		recentHealth,
 		recentDaily,
 		upcomingReminders,
