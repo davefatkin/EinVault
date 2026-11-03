@@ -49,14 +49,17 @@ export const users = sqliteTable(
 			.notNull()
 			.default(false),
 		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
+		notifyCelebrationEmail: integer('notify_celebration_email', { mode: 'boolean' })
+			.notNull()
+			.default(false),
 		// Admin-controlled switch for the token API. Enforced at token resolution,
 		// so revoking disables every existing token immediately without deleting
 		// them, and re-granting brings the user's tokens back intact.
 		apiAccessEnabled: integer('api_access_enabled', { mode: 'boolean' }).notNull().default(true),
 		// ntfy topic name on the site-configured server (env NTFY_URL). A
 		// non-empty topic is the opt-in for push notifications; the user
-		// receives both categories (reminders, shift alerts) within their
-		// role's visibility scope. Null = no pushes.
+		// receives all categories (reminders, shift alerts, celebrations)
+		// within their role's visibility scope. Null = no pushes.
 		ntfyTopic: text('ntfy_topic'),
 		// Profile photo — mirrors the companion avatar columns.
 		avatarPath: text('avatar_path'),
@@ -143,6 +146,7 @@ export const notificationOutbox = sqliteTable(
 		id: text('id').primaryKey(),
 		// reminder: 'reminder:{reminderId}:{dueAtEpochSeconds}:{userId}:{channel}'
 		// shift:    'shift:{shiftId}:{start|end}:{boundaryEpochSeconds}:{userId}:{channel}'
+		// celebration: 'celebration:{companionId}:{YYYY-MM-DD}:{userId}:{channel}'
 		// One row per occurrence per recipient per channel.
 		dedupeKey: text('dedupe_key').notNull(),
 		userId: text('user_id')
@@ -177,6 +181,8 @@ export const companions = sqliteTable(
 		species: text('species', { enum: SPECIES }).notNull().default('dog'),
 		breed: text('breed'),
 		dob: text('dob'),
+		dobApproximate: integer('dob_approximate', { mode: 'boolean' }).notNull().default(false),
+		homecomingDate: text('homecoming_date'),
 		sex: text('sex', { enum: ['male', 'female', 'unknown'] }),
 		weightUnit: text('weight_unit', { enum: WEIGHT_UNITS }).notNull().default('lbs'),
 		microchip: text('microchip'),

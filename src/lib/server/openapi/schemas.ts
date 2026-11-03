@@ -67,6 +67,8 @@ export const Companion = z
 		isActive: z.boolean(),
 		breed: z.string().nullable().optional(),
 		dob: z.string().nullable().optional(),
+		dobApproximate: z.boolean().optional(),
+		homecomingDate: z.string().nullable().optional(),
 		sex: z.string().nullable().optional(),
 		weightUnit: z.enum(WEIGHT_UNITS).nullable().optional(),
 		microchip: z.string().nullable().optional(),

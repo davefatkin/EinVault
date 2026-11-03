@@ -2,13 +2,17 @@ import { redirect, error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
 import { version } from '../../package.json';
+import { localDateISO } from '#lib/date.js';
 import { t } from '#lib/i18n/index.js';
 import { resolveReminderUndoSeconds, DEMO_MODE } from '#lib/server/env.js';
 import { isImmichEnabled, isPaperlessEnabled } from '#lib/server/storage/index.js';
 
 export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
+	// Server-computed "today" (app timezone) so client links and age math match
+	// the server's notion of today, never the browser clock.
+	const today = localDateISO();
 	const isApiRoute = url.pathname.startsWith('/api');
-	if (isApiRoute) return {};
+	if (isApiRoute) return { today };
 
 	const isSetupRoute = url.pathname.startsWith('/setup');
 
@@ -21,7 +25,7 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 		if (!isSetupRoute) {
 			error(503, t(locals.locale, 'error.databaseNotInitialized'));
 		}
-		return {};
+		return { today };
 	}
 
 	if (userCount === 0 && !isSetupRoute) {
@@ -40,6 +44,7 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	return {
 		user: locals.user,
 		locale: locals.locale,
+		today,
 		serverTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		// Don't leak the running version on the public demo; footer falls back to
 		// the source-code link.

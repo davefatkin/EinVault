@@ -19,6 +19,7 @@ declare global {
 				defaultRecurrenceUnit: RecurrenceUnit | null;
 				notifyReminderEmail: boolean;
 				notifyShiftEmail: boolean;
+				notifyCelebrationEmail: boolean;
 				ntfyTopic: string | null;
 				avatarPath: string | null;
 				totpEnabled: boolean;

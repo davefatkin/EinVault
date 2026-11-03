@@ -28,6 +28,11 @@ export function createSeededDb(dir: string): string {
 	const now = Date.now();
 	seedRows(db as never, { now });
 
+	// Seed dobs are fixed calendar dates, so on some day of the year a companion
+	// would celebrate and change banners/notifications. Mark every dob approximate
+	// and clear homecoming dates so no seeded e2e world can ever celebrate.
+	sqlite.exec('UPDATE companions SET dob_approximate = 1, homecoming_date = NULL');
+
 	// Copy photo assets so e2e photo routes resolve.
 	copyDemoPhotoFiles(path.join(dir, 'uploads'), now);
 

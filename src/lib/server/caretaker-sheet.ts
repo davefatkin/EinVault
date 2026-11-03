@@ -54,6 +54,8 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 			breed: text(companion.breed),
 			sex: companion.sex,
 			dob: text(companion.dob),
+			dobApproximate: companion.dobApproximate,
+			homecomingDate: text(companion.homecomingDate),
 			microchip: text(companion.microchip),
 			avatarPath: companion.avatarPath
 		},

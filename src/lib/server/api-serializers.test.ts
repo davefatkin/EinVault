@@ -9,6 +9,8 @@ const row = {
 	species: 'dog',
 	breed: 'mutt',
 	dob: '2020-01-01',
+	dobApproximate: true,
+	homecomingDate: '2021-06-01',
 	sex: 'male',
 	weightUnit: 'kg',
 	microchip: '985112000000000',
@@ -44,6 +46,8 @@ const PII_FIELDS = [
 describe('api companion serializers', () => {
 	it('full shape includes PII but never storage/unknown columns (default-deny)', () => {
 		const out = toApiCompanion(row);
+		expect(out.dobApproximate).toBe(true);
+		expect(out.homecomingDate).toBe('2021-06-01');
 		expect(out.microchip).toBe('985112000000000');
 		expect('avatarKey' in out).toBe(false);
 		expect('secretFutureColumn' in out).toBe(false);
