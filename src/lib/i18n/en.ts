@@ -464,7 +464,6 @@ const messages = {
 	'time.daysAgo': '{count}d ago',
 
 	// #lib/age.ts
-	'age.unknown': 'Unknown age',
 	'age.monthsOld.one': '{count}mo old',
 	'age.monthsOld.other': '{count}mo old',
 	'age.yearsOld.one': '{count}y old',
@@ -504,6 +503,7 @@ const messages = {
 	'component.markdown.cheatsheet.link': 'link text',
 
 	// Page: companion (shared form labels / placeholders)
+	'page.companion.homeSince': 'Home since {date}',
 	'page.companion.labelName': 'Name',
 	'page.companion.labelSpecies': 'Species',
 	'page.companion.labelBreed': 'Breed',

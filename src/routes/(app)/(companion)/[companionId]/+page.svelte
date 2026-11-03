@@ -32,13 +32,12 @@
 		activityDisplayLabel,
 		healthTypeLabel,
 		documentCategoryLabel,
-		reminderTypeLabel,
-		speciesLabels
+		reminderTypeLabel
 	} from '#lib/i18n/labels.js';
 	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import { formatAge } from '#lib/age.js';
+	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
 	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
@@ -71,7 +70,6 @@
 	let quickLogTypes = $derived(
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
-	let labels = $derived(speciesLabels(locale, species));
 
 	// Care status derived from outstanding reminders
 	let status = $derived(
@@ -564,12 +562,7 @@
 							{/if}
 						</div>
 					</div>
-					<p class="text-sm text-muted-foreground mt-0.5">
-						{labels.icon}
-						{companion.breed ?? labels.breedFallback} · {formatAge(companion.dob, locale, {
-							today: data.today
-						}) ?? t(locale, 'age.unknown')}{companion.sex ? ` · ${companion.sex}` : ''}
-					</p>
+					<CompanionMeta {companion} today={data.today} />
 					<div class="mt-2">
 						{#if status === 'up-to-date'}
 							<Badge variant="teal" class="text-xs">

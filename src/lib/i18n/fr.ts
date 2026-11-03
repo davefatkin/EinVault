@@ -474,7 +474,6 @@ const messages: Record<keyof Messages, string> = {
 	'time.daysAgo': 'il y a {count}j',
 
 	// #lib/age.ts
-	'age.unknown': 'Âge inconnu',
 	'age.monthsOld.one': '{count} mois',
 	'age.monthsOld.other': '{count} mois',
 	'age.yearsOld.one': '{count} an',
@@ -514,6 +513,7 @@ const messages: Record<keyof Messages, string> = {
 	'component.markdown.cheatsheet.link': 'texte du lien',
 
 	// Page: companion (shared form labels / placeholders)
+	'page.companion.homeSince': 'À la maison depuis {date}',
 	'page.companion.labelName': 'Nom',
 	'page.companion.labelSpecies': 'Espèce',
 	'page.companion.labelBreed': 'Race',

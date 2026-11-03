@@ -41,6 +41,8 @@ test.describe('caretaker sheet', () => {
 		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/sheet$`));
 
 		await expect(asMember.getByRole('heading', { level: 1, name: C.name })).toBeVisible();
+		// Seeded dobs are approximate: the summary prints the long approximate age.
+		await expect(asMember.getByText(/~\d+y old/)).toBeVisible();
 		await expect(asMember.getByText(C.feedingSchedule)).toBeVisible();
 		await expect(asMember.getByText(C.vetPhone, { exact: true })).toBeVisible();
 		await expect(noteCard(asMember, N.einCommands.title)).toBeVisible();
@@ -216,6 +218,7 @@ test.describe('caretaker sheet', () => {
 
 	test('caretaker opens it from the care page; unassigned is 403', async ({ asCaretaker }) => {
 		await asCaretaker.goto(`/care/${EIN}`);
+		await expect(asCaretaker.getByTestId('companion-meta')).toHaveText(/~\d+y old/);
 		await asCaretaker.getByRole('link', { name: 'Print sheet', exact: true }).click();
 		await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/sheet$`));
 		await expect(asCaretaker.getByRole('heading', { level: 1, name: C.name })).toBeVisible();

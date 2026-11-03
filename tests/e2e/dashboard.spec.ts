@@ -321,3 +321,21 @@ test.describe('mood trend card', () => {
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toHaveCount(0);
 	});
 });
+
+test('the age tooltip opens on tap and closes on Escape @mobile', async ({ asMember }) => {
+	await asMember.goto(`/${COMP}`);
+	await waitForHydration(asMember);
+	const trigger = asMember.getByTestId('companion-meta').getByRole('button', { name: /~\d+y old/ });
+	const tip = asMember.getByText('Approximate birth date', { exact: true });
+	await expect(tip).toBeHidden();
+	await trigger.click();
+	await expect(tip).toBeVisible();
+	// The popover sits in the viewport, not clipped off-screen.
+	const box = await tip.boundingBox();
+	const vp = asMember.viewportSize()!;
+	expect(box).not.toBeNull();
+	expect(box!.x).toBeGreaterThanOrEqual(0);
+	expect(box!.x + box!.width).toBeLessThanOrEqual(vp.width);
+	await asMember.keyboard.press('Escape');
+	await expect(tip).toBeHidden();
+});
