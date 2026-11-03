@@ -148,6 +148,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		"L'argomento può contenere solo lettere, numeri, trattini e trattini bassi (max 64).",
 	'error.invalidDate': 'Data non valida',
+	'error.invalidDob': 'Inserisci una data di nascita reale che non sia nel futuro.',
+	'error.invalidHomecoming': 'Inserisci una data di arrivo reale che non sia nel futuro.',
 	'error.invalidArchiveDate': 'Data di archiviazione non valida.',
 	'error.invalidCompanionIds': 'Uno o più ID compagno non sono validi.',
 	'error.invalidBeforeDate': 'Data antecedente non valida',
@@ -517,6 +519,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelType': 'Tipo',
 	'page.companion.labelSex': 'Sesso',
 	'page.companion.labelDob': 'Data di nascita',
+	'page.companion.labelDobApproximate': 'Approssimativa',
+	'page.companion.labelHomecoming': 'Giorno del ritorno a casa',
 	'page.companion.labelWeightUnit': 'Unità di peso',
 	'page.companion.labelMicrochip': 'Numero microchip',
 	'page.companion.labelBio': 'Bio / note',

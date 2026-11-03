@@ -34,4 +34,20 @@ describe('new companion (route action)', () => {
 			data: { name: 'Nameless', species: null, weightUnit: 'oz' }
 		});
 	});
+
+	it('rejects a future dob and echoes the date fields', async () => {
+		const result = await actions.default(
+			event([
+				['name', 'Future'],
+				['species', 'dog'],
+				['dob', '2999-01-01'],
+				['dobApproximate', 'on'],
+				['homecomingDate', '2020-01-01']
+			])
+		);
+		expect(result).toMatchObject({
+			status: 400,
+			data: { dob: '2999-01-01', dobApproximate: true, homecomingDate: '2020-01-01' }
+		});
+	});
 });

@@ -149,6 +149,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		'O tópico só pode conter letras, números, hífens e sublinhados (máx. 64).',
 	'error.invalidDate': 'Data inválida',
+	'error.invalidDob': 'Insira uma data de nascimento real que não esteja no futuro.',
+	'error.invalidHomecoming': 'Insira uma data de chegada real que não esteja no futuro.',
 	'error.invalidArchiveDate': 'Data de arquivo inválida.',
 	'error.invalidCompanionIds': 'Um ou mais IDs de companheiro são inválidos.',
 	'error.invalidBeforeDate': 'Data anterior inválida',
@@ -519,6 +521,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelType': 'Tipo',
 	'page.companion.labelSex': 'Sexo',
 	'page.companion.labelDob': 'Data de nascimento',
+	'page.companion.labelDobApproximate': 'Aproximada',
+	'page.companion.labelHomecoming': 'Dia da chegada a casa',
 	'page.companion.labelWeightUnit': 'Unidade de peso',
 	'page.companion.labelMicrochip': 'Número do microchip',
 	'page.companion.labelBio': 'Bio / notas',

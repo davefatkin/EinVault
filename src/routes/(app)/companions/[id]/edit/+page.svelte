@@ -230,7 +230,23 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<div class="space-y-1.5">
 						<Label for="dob">{t(locale, 'page.companion.labelDob')}</Label>
-						<Input id="dob" name="dob" type="date" autocomplete="off" value={companion.dob ?? ''} />
+						<Input
+							id="dob"
+							name="dob"
+							type="date"
+							autocomplete="off"
+							max={data.today}
+							value={companion.dob ?? ''}
+						/>
+						<label class="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+							<input
+								type="checkbox"
+								name="dobApproximate"
+								checked={companion.dobApproximate}
+								class="rounded border-input"
+							/>
+							{t(locale, 'page.companion.labelDobApproximate')}
+						</label>
 					</div>
 					<div class="space-y-1.5">
 						<Label for="weightUnit">{t(locale, 'page.companion.labelWeightUnit')}</Label>
@@ -240,6 +256,18 @@
 							{/each}
 						</Select>
 					</div>
+				</div>
+
+				<div class="space-y-1.5">
+					<Label for="homecomingDate">{t(locale, 'page.companion.labelHomecoming')}</Label>
+					<Input
+						id="homecomingDate"
+						name="homecomingDate"
+						type="date"
+						autocomplete="off"
+						max={data.today}
+						value={companion.homecomingDate ?? ''}
+					/>
 				</div>
 
 				<div class="space-y-1.5">

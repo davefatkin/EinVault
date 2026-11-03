@@ -149,6 +149,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		'Das Thema darf nur Buchstaben, Zahlen, Binde- und Unterstriche enthalten (max. 64).',
 	'error.invalidDate': 'Ungültiges Datum',
+	'error.invalidDob': 'Gib ein gültiges Geburtsdatum ein, das nicht in der Zukunft liegt.',
+	'error.invalidHomecoming': 'Gib ein gültiges Ankunftsdatum ein, das nicht in der Zukunft liegt.',
 	'error.invalidArchiveDate': 'Ungültiges Archivierungsdatum.',
 	'error.invalidCompanionIds': 'Eine oder mehrere Begleiter-IDs sind ungültig.',
 	'error.invalidBeforeDate': 'Ungültiges Vor-Datum',
@@ -521,6 +523,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelType': 'Art',
 	'page.companion.labelSex': 'Geschlecht',
 	'page.companion.labelDob': 'Geburtsdatum',
+	'page.companion.labelDobApproximate': 'Ungefähr',
+	'page.companion.labelHomecoming': 'Ankunftstag',
 	'page.companion.labelWeightUnit': 'Gewichtseinheit',
 	'page.companion.labelMicrochip': 'Mikrochipnummer',
 	'page.companion.labelBio': 'Bio / Notizen',

@@ -146,6 +146,8 @@ const messages = {
 	'error.invalidNtfyTopic':
 		'Topic may only contain letters, numbers, dashes and underscores (max 64).',
 	'error.invalidDate': 'Invalid date',
+	'error.invalidDob': 'Enter a real birth date that is not in the future.',
+	'error.invalidHomecoming': 'Enter a real homecoming date that is not in the future.',
 	'error.invalidArchiveDate': 'Invalid archive date.',
 	'error.invalidCompanionIds': 'One or more companion IDs are invalid.',
 	'error.invalidBeforeDate': 'Invalid before date',
@@ -510,6 +512,8 @@ const messages = {
 	'page.companion.labelType': 'Type',
 	'page.companion.labelSex': 'Sex',
 	'page.companion.labelDob': 'Date of birth',
+	'page.companion.labelDobApproximate': 'Approximate',
+	'page.companion.labelHomecoming': 'Homecoming day',
 	'page.companion.labelWeightUnit': 'Weight unit',
 	'page.companion.labelMicrochip': 'Microchip number',
 	'page.companion.labelBio': 'Bio / notes',

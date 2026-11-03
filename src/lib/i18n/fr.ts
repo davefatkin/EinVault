@@ -149,6 +149,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		'Le sujet ne peut contenir que des lettres, chiffres, tirets et tirets bas (max. 64).',
 	'error.invalidDate': 'Date invalide',
+	'error.invalidDob': 'Saisissez une date de naissance réelle qui ne soit pas dans le futur.',
+	'error.invalidHomecoming': "Saisissez une date d'arrivée réelle qui ne soit pas dans le futur.",
 	'error.invalidArchiveDate': "Date d'archivage invalide.",
 	'error.invalidCompanionIds': 'Un ou plusieurs identifiants de compagnon sont invalides.',
 	'error.invalidBeforeDate': 'Date antérieure invalide',
@@ -520,6 +522,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelType': 'Type',
 	'page.companion.labelSex': 'Sexe',
 	'page.companion.labelDob': 'Date de naissance',
+	'page.companion.labelDobApproximate': 'Approximative',
+	'page.companion.labelHomecoming': "Jour d'arrivée à la maison",
 	'page.companion.labelWeightUnit': 'Unité de poids',
 	'page.companion.labelMicrochip': 'Numéro de micropuce',
 	'page.companion.labelBio': 'Bio / notes',

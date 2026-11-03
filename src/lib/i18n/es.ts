@@ -149,6 +149,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidNtfyTopic':
 		'El tema solo puede contener letras, números, guiones y guiones bajos (máx. 64).',
 	'error.invalidDate': 'Fecha no válida',
+	'error.invalidDob': 'Introduce una fecha de nacimiento real que no esté en el futuro.',
+	'error.invalidHomecoming': 'Introduce una fecha de llegada real que no esté en el futuro.',
 	'error.invalidArchiveDate': 'Fecha de archivo no válida.',
 	'error.invalidCompanionIds': 'Uno o más IDs de compañero no son válidos.',
 	'error.invalidBeforeDate': 'Fecha anterior no válida',
@@ -519,6 +521,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.labelType': 'Tipo',
 	'page.companion.labelSex': 'Sexo',
 	'page.companion.labelDob': 'Fecha de nacimiento',
+	'page.companion.labelDobApproximate': 'Aproximada',
+	'page.companion.labelHomecoming': 'Día de llegada a casa',
 	'page.companion.labelWeightUnit': 'Unidad de peso',
 	'page.companion.labelMicrochip': 'Número de microchip',
 	'page.companion.labelBio': 'Bio / notas',

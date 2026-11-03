@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCompanionSpeciesAndUnit } from './companion-form';
+import { parseCompanionDates, parseCompanionSpeciesAndUnit } from './companion-form';
 
 const fd = (o: Record<string, string>) => {
 	const f = new FormData();
@@ -38,5 +38,44 @@ describe('parseCompanionSpeciesAndUnit', () => {
 				weightUnit: 'lbs'
 			})
 		).toEqual({ ok: true, species: 'other', weightUnit: 'oz' });
+	});
+});
+
+describe('parseCompanionDates', () => {
+	const today = '2026-11-03';
+	it('empty dob forces approximate off', () => {
+		expect(parseCompanionDates(fd({ dob: '', dobApproximate: 'on' }), today)).toEqual({
+			ok: true,
+			dob: null,
+			dobApproximate: false,
+			homecomingDate: null
+		});
+	});
+	it('keeps approximate with a dob', () => {
+		expect(
+			parseCompanionDates(fd({ dob: '2020-01-02', dobApproximate: 'on' }), today)
+		).toMatchObject({ ok: true, dob: '2020-01-02', dobApproximate: true });
+	});
+	it('rejects a future or impossible dob', () => {
+		expect(parseCompanionDates(fd({ dob: '2026-11-04' }), today)).toEqual({
+			ok: false,
+			error: 'invalidDob'
+		});
+		expect(parseCompanionDates(fd({ dob: '2025-02-29' }), today)).toEqual({
+			ok: false,
+			error: 'invalidDob'
+		});
+	});
+	it('rejects a future homecoming date', () => {
+		expect(parseCompanionDates(fd({ homecomingDate: '2027-01-01' }), today)).toEqual({
+			ok: false,
+			error: 'invalidHomecoming'
+		});
+	});
+	it('accepts today and homecoming before dob', () => {
+		expect(parseCompanionDates(fd({ dob: '2026-11-03' }), today)).toMatchObject({ ok: true });
+		expect(
+			parseCompanionDates(fd({ dob: '2020-01-01', homecomingDate: '2019-01-01' }), today)
+		).toMatchObject({ ok: true, homecomingDate: '2019-01-01' });
 	});
 });

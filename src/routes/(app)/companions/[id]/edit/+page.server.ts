@@ -4,7 +4,8 @@ import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
 import { parseSex } from '#lib/server/validation.js';
-import { parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
+import { localDateISO } from '#lib/date.js';
+import { parseCompanionDates, parseCompanionSpeciesAndUnit } from '#lib/server/companion-form.js';
 import { toSpecies } from '#lib/species.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -40,6 +41,15 @@ export const actions: Actions = {
 		});
 		if (!parsed.ok) return fail(400, { error: t(locals.locale, 'error.speciesRequired') });
 
+		const dates = parseCompanionDates(data, localDateISO());
+		if (!dates.ok)
+			return fail(400, {
+				error: t(
+					locals.locale,
+					dates.error === 'invalidDob' ? 'error.invalidDob' : 'error.invalidHomecoming'
+				)
+			});
+
 		await db
 			.update(schema.companions)
 			.set({
@@ -47,7 +57,9 @@ export const actions: Actions = {
 				species: parsed.species,
 				breed: String(data.get('breed') ?? '').trim() || null,
 				sex: parseSex(String(data.get('sex') ?? '')),
-				dob: String(data.get('dob') ?? '') || null,
+				dob: dates.dob,
+				dobApproximate: dates.dobApproximate,
+				homecomingDate: dates.homecomingDate,
 				weightUnit: parsed.weightUnit,
 				microchip: String(data.get('microchip') ?? '').trim() || null,
 				bio: String(data.get('bio') ?? '').trim() || null,
