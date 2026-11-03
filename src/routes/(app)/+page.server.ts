@@ -2,7 +2,6 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
-import { localDateISO } from '#lib/date.js';
 import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { t } from '#lib/i18n/index.js';
@@ -26,7 +25,7 @@ const RECENT_EVENT_LIMIT = 30;
 export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 
-	const { companions } = await parent();
+	const { companions, today } = await parent();
 
 	// 0 companions → fall through to the dashboard's first-run welcome (SP7).
 	if (companions.length === 1) redirect(302, `/${companions[0].id}`);
@@ -34,7 +33,6 @@ export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 	const now = new Date();
 	const in7d = new Date(now.getTime() + SEVEN_DAYS_MS);
 	const ago7d = new Date(now.getTime() - SEVEN_DAYS_MS);
-	const today = localDateISO(now);
 	const ids = companions.map((c) => c.id);
 
 	const [upcomingReminders, recentDaily, recentHealth, todayJournal] = await Promise.all([

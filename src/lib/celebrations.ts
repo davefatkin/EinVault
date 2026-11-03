@@ -57,7 +57,12 @@ export function celebrationOn(
 export function celebrationLines(locale: Locale, name: string, c: Celebration): string[] {
 	const out: string[] = [];
 	if (c.birthdayYears !== undefined) {
-		out.push(t(locale, 'celebration.birthday', { name, count: c.birthdayYears }));
+		out.push(
+			t(locale, c.birthdayYears === 1 ? 'celebration.birthday.one' : 'celebration.birthday.other', {
+				name,
+				count: c.birthdayYears
+			})
+		);
 	}
 	if (c.homecomingYears !== undefined) {
 		out.push(

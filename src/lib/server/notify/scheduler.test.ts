@@ -1,18 +1,20 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
-import { localDateISO } from '#lib/date.js';
 import { celebrationContext } from './scheduler';
 
 const yearsBefore = (date: string, n: number) => `${Number(date.slice(0, 4)) - n}${date.slice(4)}`;
-const today = localDateISO();
-const yesterday = localDateISO(new Date(Date.now() - 24 * 60 * 60 * 1000));
+// Clock pinned to local noon on a mid-year date: no midnight rollover, no Feb 29.
+const today = '2026-06-15';
+const yesterday = '2026-06-14';
 const homecoming = yearsBefore(today, 3);
 const payload = { companionId: 'comp-c', date: today };
 const email = { userId: 'u-c', channel: 'email' as const };
 const ntfy = { userId: 'u-c', channel: 'ntfy' as const };
 
 beforeEach(async () => {
+	vi.useFakeTimers({ toFake: ['Date'] });
+	vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0));
 	await db.delete(schema.companions);
 	await db.delete(schema.users);
 	await db.insert(schema.users).values({
@@ -29,6 +31,10 @@ beforeEach(async () => {
 		name: 'Ein',
 		homecomingDate: homecoming
 	} as typeof schema.companions.$inferInsert);
+});
+
+afterEach(() => {
+	vi.useRealTimers();
 });
 
 const setUser = (v: Partial<typeof schema.users.$inferInsert>) =>

@@ -500,7 +500,7 @@ const messages: Record<keyof Messages, string> = {
 	'age.unit.days.one': '{count} jour',
 	'age.unit.days.other': '{count} jours',
 	'age.approximateHint': 'Date de naissance approximative',
-	'age.bornOn': 'Né le {date}',
+	'age.bornOn': 'Naissance : {date}',
 
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Écrire',
@@ -598,10 +598,11 @@ const messages: Record<keyof Messages, string> = {
 	'overview.greeting': 'Bonjour, {name}',
 	'overview.needsAttention': 'Nécessite attention',
 	'celebration.label': 'Célébrations',
-	'celebration.birthday': "🎂 {name} fête ses {count} ans aujourd'hui !",
+	'celebration.birthday.one': "🎂 {name} fête 1 an aujourd'hui !",
+	'celebration.birthday.other': "🎂 {name} fête ses {count} ans aujourd'hui !",
 	'celebration.homecoming.one': "🏡 Jour d'arrivée de {name} : 1 an à la maison !",
 	'celebration.homecoming.other': "🏡 Jour d'arrivée de {name} : {count} ans à la maison !",
-	'celebration.dismiss': 'Ignorer',
+	'celebration.dismissFor': 'Ignorer {name}',
 	'overview.allCaughtUp': 'Tout est à jour',
 	'overview.heading.companions': 'Vos compagnons',
 	'overview.companions.addStart': 'Créer un nouveau coffre',

@@ -221,11 +221,11 @@ When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https
 
 On public servers like ntfy.sh, the topic name is the only access control. Users should pick long, random topic names that are hard to guess.
 
-|                           | Default | Description                                                                                                                                                                   |
-| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NTFY_URL`                | -       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.                                                                                  |
-| `NTFY_TOKEN`              | -       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic.                                                                      |
-| `NOTIFY_SCAN_INTERVAL_MS` | `60000` | How often the notification scheduler scans for due reminders and shift alerts, in milliseconds. Values below 250 fall back to the default. Mainly useful for automated tests. |
+|                           | Default | Description                                                                                                                                                                                  |
+| ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NTFY_URL`                | -       | ntfy server base URL, e.g. `https://ntfy.sh` or a self-hosted instance. No topic in the URL.                                                                                                 |
+| `NTFY_TOKEN`              | -       | Bearer token for self-hosted ntfy servers with auth enabled. Used for every publish regardless of topic.                                                                                     |
+| `NOTIFY_SCAN_INTERVAL_MS` | `60000` | How often the notification scheduler scans for due reminders, shift alerts, and celebrations, in milliseconds. Values below 250 fall back to the default. Mainly useful for automated tests. |
 
 ### Data and backup
 

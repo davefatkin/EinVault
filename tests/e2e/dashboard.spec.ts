@@ -5,7 +5,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { todayUTC } from '../lib/dates';
+import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
@@ -366,13 +366,14 @@ const celebrate = base.extend<{ world: AppServer }>({
 		);
 		const dbPath = createSeededDb(dir);
 		// Homecoming anniversary today, four years home (year shift keeps Feb 29 valid).
-		const [y, m, d] = todayUTC().split('-');
+		const { tz, today } = noonZone();
+		const [y, m, d] = today.split('-');
 		const raw = new Database(dbPath);
 		raw
 			.prepare('UPDATE companions SET homecoming_date = ? WHERE id = ?')
 			.run(`${Number(y) - 4}-${m}-${d}`, SEED.companions.edward.id);
 		raw.close();
-		const server = await startAppServer({ dbPath, env: {} });
+		const server = await startAppServer({ dbPath, env: { TZ: tz } });
 		await use(server);
 		await server.stop();
 		fs.rmSync(dir, { recursive: true, force: true });
@@ -403,7 +404,7 @@ celebrate(
 		await page.goto(`${base}/${SEED.companions.edward.id}`);
 		await waitForHydration(page);
 		await baseExpect(banner.getByText(text)).toBeVisible();
-		await banner.getByRole('button', { name: 'Dismiss' }).click();
+		await banner.getByRole('button', { name: 'Dismiss Edward' }).click();
 		await baseExpect(banner).toHaveCount(0);
 
 		await page.reload();

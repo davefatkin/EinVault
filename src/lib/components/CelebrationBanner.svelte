@@ -45,7 +45,7 @@
 				<button
 					type="button"
 					onclick={() => dismiss(e.companionId)}
-					aria-label={t(locale, 'celebration.dismiss')}
+					aria-label={t(locale, 'celebration.dismissFor', { name: e.name })}
 					class="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
 					<X class="h-4 w-4" />

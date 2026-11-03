@@ -323,48 +323,49 @@ base('notifications card describes push when only ntfy is enabled', async ({ pag
 // Mail unconfigured: saving an ntfy topic must not wipe the celebration flag
 // ---------------------------------------------------------------------------
 
-test('ntfy topic save keeps celebration flag when mail is unconfigured', async ({
-	page
-}, testInfo) => {
-	const dir = path.join(
-		REPO_ROOT,
-		'.test-data',
-		`notifications-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`
-	);
-	const ntfy = await startNtfyFake();
-	const dbPath = createSeededDb(dir);
-	const db = new Database(dbPath);
-	db.prepare('UPDATE users SET notify_celebration_email = 1 WHERE username = ?').run(
-		SEED.member.username
-	);
-	let server: AppServer | undefined;
-	try {
-		server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
-		await login(page, server.baseURL, SEED.member.username);
-		await page.goto(server.baseURL + '/settings');
-		await expect(page.locator('input[name="notifyCelebrationEmail"][type="checkbox"]')).toHaveCount(
-			0
+base(
+	'ntfy topic save keeps celebration flag when mail is unconfigured',
+	async ({ page }, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`notifications-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`
 		);
-		const topic = page.locator('#ntfyTopic');
-		await topic.fill('e2e-celebration-keep');
-		await topic.blur();
-		await expect(page.getByText(/notification settings updated/i)).toBeVisible({
-			timeout: 8_000
-		});
-		const row = db
-			.prepare(
-				'SELECT notify_celebration_email AS c, ntfy_topic AS t FROM users WHERE username = ?'
-			)
-			.get(SEED.member.username) as { c: number; t: string };
-		expect(row.t).toBe('e2e-celebration-keep');
-		expect(row.c).toBe(1);
-	} finally {
-		db.close();
-		await server?.stop();
-		await ntfy.stop();
-		fs.rmSync(dir, { recursive: true, force: true });
+		const ntfy = await startNtfyFake();
+		const dbPath = createSeededDb(dir);
+		const db = new Database(dbPath);
+		db.prepare('UPDATE users SET notify_celebration_email = 1 WHERE username = ?').run(
+			SEED.member.username
+		);
+		let server: AppServer | undefined;
+		try {
+			server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
+			await login(page, server.baseURL, SEED.member.username);
+			await page.goto(server.baseURL + '/settings');
+			await expect(
+				page.locator('input[name="notifyCelebrationEmail"][type="checkbox"]')
+			).toHaveCount(0);
+			const topic = page.locator('#ntfyTopic');
+			await topic.fill('e2e-celebration-keep');
+			await topic.blur();
+			await expect(page.getByText(/notification settings updated/i)).toBeVisible({
+				timeout: 8_000
+			});
+			const row = db
+				.prepare(
+					'SELECT notify_celebration_email AS c, ntfy_topic AS t FROM users WHERE username = ?'
+				)
+				.get(SEED.member.username) as { c: number; t: string };
+			expect(row.t).toBe('e2e-celebration-keep');
+			expect(row.c).toBe(1);
+		} finally {
+			db.close();
+			await server?.stop();
+			await ntfy.stop();
+			fs.rmSync(dir, { recursive: true, force: true });
+		}
 	}
-});
+);
 
 // ---------------------------------------------------------------------------
 // Day-of celebration: email + ntfy to opted-in admin, nothing to caretakers

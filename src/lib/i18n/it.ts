@@ -497,7 +497,7 @@ const messages: Record<keyof Messages, string> = {
 	'age.unit.days.one': '{count} giorno',
 	'age.unit.days.other': '{count} giorni',
 	'age.approximateHint': 'Data di nascita approssimativa',
-	'age.bornOn': 'Nato il {date}',
+	'age.bornOn': 'Data di nascita: {date}',
 
 	// Component: MarkdownTextarea
 	'component.markdown.write': 'Scrivi',
@@ -594,10 +594,11 @@ const messages: Record<keyof Messages, string> = {
 	'overview.greeting': 'Ciao, {name}',
 	'overview.needsAttention': 'Richiede attenzione',
 	'celebration.label': 'Celebrazioni',
-	'celebration.birthday': '🎂 {name} compie {count} anni oggi!',
+	'celebration.birthday.one': '🎂 {name} compie 1 anno oggi!',
+	'celebration.birthday.other': '🎂 {name} compie {count} anni oggi!',
 	'celebration.homecoming.one': '🏡 Giorno di arrivo di {name}: 1 anno a casa!',
 	'celebration.homecoming.other': '🏡 Giorno di arrivo di {name}: {count} anni a casa!',
-	'celebration.dismiss': 'Chiudi',
+	'celebration.dismissFor': 'Chiudi {name}',
 	'overview.allCaughtUp': 'Tutto in ordine',
 	'overview.heading.companions': 'I tuoi compagni',
 	'overview.companions.addStart': 'Inizia un nuovo registro',

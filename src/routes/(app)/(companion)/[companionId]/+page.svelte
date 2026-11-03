@@ -6,7 +6,6 @@
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
-	import { localDateISO } from '#lib/date.js';
 	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
@@ -63,8 +62,6 @@
 	} = $derived(data);
 
 	const locale = getLocale();
-
-	let today = localDateISO();
 
 	// Quick log shortcuts: the species trio, same as the caretaker view offers.
 	let species = $derived(toSpecies(companion.species));
@@ -819,7 +816,7 @@
 				</CardTitle>
 				{#if companion.isActive !== false}
 					<Button
-						href="/{companion.id}/journal/{today}"
+						href="/{companion.id}/journal/{data.today}"
 						variant="ghost"
 						size="sm"
 						class="h-7 text-xs text-primary px-2"

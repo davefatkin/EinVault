@@ -14,7 +14,7 @@ import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#li
 
 export const load: PageServerLoad = async ({ params, locals, parent, cookies }) => {
 	if (!locals.user) redirect(302, '/auth/login');
-	const { companion } = await parent();
+	const { companion, today } = await parent();
 
 	const now = new Date();
 	const moodToday = localDateISO(now);
@@ -108,7 +108,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		params.companionId
 	);
 
-	const celebrations = celebrationBanner([companion], moodToday, cookies.get(CELEBRATION_COOKIE));
+	const celebrations = celebrationBanner([companion], today, cookies.get(CELEBRATION_COOKIE));
 
 	return {
 		companion,

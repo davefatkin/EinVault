@@ -40,7 +40,7 @@
 	const locale = getLocale();
 
 	// Use the server's notion of today so journal links don't drift on timezone boundary.
-	// The (app) layout server returns `today: localDateISO()` which SvelteKit merges into data.
+	// The root layout server returns `today: localDateISO()` which SvelteKit merges into data.
 	let today = $derived(data.today);
 
 	// Health type → emoji icon (no dedicated icon map exists; define inline)
