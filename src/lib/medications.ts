@@ -13,12 +13,16 @@ export function isMedicationActive(endedOn: string | null, today: string): boole
 }
 
 /**
- * Whether to show a medication as ended: its end date is today or earlier.
- * On the end day it still counts as active (a dose can be logged), but the
- * course is over, so lists put it under Ended and offer Restart.
+ * Which end-date label a medication gets: ending later ("Ends {date}"), on
+ * its last day ("Ends today", still active), or over ("Ended {date}").
  */
-export function endsByToday(endedOn: string | null, today: string): boolean {
-	return endedOn !== null && endedOn <= today;
+export function medicationEndState(
+	medication: { active: boolean; endedOn: string | null },
+	today: string
+): 'endsOn' | 'endsToday' | 'endedOn' | null {
+	if (!medication.endedOn) return null;
+	if (!medication.active) return 'endedOn';
+	return medication.endedOn === today ? 'endsToday' : 'endsOn';
 }
 
 /** Today's YYYY-MM-DD in the household time zone (or the runtime zone). */

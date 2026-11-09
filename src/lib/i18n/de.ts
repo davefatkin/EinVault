@@ -1452,6 +1452,7 @@ const messages: Record<keyof Messages, string> = {
 	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.',
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Medikamente',
 	'page.medications.add': 'Medikament hinzufügen',
 	'page.medications.newTitle': 'Neues Medikament',
@@ -1504,6 +1505,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endConfirm':
 		'{name} heute beenden? Die anstehenden Dosis-Erinnerungen werden gelöscht.',
 	'page.medications.endConfirmButton': 'Medikament beenden',
+	'page.medications.endsToday': 'Endet heute',
+	'page.medications.endNow': 'Jetzt beenden',
+	'page.medications.removeEndDate': 'Enddatum entfernen',
 	'page.medications.restart': 'Neu starten',
 	'page.medications.deleteConfirm':
 		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',

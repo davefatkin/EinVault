@@ -57,7 +57,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		medication,
 		reminders,
 		doses: doses.slice(0, pages * DOSE_PAGE),
-		moreDoses: doses.length > pages * DOSE_PAGE ? pages + 1 : null,
+		// At the cap there is no next page, so "Show more" goes away.
+		moreDoses: doses.length > pages * DOSE_PAGE && pages < MAX_DOSE_PAGES ? pages + 1 : null,
 		editing: url.searchParams.get('edit') === '1',
 		today
 	};

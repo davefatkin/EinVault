@@ -1446,6 +1446,7 @@ const messages: Record<keyof Messages, string> = {
 	'demo.writeBlocked': 'Esta demo é somente leitura — sua alteração não foi salva.',
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Medicamentos',
 	'page.medications.add': 'Adicionar medicamento',
 	'page.medications.newTitle': 'Novo medicamento',
@@ -1498,6 +1499,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endConfirm':
 		'Terminar {name} hoje? Os próximos lembretes de dose serão eliminados.',
 	'page.medications.endConfirmButton': 'Terminar medicamento',
+	'page.medications.endsToday': 'Termina hoje',
+	'page.medications.endNow': 'Terminar agora',
+	'page.medications.removeEndDate': 'Remover data de fim',
 	'page.medications.restart': 'Reiniciar',
 	'page.medications.deleteConfirm':
 		'Eliminar {name} e o histórico de doses? Os próximos lembretes de dose também são eliminados; os concluídos ficam no histórico de lembretes. Não é possível desfazer.',

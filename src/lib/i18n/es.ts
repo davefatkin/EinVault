@@ -1447,6 +1447,7 @@ const messages: Record<keyof Messages, string> = {
 	'demo.writeBlocked': 'Esta demo es de solo lectura — tu cambio no fue guardado.',
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Medicamentos',
 	'page.medications.add': 'Añadir medicamento',
 	'page.medications.newTitle': 'Nuevo medicamento',
@@ -1499,6 +1500,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endConfirm':
 		'¿Finalizar {name} hoy? Se eliminarán sus próximos recordatorios de dosis.',
 	'page.medications.endConfirmButton': 'Finalizar medicamento',
+	'page.medications.endsToday': 'Termina hoy',
+	'page.medications.endNow': 'Finalizar ahora',
+	'page.medications.removeEndDate': 'Quitar fecha de fin',
 	'page.medications.restart': 'Reiniciar',
 	'page.medications.deleteConfirm':
 		'¿Eliminar {name} y su historial de dosis? También se eliminan los próximos recordatorios de dosis; los completados se quedan en el historial de recordatorios. No se puede deshacer.',

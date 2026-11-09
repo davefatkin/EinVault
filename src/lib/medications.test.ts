@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-	endsByToday,
 	formatMedicationSchedule,
+	medicationEndState,
 	todayInZone,
 	isMedicationActive,
 	ownerMedicationCaps,
@@ -64,12 +64,13 @@ describe('ownerMedicationCaps', () => {
 	});
 });
 
-describe('endsByToday', () => {
-	it('is true on and after the end date only', () => {
-		expect(endsByToday(null, '2026-11-09')).toBe(false);
-		expect(endsByToday('2026-11-10', '2026-11-09')).toBe(false);
-		expect(endsByToday('2026-11-09', '2026-11-09')).toBe(true);
-		expect(endsByToday('2026-11-08', '2026-11-09')).toBe(true);
+describe('medicationEndState', () => {
+	const today = '2026-11-09';
+	it('labels the end date by whether it is later, today, or past', () => {
+		expect(medicationEndState({ active: true, endedOn: null }, today)).toBeNull();
+		expect(medicationEndState({ active: true, endedOn: '2026-11-12' }, today)).toBe('endsOn');
+		expect(medicationEndState({ active: true, endedOn: today }, today)).toBe('endsToday');
+		expect(medicationEndState({ active: false, endedOn: '2026-11-08' }, today)).toBe('endedOn');
 	});
 });
 

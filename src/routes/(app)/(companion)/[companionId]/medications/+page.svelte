@@ -7,7 +7,7 @@
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import MedicationForm from '#lib/components/medications/MedicationForm.svelte';
 	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
-	import { endsByToday, ownerMedicationCaps } from '#lib/medications.js';
+	import { ownerMedicationCaps } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data, form } = $props();
@@ -16,9 +16,9 @@
 	const base = $derived(`/${data.companion.id}/medications`);
 	const companionActive = $derived(data.companion.isActive !== false);
 	const caps = $derived(ownerMedicationCaps(companionActive));
-	// A medication ended today is listed as ended, though its last dose can still be logged.
-	const ended = $derived(data.medications.filter((m) => endsByToday(m.endedOn, data.today)));
-	const active = $derived(data.medications.filter((m) => !endsByToday(m.endedOn, data.today)));
+	// Active through its last day (ended_on is inclusive).
+	const active = $derived(data.medications.filter((m) => m.active));
+	const ended = $derived(data.medications.filter((m) => !m.active));
 
 	let showForm = $state(false);
 	// A failed save (also without JS) keeps the form open with what was typed,

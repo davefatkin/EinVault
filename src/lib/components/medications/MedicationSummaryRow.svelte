@@ -1,17 +1,11 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
 	import { Pencil, Pill } from '@lucide/svelte';
-	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import MedicationFacts from './MedicationFacts.svelte';
 	import MedicationGivenButton from './MedicationGivenButton.svelte';
+	import MedicationStatusBadge from './MedicationStatusBadge.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import {
-		endsByToday,
-		todayInZone,
-		type MedicationCaps,
-		type MedicationSummary
-	} from '#lib/medications.js';
+	import type { MedicationCaps, MedicationSummary } from '#lib/medications.js';
 
 	// One medication in a list: the medications page, the dashboard card and
 	// the caretaker card. caps decide what the viewer may do here.
@@ -27,17 +21,14 @@
 		detailHref?: string;
 	} = $props();
 	const locale = getLocale();
-	const timeZone = getContext<string | undefined>('serverTimezone');
-	// Over on its end day, though a dose can still be logged until midnight.
-	const ended = $derived(endsByToday(medication.endedOn, todayInZone(timeZone)));
 </script>
 
 <div class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:gap-4">
 	<div class="flex min-w-0 flex-1 items-start gap-3">
 		<span
-			class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {ended
-				? 'bg-muted text-muted-foreground'
-				: 'bg-primary/10 text-primary'}"
+			class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {medication.active
+				? 'bg-primary/10 text-primary'
+				: 'bg-muted text-muted-foreground'}"
 			aria-hidden="true"
 		>
 			<Pill class="h-4 w-4" />
@@ -51,9 +42,7 @@
 				{:else}
 					<span class="font-medium text-foreground break-words">{medication.name}</span>
 				{/if}
-				{#if ended}
-					<Badge variant="secondary">{t(locale, 'page.medications.endedBadge')}</Badge>
-				{/if}
+				<MedicationStatusBadge {medication} />
 			</div>
 			<MedicationFacts {medication} />
 		</div>

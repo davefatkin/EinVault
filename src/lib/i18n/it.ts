@@ -1446,6 +1446,7 @@ const messages: Record<keyof Messages, string> = {
 	'demo.writeBlocked': 'Questa demo è in sola lettura — la tua modifica non è stata salvata.',
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Farmaci',
 	'page.medications.add': 'Aggiungi farmaco',
 	'page.medications.newTitle': 'Nuovo farmaco',
@@ -1497,6 +1498,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endConfirm':
 		'Terminare {name} oggi? I suoi prossimi promemoria per le dosi verranno eliminati.',
 	'page.medications.endConfirmButton': 'Termina farmaco',
+	'page.medications.endsToday': 'Termina oggi',
+	'page.medications.endNow': 'Termina ora',
+	'page.medications.removeEndDate': 'Rimuovi data di fine',
 	'page.medications.restart': 'Riavvia',
 	'page.medications.deleteConfirm':
 		'Eliminare {name} e il suo storico delle dosi? Vengono eliminati anche i prossimi promemoria per le dosi; quelli completati restano nello storico dei promemoria. Non si può annullare.',

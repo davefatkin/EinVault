@@ -5,8 +5,8 @@
 	import { formatDateOnly } from '#lib/date.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
-		endsByToday,
 		formatMedicationSchedule,
+		medicationEndState,
 		todayInZone,
 		type MedicationSummary
 	} from '#lib/medications.js';
@@ -26,6 +26,8 @@
 	const overdue = $derived(
 		medication.nextDueAt !== null && new Date(medication.nextDueAt).getTime() < Date.now()
 	);
+	// The last day ("Ends today") is a badge next to the name instead.
+	const endState = $derived(medicationEndState(medication, todayInZone(timeZone)));
 	const dateLine = $derived(
 		[
 			showStarted
@@ -33,14 +35,10 @@
 						date: formatDateOnly(medication.startedOn, locale) ?? medication.startedOn
 					})
 				: null,
-			medication.endedOn
-				? t(
-						locale,
-						endsByToday(medication.endedOn, todayInZone(timeZone))
-							? 'page.medications.endedOn'
-							: 'page.medications.endsOn',
-						{ date: formatDateOnly(medication.endedOn, locale) ?? medication.endedOn }
-					)
+			medication.endedOn && (endState === 'endsOn' || endState === 'endedOn')
+				? t(locale, `page.medications.${endState}`, {
+						date: formatDateOnly(medication.endedOn, locale) ?? medication.endedOn
+					})
 				: null
 		]
 			.filter(Boolean)

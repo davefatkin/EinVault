@@ -28,6 +28,15 @@ function cleanup(app: AppWorker, name: string) {
 	}
 }
 
+function setEndedOn(app: AppWorker, name: string, endedOn: string) {
+	const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+	try {
+		sqlite.prepare('UPDATE medications SET ended_on = ? WHERE name = ?').run(endedOn, name);
+	} finally {
+		sqlite.close();
+	}
+}
+
 async function addMedication(page: Page, name: string) {
 	await page.goto(BASE);
 	await waitForHydration(page);
@@ -91,19 +100,32 @@ test.describe('medications (owner)', () => {
 			const history = asMember.getByRole('region', { name: 'Dose history' });
 			await expect(history.getByText(SEED.member.displayName)).toBeVisible({ timeout: 8_000 });
 
-			// End moves it to Ended and removes its reminder.
+			// End makes today the last day: still active (a dose can be logged until
+			// midnight), shown as ending today, and its reminder is gone.
 			await asMember.getByRole('button', { name: 'End', exact: true }).click();
 			await asMember.getByRole('dialog').getByRole('button', { name: 'End medication' }).click();
-			await expect(asMember.getByRole('button', { name: 'Restart' })).toBeVisible({
-				timeout: 8_000
-			});
-			// The end day still counts: its last dose can be logged until midnight.
+			await expect(asMember.getByText('Ends today')).toBeVisible({ timeout: 8_000 });
+			await expect(asMember.getByRole('button', { name: 'End now' })).toBeVisible();
+			await expect(asMember.getByRole('button', { name: 'Remove end date' })).toBeVisible();
 			await expect(asMember.getByRole('button', { name: 'Given' })).toBeVisible();
+			await asMember.goto(BASE);
+			await expect(asMember.getByRole('region', { name: 'Active' }).getByText(name)).toBeVisible();
+			await asMember.goto(`/${EIN}/reminders`);
+			await expect(asMember.getByText(name)).toHaveCount(0);
+
+			// Once its last day has passed it is listed as Ended and can restart.
+			setEndedOn(app, name, '2020-01-01');
 			await asMember.goto(BASE);
 			await expect(asMember.getByRole('region', { name: 'Ended' }).getByText(name)).toBeVisible();
 			await expect(asMember.getByRole('region', { name: 'Active' }).getByText(name)).toHaveCount(0);
-			await asMember.goto(`/${EIN}/reminders`);
-			await expect(asMember.getByText(name)).toHaveCount(0);
+			await asMember.goto(detailUrl);
+			await waitForHydration(asMember);
+			await expect(asMember.getByRole('button', { name: 'Given' })).toHaveCount(0);
+			await asMember.getByRole('button', { name: 'Restart' }).click();
+			await expect(asMember.getByRole('button', { name: 'End', exact: true })).toBeVisible({
+				timeout: 8_000
+			});
+			await expect(asMember.getByRole('button', { name: 'Given' })).toBeVisible();
 
 			// Delete asks first, then returns to the list.
 			await asMember.goto(detailUrl);

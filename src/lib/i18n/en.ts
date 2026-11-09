@@ -1424,6 +1424,7 @@ const messages = {
 	'demo.writeBlocked': "This demo is read-only — your change wasn't saved.",
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Medications',
 	'page.medications.add': 'Add medication',
 	'page.medications.newTitle': 'New medication',
@@ -1474,6 +1475,9 @@ const messages = {
 	'page.medications.end': 'End',
 	'page.medications.endConfirm': 'End {name} today? Its upcoming dose reminders will be deleted.',
 	'page.medications.endConfirmButton': 'End medication',
+	'page.medications.endsToday': 'Ends today',
+	'page.medications.endNow': 'End now',
+	'page.medications.removeEndDate': 'Remove end date',
 	'page.medications.restart': 'Restart',
 	'page.medications.deleteConfirm':
 		'Delete {name} and its dose history? Upcoming dose reminders are deleted too; completed ones stay in the reminder history. This cannot be undone.',

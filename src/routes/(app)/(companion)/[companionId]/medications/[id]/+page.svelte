@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import {
 		BellPlus,
+		CalendarX2,
 		ChevronLeft,
 		CircleStop,
 		Pencil,
@@ -11,6 +12,7 @@
 	} from '@lucide/svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
+	import MedicationStatusBadge from '#lib/components/medications/MedicationStatusBadge.svelte';
 	import { Card, CardContent } from '#lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
 	import PageHeader from '#lib/components/PageHeader.svelte';
@@ -19,7 +21,7 @@
 	import MedicationFacts from '#lib/components/medications/MedicationFacts.svelte';
 	import MedicationForm from '#lib/components/medications/MedicationForm.svelte';
 	import MedicationGivenButton from '#lib/components/medications/MedicationGivenButton.svelte';
-	import { endsByToday, ownerMedicationCaps } from '#lib/medications.js';
+	import { ownerMedicationCaps } from '#lib/medications.js';
 	import { medicationReminderPrefillUrl } from '#lib/health.js';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -28,8 +30,6 @@
 	const locale = getLocale();
 
 	const med = $derived(data.medication);
-	// Ended on its end day (End sets it to today); Given still works until midnight.
-	const ended = $derived(endsByToday(med.endedOn, data.today));
 	const base = $derived(`/${data.companion.id}/medications`);
 	const caps = $derived(ownerMedicationCaps(data.companion.isActive !== false));
 	// A failed save without JS lands here without edit=1; its values keep the form open.
@@ -86,20 +86,28 @@
 			</CardContent>
 		</Card>
 	{:else}
-		<PageHeader title={med.name} tint={ended ? 'muted' : 'primary'}>
+		<PageHeader title={med.name} tint={med.active ? 'primary' : 'muted'}>
 			{#snippet icon()}<Pill class="h-5 w-5" />{/snippet}
 			{#snippet actions()}
-				{#if ended}
-					<Badge variant="secondary">{t(locale, 'page.medications.endedBadge')}</Badge>
-				{/if}
+				<MedicationStatusBadge medication={med} />
 				{#if caps.canEdit}
 					<Button variant="soft" size="sm" href="?edit=1">
 						<Pencil class="h-4 w-4 mr-1.5" />{t(locale, 'common.edit')}
 					</Button>
-					{#if !ended}
+					{#if med.active}
+						<!-- With an end date set, End means "end it today" instead. -->
 						<Button variant="soft" size="sm" onclick={() => (confirmEnd = true)}>
-							<CircleStop class="h-4 w-4 mr-1.5" />{t(locale, 'page.medications.end')}
+							<CircleStop class="h-4 w-4 mr-1.5" />{med.endedOn
+								? t(locale, 'page.medications.endNow')
+								: t(locale, 'page.medications.end')}
 						</Button>
+						{#if med.endedOn}
+							<form method="POST" action="?/restart" use:enhance>
+								<Button type="submit" variant="soft" size="sm">
+									<CalendarX2 class="h-4 w-4 mr-1.5" />{t(locale, 'page.medications.removeEndDate')}
+								</Button>
+							</form>
+						{/if}
 					{:else}
 						<form method="POST" action="?/restart" use:enhance>
 							<Button type="submit" variant="soft" size="sm">
@@ -132,7 +140,7 @@
 				<h2 id="dose-reminders" class={sectionHeading}>
 					{t(locale, 'page.medications.doseReminders')}
 				</h2>
-				{#if caps.canEdit && !ended}
+				{#if caps.canEdit && med.active}
 					<Button
 						variant="soft"
 						size="sm"
@@ -145,7 +153,7 @@
 			</div>
 			{#if data.reminders.length === 0}
 				<p class="rounded-2xl border bg-card px-5 py-4 text-sm text-muted-foreground">
-					{!ended
+					{med.active
 						? t(locale, 'page.medications.noDoseReminders')
 						: t(locale, 'page.medications.endedNoReminders')}
 				</p>

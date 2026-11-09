@@ -1454,6 +1454,7 @@ const messages: Record<keyof Messages, string> = {
 		"Cette démo est en lecture seule — votre modification n'a pas été enregistrée.",
 
 	// Meta
+	// Medications
 	'page.medications.title': 'Médicaments',
 	'page.medications.add': 'Ajouter un médicament',
 	'page.medications.newTitle': 'Nouveau médicament',
@@ -1505,6 +1506,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endConfirm':
 		"Terminer {name} aujourd'hui ? Ses prochains rappels de prise seront supprimés.",
 	'page.medications.endConfirmButton': 'Terminer le médicament',
+	'page.medications.endsToday': "Se termine aujourd'hui",
+	'page.medications.endNow': 'Terminer maintenant',
+	'page.medications.removeEndDate': 'Supprimer la date de fin',
 	'page.medications.restart': 'Relancer',
 	'page.medications.deleteConfirm':
 		"Supprimer {name} et son historique des prises ? Les prochains rappels de prise sont aussi supprimés ; ceux déjà faits restent dans l'historique des rappels. Cette action est irréversible.",
