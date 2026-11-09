@@ -4,6 +4,7 @@ import { t } from '#lib/i18n/index.js';
 import { loadIncidentDetail } from '#lib/server/incident-detail.js';
 import {
 	createIncidentUpdate,
+	resolvedBeforeStart,
 	parseIncidentForm,
 	parseIncidentUpdateForm,
 	setIncidentResolved,
@@ -60,7 +61,7 @@ export const actions: Actions = {
 		const data = await event.request.formData();
 		const resolvedAt = parseFormTimestamp(data.get('resolvedAt'));
 		if (!resolvedAt) return fail(400, { error: t(locals.locale, 'error.invalidDateTime') });
-		if (resolvedAt < g.incident.occurredAt)
+		if (resolvedBeforeStart(g.incident.occurredAt, resolvedAt))
 			return fail(400, { error: t(locals.locale, 'error.resolvedBeforeStart') });
 		if (formString(data, 'body').trim()) {
 			const parsed = parseIncidentUpdateForm(data, locals.locale, { allowTime: false });

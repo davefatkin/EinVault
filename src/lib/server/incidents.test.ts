@@ -4,6 +4,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import {
 	createIncident,
+	resolvedBeforeStart,
 	getIncident,
 	updateIncidentOverview,
 	setIncidentResolved,
@@ -273,5 +274,18 @@ describe('parseIncidentUpdateForm', () => {
 			expect(r.value.severity).toBe('moderate');
 			expect(r.value.occurredAt.getFullYear()).toBeGreaterThan(2020);
 		}
+	});
+});
+
+describe('resolvedBeforeStart', () => {
+	const start = new Date('2026-01-02T10:05:42Z');
+	it('rejects an earlier minute', () => {
+		expect(resolvedBeforeStart(start, new Date('2026-01-02T10:04:59Z'))).toBe(true);
+	});
+	it('allows the same minute despite seconds', () => {
+		expect(resolvedBeforeStart(start, new Date('2026-01-02T10:05:00Z'))).toBe(false);
+	});
+	it('allows later', () => {
+		expect(resolvedBeforeStart(start, new Date('2026-01-02T11:00:00Z'))).toBe(false);
 	});
 });

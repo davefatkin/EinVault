@@ -734,7 +734,7 @@ export function buildOpenApiDocument() {
 		},
 		responses: {
 			200: { description: 'OK', content: { 'application/json': { schema: HealthEvent } } },
-			400: errorResponse('invalidOccurredAt'),
+			400: errorResponse('invalidOccurredAt / resolvedBeforeStart'),
 			409: errorResponse('idempotencyKeyReused'),
 			...ownerErrors
 		}

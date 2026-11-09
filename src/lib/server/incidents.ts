@@ -65,6 +65,15 @@ export async function updateIncidentOverview(
 	return rows.length > 0;
 }
 
+const MINUTE_MS = 60_000;
+
+/** True when the resolve time is in an earlier minute than the start (forms truncate to the minute). */
+export function resolvedBeforeStart(occurredAt: Date, resolvedAt: Date): boolean {
+	return (
+		Math.floor(resolvedAt.getTime() / MINUTE_MS) < Math.floor(occurredAt.getTime() / MINUTE_MS)
+	);
+}
+
 export async function setIncidentResolved(
 	companionId: string,
 	id: string,

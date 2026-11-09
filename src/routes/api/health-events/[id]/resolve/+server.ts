@@ -4,7 +4,7 @@ import { apiRouteZod } from '#lib/server/auth/api-request.js';
 import { withIdempotency } from '#lib/server/api-idempotency.js';
 import { requireNoteOwnerScope } from '#lib/server/notes-api.js';
 import { loadAllowedIncident, throwIncidentNotFound } from '#lib/server/incidents-api.js';
-import { getIncident, setIncidentResolved } from '#lib/server/incidents.js';
+import { getIncident, resolvedBeforeStart, setIncidentResolved } from '#lib/server/incidents.js';
 import { toApiHealthEvent } from '#lib/server/api-serializers.js';
 import { IncidentResolveRequest } from '#lib/server/openapi/schemas.js';
 import { parseRecordTimestamp } from '#lib/server/validation.js';
@@ -31,6 +31,8 @@ export const POST = apiRouteZod(
 					if (!resolvedAt)
 						error(400, t(locale, 'error.invalidOccurredAt'), { code: 'invalidOccurredAt' });
 				}
+				if (resolvedAt && resolvedBeforeStart(incident.occurredAt, resolvedAt))
+					error(400, t(locale, 'error.resolvedBeforeStart'), { code: 'resolvedBeforeStart' });
 				const saved = await setIncidentResolved(incident.companionId, incident.id, resolvedAt);
 				const updated = saved ? await getIncident(incident.companionId, incident.id) : undefined;
 				if (!updated) throwIncidentNotFound(locale);

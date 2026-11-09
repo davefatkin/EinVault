@@ -1150,6 +1150,12 @@ test.describe('api tokens', () => {
 			);
 			expect(del.status()).toBe(204);
 
+			const early = await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: { resolvedAt: '2000-01-01T00:00:00Z' }
+			});
+			expect(early.status()).toBe(400);
+			expect((await early.json()).code).toBe('resolvedBeforeStart');
 			const res = await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
 				headers,
 				data: {}
