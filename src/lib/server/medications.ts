@@ -377,14 +377,22 @@ const MAX_CATCH_UP = 400;
 
 /** How far ahead of a dose time "Given" still counts as that dose. */
 const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
+// How far ahead of the server clock a givenAt may be and still count (as now).
+const FUTURE_GRACE_MS = 5 * 60 * 1000;
 
 type Reminder = typeof schema.reminders.$inferSelect;
 type LogDoseResult =
-	{ doseId: string; completedReminderId: string | null } | 'notFound' | 'ended' | 'beforeStart';
+	| { doseId: string; completedReminderId: string | null }
+	| 'notFound'
+	| 'ended'
+	| 'beforeStart'
+	| 'future';
 
 /**
  * Record that a dose was given at T (`givenAt`, default now) on local day D
- * (every "Given" button and the dose API). Refused before the start date.
+ * (every "Given" button and the dose API). Refused before the start date and
+ * more than 5 minutes in the future; a givenAt up to 5 minutes ahead (a device
+ * clock running fast) counts as now, so it can't land on tomorrow's date.
  *
  * 1. Catch-up, oldest first, over open linked occurrences due before D: an
  *    occurrence whose series already has a newer one due by D was missed and
@@ -403,7 +411,8 @@ export async function logDose(
 	opts: { givenAt?: Date; note?: string; now?: Date } = {}
 ): Promise<LogDoseResult> {
 	const now = opts.now ?? new Date();
-	const givenAt = opts.givenAt ?? now;
+	if (opts.givenAt && opts.givenAt.getTime() > now.getTime() + FUTURE_GRACE_MS) return 'future';
+	const givenAt = opts.givenAt && opts.givenAt < now ? opts.givenAt : now;
 	const day = localDateISO(givenAt);
 	const medication = await db.query.medications.findFirst({
 		where: eq(schema.medications.id, medicationId),

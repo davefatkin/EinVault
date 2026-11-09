@@ -1132,6 +1132,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationNotStarted': 'Este medicamento aún no ha comenzado.',
 	'error.doseBeforeStart':
 		'No se puede registrar una dosis antes de la fecha de inicio del medicamento.',
+	'error.doseInFuture': 'No se puede registrar una dosis en el futuro.',
 	'error.doseNotFound': 'Dosis no encontrada.',
 	'error.invalidMedicationStatus': 'status debe ser "active" o "all".',
 	'error.mustBeOnShiftToLogDose': 'Debes estar de turno para registrar dosis de medicación.',

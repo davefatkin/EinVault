@@ -1356,6 +1356,14 @@ test.describe('api tokens', () => {
 			expect(early.status()).toBe(400);
 			expect((await early.json()).code).toBe('givenBeforeStart');
 
+			// A givenAt well ahead of the server clock is refused.
+			const ahead = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() }
+			});
+			expect(ahead.status()).toBe(400);
+			expect((await ahead.json()).code).toBe('givenInFuture');
+
 			// Idempotency: a keyed retry writes one dose.
 			const key = { ...headers, 'Idempotency-Key': 'med-dose-1' };
 			const first = await asMember.request.post(`${base}/api/medications/${med}/doses`, {

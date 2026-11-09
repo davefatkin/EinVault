@@ -31,6 +31,7 @@ export function doseRefusal(outcome: Awaited<ReturnType<typeof logDose>>, locale
 	if (outcome === 'ended') return fail(400, { error: t(locale, 'error.medicationEnded') });
 	if (outcome === 'beforeStart')
 		return fail(400, { error: t(locale, 'error.medicationNotStarted') });
+	if (outcome === 'future') return fail(400, { error: t(locale, 'error.doseInFuture') });
 	return null;
 }
 

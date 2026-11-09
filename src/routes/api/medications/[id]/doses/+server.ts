@@ -75,6 +75,8 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 				error(409, t(locale, 'error.medicationEnded'), { code: 'medicationEnded' });
 			if (result === 'beforeStart')
 				error(400, t(locale, 'error.doseBeforeStart'), { code: 'givenBeforeStart' });
+			if (result === 'future')
+				error(400, t(locale, 'error.doseInFuture'), { code: 'givenInFuture' });
 			if (typeof result === 'string') notFound();
 			return { status: 201, data: result };
 		}

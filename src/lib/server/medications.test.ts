@@ -490,6 +490,24 @@ describe('logDose', () => {
 		expect((await doses(id))[0]).toMatchObject({ source: 'manual', givenAt });
 	});
 
+	it("counts a givenAt a few minutes ahead as now, so a fast clock near midnight still completes today's dose", async () => {
+		const id = await createMedication(C1, input(), U1);
+		const r20 = await addReminder(id, false, at(20));
+		const late = at(23, 58);
+		const res = await logDose(id, { id: U1 }, { now: late, givenAt: at(0, 1, 10) });
+		expect(res).toMatchObject({ completedReminderId: r20 });
+		expect((await reminderRow(r20)).completedAt).not.toBeNull();
+		expect((await doses(id))[0]).toMatchObject({ source: 'reminder', givenAt: late });
+	});
+
+	it('refuses a givenAt more than 5 minutes in the future', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const r8 = await addReminder(id, false, at(8));
+		expect(await logDose(id, { id: U1 }, { now, givenAt: at(8, 11) })).toBe('future');
+		expect((await reminderRow(r8)).completedAt).toBeNull();
+		expect(await doses(id)).toHaveLength(0);
+	});
+
 	it('refuses a dose given before the medication started', async () => {
 		const id = await createMedication(C1, input({ startedOn: TODAY }), U1);
 		const r8 = await addReminder(id, false, at(8));

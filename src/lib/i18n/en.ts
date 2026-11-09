@@ -1111,6 +1111,7 @@ const messages = {
 	'error.medicationEnded': 'This medication has ended.',
 	'error.medicationNotStarted': "This medication hasn't started yet.",
 	'error.doseBeforeStart': "A dose can't be given before the medication's start date.",
+	'error.doseInFuture': "A dose can't be given in the future.",
 	'error.doseNotFound': 'Dose not found.',
 	'error.invalidMedicationStatus': 'status must be "active" or "all".',
 	'error.mustBeOnShiftToLogDose': 'You must be on shift to log medication doses.',
