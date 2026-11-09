@@ -1241,6 +1241,13 @@ const messages = {
 	'email.reminder.footer':
 		'You are receiving this because reminder email notifications are enabled in your EinVault settings.',
 
+	// Email: reminder heads-up
+	'email.reminderUpcoming.subjectToday': 'Coming up today: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Coming up tomorrow: {title}',
+	'email.reminderUpcoming.subjectDays': 'Coming up in {days} days: {title}',
+	'email.reminderUpcoming.body': '{companion} has a reminder coming up: {title}',
+	'email.reminderUpcoming.dueLine': 'Due: {due}',
+
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Shift starting soon: {caretaker}',
 	'email.shift.endSubject': 'Shift ending soon: {caretaker}',

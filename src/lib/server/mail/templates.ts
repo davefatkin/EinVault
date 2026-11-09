@@ -2,6 +2,7 @@ import { t, type Locale } from '#lib/i18n/index.js';
 import type { MailMessage } from '#lib/server/mail/index.js';
 import type { Severity } from '#lib/incidents.js';
 import { celebrationLines, type Celebration } from '#lib/celebrations.js';
+import { daysUntil } from '#lib/reminderLeadTimes.js';
 
 // displayName/username are user-controlled; escape anything interpolated into
 // the HTML body so a crafted name cannot inject markup into the email.
@@ -73,19 +74,27 @@ export function formatWhen(locale: Locale, when: Date): string {
 	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(when);
 }
 
-export function buildReminderEmail(
+type ReminderMailInput = { title: string; description: string | null; dueAt: Date };
+
+/** Shared body of the due and heads-up reminder emails; only the copy differs. */
+function reminderMessage(
 	locale: Locale,
 	user: { displayName: string; email: string },
-	reminder: { title: string; description: string | null; dueAt: Date },
+	reminder: ReminderMailInput,
 	companionName: string,
-	link: string | null
+	link: string | null,
+	copy: {
+		subject: string;
+		bodyKey: 'email.reminder.body' | 'email.reminderUpcoming.body';
+		dueLineKey: 'email.reminder.dueLine' | 'email.reminderUpcoming.dueLine';
+	}
 ): MailMessage {
 	const greeting = t(locale, 'email.reminder.greeting', { name: user.displayName });
-	const body = t(locale, 'email.reminder.body', {
+	const body = t(locale, copy.bodyKey, {
 		companion: companionName,
 		title: reminder.title
 	});
-	const dueLine = t(locale, 'email.reminder.dueLine', { due: formatWhen(locale, reminder.dueAt) });
+	const dueLine = t(locale, copy.dueLineKey, { due: formatWhen(locale, reminder.dueAt) });
 	const cta = t(locale, 'email.reminder.cta');
 	const footer = t(locale, 'email.reminder.footer');
 
@@ -106,7 +115,7 @@ export function buildReminderEmail(
 <html>
 	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
 		<p>${tHtml(locale, 'email.reminder.greeting', { name: user.displayName })}</p>
-		<p>${tHtml(locale, 'email.reminder.body', { companion: companionName, title: reminder.title })}</p>${descriptionHtml}
+		<p>${tHtml(locale, copy.bodyKey, { companion: companionName, title: reminder.title })}</p>${descriptionHtml}
 		<p><strong>${escapeHtml(dueLine)}</strong></p>${ctaHtml}
 		<p style="font-size: 12px; color: #666;">${escapeHtml(footer)}</p>
 	</body>
@@ -114,10 +123,56 @@ export function buildReminderEmail(
 
 	return {
 		to: user.email,
-		subject: t(locale, 'email.reminder.subject', { title: reminder.title }),
+		subject: copy.subject,
 		text: textParts.join('\n\n'),
 		html
 	};
+}
+
+export function buildReminderEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	reminder: ReminderMailInput,
+	companionName: string,
+	link: string | null
+): MailMessage {
+	return reminderMessage(locale, user, reminder, companionName, link, {
+		subject: t(locale, 'email.reminder.subject', { title: reminder.title }),
+		bodyKey: 'email.reminder.body',
+		dueLineKey: 'email.reminder.dueLine'
+	});
+}
+
+/**
+ * Heads-up subject and ntfy title, worded from the local calendar days left
+ * at delivery (not the lead value), so a late delivery never says the wrong
+ * thing. Callers only send before the due time, so the count is never negative.
+ */
+export function reminderUpcomingSubject(
+	locale: Locale,
+	title: string,
+	dueAt: Date,
+	now: Date
+): string {
+	const days = daysUntil(dueAt, now);
+	if (days <= 0) return t(locale, 'email.reminderUpcoming.subjectToday', { title });
+	if (days === 1) return t(locale, 'email.reminderUpcoming.subjectTomorrow', { title });
+	return t(locale, 'email.reminderUpcoming.subjectDays', { title, days });
+}
+
+export function buildReminderUpcomingEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	reminder: ReminderMailInput,
+	companionName: string,
+	link: string | null,
+	now: Date
+): MailMessage {
+	return reminderMessage(locale, user, reminder, companionName, link, {
+		subject: reminderUpcomingSubject(locale, reminder.title, reminder.dueAt, now),
+		bodyKey: 'email.reminderUpcoming.body',
+		dueLineKey: 'email.reminderUpcoming.dueLine'
+	});
 }
 
 export function buildTestEmail(

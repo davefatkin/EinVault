@@ -1267,6 +1267,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.footer':
 		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
+	'email.reminderUpcoming.subjectToday': 'Heute fällig: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Morgen fällig: {title}',
+	'email.reminderUpcoming.subjectDays': 'In {days} Tagen fällig: {title}',
+	'email.reminderUpcoming.body': 'Für {companion} steht bald eine Erinnerung an: {title}',
+	'email.reminderUpcoming.dueLine': 'Fällig: {due}',
+
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Schicht beginnt bald: {caretaker}',
 	'email.shift.endSubject': 'Schicht endet bald: {caretaker}',

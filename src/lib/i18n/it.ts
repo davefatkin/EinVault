@@ -1261,6 +1261,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.footer':
 		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di EinVault.',
 
+	'email.reminderUpcoming.subjectToday': 'In scadenza oggi: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'In scadenza domani: {title}',
+	'email.reminderUpcoming.subjectDays': 'In scadenza tra {days} giorni: {title}',
+	'email.reminderUpcoming.body': '{companion} ha un promemoria in arrivo: {title}',
+	'email.reminderUpcoming.dueLine': 'Scadenza: {due}',
+
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno in arrivo: {caretaker}',
 	'email.shift.endSubject': 'Turno in conclusione: {caretaker}',

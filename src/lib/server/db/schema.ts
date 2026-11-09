@@ -152,6 +152,7 @@ export const notificationOutbox = sqliteTable(
 	{
 		id: text('id').primaryKey(),
 		// reminder: 'reminder:{reminderId}:{dueAtEpochSeconds}:{userId}:{channel}'
+		// heads-up: 'reminder:{reminderId}:{dueAtEpochSeconds}:lead{days}:{userId}:{channel}'
 		// shift:    'shift:{shiftId}:{start|end}:{boundaryEpochSeconds}:{userId}:{channel}'
 		// celebration: 'celebration:{companionId}:{YYYY-MM-DD}:{userId}:{channel}'
 		// One row per occurrence per recipient per channel.

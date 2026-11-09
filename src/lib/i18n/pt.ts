@@ -1261,6 +1261,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.footer':
 		'Você está recebendo este e-mail porque as notificações de lembretes estão ativadas nas suas configurações do EinVault.',
 
+	'email.reminderUpcoming.subjectToday': 'Vence hoje: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Vence amanhã: {title}',
+	'email.reminderUpcoming.subjectDays': 'Vence em {days} dias: {title}',
+	'email.reminderUpcoming.body': '{companion} tem um lembrete próximo: {title}',
+	'email.reminderUpcoming.dueLine': 'Vence: {due}',
+
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno começando em breve: {caretaker}',
 	'email.shift.endSubject': 'Turno terminando em breve: {caretaker}',

@@ -12,6 +12,12 @@ export const MAX_ATTEMPTS = 3;
 // Sent/skipped/failed rows are kept this long for operator inspection.
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
+// First-deploy guard: reminders overdue longer than this never produce a
+// notification. Without it, enabling the feature on an existing install would
+// email every historically overdue reminder at once. Heads-ups use the same
+// window for lead times that passed while the app was down.
+export const CATCH_UP_MS = 24 * 60 * 60 * 1000;
+
 export type OutboxChannel = 'email' | 'ntfy' | 'apprise';
 
 export function reminderDedupeKey(
@@ -21,6 +27,18 @@ export function reminderDedupeKey(
 	channel: OutboxChannel
 ): string {
 	return `reminder:${reminderId}:${Math.floor(dueAt.getTime() / 1000)}:${userId}:${channel}`;
+}
+
+// Keyed by occurrence and lead, so each lead fires once per occurrence and a
+// rescheduled reminder gets fresh heads-ups.
+export function reminderUpcomingDedupeKey(
+	reminderId: string,
+	dueAt: Date,
+	leadDays: number,
+	userId: string,
+	channel: OutboxChannel
+): string {
+	return `reminder:${reminderId}:${Math.floor(dueAt.getTime() / 1000)}:lead${leadDays}:${userId}:${channel}`;
 }
 
 export function shiftDedupeKey(
