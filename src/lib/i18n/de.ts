@@ -121,6 +121,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.nameRequired': 'Name ist erforderlich.',
 	'error.titleRequired': 'Titel ist erforderlich.',
 	'error.titleAndTypeRequired': 'Titel und ein gültiger Typ sind erforderlich.',
+	'error.updateBodyRequired': 'Beschreibe, was sich geändert hat.',
+	'error.incidentTypeChange':
+		'Vorfälle können nicht in einen anderen Typ geändert oder aus einem anderen Typ erstellt werden.',
 	'error.typeRequired': 'Typ ist erforderlich.',
 	'error.invalidSubtype': 'Ungültiger Untertyp für diese Aktivität',
 	'error.typeNotAllowedForSpecies': 'Diese Aktivität ist für dieses Tier nicht verfügbar.',

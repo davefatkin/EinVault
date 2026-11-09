@@ -118,6 +118,9 @@ const messages = {
 	'error.nameRequired': 'Name is required.',
 	'error.titleRequired': 'Title is required.',
 	'error.titleAndTypeRequired': 'Title and a valid type are required.',
+	'error.updateBodyRequired': 'Write what changed.',
+	'error.incidentTypeChange':
+		"Incidents can't be changed to another type, or created from another type.",
 	'error.typeRequired': 'Type is required.',
 	'error.invalidSubtype': 'Invalid subtype for this activity type',
 	'error.typeNotAllowedForSpecies': "That activity isn't available for this companion.",

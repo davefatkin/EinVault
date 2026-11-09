@@ -81,9 +81,11 @@ export const actions: Actions = {
 				eq(schema.healthEvents.id, id),
 				eq(schema.healthEvents.companionId, params.companionId)
 			),
-			columns: { id: true }
+			columns: { id: true, type: true }
 		});
 		if (!existing) return fail(404, { healthError: t(locals.locale, 'error.eventNotFound') });
+		if (existing.type === 'incident' || parsed.value.type === 'incident')
+			return fail(400, { healthError: t(locals.locale, 'error.incidentTypeChange') });
 
 		await db.update(schema.healthEvents).set(parsed.value).where(eq(schema.healthEvents.id, id));
 
@@ -105,7 +107,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { healthError: t(locals.locale, 'error.eventNotFound') });
 
-		deleteHealthEvent(params.companionId, id);
+		await deleteHealthEvent(params.companionId, id);
 		return { deleteHealthSuccess: true };
 	},
 

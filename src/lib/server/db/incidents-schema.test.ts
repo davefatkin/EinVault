@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 
 const C = 'c-inc';
 const U = 'u-inc';
@@ -77,13 +78,22 @@ describe('incident schema', () => {
 			title: 'Visit',
 			occurredAt: new Date('2026-05-03T10:00:00Z')
 		});
-		await makeUpdate('up-2', 'i-2');
+		await makeUpdate('up-2', 'i-2', 'quokkaburrow');
+		const [upRow] = await db
+			.select()
+			.from(schema.healthEventUpdates)
+			.where(eq(schema.healthEventUpdates.id, 'up-2'));
+		const searchDate = db.all<{ event_date: string }>(
+			sql`SELECT event_date FROM search_index WHERE entity_type = 'incident_update' AND entity_id = 'up-2'`
+		);
+		expect(searchDate).toEqual([{ event_date: localDateISO(upRow.occurredAt) }]);
 		await db.insert(schema.healthEventLinks).values({ incidentId: 'i-2', healthEventId: 'e-2' });
 		await db.insert(schema.media).values([
 			{ id: 'm-2a', healthEventId: 'i-2', ...base },
 			{ id: 'm-2b', healthEventId: 'i-2', updateId: 'up-2', ...base }
 		]);
 		await db.delete(schema.healthEvents).where(eq(schema.healthEvents.id, 'i-2'));
+		expect(searchRows('quokkaburrow')).toHaveLength(0);
 		expect(
 			await db
 				.select()

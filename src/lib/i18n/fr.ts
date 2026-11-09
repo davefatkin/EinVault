@@ -121,6 +121,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.nameRequired': 'Le nom est requis.',
 	'error.titleRequired': 'Le titre est requis.',
 	'error.titleAndTypeRequired': 'Le titre et un type valide sont requis.',
+	'error.updateBodyRequired': 'Décrivez ce qui a changé.',
+	'error.incidentTypeChange':
+		"Un incident ne peut pas être changé en un autre type, ni créé à partir d'un autre type.",
 	'error.typeRequired': 'Le type est requis.',
 	'error.invalidSubtype': 'Sous-type invalide pour cette activité',
 	'error.typeNotAllowedForSpecies': "Cette activité n'est pas disponible pour ce compagnon.",

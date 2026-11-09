@@ -1123,6 +1123,7 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// it; delete explicitly (this cascades to quick_log_companions).
 		tx.delete(schema.quickLogs).run();
 		// companions cascade to: journalEntries -> media, healthEvents -> media,
+		// healthEventUpdates (-> media) and healthEventLinks,
 		// weightEntries, dailyEvents, reminders, notes -> noteTags, media
 		tx.delete(schema.companions).run();
 		// Shift runs past the 24h reseed interval so the caretaker stays on-shift

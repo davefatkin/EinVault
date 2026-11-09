@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
-import { createHealthEvent } from './health';
+import { createHealthEvent, parseHealthEventForm } from './health';
 
 describe('createHealthEvent', () => {
 	it('inserts a health event and returns its id', async () => {
@@ -36,5 +36,20 @@ describe('createHealthEvent', () => {
 		expect(row?.title).toBe('Checkup');
 		expect(row?.occurredAt.getUTCFullYear()).toBe(2019);
 		expect(row?.loggedBy).toBe(u.id);
+	});
+});
+
+describe('parseHealthEventForm', () => {
+	const form = (type: string) => {
+		const fd = new FormData();
+		fd.set('title', 'Limping');
+		fd.set('type', type);
+		return fd;
+	};
+	it('accepts a regular type', () => {
+		expect(parseHealthEventForm(form('vet_visit'), 'en').ok).toBe(true);
+	});
+	it('rejects type incident', () => {
+		expect(parseHealthEventForm(form('incident'), 'en').ok).toBe(false);
 	});
 });

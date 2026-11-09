@@ -120,6 +120,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.nameRequired': 'Il nome è obbligatorio.',
 	'error.titleRequired': 'Il titolo è obbligatorio.',
 	'error.titleAndTypeRequired': 'Titolo e tipo valido sono obbligatori.',
+	'error.updateBodyRequired': 'Scrivi cosa è cambiato.',
+	'error.incidentTypeChange':
+		'Gli incidenti non possono essere cambiati in un altro tipo, né creati da un altro tipo.',
 	'error.typeRequired': 'Il tipo è obbligatorio.',
 	'error.invalidSubtype': 'Sottotipo non valido per questa attività',
 	'error.typeNotAllowedForSpecies': 'Questa attività non è disponibile per questo compagno.',
