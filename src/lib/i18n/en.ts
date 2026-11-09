@@ -318,11 +318,11 @@ const messages = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Default recurrence updated.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		'Get emails from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get emails from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Get push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get push notifications from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionBoth':
-		'Get emails and push notifications from EinVault. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get emails and push notifications from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
@@ -332,7 +332,7 @@ const messages = {
 		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
-		'Pushes cover due reminders, shift alerts, and celebrations (birthdays and homecoming days) for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe. Leave empty to disable pushes.',
+		'Pushes cover due reminders, shift alerts, celebrations (birthdays and homecoming days), and incidents a caretaker logs or updates, for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe, and incident pushes include the incident title and severity. Leave empty to disable pushes.',
 	'page.settings.securityCard': 'Security',
 	'page.settings.twofaOn': 'Two-factor authentication is on.',
 	'page.settings.twofaOff': 'Add a second step at sign-in with an authenticator app.',

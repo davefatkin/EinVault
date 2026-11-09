@@ -333,11 +333,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Standard-Wiederholung aktualisiert.',
 	'page.settings.notificationsCard': 'Benachrichtigungen',
 	'page.settings.notificationsDescription':
-		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte E-Mails von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Erhalte Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte Push-Benachrichtigungen von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionBoth':
-		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
@@ -349,7 +349,7 @@ const messages: Record<keyof Messages, string> = {
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten umfassen fällige Erinnerungen, Schichtmeldungen und Feiern (Geburtstage und Ankunftstage) für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen, Schichtmeldungen, Feiern (Geburtstage und Ankunftstage) und Vorfälle, die eine Betreuungsperson erfasst oder aktualisiert, für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren, und Vorfall-Pushes enthalten Titel und Schweregrad des Vorfalls. Leer lassen, um Push zu deaktivieren.',
 	'page.settings.securityCard': 'Sicherheit',
 	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
 	'page.settings.twofaOff':

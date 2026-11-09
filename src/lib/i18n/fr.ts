@@ -330,11 +330,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Récurrence par défaut mise à jour.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		"Recevez des e-mails d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des e-mails d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionNtfy':
-		"Recevez des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des notifications push d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionBoth':
-		"Recevez des e-mails et des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des e-mails et des notifications push d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
@@ -346,7 +346,7 @@ const messages: Record<keyof Messages, string> = {
 		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications par e-mail.',
 	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
 	'page.settings.ntfyTopicHint':
-		"Les notifications push couvrent les rappels dus, les alertes de garde et les célébrations (anniversaires et jours d'arrivée à la maison) pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner. Laissez vide pour désactiver les push.",
+		"Les notifications push couvrent les rappels dus, les alertes de garde, les célébrations (anniversaires et jours d'arrivée à la maison) et les incidents signalés ou mis à jour par un soignant, pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner, et les push d'incident contiennent le titre et la gravité de l'incident. Laissez vide pour désactiver les push.",
 	'page.settings.securityCard': 'Sécurité',
 	'page.settings.twofaOn': "L'authentification à deux facteurs est activée.",
 	'page.settings.twofaOff':
