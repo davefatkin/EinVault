@@ -27,6 +27,7 @@ interface NotifyWorld {
 	server: AppServer;
 	smtp: SmtpSink;
 	ntfy: NtfyFake;
+	dbPath: string;
 }
 
 const test = base.extend<{ world: NotifyWorld }>({
@@ -60,7 +61,7 @@ const test = base.extend<{ world: NotifyWorld }>({
 			fs.rmSync(dir, { recursive: true, force: true });
 			throw err;
 		}
-		await use({ server, smtp, ntfy });
+		await use({ server, smtp, ntfy, dbPath });
 		// Teardown: server first, then fakes, then data dir.
 		await server.stop();
 		await smtp.stop();
@@ -231,8 +232,7 @@ function tomorrowPlusMinutes(minutes: number): string {
 // ---------------------------------------------------------------------------
 
 test('heads-up pushes before the due date, none without a lead time', async ({ world, page }) => {
-	// The lead time lands about two minutes after the reminder is created.
-	test.setTimeout(210_000);
+	test.setTimeout(60_000);
 	await login(page, world.server.baseURL, SEED.member.username);
 	await page.goto(world.server.baseURL + '/settings');
 	await saveNotificationSettings(page, world.server.baseURL, { ntfyTopic: 'e2e-topic-lead' });
@@ -255,12 +255,29 @@ test('heads-up pushes before the due date, none without a lead time', async ({ w
 		});
 	}
 
+	// datetime-local only has minute precision, so rather than wait for a real
+	// lead time, move both rows into the "armed before the lead, lead just
+	// passed" state. The UI path (chip -> notify_lead_days -> lead_armed_at) was
+	// exercised above.
+	const db = new Database(world.dbPath);
+	try {
+		const nowSec = Math.floor(Date.now() / 1000);
+		const res = db
+			.prepare('UPDATE reminders SET lead_armed_at = ?, due_at = ? WHERE title LIKE ?')
+			.run(nowSec - 3600, nowSec + 86_400 - 30, 'e2e-lead-%');
+		expect(res.changes).toBe(2);
+	} finally {
+		db.close();
+	}
+
 	const publish = await world.ntfy.waitForPublish(
 		(p) => p.topic === 'e2e-topic-lead' && (p.title ?? '').includes('e2e-lead-with'),
-		180_000
+		20_000
 	);
 	expect(publish.title).toMatch(/tomorrow/i);
 
+	// Sanity check only: the no-lead reminder is also ~1 day out, so it must not
+	// have produced a push by the time the lead one did.
 	expect(
 		world.ntfy.publishes.filter(
 			(p) => p.topic === 'e2e-topic-lead' && (p.title ?? '').includes('e2e-lead-without')
