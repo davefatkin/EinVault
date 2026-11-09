@@ -1108,6 +1108,7 @@ const messages = {
 	'error.tokenLimitReached': 'Token limit reached (max {max}). Revoke one first.',
 	'error.noteTooLong': 'Note is too long (max {max} characters).',
 	'error.invalidDateTime': 'Enter a valid date and time.',
+	'error.medicationEndBeforeStart': 'The end date cannot be before the start date.',
 	'error.fieldTooLong': 'Too long (max {max} characters).',
 	'error.noteTitleTooLong': 'Title is too long (max {max} characters).',
 	'error.noteTitleNewline': 'Title must be a single line.',

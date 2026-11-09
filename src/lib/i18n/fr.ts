@@ -1132,6 +1132,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.tokenLimitReached': 'Limite de jetons atteinte (max {max}). Révoquez-en un d’abord.',
 	'error.noteTooLong': 'La note est trop longue (max {max} caractères).',
 	'error.invalidDateTime': 'Saisissez une date et une heure valides.',
+	'error.medicationEndBeforeStart': 'La date de fin ne peut pas précéder la date de début.',
 	'error.fieldTooLong': 'Trop long ({max} caractères max.).',
 	'error.noteTitleTooLong': 'Le titre est trop long (max {max} caractères).',
 	'error.noteTitleNewline': 'Le titre doit tenir sur une seule ligne.',
