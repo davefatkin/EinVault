@@ -22,11 +22,9 @@
 
 	const offered = $derived(leadChipOptions(value, recurrence));
 
-	// A selection that is no longer shorter than the repeat period is dropped.
-	$effect(() => {
-		const kept = pruneLeadDays(value, recurrence);
-		if (kept.length !== value.length) value = kept;
-	});
+	// Leads that are too long for the current repeat period are hidden and not saved, but
+	// kept in `value` so they come back if the period grows again (e.g. while retyping it).
+	const effective = $derived(pruneLeadDays(value, recurrence));
 
 	function label(n: number): string {
 		if (n === 7 || n === 14) {
@@ -40,20 +38,20 @@
 	}
 
 	function toggle(n: number) {
-		value = value.includes(n) ? value.filter((v) => v !== n) : [...value, n];
+		value = effective.includes(n) ? effective.filter((v) => v !== n) : [...effective, n];
 	}
 
-	const full = $derived(value.length >= MAX_LEAD_TIMES);
+	const full = $derived(effective.length >= MAX_LEAD_TIMES);
 </script>
 
 <fieldset class="space-y-1.5">
 	<legend class="text-sm font-medium text-foreground"
 		>{t(locale, 'page.reminders.leadLabel')}</legend
 	>
-	<input type="hidden" {name} value={serializeLeadDays(value) ?? ''} />
+	<input type="hidden" {name} value={serializeLeadDays(effective) ?? ''} />
 	<div class="flex flex-wrap gap-2">
 		{#each offered as n (n)}
-			{@const active = value.includes(n)}
+			{@const active = effective.includes(n)}
 			<button
 				type="button"
 				aria-pressed={active}

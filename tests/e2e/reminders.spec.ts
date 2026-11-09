@@ -521,6 +521,31 @@ test.describe('reminders', () => {
 			await expect(card.getByText('Heads-up 7 days and 2 days before')).toHaveCount(0);
 		});
 
+		test('retyping the repeat interval keeps the selected heads-ups', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#title').fill('e2e-rem-lead-retype');
+			await asMember.locator('#dueAt').fill(tomorrow());
+			await asMember.locator('#add-isRecurring').check();
+			await asMember.locator('#add-recurrenceInterval').fill('30');
+			await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+			const chip = (n: string) => asMember.getByRole('button', { name: n, exact: true });
+			await chip('1 week').click();
+			await chip('2 days').click();
+			// Intermediate value 6 hides the 7-day chip; 60 brings it back still selected.
+			await asMember.locator('#add-recurrenceInterval').fill('6');
+			await expect(chip('1 week')).toHaveCount(0);
+			await asMember.locator('#add-recurrenceInterval').fill('60');
+			await expect(chip('1 week')).toHaveAttribute('aria-pressed', 'true');
+			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+			const card = activeSection(asMember)
+				.locator('> *')
+				.filter({ hasText: 'e2e-rem-lead-retype' });
+			await expect(card.getByText('Heads-up 7 days and 2 days before')).toBeVisible({
+				timeout: 8_000
+			});
+		});
+
 		test('weekly reminder hides heads-ups a week or longer', async ({ asMember }) => {
 			await asMember.goto(BASE);
 			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
