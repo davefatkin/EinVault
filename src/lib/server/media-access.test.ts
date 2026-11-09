@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
-import { resolveJournalMedia, resolveNoteMedia, type MediaViewer } from './media-access';
+import {
+	resolveHealthEventMedia,
+	resolveJournalMedia,
+	resolveNoteMedia,
+	type MediaViewer
+} from './media-access';
 
 const C1 = 'c-ma-1';
 const C2 = 'c-ma-2';
@@ -305,5 +310,127 @@ describe('resolveNoteMedia', () => {
 		expect(await statusOf(resolveNoteMedia(nseg(N_SHARED, 'nm-1.jpg'), MEMBER, 'en', true))).toBe(
 			404
 		);
+	});
+});
+
+describe('resolveHealthEventMedia', () => {
+	const HC = 'c-ma-h1';
+	const HEV = 'he-ma-open';
+	const HEV_DONE = 'he-ma-done';
+	const HEV_VET = 'he-ma-vet';
+	const HC_ARCH = 'c-ma-h2';
+	const HEV_ARCH = 'he-ma-arch';
+	const hseg = (ev: string, file: string, companionId = HC) => ['health', companionId, ev, file];
+	const resolve = (segs: string[], user: MediaViewer, poster = false) =>
+		resolveHealthEventMedia(segs, user, 'en', poster);
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: HC, name: 'Hx' },
+			{ id: HC_ARCH, name: 'Ha', isActive: false }
+		] as (typeof schema.companions.$inferInsert)[]);
+		await db.insert(schema.companionCaretakers).values([
+			{ companionId: HC, userId: CT_ASSIGNED.id },
+			{ companionId: HC_ARCH, userId: CT_ASSIGNED.id }
+		] as (typeof schema.companionCaretakers.$inferInsert)[]);
+		const ev = (id: string, companionId: string, type: string, resolvedAt: Date | null = null) => ({
+			id,
+			companionId,
+			type,
+			title: id,
+			occurredAt: new Date(),
+			resolvedAt
+		});
+		await db
+			.insert(schema.healthEvents)
+			.values([
+				ev(HEV, HC, 'incident'),
+				ev(HEV_DONE, HC, 'incident', new Date()),
+				ev(HEV_VET, HC, 'vet_visit'),
+				ev(HEV_ARCH, HC_ARCH, 'incident')
+			] as (typeof schema.healthEvents.$inferInsert)[]);
+		const m = (id: string, ev: string, companionId: string, storageKey: string | null = null) => ({
+			id,
+			healthEventId: ev,
+			filename: `${id}.jpg`,
+			provider: 'local',
+			storageKey: storageKey ?? `health/${companionId}/${ev}/${id}.jpg`,
+			mimeType: 'image/jpeg',
+			sizeBytes: 10
+		});
+		await db.insert(schema.media).values([
+			m('hm-open', HEV, HC),
+			{
+				...m('hm-vid', HEV, HC),
+				filename: 'hm-vid.mp4',
+				mediaType: 'video',
+				posterKey: `health/${HC}/${HEV}/hm-vid.poster.jpg`
+			},
+			m('hm-done', HEV_DONE, HC),
+			m('hm-vet', HEV_VET, HC),
+			m('hm-arch', HEV_ARCH, HC_ARCH)
+		] as (typeof schema.media.$inferInsert)[]);
+		// Null storage key (bypasses the typed helper's default): must 404, never fall back to the path.
+		await db.insert(schema.media).values({
+			id: 'hm-null',
+			healthEventId: HEV,
+			filename: 'hm-null.jpg',
+			provider: 'local',
+			storageKey: null,
+			mimeType: 'image/jpeg',
+			sizeBytes: 10
+		});
+	});
+
+	it('lets members and admins read an overview photo', async () => {
+		const r = await resolve(hseg(HEV, 'hm-open.jpg'), MEMBER);
+		expect(r).toMatchObject({ key: `health/${HC}/${HEV}/hm-open.jpg`, isPoster: false });
+		expect(await statusOf(resolve(hseg(HEV, 'hm-open.jpg'), ADMIN))).toBe('ok');
+	});
+
+	it('lets members read resolved incident and archived companion media', async () => {
+		expect(await statusOf(resolve(hseg(HEV_DONE, 'hm-done.jpg'), MEMBER))).toBe('ok');
+		expect(await statusOf(resolve(hseg(HEV_ARCH, 'hm-arch.jpg', HC_ARCH), MEMBER))).toBe('ok');
+	});
+
+	it('404s when the URL companion does not match the incident', async () => {
+		expect(await statusOf(resolve(hseg(HEV, 'hm-open.jpg', C1), MEMBER))).toBe(404);
+	});
+
+	it('404s for a wrong filename, wrong segment count and non-health media', async () => {
+		expect(await statusOf(resolve(hseg(HEV, 'missing.jpg'), MEMBER))).toBe(404);
+		expect(await statusOf(resolve(['health', HC, HEV], MEMBER))).toBe(404);
+		expect(await statusOf(resolve(hseg(HEV, 'nm-cross.jpg'), MEMBER))).toBe(404);
+	});
+
+	it('serves the poster only from the row', async () => {
+		const r = await resolve(hseg(HEV, 'hm-vid.mp4'), MEMBER, true);
+		expect(r).toMatchObject({ key: `health/${HC}/${HEV}/hm-vid.poster.jpg`, isPoster: true });
+		expect(await statusOf(resolve(hseg(HEV, 'hm-open.jpg'), MEMBER, true))).toBe(404);
+	});
+
+	it('lets an assigned caretaker read media of an open incident', async () => {
+		expect(await statusOf(resolve(hseg(HEV, 'hm-open.jpg'), CT_ASSIGNED))).toBe('ok');
+	});
+
+	it('403s an unassigned caretaker', async () => {
+		expect(await statusOf(resolve(hseg(HEV, 'hm-open.jpg'), CT_OTHER))).toBe(403);
+	});
+
+	it('404s a caretaker on a resolved incident', async () => {
+		expect(await statusOf(resolve(hseg(HEV_DONE, 'hm-done.jpg'), CT_ASSIGNED))).toBe(404);
+	});
+
+	it('404s a caretaker on an archived companion', async () => {
+		expect(await statusOf(resolve(hseg(HEV_ARCH, 'hm-arch.jpg', HC_ARCH), CT_ASSIGNED))).toBe(404);
+	});
+
+	it('404s a caretaker on non-incident health event media', async () => {
+		expect(await statusOf(resolve(hseg(HEV_VET, 'hm-vet.jpg'), CT_ASSIGNED))).toBe(404);
+	});
+
+	it('404s a row with a null storageKey instead of using the URL path', async () => {
+		expect(await statusOf(resolve(hseg(HEV, 'hm-null.jpg'), MEMBER))).toBe(404);
+		expect(await statusOf(resolve(hseg(HEV, 'hm-null.jpg'), CT_ASSIGNED))).toBe(404);
 	});
 });

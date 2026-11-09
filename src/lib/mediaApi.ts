@@ -4,6 +4,7 @@
 // method like `api.urlFor` can be passed around on its own.
 import { t, type Locale } from '#lib/i18n/index.js';
 import {
+	incidentMediaUrl,
 	journalMediaUrl,
 	noteMediaUrl,
 	toMediaItem,
@@ -134,5 +135,43 @@ export function noteMediaApi(companionId: string, noteId: string, locale: Locale
 		},
 		urlFor: (item) => noteMediaUrl(companionId, noteId, item),
 		capMessage: (max) => t(locale, 'error.maxNoteMediaExceeded', { max })
+	};
+}
+
+// Incident overview (updateId null) or one update's photos. Immich import is
+// not offered here; callers pass immichEnabled={false}.
+export function incidentMediaApi(
+	companionId: string,
+	incidentId: string,
+	updateId: string | null,
+	locale: Locale
+): MediaApi {
+	const base = `/api/companions/${companionId}/incidents/${incidentId}/media`;
+	const failed = t(locale, 'media.uploadFailed');
+	const itemUrl = (id: string) => `${base}?mediaId=${encodeURIComponent(id)}`;
+	return {
+		upload: async (file) => {
+			const fd = new FormData();
+			fd.set('file', file);
+			if (updateId) fd.set('updateId', updateId);
+			const res = await request(base, { method: 'POST', body: fd }, failed);
+			return toMediaItem((await res.json()) as MediaItemSource);
+		},
+		remove: async (id) => {
+			await request(itemUrl(id), { method: 'DELETE' }, failed);
+		},
+		setCaption: async (id, caption) => {
+			await request(itemUrl(id), jsonInit('PATCH', { caption }), failed);
+		},
+		importImmich: async () => {
+			throw new Error('Immich import is not available for incidents');
+		},
+		status: async () => {
+			const res = await request(base, undefined, failed);
+			const body = (await res.json()) as { media: MediaStatus[] };
+			return body.media.map(toStatus);
+		},
+		urlFor: (item) => incidentMediaUrl(companionId, incidentId, item),
+		capMessage: (max) => t(locale, 'error.maxIncidentMediaExceeded', { max })
 	};
 }

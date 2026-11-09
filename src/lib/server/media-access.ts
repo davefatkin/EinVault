@@ -129,3 +129,47 @@ export async function resolveNoteMedia(
 
 	return pickObject(item, segments.join('/'), wantPoster, locale);
 }
+
+// URL shape: health/{companionId}/{incidentId}/{filename}
+// Only incident media exists under this prefix. Members and admins read any of
+// it. Caretakers: unassigned is 403; an archived companion, a non-incident
+// health event or a resolved incident is 404. Shift is not checked (matches
+// note and journal media). Health media always has a storage key, so a null
+// key is 404 and never falls back to the URL path.
+export async function resolveHealthEventMedia(
+	segments: string[],
+	user: MediaViewer,
+	locale: Locale,
+	wantPoster: boolean
+): Promise<ResolvedMedia> {
+	if (segments.length !== 4) notFound(locale);
+	const [, urlCompanionId, urlEventId, filename] = segments;
+
+	const item = await db.query.media.findFirst({
+		where: and(eq(schema.media.healthEventId, urlEventId), eq(schema.media.filename, filename)),
+		with: {
+			healthEvent: { columns: { companionId: true, type: true, resolvedAt: true } }
+		}
+	});
+	if (!item || !item.healthEvent || item.healthEvent.companionId !== urlCompanionId) {
+		notFound(locale);
+	}
+
+	if (user.role === 'caretaker') {
+		if (!(await isAssigned(urlCompanionId, user.id))) error(403, t(locale, 'error.forbidden'));
+		const companion = await db.query.companions.findFirst({
+			where: eq(schema.companions.id, urlCompanionId),
+			columns: { isActive: true }
+		});
+		if (
+			!companion?.isActive ||
+			item.healthEvent.type !== 'incident' ||
+			item.healthEvent.resolvedAt
+		) {
+			notFound(locale);
+		}
+	}
+
+	if (!item.storageKey) notFound(locale);
+	return pickObject(item, segments.join('/'), wantPoster, locale);
+}

@@ -219,6 +219,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidGifFile': 'Ungültige GIF-Datei',
 	'error.maxMediaExceeded': 'Maximal {max} Fotos oder Videos pro Tag',
 	'error.maxNoteMediaExceeded': 'Maximal {max} Fotos oder Videos pro Notiz',
+	'error.maxIncidentMediaExceeded':
+		'Hier können bis zu {max} Fotos oder Videos hinzugefügt werden.',
 	'error.requestBodyTooLarge': 'Anfrage zu groß',
 	'error.maxDocumentsExceeded': 'Dokumentlimit erreicht (max. {max} pro Begleiter)',
 
