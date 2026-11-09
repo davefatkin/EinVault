@@ -1266,6 +1266,13 @@ test.describe('api tokens', () => {
 			const allMeds = (await all.json()).medications;
 			expect(allMeds.find((m: { id: string }) => m.id === ended).active).toBe(false);
 
+			// Write scope gets the PII-free view: no name of who gave the last dose.
+			expect(
+				allMeds.every(
+					(m: { lastGiven: { by: unknown } | null }) => !m.lastGiven || m.lastGiven.by === null
+				)
+			).toBe(true);
+
 			const bad = await asMember.request.get(`${base}/api/medications?status=nope`, { headers });
 			expect(bad.status()).toBe(400);
 			expect((await bad.json()).code).toBe('invalidStatus');
@@ -1294,6 +1301,33 @@ test.describe('api tokens', () => {
 			});
 			expect(unknown.status()).toBe(404);
 
+			// Strict body: unknown field and array body are invalidBody; empty/{} still log.
+			const unknownField = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenat: new Date().toISOString() }
+			});
+			expect(unknownField.status()).toBe(400);
+			expect((await unknownField.json()).code).toBe('invalidBody');
+			const arrayBody = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: []
+			});
+			expect(arrayBody.status()).toBe(400);
+			const tooLong = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { note: 'x'.repeat(20_001) }
+			});
+			expect(tooLong.status()).toBe(400);
+			expect((await tooLong.json()).code).toBe('noteTooLong');
+			expect(dosesFor(app.dataDir, med)).toHaveLength(1);
+
+			// Bad status is a 400 even for an inaccessible companion.
+			const badStatus = await asMember.request.get(
+				`${base}/api/medications?companionId=nope&status=nope`,
+				{ headers }
+			);
+			expect(badStatus.status()).toBe(400);
+
 			// Bad givenAt is a stable 400.
 			const badAt = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
 				headers,
@@ -1314,6 +1348,23 @@ test.describe('api tokens', () => {
 			});
 			expect((await second.json()).doseId).toBe((await first.json()).doseId);
 			expect(dosesFor(app.dataDir, med)).toHaveLength(2);
+
+			// A body-less POST (like a smart button) still logs a dose.
+			const bodyless = await bearerCall('POST', `${base}/api/medications/${med}/doses`, {
+				headers
+			});
+			expect(bodyless.status()).toBe(201);
+			expect(dosesFor(app.dataDir, med)).toHaveLength(3);
+
+			// lastGiven exists now; write scope still hides who gave it.
+			const after = await asMember.request.get(`${base}/api/medications?companionId=${EIN}`, {
+				headers
+			});
+			const lastGiven = (await after.json()).medications.find(
+				(m: { id: string }) => m.id === med
+			).lastGiven;
+			expect(lastGiven.at).toBeTruthy();
+			expect(lastGiven.by).toBeNull();
 
 			// A full-scope token sees the deprecated alias as markdown; write-scope has none.
 			const fullRaw = await createToken(asMember, 'Med full bot');

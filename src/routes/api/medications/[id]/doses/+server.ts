@@ -9,6 +9,7 @@ import { authorizeCompanions, listAllowedCompanions } from '#lib/server/companio
 import { logDose } from '#lib/server/medications.js';
 import { MAX_NOTE_LEN } from '#lib/server/env.js';
 import { parseLoggedAt } from '#lib/server/validation.js';
+import { MedicationDoseRequest } from '#lib/server/openapi/schemas.js';
 
 // POST /api/medications/{id}/doses: record that a dose was given. Body is
 // optional: { givenAt?, note? }. Completes the due linked reminder occurrence
@@ -37,23 +38,33 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 		throwCareError(resolved.code, locale);
 	}
 
-	const raw = await event.request.json().catch(() => null);
-	const body = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-	if (raw !== null && typeof raw !== 'object')
-		error(400, t(locale, 'error.invalidRequestBody'), { code: 'invalidBody' });
+	// Body is optional: an empty body is {}. Anything else must be a JSON object
+	// matching the strict schema (unknown fields and arrays are invalidBody).
+	const text = (await event.request.text()).trim();
+	let raw: unknown = null;
+	if (text) {
+		try {
+			raw = JSON.parse(text);
+		} catch {
+			error(400, t(locale, 'error.invalidRequestBody'), { code: 'invalidBody' });
+		}
+	}
+	const parsed = MedicationDoseRequest.strict().safeParse(raw ?? {});
+	if (!parsed.success) {
+		const issue = parsed.error.issues[0];
+		if (issue?.path[0] === 'note' && issue.code === 'too_big')
+			error(400, t(locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }), { code: 'noteTooLong' });
+		const where = issue?.path.join('.') || 'body';
+		error(400, `${where}: ${issue?.message ?? t(locale, 'error.invalidRequestBody')}`, {
+			code: 'invalidBody'
+		});
+	}
 	let givenAt: Date | undefined;
-	if (body.givenAt !== undefined && body.givenAt !== null) {
-		givenAt = parseLoggedAt(body.givenAt) ?? undefined;
+	if (parsed.data.givenAt !== undefined) {
+		givenAt = parseLoggedAt(parsed.data.givenAt) ?? undefined;
 		if (!givenAt) error(400, t(locale, 'error.invalidDateTime'), { code: 'invalidGivenAt' });
 	}
-	let note: string | undefined;
-	if (body.note !== undefined && body.note !== null) {
-		if (typeof body.note !== 'string')
-			error(400, t(locale, 'error.invalidRequestBody'), { code: 'invalidBody' });
-		if (body.note.length > MAX_NOTE_LEN)
-			error(400, t(locale, 'error.noteTooLong', { max: MAX_NOTE_LEN }), { code: 'noteTooLong' });
-		note = body.note.trim() || undefined;
-	}
+	const note = parsed.data.note?.trim() || undefined;
 
 	return withIdempotency(
 		{ request: event.request, tokenId, endpoint: `medications/${id}/doses`, body: raw },

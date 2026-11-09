@@ -245,6 +245,25 @@ describe('medication serializers', () => {
 		).toBeNull();
 	});
 
+	it('omitPeople hides who gave the last dose', () => {
+		const at = new Date();
+		const m = {
+			id: 'm',
+			companionId: 'c',
+			name: 'P',
+			dose: null,
+			instructions: null,
+			startedOn: '2026-01-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: null,
+			lastGiven: { at, by: { displayName: 'Jet' } },
+			schedule: []
+		} as never;
+		expect(toApiMedication(m, { omitPeople: true }).lastGiven).toEqual({ at, by: null });
+		expect(toApiMedication(m).lastGiven).toEqual({ at, by: 'Jet' });
+	});
+
 	it('companion alias comes from the argument, not the cleared column', () => {
 		expect(toApiCompanion(row, null, '- Carprofen, 1 tablet').medicationSchedule).toBe(
 			'- Carprofen, 1 tablet'

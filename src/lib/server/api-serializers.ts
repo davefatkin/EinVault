@@ -254,7 +254,9 @@ export function toApiNote(row: NoteWithTags) {
 
 // Public shape for a medication (GET /api/medications). The recurrence-engine
 // details of linked reminders stay internal; nextDueAt is enough for a device.
-export function toApiMedication(m: MedicationSummary) {
+// `omitPeople` (write-scope tokens) drops who gave the last dose, like the
+// minimal companion shape drops PII.
+export function toApiMedication(m: MedicationSummary, opts: { omitPeople?: boolean } = {}) {
 	return {
 		id: m.id,
 		companionId: m.companionId,
@@ -265,6 +267,8 @@ export function toApiMedication(m: MedicationSummary) {
 		endedOn: m.endedOn,
 		active: m.active,
 		nextDueAt: m.nextDueAt,
-		lastGiven: m.lastGiven ? { at: m.lastGiven.at, by: m.lastGiven.by?.displayName ?? null } : null
+		lastGiven: m.lastGiven
+			? { at: m.lastGiven.at, by: opts.omitPeople ? null : (m.lastGiven.by?.displayName ?? null) }
+			: null
 	};
 }

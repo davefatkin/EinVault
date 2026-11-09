@@ -12,7 +12,10 @@ import { toApiMedication } from '#lib/server/api-serializers.js';
 // every companion the token user may access. Caretakers only ever see active
 // medications, whatever status they ask for. Shift-independent, like the
 // companions list: reading grants no write capability.
-export const GET = apiRoute(async ({ event, user, locale }) => {
+export const GET = apiRoute(async ({ event, user, scope, locale }) => {
+	const status = event.url.searchParams.get('status');
+	if (status !== null && status !== 'active' && status !== 'all')
+		error(400, t(locale, 'error.invalidMedicationStatus'), { code: 'invalidStatus' });
 	const allowed = await listAllowedCompanions({ id: user.id, role: user.role });
 	const companionId = event.url.searchParams.get('companionId');
 	let ids = allowed;
@@ -20,11 +23,10 @@ export const GET = apiRoute(async ({ event, user, locale }) => {
 		if (!allowed.includes(companionId)) throwCareError('notAssigned', locale);
 		ids = [companionId];
 	}
-	const status = event.url.searchParams.get('status');
-	if (status !== null && status !== 'active' && status !== 'all')
-		error(400, t(locale, 'error.invalidMedicationStatus'), { code: 'invalidStatus' });
 	const activeOnly = status !== 'all' || user.role === 'caretaker';
 
 	const medications = await listMedicationSummaries(ids, { activeOnly });
-	return Response.json({ medications: medications.map(toApiMedication) });
+	return Response.json({
+		medications: medications.map((m) => toApiMedication(m, { omitPeople: scope === 'write' }))
+	});
 });
