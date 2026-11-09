@@ -371,10 +371,13 @@ test.describe('caretaker incidents', () => {
 
 			// A photo the member adds to the caretaker's update is not the
 			// caretaker's to delete, even on their own update.
-			const up = await asMember.request.post(mediaBase(EIN, id), {
-				headers: { Origin: app.server.baseURL },
-				multipart: { file: pngUpload('owner-added.png'), updateId }
-			});
+			const up = await asMember.request.post(
+				`${mediaBase(EIN, id)}?updateId=${encodeURIComponent(updateId)}`,
+				{
+					headers: { Origin: app.server.baseURL },
+					multipart: { file: pngUpload('owner-added.png') }
+				}
+			);
 			expect(up.status()).toBe(200);
 			const { id: mediaId } = await up.json();
 			const del = await asCaretaker.request.delete(
@@ -382,6 +385,15 @@ test.describe('caretaker incidents', () => {
 				{ headers: { Origin: app.server.baseURL } }
 			);
 			expect(del.status()).toBe(403);
+			// Nor can they delete the update and take the member's photo with it.
+			const delUpdate = await asCaretaker.request.post(
+				`/care/${EIN}/incidents/${id}?/deleteUpdate`,
+				{
+					headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+					form: { updateId }
+				}
+			);
+			expect(delUpdate.status()).toBe(403);
 		} finally {
 			if (id) await deleteIncidentViaUi(asMember, EIN, id);
 		}

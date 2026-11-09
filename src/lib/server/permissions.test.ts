@@ -408,6 +408,13 @@ describe('checkIncidentWrite', () => {
 		}
 	});
 
+	it('403 for a caretaker on any action outside the caretaker allowlist', async () => {
+		const future = 'archive' as unknown as IncidentWriteAction;
+		const r = await check(ctOn, 'inc-open', future);
+		expect(r).toMatchObject({ ok: false, status: 403, key: 'error.forbidden' });
+		expect(await outcome(mem, 'inc-open', future)).toBe('ok');
+	});
+
 	it('404 for a caretaker addUpdate on a resolved incident', async () => {
 		const r = await check(ctOn, 'inc-resolved', 'addUpdate');
 		expect(r).toMatchObject({ ok: false, status: 404, key: 'error.incidentNotFound' });

@@ -35,7 +35,13 @@ export const actions: Actions = {
 		if (!parsed.ok) return fail(400, { error: parsed.message });
 
 		const id = await createIncident(params.companionId, parsed.value, locals.user.id);
-		await enqueueIncidentAlert({ kind: 'incidentLogged', incidentId: id }, locals.user.id);
+		// The incident is saved either way: a failed enqueue must not turn into a
+		// 500 that invites a duplicate retry.
+		try {
+			await enqueueIncidentAlert({ kind: 'incidentLogged', incidentId: id }, locals.user.id);
+		} catch (err) {
+			console.error('[incidents] new incident alert enqueue failed:', err);
+		}
 		if (data.get('afterSave') !== 'client') redirect(303, careIncidentPath(params.companionId, id));
 		return { id };
 	}

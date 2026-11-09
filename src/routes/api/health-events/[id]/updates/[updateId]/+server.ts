@@ -53,7 +53,7 @@ export const PATCH = apiRouteZod(
 export const DELETE = apiRoute(async ({ event, user, scope, locale }) => {
 	requireNoteOwnerScope(scope, user, locale);
 	const incident = await loadAllowedIncident(event.params.id!, user, locale);
-	if (!(await deleteIncidentUpdate(incident.id, event.params.updateId!))) {
+	if ((await deleteIncidentUpdate(incident.id, event.params.updateId!)) !== 'deleted') {
 		throwUpdateNotFound(locale);
 	}
 	return new Response(null, { status: 204 });

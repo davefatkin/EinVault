@@ -34,15 +34,20 @@ export const formString = (data: FormData, name: string) => {
 	return typeof v === 'string' ? v : '';
 };
 
+// Caretakers never set an update's time, whatever the route asked for.
+const timeAllowed = (event: IncidentEvent, allowTime: boolean) =>
+	allowTime && event.locals.user?.role !== 'caretaker';
+
 /**
  * addUpdate, editUpdate and deleteUpdate. `allowTime` is false for caretakers,
  * whose updates are always "now" whatever the form posts.
  */
-export function incidentUpdateActions({ allowTime }: { allowTime: boolean }) {
+export function incidentUpdateActions(opts: { allowTime: boolean }) {
 	return {
 		addUpdate: async (event: IncidentEvent) => {
 			const g = await gateIncidentWrite(event, 'addUpdate');
 			if (g.fail) return g.fail;
+			const allowTime = timeAllowed(event, opts.allowTime);
 			const data = await event.request.formData();
 			const parsed = parseIncidentUpdateForm(data, event.locals.locale, { allowTime });
 			if (!parsed.ok) return fail(400, { error: parsed.message });
@@ -52,11 +57,18 @@ export function incidentUpdateActions({ allowTime }: { allowTime: boolean }) {
 				event.locals.user!.id
 			);
 			// Owners' own updates alert nobody; only a caretaker's reach the owners.
-			if (event.locals.user!.role === 'caretaker')
-				await enqueueIncidentAlert(
-					{ kind: 'incidentUpdated', incidentId: g.incident.id, updateId },
-					event.locals.user!.id
-				);
+			// The update is saved either way: a failed enqueue must not turn into a
+			// 500 that invites a duplicate retry.
+			if (event.locals.user!.role === 'caretaker') {
+				try {
+					await enqueueIncidentAlert(
+						{ kind: 'incidentUpdated', incidentId: g.incident.id, updateId },
+						event.locals.user!.id
+					);
+				} catch (err) {
+					console.error('[incidents] update alert enqueue failed:', err);
+				}
+			}
 			return { updateId };
 		},
 
@@ -65,6 +77,7 @@ export function incidentUpdateActions({ allowTime }: { allowTime: boolean }) {
 			const updateId = formString(data, 'updateId');
 			const g = await gateIncidentWrite(event, 'editUpdate', updateId);
 			if (g.fail) return g.fail;
+			const allowTime = timeAllowed(event, opts.allowTime);
 			const parsed = parseIncidentUpdateForm(data, event.locals.locale, { allowTime });
 			if (!parsed.ok) return fail(400, { error: parsed.message });
 			// Without allowTime the parsed time is "now"; an edit keeps the
@@ -81,7 +94,15 @@ export function incidentUpdateActions({ allowTime }: { allowTime: boolean }) {
 			const updateId = formString(data, 'updateId');
 			const g = await gateIncidentWrite(event, 'editUpdate', updateId);
 			if (g.fail) return g.fail;
-			if (!(await deleteIncidentUpdate(g.incident.id, updateId)))
+			// A caretaker's delete would cascade to photos an owner added to their
+			// update, so it is refused while any are there.
+			const user = event.locals.user!;
+			const outcome = await deleteIncidentUpdate(g.incident.id, updateId, {
+				onlyMediaOf: user.role === 'caretaker' ? user.id : undefined
+			});
+			if (outcome === 'othersMedia')
+				return fail(403, { error: t(event.locals.locale, 'error.forbidden') });
+			if (outcome === 'notFound')
 				return fail(404, { error: t(event.locals.locale, 'error.incidentNotFound') });
 			return { ok: true };
 		}

@@ -153,8 +153,9 @@ export function incidentMediaApi(
 		upload: async (file) => {
 			const fd = new FormData();
 			fd.set('file', file);
-			if (updateId) fd.set('updateId', updateId);
-			const res = await request(base, { method: 'POST', body: fd }, failed);
+			// The server gates on the update before it reads the body.
+			const target = updateId ? `${base}?updateId=${encodeURIComponent(updateId)}` : base;
+			const res = await request(target, { method: 'POST', body: fd }, failed);
 			return toMediaItem((await res.json()) as MediaItemSource);
 		},
 		remove: async (id) => {

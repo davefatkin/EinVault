@@ -38,13 +38,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	return Response.json({ media: await listIncidentMediaStatus(params.incidentId) });
 };
 
-export const POST: RequestHandler = async ({ request, params, locals }) => {
+// The update id rides in the query string (like ?mediaId= below) so the full
+// gate runs before the multipart body is read.
+export const POST: RequestHandler = async ({ url, request, params, locals }) => {
 	const { companionId, incidentId } = params;
-	// Don't parse a body for anonymous callers; the full gate runs once updateId is known.
-	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
-	const formData = await request.formData();
-	const rawUpdateId = formData.get('updateId');
-	const updateId = typeof rawUpdateId === 'string' && rawUpdateId !== '' ? rawUpdateId : null;
+	const updateId = url.searchParams.get('updateId') || null;
 	await assertCanWriteIncident(locals, companionId, incidentId, 'media', {
 		updateId: updateId ?? undefined
 	});
@@ -55,6 +53,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		error(400, t(locals.locale, 'error.maxIncidentMediaExceeded', { max: MAX_INCIDENT_MEDIA }));
 	}
 
+	const formData = await request.formData();
 	const entry = formData.get('file');
 	const file = entry instanceof File ? entry : null;
 

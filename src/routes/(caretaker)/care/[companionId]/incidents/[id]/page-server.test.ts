@@ -1,7 +1,24 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { incidentUpdateActions } from '#lib/server/incident-actions.js';
 import { load, actions } from './+page.server';
+
+// Lets a test make the alert enqueue throw after the write committed.
+const alerts = vi.hoisted(() => ({ fail: false }));
+vi.mock('#lib/server/notify/incidents.js', async (importOriginal) => {
+	const mod = await importOriginal<typeof import('#lib/server/notify/incidents.js')>();
+	return {
+		...mod,
+		enqueueIncidentAlert: async (...args: Parameters<typeof mod.enqueueIncidentAlert>) => {
+			if (alerts.fail) throw new Error('outbox down');
+			return mod.enqueueIncidentAlert(...args);
+		}
+	};
+});
+vi.mock('#lib/server/storage/media-blobs.js', () => ({
+	deleteMediaBlobs: vi.fn(async () => {})
+}));
 
 // Caretaker incident page: the load checks the assignment itself (there is no
 // care/[companionId] layout doing it) and only shows open incidents; the
@@ -193,6 +210,71 @@ describe('caretaker incident page', () => {
 		expect(edited?.body).toBe('Mine, edited');
 		// The edit keeps the update's time; caretakers never set it.
 		expect(edited?.occurredAt.getTime()).toBe(at.getTime());
+		await call(actions.deleteUpdate, ON, 'cid-open', { updateId: own.updateId });
+		expect((await updates('cid-open')).find((u) => u.id === own.updateId)).toBeUndefined();
+	});
+
+	it('addUpdate: a failed alert enqueue still returns the saved update', async () => {
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+		alerts.fail = true;
+		try {
+			const res = (await call(actions.addUpdate, ON, 'cid-open', { body: 'Alert lost' })) as {
+				updateId: string;
+			};
+			expect(res.updateId).toBeTruthy();
+			expect((await updates('cid-open')).filter((u) => u.body === 'Alert lost')).toHaveLength(1);
+			expect(logged).toHaveBeenCalled();
+		} finally {
+			alerts.fail = false;
+			logged.mockRestore();
+		}
+	});
+
+	it('a caretaker never sets the time, even through actions built with allowTime', async () => {
+		const ownerActions = incidentUpdateActions({ allowTime: true });
+		const before = Date.now() - 1000;
+		const res = (await call(ownerActions.addUpdate, ON, 'cid-open', {
+			body: 'Backdated?',
+			occurredAt: new Date(2020, 0, 1).toISOString()
+		})) as { updateId: string };
+		const row = (await updates('cid-open')).find((u) => u.id === res.updateId);
+		expect(row!.occurredAt.getTime()).toBeGreaterThanOrEqual(Math.floor(before / 1000) * 1000);
+
+		await call(ownerActions.editUpdate, ON, 'cid-open', {
+			updateId: res.updateId,
+			body: 'Backdated on edit?',
+			occurredAt: new Date(2020, 0, 1).toISOString()
+		});
+		const edited = (await updates('cid-open')).find((u) => u.id === res.updateId);
+		expect(edited?.body).toBe('Backdated on edit?');
+		expect(edited!.occurredAt.getTime()).toBe(row!.occurredAt.getTime());
+	});
+
+	it("deleteUpdate: 403 when the caretaker's update carries an owner's photo", async () => {
+		const own = (await call(actions.addUpdate, ON, 'cid-open', { body: 'With photos' })) as {
+			updateId: string;
+		};
+		const base = {
+			healthEventId: 'cid-open',
+			updateId: own.updateId,
+			filename: 'f.jpg',
+			mimeType: 'image/jpeg',
+			sizeBytes: 1
+		} as const;
+		await db.insert(schema.media).values([
+			{ id: 'cid-m-own', storageKey: 'k/own.jpg', loggedBy: ON, ...base },
+			{ id: 'cid-m-mem', storageKey: 'k/mem.jpg', loggedBy: MEM, ...base }
+		]);
+		expect(
+			status(await call(actions.deleteUpdate, ON, 'cid-open', { updateId: own.updateId }))
+		).toBe(403);
+		expect((await updates('cid-open')).find((u) => u.id === own.updateId)).toBeDefined();
+		expect(
+			await db.select().from(schema.media).where(eq(schema.media.updateId, own.updateId))
+		).toHaveLength(2);
+
+		// With only their own photo left, the delete goes through.
+		await db.delete(schema.media).where(eq(schema.media.id, 'cid-m-mem'));
 		await call(actions.deleteUpdate, ON, 'cid-open', { updateId: own.updateId });
 		expect((await updates('cid-open')).find((u) => u.id === own.updateId)).toBeUndefined();
 	});

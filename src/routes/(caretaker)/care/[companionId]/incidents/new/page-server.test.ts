@@ -1,7 +1,20 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { load, actions } from './+page.server';
+
+// Lets a test make the alert enqueue throw after the write committed.
+const alerts = vi.hoisted(() => ({ fail: false }));
+vi.mock('#lib/server/notify/incidents.js', async (importOriginal) => {
+	const mod = await importOriginal<typeof import('#lib/server/notify/incidents.js')>();
+	return {
+		...mod,
+		enqueueIncidentAlert: async (...args: Parameters<typeof mod.enqueueIncidentAlert>) => {
+			if (alerts.fail) throw new Error('outbox down');
+			return mod.enqueueIncidentAlert(...args);
+		}
+	};
+});
 
 // Caretaker "Log incident": the action is the one caretaker incident write
 // that doesn't go through checkIncidentWrite, so it checks the shift, the
@@ -112,6 +125,25 @@ describe('caretaker new incident', () => {
 			resolvedAt: null
 		});
 		expect(row!.occurredAt.getTime()).toBeGreaterThanOrEqual(Math.floor(before / 1000) * 1000);
+	});
+
+	it('create: a failed alert enqueue still returns the saved incident', async () => {
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+		alerts.fail = true;
+		try {
+			const res = (await create(ON, { title: 'Alert lost', afterSave: 'client' })) as {
+				id: string;
+			};
+			expect(res.id).toBeTruthy();
+			const rows = await db.query.healthEvents.findMany({
+				where: eq(schema.healthEvents.title, 'Alert lost')
+			});
+			expect(rows.map((r) => r.id)).toEqual([res.id]);
+			expect(logged).toHaveBeenCalled();
+		} finally {
+			alerts.fail = false;
+			logged.mockRestore();
+		}
 	});
 
 	it('create: 400 without a title', async () => {

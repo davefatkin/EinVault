@@ -127,18 +127,29 @@ export async function editIncidentUpdate(
 	return rows.length > 0;
 }
 
+export type DeleteUpdateOutcome = 'deleted' | 'notFound' | 'othersMedia';
+
 // Same read-then-cascade shape as deleteNote: the media keys are read and the
 // update deleted in one immediate transaction so an upload can't slip a row in
 // between. Objects are removed after commit.
-export async function deleteIncidentUpdate(incidentId: string, updateId: string): Promise<boolean> {
-	const { deleted, media } = db.transaction(
-		(tx): { deleted: boolean; media: StoredMediaRef[] } => {
-			const media = tx
+//
+// With onlyMediaOf (a caretaker deleting their own update) the update is kept
+// when it carries media anyone else added, since the cascade would take those
+// photos with it: 'othersMedia'.
+export async function deleteIncidentUpdate(
+	incidentId: string,
+	updateId: string,
+	opts: { onlyMediaOf?: string } = {}
+): Promise<DeleteUpdateOutcome> {
+	const { outcome, media } = db.transaction(
+		(tx): { outcome: DeleteUpdateOutcome; media: StoredMediaRef[] } => {
+			const rows = tx
 				.select({
 					provider: schema.media.provider,
 					storageKey: schema.media.storageKey,
 					originalKey: schema.media.originalKey,
-					posterKey: schema.media.posterKey
+					posterKey: schema.media.posterKey,
+					loggedBy: schema.media.loggedBy
 				})
 				.from(schema.media)
 				.innerJoin(
@@ -152,7 +163,11 @@ export async function deleteIncidentUpdate(incidentId: string, updateId: string)
 					)
 				)
 				.all();
-			const rows = tx
+			const actor = opts.onlyMediaOf;
+			if (actor !== undefined && rows.some((m) => m.loggedBy !== actor)) {
+				return { outcome: 'othersMedia', media: [] };
+			}
+			const deleted = tx
 				.delete(schema.healthEventUpdates)
 				.where(
 					and(
@@ -162,12 +177,21 @@ export async function deleteIncidentUpdate(incidentId: string, updateId: string)
 				)
 				.returning({ id: schema.healthEventUpdates.id })
 				.all();
-			return { deleted: rows.length > 0, media: rows.length > 0 ? media : [] };
+			if (deleted.length === 0) return { outcome: 'notFound', media: [] };
+			return {
+				outcome: 'deleted',
+				media: rows.map(({ provider, storageKey, originalKey, posterKey }) => ({
+					provider,
+					storageKey,
+					originalKey,
+					posterKey
+				}))
+			};
 		},
 		{ behavior: 'immediate' }
 	);
 	if (media.length > 0) await deleteMediaBlobs(media, 'incident-media');
-	return deleted;
+	return outcome;
 }
 
 export async function listOpenIncidents(companionIds: string[]): Promise<OpenIncidentSummary[]> {
@@ -205,10 +229,8 @@ export async function listOpenIncidents(companionIds: string[]): Promise<OpenInc
 	return incidents.map((i) => {
 		const ups = byIncident.get(i.id) ?? [];
 		const latest = ups.at(-1) ?? null;
-		const lastActivityMs = Math.max(
-			i.occurredAt.getTime(),
-			...ups.map((u) => u.occurredAt.getTime())
-		);
+		let lastActivityMs = i.occurredAt.getTime();
+		for (const u of ups) lastActivityMs = Math.max(lastActivityMs, u.occurredAt.getTime());
 		return {
 			id: i.id,
 			companionId: i.companionId,

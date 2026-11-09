@@ -130,9 +130,9 @@ describe('incident data', () => {
 				...base
 			}
 		]);
-		expect(await deleteIncidentUpdate('wrong-incident', upId)).toBe(false);
+		expect(await deleteIncidentUpdate('wrong-incident', upId)).toBe('notFound');
 		expect(deleteMediaBlobs).not.toHaveBeenCalled();
-		expect(await deleteIncidentUpdate(id, upId)).toBe(true);
+		expect(await deleteIncidentUpdate(id, upId)).toBe('deleted');
 		expect(deleteMediaBlobs).toHaveBeenCalledTimes(1);
 		expect(deleteMediaBlobs).toHaveBeenCalledWith(
 			[
@@ -148,6 +148,65 @@ describe('incident data', () => {
 		expect(await getIncidentUpdate(id, upId)).toBeUndefined();
 		expect(await db.select().from(schema.media).where(eq(schema.media.id, 'm-ov'))).toHaveLength(1);
 		expect(await db.select().from(schema.media).where(eq(schema.media.id, 'm-up'))).toHaveLength(0);
+	});
+
+	it("deleteIncidentUpdate with onlyMediaOf refuses an update carrying someone else's media", async () => {
+		const O = 'u-incm-other';
+		await db
+			.insert(schema.users)
+			.values({ id: O, username: 'incm-o', displayName: 'Other', role: 'caretaker' });
+		const id = await createIncident(C1, input(), U);
+		const at = new Date('2026-05-02T10:00:00Z');
+		const mine = await createIncidentUpdate(
+			id,
+			{ body: 'mine', severity: null, occurredAt: at },
+			O
+		);
+		const mixed = await createIncidentUpdate(
+			id,
+			{ body: 'mix', severity: null, occurredAt: at },
+			O
+		);
+		const base = { filename: 'f.jpg', mimeType: 'image/jpeg', sizeBytes: 1 } as const;
+		await db.insert(schema.media).values([
+			{
+				id: 'm-own',
+				healthEventId: id,
+				updateId: mine,
+				storageKey: 'k/own.jpg',
+				loggedBy: O,
+				...base
+			},
+			{
+				id: 'm-mix-own',
+				healthEventId: id,
+				updateId: mixed,
+				storageKey: 'k/a.jpg',
+				loggedBy: O,
+				...base
+			},
+			{
+				id: 'm-mix-owner',
+				healthEventId: id,
+				updateId: mixed,
+				storageKey: 'k/b.jpg',
+				loggedBy: U,
+				...base
+			}
+		]);
+
+		expect(await deleteIncidentUpdate(id, mixed, { onlyMediaOf: O })).toBe('othersMedia');
+		expect(deleteMediaBlobs).not.toHaveBeenCalled();
+		expect(await getIncidentUpdate(id, mixed)).toBeDefined();
+		expect(
+			await db.select().from(schema.media).where(eq(schema.media.updateId, mixed))
+		).toHaveLength(2);
+
+		expect(await deleteIncidentUpdate(id, mine, { onlyMediaOf: O })).toBe('deleted');
+		expect(deleteMediaBlobs).toHaveBeenCalledTimes(1);
+		expect(await getIncidentUpdate(id, mine)).toBeUndefined();
+		// Owners may delete it regardless.
+		expect(await deleteIncidentUpdate(id, mixed)).toBe('deleted');
 	});
 
 	it('listOpenIncidents excludes resolved incidents and other types and returns currentSeverity from the latest update', async () => {

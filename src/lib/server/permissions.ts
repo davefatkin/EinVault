@@ -58,11 +58,12 @@ export type IncidentWriteAction =
 export type IncidentWriteCheck =
 	{ ok: true; incident: IncidentRow } | { ok: false; status: 401 | 403 | 404; key: MessageKey };
 
-const OWNER_ONLY: ReadonlySet<IncidentWriteAction> = new Set([
-	'overview',
-	'resolve',
-	'link',
-	'delete'
+// Everything a caretaker may do. Any other action, including one added later,
+// is owner-only until it is listed here.
+const CARETAKER_ACTIONS: ReadonlySet<IncidentWriteAction> = new Set([
+	'addUpdate',
+	'editUpdate',
+	'media'
 ]);
 
 const deny = (status: 401 | 403 | 404, key: MessageKey): IncidentWriteCheck => ({
@@ -100,7 +101,7 @@ export async function checkIncidentWrite(
 	const isCaretaker = user.role === 'caretaker';
 
 	if (isCaretaker) {
-		if (OWNER_ONLY.has(action)) return forbidden();
+		if (!CARETAKER_ACTIONS.has(action)) return forbidden();
 		const scope = await authorizeCompanions(user, [companionId]);
 		if (!scope.ok) {
 			const { status, key } = CARE_ERROR[scope.code];
