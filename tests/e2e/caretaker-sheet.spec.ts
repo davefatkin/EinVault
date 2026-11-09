@@ -212,13 +212,18 @@ test.describe('caretaker sheet', () => {
 	}) => {
 		const active = 'e2e-sheet-med';
 		const ended = 'e2e-sheet-med-ended';
-		insertMedication(app.dataDir, {
-			companionId: EIN,
-			name: active,
-			dose: '1 tablet',
-			instructions: 'Give **with** food'
-		});
-		insertMedication(app.dataDir, { companionId: EIN, name: ended, endedOn: '2020-01-01' });
+		const ids: string[] = [];
+		ids.push(
+			insertMedication(app.dataDir, {
+				companionId: EIN,
+				name: active,
+				dose: '1 tablet',
+				instructions: 'Give **with** food'
+			})
+		);
+		ids.push(
+			insertMedication(app.dataDir, { companionId: EIN, name: ended, endedOn: '2020-01-01' })
+		);
 		try {
 			await openSheet(asMember);
 			const routine = asMember.locator('section').filter({
@@ -235,7 +240,7 @@ test.describe('caretaker sheet', () => {
 				await expect(routine).toBeHidden();
 			});
 		} finally {
-			deleteMedications(app.dataDir, active, ended);
+			deleteMedications(app.dataDir, ids);
 		}
 	});
 

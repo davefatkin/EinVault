@@ -478,13 +478,17 @@ test('medications card shows active medications with Given, and is hidden withou
 	const active = 'e2e-dash-med';
 	const ended = 'e2e-dash-med-ended';
 	const card = asMember.getByTestId('dashboard-medications');
+	const ids: string[] = [];
 	try {
 		await asMember.goto(`/${COMP}`);
 		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
 		await expect(card).toHaveCount(0);
 
 		const id = insertMedication(app.dataDir, { companionId: COMP, name: active, dose: '2 ml' });
-		insertMedication(app.dataDir, { companionId: COMP, name: ended, endedOn: '2020-01-01' });
+		ids.push(id);
+		ids.push(
+			insertMedication(app.dataDir, { companionId: COMP, name: ended, endedOn: '2020-01-01' })
+		);
 		await asMember.goto(`/${COMP}`);
 		await waitForHydration(asMember);
 		await expect(card.getByText(active, { exact: true })).toBeVisible();
@@ -496,6 +500,6 @@ test('medications card shows active medications with Given, and is hidden withou
 		await expect.poll(() => dosesFor(app.dataDir, id).length).toBe(1);
 		expect(dosesFor(app.dataDir, id)[0].givenBy).toBe(SEED.member.id);
 	} finally {
-		deleteMedications(app.dataDir, active, ended);
+		deleteMedications(app.dataDir, ids);
 	}
 });

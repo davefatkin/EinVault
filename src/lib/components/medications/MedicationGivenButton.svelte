@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { Check } from '@lucide/svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { addToast } from '#lib/components/ui/toast/index.js';
@@ -24,7 +25,18 @@
 					title: t(locale, 'page.medications.doseLogged', { name: medication.name }),
 					durationMs: 4000
 				});
-			await update();
+			if (result.type === 'failure') {
+				// Say why (ended, off shift...) and refresh what the page shows. Not
+				// update(): that would also put the message in `form` for the page.
+				addToast({
+					id: 'medication-given-error',
+					title: String(result.data?.error ?? t(locale, 'media.actionFailed')),
+					durationMs: 6000
+				});
+				await invalidateAll();
+			} else {
+				await update();
+			}
 			submitting = false;
 		};
 	}}

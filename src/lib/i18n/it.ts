@@ -586,8 +586,6 @@ const messages: Record<keyof Messages, string> = {
 		'es. Sessione di gioco ~20:00, 15 min\nPulire la lettiera mattina e sera',
 	'page.companion.edit.placeholderCareRoutine':
 		'es. Pulire la gabbia il sabato\nTempo fuori dalla gabbia ogni sera',
-	'page.companion.edit.placeholderMedicationSchedule':
-		'es. Compressa antiparassitaria il 1° del mese\nIntegratore articolare ogni mattina\nCollirio mattina e sera',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dott. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Clinica Veterinaria Valentine',

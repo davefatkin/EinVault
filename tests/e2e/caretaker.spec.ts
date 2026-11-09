@@ -5,7 +5,7 @@ import { test, expect } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
-import { insertMedication, deleteMedications, dosesFor } from '../lib/medications';
+import { insertMedication, deleteMedications, dosesFor, endMedication } from '../lib/medications';
 import { todayUTC } from '../lib/dates';
 import { pdfUpload, pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
@@ -582,7 +582,26 @@ test.describe('caretaker medications', () => {
 				.poll(() => dosesFor(app.dataDir, id))
 				.toEqual([{ givenBy: SEED.caretaker.id, source: 'manual' }]);
 		} finally {
-			deleteMedications(app.dataDir, name);
+			deleteMedications(app.dataDir, [id]);
+		}
+	});
+
+	test('a failed Given says why instead of staying silent', async ({ app, asCaretaker }) => {
+		const id = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-care-stale' });
+		try {
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			const card = asCaretaker.getByTestId('care-medications');
+			await expect(card.getByText('e2e-care-stale')).toBeVisible({ timeout: 8_000 });
+			// The course ends while the page is open.
+			endMedication(app.dataDir, id);
+			await card.getByRole('button', { name: 'Given' }).first().click();
+			await expect(asCaretaker.getByText('This medication has ended.')).toBeVisible({
+				timeout: 8_000
+			});
+			expect(dosesFor(app.dataDir, id)).toEqual([]);
+		} finally {
+			deleteMedications(app.dataDir, [id]);
 		}
 	});
 
@@ -614,7 +633,7 @@ test.describe('caretaker medications', () => {
 			expect(unassigned.body.type).toBe('failure');
 			for (const id of [ended, edwards, julias]) expect(dosesFor(app.dataDir, id)).toEqual([]);
 		} finally {
-			deleteMedications(app.dataDir, 'e2e-care-ended', 'e2e-care-edward', 'e2e-care-julia');
+			deleteMedications(app.dataDir, [ended, edwards, julias]);
 		}
 	});
 });

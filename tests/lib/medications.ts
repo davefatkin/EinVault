@@ -41,14 +41,21 @@ export function insertMedication(dataDir: string, m: Medication): string {
 	return id;
 }
 
-/** Removes medications (doses cascade) and any reminders titled the same. */
-export function deleteMedications(dataDir: string, ...names: string[]) {
+/** Removes the medications insertMedication returned (doses cascade). */
+export function deleteMedications(dataDir: string, ids: string[]) {
 	const sqlite = open(dataDir);
 	try {
-		for (const name of names) {
-			sqlite.prepare('DELETE FROM reminders WHERE title = ?').run(name);
-			sqlite.prepare('DELETE FROM medications WHERE name = ?').run(name);
-		}
+		for (const id of ids) sqlite.prepare('DELETE FROM medications WHERE id = ?').run(id);
+	} finally {
+		sqlite.close();
+	}
+}
+
+/** Ends a medication behind the app's back (a stale page then acts on it). */
+export function endMedication(dataDir: string, id: string) {
+	const sqlite = open(dataDir);
+	try {
+		sqlite.prepare("UPDATE medications SET ended_on = '2020-01-01' WHERE id = ?").run(id);
 	} finally {
 		sqlite.close();
 	}

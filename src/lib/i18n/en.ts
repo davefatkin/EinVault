@@ -578,8 +578,6 @@ const messages = {
 		'e.g. Play session ~8pm, 15 min\nScoop litter morning and night',
 	'page.companion.edit.placeholderCareRoutine':
 		'e.g. Clean enclosure Saturdays\nOut-of-cage time every evening',
-	'page.companion.edit.placeholderMedicationSchedule':
-		'e.g. Heartworm chew 1st of the month\nJoint supplement daily with breakfast\nEye drops morning and night',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Animal Hospital',
