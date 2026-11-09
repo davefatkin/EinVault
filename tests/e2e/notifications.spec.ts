@@ -216,6 +216,58 @@ test('reminder due fires email and ntfy push', async ({ world, page }) => {
 	expect(world.ntfy.publishes.filter(reminderPublishMatcher)).toHaveLength(1);
 });
 
+/** Local datetime-local string for the same wall time tomorrow, plus `minutes`. */
+function tomorrowPlusMinutes(minutes: number): string {
+	const d = new Date();
+	d.setDate(d.getDate() + 1);
+	d.setMinutes(d.getMinutes() + minutes);
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ---------------------------------------------------------------------------
+// Heads-up: a 1-day lead pushes "Coming up tomorrow" once the lead time passes;
+// a reminder with no heads-up stays quiet until it is due.
+// ---------------------------------------------------------------------------
+
+test('heads-up pushes before the due date, none without a lead time', async ({ world, page }) => {
+	// The lead time lands about two minutes after the reminder is created.
+	test.setTimeout(210_000);
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(world.server.baseURL + '/settings');
+	await saveNotificationSettings(page, world.server.baseURL, { ntfyTopic: 'e2e-topic-lead' });
+
+	await page.goto(world.server.baseURL + `/${SEED.companions.ein.id}/reminders`);
+	const dueAt = tomorrowPlusMinutes(2);
+	for (const [title, lead] of [
+		['e2e-lead-with', true],
+		['e2e-lead-without', false]
+	] as const) {
+		await page.getByRole('button', { name: 'Add Reminder' }).click();
+		await page.locator('#title').fill(title);
+		await page.locator('#dueAt').fill(dueAt);
+		if (lead) {
+			await page.getByRole('button', { name: '1 day', exact: true }).click();
+		}
+		await page.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(page.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+	}
+
+	const publish = await world.ntfy.waitForPublish(
+		(p) => p.topic === 'e2e-topic-lead' && (p.title ?? '').includes('e2e-lead-with'),
+		180_000
+	);
+	expect(publish.title).toMatch(/tomorrow/i);
+
+	expect(
+		world.ntfy.publishes.filter(
+			(p) => p.topic === 'e2e-topic-lead' && (p.title ?? '').includes('e2e-lead-without')
+		)
+	).toHaveLength(0);
+});
+
 // ---------------------------------------------------------------------------
 // Test 3: shift start email reaches seed-caretaker
 // ---------------------------------------------------------------------------

@@ -394,7 +394,8 @@ export const Reminder = z
 		isRecurring: z.boolean(),
 		completedAt: z.string().nullable(),
 		outcome: z.enum(['completed', 'skipped']).nullable(),
-		seriesId: z.string().nullable()
+		seriesId: z.string().nullable(),
+		leadDays: z.array(z.number().int())
 	})
 	.openapi('Reminder');
 

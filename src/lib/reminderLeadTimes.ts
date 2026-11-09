@@ -16,7 +16,7 @@ function canonical(days: readonly number[]): number[] {
 	return [...new Set(days)].sort((a, b) => b - a);
 }
 
-/** Tolerant read of the stored text: drops junk, returns distinct values, ascending. */
+/** Tolerant read of the stored text: drops junk, returns distinct values, descending. */
 export function parseLeadDays(text: string | null | undefined): number[] {
 	if (!text) return [];
 	const out: number[] = [];
