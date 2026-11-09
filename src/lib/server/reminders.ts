@@ -1,6 +1,8 @@
 import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
+import { localDateISO } from '#lib/date.js';
+import { isMedicationActive } from '#lib/medications.js';
 import {
 	clampDayOfMonth,
 	unpackMonthDay,
@@ -68,13 +70,25 @@ export function computeNextDueAt(reminder: Reminder): Date | null {
 	return next;
 }
 
+export type ResolveResult = {
+	completedAt: Date;
+	nextReminderId: string | null;
+	/** The dose written for a completed medication-linked occurrence, else null. */
+	doseId: string | null;
+};
+
+/** Dose details when completing a medication-linked occurrence. */
+export type DoseOptions = { givenAt?: Date; note?: string | null };
+
 function resolveReminder(
 	reminder: Reminder,
 	userId: string,
-	outcome: 'completed' | 'skipped'
-): { completedAt: Date; nextReminderId: string | null } | null {
+	outcome: 'completed' | 'skipped',
+	dose: DoseOptions = {}
+): ResolveResult | null {
 	const completedAt = new Date();
 	let nextReminderId: string | null = null;
+	let doseId: string | null = null;
 	let resolved = false;
 	db.transaction((tx) => {
 		const res = tx
@@ -85,8 +99,40 @@ function resolveReminder(
 		if (res.changes === 0) return; // already resolved by a concurrent/prior call — spawn nothing
 		resolved = true;
 
+		// Read the medication fresh: the snapshot's link may point at a deleted one.
+		const medication = reminder.medicationId
+			? tx
+					.select({ id: schema.medications.id, endedOn: schema.medications.endedOn })
+					.from(schema.medications)
+					.where(eq(schema.medications.id, reminder.medicationId))
+					.get()
+			: undefined;
+
+		// An ended medication (as of the completion's local date) takes no dose
+		// and keeps no open reminder (R1); the completion itself still stands.
+		const medicationActive =
+			!!medication && isMedicationActive(medication.endedOn, localDateISO(completedAt));
+
+		if (medication && medicationActive && outcome === 'completed') {
+			doseId = generateId(15);
+			tx.insert(schema.medicationDoses)
+				.values({
+					id: doseId,
+					medicationId: medication.id,
+					givenAt: dose.givenAt ?? completedAt,
+					givenBy: userId,
+					reminderId: reminder.id,
+					source: 'reminder',
+					note: dose.note ?? null
+				})
+				.run();
+		}
+
 		const nextDueAt = computeNextDueAt(reminder);
 		if (!nextDueAt) return;
+		if (medication && !medicationActive) return;
+		// A course stops by itself: nothing spawns past the medication's last day.
+		if (medication?.endedOn && localDateISO(nextDueAt) > medication.endedOn) return;
 
 		nextReminderId = generateId(15);
 		tx.insert(schema.reminders)
@@ -105,18 +151,25 @@ function resolveReminder(
 				seriesId: reminder.seriesId ?? reminder.id,
 				notifyLeadDays: reminder.notifyLeadDays,
 				leadArmedAt: reminder.notifyLeadDays ? new Date() : null,
+				medicationId: medication?.id ?? null,
 				loggedBy: reminder.loggedBy
 			})
 			.run();
 	});
-	return resolved ? { completedAt, nextReminderId } : null;
+	return resolved ? { completedAt, nextReminderId, doseId } : null;
 }
 
+/**
+ * Complete an occurrence and spawn the next one. A medication-linked
+ * occurrence also logs one dose (given now unless `dose.givenAt` says
+ * otherwise) in the same transaction.
+ */
 export function completeReminder(
 	reminder: Reminder,
-	userId: string
-): { completedAt: Date; nextReminderId: string | null } | null {
-	return resolveReminder(reminder, userId, 'completed');
+	userId: string,
+	dose?: DoseOptions
+): ResolveResult | null {
+	return resolveReminder(reminder, userId, 'completed', dose);
 }
 
 /**
@@ -124,10 +177,7 @@ export function completeReminder(
  * "done" record and spawn the next occurrence. One-off reminders can't be
  * skipped — returns null without touching the database.
  */
-export function skipReminder(
-	reminder: Reminder,
-	userId: string
-): { completedAt: Date; nextReminderId: string | null } | null {
+export function skipReminder(reminder: Reminder, userId: string): ResolveResult | null {
 	if (!reminder.isRecurring) return null;
 	return resolveReminder(reminder, userId, 'skipped');
 }

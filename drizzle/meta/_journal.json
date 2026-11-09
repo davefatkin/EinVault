@@ -288,6 +288,20 @@
       "when": 1794239437847,
       "tag": "0040_white_thundra",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1794249617555,
+      "tag": "0041_late_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1794249623746,
+      "tag": "0042_medication_schedule_migration",
+      "breakpoints": true
     }
   ]
 }

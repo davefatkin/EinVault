@@ -1,5 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import { todayUTC } from '../lib/dates';
+import { SEED } from '../lib/seed';
+import { waitForHydration } from '../lib/hydration';
 
 // Helper: create a companion via the /companions/new form and return its id
 // extracted from the redirect URL.
@@ -41,6 +43,17 @@ test.describe('companion crud', () => {
 		// Reload and confirm the value is persisted
 		await asMember.goto(`/companions/${id}/edit`);
 		await expect(asMember.locator('#breed')).toHaveValue('e2e-breed');
+	});
+
+	test('edit form has no medication schedule field (medications have their own page)', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/companions/${SEED.companions.ein.id}/edit`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Caretaker info', exact: true }).click();
+		await expect(asMember.locator('#feedingSchedule')).toBeVisible();
+		await expect(asMember.locator('[name="medicationSchedule"]')).toHaveCount(0);
+		await expect(asMember.getByText('Medication schedule', { exact: true })).toHaveCount(0);
 	});
 
 	test('empty name is rejected', async ({ asMember }) => {

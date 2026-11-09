@@ -240,6 +240,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.reminders': 'Erinnerungen',
 	'nav.documents': 'Dokumente',
 	'nav.notes': 'Notizen',
+	'nav.medications': 'Medikamente',
 	'nav.settings': 'Einstellungen',
 	'nav.admin': 'Verwaltung',
 	'nav.adminCompanions': 'Begleiter',
@@ -576,7 +577,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelWalkSchedule': 'Spaziergangsplan',
 	'page.companion.edit.labelRoutine': 'Routine',
 	'page.companion.edit.labelCareRoutine': 'Pflegeroutine',
-	'page.companion.edit.labelMedicationSchedule': 'Medikamentenplan',
 	'page.companion.edit.cardContacts': 'Kontakte',
 	'page.companion.edit.labelVetName': 'Tierarztname',
 	'page.companion.edit.labelVetPhone': 'Tierarzt-Telefon',
@@ -591,8 +591,6 @@ const messages: Record<keyof Messages, string> = {
 		'z.B. Spielrunde ~20 Uhr, 15 Min.\nStreu morgens und abends reinigen',
 	'page.companion.edit.placeholderCareRoutine':
 		'z.B. Gehege samstags reinigen\nAuslauf jeden Abend',
-	'page.companion.edit.placeholderMedicationSchedule':
-		'z.B. Herzwurm-Tablette am 1. des Monats\nGelenkpräparat täglich zum Frühstück\nAugentropfen morgens und abends',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Valentine Tierklinik',
@@ -655,6 +653,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.shiftEnds': 'Schicht endet',
 	'page.dashboard.cardReminders': 'Erinnerungen',
 	'page.dashboard.remindersViewAll': 'Alle anzeigen',
+	'page.dashboard.medicationsViewAll': 'Alle anzeigen',
 	'page.dashboard.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.cardWeight': 'Gewicht',
 	'page.dashboard.weightAsOf': 'Stand',
@@ -696,7 +695,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardWalk': 'Spaziergangsplan',
 	'page.dashboard.caretaker.cardRoutine': 'Routine',
 	'page.dashboard.caretaker.cardCareRoutine': 'Pflegeroutine',
-	'page.dashboard.caretaker.cardMedicationSchedule': 'Medikamentenplan',
 	'page.dashboard.caretaker.cardReminders': 'Anstehende Erinnerungen',
 	'page.dashboard.caretaker.remindersEmpty': 'Keine anstehenden Erinnerungen.',
 	'page.dashboard.caretaker.reminderOverdue': 'Überfällig',
@@ -1132,6 +1130,18 @@ const messages: Record<keyof Messages, string> = {
 	'error.tokenLimitReached': 'Token-Limit erreicht (max. {max}). Widerrufe zuerst eines.',
 	'error.noteTooLong': 'Notiz ist zu lang (max. {max} Zeichen).',
 	'error.invalidDateTime': 'Gib ein gültiges Datum und eine gültige Uhrzeit ein.',
+	'error.medicationEndBeforeStart': 'Das Enddatum darf nicht vor dem Startdatum liegen.',
+	'error.medicationNotFound': 'Medikament nicht gefunden.',
+	'error.medicationEnded': 'Dieses Medikament ist abgesetzt.',
+	'error.medicationNotStarted': 'Dieses Medikament hat noch nicht begonnen.',
+	'error.doseBeforeStart':
+		'Eine Dosis kann nicht vor dem Startdatum des Medikaments gegeben werden.',
+	'error.doseInFuture': 'Eine Dosis kann nicht in der Zukunft gegeben werden.',
+	'error.doseNotFound': 'Dosis nicht gefunden.',
+	'error.invalidMedicationStatus': 'status muss "active" oder "all" sein.',
+	'error.mustBeOnShiftToLogDose': 'Du musst im Dienst sein, um Medikamentengaben einzutragen.',
+	'error.reminderAfterMedicationEnd':
+		'Diese Erinnerung ist erst nach dem Ende des Medikaments fällig.',
 	'error.fieldTooLong': 'Zu lang (max. {max} Zeichen).',
 	'error.noteTitleTooLong': 'Der Titel ist zu lang (max. {max} Zeichen).',
 	'error.noteTitleNewline': 'Der Titel muss einzeilig sein.',
@@ -1443,9 +1453,81 @@ const messages: Record<keyof Messages, string> = {
 	'demo.roleMember': 'Mitglied',
 	'demo.roleCaretaker': 'Betreuer',
 	'demo.sourceLink': 'Quellcode',
-	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.'
+	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.',
 
 	// Meta
+	// Medications
+	'page.medications.title': 'Medikamente',
+	'page.medications.add': 'Medikament hinzufügen',
+	'page.medications.newTitle': 'Neues Medikament',
+	'page.medications.active': 'Aktiv',
+	'page.medications.ended': 'Beendet',
+	'page.medications.endedBadge': 'Beendet',
+	'page.medications.empty': 'Noch keine Medikamente',
+	'page.medications.emptyBody':
+		'Füge ein Medikament hinzu, um Dosis, Zeitplan und letzte Gabe an einem Ort zu haben.',
+	'page.medications.noActive': 'Keine aktiven Medikamente.',
+	'page.medications.archivedNotice':
+		'{name} ist archiviert. Medikamente bleiben zum Nachschlagen verfügbar.',
+	'page.medications.backToList': 'Alle Medikamente',
+	'page.medications.labelName': 'Name',
+	'page.medications.labelDose': 'Dosis',
+	'page.medications.labelInstructions': 'Hinweise',
+	'page.medications.labelStartedOn': 'Startdatum',
+	'page.medications.labelEndedOn': 'Enddatum',
+	'page.medications.endedOnHint':
+		'Leer lassen, wenn kein Ende geplant ist. Der letzte Tag zählt noch mit.',
+	'page.medications.placeholderName': 'z. B. Carprofen',
+	'page.medications.placeholderDose': 'z. B. 1 Tablette',
+	'page.medications.placeholderInstructions': 'z. B. Mit Futter geben',
+	'page.medications.save': 'Medikament speichern',
+	'page.medications.given': 'Gegeben',
+	'page.medications.givenTitle': 'Jetzt gegebene Dosis eintragen',
+	'page.medications.givenAt': 'Gegeben {when}',
+	'page.medications.givenAgainTitle': 'Bereits gegeben. Weitere Dosis eintragen?',
+	'page.medications.givenAgainConfirm':
+		'{name} wurde bereits gegeben ({when}). Weitere Dosis eintragen?',
+	'page.medications.givenAgainConfirmBy':
+		'{name} wurde bereits gegeben ({when}, von {by}). Weitere Dosis eintragen?',
+	'page.medications.givenAgainButton': 'Weitere Dosis eintragen',
+	'page.medications.doseLogged': 'Dosis von {name} eingetragen',
+	'page.medications.nextDue': 'Nächste Gabe',
+	'page.medications.lastGiven': 'Zuletzt gegeben',
+	'page.medications.notGivenYet': 'Noch nicht gegeben',
+	'page.medications.byName': 'von {name}',
+	'page.medications.scheduleAt': '{recurrence} um {times}',
+	'page.medications.startedOn': 'Begonnen am {date}',
+	'page.medications.endsOn': 'Endet am {date}',
+	'page.medications.endedOn': 'Beendet am {date}',
+	'page.medications.addDoseReminder': 'Dosis-Erinnerung hinzufügen',
+	'page.medications.once': 'Einmalig',
+	'page.medications.doseReminders': 'Dosis-Erinnerungen',
+	'page.medications.noDoseReminders':
+		'Keine Dosis-Erinnerungen. Füge eine hinzu, um an fällige Gaben erinnert zu werden.',
+	'page.medications.endedNoReminders':
+		'Starte das Medikament neu, um wieder Dosis-Erinnerungen hinzuzufügen.',
+	'page.medications.doseHistory': 'Verlauf der Gaben',
+	'page.medications.noDoses': 'Noch keine Gaben eingetragen.',
+	'page.medications.fromReminder': 'Aus Erinnerung',
+	'page.medications.loggedByHand': 'Von Hand eingetragen',
+	'page.medications.givenBy': 'Gegeben von {name}',
+	'page.medications.showMore': 'Mehr anzeigen',
+	'page.medications.end': 'Beenden',
+	'page.medications.endConfirm':
+		'{name} heute beenden? Die anstehenden Dosis-Erinnerungen werden gelöscht.',
+	'page.medications.endConfirmButton': 'Medikament beenden',
+	'page.medications.endsToday': 'Endet heute',
+	'page.medications.endNow': 'Jetzt beenden',
+	'page.medications.removeEndDate': 'Enddatum entfernen',
+	'page.medications.restart': 'Neu starten',
+	'page.medications.removeDose': 'Entfernen',
+	'page.medications.removeDoseLabel': 'Diese Dosis entfernen',
+	'page.medications.removeDoseConfirm':
+		'Diese Dosis aus dem Verlauf entfernen? Stammt sie von einer Erinnerung, bleibt diese erledigt. Mit „Wiederherstellen“ auf der Seite Erinnerungen lässt sie sich wieder öffnen.',
+	'page.medications.deleteConfirm':
+		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',
+	'page.health.medicationsHintPrefix': 'Geht es um ein Medikament?',
+	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

@@ -7,7 +7,10 @@ import { generateId } from '#lib/server/utils.js';
 import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { validateLeadDays } from '#lib/reminderLeadTimes.js';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { reminderLogEventUrl } from '#lib/health.js';
+import { getMedication } from '#lib/server/medications.js';
+import { isMedicationActive } from '#lib/medications.js';
+import { localDateISO } from '#lib/date.js';
 
 const LEAD_ERROR_KEYS = {
 	invalid: 'error.invalidLeadDays',
@@ -59,6 +62,17 @@ export const actions: Actions = {
 		);
 		if (!leads.ok) return fail(400, { error: t(locals.locale, LEAD_ERROR_KEYS[leads.reason]) });
 
+		// A dose reminder from a medication's page: same companion, still active.
+		const medicationId = String(data.get('medicationId') ?? '').trim() || null;
+		if (medicationId) {
+			const medication = await getMedication(params.companionId, medicationId);
+			if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+			if (!isMedicationActive(medication.endedOn, localDateISO()))
+				return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+			if (medication.endedOn && localDateISO(dueAt) > medication.endedOn)
+				return fail(400, { error: t(locals.locale, 'error.reminderAfterMedicationEnd') });
+		}
+
 		const id = generateId(15);
 		await db.insert(schema.reminders).values({
 			id,
@@ -75,9 +89,11 @@ export const actions: Actions = {
 			seriesId: isRecurring ? id : null,
 			notifyLeadDays: leads.value,
 			leadArmedAt: leads.value ? new Date() : null,
+			medicationId,
 			loggedBy: locals.user.id
 		});
 
+		if (medicationId) redirect(303, `/${params.companionId}/medications/${medicationId}`);
 		return { success: true };
 	},
 
@@ -102,7 +118,7 @@ export const actions: Actions = {
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
-			columns: { id: true, dueAt: true, notifyLeadDays: true }
+			columns: { id: true, dueAt: true, notifyLeadDays: true, medicationId: true }
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
@@ -122,6 +138,13 @@ export const actions: Actions = {
 		// The datetime-local input drops seconds, so compare at minute precision.
 		const dueChanged =
 			Math.floor(existing.dueAt.getTime() / 60_000) !== Math.floor(dueAt.getTime() / 60_000);
+
+		// A dose reminder can't move past its medication's last day (same rule as add).
+		if (dueChanged && existing.medicationId) {
+			const medication = await getMedication(params.companionId, existing.medicationId);
+			if (medication?.endedOn && localDateISO(dueAt) > medication.endedOn)
+				return fail(400, { error: t(locals.locale, 'error.reminderAfterMedicationEnd') });
+		}
 		if (dueChanged || nextLeads !== existing.notifyLeadDays) {
 			leadFields.leadArmedAt = nextLeads ? new Date() : null;
 		}
@@ -172,17 +195,8 @@ export const actions: Actions = {
 				)
 			);
 
-		if (andEvent) {
-			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
-			redirect(
-				303,
-				healthEventPrefillUrl(params.companionId, {
-					title: existing.title,
-					description: existing.description,
-					type: mapped ?? undefined
-				})
-			);
-		}
+		const logEventUrl = andEvent ? reminderLogEventUrl(existing) : null;
+		if (logEventUrl) redirect(303, logEventUrl);
 
 		return { completeSuccess: true };
 	},
@@ -215,27 +229,47 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		db.transaction((tx) => {
-			tx.update(schema.reminders)
-				.set({ completedAt: null, completedBy: null, outcome: null })
-				.where(eq(schema.reminders.id, id))
-				.run();
+		const outcome = db.transaction(
+			(tx) => {
+				// An ended medication never gets an open reminder back (R1).
+				if (existing.medicationId) {
+					const medication = tx
+						.select({ endedOn: schema.medications.endedOn })
+						.from(schema.medications)
+						.where(eq(schema.medications.id, existing.medicationId))
+						.get();
+					if (medication && !isMedicationActive(medication.endedOn, localDateISO()))
+						return 'ended' as const;
+				}
 
-			// If recurring, delete all future instances in this series. Spawned
-			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
-			// the same fallback: rows whose own seriesId is null still own the
-			// instances their id seeded.
-			if (existing.isRecurring) {
-				tx.delete(schema.reminders)
-					.where(
-						and(
-							eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
-							gt(schema.reminders.dueAt, existing.dueAt)
-						)
-					)
+				// Undoing a completion undoes its dose. Doses of later occurrences
+				// deleted below were really given: they stay, unlinked by the FK.
+				tx.delete(schema.medicationDoses).where(eq(schema.medicationDoses.reminderId, id)).run();
+
+				tx.update(schema.reminders)
+					.set({ completedAt: null, completedBy: null, outcome: null })
+					.where(eq(schema.reminders.id, id))
 					.run();
-			}
-		});
+
+				// If recurring, delete all future instances in this series. Spawned
+				// instances carry seriesId = origin.seriesId ?? origin.id, so match on
+				// the same fallback: rows whose own seriesId is null still own the
+				// instances their id seeded.
+				if (existing.isRecurring) {
+					tx.delete(schema.reminders)
+						.where(
+							and(
+								eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
+								gt(schema.reminders.dueAt, existing.dueAt)
+							)
+						)
+						.run();
+				}
+				return 'restored' as const;
+			},
+			{ behavior: 'immediate' }
+		);
+		if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
 
 		return { restoreSuccess: true };
 	},

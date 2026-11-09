@@ -6,6 +6,7 @@ import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { bearerCall, createToken } from '../lib/api-tokens';
 import { waitForHydration } from '../lib/hydration';
+import { insertMedication, deleteMedications, dosesFor } from '../lib/medications';
 
 const EIN = 'seed-comp-ein';
 const JULIA = 'seed-comp-julia';
@@ -1225,6 +1226,224 @@ test.describe('api tokens', () => {
 		});
 		expect(restored.status()).toBe(201);
 	});
+
+	test('medications: write-scope token lists them and logs a dose; alias and ended rules', async ({
+		asMember,
+		app
+	}) => {
+		const ids: string[] = [];
+		try {
+			const med = insertMedication(app.dataDir, {
+				companionId: EIN,
+				name: 'E2E Carprofen',
+				dose: '1 tablet',
+				instructions: 'with food'
+			});
+			const ended = insertMedication(app.dataDir, {
+				companionId: EIN,
+				name: 'E2E Old Course',
+				endedOn: '2020-01-01'
+			});
+			ids.push(med, ended);
+
+			const raw = await createToken(asMember, 'Med write bot', '/settings', 'write');
+			const headers = { Authorization: `Bearer ${raw}` };
+			const fullRaw = await createToken(asMember, 'Med full bot');
+			const fullHeaders = { Authorization: `Bearer ${fullRaw}` };
+			const base = app.server.baseURL;
+
+			// A write-scope token can read the list (to discover ids): active
+			// medications only, in the minimal shape.
+			const list = await asMember.request.get(`${base}/api/medications?companionId=${EIN}`, {
+				headers
+			});
+			expect(list.status()).toBe(200);
+			const listed = (await list.json()).medications;
+			const names = listed.map((m: { name: string }) => m.name);
+			expect(names).toContain('E2E Carprofen');
+			expect(names).not.toContain('E2E Old Course');
+			expect(Object.keys(listed.find((m: { id: string }) => m.id === med)).sort()).toEqual([
+				'active',
+				'companionId',
+				'id',
+				'name',
+				'nextDueAt'
+			]);
+			const writeAll = await asMember.request.get(
+				`${base}/api/medications?companionId=${EIN}&status=all`,
+				{ headers }
+			);
+			expect((await writeAll.json()).medications.map((m: { id: string }) => m.id)).not.toContain(
+				ended
+			);
+
+			// A full-scope token gets ended ones too with status=all.
+			const all = await asMember.request.get(
+				`${base}/api/medications?companionId=${EIN}&status=all`,
+				{ headers: fullHeaders }
+			);
+			const allMeds = (await all.json()).medications;
+			expect(allMeds.find((m: { id: string }) => m.id === ended).active).toBe(false);
+
+			const bad = await asMember.request.get(`${base}/api/medications?status=nope`, { headers });
+			expect(bad.status()).toBe(400);
+			expect((await bad.json()).code).toBe('invalidStatus');
+
+			// Log a dose.
+			const dose = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { note: 'with a treat' }
+			});
+			expect(dose.status()).toBe(201);
+			const body = await dose.json();
+			expect(body.doseId).toBeTruthy();
+			expect(body.completedReminderId).toBeNull();
+			expect(dosesFor(app.dataDir, med)).toHaveLength(1);
+
+			// Ended medication: 409 medicationEnded. Unknown id: 404.
+			const endedRes = await asMember.request.post(`${base}/api/medications/${ended}/doses`, {
+				headers,
+				data: {}
+			});
+			expect(endedRes.status()).toBe(409);
+			expect((await endedRes.json()).code).toBe('medicationEnded');
+			const unknown = await asMember.request.post(`${base}/api/medications/nope/doses`, {
+				headers,
+				data: {}
+			});
+			expect(unknown.status()).toBe(404);
+
+			// Strict body: unknown field and array body are invalidBody; empty/{} still log.
+			const unknownField = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenat: new Date().toISOString() }
+			});
+			expect(unknownField.status()).toBe(400);
+			expect((await unknownField.json()).code).toBe('invalidBody');
+			const arrayBody = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: []
+			});
+			expect(arrayBody.status()).toBe(400);
+			const tooLong = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { note: 'x'.repeat(20_001) }
+			});
+			expect(tooLong.status()).toBe(400);
+			expect((await tooLong.json()).code).toBe('noteTooLong');
+			expect(dosesFor(app.dataDir, med)).toHaveLength(1);
+
+			// Bad status is a 400 even for an inaccessible companion.
+			const badStatus = await asMember.request.get(
+				`${base}/api/medications?companionId=nope&status=nope`,
+				{ headers }
+			);
+			expect(badStatus.status()).toBe(400);
+
+			// Bad givenAt is a stable 400.
+			const badAt = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenAt: 'not-a-date' }
+			});
+			expect(badAt.status()).toBe(400);
+			expect((await badAt.json()).code).toBe('invalidGivenAt');
+
+			// A dose before the start date (2026-01-01) is refused.
+			const early = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenAt: new Date(2025, 11, 31, 12).toISOString() }
+			});
+			expect(early.status()).toBe(400);
+			expect((await early.json()).code).toBe('givenBeforeStart');
+
+			// A givenAt well ahead of the server clock is refused.
+			const ahead = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() }
+			});
+			expect(ahead.status()).toBe(400);
+			expect((await ahead.json()).code).toBe('givenInFuture');
+
+			// Idempotency: a keyed retry writes one dose.
+			const key = { ...headers, 'Idempotency-Key': 'med-dose-1' };
+			const first = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers: key,
+				data: {}
+			});
+			const second = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers: key,
+				data: {}
+			});
+			expect((await second.json()).doseId).toBe((await first.json()).doseId);
+			expect(dosesFor(app.dataDir, med)).toHaveLength(2);
+
+			// A body-less POST (like a smart button) still logs a dose.
+			const bodyless = await bearerCall('POST', `${base}/api/medications/${med}/doses`, {
+				headers
+			});
+			expect(bodyless.status()).toBe(201);
+			expect(dosesFor(app.dataDir, med)).toHaveLength(3);
+
+			// A full-scope token sees the last dose and who gave it.
+			const after = await asMember.request.get(`${base}/api/medications?companionId=${EIN}`, {
+				headers: fullHeaders
+			});
+			const lastGiven = (await after.json()).medications.find(
+				(m: { id: string }) => m.id === med
+			).lastGiven;
+			expect(lastGiven.at).toBeTruthy();
+			expect(lastGiven.by).toBe(SEED.member.displayName);
+
+			// A full-scope token sees the deprecated alias as markdown; write-scope has none.
+			const detail = await asMember.request.get(`${base}/api/companions/${EIN}`, {
+				headers: fullHeaders
+			});
+			const alias = (await detail.json()).companion.medicationSchedule as string;
+			expect(alias.split('\n')).toContain('- E2E Carprofen, 1 tablet: with food');
+			expect(alias).not.toContain('E2E Old Course');
+			const listAll = await asMember.request.get(`${base}/api/companions`, {
+				headers: fullHeaders
+			});
+			const julia = (await listAll.json()).companions.find((c: { id: string }) => c.id === JULIA);
+			expect(julia.medicationSchedule).toBeNull();
+		} finally {
+			deleteMedications(app.dataDir, ids);
+		}
+	});
+
+	test('medications: caretaker sees only active ones and can log a dose on shift', async ({
+		asCaretaker,
+		app
+	}) => {
+		const ids: string[] = [];
+		try {
+			const med = insertMedication(app.dataDir, { companionId: EIN, name: 'E2E Care Pill' });
+			const ended = insertMedication(app.dataDir, {
+				companionId: EIN,
+				name: 'E2E Care Old',
+				endedOn: '2020-01-01'
+			});
+			ids.push(med, ended);
+			const raw = await createToken(asCaretaker, 'Care med bot', '/care/settings');
+			const headers = { Authorization: `Bearer ${raw}` };
+			const list = await asCaretaker.request.get(
+				`${app.server.baseURL}/api/medications?status=all`,
+				{ headers }
+			);
+			const names = (await list.json()).medications.map((m: { name: string }) => m.name);
+			expect(names).toContain('E2E Care Pill');
+			expect(names).not.toContain('E2E Care Old');
+
+			const res = await asCaretaker.request.post(
+				`${app.server.baseURL}/api/medications/${med}/doses`,
+				{ headers, data: {} }
+			);
+			expect(res.status()).toBe(201);
+			expect(dosesFor(app.dataDir, med)[0].givenBy).toBe(SEED.caretaker.id);
+		} finally {
+			deleteMedications(app.dataDir, ids);
+		}
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -1234,6 +1453,7 @@ test.describe('api tokens', () => {
 
 interface OffShiftWorld {
 	server: AppServer;
+	dataDir: string;
 }
 
 const offShiftTest = base.extend<{ world: OffShiftWorld }>({
@@ -1252,7 +1472,7 @@ const offShiftTest = base.extend<{ world: OffShiftWorld }>({
 			fs.rmSync(dir, { recursive: true, force: true });
 			throw err;
 		}
-		await use({ server });
+		await use({ server, dataDir: dir });
 		await server.stop();
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
@@ -1298,5 +1518,50 @@ offShiftTest(
 		expect((await assigned.json()).code).toBe('noActiveShift');
 
 		await ctx.close();
+	}
+);
+
+offShiftTest(
+	'off-shift caretaker: logging a medication dose is 403 noActiveShift; unassigned is 404',
+	async ({ world, browser }) => {
+		const ctx = await browser.newContext({ baseURL: world.server.baseURL });
+		const page = await ctx.newPage();
+		await page.goto('/auth/login');
+		await page.getByLabel('Username').fill(SEED.caretaker.username);
+		await page.getByLabel('Password').fill(SEED.password);
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+
+		const raw = await createToken(page, 'Offshift med bot', '/care/settings');
+		const headers = { Authorization: `Bearer ${raw}` };
+		const ids: string[] = [];
+		try {
+			const assigned = insertMedication(world.dataDir, { companionId: EIN, name: 'Off Ein' });
+			const unassigned = insertMedication(world.dataDir, {
+				companionId: 'seed-comp-edward',
+				name: 'Off Edward'
+			});
+			ids.push(assigned, unassigned);
+
+			const res = await bearerCall(
+				'POST',
+				`${world.server.baseURL}/api/medications/${assigned}/doses`,
+				{ headers }
+			);
+			expect(res.status()).toBe(403);
+			expect((await res.json()).code).toBe('noActiveShift');
+			expect(dosesFor(world.dataDir, assigned)).toHaveLength(0);
+
+			const other = await bearerCall(
+				'POST',
+				`${world.server.baseURL}/api/medications/${unassigned}/doses`,
+				{ headers }
+			);
+			expect(other.status()).toBe(404);
+			expect((await other.json()).code).toBe('notFound');
+		} finally {
+			deleteMedications(world.dataDir, ids);
+			await ctx.close();
+		}
 	}
 );

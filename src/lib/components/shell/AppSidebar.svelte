@@ -11,6 +11,7 @@
 		Bell,
 		FileText,
 		StickyNote,
+		Pill,
 		Search,
 		ChevronDown,
 		LayoutGrid,
@@ -87,6 +88,11 @@
 						href: `/${activeCompanion.id}/reminders`,
 						label: t(locale, 'nav.reminders'),
 						icon: Bell
+					},
+					{
+						href: `/${activeCompanion.id}/medications`,
+						label: t(locale, 'nav.medications'),
+						icon: Pill
 					},
 					{
 						href: `/${activeCompanion.id}/documents`,

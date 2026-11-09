@@ -31,7 +31,7 @@
 	import RecurrenceEditor from '#lib/components/reminders/RecurrenceEditor.svelte';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
-	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import { reminderBuckets } from '#lib/reminderBuckets.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -58,6 +58,9 @@
 	let prefillTitle = $state('');
 	let prefillType = $state('');
 	let prefillDescription = $state('');
+	// Set when "Add a dose reminder" opened the form: saving links the reminder
+	// to that medication and returns to its page.
+	let prefillMedicationId = $state('');
 	// One-shot guard: prevents the ?new=1 effect from re-firing when the form
 	// closes, even before stripUrlParams has removed the params.
 	let prefillApplied = $state(false);
@@ -68,6 +71,7 @@
 		prefillTitle = '';
 		prefillType = '';
 		prefillDescription = '';
+		prefillMedicationId = '';
 	}
 
 	let active = $derived(data.reminders.filter((r) => !r.completedAt));
@@ -140,11 +144,12 @@
 		const rawType = params.get('type') ?? '';
 		prefillType = (REMINDER_TYPE_VALUES as string[]).includes(rawType) ? rawType : '';
 		prefillDescription = (params.get('description') ?? '').slice(0, 2000);
+		prefillMedicationId = (params.get('medicationId') ?? '').slice(0, 64);
 
 		showForm = true;
 		prefillApplied = true;
 		// Strip the query so a reload doesn't re-open the form with stale values.
-		tick().then(() => stripUrlParams('new', 'title', 'type', 'description'));
+		tick().then(() => stripUrlParams('new', 'title', 'type', 'description', 'medicationId'));
 	});
 
 	// Re-fires for a different reminder/companion (page component is reused
@@ -331,8 +336,7 @@
 			<Separator />
 
 			{#if data.companion.isActive !== false}
-				{@const allowLogEvent =
-					REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null}
+				{@const allowLogEvent = reminderAllowsLogEvent(r)}
 				<div class="flex gap-2 px-5 py-4">
 					<Button
 						type="button"
@@ -450,6 +454,9 @@
 					}}
 					class="space-y-4"
 				>
+					{#if prefillMedicationId}
+						<input type="hidden" name="medicationId" value={prefillMedicationId} />
+					{/if}
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-1.5 col-span-2 sm:col-span-1">
 							<Label for="title">{t(locale, 'page.reminders.labelTitle')}</Label>
@@ -678,10 +685,7 @@
 											const form = dismissFormRegistry.get(reminder.id);
 											if (form)
 												pendingDismiss.queue(reminder.id, form, reminder.title, {
-													allowLogEvent:
-														REMINDER_TO_HEALTH_TYPE[
-															reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-														] !== null
+													allowLogEvent: reminderAllowsLogEvent(reminder)
 												});
 										}}
 										onDoneAndLog={() => submitWithAndEvent(reminder.id)}
@@ -693,9 +697,7 @@
 												});
 										}}
 										isRecurring={reminder.isRecurring}
-										allowLogEvent={REMINDER_TO_HEALTH_TYPE[
-											reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-										] !== null}
+										allowLogEvent={reminderAllowsLogEvent(reminder)}
 									/>
 									<Button
 										type="button"

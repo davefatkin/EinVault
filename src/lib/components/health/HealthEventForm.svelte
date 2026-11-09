@@ -21,6 +21,7 @@
 		submitting,
 		prefill = { title: '', type: '', notes: '' },
 		oncancel,
+		medicationsHref,
 		extra
 	}: {
 		action: string;
@@ -30,11 +31,13 @@
 		submitting: boolean;
 		prefill?: { title: string; type: HealthEventType | ''; notes: string };
 		oncancel: () => void;
+		/** New events don't take the Medication type; this points there instead. */
+		medicationsHref: string;
 		/** Rendered above the buttons, e.g. the journal day's attach options. */
 		extra?: Snippet;
 	} = $props();
 	const locale = getLocale();
-	const HEALTH_TYPES = healthTypeOptions(locale);
+	const HEALTH_TYPES = healthTypeOptions(locale, { includeMedication: false });
 </script>
 
 <form method="POST" {action} use:localDatetimes use:enhance={submit} class="space-y-4">
@@ -58,6 +61,12 @@
 					<option value={ht.value} selected={ht.value === prefill.type}>{ht.label}</option>
 				{/each}
 			</Select>
+			<p class="text-xs text-muted-foreground">
+				{t(locale, 'page.health.medicationsHintPrefix')}
+				<a href={medicationsHref} class="underline underline-offset-2 hover:text-foreground"
+					>{t(locale, 'page.health.medicationsHintLink')}</a
+				>
+			</p>
 		</div>
 	</div>
 	<div class="space-y-1.5">

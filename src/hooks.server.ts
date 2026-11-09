@@ -21,6 +21,7 @@ import { isDemoBlockedRequest, demoReturnPath } from '#lib/server/demo.js';
 import { DATA_DIR } from '#lib/server/paths.js';
 import { recoverAndStart } from '#lib/server/video/worker.js';
 import { startNotifyScheduler } from '#lib/server/notify/scheduler.js';
+import { startMedicationSweep } from '#lib/server/medications.js';
 import { getAppSettings } from '#lib/server/app-settings.js';
 import { requiresTwoFactor } from '#lib/server/auth/two-factor.js';
 import { routeGroupDecision } from '#lib/server/auth/route-guard.js';
@@ -40,6 +41,8 @@ logTwoFactorBootStatus();
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
 recoverAndStart();
 startNotifyScheduler();
+// Ended medications keep no open reminders, with or without notifications set up.
+startMedicationSweep();
 
 if (DEMO_MODE) {
 	Promise.all([import('./lib/server/db'), import('./lib/server/db/demo-seed')])

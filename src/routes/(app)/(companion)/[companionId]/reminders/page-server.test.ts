@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { completeReminder } from '#lib/server/reminders.js';
 import { actions } from './+page.server';
 
 const companionId = 'rl-comp';
@@ -13,7 +14,10 @@ function form(fields: Record<string, string>) {
 }
 
 type Action = (e: never) => Promise<unknown>;
-async function call(name: 'add' | 'update', fields: Record<string, string>) {
+async function call(
+	name: 'add' | 'update' | 'restore' | 'complete',
+	fields: Record<string, string>
+) {
 	const event = {
 		request: { formData: async () => form(fields) },
 		params: { companionId },
@@ -176,5 +180,182 @@ describe('reminders add/update lead times', () => {
 		});
 		expect(res.status).toBe(400);
 		expect((await row('u-bad')).notifyLeadDays).toBe('7');
+	});
+});
+
+describe('reminders linked to a medication', () => {
+	const other = 'rl-comp-other';
+	beforeAll(async () => {
+		await db
+			.insert(schema.companions)
+			.values({ id: other, name: 'Other' } as typeof schema.companions.$inferInsert);
+	});
+	let k = 0;
+	async function med(companion = companionId, endedOn: string | null = null) {
+		const id = `rl-med-${++k}`;
+		await db.insert(schema.medications).values({
+			id,
+			companionId: companion,
+			name: 'Carprofen',
+			startedOn: '2026-01-01',
+			endedOn
+		});
+		return id;
+	}
+
+	it('add links the reminder and redirects to the medication', async () => {
+		const m = await med();
+		await expect(call('add', base({ title: 'med-add', medicationId: m }))).rejects.toMatchObject({
+			status: 303,
+			location: `/${companionId}/medications/${m}`
+		});
+		expect((await lastTitled('med-add'))?.medicationId).toBe(m);
+	});
+
+	it("add refuses another companion's medication with 404", async () => {
+		const m = await med(other);
+		const res = await call('add', base({ title: 'med-other', medicationId: m }));
+		expect(res.status).toBe(404);
+		expect(res.data?.error).toBe('Medication not found.');
+		expect(await lastTitled('med-other')).toBeUndefined();
+	});
+
+	it('add refuses an ended medication with 400', async () => {
+		const m = await med(companionId, '2020-01-01');
+		const res = await call('add', base({ title: 'med-ended', medicationId: m }));
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('This medication has ended.');
+		expect(await lastTitled('med-ended')).toBeUndefined();
+	});
+
+	it('add refuses a reminder due after the medication ends', async () => {
+		// base() is due 2030-06-20.
+		const m = await med(companionId, '2030-06-19');
+		const res = await call('add', base({ title: 'med-late', medicationId: m }));
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('This reminder is due after the medication ends.');
+		expect(await lastTitled('med-late')).toBeUndefined();
+		const lastDay = await med(companionId, '2030-06-20');
+		await expect(
+			call('add', base({ title: 'med-last-day', medicationId: lastDay }))
+		).rejects.toMatchObject({ status: 303 });
+	});
+
+	it('add with an empty medicationId stores no link', async () => {
+		await call('add', base({ title: 'med-none', medicationId: '' }));
+		expect((await lastTitled('med-none'))?.medicationId).toBeNull();
+	});
+
+	async function linkedSeries(m: string, id: string) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId,
+			title: id,
+			type: 'medication',
+			dueAt: day(1),
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			seriesId: id,
+			medicationId: m,
+			loggedBy: 'rl-user'
+		} as typeof schema.reminders.$inferInsert);
+	}
+	const dosesFor = (m: string) =>
+		db.query.medicationDoses.findMany({ where: eq(schema.medicationDoses.medicationId, m) });
+
+	it("restore removes only the restored occurrence's dose", async () => {
+		const m = await med();
+		await linkedSeries(m, 'rl-series');
+		const first = completeReminder(await row('rl-series'), 'rl-user')!;
+		const second = completeReminder(await row(first.nextReminderId!), 'rl-user')!;
+		await db.insert(schema.medicationDoses).values({
+			id: 'rl-manual',
+			medicationId: m,
+			givenAt: day(1),
+			source: 'manual'
+		});
+		expect(await dosesFor(m)).toHaveLength(3);
+
+		const res = await call('restore', { id: 'rl-series' });
+		expect(res).toEqual({ restoreSuccess: true });
+		expect((await row('rl-series')).completedAt).toBeNull();
+		expect(
+			await db.query.reminders.findFirst({ where: eq(schema.reminders.id, second.nextReminderId!) })
+		).toBeUndefined();
+		// The later occurrence is gone but its dose was really given: it stays,
+		// unlinked, still marked as coming from a reminder.
+		const left = await dosesFor(m);
+		expect(left.map((d) => d.id).sort()).toEqual([second.doseId!, 'rl-manual'].sort());
+		expect(left.find((d) => d.id === second.doseId)).toMatchObject({
+			reminderId: null,
+			source: 'reminder'
+		});
+	});
+
+	it('update refuses moving a dose reminder past the last day', async () => {
+		const m = await med(companionId, '2030-06-19');
+		await linkedSeries(m, 'rl-move');
+		const late = await call('update', base({ id: 'rl-move', title: 'rl-move' }));
+		expect(late.status).toBe(400);
+		expect(late.data?.error).toBe('This reminder is due after the medication ends.');
+		expect((await row('rl-move')).dueAt).toEqual(day(1));
+
+		const lastDay = day(19);
+		const ok = await call('update', base({ id: 'rl-move', dueAt: lastDay.toISOString() }));
+		expect(ok).toEqual({ updateSuccess: true });
+		expect((await row('rl-move')).dueAt).toEqual(lastDay);
+	});
+
+	it('update leaves the due date check alone when the date does not move', async () => {
+		const m = await med(companionId, '2030-06-19');
+		await linkedSeries(m, 'rl-keep');
+		await db
+			.update(schema.reminders)
+			.set({ dueAt: day(25) })
+			.where(eq(schema.reminders.id, 'rl-keep'));
+		const res = await call(
+			'update',
+			base({ id: 'rl-keep', title: 'renamed', dueAt: day(25).toISOString() })
+		);
+		expect(res).toEqual({ updateSuccess: true });
+		expect((await row('rl-keep')).title).toBe('renamed');
+	});
+
+	it('complete ignores Log event for a dose reminder', async () => {
+		const m = await med();
+		await linkedSeries(m, 'rl-and-event');
+		const res = await call('complete', { id: 'rl-and-event', andEvent: '1' });
+		expect(res).toEqual({ completeSuccess: true });
+		expect((await row('rl-and-event')).completedAt).not.toBeNull();
+		expect(await dosesFor(m)).toHaveLength(1);
+	});
+
+	it('complete still offers Log event for an unlinked reminder', async () => {
+		await db.insert(schema.reminders).values({
+			id: 'rl-plain-event',
+			companionId,
+			title: 'Checkup',
+			type: 'vet',
+			dueAt: day(1)
+		});
+		await expect(call('complete', { id: 'rl-plain-event', andEvent: '1' })).rejects.toMatchObject({
+			status: 303
+		});
+	});
+
+	it('restore is refused when the medication has ended', async () => {
+		const m = await med();
+		await linkedSeries(m, 'rl-ended');
+		completeReminder(await row('rl-ended'), 'rl-user');
+		await db
+			.update(schema.medications)
+			.set({ endedOn: '2020-01-01' })
+			.where(eq(schema.medications.id, m));
+		const res = await call('restore', { id: 'rl-ended' });
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('This medication has ended.');
+		expect((await row('rl-ended')).completedAt).not.toBeNull();
+		expect(await dosesFor(m)).toHaveLength(1);
 	});
 });
