@@ -2,9 +2,9 @@
 	import { Check } from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
-		LEAD_DAY_PRESETS,
 		MAX_LEAD_TIMES,
-		repeatPeriodDays,
+		leadChipOptions,
+		pruneLeadDays,
 		serializeLeadDays
 	} from '#lib/reminderLeadTimes.js';
 
@@ -20,17 +20,12 @@
 
 	const locale = getLocale();
 
-	const offered = $derived(
-		recurrence
-			? LEAD_DAY_PRESETS.filter((n) => n < repeatPeriodDays(recurrence.unit, recurrence.interval))
-			: [...LEAD_DAY_PRESETS]
-	);
+	const offered = $derived(leadChipOptions(value, recurrence));
 
 	// A selection that is no longer shorter than the repeat period is dropped.
 	$effect(() => {
-		if (value.some((n) => !offered.includes(n as (typeof LEAD_DAY_PRESETS)[number]))) {
-			value = value.filter((n) => offered.includes(n as (typeof LEAD_DAY_PRESETS)[number]));
-		}
+		const kept = pruneLeadDays(value, recurrence);
+		if (kept.length !== value.length) value = kept;
 	});
 
 	function label(n: number): string {

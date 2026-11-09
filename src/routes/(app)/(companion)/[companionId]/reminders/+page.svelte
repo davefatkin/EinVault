@@ -63,6 +63,8 @@
 	let prefillApplied = $state(false);
 
 	function resetPrefill() {
+		addLeads = [];
+		addRecurrence = null;
 		prefillTitle = '';
 		prefillType = '';
 		prefillDescription = '';
@@ -159,6 +161,10 @@
 
 	function startEdit(reminder: (typeof data.reminders)[0]) {
 		editLeads = parseLeadDays(reminder.notifyLeadDays);
+		editRecurrence =
+			reminder.isRecurring && reminder.recurrenceUnit && reminder.recurrenceInterval
+				? { unit: reminder.recurrenceUnit, interval: reminder.recurrenceInterval }
+				: null;
 		editingId = reminder.id;
 	}
 
@@ -439,7 +445,6 @@
 							await update();
 							submitting = false;
 							showForm = false;
-							addLeads = [];
 							resetPrefill();
 						};
 					}}

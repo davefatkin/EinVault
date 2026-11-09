@@ -16,7 +16,7 @@ function canonical(days: readonly number[]): number[] {
 	return [...new Set(days)].sort((a, b) => b - a);
 }
 
-/** Tolerant read of the stored text: drops junk, returns distinct values, descending. */
+/** Tolerant read of the stored text: drops junk, returns distinct values, ascending. */
 export function parseLeadDays(text: string | null | undefined): number[] {
 	if (!text) return [];
 	const out: number[] = [];
@@ -87,4 +87,22 @@ export function formatLeadDays(locale: Locale, days: readonly number[]): string 
 			? parts[0]
 			: `${parts.slice(0, -1).join(', ')} ${t(locale, 'page.reminders.leadAnd')} ${parts[parts.length - 1]}`;
 	return t(locale, 'page.reminders.leadSummary', { list });
+}
+
+type Recurrence = { unit: Unit; interval: number } | null;
+
+/** Drops leads that are not shorter than the repeat period; no-op when not recurring. */
+export function pruneLeadDays(days: readonly number[], recurrence: Recurrence): number[] {
+	if (!recurrence) return [...days];
+	const period = repeatPeriodDays(recurrence.unit, recurrence.interval);
+	return days.filter((n) => n < period);
+}
+
+/** Chips to show: presets shorter than the period plus any selected custom values, ascending. */
+export function leadChipOptions(days: readonly number[], recurrence: Recurrence): number[] {
+	const period = recurrence ? repeatPeriodDays(recurrence.unit, recurrence.interval) : Infinity;
+	return canonical([
+		...LEAD_DAY_PRESETS.filter((n) => n < period),
+		...days.filter((n) => n < period)
+	]).reverse();
 }

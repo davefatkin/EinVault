@@ -117,3 +117,17 @@ describe('formatLeadDays', () => {
 		expect(formatLeadDays('en', [])).toBe('');
 	});
 });
+
+describe('pruneLeadDays / leadChipOptions', () => {
+	it('keeps custom leads when not recurring', async () => {
+		const m = await import('./reminderLeadTimes.js');
+		expect(m.pruneLeadDays([10, 2], null)).toEqual([10, 2]);
+		expect(m.leadChipOptions([10], null)).toEqual([1, 2, 3, 7, 10, 14, 30]);
+	});
+	it('drops leads at or past the repeat period', async () => {
+		const m = await import('./reminderLeadTimes.js');
+		const weekly = { unit: 'week' as const, interval: 1 };
+		expect(m.pruneLeadDays([10, 7, 3], weekly)).toEqual([3]);
+		expect(m.leadChipOptions([3], weekly)).toEqual([1, 2, 3]);
+	});
+});
