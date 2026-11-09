@@ -22,6 +22,7 @@ import { failCareError } from '#lib/server/care-errors.js';
 import { resolveActivityUpdate } from '#lib/server/journal-activity.js';
 import { getDayItems, listAttachableDocuments } from '#lib/server/journal-day-items.js';
 import { createHealthEvent, parseHealthEventForm } from '#lib/server/health.js';
+import { createIncident, parseIncidentForm } from '#lib/server/incidents.js';
 import { createWeightEntry, parseWeightForm } from '#lib/server/weight.js';
 import { reminderPrefillUrl } from '#lib/health.js';
 import {
@@ -307,6 +308,29 @@ export const actions: Actions = {
 		const reminderUrl =
 			data.get('andReminder') === '1' ? reminderPrefillUrl(companionId, type, title, notes) : null;
 		return { healthEventId, day, reminderUrl };
+	},
+
+	// Returns the id so the modal can upload the picked files before closing.
+	// Caretakers log incidents from the care page, not here.
+	addIncident: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		if (locals.user.role === 'caretaker')
+			return fail(403, { error: t(locals.locale, 'error.forbidden') });
+		const { companionId, date } = params;
+		if (!isValidDate(date)) return fail(400, { error: t(locals.locale, 'error.invalidDate') });
+		if (await isArchived(companionId))
+			return fail(403, { error: t(locals.locale, 'error.forbidden') });
+
+		const parsed = parseIncidentForm(await request.formData(), locals.locale, {
+			allowStart: true
+		});
+		if (!parsed.ok) return fail(400, { error: parsed.message });
+
+		const id = await createIncident(companionId, parsed.value, locals.user.id);
+		// Started on another day: link it here, so it still shows on this page.
+		if (localDateISO(parsed.value.occurredAt) !== date)
+			await linkHealthEvent(companionId, date, id, locals.user.id);
+		return { id };
 	},
 
 	addWeight: async ({ params, request, locals }) => {

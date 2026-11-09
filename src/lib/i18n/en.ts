@@ -782,6 +782,7 @@ const messages = {
 	'page.journal.day.noHealthRecords': 'No health records for this day.',
 	'page.journal.day.add': 'Add',
 	'page.journal.day.addHealthEvent': 'Health event',
+	'page.journal.day.addIncident': 'Incident',
 	'page.journal.day.addWeight': 'Weight',
 	'page.journal.day.attachFiles': 'Attach files',
 	'page.journal.day.attachExisting': 'Attach existing documents',

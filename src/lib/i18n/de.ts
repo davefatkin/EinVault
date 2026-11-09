@@ -795,6 +795,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noHealthRecords': 'Keine Gesundheitseinträge an diesem Tag.',
 	'page.journal.day.add': 'Hinzufügen',
 	'page.journal.day.addHealthEvent': 'Gesundheitsereignis',
+	'page.journal.day.addIncident': 'Vorfall',
 	'page.journal.day.addWeight': 'Gewicht',
 	'page.journal.day.attachFiles': 'Dateien anhängen',
 	'page.journal.day.attachExisting': 'Vorhandene Dokumente anhängen',
