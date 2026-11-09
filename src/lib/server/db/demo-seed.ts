@@ -130,6 +130,26 @@ export const SEED = {
 			tags: []
 		}
 	},
+	// Demo-only incidents (#282). Not part of seedRows: an open incident would
+	// put a banner on Ein in every e2e spec. Seeded by seedDemoIncidents.
+	incidents: {
+		einLimp: {
+			id: 'seed-incident-ein-limp',
+			title: 'Limping, left back leg',
+			recheckId: 'seed-health-ein-recheck',
+			recheckTitle: 'Recheck: left back leg',
+			updateIds: [
+				'seed-incident-ein-limp-u1',
+				'seed-incident-ein-limp-u2',
+				'seed-incident-ein-limp-u3'
+			]
+		},
+		edwardStomach: {
+			id: 'seed-incident-edward-stomach',
+			title: 'Upset stomach',
+			updateIds: ['seed-incident-edward-stomach-u1', 'seed-incident-edward-stomach-u2']
+		}
+	},
 	// Note media (#321). Filenames follow the app's `{mediaId}.{ext}` shape;
 	// `sourceAsset` names the bundled demo JPEG copied to the storage key.
 	noteMedia: {
@@ -1096,6 +1116,113 @@ export async function ensureDemoUsers(db: SeedDb): Promise<number> {
 }
 
 /**
+ * Demo-only incidents: one open (Ein) and one resolved (Edward). Called from
+ * refreshDemoContent after seedContent; never from seedRows, so e2e stays free
+ * of incident banners. Anchored to `now` like the rest of the seed.
+ */
+export function seedDemoIncidents(
+	db: BetterSQLite3Database<typeof schema>,
+	opts: { now: number }
+): void {
+	const now = opts.now;
+	const day = 24 * 60 * 60 * 1000;
+	const hour = 60 * 60 * 1000;
+	const { einLimp, edwardStomach } = SEED.incidents;
+	const ein = SEED.companions.ein.id;
+	const edward = SEED.companions.edward.id;
+	const spike = SEED.admin.id;
+	const jet = SEED.member.id;
+	const faye = SEED.caretaker.id;
+
+	db.insert(schema.healthEvents)
+		.values([
+			{
+				id: einLimp.id,
+				companionId: ein,
+				type: 'incident',
+				title: einLimp.title,
+				notes:
+					'Started limping after a long hike. No swelling or heat that we can find, and he is still eating normally. Keeping him off the stairs and on short leash walks for now.',
+				severity: 'moderate',
+				occurredAt: new Date(now - 4 * day),
+				loggedBy: jet
+			},
+			{
+				id: einLimp.recheckId,
+				companionId: ein,
+				type: 'vet_visit',
+				title: einLimp.recheckTitle,
+				notes: 'Mild strain. Rest and short walks for a week.',
+				occurredAt: new Date(now - 2 * day - 3 * hour),
+				vetName: 'Dr. Bacchus',
+				vetClinic: 'Animal Treasure Veterinary',
+				loggedBy: spike
+			},
+			{
+				id: edwardStomach.id,
+				companionId: edward,
+				type: 'incident',
+				title: edwardStomach.title,
+				notes: 'Got into the trash and ate something she should not have. Vomited twice overnight.',
+				severity: 'severe',
+				occurredAt: new Date(now - 24 * day),
+				resolvedAt: new Date(now - 21 * day),
+				loggedBy: spike
+			}
+		])
+		.run();
+
+	db.insert(schema.healthEventUpdates)
+		.values([
+			{
+				id: einLimp.updateIds[0],
+				healthEventId: einLimp.id,
+				body: 'Still favoring the leg this morning, but putting weight on it. Vet recheck booked.',
+				severity: 'moderate',
+				occurredAt: new Date(now - 3 * day + 2 * hour),
+				loggedBy: spike
+			},
+			{
+				id: einLimp.updateIds[1],
+				healthEventId: einLimp.id,
+				body: 'Vet thinks it is a mild strain. Walking better on the evening loop.',
+				severity: 'mild',
+				occurredAt: new Date(now - 2 * day),
+				loggedBy: faye
+			},
+			{
+				id: einLimp.updateIds[2],
+				healthEventId: einLimp.id,
+				body: 'Barely a limp today. Staying on short walks and no stairs until the weekend.',
+				severity: 'mild',
+				occurredAt: new Date(now - 1 * day),
+				loggedBy: jet
+			},
+			{
+				id: edwardStomach.updateIds[0],
+				healthEventId: edwardStomach.id,
+				body: 'No more vomiting. Small bland meals, drinking water on her own.',
+				severity: 'moderate',
+				occurredAt: new Date(now - 23 * day),
+				loggedBy: jet
+			},
+			{
+				id: edwardStomach.updateIds[1],
+				healthEventId: edwardStomach.id,
+				body: 'Back to normal: eating, playing, and plotting against the trash can. Closing this out.',
+				severity: null,
+				occurredAt: new Date(now - 21 * day),
+				loggedBy: spike
+			}
+		])
+		.run();
+
+	db.insert(schema.healthEventLinks)
+		.values({ incidentId: einLimp.id, healthEventId: einLimp.recheckId })
+		.run();
+}
+
+/**
  * Wipes all demo content rows (companions + their cascade children,
  * plus explicit deletes for tables with user FK), then re-seeds
  * anchored to `now`. Also copies photo files.
@@ -1123,11 +1250,13 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// it; delete explicitly (this cascades to quick_log_companions).
 		tx.delete(schema.quickLogs).run();
 		// companions cascade to: journalEntries -> media, healthEvents -> media,
+		// healthEventUpdates (-> media) and healthEventLinks,
 		// weightEntries, dailyEvents, reminders, notes -> noteTags, media
 		tx.delete(schema.companions).run();
 		// Shift runs past the 24h reseed interval so the caretaker stays on-shift
 		// for the whole window between refreshes (issue #158).
 		seedContent(tx as never, { now, shiftEndHours: 25 });
+		seedDemoIncidents(tx as never, { now });
 	});
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }

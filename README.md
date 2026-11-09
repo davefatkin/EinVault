@@ -54,6 +54,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Notes:** pinned, tagged markdown notes per companion with photos and videos, multi-tag filtering, and per-note sharing to caretakers
 - **Caretaker sheet:** a printable one-pager with schedules, contacts, and shared notes for sitters without an account; pick which sections, notes, and photos go on paper
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
+- **Incidents:** track something that goes wrong, like a symptom or an injury, until it is resolved, with severity, dated updates with photos and videos, and links to vet visits; caretakers can log them on shift and owners get an alert
 - **Activity logging:** walks, meals, bathroom trips, litter box visits, treats, play sessions, and grooming, with the choices matched to each companion's species (dog, cat, or other)
 - **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users
 - **Bearer-token API:** log activities and journal entries, manage notes, record health and weight, manage reminders, and read companion, shift, and roster data headlessly from smart buttons, scripts, and devices

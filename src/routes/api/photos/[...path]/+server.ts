@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import {
+	resolveHealthEventMedia,
 	resolveJournalMedia,
 	resolveNoteMedia,
 	type ResolvedMedia
@@ -11,6 +12,7 @@ import { serveStoredMedia } from '#lib/server/media-serve.js';
 // URL shapes:
 //   /api/photos/journal/{companionId}/{date}/{filename}
 //   /api/photos/notes/{companionId}/{noteId}/{filename}
+//   /api/photos/health/{companionId}/{incidentId}/{filename}
 // `?poster` serves a transcoded video's poster instead of the video.
 export const GET: RequestHandler = async ({ params, url, locals, request }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
@@ -25,6 +27,9 @@ export const GET: RequestHandler = async ({ params, url, locals, request }) => {
 			break;
 		case 'notes':
 			resolved = await resolveNoteMedia(segments, locals.user, locals.locale, wantPoster);
+			break;
+		case 'health':
+			resolved = await resolveHealthEventMedia(segments, locals.user, locals.locale, wantPoster);
 			break;
 		default:
 			error(404, t(locals.locale, 'error.notFound'));

@@ -20,6 +20,8 @@ import {
 	formatWhen
 } from '#lib/server/mail/templates.js';
 import { buildCelebrationRows } from './celebrations';
+import { deliverIncident, deliverIncidentNtfy } from './incidents';
+import { publicLink } from './links';
 import { isNtfyEnabled, sendNtfy } from './ntfy';
 import {
 	claimNext,
@@ -245,13 +247,6 @@ async function eligibleRecipient(userId: string) {
 	});
 	if (!user || !user.isActive) return null;
 	return user;
-}
-
-// Deep links need a configured public origin; without one the email simply
-// has no button (boot already warns about ORIGIN when SMTP is on).
-function publicLink(path: string): string | null {
-	const origin = env.ORIGIN?.trim().replace(/\/$/, '') || null;
-	return origin ? `${origin}${path}` : null;
 }
 
 async function deliverReminder(
@@ -551,16 +546,26 @@ async function drain(): Promise<void> {
 					await deliverReminder(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebration(row, row.payload);
-				} else {
+				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
 					await deliverShift(row, row.payload);
+				} else if (
+					row.payload.kind === 'incidentLogged' ||
+					row.payload.kind === 'incidentUpdated'
+				) {
+					await deliverIncident(row, row.payload);
 				}
 			} else if (row.channel === 'ntfy') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminderNtfy(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebrationNtfy(row, row.payload);
-				} else {
+				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
 					await deliverShiftNtfy(row, row.payload);
+				} else if (
+					row.payload.kind === 'incidentLogged' ||
+					row.payload.kind === 'incidentUpdated'
+				) {
+					await deliverIncidentNtfy(row, row.payload);
 				}
 			} else {
 				// apprise lands in a later PR.

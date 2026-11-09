@@ -131,6 +131,65 @@ beforeAll(async () => {
 	await addNote('cs-n-private', FULL, false);
 	await addMedia('cs-m-private', 'cs-n-private');
 	await addNote('cs-n-other', OTHER, true);
+	const started = new Date(2026, 4, 1, 9);
+	await db.insert(schema.healthEvents).values([
+		{
+			id: 'cs-i-open',
+			companionId: FULL,
+			type: 'incident',
+			title: 'Limping',
+			occurredAt: started,
+			loggedBy: JET
+		},
+		{
+			id: 'cs-i-resolved',
+			companionId: FULL,
+			type: 'incident',
+			title: 'Old cough',
+			occurredAt: started,
+			resolvedAt: new Date(2026, 4, 3),
+			loggedBy: JET
+		},
+		{
+			id: 'cs-i-other',
+			companionId: OTHER,
+			type: 'incident',
+			title: 'Edward only',
+			occurredAt: started,
+			loggedBy: JET
+		}
+	] as (typeof schema.healthEvents.$inferInsert)[]);
+	await db.insert(schema.healthEventUpdates).values([
+		{
+			id: 'cs-u-1',
+			healthEventId: 'cs-i-open',
+			body: 'Resting it.',
+			severity: 'mild',
+			occurredAt: new Date(2026, 4, 1, 12),
+			loggedBy: JET
+		},
+		{
+			id: 'cs-u-2',
+			healthEventId: 'cs-i-open',
+			body: 'Worse after the walk.',
+			severity: 'moderate',
+			occurredAt: new Date(2026, 4, 2, 12),
+			loggedBy: JET
+		}
+	] as (typeof schema.healthEventUpdates.$inferInsert)[]);
+});
+
+describe('loadCaretakerSheet open incidents', () => {
+	it('lists only the open incidents of this companion, with the latest update', async () => {
+		const { openIncidents } = (await loadCaretakerSheet(FULL))!;
+		expect(openIncidents.map((i) => i.id)).toEqual(['cs-i-open']);
+		expect(openIncidents[0]).toMatchObject({
+			title: 'Limping',
+			currentSeverity: 'moderate',
+			latestUpdate: { body: 'Worse after the walk.' }
+		});
+		expect((await loadCaretakerSheet(BARE))!.openIncidents).toEqual([]);
+	});
 });
 
 describe('loadCaretakerSheet', () => {
@@ -141,6 +200,7 @@ describe('loadCaretakerSheet', () => {
 			'emergency',
 			'latestWeight',
 			'notes',
+			'openIncidents',
 			'owners',
 			'schedules',
 			'vet'

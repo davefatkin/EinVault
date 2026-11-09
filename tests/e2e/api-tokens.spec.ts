@@ -1010,6 +1010,172 @@ test.describe('api tokens', () => {
 		expect(res.status()).toBe(201);
 	});
 
+	test('caretaker token cannot create an incident', async ({ asCaretaker, app }) => {
+		const raw = await createToken(asCaretaker, 'Care incident bot', '/care/settings');
+		const res = await asCaretaker.request.post(app.server.baseURL + '/api/health-events', {
+			headers: { Authorization: `Bearer ${raw}` },
+			data: { companionId: EIN, type: 'incident', title: 'Should not exist' }
+		});
+		expect(res.status()).toBe(403);
+		expect((await res.json()).code).toBe('forbidden');
+	});
+
+	test('caretaker token gets 403 on the incident endpoints', async ({
+		asCaretaker,
+		asMember,
+		app
+	}) => {
+		const base = app.server.baseURL;
+		const memberRaw = await createToken(asMember, 'Incident owner bot');
+		const mh = { Authorization: `Bearer ${memberRaw}` };
+		const created = await asMember.request.post(base + '/api/health-events', {
+			headers: mh,
+			data: { companionId: EIN, type: 'incident', title: 'Caretaker 403 probe' }
+		});
+		expect(created.status()).toBe(201);
+		const { id } = await created.json();
+		try {
+			const raw = await createToken(asCaretaker, 'Care incident reader', '/care/settings');
+			const headers = { Authorization: `Bearer ${raw}` };
+			const list = await asCaretaker.request.get(base + `/api/health-events/${id}/updates`, {
+				headers
+			});
+			expect(list.status()).toBe(403);
+			expect((await list.json()).code).toBe('forbidden');
+			const add = await asCaretaker.request.post(base + `/api/health-events/${id}/updates`, {
+				headers,
+				data: { body: 'nope' }
+			});
+			expect(add.status()).toBe(403);
+			const resolve = await asCaretaker.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: {}
+			});
+			expect(resolve.status()).toBe(403);
+		} finally {
+			await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers: mh,
+				data: {}
+			});
+		}
+	});
+
+	test('member token creates an incident, adds an update, links a vet visit, resolves it', async ({
+		asMember,
+		app
+	}) => {
+		const base = app.server.baseURL;
+		const raw = await createToken(asMember, 'Incident bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+		const create = await asMember.request.post(base + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'incident', title: 'Api limp', severity: 'mild' }
+		});
+		expect(create.status()).toBe(201);
+		const { id } = await create.json();
+		try {
+			// Validation: vet fields and severity misuse.
+			const vet = await asMember.request.post(base + '/api/health-events', {
+				headers,
+				data: { companionId: EIN, type: 'incident', title: 'x', vetName: 'Dr' }
+			});
+			expect(vet.status()).toBe(400);
+			expect((await vet.json()).code).toBe('invalidField');
+			const sev = await asMember.request.post(base + '/api/health-events', {
+				headers,
+				data: { companionId: EIN, type: 'vet_visit', title: 'x', severity: 'mild' }
+			});
+			expect(sev.status()).toBe(400);
+			expect((await sev.json()).code).toBe('invalidSeverity');
+
+			const read = await asMember.request.get(
+				base + `/api/health-events?companionId=${EIN}&limit=50`,
+				{ headers }
+			);
+			const found = (await read.json()).events.find((e: { id: string }) => e.id === id);
+			expect(found.severity).toBe('mild');
+			expect(found.resolvedAt).toBeNull();
+
+			const up = await asMember.request.post(base + `/api/health-events/${id}/updates`, {
+				headers,
+				data: { body: 'Walking better', severity: 'moderate' }
+			});
+			expect(up.status()).toBe(201);
+			const update = await up.json();
+			expect(update.body).toBe('Walking better');
+			const patched = await asMember.request.patch(
+				base + `/api/health-events/${id}/updates/${update.id}`,
+				{ headers, data: { body: 'Walking much better' } }
+			);
+			expect(patched.status()).toBe(200);
+			const pj = await patched.json();
+			expect(pj.body).toBe('Walking much better');
+			expect(pj.severity).toBe('moderate');
+			const ups = await asMember.request.get(base + `/api/health-events/${id}/updates`, {
+				headers
+			});
+			expect((await ups.json()).updates).toHaveLength(1);
+
+			const visit = await asMember.request.post(base + '/api/health-events', {
+				headers,
+				data: { companionId: EIN, type: 'vet_visit', title: 'Limp checkup' }
+			});
+			const visitId = (await visit.json()).id;
+			const link = await asMember.request.post(base + `/api/health-events/${id}/links`, {
+				headers,
+				data: { healthEventId: visitId }
+			});
+			expect(link.status()).toBe(201);
+			// An incident cannot link to an incident.
+			const bad = await asMember.request.post(base + `/api/health-events/${id}/links`, {
+				headers,
+				data: { healthEventId: id }
+			});
+			expect(bad.status()).toBe(400);
+			const links = await asMember.request.get(base + `/api/health-events/${id}/links`, {
+				headers
+			});
+			expect((await links.json()).links.map((l: { id: string }) => l.id)).toEqual([visitId]);
+			const unlink = await bearerCall(
+				'DELETE',
+				base + `/api/health-events/${id}/links?healthEventId=${visitId}`,
+				{ headers }
+			);
+			expect(unlink.status()).toBe(204);
+
+			const del = await bearerCall(
+				'DELETE',
+				base + `/api/health-events/${id}/updates/${update.id}`,
+				{ headers }
+			);
+			expect(del.status()).toBe(204);
+
+			const early = await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: { resolvedAt: '2000-01-01T00:00:00Z' }
+			});
+			expect(early.status()).toBe(400);
+			expect((await early.json()).code).toBe('resolvedBeforeStart');
+			const res = await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: {}
+			});
+			expect(res.status()).toBe(200);
+			expect((await res.json()).resolvedAt).not.toBeNull();
+			const reopen = await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: { resolvedAt: null }
+			});
+			expect((await reopen.json()).resolvedAt).toBeNull();
+		} finally {
+			// The API has no health-event DELETE; resolving keeps the banner off other specs.
+			await asMember.request.post(base + `/api/health-events/${id}/resolve`, {
+				headers,
+				data: {}
+			});
+		}
+	});
+
 	test('admin revokes a member’s API access; tokens 401 until re-granted', async ({
 		asMember,
 		asAdmin,

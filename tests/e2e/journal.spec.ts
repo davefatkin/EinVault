@@ -2,6 +2,7 @@ import { test, expect } from '../lib/fixtures';
 import { pngUpload, pdfUpload } from '../lib/files';
 import { todayUTC } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
+import { deleteIncidentViaUi, incidentUrl, waitForCreatedIncidentId } from '../lib/incidents';
 
 const COMP = 'seed-comp-ein';
 
@@ -829,5 +830,33 @@ test.describe('journal day editor', () => {
 		await expect(asMember.getByTestId('day-health-records').getByText(name)).toBeVisible({
 			timeout: 10_000
 		});
+	});
+
+	test('add an incident from the journal day and see its chip', async ({ asMember }) => {
+		const title = `e2e-day-incident-${Date.now().toString(36)}`;
+		await asMember.goto(`/${COMP}/journal/2026-05-12`);
+		await waitForHydration(asMember);
+		let id: string | null = null;
+		try {
+			await openAdd(asMember, 'Incident');
+			const dialog = asMember.getByRole('dialog', { name: 'New incident' });
+			await dialog.locator('#incident-title').fill(title);
+			await dialog.locator('#incident-severity').selectOption('mild');
+			const created = waitForCreatedIncidentId(asMember, 'addIncident');
+			await dialog.getByRole('button', { name: 'Save incident' }).click();
+			id = await created;
+			await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+
+			// The chip goes straight to the incident page, no detail modal.
+			const chip = asMember.getByTestId('day-health-records').getByRole('button', {
+				name: new RegExp(`^${title}`)
+			});
+			await expect(chip).toBeVisible();
+			await chip.click();
+			await expect(asMember).toHaveURL(incidentUrl(COMP, id), { timeout: 10_000 });
+			await expect(asMember.getByRole('heading', { level: 1, name: title })).toBeVisible();
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, COMP, id);
+		}
 	});
 });

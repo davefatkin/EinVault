@@ -39,7 +39,9 @@ export function parseHealthEventForm(data: FormData, locale: Locale): FormParse<
 	const notes = String(data.get('notes') ?? '').trim();
 	const vetName = String(data.get('vetName') ?? '').trim();
 	const vetClinic = String(data.get('vetClinic') ?? '').trim();
-	if (!title || !type) return { ok: false, message: t(locale, 'error.titleAndTypeRequired') };
+	// Incidents have their own form and can't be created or retyped here.
+	if (!title || !type || type === 'incident')
+		return { ok: false, message: t(locale, 'error.titleAndTypeRequired') };
 	if ([title, notes, vetName, vetClinic].some((v) => exceedsLen(v, MAX_NOTE_LEN)))
 		return { ok: false, message: t(locale, 'error.fieldTooLong', { max: MAX_NOTE_LEN }) };
 	const occurredAt = parseFormTimestamp(data.get('occurredAt'));

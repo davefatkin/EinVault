@@ -5,7 +5,10 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Separator } from '#lib/components/ui/separator/index.js';
-	import { X, FileText, HeartPulse } from '@lucide/svelte';
+	import { enhance } from '$app/forms';
+	import { X, FileText, HeartPulse, Unlink } from '@lucide/svelte';
+	import LinkEventPicker from '#lib/components/incidents/LinkEventPicker.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import { healthTypeLabel } from '#lib/i18n/labels.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -23,7 +26,8 @@
 		footer,
 		footerExtra,
 		journalHref,
-		currentDate
+		currentDate,
+		incidentLinks
 	}: {
 		detail: HealthDetail;
 		documents?: D[];
@@ -39,6 +43,13 @@
 		journalHref?: (date: string) => string;
 		/** The journal day being viewed, rendered as plain text instead of a link. */
 		currentDate?: string;
+		/** "About incident…": the incidents this event belongs to, with link/unlink. Owners only. */
+		incidentLinks?: {
+			companionId: string;
+			incidents: { id: string; title: string; resolvedAt: Date | string | null }[];
+			linkAction: string;
+			unlinkAction: string;
+		};
 	} = $props();
 
 	const locale = getLocale();
@@ -70,6 +81,26 @@
 		} else if (!e.shiftKey && document.activeElement === last) {
 			e.preventDefault();
 			first.focus();
+		}
+	}
+
+	// Candidates load when the picker opens, not with the page.
+	let candidates = $state<
+		| { id: string; title: string; resolvedAt: Date | string | null; occurredAt: Date | string }[]
+		| null
+	>(null);
+	let candidatesState = $state<'idle' | 'loading' | 'failed'>('idle');
+	async function openPicker(companionId: string, eventId: string) {
+		candidatesState = 'loading';
+		try {
+			const res = await fetch(
+				`/${companionId}/health/incidents/candidates?eventId=${encodeURIComponent(eventId)}`
+			);
+			if (!res.ok) throw new Error(String(res.status));
+			candidates = await res.json();
+			candidatesState = 'idle';
+		} catch {
+			candidatesState = 'failed';
 		}
 	}
 
@@ -228,6 +259,71 @@
 								{/if}
 							{/each}
 						</div>
+					</div>
+				{/if}
+				{#if incidentLinks}
+					<div class="space-y-1.5 pt-1" data-testid="health-detail-incidents">
+						<p class="text-xs font-medium text-muted-foreground">
+							{t(locale, 'component.healthDetail.aboutIncident')}
+						</p>
+						{#each incidentLinks.incidents as inc (inc.id)}
+							<div class="flex items-center gap-2">
+								<a
+									href={incidentPath(incidentLinks.companionId, inc.id)}
+									onclick={onclose}
+									class="min-w-0 flex-1 truncate text-primary-link hover:underline">{inc.title}</a
+								>
+								{#if inc.resolvedAt}
+									<span class="text-xs text-muted-foreground"
+										>{t(locale, 'component.healthDetail.incidentResolved')}</span
+									>
+								{/if}
+								<form method="POST" action={incidentLinks.unlinkAction} use:enhance>
+									<input type="hidden" name="incidentId" value={inc.id} />
+									<input type="hidden" name="healthEventId" value={h.id} />
+									<button
+										type="submit"
+										class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+										aria-label={t(locale, 'component.healthDetail.unlinkIncident', {
+											title: inc.title
+										})}
+									>
+										<Unlink class="h-3.5 w-3.5" />
+									</button>
+								</form>
+							</div>
+						{/each}
+						{#if candidates}
+							<LinkEventPicker
+								items={candidates.map((c) => ({
+									id: c.id,
+									label: c.title,
+									badge: c.resolvedAt
+										? t(locale, 'component.healthDetail.incidentResolved')
+										: undefined,
+									date: c.occurredAt
+								}))}
+								action={incidentLinks.linkAction}
+								idField="incidentId"
+								fields={{ healthEventId: h.id }}
+								emptyText={t(locale, 'component.healthDetail.noIncidents')}
+								onlinked={() => (candidates = null)}
+							/>
+						{:else}
+							{#if candidatesState === 'failed'}
+								<p role="alert" class="text-xs text-destructive">
+									{t(locale, 'page.incident.linkLoadFailed')}
+								</p>
+							{/if}
+							<Button
+								variant="soft"
+								size="sm"
+								disabled={candidatesState === 'loading'}
+								onclick={() => openPicker(incidentLinks.companionId, h.id)}
+							>
+								{t(locale, 'component.healthDetail.linkIncident')}
+							</Button>
+						{/if}
 					</div>
 				{/if}
 			{/if}

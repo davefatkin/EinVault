@@ -28,6 +28,7 @@
 		Link2,
 		Unlink,
 		HeartPulse,
+		Bandage,
 		Scale,
 		Upload,
 		FileText
@@ -47,6 +48,8 @@
 	import { uploadDocument, importFromPaperless, DOCUMENT_ACCEPT } from '#lib/documentsApi.js';
 	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
+	import IncidentFormModal from '#lib/components/incidents/IncidentFormModal.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 	import DayHealthEventModal from '#lib/components/journal/DayHealthEventModal.svelte';
 	import DayWeightModal from '#lib/components/journal/DayWeightModal.svelte';
 	import {
@@ -83,8 +86,23 @@
 	let showLinkForm = $state(false);
 	const canEditRecords = $derived(companion.isActive !== false);
 
+	// Incidents open their own page. One linked to this day keeps the detail
+	// modal while records can be edited: its Unlink button lives there.
+	function openRecord(item: DayRecordItem) {
+		if (
+			item.kind === 'health' &&
+			item.type === 'incident' &&
+			!(item.linkedHere && canEditRecords)
+		) {
+			goto(incidentPath(companion.id, item.id));
+			return;
+		}
+		detailRecord = item;
+	}
+
 	let showHealthModal = $state(false);
 	let showWeightModal = $state(false);
+	let showIncidentModal = $state(false);
 
 	let docInput = $state<HTMLInputElement | null>(null);
 	let uploadingDocs = $state(false);
@@ -142,6 +160,11 @@
 			onselect: () => (showWeightModal = true)
 		},
 		{
+			label: t(locale, 'page.journal.day.addIncident'),
+			icon: Bandage,
+			onselect: () => (showIncidentModal = true)
+		},
+		{
 			label: t(locale, 'page.documents.upload'),
 			icon: Upload,
 			onselect: () => docInput?.click()
@@ -193,6 +216,7 @@
 		// so nothing posts to, or sits over, the new day.
 		showHealthModal = false;
 		showWeightModal = false;
+		showIncidentModal = false;
 		paperlessOpen = false;
 		showLinkForm = false;
 		detailRecord = null;
@@ -280,6 +304,13 @@
 	function defaultLoggedAt() {
 		const d = new Date(data.date + 'T12:00:00');
 		return localDatetimeISO(data.isToday ? new Date() : d);
+	}
+
+	// The viewed day at the current local time of day.
+	function dayAtNow() {
+		const [y, m, d] = data.date.split('-').map(Number);
+		const now = new Date();
+		return new Date(y, m - 1, d, now.getHours(), now.getMinutes());
 	}
 
 	let showActivityForm = $state(false);
@@ -974,7 +1005,7 @@
 
 		<DayHealthRecords
 			items={data.dayItems}
-			onOpenRecord={(item) => (detailRecord = item)}
+			onOpenRecord={openRecord}
 			onPreviewDocument={(doc) => (previewDoc = doc)}
 			headerAction={canEditRecords ? addMenu : undefined}
 			panel={canEditRecords && showLinkForm ? linkHealthPanel : undefined}
@@ -1099,6 +1130,17 @@
 		uploadMaxMb={data.uploadMaxMb}
 		flush={() => autosave.flush()}
 		onclose={() => (showHealthModal = false)}
+	/>
+{/if}
+
+{#if showIncidentModal && canEditRecords}
+	<IncidentFormModal
+		companionId={data.companion.id}
+		defaultStart={dayAtNow()}
+		uploadMaxMb={data.uploadMaxMb}
+		videoMaxMb={data.videoMaxMb}
+		flush={() => autosave.flush()}
+		onclose={() => (showIncidentModal = false)}
 	/>
 {/if}
 

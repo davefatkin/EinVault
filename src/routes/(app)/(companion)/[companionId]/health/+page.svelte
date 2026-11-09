@@ -11,7 +11,7 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
 	import { Select } from '#lib/components/ui/select/index.js';
-	import { Scale, Plus, Pencil, Trash2, FileText, HeartPulse } from '@lucide/svelte';
+	import { Scale, Plus, Pencil, Trash2, FileText, HeartPulse, Bandage } from '@lucide/svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import WeightChart from '#lib/components/WeightChart.svelte';
@@ -20,6 +20,8 @@
 	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
 	import HealthEventForm from '#lib/components/health/HealthEventForm.svelte';
 	import WeightForm from '#lib/components/health/WeightForm.svelte';
+	import OpenIncidentsList from '#lib/components/incidents/OpenIncidentsList.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 	import { stripMarkdown } from '#lib/markdown.js';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
@@ -117,7 +119,8 @@
 		if (weightMatch) {
 			editingWeightId = editId;
 		} else {
-			const healthMatch = data.healthEvents.find((e) => e.id === editId);
+			// Incidents never edit here: the load redirects them to their page.
+			const healthMatch = data.healthEvents.find((e) => e.id === editId && e.type !== 'incident');
 			if (healthMatch) {
 				editingHealthId = editId;
 			}
@@ -162,7 +165,8 @@
 		if (!id || id === lastDeepLinkId) return;
 		lastDeepLinkId = id;
 		if (healthId) {
-			const match = data.healthEvents.find((e) => e.id === healthId);
+			// Incidents never open here: the load redirects them to their page.
+			const match = data.healthEvents.find((e) => e.id === healthId && e.type !== 'incident');
 			if (match) openDetail({ kind: 'health', item: match });
 		} else if (weightId) {
 			const match = data.weightEntries.find((e) => e.id === weightId);
@@ -227,6 +231,14 @@
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		footer={data.companion.isActive !== false ? detailActions : undefined}
 		journalHref={(d) => `/${data.companion.id}/journal/${d}`}
+		incidentLinks={selected.kind === 'health' && data.companion.isActive !== false
+			? {
+					companionId: data.companion.id,
+					incidents: data.incidentLinksByEvent[selected.item.id] ?? [],
+					linkAction: '?/linkIncident',
+					unlinkAction: '?/unlinkIncident'
+				}
+			: undefined}
 	/>
 {/if}
 
@@ -330,6 +342,16 @@
 					{t(locale, 'page.health.logWeight')}
 				</Button>
 				<Button
+					variant="outline"
+					size="sm"
+					href="/{data.companion.id}/health/incidents/new"
+					aria-label={t(locale, 'page.health.newIncident')}
+				>
+					<!-- Icon only on phones, where three labeled buttons overflow the row. -->
+					<Bandage class="h-4 w-4 sm:mr-1.5" />
+					<span class="hidden sm:inline">{t(locale, 'page.health.newIncident')}</span>
+				</Button>
+				<Button
 					size="sm"
 					onclick={() => {
 						showHealthForm = !showHealthForm;
@@ -402,6 +424,21 @@
 				/>
 			</CardContent>
 		</Card>
+	{/if}
+
+	{#if data.openIncidents.length > 0}
+		<section aria-labelledby="open-incidents-heading">
+			<h2
+				id="open-incidents-heading"
+				class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2"
+			>
+				{t(locale, 'page.health.openIncidents')}
+			</h2>
+			<OpenIncidentsList
+				incidents={data.openIncidents}
+				href={(i) => incidentPath(data.companion.id, i.id)}
+			/>
+		</section>
 	{/if}
 
 	<section>
@@ -678,11 +715,7 @@
 							<div
 								class="flex flex-col gap-3 py-2 border-b border-border last:border-0 transition-colors hover:bg-accent/40 sm:flex-row sm:items-start sm:gap-4"
 							>
-								<button
-									type="button"
-									onclick={() => openDetail({ kind: 'health', item: event })}
-									class="flex flex-1 items-start gap-4 text-left rounded-md min-w-0"
-								>
+								{#snippet eventSummary()}
 									<div class="shrink-0 text-right w-20">
 										<span class="text-xs text-muted-foreground"
 											><LocalTime date={event.occurredAt} /></span
@@ -718,8 +751,24 @@
 										{/if}
 										<ByLine user={event.logger} class="mt-0.5" />
 									</div>
-								</button>
-								{#if data.companion.isActive !== false}
+								{/snippet}
+								{#if event.type === 'incident'}
+									<a
+										href={incidentPath(data.companion.id, event.id)}
+										class="flex flex-1 items-start gap-4 text-left rounded-md min-w-0"
+									>
+										{@render eventSummary()}
+									</a>
+								{:else}
+									<button
+										type="button"
+										onclick={() => openDetail({ kind: 'health', item: event })}
+										class="flex flex-1 items-start gap-4 text-left rounded-md min-w-0"
+									>
+										{@render eventSummary()}
+									</button>
+								{/if}
+								{#if data.companion.isActive !== false && event.type !== 'incident'}
 									<div class="flex gap-1 shrink-0 self-end sm:self-auto">
 										<Button
 											type="button"

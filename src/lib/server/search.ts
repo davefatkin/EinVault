@@ -2,6 +2,9 @@ import { db } from '#lib/server/db/index.js';
 import type { SearchEntityType } from '#lib/searchTypes.js';
 export { SEARCH_ENTITY_TYPES, type SearchEntityType } from '#lib/searchTypes.js';
 
+/** Internal index types: the public ones plus rows that surface under another type. */
+type IndexEntityType = SearchEntityType | 'incident_update';
+
 export interface SearchFilters {
 	text: string;
 	companionIds: string[];
@@ -26,8 +29,12 @@ export function buildFilterClause(f: SearchFilters): { sql: string; params: stri
 		params.push(...f.companionIds);
 	}
 	if (f.types.length) {
-		parts.push(`s.entity_type IN (${f.types.map(() => '?').join(', ')})`);
-		params.push(...f.types);
+		// Update rows are indexed as 'incident_update' but surface as health.
+		const types: IndexEntityType[] = f.types.includes('health')
+			? [...f.types, 'incident_update']
+			: f.types;
+		parts.push(`s.entity_type IN (${types.map(() => '?').join(', ')})`);
+		params.push(...types);
 	}
 	if (f.after) {
 		parts.push('s.event_date >= ?');
@@ -71,12 +78,13 @@ export function buildMatchQuery(raw: string): string | null {
 }
 
 const HREF_BY_TYPE: Record<
-	SearchEntityType,
+	IndexEntityType,
 	(companionId: string, date: string, id: string) => string
 > = {
 	journal: (c, d) => `/${c}/journal/${d}`,
 	daily: (c, d) => `/${c}/journal/${d}`,
 	health: (c, _d, id) => `/${c}/health?detailHealth=${id}`,
+	incident_update: (c, _d, id) => `/${c}/health?incidentUpdate=${id}`,
 	weight: (c, _d, id) => `/${c}/health?detailWeight=${id}`,
 	reminder: (c, _d, id) => `/${c}/reminders?detail=${id}`,
 	document: (c, _d, id) => `/${c}/documents?preview=${id}`,
@@ -85,7 +93,7 @@ const HREF_BY_TYPE: Record<
 };
 
 interface SearchRow {
-	entity_type: SearchEntityType;
+	entity_type: IndexEntityType;
 	entity_id: string;
 	companion_id: string;
 	companion_name: string;
@@ -136,7 +144,7 @@ export function search(filters: SearchFilters): SearchResult[] {
 	}
 
 	return rows.map((r) => ({
-		type: r.entity_type,
+		type: r.entity_type === 'incident_update' ? 'health' : r.entity_type,
 		id: r.entity_id,
 		companionId: r.companion_id,
 		companionName: r.companion_name,

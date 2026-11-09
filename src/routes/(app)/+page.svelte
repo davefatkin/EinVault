@@ -518,7 +518,9 @@
 						compReminders.map((r) => ({
 							dueAt: new Date(r.dueAt),
 							completedAt: r.completedAt ? new Date(r.completedAt) : null
-						}))
+						})),
+						undefined,
+						data.openIncidentCounts[companion.id] ?? 0
 					)}
 					{@const nextReminder = nextReminderByCompanion[companion.id]}
 					{@const nextUrgency = nextReminder ? urgencyOf(nextReminder.dueAt) : null}

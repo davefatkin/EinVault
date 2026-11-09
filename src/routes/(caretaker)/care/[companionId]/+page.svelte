@@ -12,7 +12,7 @@
 	import type { MediaItem } from '#lib/media.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { Phone, Mail, X, Bell, Activity, Printer } from '@lucide/svelte';
+	import { Phone, Mail, X, Bell, Activity, Printer, Bandage } from '@lucide/svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '#lib/components/ui/separator/index.js';
@@ -33,6 +33,8 @@
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
+	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
+	import { careIncidentPath } from '#lib/incidents.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
@@ -348,6 +350,11 @@
 		</div>
 	</div>
 
+	<OpenIncidentBanner
+		incidents={data.openIncidents}
+		hrefFor={(id) => careIncidentPath(companion.id, id)}
+	/>
+
 	<!-- 1b. Bio / About (reference) -->
 	{#if companion.bio}
 		<section>
@@ -478,6 +485,10 @@
 					<span>{t(locale, 'page.dashboard.caretaker.logActivity')}</span>
 				</a>
 			</div>
+			<Button href="/care/{companion.id}/incidents/new" variant="outline" size="sm" class="mt-2">
+				<Bandage class="h-3.5 w-3.5 mr-1.5" />
+				{t(locale, 'page.dashboard.caretaker.logIncident')}
+			</Button>
 		</section>
 	{/if}
 

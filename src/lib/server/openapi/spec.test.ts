@@ -66,6 +66,6 @@ describe('buildOpenApiDocument', () => {
 		const bad = get?.responses?.['400'] as { description: string };
 		expect(bad.description).toContain('invalidMatch');
 		expect(bad.description).toContain('tooManyFilterTags');
-		expect(doc.info.version).toBe('1.3.0');
+		expect(doc.info.version).toBe('1.4.0');
 	});
 });

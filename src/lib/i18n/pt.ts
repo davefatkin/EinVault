@@ -41,6 +41,12 @@ const messages: Record<keyof Messages, string> = {
 	'enum.healthType.medication': 'Medicação',
 	'enum.healthType.procedure': 'Procedimento',
 	'enum.healthType.other': 'Outro',
+	'enum.healthType.incident': 'Incidente',
+
+	// Enum: Incident severity
+	'enum.severity.mild': 'Leve',
+	'enum.severity.moderate': 'Moderada',
+	'enum.severity.severe': 'Grave',
 
 	// Enum: Daily event / activity types
 	'enum.activityType.walk': 'Passeio',
@@ -120,6 +126,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.nameRequired': 'O nome é obrigatório.',
 	'error.titleRequired': 'O título é obrigatório.',
 	'error.titleAndTypeRequired': 'O título e um tipo válido são obrigatórios.',
+	'error.updateBodyRequired': 'Escreva o que mudou.',
+	'error.incidentTypeChange':
+		'Incidentes não podem ser alterados para outro tipo, nem criados a partir de outro tipo.',
 	'error.typeRequired': 'O tipo é obrigatório.',
 	'error.invalidSubtype': 'Subtipo inválido para esta atividade',
 	'error.typeNotAllowedForSpecies': 'Essa atividade não está disponível para este companheiro.',
@@ -212,6 +221,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidGifFile': 'Ficheiro GIF inválido',
 	'error.maxMediaExceeded': 'Máximo de {max} fotos ou vídeos por dia',
 	'error.maxNoteMediaExceeded': 'Máximo de {max} fotos ou vídeos por nota',
+	'error.maxIncidentMediaExceeded': 'Você pode adicionar até {max} fotos ou vídeos aqui.',
 	'error.requestBodyTooLarge': 'Pedido demasiado grande',
 	'error.maxDocumentsExceeded': 'Limite de documentos atingido (máx. {max} por companheiro)',
 
@@ -320,22 +330,24 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Recorrência padrão atualizada.',
 	'page.settings.notificationsCard': 'Notificações',
 	'page.settings.notificationsDescription':
-		'Receba e-mails do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba e-mails do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Receba notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba notificações push do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionBoth':
-		'Receba e-mails e notificações push do EinVault. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba e-mails e notificações push do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
 	'page.settings.notifyCelebrationEmailLabel':
 		'Comemorações (aniversários exatos e dias de chegada a casa)',
+	'page.settings.notifyIncidentEmailLabel':
+		'Incidentes (registrados ou atualizados por um cuidador)',
 	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
 	'page.settings.notificationsNeedEmail':
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
-		'As notificações push cobrem lembretes vencidos, alertas de turno e comemorações (aniversários e dias de chegada a casa) do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever. Deixe vazio para desativar os push.',
+		'As notificações push cobrem lembretes vencidos, alertas de turno, comemorações (aniversários e dias de chegada a casa) e incidentes registrados ou atualizados por um cuidador, do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever, e os avisos de incidente incluem o título e a gravidade do incidente. Deixe vazio para desativar os push.',
 	'page.settings.securityCard': 'Segurança',
 	'page.settings.twofaOn': 'A autenticação de dois fatores está ativa.',
 	'page.settings.twofaOff':
@@ -454,6 +466,12 @@ const messages: Record<keyof Messages, string> = {
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Abrir no registo de saúde',
 	'component.healthDetail.unlink': 'Desvincular deste dia',
+	'component.healthDetail.aboutIncident': 'Sobre o incidente…',
+	'component.healthDetail.linkIncident': 'Vincular a um incidente',
+	'component.healthDetail.noIncidents': 'Nenhum incidente para vincular.',
+	'component.healthDetail.unlinkIncident': 'Desvincular de {title}',
+	'component.healthDetail.loadingIncidents': 'Carregando…',
+	'component.healthDetail.incidentResolved': 'Resolvido',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancelar',
@@ -688,6 +706,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.sectionSchedules': 'Horários',
 	'page.dashboard.caretaker.sectionContacts': 'Contactos',
 	'page.dashboard.caretaker.logActivity': 'Registar atividade',
+	'page.dashboard.caretaker.logIncident': 'Registar incidente',
 	'page.dashboard.caretaker.activityEmpty': 'Nada registado hoje.',
 	'page.dashboard.caretaker.modalLabelType': 'Tipo',
 	'page.dashboard.caretaker.modalLabelNotes': 'Notas',
@@ -698,6 +717,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: caretaker sheet (#280)
 	'page.sheet.title': 'Ficha para o cuidador',
 	'page.sheet.sectionNotes': 'Notas',
+	'page.sheet.latestUpdate': 'Última atualização',
 	'page.sheet.video': 'Vídeo no EinVault',
 	'page.sheet.printedOn': 'Impresso em {date} a partir do EinVault',
 	'page.sheet.print': 'Imprimir',
@@ -776,6 +796,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.noHealthRecords': 'Sem registos de saúde neste dia.',
 	'page.journal.day.add': 'Adicionar',
 	'page.journal.day.addHealthEvent': 'Evento de saúde',
+	'page.journal.day.addIncident': 'Incidente',
 	'page.journal.day.addWeight': 'Peso',
 	'page.journal.day.attachFiles': 'Anexar ficheiros',
 	'page.journal.day.attachExisting': 'Anexar documentos existentes',
@@ -1105,6 +1126,62 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTooManyFilterTags': 'Filtre por no máximo {max} tags.',
 	'error.noteInvalidTag': 'Cada tag deve ter de 1 a {max} caracteres.',
 	'error.noteNotFound': 'Nota não encontrada.',
+	'error.incidentNotFound': 'Incidente não encontrado.',
+	'error.updateNotFound': 'Atualização não encontrada.',
+	'error.invalidField': 'Este campo não é permitido em um incidente.',
+	'error.invalidSeverity':
+		'severity só é permitido em incidentes e deve ser mild, moderate ou severe.',
+	'error.incidentLinkInvalid':
+		'Só é possível vincular um evento de saúde do mesmo animal que não seja um incidente.',
+	'page.health.newIncident': 'Novo incidente',
+	'page.health.openIncidents': 'Incidentes em aberto',
+	'page.incident.newTitle': 'Novo incidente',
+	'page.incident.labelStart': 'Início',
+	'page.incident.labelSeverity': 'Gravidade',
+	'page.incident.severityNone': 'Não indicada',
+	'page.incident.placeholderTitle': 'ex. A coxear da pata traseira esquerda',
+	'page.incident.placeholderNotes': 'O que aconteceu, o que pode ter causado, o que fez primeiro',
+	'page.incident.labelFiles': 'Fotos e vídeos',
+	'page.incident.save': 'Guardar incidente',
+	'page.incident.ongoingDay': 'Em curso · dia {day}',
+	'page.incident.resolved': 'Resolvido',
+	'page.incident.started': 'Início',
+	'page.incident.addUpdate': 'Atualização',
+	'page.incident.newUpdateTitle': 'Nova atualização',
+	'page.incident.labelUpdate': 'O que mudou? *',
+	'page.incident.placeholderUpdate': 'ex. Anda melhor esta manhã, ainda com cuidado nas escadas',
+	'page.incident.labelWhen': 'Quando',
+	'page.incident.saveUpdate': 'Guardar atualização',
+	'page.incident.markResolved': 'Marcar como resolvido',
+	'page.incident.reopen': 'Reabrir',
+	'page.incident.print': 'Imprimir',
+	'page.incident.editTitle': 'Editar incidente',
+	'page.incident.confirmDelete':
+		'Eliminar "{title}" com todas as atualizações, fotos e vídeos? As consultas veterinárias ligadas ficam no registo de saúde.',
+	'page.incident.confirmDeleteUpdate': 'Eliminar esta atualização com as suas fotos e vídeos?',
+	'page.incident.overview': 'Resumo',
+	'page.incident.noNotes': 'Ainda sem notas.',
+	'page.incident.progress': 'Evolução',
+	'page.incident.noUpdates': 'Ainda sem atualizações.',
+	'page.incident.resolvedItem': 'Marcado como resolvido',
+	'page.incident.related': 'Relacionado',
+	'page.incident.journal': 'Diário',
+	'page.incident.documents': 'Documentos',
+	'page.incident.linkVet': 'Vincular consulta veterinária',
+	'page.incident.linkPickerTitle': 'Vincular um evento de saúde',
+	'page.incident.linkNone': 'Nada mais para vincular.',
+	'page.incident.linkLoadFailed': 'Não foi possível carregar a lista.',
+	'page.incident.unlinkEvent': 'Desvincular {title}',
+	'page.incident.attachDocument': 'Anexar documento',
+	'page.incident.attachFailed': 'Salvo, mas estes documentos não foram anexados:',
+	'page.incident.labelResolvedAt': 'Resolvido em',
+	'page.incident.labelClosing': 'Atualização final',
+	'page.incident.closingHint': 'Opcional. Como terminou?',
+	'page.incident.day': 'Dia {day}',
+	'page.incident.updated': 'Atualizado',
+	'page.incident.filesFailed': 'Guardado, mas estes ficheiros não foram carregados:',
+	'page.incident.continue': 'Continuar',
+	'error.resolvedBeforeStart': 'A data de resolução não pode ser anterior ao início.',
 	'error.invalidDuration': 'A duração deve ser um número inteiro de minutos, no máximo 480.',
 	'error.invalidLoggedAt':
 		'loggedAt deve ser uma data-hora ISO 8601 válida dentro do intervalo permitido.',
@@ -1191,6 +1268,19 @@ const messages: Record<keyof Messages, string> = {
 	'email.celebration.cta': 'Abrir no EinVault',
 	'email.celebration.footer':
 		'Você está recebendo este e-mail porque os e-mails de comemorações estão ativados nas suas configurações do EinVault.',
+
+	// Email and ntfy: caretaker incident alerts
+	'email.incident.loggedSubject': 'Novo incidente para {name}: {title}',
+	'email.incident.updatedSubject': 'Atualização de incidente para {name}: {title}',
+	'email.incident.greeting': 'Olá, {name}!',
+	'email.incident.loggedBody': 'Um cuidador registrou um incidente para {companion}.',
+	'email.incident.updatedBody':
+		'Um cuidador adicionou uma atualização a um incidente para {companion}.',
+	'email.incident.titleLine': 'Incidente: {title}',
+	'email.incident.severityLine': 'Gravidade: {severity}',
+	'email.incident.cta': 'Abrir no EinVault',
+	'email.incident.footer':
+		'Você está recebendo este e-mail porque os alertas de incidentes estão ativados nas suas configurações do EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Pesquisar diários, notas, mídia, saúde, documentos…',

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { upsertJournalEntry, ensureJournalEntry } from './journal';
@@ -8,6 +8,11 @@ import {
 	deleteHealthEvent,
 	listLinkableHealthEvents
 } from './journal-links';
+
+vi.mock('#lib/server/storage/media-blobs.js', () => ({
+	deleteMediaBlobs: vi.fn(async () => {})
+}));
+const { deleteMediaBlobs } = await import('#lib/server/storage/media-blobs.js');
 
 const ORIGINAL_TZ = process.env.TZ;
 beforeAll(() => {
@@ -183,25 +188,62 @@ describe('deleting a linked health event', () => {
 
 	it('removes an entry that existed only for the link', async () => {
 		await linkHealthEvent(D, '2026-04-10', 'ev-d1', 'u-jld');
-		expect(deleteHealthEvent(D, 'ev-d1')).toBe(true);
+		expect(await deleteHealthEvent(D, 'ev-d1')).toBe(true);
 		expect(await entry('2026-04-10')).toBeUndefined();
 	});
 
 	it('keeps an entry with text', async () => {
 		await upsertJournalEntry(D, '2026-04-11', 'notes', null, 'u-jld');
 		await linkHealthEvent(D, '2026-04-11', 'ev-d2', 'u-jld');
-		expect(deleteHealthEvent(D, 'ev-d2')).toBe(true);
+		expect(await deleteHealthEvent(D, 'ev-d2')).toBe(true);
 		expect(await entry('2026-04-11')).toBeDefined();
 	});
 
 	it('keeps an empty entry that still has another link', async () => {
 		await linkHealthEvent(D, '2026-04-12', 'ev-d3', 'u-jld');
 		await linkHealthEvent(D, '2026-04-12', 'ev-d4', 'u-jld');
-		expect(deleteHealthEvent(D, 'ev-d3')).toBe(true);
+		expect(await deleteHealthEvent(D, 'ev-d3')).toBe(true);
 		expect(await entry('2026-04-12')).toBeDefined();
 	});
 
-	it("does not delete another companion's event", () => {
-		expect(deleteHealthEvent(D, 'ev-foreign')).toBe(false);
+	it("does not delete another companion's event", async () => {
+		expect(await deleteHealthEvent(D, 'ev-foreign')).toBe(false);
+		expect(deleteMediaBlobs).not.toHaveBeenCalled();
+	});
+
+	it('deletes media blobs of the event and its updates', async () => {
+		await db.insert(schema.healthEvents).values({
+			id: 'inc-d1',
+			companionId: D,
+			type: 'incident',
+			title: 'inc',
+			occurredAt: new Date(2026, 3, 1, 12)
+		});
+		await db.insert(schema.healthEventUpdates).values({
+			id: 'upd-d1',
+			healthEventId: 'inc-d1',
+			body: 'b',
+			occurredAt: new Date(2026, 3, 2, 12)
+		});
+		const base = { filename: 'f.jpg', mimeType: 'image/jpeg', sizeBytes: 1 } as const;
+		await db.insert(schema.media).values([
+			{ id: 'm-d-ov', healthEventId: 'inc-d1', storageKey: 'k/ov.jpg', ...base },
+			{
+				id: 'm-d-up',
+				healthEventId: 'inc-d1',
+				updateId: 'upd-d1',
+				storageKey: 'k/up.jpg',
+				originalKey: 'k/up-o.jpg',
+				...base
+			}
+		]);
+		expect(await deleteHealthEvent(D, 'inc-d1')).toBe(true);
+		expect(deleteMediaBlobs).toHaveBeenCalledTimes(1);
+		const [refs, label] = vi.mocked(deleteMediaBlobs).mock.calls[0];
+		expect(label).toBe('health-media');
+		expect(refs.map((r) => r.storageKey).sort()).toEqual(['k/ov.jpg', 'k/up.jpg']);
+		expect(
+			await db.select().from(schema.media).where(eq(schema.media.healthEventId, 'inc-d1'))
+		).toHaveLength(0);
 	});
 });

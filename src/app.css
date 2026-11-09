@@ -455,6 +455,20 @@
 	}
 }
 
+/* Incident page (#282): the timeline prints in full with photos kept small.
+   Actions and editors carry print:hidden in the markup. */
+@media print {
+	.incident-print img,
+	.incident-print video {
+		max-height: 3cm;
+		width: auto;
+	}
+
+	.incident-tl-item {
+		break-inside: avoid;
+	}
+}
+
 @page {
 	margin: 12mm;
 }

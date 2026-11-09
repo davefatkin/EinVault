@@ -353,6 +353,31 @@ test.describe('settings', () => {
 		});
 	});
 
+	// Incident alerts default on; unchecking persists and is absent for caretakers.
+	test('incident alerts toggle persists', async ({ asMember }) => {
+		await asMember.goto('/settings');
+		await waitForHydration(asMember);
+		const box = asMember.locator('input[name="notifyIncidentEmail"]');
+		await expect(box).toBeVisible({ timeout: 6_000 });
+		await expect(box).toBeChecked();
+		await box.click();
+		await expect(asMember.getByText(/notification settings updated/i)).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.reload();
+		await waitForHydration(asMember);
+		await expect(box).not.toBeChecked({ timeout: 6_000 });
+
+		// Clean up: back to the default.
+		await box.click();
+		await expect(asMember.getByText(/notification settings updated/i)).toBeVisible({
+			timeout: 8_000
+		});
+		await asMember.reload();
+		await waitForHydration(asMember);
+		await expect(box).toBeChecked({ timeout: 6_000 });
+	});
+
 	test('caretaker settings has no celebrations toggle', async ({ asCaretaker }) => {
 		await asCaretaker.goto('/care/settings');
 		await waitForHydration(asCaretaker);
@@ -360,5 +385,6 @@ test.describe('settings', () => {
 			timeout: 6_000
 		});
 		await expect(asCaretaker.locator('input[name="notifyCelebrationEmail"]')).toHaveCount(0);
+		await expect(asCaretaker.locator('input[name="notifyIncidentEmail"]')).toHaveCount(0);
 	});
 });

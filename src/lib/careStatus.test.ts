@@ -27,4 +27,10 @@ describe('careStatus', () => {
 	it('ignores completed reminders', () => {
 		expect(careStatus([rem('2026-06-09T09:00:00Z', new Date())], NOW)).toBe('up-to-date');
 	});
+	it('careStatus returns needs-attention when an incident is open', () => {
+		expect(careStatus([], NOW, 1)).toBe('needs-attention');
+	});
+	it('no open incidents leaves the reminder status alone', () => {
+		expect(careStatus([rem('2026-06-12T18:00:00Z')], NOW, 0)).toBe('due-today');
+	});
 });

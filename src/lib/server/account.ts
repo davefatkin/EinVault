@@ -212,6 +212,7 @@ export async function handleNotificationsUpdate(
 	const notifyReminderEmail = data.get('notifyReminderEmail') === 'on';
 	const notifyShiftEmail = data.get('notifyShiftEmail') === 'on';
 	const notifyCelebrationEmail = data.get('notifyCelebrationEmail') === 'on';
+	const notifyIncidentEmail = data.get('notifyIncidentEmail') === 'on';
 	const rawTopic = String(data.get('ntfyTopic') ?? '').trim();
 	const ntfyTopic = rawTopic || null;
 
@@ -221,12 +222,12 @@ export async function handleNotificationsUpdate(
 
 	await db
 		.update(schema.users)
-		// Caretakers have no celebrations toggle; never touch their stored value.
+		// Caretakers have no celebrations or incident toggle; never touch their stored values.
 		.set({
 			notifyReminderEmail,
 			notifyShiftEmail,
 			ntfyTopic,
-			...(role !== 'caretaker' && { notifyCelebrationEmail })
+			...(role !== 'caretaker' && { notifyCelebrationEmail, notifyIncidentEmail })
 		})
 		.where(eq(schema.users.id, userId));
 

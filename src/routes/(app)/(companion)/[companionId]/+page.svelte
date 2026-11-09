@@ -49,6 +49,8 @@
 	import { convertWeight } from '#lib/weightChart.js';
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '#lib/species.js';
 	import MoodTrendCard from '#lib/components/companion/MoodTrendCard.svelte';
+	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -69,10 +71,12 @@
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 
-	// Care status derived from outstanding reminders
+	// Care status derived from outstanding reminders and open incidents
 	let status = $derived(
 		careStatus(
-			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null }))
+			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null })),
+			undefined,
+			data.openIncidents.length
 		)
 	);
 
@@ -487,7 +491,7 @@
 									handleSkip(item.id, item.title);
 								}}
 							/>
-						{:else if selected.kind === 'weight' || selected.kind === 'health'}
+						{:else if selected.kind === 'weight' || (selected.kind === 'health' && selected.item.type !== 'incident')}
 							<Button
 								href="/{companion.id}/health?edit={selected.item.id}"
 								variant="soft"
@@ -646,6 +650,11 @@
 			</div>
 		</div>
 	</Card>
+
+	<OpenIncidentBanner
+		incidents={data.openIncidents}
+		hrefFor={(id) => incidentPath(companion.id, id)}
+	/>
 
 	<MoodTrendCard
 		companionId={companion.id}
@@ -871,11 +880,7 @@
 							</button>
 						{:else if entry.kind === 'health'}
 							{@const event = entry.item}
-							<button
-								type="button"
-								onclick={() => openDetail({ kind: 'health', item: event })}
-								class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
-							>
+							{#snippet healthRow()}
 								<div class="flex items-center gap-3 text-sm">
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-teal/10 flex items-center justify-center text-base"
@@ -899,7 +904,24 @@
 										</div>
 									</div>
 								</div>
-							</button>
+							{/snippet}
+							{#if event.type === 'incident'}
+								<!-- Incidents have their own page; the modal's Edit can't open them. -->
+								<a
+									href={incidentPath(companion.id, event.id)}
+									class="block w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+								>
+									{@render healthRow()}
+								</a>
+							{:else}
+								<button
+									type="button"
+									onclick={() => openDetail({ kind: 'health', item: event })}
+									class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+								>
+									{@render healthRow()}
+								</button>
+							{/if}
 						{/if}
 					{/each}
 				</div>

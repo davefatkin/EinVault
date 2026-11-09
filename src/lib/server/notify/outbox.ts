@@ -44,6 +44,16 @@ export function celebrationDedupeKey(
 	return `celebration:${companionId}:${date}:${userId}:${channel}`;
 }
 
+// `id` is the incident id for 'logged' and the update id for 'updated'.
+export function incidentDedupeKey(
+	kind: 'logged' | 'updated',
+	id: string,
+	userId: string,
+	channel: OutboxChannel
+): string {
+	return `incident:${kind}:${id}:${userId}:${channel}`;
+}
+
 /** A user relevant to a notification category, as the producers load them. */
 export interface Recipient {
 	id: string;

@@ -3,7 +3,8 @@ import { isNotNull } from 'drizzle-orm';
 import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { db, schema } from '#lib/server/db/index.js';
-import { seedRows, SEED, copyDemoPhotoFiles } from '#lib/server/db/demo-seed.js';
+import { currentSeverity } from '#lib/incidents.js';
+import { seedRows, seedDemoIncidents, SEED, copyDemoPhotoFiles } from '#lib/server/db/demo-seed.js';
 
 // copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
 // a developer's journal photos in the ./data directory. Stub the fs operations
@@ -245,5 +246,110 @@ describe('startDemoRefreshScheduler', () => {
 			startDemoRefreshScheduler(db, true, '/tmp/einvault-demo-test');
 			startDemoRefreshScheduler(db, true, '/tmp/einvault-demo-test'); // second call is no-op
 		}).not.toThrow();
+	});
+});
+
+describe('seedDemoIncidents', () => {
+	const now = 1_700_000_000_000;
+
+	beforeEach(async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	const incidents = () =>
+		db.query.healthEvents.findMany({ where: (h, { eq }) => eq(h.type, 'incident') });
+
+	it('seedRows alone creates no incidents (keeps e2e free of banners)', async () => {
+		seedRows(db as never, { now });
+		expect(await incidents()).toEqual([]);
+		expect(await db.select().from(schema.healthEventUpdates)).toEqual([]);
+		expect(await db.select().from(schema.healthEventLinks)).toEqual([]);
+	});
+
+	it('adds one open incident for Ein and one resolved incident', async () => {
+		seedRows(db as never, { now });
+		seedDemoIncidents(db as never, { now });
+		const all = await incidents();
+		const open = all.filter((i) => !i.resolvedAt);
+		const resolved = all.filter((i) => i.resolvedAt);
+		expect(open.map((i) => i.id)).toEqual([SEED.incidents.einLimp.id]);
+		expect(open[0].companionId).toBe(SEED.companions.ein.id);
+		expect(resolved.map((i) => i.id)).toEqual([SEED.incidents.edwardStomach.id]);
+	});
+
+	it('orders updates by severity and ends Ein at mild', async () => {
+		seedRows(db as never, { now });
+		seedDemoIncidents(db as never, { now });
+		const incident = await db.query.healthEvents.findFirst({
+			where: (h, { eq }) => eq(h.id, SEED.incidents.einLimp.id)
+		});
+		const updates = await db.query.healthEventUpdates.findMany({
+			where: (u, { eq }) => eq(u.healthEventId, SEED.incidents.einLimp.id),
+			orderBy: (u, { asc }) => asc(u.occurredAt)
+		});
+		expect(updates.map((u) => u.severity)).toEqual(['moderate', 'mild', 'mild']);
+		expect(currentSeverity(incident!, updates)).toBe('mild');
+		const stomach = await db.query.healthEventUpdates.findMany({
+			where: (u, { eq }) => eq(u.healthEventId, SEED.incidents.edwardStomach.id)
+		});
+		expect(stomach).toHaveLength(2);
+	});
+
+	it('keeps the story dates and authors consistent', async () => {
+		seedRows(db as never, { now });
+		seedDemoIncidents(db as never, { now });
+		const events = await db.query.healthEvents.findMany();
+		const byId = new Map(events.map((e) => [e.id, e]));
+		const updates = await db.query.healthEventUpdates.findMany({
+			orderBy: (u, { asc }) => asc(u.occurredAt)
+		});
+		const userIds = new Set((await db.query.users.findMany()).map((u) => u.id));
+		for (const u of updates) {
+			expect(u.occurredAt.getTime()).toBeGreaterThan(
+				byId.get(u.healthEventId)!.occurredAt.getTime()
+			);
+			expect(userIds.has(u.loggedBy!)).toBe(true);
+		}
+		for (const i of events.filter((e) => e.type === 'incident')) {
+			expect(userIds.has(i.loggedBy!)).toBe(true);
+		}
+		const stomach = byId.get(SEED.incidents.edwardStomach.id)!;
+		const stomachUps = updates.filter((u) => u.healthEventId === stomach.id);
+		expect(stomach.resolvedAt!.getTime()).toBeGreaterThan(stomach.occurredAt.getTime());
+		for (const u of stomachUps) {
+			expect(u.occurredAt.getTime()).toBeLessThanOrEqual(stomach.resolvedAt!.getTime());
+		}
+		expect(stomachUps.at(-1)!.occurredAt.getTime()).toBeLessThanOrEqual(
+			stomach.resolvedAt!.getTime()
+		);
+		const [u1, u2] = updates.filter((u) => u.healthEventId === SEED.incidents.einLimp.id);
+		const visit = byId.get(SEED.incidents.einLimp.recheckId)!;
+		expect(visit.occurredAt.getTime()).toBeGreaterThan(u1.occurredAt.getTime());
+		expect(visit.occurredAt.getTime()).toBeLessThan(u2.occurredAt.getTime());
+	});
+
+	it('links Ein incident to a vet visit', async () => {
+		seedRows(db as never, { now });
+		seedDemoIncidents(db as never, { now });
+		const links = await db.select().from(schema.healthEventLinks);
+		expect(links).toHaveLength(1);
+		const visit = await db.query.healthEvents.findFirst({
+			where: (h, { eq }) => eq(h.id, links[0].healthEventId)
+		});
+		expect(links[0].incidentId).toBe(SEED.incidents.einLimp.id);
+		expect(visit?.type).toBe('vet_visit');
+	});
+
+	it('refreshDemoContent seeds them too', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, '/tmp/einvault-demo-test');
+		refreshDemoContent(db, true, '/tmp/einvault-demo-test');
+		expect(await incidents()).toHaveLength(2);
+		expect(await db.select().from(schema.healthEventUpdates)).toHaveLength(5);
+		expect(await db.select().from(schema.healthEventLinks)).toHaveLength(1);
 	});
 });

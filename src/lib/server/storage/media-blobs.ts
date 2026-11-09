@@ -1,4 +1,5 @@
-import { getStorage } from '#lib/server/storage/index.js';
+import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import type { PreparedMedia } from '#lib/server/storage/media-upload.js';
 
 // Stored objects owned by one media row (journal or note). Immich rows point
 // at the user's library and are never deleted.
@@ -37,4 +38,34 @@ export async function deleteMediaBlobs(rows: StoredMediaRef[], logTag: string): 
 			console.warn(`[${logTag}] failed to delete object ${jobs[i].key}:`, r.reason);
 		}
 	});
+}
+
+// Store the blob, then run `insert` (the row insert under its checks). Any path
+// that ends without a row (failed insert, thrown insert, non-'ok' outcome)
+// deletes the blob just stored, so a lost race leaves nothing behind. A failed
+// put returns 'putFailed' with nothing to clean up.
+export async function storeThenInsert<O extends string>(
+	key: string,
+	prepared: PreparedMedia,
+	logTag: string,
+	insert: () => O
+): Promise<O | 'putFailed'> {
+	try {
+		await getStorage().put({ key, body: prepared.body, contentType: prepared.contentType });
+	} catch (err) {
+		console.error(`[${logTag}] storage put failed:`, err);
+		return 'putFailed';
+	}
+	const orphan = [
+		{ provider: STORAGE_BACKEND, storageKey: key, originalKey: null, posterKey: null }
+	];
+	let outcome: O;
+	try {
+		outcome = insert();
+	} catch (err) {
+		await deleteMediaBlobs(orphan, logTag);
+		throw err;
+	}
+	if (outcome !== 'ok') await deleteMediaBlobs(orphan, logTag);
+	return outcome;
 }

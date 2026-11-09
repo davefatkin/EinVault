@@ -1,6 +1,7 @@
 import { type Page } from '@playwright/test';
 import { test, expect } from '../lib/fixtures';
 import { waitForHydration } from '../lib/hydration';
+import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
 
 const COMP = 'seed-comp-ein';
 
@@ -87,6 +88,34 @@ test.describe('global search palette', () => {
 		await asMember.keyboard.type('xenolith');
 
 		await expect(dialog.getByText('e2e-srch-xenolith')).toBeVisible({ timeout: 8_000 });
+	});
+
+	test('finds a word that only appears in an incident update and opens the incident', async ({
+		asMember
+	}) => {
+		const word = `e2e-srch-updword${Date.now().toString(36)}`;
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, COMP, { title: 'e2e-srch-incident' });
+			await asMember.getByRole('button', { name: 'Update', exact: true }).click();
+			const form = asMember.getByRole('dialog');
+			await form.locator('textarea[name="body"]').fill(`Rested well, ${word} applied.`);
+			await form.getByRole('button', { name: 'Save update' }).click();
+			await expect(asMember.getByRole('dialog')).toHaveCount(0, { timeout: 10_000 });
+
+			await asMember.getByRole('button', { name: 'Open search' }).click();
+			const palette = asMember.locator('[role="dialog"]');
+			await expect(palette).toBeVisible({ timeout: 8_000 });
+			await asMember.keyboard.type(word);
+			await expect(palette.locator('[role="option"]').first()).toBeVisible({ timeout: 8_000 });
+			await asMember.keyboard.press('ArrowDown');
+			await asMember.keyboard.press('Enter');
+			await expect(asMember).toHaveURL(new RegExp(`/health/incidents/${id}#update-[^/?#]+$`), {
+				timeout: 10_000
+			});
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, COMP, id);
+		}
 	});
 
 	test('search result for health event deep-links to its detail modal', async ({ asMember }) => {

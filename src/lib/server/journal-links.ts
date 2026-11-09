@@ -1,6 +1,7 @@
 import { db, schema } from '#lib/server/db/index.js';
 import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
 import type { HealthEventType } from '#lib/health.js';
+import { deleteMediaBlobs, type StoredMediaRef } from '#lib/server/storage/media-blobs.js';
 import { ensureJournalEntry } from './journal';
 import { healthDay } from './journal-day-items';
 
@@ -123,32 +124,59 @@ export function unlinkHealthEvent(companionId: string, date: string, healthEvent
  * Delete a health event of this companion. Entries that existed only to link
  * it go with it. Returns whether the event was deleted.
  */
-export function deleteHealthEvent(companionId: string, healthEventId: string): boolean {
-	return db.transaction((tx) => {
-		const entryIds = tx
-			.select({ id: links.entryId })
-			.from(links)
-			.innerJoin(schema.journalEntries, eq(schema.journalEntries.id, links.entryId))
-			.where(
-				and(
-					eq(links.healthEventId, healthEventId),
-					eq(schema.journalEntries.companionId, companionId)
+export async function deleteHealthEvent(
+	companionId: string,
+	healthEventId: string
+): Promise<boolean> {
+	// Media keys (the event's own plus its updates') are read in the same
+	// immediate transaction as the delete, as deleteNote does; objects go after
+	// commit.
+	const { deleted, media } = db.transaction(
+		(tx): { deleted: boolean; media: StoredMediaRef[] } => {
+			const entryIds = tx
+				.select({ id: links.entryId })
+				.from(links)
+				.innerJoin(schema.journalEntries, eq(schema.journalEntries.id, links.entryId))
+				.where(
+					and(
+						eq(links.healthEventId, healthEventId),
+						eq(schema.journalEntries.companionId, companionId)
+					)
 				)
-			)
-			.all()
-			.map((r) => r.id);
-		const { changes } = tx
-			.delete(schema.healthEvents)
-			.where(
-				and(
-					eq(schema.healthEvents.id, healthEventId),
-					eq(schema.healthEvents.companionId, companionId)
+				.all()
+				.map((r) => r.id);
+			const media = tx
+				.select({
+					provider: schema.media.provider,
+					storageKey: schema.media.storageKey,
+					originalKey: schema.media.originalKey,
+					posterKey: schema.media.posterKey
+				})
+				.from(schema.media)
+				.innerJoin(schema.healthEvents, eq(schema.healthEvents.id, schema.media.healthEventId))
+				.where(
+					and(
+						eq(schema.media.healthEventId, healthEventId),
+						eq(schema.healthEvents.companionId, companionId)
+					)
 				)
-			)
-			.run();
-		for (const id of entryIds) deleteEntryIfEmpty(tx, id);
-		return changes > 0;
-	});
+				.all();
+			const { changes } = tx
+				.delete(schema.healthEvents)
+				.where(
+					and(
+						eq(schema.healthEvents.id, healthEventId),
+						eq(schema.healthEvents.companionId, companionId)
+					)
+				)
+				.run();
+			for (const id of entryIds) deleteEntryIfEmpty(tx, id);
+			return { deleted: changes > 0, media: changes > 0 ? media : [] };
+		},
+		{ behavior: 'immediate' }
+	);
+	if (media.length > 0) await deleteMediaBlobs(media, 'health-media');
+	return deleted;
 }
 
 /** Events the day's entry can link: this companion's, not on this day, not linked yet. */

@@ -185,6 +185,8 @@ describe('response schemas match their serializers', () => {
 			occurredAt: new Date(),
 			vetName: 'Dr. Smith',
 			vetClinic: 'Downtown Vet',
+			severity: null,
+			resolvedAt: null,
 			createdAt: new Date(),
 			loggedBy: 'user-1'
 		};
@@ -271,6 +273,7 @@ describe('response schemas match their serializers', () => {
 			notifyReminderEmail: true,
 			notifyShiftEmail: true,
 			notifyCelebrationEmail: false,
+			notifyIncidentEmail: true,
 			apiAccessEnabled: true,
 			ntfyTopic: 'ntfy-topic-1',
 			avatarPath: '/avatars/user-1.jpg',
@@ -309,6 +312,7 @@ describe('response schemas match their serializers', () => {
 			notifyReminderEmail: true,
 			notifyShiftEmail: true,
 			notifyCelebrationEmail: false,
+			notifyIncidentEmail: true,
 			apiAccessEnabled: true,
 			ntfyTopic: 'ntfy-topic-1',
 			avatarPath: '/avatars/user-1.jpg',

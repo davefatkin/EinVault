@@ -1,6 +1,7 @@
 import { and, eq, ne } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { listSharedNotes } from '#lib/server/notes.js';
+import { listOpenIncidents } from '#lib/server/incidents.js';
 import type { Locale } from '#lib/i18n/index.js';
 import type { CaretakerSheet } from '#lib/caretakerSheet.js';
 
@@ -19,7 +20,7 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 	});
 	if (!companion) return null;
 
-	const [weight, users, notes] = await Promise.all([
+	const [weight, users, notes, openIncidents] = await Promise.all([
 		db.query.weightEntries.findFirst({
 			where: eq(schema.weightEntries.companionId, companionId),
 			orderBy: (w, { desc }) => [desc(w.recordedAt)],
@@ -33,7 +34,8 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 			columns: { id: true, displayName: true, phone: true, email: true }
 		}),
 		// Shared notes only, for owners too: the sheet never prints a private note.
-		listSharedNotes(companionId)
+		listSharedNotes(companionId),
+		listOpenIncidents([companionId])
 	]);
 
 	const vet = {
@@ -91,7 +93,8 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 					mediaType: m.mediaType,
 					caption: m.caption
 				}))
-		}))
+		})),
+		openIncidents
 	};
 }
 

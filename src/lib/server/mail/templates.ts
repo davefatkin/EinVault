@@ -1,5 +1,6 @@
 import { t, type Locale } from '#lib/i18n/index.js';
 import type { MailMessage } from '#lib/server/mail/index.js';
+import type { Severity } from '#lib/incidents.js';
 import { celebrationLines, type Celebration } from '#lib/celebrations.js';
 
 // displayName/username are user-controlled; escape anything interpolated into
@@ -219,6 +220,89 @@ export function buildCelebrationEmail(
 	return {
 		to: user.email,
 		subject: t(locale, 'email.celebration.subject', { name: companionName }),
+		text: textParts.join('\n\n'),
+		html
+	};
+}
+
+export type IncidentAlertKind = 'incidentLogged' | 'incidentUpdated';
+
+/** Lines shared by the email and the ntfy push: what happened, the incident, its severity. */
+export function incidentAlertLines(
+	locale: Locale,
+	kind: IncidentAlertKind,
+	companionName: string,
+	title: string,
+	severity: Severity | null
+): string[] {
+	const lines = [
+		t(
+			locale,
+			kind === 'incidentLogged' ? 'email.incident.loggedBody' : 'email.incident.updatedBody',
+			{ companion: companionName }
+		),
+		t(locale, 'email.incident.titleLine', { title })
+	];
+	if (severity) {
+		lines.push(
+			t(locale, 'email.incident.severityLine', { severity: t(locale, `enum.severity.${severity}`) })
+		);
+	}
+	return lines;
+}
+
+const INCIDENT_TEXT_MAX = 1000;
+
+export function buildIncidentEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	a: {
+		kind: IncidentAlertKind;
+		companionName: string;
+		title: string;
+		severity: Severity | null;
+		text: string | null;
+	},
+	link: string | null
+): MailMessage {
+	const greeting = t(locale, 'email.incident.greeting', { name: user.displayName });
+	const lines = incidentAlertLines(locale, a.kind, a.companionName, a.title, a.severity);
+	const text = a.text?.trim()
+		? a.text.trim().length > INCIDENT_TEXT_MAX
+			? `${a.text.trim().slice(0, INCIDENT_TEXT_MAX)}…`
+			: a.text.trim()
+		: null;
+	const cta = t(locale, 'email.incident.cta');
+	const footer = t(locale, 'email.incident.footer');
+
+	const textParts = [greeting, lines.join('\n')];
+	if (text) textParts.push(text);
+	if (link) textParts.push(link);
+	textParts.push(footer);
+
+	const linesHtml = lines.map((line) => `\n\t\t<p>${escapeHtml(line)}</p>`).join('');
+	const textHtml = text ? `\n\t\t<p style="white-space: pre-wrap;">${escapeHtml(text)}</p>` : '';
+	const ctaHtml = link
+		? `\n\t\t<p style="margin: 24px 0;">\n\t\t\t<a href="${escapeHtml(link)}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">${escapeHtml(cta)}</a>\n\t\t</p>`
+		: '';
+
+	const html = `<!doctype html>
+<html>
+	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
+		<p>${tHtml(locale, 'email.incident.greeting', { name: user.displayName })}</p>${linesHtml}${textHtml}${ctaHtml}
+		<p style="font-size: 12px; color: #666;">${escapeHtml(footer)}</p>
+	</body>
+</html>`;
+
+	return {
+		to: user.email,
+		subject: t(
+			locale,
+			a.kind === 'incidentLogged'
+				? 'email.incident.loggedSubject'
+				: 'email.incident.updatedSubject',
+			{ name: a.companionName, title: a.title }
+		),
 		text: textParts.join('\n\n'),
 		html
 	};

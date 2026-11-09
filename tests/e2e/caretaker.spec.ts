@@ -1,7 +1,12 @@
 import { test, expect } from '../lib/fixtures';
 import { todayUTC } from '../lib/dates';
-import { pngUpload } from '../lib/files';
+import { pdfUpload, pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
+import {
+	createIncidentViaUi,
+	deleteIncidentViaUi,
+	waitForCreatedIncidentId
+} from '../lib/incidents';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
@@ -287,5 +292,249 @@ test.describe('caretaker', () => {
 		const row = asCaretaker.getByRole('button', { name: /e2e cat harness walk/ });
 		await expect(row).toBeVisible();
 		await expect(row.locator('span').first()).toHaveText('🐈');
+	});
+});
+
+// Caretaker side of incidents (#282). The member creates (or the caretaker
+// logs) an incident per test and the member deletes it in `finally`, so no open
+// incident outlives the test (it would put a banner on other specs' pages).
+test.describe('caretaker incidents', () => {
+	const unique = (label: string) => `e2e-care-inc-${label}-${Date.now().toString(36)}`;
+	const banner = (page: import('@playwright/test').Page) =>
+		page.getByRole('region', { name: 'Open incidents' });
+	const mediaBase = (companionId: string, id: string) =>
+		`/api/companions/${companionId}/incidents/${id}/media`;
+
+	async function addCareUpdate(page: import('@playwright/test').Page, body: string, file?: string) {
+		await page.getByRole('button', { name: 'Update', exact: true }).click();
+		const dialog = page.getByRole('dialog');
+		// Caretaker updates are "now": no time field.
+		await expect(dialog.locator('input[name="occurredAt"]')).toHaveCount(0);
+		await dialog.locator('textarea[name="body"]').fill(body);
+		if (file) await dialog.locator('#new-update-files').setInputFiles(pngUpload(file));
+		await dialog.getByRole('button', { name: 'Save update' }).click();
+		await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 15_000 });
+		await expect(page.getByText(body)).toBeVisible();
+	}
+
+	test('caretaker sees the open incident banner and opens the incident', async ({
+		asMember,
+		asCaretaker
+	}) => {
+		const title = unique('banner');
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, EIN, { title, severity: 'moderate' });
+
+			await asCaretaker.goto(`/care/${EIN}`);
+			const strip = banner(asCaretaker);
+			await expect(strip).toContainText(title);
+			await expect(strip).toContainText('Moderate');
+			await expect(strip).toContainText('Day 1');
+			await strip.getByRole('link', { name: new RegExp(title) }).click();
+			await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/incidents/${id}$`));
+
+			await expect(asCaretaker.getByRole('heading', { level: 1, name: title })).toBeVisible();
+			await expect(asCaretaker.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
+			// Owner-only actions are absent.
+			await expect(asCaretaker.getByRole('button', { name: 'Mark resolved' })).toHaveCount(0);
+			await expect(asCaretaker.getByRole('button', { name: 'Link vet visit' })).toHaveCount(0);
+			await expect(asCaretaker.getByRole('button', { name: 'Attach document' })).toHaveCount(0);
+			await expect(asCaretaker.getByTestId('incident-edit')).toHaveCount(0);
+			await expect(asCaretaker.getByTestId('incident-delete')).toHaveCount(0);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EIN, id);
+		}
+	});
+
+	test('caretaker on shift adds an update with a photo', async ({ app, asMember, asCaretaker }) => {
+		const body = `Ate breakfast, limping less ${Date.now().toString(36)}`;
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, EIN, { title: unique('update') });
+
+			await asCaretaker.goto(`/care/${EIN}/incidents/${id}`);
+			await waitForHydration(asCaretaker);
+			await addCareUpdate(asCaretaker, body, 'care-limp.png');
+			await expect(asCaretaker.locator('img[alt="care-limp.png"]').first()).toBeVisible({
+				timeout: 10_000
+			});
+			// Their own update from today is editable.
+			const item = asCaretaker.locator('[id^="update-"]').filter({ hasText: body });
+			await expect(item.getByRole('button', { name: 'Edit' })).toBeVisible();
+			const updateId = (await item.getAttribute('id'))!.slice('update-'.length);
+
+			// The member sees it on the owner incident page.
+			await asMember.goto(`/${EIN}/health/incidents/${id}`);
+			await expect(asMember.getByText(body)).toBeVisible();
+			await expect(asMember.locator('img[alt="care-limp.png"]').first()).toBeVisible();
+
+			// A photo the member adds to the caretaker's update is not the
+			// caretaker's to delete, even on their own update.
+			const up = await asMember.request.post(
+				`${mediaBase(EIN, id)}?updateId=${encodeURIComponent(updateId)}`,
+				{
+					headers: { Origin: app.server.baseURL },
+					multipart: { file: pngUpload('owner-added.png') }
+				}
+			);
+			expect(up.status()).toBe(200);
+			const { id: mediaId } = await up.json();
+			const del = await asCaretaker.request.delete(
+				`${mediaBase(EIN, id)}?mediaId=${encodeURIComponent(mediaId)}`,
+				{ headers: { Origin: app.server.baseURL } }
+			);
+			expect(del.status()).toBe(403);
+			// Nor can they delete the update and take the member's photo with it.
+			const delUpdate = await asCaretaker.request.post(
+				`/care/${EIN}/incidents/${id}?/deleteUpdate`,
+				{
+					headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+					form: { updateId }
+				}
+			);
+			expect(delUpdate.status()).toBe(403);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EIN, id);
+		}
+	});
+
+	test('caretaker logs a new incident', async ({ asMember, asCaretaker }) => {
+		const title = unique('log');
+		let id: string | undefined;
+		try {
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			await asCaretaker.getByRole('link', { name: 'Log incident' }).click();
+			await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/incidents/new$`));
+			await waitForHydration(asCaretaker);
+			// Caretakers log "now": no start field.
+			await expect(asCaretaker.locator('#incident-start')).toHaveCount(0);
+			await asCaretaker.locator('#incident-title').fill(title);
+			await asCaretaker.locator('#incident-severity').selectOption('mild');
+			await asCaretaker.locator('#incident-files').setInputFiles(pngUpload('care-new.png'));
+			const created = waitForCreatedIncidentId(asCaretaker, 'create');
+			await asCaretaker.getByRole('button', { name: 'Save incident' }).click();
+			id = await created;
+			await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/incidents/${id}$`), {
+				timeout: 10_000
+			});
+			await expect(asCaretaker.getByRole('heading', { level: 1, name: title })).toBeVisible();
+			// Photos picked while logging go on the overview.
+			await expect(asCaretaker.locator('img[alt="care-new.png"]').first()).toBeVisible();
+
+			await asMember.goto(`/${EIN}/health`);
+			const open = asMember.getByRole('region', { name: 'Open incidents' });
+			await expect(open).toContainText(title);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EIN, id);
+		}
+	});
+
+	test('caretaker cannot open a resolved incident', async ({ app, asMember, asCaretaker }) => {
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, EIN, { title: unique('resolved') });
+			// The caretaker has the page open while the member resolves it.
+			await asCaretaker.goto(`/care/${EIN}/incidents/${id}`);
+			await expect(asCaretaker.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
+
+			await waitForHydration(asMember);
+			await asMember.getByRole('button', { name: 'Mark resolved' }).click();
+			await asMember.getByRole('dialog').getByRole('button', { name: 'Mark resolved' }).click();
+			await expect(asMember.getByTestId('incident-status')).toContainText('Resolved');
+
+			// Their next update POST gets 404, as do media polls and uploads.
+			const post = await asCaretaker.request.post(`/care/${EIN}/incidents/${id}?/addUpdate`, {
+				headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+				form: { body: 'Too late' }
+			});
+			expect(post.status()).toBe(404);
+			const poll = await asCaretaker.request.get(mediaBase(EIN, id));
+			expect(poll.status()).toBe(404);
+			const upload = await asCaretaker.request.post(mediaBase(EIN, id), {
+				headers: { Origin: app.server.baseURL },
+				multipart: { file: pngUpload() }
+			});
+			expect(upload.status()).toBe(404);
+
+			const res = await asCaretaker.goto(`/care/${EIN}/incidents/${id}`);
+			expect(res?.status()).toBe(404);
+			await asCaretaker.goto(`/care/${EIN}`);
+			await expect(banner(asCaretaker)).toHaveCount(0);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EIN, id);
+		}
+	});
+
+	test("caretaker gets 403 on an unassigned companion's open incident", async ({
+		app,
+		asMember,
+		asCaretaker
+	}) => {
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, EDWARD, { title: unique('unassigned') });
+			const page = await asCaretaker.goto(`/care/${EDWARD}/incidents/${id}`);
+			expect(page?.status()).toBe(403);
+			const form = await asCaretaker.goto(`/care/${EDWARD}/incidents/new`);
+			expect(form?.status()).toBe(403);
+
+			const headers = { Origin: app.server.baseURL, Accept: 'application/json' };
+			const update = await asCaretaker.request.post(`/care/${EDWARD}/incidents/${id}?/addUpdate`, {
+				headers,
+				form: { body: 'Not mine' }
+			});
+			expect(update.status()).toBe(403);
+			const create = await asCaretaker.request.post(`/care/${EDWARD}/incidents/new?/create`, {
+				headers,
+				form: { title: unique('sneaky') }
+			});
+			expect(create.status()).toBe(403);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EDWARD, id);
+		}
+	});
+
+	test('caretaker incident page shows the linked vet visit title but no documents', async ({
+		app,
+		asMember,
+		asCaretaker
+	}) => {
+		const docName = `${unique('doc')}.pdf`;
+		let id: string | undefined;
+		let docId: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, EIN, { title: unique('vet') });
+			const linked = await asMember.request.post(`/${EIN}/health/incidents/${id}?/link`, {
+				headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+				form: { healthEventId: 'seed-health-1' }
+			});
+			expect(linked.status()).toBe(200);
+			const doc = await asMember.request.post(`/api/companions/${EIN}/documents`, {
+				headers: { Origin: app.server.baseURL },
+				multipart: { file: pdfUpload(docName), healthEventId: id }
+			});
+			expect(doc.status()).toBe(200);
+			docId = (await doc.json()).id;
+			const docTitle = docName.replace(/\.pdf$/, '');
+
+			// The member sees the document under Related.
+			await asMember.goto(`/${EIN}/health/incidents/${id}`);
+			await expect(asMember.getByRole('region', { name: 'Related' })).toContainText(docTitle);
+
+			await asCaretaker.goto(`/care/${EIN}/incidents/${id}`);
+			await expect(asCaretaker.getByRole('region', { name: 'Progress' })).toContainText(
+				'Wellness checkup'
+			);
+			await expect(asCaretaker.getByRole('region', { name: 'Related' })).toHaveCount(0);
+			await expect(asCaretaker.getByText(docTitle)).toHaveCount(0);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, EIN, id);
+			if (docId)
+				await asMember.request.delete(`/api/companions/${EIN}/documents/${docId}`, {
+					headers: { Origin: app.server.baseURL }
+				});
+		}
 	});
 });

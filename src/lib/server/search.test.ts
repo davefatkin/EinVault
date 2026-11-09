@@ -40,9 +40,9 @@ describe('buildFilterClause', () => {
 			})
 		);
 		expect(r.sql).toBe(
-			's.companion_id IN (?, ?) AND s.entity_type IN (?) AND s.event_date >= ? AND s.event_date <= ?'
+			's.companion_id IN (?, ?) AND s.entity_type IN (?, ?) AND s.event_date >= ? AND s.event_date <= ?'
 		);
-		expect(r.params).toEqual(['c1', 'c2', 'health', '2026-01-01', '2026-12-31']);
+		expect(r.params).toEqual(['c1', 'c2', 'health', 'incident_update', '2026-01-01', '2026-12-31']);
 	});
 });
 
@@ -301,5 +301,53 @@ describe('note search', () => {
 	it('filters to notes with the note type', () => {
 		const results = search(q({ text: 'sardines', types: ['note'] }));
 		expect(results.map((r) => r.type)).toEqual(['note']);
+	});
+});
+
+describe('incident update search', () => {
+	beforeAll(async () => {
+		await db.insert(schema.healthEvents).values({
+			id: 'h-inc',
+			companionId: 'c-s',
+			title: 'limping incident',
+			type: 'incident',
+			occurredAt: new Date('2026-05-01T10:00:00Z'),
+			loggedBy: 'u-s'
+		} as typeof schema.healthEvents.$inferInsert);
+		await db.insert(schema.healthEventUpdates).values({
+			id: 'hu-1',
+			healthEventId: 'h-inc',
+			body: 'gnarlwort poultice applied',
+			occurredAt: new Date('2026-05-02T10:00:00Z'),
+			loggedBy: 'u-s'
+		} as typeof schema.healthEventUpdates.$inferInsert);
+		await db.insert(schema.journalEntries).values({
+			id: 'j-inc',
+			companionId: 'c-s',
+			date: '2026-05-03',
+			body: 'gnarlwort again in the journal',
+			loggedBy: 'u-s'
+		} as typeof schema.journalEntries.$inferInsert);
+	});
+
+	it('a word only in an update body returns one health result with the incidentUpdate href', () => {
+		const results = search(q({ text: 'poultice' }));
+		expect(results).toHaveLength(1);
+		expect(results[0]).toMatchObject({
+			type: 'health',
+			id: 'hu-1',
+			href: '/c-s/health?incidentUpdate=hu-1'
+		});
+	});
+
+	it('health type filter includes update hits', () => {
+		const results = search(q({ text: 'poultice', types: ['health'] }));
+		expect(results.map((r) => r.id)).toEqual(['hu-1']);
+		expect(search(q({ text: 'poultice', types: ['journal'] }))).toEqual([]);
+	});
+
+	it('a query matching both an update and a journal entry returns both', () => {
+		const results = search(q({ text: 'gnarlwort' }));
+		expect(results.map((r) => r.id).sort()).toEqual(['hu-1', 'j-inc']);
 	});
 });

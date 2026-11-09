@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { toApiCompanion, toApiCompanionMinimal, toApiNote } from './api-serializers';
+import {
+	toApiCompanion,
+	toApiCompanionMinimal,
+	toApiNote,
+	toApiHealthEvent,
+	toApiIncidentUpdate,
+	toApiIncidentLink
+} from './api-serializers';
 
 // A companion row carrying PII the write-scope shape must never leak, plus a
 // stray column the default-deny full shape must not pass through untouched.
@@ -96,5 +103,65 @@ describe('toApiNote', () => {
 			updatedAt: new Date('2026-01-02T00:00:00Z'),
 			updatedBy: 'u2'
 		});
+	});
+});
+
+describe('api incident serializers', () => {
+	const at = new Date('2026-01-02T03:04:05Z');
+	it('health event exposes severity and resolvedAt, still default-deny', () => {
+		const out = toApiHealthEvent({
+			id: 'h1',
+			companionId: 'c1',
+			type: 'incident',
+			title: 'Limp',
+			notes: null,
+			occurredAt: at,
+			vetName: null,
+			vetClinic: null,
+			severity: 'mild',
+			resolvedAt: at,
+			loggedBy: 'u1',
+			secretFutureColumn: 'x'
+		} as unknown as Parameters<typeof toApiHealthEvent>[0]);
+		expect(out.severity).toBe('mild');
+		expect(out.resolvedAt).toBe(at);
+		expect('loggedBy' in out).toBe(false);
+		expect('secretFutureColumn' in out).toBe(false);
+	});
+
+	it('update whitelists its fields', () => {
+		const out = toApiIncidentUpdate({
+			id: 'u1',
+			healthEventId: 'h1',
+			body: 'better',
+			severity: null,
+			occurredAt: at,
+			createdAt: at,
+			loggedBy: 'x'
+		} as unknown as Parameters<typeof toApiIncidentUpdate>[0]);
+		expect(out).toEqual({
+			id: 'u1',
+			incidentId: 'h1',
+			body: 'better',
+			severity: null,
+			occurredAt: at,
+			createdAt: at
+		});
+	});
+
+	it('link whitelists its fields', () => {
+		const out = toApiIncidentLink({
+			id: 'e1',
+			type: 'vet_visit',
+			title: 'Checkup',
+			occurredAt: at,
+			vetName: 'Dr',
+			vetClinic: null,
+			notes: 'n',
+			extra: 1
+		} as unknown as Parameters<typeof toApiIncidentLink>[0]);
+		expect(Object.keys(out).sort()).toEqual(
+			['id', 'notes', 'occurredAt', 'title', 'type', 'vetClinic', 'vetName'].sort()
+		);
 	});
 });

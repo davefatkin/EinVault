@@ -3,8 +3,8 @@ import { db, schema } from '#lib/server/db/index.js';
 import type { Media } from '#lib/server/db/schema.js';
 import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
 import { toMediaItem, type MediaItem, type MediaStatus } from '#lib/media.js';
-import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
-import { deleteMediaBlobs } from '#lib/server/storage/media-blobs.js';
+import { STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { deleteMediaBlobs, storeThenInsert } from '#lib/server/storage/media-blobs.js';
 import type { PreparedMedia } from '#lib/server/storage/media-upload.js';
 
 // Note media (issue #321). Pure data access plus the upload commit; callers
@@ -149,18 +149,8 @@ export async function saveNoteMediaUpload(input: {
 }): Promise<InsertOutcome | 'putFailed'> {
 	const { companionId, noteId, mediaId, prepared } = input;
 	const key = noteMediaKey(companionId, noteId, prepared.filename);
-	try {
-		await getStorage().put({ key, body: prepared.body, contentType: prepared.contentType });
-	} catch (err) {
-		console.error('[note-media] storage put failed:', err);
-		return 'putFailed';
-	}
-	const orphan = [
-		{ provider: STORAGE_BACKEND, storageKey: key, originalKey: null, posterKey: null }
-	];
-	let outcome: InsertOutcome;
-	try {
-		outcome = insertNoteMedia(
+	return storeThenInsert(key, prepared, 'note-media', () =>
+		insertNoteMedia(
 			{
 				id: mediaId,
 				noteId,
@@ -175,13 +165,8 @@ export async function saveNoteMediaUpload(input: {
 				loggedBy: input.loggedBy
 			},
 			input.max
-		);
-	} catch (err) {
-		await deleteMediaBlobs(orphan, 'note-media');
-		throw err;
-	}
-	if (outcome !== 'ok') await deleteMediaBlobs(orphan, 'note-media');
-	return outcome;
+		)
+	);
 }
 
 export async function setNoteMediaCaption(
