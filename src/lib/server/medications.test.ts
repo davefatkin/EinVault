@@ -12,6 +12,7 @@ import {
 	listMedicationSummaries,
 	listDoses,
 	sweepEndedMedicationReminders,
+	logDose,
 	type MedicationInput
 } from './medications';
 
@@ -271,5 +272,82 @@ describe('sweepEndedMedicationReminders', () => {
 		expect(left).not.toContain(pastOpen);
 		expect(left).toEqual(expect.arrayContaining([pastDone, t, a]));
 		expect(await sweepEndedMedicationReminders(TODAY)).toBe(0);
+	});
+});
+
+describe('logDose', () => {
+	// "Now" is 8:05 local on TODAY.
+	const now = new Date(2026, 10, 9, 8, 5, 0);
+	const at = (h: number, m = 0, day = 9) => new Date(2026, 10, day, h, m, 0);
+	const doses = (medicationId: string) =>
+		db
+			.select()
+			.from(schema.medicationDoses)
+			.where(eq(schema.medicationDoses.medicationId, medicationId));
+	const reminderRow = async (id: string) =>
+		(await db.select().from(schema.reminders).where(eq(schema.reminders.id, id)))[0];
+
+	it('Given at 8:05 completes the 8:00 occurrence: one linked dose, nothing left overdue', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const r8 = await addReminder(id, false, at(8));
+		const r20 = await addReminder(id, false, at(20));
+		const res = await logDose(id, { id: U1 }, { now });
+		expect(res).toMatchObject({ completedReminderId: r8 });
+		const rows = await doses(id);
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({
+			id: (res as { doseId: string }).doseId,
+			source: 'reminder',
+			reminderId: r8,
+			givenBy: U1
+		});
+		expect((await reminderRow(r8)).outcome).toBe('completed');
+		expect((await reminderRow(r20)).completedAt).toBeNull();
+		const overdue = await db
+			.select()
+			.from(schema.reminders)
+			.where(eq(schema.reminders.medicationId, id));
+		expect(overdue.filter((r) => !r.completedAt && r.dueAt <= now)).toEqual([]);
+	});
+
+	it('completes a later-today occurrence when none is overdue', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const r20 = await addReminder(id, false, at(20));
+		expect(await logDose(id, { id: U1 }, { now })).toMatchObject({ completedReminderId: r20 });
+	});
+
+	it('writes a manual dose when nothing is due today', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const tomorrow = await addReminder(id, false, at(8, 0, 10));
+		const givenAt = at(7, 30);
+		const res = await logDose(id, { id: U1 }, { now, givenAt, note: 'half a pill' });
+		expect(res).toMatchObject({ completedReminderId: null });
+		const rows = await doses(id);
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({
+			source: 'manual',
+			reminderId: null,
+			givenBy: U1,
+			givenAt,
+			note: 'half a pill'
+		});
+		expect((await reminderRow(tomorrow)).completedAt).toBeNull();
+	});
+
+	it('defaults givenAt to now for a manual dose', async () => {
+		const id = await createMedication(C1, input(), U1);
+		await logDose(id, { id: U1 }, { now });
+		expect((await doses(id))[0].givenAt).toEqual(now);
+	});
+
+	it('refuses an ended medication and a missing one', async () => {
+		const ended = await createMedication(C1, input({ endedOn: '2026-11-08' }), U1);
+		expect(await logDose(ended, { id: U1 }, { now })).toBe('ended');
+		expect(await doses(ended)).toHaveLength(0);
+		expect(await logDose('nope', { id: U1 }, { now })).toBe('notFound');
+		const lastDay = await createMedication(C1, input({ endedOn: TODAY }), U1);
+		expect(await logDose(lastDay, { id: U1 }, { now })).toMatchObject({
+			completedReminderId: null
+		});
 	});
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { computeNextDueAt, completeReminder, skipReminder } from './reminders';
 
@@ -424,5 +424,144 @@ describe('lead times carry to the next occurrence', () => {
 		}))!;
 		expect(next.notifyLeadDays).toBeNull();
 		expect(next.leadArmedAt).toBeNull();
+	});
+});
+
+describe('medication-linked reminders', () => {
+	let k = 0;
+	async function med(endedOn: string | null = null) {
+		const id = `med-rem-${++k}`;
+		await db.insert(schema.medications).values({
+			id,
+			companionId: 'c-rem',
+			name: 'Carprofen',
+			startedOn: '2026-01-01',
+			endedOn
+		});
+		return id;
+	}
+	async function linked(medicationId: string, dueAt = new Date(2026, 0, 15, 9, 0, 0)) {
+		const id = `med-rem-r-${++k}`;
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Pill',
+			type: 'medication',
+			dueAt,
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			seriesId: id,
+			medicationId,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		return (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+	}
+	const dosesFor = (medicationId: string) =>
+		db.query.medicationDoses.findMany({
+			where: eq(schema.medicationDoses.medicationId, medicationId)
+		});
+
+	it('completing writes one reminder dose and links the next occurrence', async () => {
+		const m = await med();
+		const r = await linked(m);
+		const res = completeReminder(r, 'u-rem')!;
+		const doses = await dosesFor(m);
+		expect(doses).toHaveLength(1);
+		expect(doses[0]).toMatchObject({
+			id: res.doseId,
+			source: 'reminder',
+			reminderId: r.id,
+			givenBy: 'u-rem',
+			givenAt: new Date(Math.floor(res.completedAt.getTime() / 1000) * 1000)
+		});
+		const next = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, res.nextReminderId!)
+		}))!;
+		expect(next.medicationId).toBe(m);
+	});
+
+	it('a second complete on the same snapshot writes no second dose', async () => {
+		const m = await med();
+		const r = await linked(m);
+		completeReminder(r, 'u-rem');
+		expect(completeReminder(r, 'u-rem')).toBeNull();
+		expect(await dosesFor(m)).toHaveLength(1);
+	});
+
+	it('skipping writes no dose but keeps the link on the next occurrence', async () => {
+		const m = await med();
+		const r = await linked(m);
+		const res = skipReminder(r, 'u-rem')!;
+		expect(await dosesFor(m)).toHaveLength(0);
+		const next = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, res.nextReminderId!)
+		}))!;
+		expect(next.medicationId).toBe(m);
+	});
+
+	it('unlinked reminders write no dose', async () => {
+		const before = (await db.query.medicationDoses.findMany()).length;
+		await db.insert(schema.reminders).values({
+			id: 'med-rem-plain',
+			companionId: 'c-rem',
+			title: 'Plain',
+			type: 'other',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: false,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const r = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, 'med-rem-plain')
+		}))!;
+		expect(completeReminder(r, 'u-rem')!.doseId).toBeNull();
+		expect((await db.query.medicationDoses.findMany()).length).toBe(before);
+	});
+
+	it('a course stops by itself: no occurrence spawns past ended_on', async () => {
+		// Daily 9:00 reminder, course ends tomorrow (inclusive).
+		const m = await med('2026-01-16');
+		const today = await linked(m, new Date(2026, 0, 15, 9, 0, 0));
+		const first = completeReminder(today, 'u-rem')!;
+		expect(first.nextReminderId).not.toBeNull();
+		const tomorrow = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, first.nextReminderId!)
+		}))!;
+		expect(tomorrow.dueAt).toEqual(new Date(2026, 0, 16, 9, 0, 0));
+		const last = completeReminder(tomorrow, 'u-rem')!;
+		expect(last.nextReminderId).toBeNull();
+		expect(await dosesFor(m)).toHaveLength(2);
+		const open = await db.query.reminders.findMany({
+			where: and(eq(schema.reminders.medicationId, m), isNull(schema.reminders.completedAt))
+		});
+		expect(open).toHaveLength(0);
+	});
+
+	it('skipping the last day of a course spawns nothing either', async () => {
+		const m = await med('2026-01-15');
+		const r = await linked(m, new Date(2026, 0, 15, 9, 0, 0));
+		expect(skipReminder(r, 'u-rem')!.nextReminderId).toBeNull();
+	});
+
+	it('a link to a deleted medication writes no dose and does not throw', async () => {
+		const m = await med();
+		const r = await linked(m);
+		await db.delete(schema.medications).where(eq(schema.medications.id, m));
+		// r is a stale snapshot that still carries medicationId.
+		const res = completeReminder(r, 'u-rem')!;
+		expect(res.doseId).toBeNull();
+		const next = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, res.nextReminderId!)
+		}))!;
+		expect(next.medicationId).toBeNull();
+	});
+
+	it('uses the given time and note for the dose when passed', async () => {
+		const m = await med();
+		const r = await linked(m);
+		const givenAt = new Date(2026, 0, 15, 8, 55, 0);
+		const res = completeReminder(r, 'u-rem', { givenAt, note: 'with food' })!;
+		const [dose] = await dosesFor(m);
+		expect(dose).toMatchObject({ id: res.doseId, givenAt, note: 'with food' });
 	});
 });

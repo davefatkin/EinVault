@@ -1129,6 +1129,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTooLong': 'La nota es demasiado larga (máx. {max} caracteres).',
 	'error.invalidDateTime': 'Introduce una fecha y hora válidas.',
 	'error.medicationEndBeforeStart': 'La fecha de fin no puede ser anterior a la de inicio.',
+	'error.medicationNotFound': 'Medicamento no encontrado.',
+	'error.medicationEnded': 'Este medicamento ha finalizado.',
 	'error.fieldTooLong': 'Demasiado largo (máx. {max} caracteres).',
 	'error.noteTitleTooLong': 'El título es demasiado largo (máx. {max} caracteres).',
 	'error.noteTitleNewline': 'El título debe ser una sola línea.',

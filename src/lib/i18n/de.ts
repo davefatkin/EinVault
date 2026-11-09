@@ -1133,6 +1133,8 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTooLong': 'Notiz ist zu lang (max. {max} Zeichen).',
 	'error.invalidDateTime': 'Gib ein gültiges Datum und eine gültige Uhrzeit ein.',
 	'error.medicationEndBeforeStart': 'Das Enddatum darf nicht vor dem Startdatum liegen.',
+	'error.medicationNotFound': 'Medikament nicht gefunden.',
+	'error.medicationEnded': 'Dieses Medikament ist abgesetzt.',
 	'error.fieldTooLong': 'Zu lang (max. {max} Zeichen).',
 	'error.noteTitleTooLong': 'Der Titel ist zu lang (max. {max} Zeichen).',
 	'error.noteTitleNewline': 'Der Titel muss einzeilig sein.',

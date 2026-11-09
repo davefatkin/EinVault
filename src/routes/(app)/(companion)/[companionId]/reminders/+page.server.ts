@@ -2,12 +2,15 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
+import { eq, and, lt, gt, inArray, isNotNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { getMedication } from '#lib/server/medications.js';
+import { isMedicationActive } from '#lib/medications.js';
+import { localDateISO } from '#lib/date.js';
 
 const LEAD_ERROR_KEYS = {
 	invalid: 'error.invalidLeadDays',
@@ -59,6 +62,15 @@ export const actions: Actions = {
 		);
 		if (!leads.ok) return fail(400, { error: t(locals.locale, LEAD_ERROR_KEYS[leads.reason]) });
 
+		// A dose reminder from a medication's page: same companion, still active.
+		const medicationId = String(data.get('medicationId') ?? '').trim() || null;
+		if (medicationId) {
+			const medication = await getMedication(params.companionId, medicationId);
+			if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+			if (!isMedicationActive(medication.endedOn, localDateISO()))
+				return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+		}
+
 		const id = generateId(15);
 		await db.insert(schema.reminders).values({
 			id,
@@ -75,9 +87,11 @@ export const actions: Actions = {
 			seriesId: isRecurring ? id : null,
 			notifyLeadDays: leads.value,
 			leadArmedAt: leads.value ? new Date() : null,
+			medicationId,
 			loggedBy: locals.user.id
 		});
 
+		if (medicationId) redirect(303, `/${params.companionId}/medications/${medicationId}`);
 		return { success: true };
 	},
 
@@ -215,25 +229,46 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
+		// An ended medication never gets an open reminder back (R1).
+		if (existing.medicationId) {
+			const medication = await getMedication(params.companionId, existing.medicationId);
+			if (medication && !isMedicationActive(medication.endedOn, localDateISO()))
+				return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+		}
+
 		db.transaction((tx) => {
+			// If recurring, delete all future instances in this series. Spawned
+			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
+			// the same fallback: rows whose own seriesId is null still own the
+			// instances their id seeded.
+			const later = existing.isRecurring
+				? tx
+						.select({ id: schema.reminders.id })
+						.from(schema.reminders)
+						.where(
+							and(
+								eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
+								gt(schema.reminders.dueAt, existing.dueAt)
+							)
+						)
+						.all()
+						.map((r) => r.id)
+				: [];
+
+			// Undoing a completion undoes its dose, and the doses of the later
+			// occurrences going away. Delete them before the reminders: the FK
+			// would otherwise null reminder_id and orphan them.
+			tx.delete(schema.medicationDoses)
+				.where(inArray(schema.medicationDoses.reminderId, [id, ...later]))
+				.run();
+
 			tx.update(schema.reminders)
 				.set({ completedAt: null, completedBy: null, outcome: null })
 				.where(eq(schema.reminders.id, id))
 				.run();
 
-			// If recurring, delete all future instances in this series. Spawned
-			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
-			// the same fallback: rows whose own seriesId is null still own the
-			// instances their id seeded.
-			if (existing.isRecurring) {
-				tx.delete(schema.reminders)
-					.where(
-						and(
-							eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
-							gt(schema.reminders.dueAt, existing.dueAt)
-						)
-					)
-					.run();
+			if (later.length > 0) {
+				tx.delete(schema.reminders).where(inArray(schema.reminders.id, later)).run();
 			}
 		});
 

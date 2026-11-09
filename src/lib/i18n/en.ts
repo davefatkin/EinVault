@@ -1109,6 +1109,8 @@ const messages = {
 	'error.noteTooLong': 'Note is too long (max {max} characters).',
 	'error.invalidDateTime': 'Enter a valid date and time.',
 	'error.medicationEndBeforeStart': 'The end date cannot be before the start date.',
+	'error.medicationNotFound': 'Medication not found.',
+	'error.medicationEnded': 'This medication has ended.',
 	'error.fieldTooLong': 'Too long (max {max} characters).',
 	'error.noteTitleTooLong': 'Title is too long (max {max} characters).',
 	'error.noteTitleNewline': 'Title must be a single line.',

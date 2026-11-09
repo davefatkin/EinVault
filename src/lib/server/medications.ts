@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
 import { t, type Locale } from '#lib/i18n/index.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
+import { completeReminder } from '#lib/server/reminders.js';
 import {
 	isMedicationActive,
 	type DoseView,
@@ -281,4 +282,59 @@ export async function sweepEndedMedicationReminders(
 		},
 		{ behavior: 'immediate' }
 	);
+}
+
+/**
+ * Record that a dose was given (every "Given" button and the dose API). If an
+ * occurrence of a linked reminder is due by the end of today (local), the
+ * earliest one is completed, which writes the dose; otherwise a standalone
+ * manual dose is written. Callers check that the medication belongs to the
+ * companion they act on.
+ */
+export async function logDose(
+	medicationId: string,
+	actor: { id: string },
+	opts: { givenAt?: Date; note?: string; now?: Date } = {}
+): Promise<{ doseId: string; completedReminderId: string | null } | 'notFound' | 'ended'> {
+	const now = opts.now ?? new Date();
+	const medication = await db.query.medications.findFirst({
+		where: eq(schema.medications.id, medicationId),
+		columns: { id: true, endedOn: true }
+	});
+	if (!medication) return 'notFound';
+	if (!isMedicationActive(medication.endedOn, localDateISO(now))) return 'ended';
+
+	const endOfToday = new Date(now);
+	endOfToday.setHours(23, 59, 59, 999);
+	const due = await db.query.reminders.findFirst({
+		where: and(
+			eq(schema.reminders.medicationId, medicationId),
+			isNull(schema.reminders.completedAt),
+			lte(schema.reminders.dueAt, endOfToday)
+		),
+		orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
+	});
+	if (due) {
+		const res = completeReminder(due, actor.id, { givenAt: opts.givenAt, note: opts.note });
+		// Completed but no dose: the medication was deleted in between.
+		if (res) return res.doseId ? { doseId: res.doseId, completedReminderId: due.id } : 'notFound';
+		// Lost a race: someone else just completed it and that wrote the dose.
+		const existing = await db.query.medicationDoses.findFirst({
+			where: eq(schema.medicationDoses.reminderId, due.id),
+			columns: { id: true }
+		});
+		if (existing) return { doseId: existing.id, completedReminderId: due.id };
+		// Resolved some other way (skipped): log the dose by hand below.
+	}
+
+	const doseId = generateId(15);
+	await db.insert(schema.medicationDoses).values({
+		id: doseId,
+		medicationId,
+		givenAt: opts.givenAt ?? now,
+		givenBy: actor.id,
+		source: 'manual',
+		note: opts.note ?? null
+	});
+	return { doseId, completedReminderId: null };
 }

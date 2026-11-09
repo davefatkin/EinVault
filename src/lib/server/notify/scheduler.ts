@@ -7,13 +7,15 @@
 // presume one app process per database — the same accepted constraint as the
 // video worker.
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
-import { and, eq, gt, isNotNull, isNull, lte } from 'drizzle-orm';
+import { and, eq, gt, gte, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import * as env from '$app/env/private';
 import { celebrationLines, celebrationOn } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';
 import { MAX_LEAD_DAYS, parseLeadDays } from '#lib/reminderLeadTimes.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
+import { sweepEndedMedicationReminders } from '#lib/server/medications.js';
+import { isMedicationActive } from '#lib/medications.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
 import {
 	buildCelebrationEmail,
@@ -90,8 +92,27 @@ async function caretakerAssignments(): Promise<Set<string>> {
 	return new Set(assignments.map((a) => `${a.companionId}:${a.userId}`));
 }
 
+/** Unlinked, or linked to a medication still active on `today` (R1 safety net). */
+function medicationStillActive(today: string) {
+	return or(
+		isNull(schema.reminders.medicationId),
+		isNull(schema.medications.endedOn),
+		gte(schema.medications.endedOn, today)
+	);
+}
+
+/** Delivery re-check: the reminder's medication, if any, has not ended. */
+async function linkedMedicationEnded(medicationId: string | null): Promise<boolean> {
+	if (!medicationId) return false;
+	const medication = await db.query.medications.findFirst({
+		where: eq(schema.medications.id, medicationId),
+		columns: { endedOn: true }
+	});
+	return !!medication && !isMedicationActive(medication.endedOn, localDateISO());
+}
+
 /** Due reminders → one outbox row per eligible recipient. */
-async function produceReminders(now: Date): Promise<EnqueueRow[]> {
+export async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 	const due = await db
 		.select({
 			id: schema.reminders.id,
@@ -100,12 +121,14 @@ async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 		})
 		.from(schema.reminders)
 		.innerJoin(schema.companions, eq(schema.reminders.companionId, schema.companions.id))
+		.leftJoin(schema.medications, eq(schema.reminders.medicationId, schema.medications.id))
 		.where(
 			and(
 				isNull(schema.reminders.completedAt),
 				lte(schema.reminders.dueAt, now),
 				gt(schema.reminders.dueAt, new Date(now.getTime() - CATCH_UP_MS)),
-				eq(schema.companions.isActive, true)
+				eq(schema.companions.isActive, true),
+				medicationStillActive(localDateISO(now))
 			)
 		);
 	if (due.length === 0) return [];
@@ -155,19 +178,21 @@ async function produceReminders(now: Date): Promise<EnqueueRow[]> {
  * the due notification. The due_at bound keeps the scan to reminders a lead
  * could reach (plus a day of slack for DST).
  */
-async function produceReminderHeadsUps(now: Date): Promise<EnqueueRow[]> {
+export async function produceReminderHeadsUps(now: Date): Promise<EnqueueRow[]> {
 	const horizon = new Date(now.getTime() + (MAX_LEAD_DAYS + 1) * 24 * 60 * 60 * 1000);
-	const candidates = await db
+	const rows = await db
 		.select({
 			id: schema.reminders.id,
 			companionId: schema.reminders.companionId,
 			dueAt: schema.reminders.dueAt,
 			notifyLeadDays: schema.reminders.notifyLeadDays,
 			leadArmedAt: schema.reminders.leadArmedAt,
-			createdAt: schema.reminders.createdAt
+			createdAt: schema.reminders.createdAt,
+			medicationEndedOn: schema.medications.endedOn
 		})
 		.from(schema.reminders)
 		.innerJoin(schema.companions, eq(schema.reminders.companionId, schema.companions.id))
+		.leftJoin(schema.medications, eq(schema.reminders.medicationId, schema.medications.id))
 		.where(
 			and(
 				isNull(schema.reminders.completedAt),
@@ -177,6 +202,12 @@ async function produceReminderHeadsUps(now: Date): Promise<EnqueueRow[]> {
 				eq(schema.companions.isActive, true)
 			)
 		);
+	// No heads-up for an occurrence after a linked medication's last day. That
+	// covers ended medications too (the occurrence is in the future), and the
+	// sweep removes such an occurrence before it comes due.
+	const candidates = rows.filter(
+		(r) => !r.medicationEndedOn || localDateISO(r.dueAt) <= r.medicationEndedOn
+	);
 	if (candidates.length === 0) return [];
 	const recipients = await categoryRecipients(schema.users.notifyReminderEmail);
 	return buildReminderHeadsUpRows(candidates, recipients, await caretakerAssignments(), now, {
@@ -273,8 +304,10 @@ export async function produceCelebrations(now: Date): Promise<EnqueueRow[]> {
 	});
 }
 
-async function produce(): Promise<void> {
-	const now = new Date();
+export async function produce(now: Date = new Date()): Promise<void> {
+	// R1 safety net: ended medications keep no open reminders.
+	const swept = await sweepEndedMedicationReminders(localDateISO(now));
+	if (swept > 0) console.info(`[notify] removed ${swept} reminder(s) of ended medications`);
 	const rows = [
 		...(await produceReminders(now)),
 		...(await produceReminderHeadsUps(now)),
@@ -302,8 +335,9 @@ async function deliverReminder(
 	const reminder = await db.query.reminders.findFirst({
 		where: eq(schema.reminders.id, payload.reminderId)
 	});
-	// Reminder deleted or completed since enqueue: nothing to say anymore.
-	if (!reminder || reminder.completedAt) {
+	// Reminder deleted or completed since enqueue, or its medication ended:
+	// nothing to say anymore.
+	if (!reminder || reminder.completedAt || (await linkedMedicationEnded(reminder.medicationId))) {
 		await markSkipped(row.id);
 		return;
 	}
@@ -369,6 +403,7 @@ export async function reminderUpcomingContext(
 		where: eq(schema.reminders.id, payload.reminderId)
 	});
 	if (!reminder || reminder.completedAt) return null;
+	if (await linkedMedicationEnded(reminder.medicationId)) return null;
 	if (Math.floor(reminder.dueAt.getTime() / 1000) !== payload.dueAtEpoch) return null;
 	if (!parseLeadDays(reminder.notifyLeadDays).includes(payload.leadDays)) return null;
 	if (reminder.dueAt <= now) return null;
@@ -502,7 +537,7 @@ async function deliverReminderNtfy(
 	const reminder = await db.query.reminders.findFirst({
 		where: eq(schema.reminders.id, payload.reminderId)
 	});
-	if (!reminder || reminder.completedAt) {
+	if (!reminder || reminder.completedAt || (await linkedMedicationEnded(reminder.medicationId))) {
 		await markSkipped(row.id);
 		return;
 	}

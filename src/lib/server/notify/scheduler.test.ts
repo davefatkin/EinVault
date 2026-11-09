@@ -7,7 +7,10 @@ import {
 	celebrationContext,
 	deliverReminderUpcoming,
 	deliverReminderUpcomingNtfy,
-	drain
+	drain,
+	produce,
+	produceReminderHeadsUps,
+	produceReminders
 } from './scheduler';
 
 vi.mock('#lib/server/mail/index.js', () => ({
@@ -251,5 +254,122 @@ describe('reminder heads-up delivery', () => {
 			(await db.select().from(schema.notificationOutbox)).map((r) => [r.id, r.status])
 		);
 		expect(status).toEqual({ o1: 'sent', o2: 'sent', o3: 'skipped', o4: 'skipped' });
+	});
+});
+
+describe('reminders linked to an ended medication', () => {
+	// Clock is 2026-06-15 12:00 local.
+	const now = () => new Date();
+	const epoch = (d: Date) => Math.floor(d.getTime() / 1000);
+	const dueNow = new Date(2026, 5, 15, 11, 0);
+	const dueTomorrow = new Date(2026, 5, 16, 9, 0);
+
+	async function med(id: string, endedOn: string | null) {
+		await db.insert(schema.medications).values({
+			id,
+			companionId: 'comp-c',
+			name: id,
+			startedOn: '2026-01-01',
+			endedOn
+		});
+	}
+	async function rem(id: string, medicationId: string | null, dueAt: Date, leads?: string) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'comp-c',
+			title: id,
+			type: 'medication',
+			dueAt,
+			medicationId,
+			notifyLeadDays: leads ?? null,
+			createdAt: new Date(2026, 0, 1)
+		});
+	}
+	const ids = (rows: { payload: unknown }[]) =>
+		[...new Set(rows.map((r) => (r.payload as { reminderId?: string }).reminderId))].sort();
+
+	beforeEach(async () => {
+		vi.clearAllMocks();
+		await db.delete(schema.notificationOutbox);
+		await setUser({ notifyReminderEmail: true });
+		await med('m-ended', '2026-06-14');
+		await med('m-last-day', '2026-06-15');
+		await med('m-active', null);
+	});
+
+	it('produce sweeps open reminders of ended medications and notifies the rest', async () => {
+		await rem('r-ended', 'm-ended', dueNow);
+		await rem('r-active', 'm-active', dueNow);
+		await produce(now());
+		const left = (await db.select().from(schema.reminders)).map((r) => r.id).sort();
+		expect(left).toEqual(['r-active']);
+		const due = (await db.select().from(schema.notificationOutbox)).filter(
+			(r) => (r.payload as { kind: string }).kind === 'reminderDue'
+		);
+		expect(ids(due)).toEqual(['r-active']);
+	});
+
+	it('the due producer skips a reminder whose medication has ended', async () => {
+		await rem('r-ended', 'm-ended', dueNow);
+		await rem('r-last-day', 'm-last-day', dueNow);
+		await rem('r-active', 'm-active', dueNow);
+		await rem('r-plain', null, dueNow);
+		expect(ids(await produceReminders(now()))).toEqual(['r-active', 'r-last-day', 'r-plain']);
+	});
+
+	it('the heads-up producer skips ended medications and occurrences past the end date', async () => {
+		await rem('h-ended', 'm-ended', dueTomorrow, '1');
+		await rem('h-past-end', 'm-last-day', dueTomorrow, '1');
+		await rem('h-active', 'm-active', dueTomorrow, '1');
+		await rem('h-plain', null, dueTomorrow, '1');
+		expect(ids(await produceReminderHeadsUps(now()))).toEqual(['h-active', 'h-plain']);
+	});
+
+	it('delivery skips a due reminder whose medication ended after enqueue', async () => {
+		await rem('r-ended', 'm-ended', dueNow);
+		const payload = {
+			kind: 'reminderDue' as const,
+			reminderId: 'r-ended',
+			dueAtEpoch: epoch(dueNow)
+		};
+		await db.insert(schema.notificationOutbox).values([
+			{ id: 'o1', dedupeKey: 'k1', userId: 'u-c', channel: 'email', payload },
+			{ id: 'o2', dedupeKey: 'k2', userId: 'u-c', channel: 'ntfy', payload }
+		]);
+		await drain();
+		expect(sendMail).not.toHaveBeenCalled();
+		expect(sendNtfy).not.toHaveBeenCalled();
+	});
+
+	it('delivery skips a heads-up whose medication ended after enqueue', async () => {
+		await rem('h-ended', 'm-ended', dueTomorrow, '1');
+		const payload = {
+			kind: 'reminderUpcoming' as const,
+			reminderId: 'h-ended',
+			dueAtEpoch: epoch(dueTomorrow),
+			leadDays: 1
+		};
+		type Row = Parameters<typeof deliverReminderUpcoming>[0];
+		const row = (channel: 'email' | 'ntfy'): Row => ({ id: 'x', userId: 'u-c', channel }) as Row;
+		await deliverReminderUpcoming(row('email'), payload);
+		await deliverReminderUpcomingNtfy(row('ntfy'), payload);
+		expect(sendMail).not.toHaveBeenCalled();
+		expect(sendNtfy).not.toHaveBeenCalled();
+	});
+
+	it('delivery still sends for an active medication', async () => {
+		await rem('r-active', 'm-active', dueNow);
+		const payload = {
+			kind: 'reminderDue' as const,
+			reminderId: 'r-active',
+			dueAtEpoch: epoch(dueNow)
+		};
+		await db.insert(schema.notificationOutbox).values([
+			{ id: 'o1', dedupeKey: 'k1', userId: 'u-c', channel: 'email', payload },
+			{ id: 'o2', dedupeKey: 'k2', userId: 'u-c', channel: 'ntfy', payload }
+		]);
+		await drain();
+		expect(sendMail).toHaveBeenCalledOnce();
+		expect(sendNtfy).toHaveBeenCalledOnce();
 	});
 });
