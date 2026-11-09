@@ -1,3 +1,6 @@
+// Pin a DST-observing zone so the DST assertions cross a real boundary even in UTC CI.
+process.env.TZ = 'America/New_York';
+
 import { describe, expect, it } from 'vitest';
 import {
 	LEAD_DAY_PRESETS,
@@ -83,6 +86,12 @@ describe('leadTime', () => {
 		expect([r2.getDate(), r2.getHours()]).toEqual([7, 9]);
 		const r3 = leadTime(new Date(2026, 2, 8, 9, 0), 1);
 		expect([r3.getDate(), r3.getHours()]).toEqual([7, 9]);
+	});
+	it('is not plain millisecond arithmetic across the change', () => {
+		const due = new Date(2026, 2, 10, 9, 0);
+		const r = leadTime(due, 7);
+		expect(r.getHours()).toBe(9);
+		expect(due.getTime() - r.getTime()).not.toBe(7 * 24 * 3600 * 1000);
 	});
 });
 
