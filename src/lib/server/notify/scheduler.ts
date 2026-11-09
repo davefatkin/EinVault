@@ -1,6 +1,7 @@
 // Notification scheduler (issue #12). A 60-second in-process interval that
-// (a) produces outbox rows for newly-due reminders and for shifts entering
-// the 24h lead window, then (b) drains the queue through SMTP. Single-flight
+// produces outbox rows for due reminders and reminder heads-ups, shifts
+// entering the 24h lead window, and celebrations, then drains the queue
+// through email and ntfy (incident alerts are enqueued on write). Single-flight
 // like the video worker: overlapping ticks are no-ops. Single-process
 // assumption: the in-memory flag and the select-then-claim pattern both
 // presume one app process per database — the same accepted constraint as the

@@ -232,7 +232,7 @@ function tomorrowPlusMinutes(minutes: number): string {
 // ---------------------------------------------------------------------------
 
 test('heads-up pushes before the due date, none without a lead time', async ({ world, page }) => {
-	test.setTimeout(60_000);
+	test.setTimeout(130_000);
 	await login(page, world.server.baseURL, SEED.member.username);
 	await page.goto(world.server.baseURL + '/settings');
 	await saveNotificationSettings(page, world.server.baseURL, { ntfyTopic: 'e2e-topic-lead' });
@@ -259,6 +259,11 @@ test('heads-up pushes before the due date, none without a lead time', async ({ w
 	// lead time, move both rows into the "armed before the lead, lead just
 	// passed" state. The UI path (chip -> notify_lead_days -> lead_armed_at) was
 	// exercised above.
+	// The app server runs in UTC and the wording counts calendar days, so in the
+	// first minute after UTC midnight "now + 1 day - 30s" would read as today.
+	// Wait that minute out rather than shift the timing.
+	const sinceMidnightSec = Math.floor(Date.now() / 1000) % 86_400;
+	if (sinceMidnightSec < 60) await page.waitForTimeout((60 - sinceMidnightSec) * 1000);
 	const db = new Database(world.dbPath);
 	try {
 		const nowSec = Math.floor(Date.now() / 1000);
