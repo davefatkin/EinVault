@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { tick, onDestroy } from 'svelte';
-	import { snapshot } from '$app/navigation';
+	import { goto, snapshot } from '$app/navigation';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { NotebookPen, ArrowRight } from '@lucide/svelte';
@@ -16,6 +16,7 @@
 	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
 	import { journalMediaUrl, type MediaItem } from '#lib/media.js';
 	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 	import {
 		documentUrl,
 		healthRecordHref,
@@ -80,6 +81,15 @@
 
 	let previewDoc = $state<DayItemDocument | null>(null);
 	let detailRecord = $state<DayRecordItem | null>(null);
+
+	// Incidents open their own page instead of the detail modal.
+	function openRecord(item: DayRecordItem) {
+		if (item.kind === 'health' && item.type === 'incident') {
+			goto(incidentPath(companion.id, item.id));
+			return;
+		}
+		detailRecord = item;
+	}
 
 	async function loadMore() {
 		if (!oldestDate || loadingMore) return;
@@ -245,7 +255,7 @@
 						canEdit={companion.isActive !== false}
 						onOpenLightbox={openLightbox}
 						onOpenActivity={openDetail}
-						onOpenRecord={(item) => (detailRecord = item)}
+						onOpenRecord={openRecord}
 						onPreviewDocument={(doc) => (previewDoc = doc)}
 						{species}
 					/>

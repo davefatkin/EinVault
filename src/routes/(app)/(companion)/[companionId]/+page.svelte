@@ -491,7 +491,7 @@
 									handleSkip(item.id, item.title);
 								}}
 							/>
-						{:else if selected.kind === 'weight' || selected.kind === 'health'}
+						{:else if selected.kind === 'weight' || (selected.kind === 'health' && selected.item.type !== 'incident')}
 							<Button
 								href="/{companion.id}/health?edit={selected.item.id}"
 								variant="soft"
@@ -880,11 +880,7 @@
 							</button>
 						{:else if entry.kind === 'health'}
 							{@const event = entry.item}
-							<button
-								type="button"
-								onclick={() => openDetail({ kind: 'health', item: event })}
-								class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
-							>
+							{#snippet healthRow()}
 								<div class="flex items-center gap-3 text-sm">
 									<span
 										class="w-7 h-7 shrink-0 rounded-lg bg-teal/10 flex items-center justify-center text-base"
@@ -908,7 +904,24 @@
 										</div>
 									</div>
 								</div>
-							</button>
+							{/snippet}
+							{#if event.type === 'incident'}
+								<!-- Incidents have their own page; the modal's Edit can't open them. -->
+								<a
+									href={incidentPath(companion.id, event.id)}
+									class="block w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+								>
+									{@render healthRow()}
+								</a>
+							{:else}
+								<button
+									type="button"
+									onclick={() => openDetail({ kind: 'health', item: event })}
+									class="w-full rounded-md px-2 py-2 -mx-2 hover:bg-accent transition-colors text-left"
+								>
+									{@render healthRow()}
+								</button>
+							{/if}
 						{/if}
 					{/each}
 				</div>

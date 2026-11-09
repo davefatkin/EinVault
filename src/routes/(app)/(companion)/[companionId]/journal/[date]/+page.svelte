@@ -49,6 +49,7 @@
 	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
 	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
 	import IncidentFormModal from '#lib/components/incidents/IncidentFormModal.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 	import DayHealthEventModal from '#lib/components/journal/DayHealthEventModal.svelte';
 	import DayWeightModal from '#lib/components/journal/DayWeightModal.svelte';
 	import {
@@ -84,6 +85,20 @@
 	let detailRecord = $state<DayRecordItem | null>(null);
 	let showLinkForm = $state(false);
 	const canEditRecords = $derived(companion.isActive !== false);
+
+	// Incidents open their own page. One linked to this day keeps the detail
+	// modal while records can be edited: its Unlink button lives there.
+	function openRecord(item: DayRecordItem) {
+		if (
+			item.kind === 'health' &&
+			item.type === 'incident' &&
+			!(item.linkedHere && canEditRecords)
+		) {
+			goto(incidentPath(companion.id, item.id));
+			return;
+		}
+		detailRecord = item;
+	}
 
 	let showHealthModal = $state(false);
 	let showWeightModal = $state(false);
@@ -990,7 +1005,7 @@
 
 		<DayHealthRecords
 			items={data.dayItems}
-			onOpenRecord={(item) => (detailRecord = item)}
+			onOpenRecord={openRecord}
 			onPreviewDocument={(doc) => (previewDoc = doc)}
 			headerAction={canEditRecords ? addMenu : undefined}
 			panel={canEditRecords && showLinkForm ? linkHealthPanel : undefined}

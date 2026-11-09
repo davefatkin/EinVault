@@ -119,7 +119,8 @@
 		if (weightMatch) {
 			editingWeightId = editId;
 		} else {
-			const healthMatch = data.healthEvents.find((e) => e.id === editId);
+			// Incidents never edit here: the load redirects them to their page.
+			const healthMatch = data.healthEvents.find((e) => e.id === editId && e.type !== 'incident');
 			if (healthMatch) {
 				editingHealthId = editId;
 			}

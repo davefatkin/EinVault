@@ -2,7 +2,7 @@ import { test, expect } from '../lib/fixtures';
 import { pngUpload, pdfUpload } from '../lib/files';
 import { todayUTC } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
-import { deleteIncidentViaUi } from '../lib/incidents';
+import { deleteIncidentViaUi, incidentUrl, waitForCreatedIncidentId } from '../lib/incidents';
 
 const COMP = 'seed-comp-ein';
 
@@ -842,19 +842,19 @@ test.describe('journal day editor', () => {
 			const dialog = asMember.getByRole('dialog', { name: 'New incident' });
 			await dialog.locator('#incident-title').fill(title);
 			await dialog.locator('#incident-severity').selectOption('mild');
+			const created = waitForCreatedIncidentId(asMember, 'addIncident');
 			await dialog.getByRole('button', { name: 'Save incident' }).click();
+			id = await created;
 			await expect(dialog).toHaveCount(0, { timeout: 10_000 });
 
+			// The chip goes straight to the incident page, no detail modal.
 			const chip = asMember.getByTestId('day-health-records').getByRole('button', {
 				name: new RegExp(`^${title}`)
 			});
 			await expect(chip).toBeVisible();
 			await chip.click();
-			await asMember.getByRole('dialog', { name: title }).getByRole('link').first().click();
-			await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health/incidents/[^/?#]+$`), {
-				timeout: 10_000
-			});
-			id = new URL(asMember.url()).pathname.split('/').pop() ?? null;
+			await expect(asMember).toHaveURL(incidentUrl(COMP, id), { timeout: 10_000 });
+			await expect(asMember.getByRole('heading', { level: 1, name: title })).toBeVisible();
 		} finally {
 			if (id) await deleteIncidentViaUi(asMember, COMP, id);
 		}

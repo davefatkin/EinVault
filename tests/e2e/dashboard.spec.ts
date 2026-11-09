@@ -380,6 +380,22 @@ test('open incident banner shows on the companion dashboard and disappears when 
 	}
 });
 
+test('a recent incident on the dashboard opens the incident page', async ({ asMember }) => {
+	const title = `e2e-dash-recent-${Date.now().toString(36)}`;
+	let id: string | undefined;
+	try {
+		id = await createIncidentViaUi(asMember, COMP, { title });
+		await asMember.goto(`/${COMP}`);
+		await waitForHydration(asMember);
+		// The recent activity row (type label first), not the banner's link.
+		await asMember.getByRole('link', { name: new RegExp(`^Incident ${title}`) }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health/incidents/${id}$`));
+		await expect(asMember.getByRole('heading', { level: 1, name: title })).toBeVisible();
+	} finally {
+		if (id) await deleteIncidentViaUi(asMember, COMP, id);
+	}
+});
+
 test('the default seeded world shows no celebrations banner', async ({ asAdmin }) => {
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);

@@ -17,10 +17,10 @@ import {
 import { checkIncidentWrite } from '#lib/server/permissions.js';
 
 // Incidents have their own page. Old ?detailHealth= links (journal chips,
-// search hits) and ?incidentUpdate= search hits land there, but only for an
-// incident of this companion.
+// search hits), ?edit= links (dashboard detail modal) and ?incidentUpdate=
+// search hits land there, but only for an incident of this companion.
 async function incidentRedirect(companionId: string, url: URL): Promise<string | null> {
-	const healthId = url.searchParams.get('detailHealth');
+	const healthId = url.searchParams.get('detailHealth') ?? url.searchParams.get('edit');
 	if (healthId) {
 		const ev = await db.query.healthEvents.findFirst({
 			where: and(

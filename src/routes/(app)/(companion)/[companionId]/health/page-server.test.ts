@@ -85,6 +85,15 @@ describe('health page load', () => {
 		expect(await redirectOf('?detailHealth=hp-o-inc')).toBeNull();
 	});
 
+	it('sends ?edit= for an incident to its page and leaves other ids alone', async () => {
+		expect(await redirectOf('?edit=hp-inc')).toEqual({
+			status: 303,
+			location: `/${companionId}/health/incidents/hp-inc`
+		});
+		expect(await redirectOf('?edit=hp-ev')).toBeNull();
+		expect(await redirectOf('?edit=hp-o-inc')).toBeNull();
+	});
+
 	it('sends ?incidentUpdate= to the incident page at that update', async () => {
 		expect(await redirectOf('?incidentUpdate=hp-up')).toEqual({
 			status: 303,
