@@ -1106,6 +1106,12 @@ const messages = {
 	'error.noteInvalidTag': 'Each tag must be 1 to {max} characters.',
 	'error.noteNotFound': 'Note not found.',
 	'error.incidentNotFound': 'Incident not found.',
+	'error.updateNotFound': 'Update not found.',
+	'error.invalidField': 'This field is not allowed on an incident.',
+	'error.invalidSeverity':
+		'severity is only allowed on incidents, and must be mild, moderate, or severe.',
+	'error.incidentLinkInvalid':
+		'Only a non-incident health event of the same companion can be linked.',
 	'page.health.newIncident': 'New incident',
 	'page.health.openIncidents': 'Open incidents',
 	'page.incident.newTitle': 'New incident',

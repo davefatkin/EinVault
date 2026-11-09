@@ -3,18 +3,21 @@ import type {
 	dailyEvents,
 	journalEntries,
 	healthEvents,
+	healthEventUpdates,
 	weightEntries,
 	reminders,
 	caretakerShifts,
 	users
 } from '#lib/server/db/schema.js';
 import type { NoteWithTags } from '#lib/server/notes.js';
+import type { LinkedEvent } from '#lib/incidents.js';
 import type { QuickLogButton } from '#lib/server/quick-logs.js';
 
 type CompanionRow = typeof companions.$inferSelect;
 type DailyEventRow = typeof dailyEvents.$inferSelect;
 type JournalEntryRow = typeof journalEntries.$inferSelect;
 type HealthEventRow = typeof healthEvents.$inferSelect;
+type IncidentUpdateRow = typeof healthEventUpdates.$inferSelect;
 type WeightEntryRow = typeof weightEntries.$inferSelect;
 type ReminderRow = typeof reminders.$inferSelect;
 type CaretakerShiftRow = typeof caretakerShifts.$inferSelect;
@@ -69,6 +72,33 @@ export function toApiHealthEvent(row: HealthEventRow) {
 	return {
 		id: row.id,
 		companionId: row.companionId,
+		type: row.type,
+		title: row.title,
+		notes: row.notes,
+		occurredAt: row.occurredAt,
+		vetName: row.vetName,
+		vetClinic: row.vetClinic,
+		severity: row.severity,
+		resolvedAt: row.resolvedAt
+	};
+}
+
+// Public shape for an incident update. loggedBy stays internal.
+export function toApiIncidentUpdate(row: IncidentUpdateRow) {
+	return {
+		id: row.id,
+		incidentId: row.healthEventId,
+		body: row.body,
+		severity: row.severity,
+		occurredAt: row.occurredAt,
+		createdAt: row.createdAt
+	};
+}
+
+// A health event linked to an incident (listLinkedEvents row).
+export function toApiIncidentLink(row: LinkedEvent) {
+	return {
+		id: row.id,
 		type: row.type,
 		title: row.title,
 		notes: row.notes,

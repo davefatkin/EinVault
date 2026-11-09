@@ -1129,6 +1129,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteInvalidTag': 'Chaque tag doit comporter de 1 à {max} caractères.',
 	'error.noteNotFound': 'Note introuvable.',
 	'error.incidentNotFound': 'Incident introuvable.',
+	'error.updateNotFound': 'Mise à jour introuvable.',
+	'error.invalidField': "Ce champ n'est pas autorisé sur un incident.",
+	'error.invalidSeverity':
+		"severity n'est autorisé que sur les incidents et doit valoir mild, moderate ou severe.",
+	'error.incidentLinkInvalid':
+		"Seul un événement de santé du même compagnon, qui n'est pas un incident, peut être lié.",
 	'page.health.newIncident': 'Nouvel incident',
 	'page.health.openIncidents': 'Incidents en cours',
 	'page.incident.newTitle': 'Nouvel incident',

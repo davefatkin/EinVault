@@ -159,6 +159,8 @@ export const HealthEventType = z
 	.enum(['vet_visit', 'vaccination', 'medication', 'procedure', 'other', 'incident'])
 	.openapi('HealthEventType');
 
+export const IncidentSeverity = z.enum(['mild', 'moderate', 'severe']).openapi('IncidentSeverity');
+
 export const HealthRequest = z
 	.object({
 		companionId: z.string().min(1),
@@ -170,7 +172,10 @@ export const HealthRequest = z
 			description: 'ISO 8601. Defaults to now; may be old, not far future.'
 		}),
 		vetName: z.string().max(MAX_NOTE_LEN).optional(),
-		vetClinic: z.string().max(MAX_NOTE_LEN).optional()
+		vetClinic: z.string().max(MAX_NOTE_LEN).optional(),
+		severity: IncidentSeverity.optional().openapi({
+			description: 'Only for type "incident".'
+		})
 	})
 	.strict()
 	.openapi('HealthRequest');
@@ -184,7 +189,12 @@ export const HealthEvent = z
 		notes: z.string().nullable(),
 		occurredAt: z.string(),
 		vetName: z.string().nullable(),
-		vetClinic: z.string().nullable()
+		vetClinic: z.string().nullable(),
+		severity: IncidentSeverity.nullable().openapi({ description: 'Incidents only.' }),
+		resolvedAt: z.string().nullable().openapi({
+			format: 'date-time',
+			description: 'Incidents only; null while the incident is ongoing.'
+		})
 	})
 	.openapi('HealthEvent');
 
@@ -195,6 +205,82 @@ export const HealthList = z
 export const HealthWriteResponse = z
 	.object({ id: z.string(), companionId: z.string() })
 	.openapi('HealthWriteResponse');
+
+export const IncidentUpdate = z
+	.object({
+		id: z.string(),
+		incidentId: z.string(),
+		body: z.string(),
+		severity: IncidentSeverity.nullable(),
+		occurredAt: z.string().openapi({ format: 'date-time' }),
+		createdAt: z.string().openapi({ format: 'date-time' })
+	})
+	.openapi('IncidentUpdate');
+
+export const IncidentUpdateRequest = z
+	.object({
+		body: z.string().min(1).max(MAX_NOTE_LEN),
+		severity: IncidentSeverity.optional(),
+		occurredAt: z.string().optional().openapi({
+			format: 'date-time',
+			description: 'ISO 8601. Defaults to now.'
+		})
+	})
+	.strict()
+	.openapi('IncidentUpdateRequest');
+
+export const IncidentUpdatePatch = z
+	.object({
+		body: z.string().min(1).max(MAX_NOTE_LEN).optional(),
+		severity: IncidentSeverity.nullable().optional().openapi({
+			description: 'Omit to keep, null to clear.'
+		}),
+		occurredAt: z.string().optional().openapi({
+			format: 'date-time',
+			description: 'ISO 8601. Omit to keep.'
+		})
+	})
+	.strict()
+	.openapi('IncidentUpdatePatch');
+
+export const IncidentUpdateList = z
+	.object({ updates: z.array(IncidentUpdate) })
+	.openapi('IncidentUpdateList');
+
+export const IncidentLink = z
+	.object({
+		id: z.string(),
+		type: HealthEventType,
+		title: z.string(),
+		notes: z.string().nullable(),
+		occurredAt: z.string().openapi({ format: 'date-time' }),
+		vetName: z.string().nullable(),
+		vetClinic: z.string().nullable()
+	})
+	.openapi('IncidentLink');
+
+export const IncidentLinkList = z
+	.object({ links: z.array(IncidentLink) })
+	.openapi('IncidentLinkList');
+
+export const IncidentLinkRequest = z
+	.object({ healthEventId: z.string().min(1) })
+	.strict()
+	.openapi('IncidentLinkRequest');
+
+export const IncidentLinkResponse = z
+	.object({ incidentId: z.string(), healthEventId: z.string() })
+	.openapi('IncidentLinkResponse');
+
+export const IncidentResolveRequest = z
+	.object({
+		resolvedAt: z.string().nullable().optional().openapi({
+			format: 'date-time',
+			description: 'ISO 8601. Omit for now; null reopens the incident.'
+		})
+	})
+	.strict()
+	.openapi('IncidentResolveRequest');
 
 export const Note = z
 	.object({

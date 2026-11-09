@@ -8,6 +8,7 @@ import { throwCareError } from '#lib/server/care-errors.js';
 import { authorizeCompanions } from '#lib/server/companion-scope.js';
 import { requireFullScope, requireAllowedCompanion } from '#lib/server/api-guards.js';
 import { createHealthEvent } from '#lib/server/health.js';
+import { createIncident } from '#lib/server/incidents.js';
 import { toApiHealthEvent } from '#lib/server/api-serializers.js';
 import { isValidDate, parseRecordTimestamp } from '#lib/server/validation.js';
 import { HealthRequest } from '#lib/server/openapi/schemas.js';
@@ -47,6 +48,13 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 export const POST = apiRouteZod(
 	HealthRequest,
 	async ({ event, user, tokenId, locale, body }) => {
+		// Caretakers log incidents only from /care (shift check, owner alerts).
+		if (body.type === 'incident' && user.role === 'caretaker')
+			error(403, t(locale, 'error.forbidden'), { code: 'forbidden' });
+		if (body.type !== 'incident' && body.severity !== undefined)
+			error(400, t(locale, 'error.invalidSeverity'), { code: 'invalidSeverity' });
+		if (body.type === 'incident' && (body.vetName !== undefined || body.vetClinic !== undefined))
+			error(400, t(locale, 'error.invalidField'), { code: 'invalidField' });
 		return withIdempotency(
 			{ request: event.request, tokenId, endpoint: 'health', body },
 			async () => {
@@ -65,6 +73,20 @@ export const POST = apiRouteZod(
 					if (!parsed)
 						error(400, t(locale, 'error.invalidOccurredAt'), { code: 'invalidOccurredAt' });
 					occurredAt = parsed;
+				}
+
+				if (body.type === 'incident') {
+					const incidentId = await createIncident(
+						body.companionId,
+						{
+							title: body.title.trim(),
+							notes: body.notes?.trim() || null,
+							occurredAt,
+							severity: body.severity ?? null
+						},
+						user.id
+					);
+					return { status: 201, data: { id: incidentId, companionId: body.companionId } };
 				}
 
 				const id = await createHealthEvent(
@@ -86,6 +108,8 @@ export const POST = apiRouteZod(
 	(issue, locale) => {
 		if (issue.path[0] === 'type')
 			return { code: 'invalidType', message: t(locale, 'error.typeRequired') };
+		if (issue.path[0] === 'severity')
+			return { code: 'invalidSeverity', message: t(locale, 'error.invalidSeverity') };
 		if (issue.path[0] === 'title' && issue.code !== 'too_big')
 			return { code: 'titleRequired', message: t(locale, 'error.titleRequired') };
 		if (issue.path[0] === 'notes' && issue.code === 'too_big')

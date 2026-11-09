@@ -1124,6 +1124,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteInvalidTag': 'Ogni tag deve avere da 1 a {max} caratteri.',
 	'error.noteNotFound': 'Nota non trovata.',
 	'error.incidentNotFound': 'Incidente non trovato.',
+	'error.updateNotFound': 'Aggiornamento non trovato.',
+	'error.invalidField': 'Questo campo non è consentito in un incidente.',
+	'error.invalidSeverity':
+		'severity è consentito solo per gli incidenti e deve essere mild, moderate o severe.',
+	'error.incidentLinkInvalid':
+		'Si può collegare solo un evento di salute dello stesso animale che non sia un incidente.',
 	'page.health.newIncident': 'Nuovo incidente',
 	'page.health.openIncidents': 'Incidenti aperti',
 	'page.incident.newTitle': 'Nuovo incidente',

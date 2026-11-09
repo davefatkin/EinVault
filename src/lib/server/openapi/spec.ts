@@ -28,7 +28,16 @@ import {
 	NoteList,
 	NoteWriteResponse,
 	NoteCreate,
-	NoteUpdate
+	NoteUpdate,
+	IncidentUpdate,
+	IncidentUpdateRequest,
+	IncidentUpdatePatch,
+	IncidentUpdateList,
+	IncidentLinkList,
+	IncidentLinkRequest,
+	IncidentLinkResponse,
+	IncidentResolveRequest,
+	HealthEvent
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -239,7 +248,7 @@ export function buildOpenApiDocument() {
 		tags: ['health'],
 		summary: 'Log a health event',
 		description:
-			'Creates one health event for a companion (vet visit, vaccination, medication, procedure, or other). The token acts as its user, so caretaker shift/assignment rules still apply. Send an Idempotency-Key header to make a retry a no-op.',
+			'Creates one health event for a companion (vet visit, vaccination, medication, procedure, other, or incident). The token acts as its user, so caretaker shift/assignment rules still apply. Type "incident" opens an ongoing incident (optional severity; no vetName/vetClinic) and is for owner tokens only. Send an Idempotency-Key header to make a retry a no-op.',
 		security: secured,
 		request: {
 			body: { content: { 'application/json': { schema: HealthRequest } }, required: true }
@@ -249,9 +258,13 @@ export function buildOpenApiDocument() {
 				description: 'Created',
 				content: { 'application/json': { schema: HealthWriteResponse } }
 			},
-			400: errorResponse('invalidType / titleRequired / noteTooLong / invalidOccurredAt'),
+			400: errorResponse(
+				'invalidType / titleRequired / noteTooLong / invalidOccurredAt / invalidSeverity / invalidField'
+			),
 			401: errorResponse('Missing or invalid token'),
-			403: errorResponse('notAssigned / noActiveShift'),
+			403: errorResponse(
+				'notAssigned / noActiveShift / forbidden (caretaker creating an incident)'
+			),
 			404: errorResponse('API disabled'),
 			409: errorResponse('idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
@@ -580,6 +593,153 @@ export function buildOpenApiDocument() {
 		}
 	});
 
+	const incidentParam = z.object({ id: z.string().openapi({ description: 'Incident id.' }) });
+	const incidentUpdateParam = z.object({
+		id: z.string().openapi({ description: 'Incident id.' }),
+		updateId: z.string()
+	});
+	const ownerErrors = {
+		401: errorResponse('Missing or invalid token'),
+		403: errorResponse('writeScopeReadOnly / forbidden (caretaker tokens)'),
+		404: errorResponse('notFound (also for incidents on companions the token cannot access)'),
+		429: errorResponse('Rate limited')
+	};
+	const ownerOnly = 'Full-scope member or admin tokens only; caretaker tokens get 403.';
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/health-events/{id}/updates',
+		tags: ['health'],
+		summary: "List an incident's updates",
+		description: `Oldest first. ${ownerOnly}`,
+		security: secured,
+		request: { params: incidentParam },
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: IncidentUpdateList } } },
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/health-events/{id}/updates',
+		tags: ['health'],
+		summary: 'Add an update to an incident',
+		description: `${ownerOnly} No media upload over the API. Send an Idempotency-Key header to make a retry a no-op.`,
+		security: secured,
+		request: {
+			params: incidentParam,
+			body: { content: { 'application/json': { schema: IncidentUpdateRequest } }, required: true }
+		},
+		responses: {
+			201: { description: 'Created', content: { 'application/json': { schema: IncidentUpdate } } },
+			400: errorResponse('bodyRequired / bodyTooLong / invalidSeverity / invalidOccurredAt'),
+			409: errorResponse('idempotencyKeyReused'),
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'patch',
+		path: '/api/health-events/{id}/updates/{updateId}',
+		tags: ['health'],
+		summary: 'Edit an incident update',
+		description: 'Partial update; fields left out are unchanged, severity null clears it.',
+		security: secured,
+		request: {
+			params: incidentUpdateParam,
+			body: { content: { 'application/json': { schema: IncidentUpdatePatch } }, required: true }
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: IncidentUpdate } } },
+			400: errorResponse('bodyRequired / bodyTooLong / invalidSeverity / invalidOccurredAt'),
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'delete',
+		path: '/api/health-events/{id}/updates/{updateId}',
+		tags: ['health'],
+		summary: 'Delete an incident update',
+		description: 'Not idempotent: retrying after a lost response returns 404.',
+		security: secured,
+		request: { params: incidentUpdateParam },
+		responses: { 204: { description: 'Deleted' }, ...ownerErrors }
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/health-events/{id}/links',
+		tags: ['health'],
+		summary: 'List health events linked to an incident',
+		description: ownerOnly,
+		security: secured,
+		request: { params: incidentParam },
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: IncidentLinkList } } },
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/health-events/{id}/links',
+		tags: ['health'],
+		summary: 'Link a health event to an incident',
+		description: `The event must be a non-incident of the same companion. Linking twice is a no-op. ${ownerOnly}`,
+		security: secured,
+		request: {
+			params: incidentParam,
+			body: { content: { 'application/json': { schema: IncidentLinkRequest } }, required: true }
+		},
+		responses: {
+			201: {
+				description: 'Linked',
+				content: { 'application/json': { schema: IncidentLinkResponse } }
+			},
+			400: errorResponse('invalidLink'),
+			409: errorResponse('idempotencyKeyReused'),
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'delete',
+		path: '/api/health-events/{id}/links',
+		tags: ['health'],
+		summary: 'Unlink a health event from an incident',
+		security: secured,
+		request: {
+			params: incidentParam,
+			query: z.object({ healthEventId: z.string() })
+		},
+		responses: {
+			204: { description: 'Unlinked' },
+			400: errorResponse('invalidBody (missing healthEventId)'),
+			...ownerErrors
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/health-events/{id}/resolve',
+		tags: ['health'],
+		summary: 'Resolve or reopen an incident',
+		description: `Omit resolvedAt to resolve now, send an ISO time to resolve then, send null to reopen. ${ownerOnly}`,
+		security: secured,
+		request: {
+			params: incidentParam,
+			body: { content: { 'application/json': { schema: IncidentResolveRequest } }, required: true }
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: HealthEvent } } },
+			400: errorResponse('invalidOccurredAt'),
+			409: errorResponse('idempotencyKeyReused'),
+			...ownerErrors
+		}
+	});
+
 	const generator = new OpenApiGeneratorV31(registry.definitions);
 	return generator.generateDocument({
 		openapi: '3.1.0',
@@ -587,7 +747,7 @@ export function buildOpenApiDocument() {
 			// API contract version, versioned independently of the app's release
 			// number: bump minor for additive changes, major for breaking ones.
 			title: 'EinVault API',
-			version: '1.3.0',
+			version: '1.4.0',
 			description:
 				'Headless HTTP API for smart buttons, scripts, and devices: log events and journal entries, record health and weight, list and complete reminders, manage notes, and read companions, shifts, and the user roster.'
 		},
