@@ -116,3 +116,59 @@ export type IncidentCaps = {
 	canDelete: boolean;
 	canEditUpdate: (u: UpdateView) => boolean;
 };
+
+/** Owners may do everything; an archived companion is read-only, and new updates go on open incidents only. */
+export function ownerIncidentCaps(opts: { active: boolean; resolved: boolean }): IncidentCaps {
+	const { active, resolved } = opts;
+	return {
+		canEditOverview: active,
+		canAddUpdate: active && !resolved,
+		canResolve: active,
+		canLink: active,
+		canAttachDocuments: active,
+		canDelete: active,
+		canEditUpdate: () => active
+	};
+}
+
+/**
+ * The server is the gate (checkIncidentWrite); this only decides what to
+ * offer. On shift a caretaker adds updates and edits their own from today.
+ */
+export function caretakerIncidentCaps(opts: {
+	isOnShift: boolean;
+	userId: string;
+	today?: string;
+}): IncidentCaps {
+	const { isOnShift, userId } = opts;
+	return {
+		canEditOverview: false,
+		canAddUpdate: isOnShift,
+		canResolve: false,
+		canLink: false,
+		canAttachDocuments: false,
+		canDelete: false,
+		canEditUpdate: (u) =>
+			isOnShift &&
+			u.loggedBy === userId &&
+			localDateISO(u.createdAt) === (opts.today ?? localDateISO())
+	};
+}
+
+export const OWNER_INCIDENT_FORMS = {
+	addUpdate: '?/addUpdate',
+	editUpdate: '?/editUpdate',
+	deleteUpdate: '?/deleteUpdate',
+	resolve: '?/resolve',
+	reopen: '?/reopen',
+	editOverview: '?/editOverview',
+	delete: '?/delete',
+	link: '?/link',
+	unlink: '?/unlink'
+};
+
+export const CARETAKER_INCIDENT_FORMS = {
+	addUpdate: '?/addUpdate',
+	editUpdate: '?/editUpdate',
+	deleteUpdate: '?/deleteUpdate'
+};

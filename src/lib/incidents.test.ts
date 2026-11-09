@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { localDateISO } from '#lib/date.js';
 import {
 	currentSeverity,
 	incidentDayNumber,
 	parseSeverity,
 	incidentPath,
-	careIncidentPath
+	careIncidentPath,
+	ownerIncidentCaps,
+	caretakerIncidentCaps,
+	type UpdateView
 } from './incidents.js';
 
 const d = (s: string) => new Date(s);
@@ -45,5 +49,70 @@ describe('parseSeverity and paths', () => {
 	it('builds paths', () => {
 		expect(incidentPath('c', 'i')).toBe('/c/health/incidents/i');
 		expect(careIncidentPath('c', 'i')).toBe('/care/c/incidents/i');
+	});
+});
+
+const upd = (loggedBy: string | null, createdAt: Date) => ({ loggedBy, createdAt }) as UpdateView;
+
+describe('ownerIncidentCaps', () => {
+	it('allows everything on an active open incident', () => {
+		const c = ownerIncidentCaps({ active: true, resolved: false });
+		expect(c).toMatchObject({
+			canEditOverview: true,
+			canAddUpdate: true,
+			canResolve: true,
+			canLink: true,
+			canAttachDocuments: true,
+			canDelete: true
+		});
+		expect(c.canEditUpdate(upd('x', new Date('2020-01-01')))).toBe(true);
+	});
+	it('blocks new updates on a resolved incident but keeps the rest', () => {
+		const c = ownerIncidentCaps({ active: true, resolved: true });
+		expect(c.canAddUpdate).toBe(false);
+		expect(c.canResolve).toBe(true);
+		expect(c.canEditUpdate(upd(null, new Date()))).toBe(true);
+	});
+	it('is read-only for an archived companion', () => {
+		const c = ownerIncidentCaps({ active: false, resolved: false });
+		expect(c.canEditOverview || c.canAddUpdate || c.canResolve || c.canLink).toBe(false);
+		expect(c.canAttachDocuments || c.canDelete).toBe(false);
+		expect(c.canEditUpdate(upd('x', new Date()))).toBe(false);
+	});
+});
+
+describe('caretakerIncidentCaps', () => {
+	const now = new Date();
+	const yesterday = new Date(now.getTime() - 36 * 3_600_000);
+	it('offers only adding updates, and only on shift', () => {
+		for (const isOnShift of [true, false]) {
+			const c = caretakerIncidentCaps({ isOnShift, userId: 'me' });
+			expect(c.canAddUpdate).toBe(isOnShift);
+			expect(c.canEditOverview || c.canResolve || c.canLink).toBe(false);
+			expect(c.canAttachDocuments || c.canDelete).toBe(false);
+		}
+	});
+	it('lets an on-shift caretaker edit their own update from today', () => {
+		const c = caretakerIncidentCaps({ isOnShift: true, userId: 'me' });
+		expect(c.canEditUpdate(upd('me', now))).toBe(true);
+	});
+	it("refuses someone else's update, and own updates from earlier days", () => {
+		const c = caretakerIncidentCaps({ isOnShift: true, userId: 'me' });
+		expect(c.canEditUpdate(upd('other', now))).toBe(false);
+		expect(c.canEditUpdate(upd(null, now))).toBe(false);
+		expect(c.canEditUpdate(upd('me', yesterday))).toBe(false);
+	});
+	it('refuses all edits off shift', () => {
+		const c = caretakerIncidentCaps({ isOnShift: false, userId: 'me' });
+		expect(c.canEditUpdate(upd('me', now))).toBe(false);
+	});
+	it('takes today as a parameter', () => {
+		const c = caretakerIncidentCaps({
+			isOnShift: true,
+			userId: 'me',
+			today: localDateISO(yesterday)
+		});
+		expect(c.canEditUpdate(upd('me', yesterday))).toBe(true);
+		expect(c.canEditUpdate(upd('me', now))).toBe(false);
 	});
 });
