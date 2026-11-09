@@ -1153,7 +1153,7 @@ export function seedDemoIncidents(
 				type: 'vet_visit',
 				title: einLimp.recheckTitle,
 				notes: 'Mild strain. Rest and short walks for a week.',
-				occurredAt: new Date(now - 3 * day),
+				occurredAt: new Date(now - 2 * day - 3 * hour),
 				vetName: 'Dr. Bacchus',
 				vetClinic: 'Animal Treasure Veterinary',
 				loggedBy: spike
