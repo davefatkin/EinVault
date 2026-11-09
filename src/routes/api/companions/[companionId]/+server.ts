@@ -5,6 +5,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { apiRoute } from '#lib/server/auth/api-request.js';
 import { listAllowedCompanions } from '#lib/server/companion-scope.js';
 import { sharedNotesMarkdown } from '#lib/server/notes.js';
+import { medicationScheduleMarkdown } from '#lib/server/medications.js';
 import { toApiCompanion, toApiCompanionMinimal } from '#lib/server/api-serializers.js';
 
 // GET /api/companions/{id}: full detail for a companion the token user may
@@ -22,5 +23,8 @@ export const GET = apiRoute(async ({ event, user, scope, locale }) => {
 
 	if (scope === 'write') return Response.json({ companion: toApiCompanionMinimal(row) });
 	const sitterNotes = await sharedNotesMarkdown([row.id]);
-	return Response.json({ companion: toApiCompanion(row, sitterNotes.get(row.id) ?? null) });
+	const medSchedule = await medicationScheduleMarkdown([row.id]);
+	return Response.json({
+		companion: toApiCompanion(row, sitterNotes.get(row.id) ?? null, medSchedule.get(row.id) ?? null)
+	});
 });

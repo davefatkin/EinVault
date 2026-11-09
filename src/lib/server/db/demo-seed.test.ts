@@ -26,6 +26,23 @@ vi.mock('node:fs', async (importOriginal) => {
 });
 
 describe('seedRows', () => {
+	it('seeds no medications and leaves medication_schedule null', async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+		seedRows(db as never, { now: 1_700_000_000_000 });
+		expect(await db.select().from(schema.medications)).toEqual([]);
+		expect(await db.select().from(schema.medicationDoses)).toEqual([]);
+		const comps = await db.query.companions.findMany();
+		expect(comps.length).toBeGreaterThan(0);
+		expect(comps.every((c) => c.medicationSchedule === null)).toBe(true);
+		const linked = await db.query.reminders.findMany({
+			where: (r, { isNotNull }) => isNotNull(r.medicationId)
+		});
+		expect(linked).toEqual([]);
+	});
+
 	beforeEach(async () => {
 		// Each test needs a clean slate. The test DB is shared within this file,
 		// so clear seeded tables before each test (cascade deletes handle children).
@@ -186,6 +203,43 @@ describe('refreshDemoContent', () => {
 		await db.delete(schema.companionCaretakers);
 		await db.delete(schema.companions);
 		await db.delete(schema.users);
+	});
+
+	it('seeds the demo medications with a linked daily reminder and past doses', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, DATA_DIR);
+		refreshDemoContent(db, true, DATA_DIR);
+		const meds = await db.select().from(schema.medications);
+		const byName = new Map(meds.map((m) => [m.name, m]));
+		expect(meds).toHaveLength(4);
+		const carprofen = byName.get('Carprofen')!;
+		expect(carprofen).toMatchObject({
+			companionId: SEED.companions.ein.id,
+			dose: '1 tablet',
+			instructions: 'With food.'
+		});
+		expect(carprofen.endedOn).toBeTruthy();
+		const heartworm = byName.get('Heartworm chew')!;
+		expect(heartworm.companionId).toBe(SEED.companions.ein.id);
+		const recurring = await db.query.reminders.findFirst({
+			where: (r, { eq }) => eq(r.id, 'seed-reminder-recurring')
+		});
+		expect(recurring?.medicationId).toBe(heartworm.id);
+		const open = await db.query.reminders.findMany({
+			where: (r, { and, eq, isNull }) =>
+				and(eq(r.medicationId, carprofen.id), isNull(r.completedAt))
+		});
+		expect(open).toHaveLength(1);
+		expect(open[0]).toMatchObject({ recurrenceUnit: 'day', recurrenceInterval: 1 });
+		expect(open[0].dueAt.getHours()).toBe(8);
+		const companions = new Set(meds.map((m) => m.companionId));
+		expect(companions).toEqual(
+			new Set([SEED.companions.ein.id, SEED.companions.edward.id, SEED.companions.julia.id])
+		);
+		const doses = await db.select().from(schema.medicationDoses);
+		expect(doses.length).toBeGreaterThanOrEqual(3);
+		expect(new Set(doses.map((d) => d.source))).toEqual(new Set(['manual', 'reminder']));
 	});
 
 	it('refuses to run when demoMode is false (fail closed)', async () => {

@@ -6,7 +6,8 @@ import {
 	toApiHealthEvent,
 	toApiIncidentUpdate,
 	toApiIncidentLink,
-	toApiReminder
+	toApiReminder,
+	toApiMedication
 } from './api-serializers';
 
 // A companion row carrying PII the write-scope shape must never leak, plus a
@@ -178,7 +179,8 @@ describe('toApiReminder', () => {
 		isRecurring: false,
 		completedAt: null,
 		outcome: null,
-		seriesId: null
+		seriesId: null,
+		medicationId: null
 	};
 
 	it('returns leadDays from the stored text', () => {
@@ -188,5 +190,65 @@ describe('toApiReminder', () => {
 
 	it('returns an empty array when no heads-ups are set', () => {
 		expect(toApiReminder({ ...base, notifyLeadDays: null } as never).leadDays).toEqual([]);
+	});
+});
+
+describe('medication serializers', () => {
+	const reminderBase = {
+		id: 'r1',
+		companionId: 'c1',
+		title: 'Pill',
+		description: null,
+		type: 'medication',
+		dueAt: new Date('2025-01-01T00:00:00Z'),
+		isRecurring: false,
+		completedAt: null,
+		outcome: null,
+		seriesId: null,
+		notifyLeadDays: null
+	};
+
+	it('reminder exposes medicationId (nullable)', () => {
+		expect(toApiReminder({ ...reminderBase, medicationId: 'm1' } as never).medicationId).toBe('m1');
+		expect(toApiReminder({ ...reminderBase, medicationId: null } as never).medicationId).toBeNull();
+	});
+
+	it('toApiMedication whitelists fields and flattens lastGiven', () => {
+		const at = new Date('2026-11-01T08:00:00Z');
+		const out = toApiMedication({
+			id: 'm1',
+			companionId: 'c1',
+			name: 'Carprofen',
+			dose: '1 tablet',
+			instructions: 'with food',
+			startedOn: '2026-11-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: at,
+			lastGiven: { at, by: { displayName: 'Jet' } },
+			schedule: [{ secret: 1 }]
+		} as never);
+		expect(out).toEqual({
+			id: 'm1',
+			companionId: 'c1',
+			name: 'Carprofen',
+			dose: '1 tablet',
+			instructions: 'with food',
+			startedOn: '2026-11-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: at,
+			lastGiven: { at, by: 'Jet' }
+		});
+		expect(
+			toApiMedication({ ...out, schedule: [], lastGiven: null } as never).lastGiven
+		).toBeNull();
+	});
+
+	it('companion alias comes from the argument, not the cleared column', () => {
+		expect(toApiCompanion(row, null, '- Carprofen, 1 tablet').medicationSchedule).toBe(
+			'- Carprofen, 1 tablet'
+		);
+		expect(toApiCompanion(row).medicationSchedule).toBeNull();
 	});
 });

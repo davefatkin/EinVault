@@ -235,6 +235,53 @@ export async function listMedicationSummaries(
 	}));
 }
 
+/** One markdown line of the deprecated API alias: "- Name, dose: instructions". */
+export function formatMedicationScheduleLine(m: {
+	name: string;
+	dose: string | null;
+	instructions: string | null;
+}): string {
+	const one = (v: string | null) => (v ?? '').replace(/\s+/g, ' ').trim();
+	const dose = one(m.dose);
+	const instructions = one(m.instructions);
+	return `- ${one(m.name)}${dose ? `, ${dose}` : ''}${instructions ? `: ${instructions}` : ''}`;
+}
+
+/**
+ * Deprecated API alias `medicationSchedule`: active medications per companion
+ * as markdown lines, from ONE query. Companions without any are absent.
+ */
+export async function medicationScheduleMarkdown(
+	companionIds: string[],
+	today: string = localDateISO()
+): Promise<Map<string, string>> {
+	const out = new Map<string, string>();
+	if (companionIds.length === 0) return out;
+	const rows = await db
+		.select({
+			companionId: schema.medications.companionId,
+			name: schema.medications.name,
+			dose: schema.medications.dose,
+			instructions: schema.medications.instructions
+		})
+		.from(schema.medications)
+		.where(
+			and(
+				inArray(schema.medications.companionId, companionIds),
+				sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`
+			)
+		)
+		.orderBy(asc(schema.medications.name), asc(schema.medications.id));
+	const lines = new Map<string, string[]>();
+	for (const r of rows) {
+		const list = lines.get(r.companionId) ?? [];
+		list.push(formatMedicationScheduleLine(r));
+		lines.set(r.companionId, list);
+	}
+	for (const [id, list] of lines) out.set(id, list.join('\n'));
+	return out;
+}
+
 export async function listDoses(medicationId: string, limit = 50, offset = 0): Promise<DoseView[]> {
 	const rows = await db
 		.select({

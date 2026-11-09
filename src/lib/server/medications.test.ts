@@ -13,6 +13,8 @@ import {
 	listDoses,
 	sweepEndedMedicationReminders,
 	logDose,
+	formatMedicationScheduleLine,
+	medicationScheduleMarkdown,
 	startMedicationSweep,
 	type MedicationInput
 } from './medications';
@@ -403,5 +405,35 @@ describe('startMedicationSweep', () => {
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+});
+
+describe('medicationScheduleMarkdown (deprecated API alias)', () => {
+	it('formats name, dose and instructions, omitting missing parts', () => {
+		const f = formatMedicationScheduleLine;
+		expect(f({ name: 'Carprofen', dose: '1 tablet', instructions: 'with food' })).toBe(
+			'- Carprofen, 1 tablet: with food'
+		);
+		expect(f({ name: 'Carprofen', dose: '1 tablet', instructions: null })).toBe(
+			'- Carprofen, 1 tablet'
+		);
+		expect(f({ name: 'Carprofen', dose: null, instructions: 'with food' })).toBe(
+			'- Carprofen: with food'
+		);
+		expect(f({ name: 'Carprofen', dose: null, instructions: null })).toBe('- Carprofen');
+		expect(f({ name: 'Pill', dose: null, instructions: 'a\n\nb' })).toBe('- Pill: a b');
+	});
+
+	it('groups active medications per companion in one map; none means no entry', async () => {
+		await createMedication(
+			C1,
+			input({ name: 'Carprofen', dose: '1 tablet', instructions: 'with food' }),
+			U1
+		);
+		await createMedication(C1, input({ name: 'Antibiotic', dose: '2 ml' }), U1);
+		await createMedication(C1, input({ name: 'Old', endedOn: '2026-11-01' }), U1);
+		const map = await medicationScheduleMarkdown([C1, C2], TODAY);
+		expect(map.get(C1)).toBe('- Antibiotic, 2 ml\n- Carprofen, 1 tablet: with food');
+		expect(map.has(C2)).toBe(false);
 	});
 });

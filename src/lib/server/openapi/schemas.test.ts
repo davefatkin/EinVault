@@ -9,6 +9,7 @@ import {
 	toApiHealthEvent,
 	toApiWeightEntry,
 	toApiReminder,
+	toApiMedication,
 	toApiShift,
 	toApiUser,
 	toApiUserPublic
@@ -24,6 +25,7 @@ import {
 	HealthEvent,
 	WeightEntry,
 	Reminder,
+	Medication,
 	Shift,
 	User,
 	UserPublic
@@ -234,6 +236,23 @@ describe('response schemas match their serializers', () => {
 		};
 		const result = toApiReminder(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Reminder.shape).sort());
+	});
+
+	it('toApiMedication output keys match Medication.shape', () => {
+		const result = toApiMedication({
+			id: 'm1',
+			companionId: 'c1',
+			name: 'Carprofen',
+			dose: null,
+			instructions: null,
+			startedOn: '2026-11-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: null,
+			lastGiven: null,
+			schedule: []
+		});
+		expect(Object.keys(result).sort()).toEqual(Object.keys(Medication.shape).sort());
 	});
 
 	it('toApiShift output keys match Shift.shape', () => {

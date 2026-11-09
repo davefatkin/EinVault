@@ -38,7 +38,6 @@ export const SEED = {
 			bio: 'A Pembroke Welsh Corgi with a quiet secret: he is a data dog, the product of a research lab that left him improbably, almost unnervingly intelligent. Patient, unbothered, and far more aware of what is going on than he ever lets show.',
 			feedingSchedule: 'Half cup of kibble at 7am and 6pm.',
 			walkSchedule: 'Two short walks, after breakfast and before dark.',
-			medicationSchedule: 'Heartworm chew on the first of the month.',
 			vetName: 'Dr. Bacchus',
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
@@ -57,7 +56,6 @@ export const SEED = {
 			bio: 'Named after a one-of-a-kind kid and just as untamable. A barefoot-at-heart mutt who treats the whole house as a playground and every closed door as a personal challenge. Pure chaos with a wagging tail.',
 			feedingSchedule: 'Free-fed kibble; extra treats only after she does a trick.',
 			walkSchedule: 'One long off-leash run whenever she tolerates the leash.',
-			medicationSchedule: 'Flea and tick topical, monthly.',
 			vetName: 'Dr. Bacchus',
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
@@ -76,7 +74,6 @@ export const SEED = {
 			bio: 'Elegant, elusive, and entirely on her own schedule. Appears exactly when dinner does.',
 			feedingSchedule: 'Wet food at 7am and 7pm, dry food free-fed.',
 			walkSchedule: 'Wand-toy session every evening. Scoop the litter morning and night.',
-			medicationSchedule: 'Hairball paste on Sundays.',
 			vetName: 'Dr. Bacchus',
 			vetPhone: '(555) 287-3300',
 			vetClinic: 'Animal Treasure Veterinary',
@@ -1137,6 +1134,170 @@ export function seedDemoReminderHeadsUps(
 }
 
 /**
+ * Demo-only medications. Ein: Carprofen (1 tablet, with food; a course that
+ * ends in 3 days, with a daily 8:00 reminder) and a Heartworm chew linked to
+ * the seeded monthly reminder. Edward and Julia get one as-needed medication
+ * each. A few past doses. Called from refreshDemoContent only; never from
+ * seedRows, so e2e stays free of medications.
+ */
+export function seedDemoMedications(
+	db: BetterSQLite3Database<typeof schema>,
+	opts: { now: number }
+): void {
+	const now = opts.now;
+	const day = 24 * 60 * 60 * 1000;
+	const ein = SEED.companions.ein.id;
+	const edward = SEED.companions.edward.id;
+	const julia = SEED.companions.julia.id;
+	const spike = SEED.admin.id;
+	const jet = SEED.member.id;
+	const faye = SEED.caretaker.id;
+	const localDate = (ms: number) => {
+		const d = new Date(ms);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	};
+	// Local 8:00 on the day `offset` days from now.
+	const at8 = (offset: number, minutes = 0) => {
+		const d = new Date(now + offset * day);
+		d.setHours(8, minutes, 0, 0);
+		return d;
+	};
+	const nextEight = at8(0).getTime() > now ? at8(0) : at8(1);
+
+	const carprofen = 'seed-med-ein-carprofen';
+	const heartworm = 'seed-med-ein-heartworm';
+	const edwardMed = 'seed-med-edward-eye-drops';
+	const juliaMed = 'seed-med-julia-hairball';
+	db.insert(schema.medications)
+		.values([
+			{
+				id: carprofen,
+				companionId: ein,
+				name: 'Carprofen',
+				dose: '1 tablet',
+				instructions: 'With food.',
+				startedOn: localDate(now - 7 * day),
+				endedOn: localDate(now + 3 * day),
+				loggedBy: spike
+			},
+			{
+				id: heartworm,
+				companionId: ein,
+				name: 'Heartworm chew',
+				dose: '1 chew',
+				instructions: null,
+				startedOn: localDate(now - 120 * day),
+				loggedBy: spike
+			},
+			{
+				id: edwardMed,
+				companionId: edward,
+				name: 'Eye drops',
+				dose: '1 drop per eye',
+				instructions: 'As needed when the eyes look irritated.',
+				startedOn: localDate(now - 60 * day),
+				loggedBy: jet
+			},
+			{
+				id: juliaMed,
+				companionId: julia,
+				name: 'Hairball paste',
+				dose: '1 inch',
+				instructions: 'As needed, on a paw or a finger.',
+				startedOn: localDate(now - 90 * day),
+				loggedBy: jet
+			}
+		])
+		.run();
+
+	// Daily 8:00 series for the Carprofen course, plus yesterday's completed
+	// occurrence so a reminder-sourced dose shows in its history.
+	const series = 'seed-reminder-carprofen';
+	db.insert(schema.reminders)
+		.values([
+			{
+				id: series,
+				companionId: ein,
+				title: 'Carprofen',
+				type: 'medication',
+				dueAt: nextEight,
+				isRecurring: true,
+				recurrenceUnit: 'day',
+				recurrenceInterval: 1,
+				recurrenceAnchor: 'interval',
+				seriesId: series,
+				medicationId: carprofen,
+				loggedBy: spike
+			},
+			{
+				id: 'seed-reminder-carprofen-done',
+				companionId: ein,
+				title: 'Carprofen',
+				type: 'medication',
+				dueAt: at8(-1),
+				isRecurring: true,
+				recurrenceUnit: 'day',
+				recurrenceInterval: 1,
+				recurrenceAnchor: 'interval',
+				seriesId: series,
+				completedAt: at8(-1, 6),
+				completedBy: jet,
+				outcome: 'completed',
+				medicationId: carprofen,
+				loggedBy: spike
+			}
+		])
+		.run();
+	db.update(schema.reminders)
+		.set({ medicationId: heartworm })
+		.where(eq(schema.reminders.id, 'seed-reminder-recurring'))
+		.run();
+
+	db.insert(schema.medicationDoses)
+		.values([
+			{
+				id: 'seed-dose-carprofen-1',
+				medicationId: carprofen,
+				givenAt: at8(-1, 6),
+				givenBy: jet,
+				reminderId: 'seed-reminder-carprofen-done',
+				source: 'reminder'
+			},
+			{
+				id: 'seed-dose-carprofen-2',
+				medicationId: carprofen,
+				givenAt: at8(-2, 12),
+				givenBy: faye,
+				source: 'manual',
+				note: 'Ate it hidden in a bit of cheese.'
+			},
+			{
+				id: 'seed-dose-heartworm-1',
+				medicationId: heartworm,
+				givenAt: new Date(now - 15 * day),
+				givenBy: spike,
+				source: 'manual'
+			},
+			{
+				id: 'seed-dose-edward-1',
+				medicationId: edwardMed,
+				givenAt: new Date(now - 5 * day),
+				givenBy: jet,
+				source: 'manual'
+			},
+			{
+				id: 'seed-dose-julia-1',
+				medicationId: juliaMed,
+				givenAt: new Date(now - 3 * day),
+				givenBy: jet,
+				source: 'manual'
+			}
+		])
+		.run();
+}
+
+/**
  * Demo-only incidents: one open (Ein) and one resolved (Edward). Called from
  * refreshDemoContent after seedContent; never from seedRows, so e2e stays free
  * of incident banners. Anchored to `now` like the rest of the seed.
@@ -1279,6 +1440,7 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		seedContent(tx as never, { now, shiftEndHours: 25 });
 		seedDemoIncidents(tx as never, { now });
 		seedDemoReminderHeadsUps(tx as never, { now });
+		seedDemoMedications(tx as never, { now });
 	});
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }

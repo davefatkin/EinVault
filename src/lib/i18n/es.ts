@@ -1129,6 +1129,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'La fecha de fin no puede ser anterior a la de inicio.',
 	'error.medicationNotFound': 'Medicamento no encontrado.',
 	'error.medicationEnded': 'Este medicamento ha finalizado.',
+	'error.invalidMedicationStatus': 'status debe ser "active" o "all".',
 	'error.mustBeOnShiftToLogDose': 'Debes estar de turno para registrar dosis de medicación.',
 	'error.reminderAfterMedicationEnd':
 		'Este recordatorio vence después de que termine el medicamento.',
