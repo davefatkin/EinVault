@@ -283,14 +283,25 @@ test.describe('incidents (owner)', () => {
 	});
 
 	test('attach a PDF from the incident page and see it under Related', async ({ asMember }) => {
+		const name = `${unique('attach')}.pdf`;
+		const docTitle = name.replace(/\.pdf$/, '');
 		let id: string | undefined;
 		try {
 			id = await createIncidentViaUi(asMember, COMP, { title: unique('attach') });
-			await asMember.getByTestId('incident-attach-file').setInputFiles(pdfUpload('lab-report.pdf'));
+			await asMember.getByTestId('incident-attach-file').setInputFiles(pdfUpload(name));
 			const related = asMember.getByRole('region', { name: 'Related' });
-			await expect(related).toContainText('lab-report', { timeout: 10_000 });
+			await expect(related).toContainText(docTitle, { timeout: 10_000 });
 		} finally {
 			if (id) await deleteIncidentViaUi(asMember, COMP, id);
+			// Deleting the incident only detaches the document; remove it too.
+			await asMember.goto(`/${COMP}/documents`);
+			await waitForHydration(asMember);
+			const row = asMember.locator('li').filter({ hasText: docTitle }).first();
+			if ((await row.count()) > 0) {
+				await row.getByRole('button', { name: 'Delete' }).click();
+				await asMember.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+				await expect(asMember.getByText(docTitle)).toHaveCount(0, { timeout: 8_000 });
+			}
 		}
 	});
 });
