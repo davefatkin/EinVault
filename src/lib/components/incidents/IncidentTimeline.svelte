@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CircleCheck, FileText } from '@lucide/svelte';
+	import { enhance } from '$app/forms';
+	import { CircleCheck, FileText, Unlink } from '@lucide/svelte';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import IncidentUpdateItem from './IncidentUpdateItem.svelte';
@@ -20,6 +21,7 @@
 		allowTime,
 		editAction,
 		deleteAction,
+		unlinkAction,
 		mediaUrl,
 		uploadMaxMb,
 		videoMaxMb,
@@ -34,6 +36,8 @@
 		allowTime: boolean;
 		editAction: string;
 		deleteAction: string;
+		/** Set when the viewer may unlink health events from the incident. */
+		unlinkAction?: string;
 		mediaUrl: (item: MediaItem) => string;
 		uploadMaxMb: number;
 		videoMaxMb: number;
@@ -82,6 +86,19 @@
 						<span class="text-xs text-muted-foreground"
 							><LocalTime date={item.event.occurredAt} /></span
 						>
+						{#if unlinkAction}
+							<form method="POST" action={unlinkAction} use:enhance class="print:hidden">
+								<input type="hidden" name="healthEventId" value={item.event.id} />
+								<button
+									type="submit"
+									class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+									aria-label={t(locale, 'page.incident.unlinkEvent', { title: item.event.title })}
+									title={t(locale, 'page.incident.unlinkEvent', { title: item.event.title })}
+								>
+									<Unlink class="h-3.5 w-3.5" />
+								</button>
+							</form>
+						{/if}
 					</div>
 					{#if item.event.vetName || item.event.vetClinic}
 						<p class="text-xs text-muted-foreground">

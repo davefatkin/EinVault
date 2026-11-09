@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
+import type { PageServerLoad, Actions, RequestEvent } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq, and } from 'drizzle-orm';
@@ -9,6 +9,12 @@ import { createWeightEntry, parseWeightForm } from '#lib/server/weight.js';
 import { getJournalDatesByEvent, deleteHealthEvent } from '#lib/server/journal-links.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
 import { incidentPath } from '#lib/incidents.js';
+import {
+	linkToIncident,
+	unlinkFromIncident,
+	listIncidentLinksByEvent
+} from '#lib/server/incident-links.js';
+import { checkIncidentWrite } from '#lib/server/permissions.js';
 
 // Incidents have their own page. Old ?detailHealth= links (journal chips,
 // search hits) and ?incidentUpdate= search hits land there, but only for an
@@ -47,23 +53,25 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	const to = await incidentRedirect(params.companionId, url);
 	if (to) redirect(303, to);
 
-	const [healthEvents, weightEntries, linkedDocuments, openIncidents] = await Promise.all([
-		db.query.healthEvents.findMany({
-			where: eq(schema.healthEvents.companionId, params.companionId),
-			orderBy: (h, { desc }) => [desc(h.occurredAt)],
-			with: { logger: { columns: { displayName: true } } }
-		}),
-		db.query.weightEntries.findMany({
-			where: eq(schema.weightEntries.companionId, params.companionId),
-			orderBy: (w, { desc }) => [desc(w.recordedAt)],
-			with: { logger: { columns: { displayName: true } } }
-		}),
-		db.query.documents.findMany({
-			where: eq(schema.documents.companionId, params.companionId),
-			columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
-		}),
-		listOpenIncidents([params.companionId])
-	]);
+	const [healthEvents, weightEntries, linkedDocuments, openIncidents, incidentLinksByEvent] =
+		await Promise.all([
+			db.query.healthEvents.findMany({
+				where: eq(schema.healthEvents.companionId, params.companionId),
+				orderBy: (h, { desc }) => [desc(h.occurredAt)],
+				with: { logger: { columns: { displayName: true } } }
+			}),
+			db.query.weightEntries.findMany({
+				where: eq(schema.weightEntries.companionId, params.companionId),
+				orderBy: (w, { desc }) => [desc(w.recordedAt)],
+				with: { logger: { columns: { displayName: true } } }
+			}),
+			db.query.documents.findMany({
+				where: eq(schema.documents.companionId, params.companionId),
+				columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
+			}),
+			listOpenIncidents([params.companionId]),
+			listIncidentLinksByEvent(params.companionId)
+		]);
 
 	const journalDates = await getJournalDatesByEvent(
 		params.companionId,
@@ -77,11 +85,40 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		weightEntries,
 		linkedDocuments,
 		journalDatesByEvent,
-		openIncidents
+		openIncidents,
+		incidentLinksByEvent
 	};
 };
 
+// Link or unlink one health event and one incident from the event's modal.
+// The incident permission check covers the role, so caretakers get 403.
+async function incidentLink(
+	{ request, params, locals }: RequestEvent,
+	apply: (incidentId: string, healthEventId: string) => Promise<boolean>
+) {
+	const data = await request.formData();
+	const incidentId = String(data.get('incidentId') ?? '');
+	const healthEventId = String(data.get('healthEventId') ?? '');
+	const check = await checkIncidentWrite(locals.user, params.companionId, incidentId, 'link');
+	if (!check.ok) return fail(check.status, { healthError: t(locals.locale, check.key) });
+	if (!(await apply(check.incident.id, healthEventId)))
+		return fail(404, { healthError: t(locals.locale, 'error.eventNotFound') });
+	return { incidentLinkSuccess: true };
+}
+
 export const actions: Actions = {
+	linkIncident: (event) =>
+		incidentLink(
+			event,
+			async (incidentId, eventId) =>
+				(await linkToIncident(event.params.companionId, incidentId, eventId)) === 'linked'
+		),
+
+	unlinkIncident: (event) =>
+		incidentLink(event, (incidentId, eventId) =>
+			unlinkFromIncident(event.params.companionId, incidentId, eventId)
+		),
+
 	addHealth: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();

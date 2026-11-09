@@ -111,6 +111,8 @@ export type IncidentCaps = {
 	canAddUpdate: boolean;
 	canResolve: boolean;
 	canLink: boolean;
+	/** Upload or import documents onto the incident (owners only). */
+	canAttachDocuments: boolean;
 	canDelete: boolean;
 	canEditUpdate: (u: UpdateView) => boolean;
 };

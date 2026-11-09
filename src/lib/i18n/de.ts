@@ -466,6 +466,12 @@ const messages: Record<keyof Messages, string> = {
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Im Gesundheitsprotokoll öffnen',
 	'component.healthDetail.unlink': 'Von diesem Tag lösen',
+	'component.healthDetail.aboutIncident': 'Zum Vorfall…',
+	'component.healthDetail.linkIncident': 'Mit einem Vorfall verknüpfen',
+	'component.healthDetail.noIncidents': 'Keine Vorfälle zum Verknüpfen.',
+	'component.healthDetail.unlinkIncident': 'Von {title} lösen',
+	'component.healthDetail.loadingIncidents': 'Wird geladen…',
+	'component.healthDetail.incidentResolved': 'Gelöst',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Abbrechen',
@@ -1155,6 +1161,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.incident.related': 'Zugehörig',
 	'page.incident.journal': 'Tagebuch',
 	'page.incident.documents': 'Dokumente',
+	'page.incident.linkVet': 'Tierarztbesuch verknüpfen',
+	'page.incident.linkPickerTitle': 'Gesundheitseintrag verknüpfen',
+	'page.incident.linkNone': 'Nichts mehr zu verknüpfen.',
+	'page.incident.linkLoadFailed': 'Die Liste konnte nicht geladen werden.',
+	'page.incident.unlinkEvent': '{title} lösen',
+	'page.incident.attachDocument': 'Dokument anhängen',
+	'page.incident.attachFailed': 'Gespeichert, aber diese Dokumente wurden nicht angehängt:',
 	'page.incident.labelResolvedAt': 'Abgeschlossen am',
 	'page.incident.labelClosing': 'Abschließender Eintrag',
 	'page.incident.closingHint': 'Optional. Wie ist es ausgegangen?',

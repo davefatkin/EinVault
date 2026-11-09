@@ -1,7 +1,7 @@
 import { test, expect } from '../lib/fixtures';
 import type { Page } from '@playwright/test';
 import { waitForHydration } from '../lib/hydration';
-import { pngUpload } from '../lib/files';
+import { pdfUpload, pngUpload } from '../lib/files';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
 
 // Owner incident page (#282). Every test creates its own incident with a unique
@@ -213,6 +213,84 @@ test.describe('incidents (owner)', () => {
 			expect(res?.status()).toBe(404);
 		} finally {
 			if (id && !deleted) await deleteIncidentViaUi(asMember, COMP, id);
+		}
+	});
+	test('link a vet visit from the incident page and see it in the timeline', async ({
+		asMember
+	}) => {
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, COMP, { title: unique('link') });
+			await asMember.getByRole('button', { name: 'Link vet visit' }).click();
+			const dialog = asMember.getByRole('dialog');
+			await dialog.getByRole('button', { name: /Wellness checkup/ }).click();
+			await expect(asMember.getByRole('dialog')).toHaveCount(0, { timeout: 10_000 });
+
+			const progress = asMember.getByRole('region', { name: 'Progress' });
+			await expect(progress).toContainText('Wellness checkup');
+
+			// Already linked, so it is no longer offered.
+			await asMember.getByRole('button', { name: 'Link vet visit' }).click();
+			await expect(
+				asMember.getByRole('dialog').getByRole('button', { name: /Wellness checkup/ })
+			).toHaveCount(0);
+			await asMember.keyboard.press('Escape');
+
+			await progress.getByRole('button', { name: 'Unlink Wellness checkup' }).click();
+			await expect(progress).not.toContainText('Wellness checkup');
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, COMP, id);
+		}
+	});
+
+	test('link from the vet visit modal via About incident and unlink again', async ({
+		asMember
+	}) => {
+		const title = unique('about');
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, COMP, { title });
+			await asMember.goto(`/${COMP}/health`);
+			await waitForHydration(asMember);
+			await asMember.getByText('Wellness checkup').first().click();
+			const dialog = asMember.getByRole('dialog');
+			await dialog.getByRole('button', { name: 'Link to an incident' }).click();
+			await dialog.getByRole('button', { name: new RegExp(title) }).click();
+			const about = dialog.getByTestId('health-detail-incidents');
+			await expect(about.getByRole('link', { name: title })).toBeVisible();
+
+			// The incident page lists it too.
+			await asMember.goto(`/${COMP}/health/incidents/${id}`);
+			await expect(asMember.getByRole('region', { name: 'Progress' })).toContainText(
+				'Wellness checkup'
+			);
+
+			await asMember.goto(`/${COMP}/health`);
+			await waitForHydration(asMember);
+			await asMember.getByText('Wellness checkup').first().click();
+			const again = asMember.getByRole('dialog').getByTestId('health-detail-incidents');
+			await again.getByRole('button', { name: `Unlink from ${title}` }).click();
+			await expect(again.getByRole('link', { name: title })).toHaveCount(0);
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, COMP, id);
+		}
+	});
+
+	test('candidates endpoint is closed to caretakers', async ({ asCaretaker, asMember }) => {
+		const url = `/${COMP}/health/incidents/candidates?eventId=seed-health-1`;
+		expect((await asCaretaker.request.get(url)).status()).toBe(403);
+		expect((await asMember.request.get(url)).status()).toBe(200);
+	});
+
+	test('attach a PDF from the incident page and see it under Related', async ({ asMember }) => {
+		let id: string | undefined;
+		try {
+			id = await createIncidentViaUi(asMember, COMP, { title: unique('attach') });
+			await asMember.getByTestId('incident-attach-file').setInputFiles(pdfUpload('lab-report.pdf'));
+			const related = asMember.getByRole('region', { name: 'Related' });
+			await expect(related).toContainText('lab-report', { timeout: 10_000 });
+		} finally {
+			if (id) await deleteIncidentViaUi(asMember, COMP, id);
 		}
 	});
 });

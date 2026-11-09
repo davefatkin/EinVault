@@ -462,6 +462,12 @@ const messages: Record<keyof Messages, string> = {
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Apri nel registro salute',
 	'component.healthDetail.unlink': 'Scollega da questo giorno',
+	'component.healthDetail.aboutIncident': 'Sull’incidente…',
+	'component.healthDetail.linkIncident': 'Collega a un incidente',
+	'component.healthDetail.noIncidents': 'Nessun incidente da collegare.',
+	'component.healthDetail.unlinkIncident': 'Scollega da {title}',
+	'component.healthDetail.loadingIncidents': 'Caricamento…',
+	'component.healthDetail.incidentResolved': 'Risolto',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Annulla',
@@ -1150,6 +1156,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.incident.related': 'Collegati',
 	'page.incident.journal': 'Diario',
 	'page.incident.documents': 'Documenti',
+	'page.incident.linkVet': 'Collega visita veterinaria',
+	'page.incident.linkPickerTitle': 'Collega un evento di salute',
+	'page.incident.linkNone': 'Non c’è più nulla da collegare.',
+	'page.incident.linkLoadFailed': 'Impossibile caricare l’elenco.',
+	'page.incident.unlinkEvent': 'Scollega {title}',
+	'page.incident.attachDocument': 'Allega documento',
+	'page.incident.attachFailed': 'Salvato, ma questi documenti non sono stati allegati:',
 	'page.incident.labelResolvedAt': 'Risolto il',
 	'page.incident.labelClosing': 'Aggiornamento finale',
 	'page.incident.closingHint': 'Facoltativo. Come è finita?',

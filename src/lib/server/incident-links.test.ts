@@ -5,6 +5,7 @@ import {
 	unlinkFromIncident,
 	listLinkedEvents,
 	listIncidentsForEvent,
+	listIncidentLinksByEvent,
 	listLinkCandidates,
 	listIncidentCandidates
 } from './incident-links';
@@ -48,6 +49,11 @@ describe('incident links', () => {
 		const inc = await listIncidentsForEvent(C, 'vet1');
 		expect(inc.map((i) => i.id).sort()).toEqual(['inc1', 'inc2']);
 		expect(inc.find((i) => i.id === 'inc2')?.resolvedAt).toEqual(d(3000));
+		const byEvent = await listIncidentLinksByEvent(C);
+		expect(byEvent['vet1'].map((i) => i.id).sort()).toEqual(['inc1', 'inc2']);
+		expect(byEvent['vet2'].map((i) => i.id)).toEqual(['inc1']);
+		expect(byEvent['vet3']).toBeUndefined();
+		expect(await listIncidentLinksByEvent(OTHER)).toEqual({});
 	});
 
 	it('rejects cross-companion links', async () => {

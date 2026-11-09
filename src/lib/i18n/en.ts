@@ -454,6 +454,12 @@ const messages = {
 	// Component: HealthDetailModal
 	'component.healthDetail.openHealthLog': 'Open in Health Log',
 	'component.healthDetail.unlink': 'Unlink from this day',
+	'component.healthDetail.aboutIncident': 'About incident…',
+	'component.healthDetail.linkIncident': 'Link to an incident',
+	'component.healthDetail.noIncidents': 'No incidents to link.',
+	'component.healthDetail.unlinkIncident': 'Unlink from {title}',
+	'component.healthDetail.loadingIncidents': 'Loading…',
+	'component.healthDetail.incidentResolved': 'Resolved',
 
 	// Component: ConfirmDialog
 	'component.confirmDialog.cancel': 'Cancel',
@@ -1131,6 +1137,13 @@ const messages = {
 	'page.incident.related': 'Related',
 	'page.incident.journal': 'Journal',
 	'page.incident.documents': 'Documents',
+	'page.incident.linkVet': 'Link vet visit',
+	'page.incident.linkPickerTitle': 'Link a health event',
+	'page.incident.linkNone': 'Nothing left to link.',
+	'page.incident.linkLoadFailed': 'Could not load the list.',
+	'page.incident.unlinkEvent': 'Unlink {title}',
+	'page.incident.attachDocument': 'Attach document',
+	'page.incident.attachFailed': 'Saved, but these documents did not attach:',
 	'page.incident.labelResolvedAt': 'Resolved on',
 	'page.incident.labelClosing': 'Closing update',
 	'page.incident.closingHint': 'Optional. How did it end?',

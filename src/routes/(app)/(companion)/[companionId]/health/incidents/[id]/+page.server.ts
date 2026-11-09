@@ -11,7 +11,11 @@ import {
 	setIncidentResolved,
 	updateIncidentOverview
 } from '#lib/server/incidents.js';
-import { linkToIncident, unlinkFromIncident } from '#lib/server/incident-links.js';
+import {
+	linkToIncident,
+	listLinkCandidates,
+	unlinkFromIncident
+} from '#lib/server/incident-links.js';
 import { deleteHealthEvent } from '#lib/server/journal-links.js';
 import { checkIncidentWrite, type IncidentWriteAction } from '#lib/server/permissions.js';
 import { parseFormTimestamp } from '#lib/server/validation.js';
@@ -22,7 +26,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { companion } = await parent();
 	const detail = await loadIncidentDetail(params.companionId, params.id, 'owner');
 	if (!detail) error(404, t(locals.locale, 'error.incidentNotFound'));
-	return { companion, detail, uploadMaxMb: UPLOAD_MAX_MB, videoMaxMb: VIDEO_MAX_MB };
+	const linkCandidates = await listLinkCandidates(params.companionId, detail.incident.id);
+	return {
+		companion,
+		detail,
+		linkCandidates,
+		uploadMaxMb: UPLOAD_MAX_MB,
+		videoMaxMb: VIDEO_MAX_MB
+	};
 };
 
 type Event = RequestEvent;

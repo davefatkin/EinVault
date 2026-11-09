@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { refreshAll } from '$app/navigation';
-	import { CheckCheck, FileText, Pencil, Plus, Printer, RotateCcw, Trash2 } from '@lucide/svelte';
+	import {
+		CheckCheck,
+		FileText,
+		Link2,
+		Paperclip,
+		Pencil,
+		Plus,
+		Printer,
+		RotateCcw,
+		Trash2
+	} from '@lucide/svelte';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import LocalTime from '#lib/components/LocalTime.svelte';
@@ -12,14 +22,24 @@
 	import MediaThumbs from '#lib/components/MediaThumbs.svelte';
 	import MediaLightbox from '#lib/components/MediaLightbox.svelte';
 	import DocumentPreview from '#lib/components/DocumentPreview.svelte';
+	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
+	import LinkEventPicker from './LinkEventPicker.svelte';
 	import SeverityChip from './SeverityChip.svelte';
 	import IncidentTimeline from './IncidentTimeline.svelte';
 	import IncidentForm from './IncidentForm.svelte';
 	import IncidentUpdateForm from './IncidentUpdateForm.svelte';
 	import ResolveIncidentDialog from './ResolveIncidentDialog.svelte';
 	import { renderMarkdown } from '#lib/markdown.js';
+	import { healthTypeLabel } from '#lib/i18n/labels.js';
+	import {
+		DOCUMENT_ACCEPT,
+		attachDocument,
+		importFromPaperless,
+		uploadDocument
+	} from '#lib/documentsApi.js';
 	import { incidentMediaApi, uploadEach } from '#lib/mediaApi.js';
 	import type { MediaItem } from '#lib/media.js';
+	import type { HealthEventType } from '#lib/health.js';
 	import {
 		MAX_INCIDENT_MEDIA,
 		incidentDayNumber,
@@ -41,7 +61,9 @@
 		uploadMaxMb,
 		videoMaxMb,
 		currentUserId,
-		allowTime = false
+		allowTime = false,
+		linkCandidates = [],
+		paperlessEnabled = false
 	}: {
 		data: IncidentDetailData;
 		companionId: string;
@@ -63,6 +85,14 @@
 		currentUserId: string;
 		/** Whether the viewer sets the time of updates (owners) or they are "now". */
 		allowTime?: boolean;
+		/** Health events that can still be linked (owners only). */
+		linkCandidates?: {
+			id: string;
+			type: HealthEventType;
+			title: string;
+			occurredAt: Date | string;
+		}[];
+		paperlessEnabled?: boolean;
 	} = $props();
 	const locale = getLocale();
 
@@ -137,6 +167,38 @@
 		};
 	};
 
+	let linkOpen = $state(false);
+
+	// Attach document: files upload (or a Paperless import is filed) straight
+	// onto the incident through the documents API, then the page reloads.
+	let attachInput = $state<HTMLInputElement | null>(null);
+	let attaching = $state(false);
+	let attachFailures = $state<{ name: string; message: string }[]>([]);
+	let paperlessOpen = $state(false);
+	async function attachFiles(files: File[]) {
+		if (files.length === 0) return;
+		attaching = true;
+		attachFailures = [];
+		const failed: { name: string; message: string }[] = [];
+		for (const file of files) {
+			const r = await uploadDocument(companionId, file, { healthEventId: incident.id }, locale);
+			if (!r.ok) failed.push({ name: file.name, message: r.message });
+		}
+		attachFailures = failed;
+		await refreshAll();
+		attaching = false;
+	}
+	async function pickFromPaperless(paperlessId: number) {
+		attachFailures = [];
+		const imported = await importFromPaperless(companionId, paperlessId, locale);
+		const r = imported.ok
+			? await attachDocument(companionId, imported.value.id, incident.id, locale)
+			: imported;
+		if (!r.ok) attachFailures = [{ name: 'Paperless', message: r.message }];
+		paperlessOpen = false;
+		await refreshAll();
+	}
+
 	let resolveOpen = $state(false);
 
 	let editOpen = $state(false);
@@ -202,6 +264,34 @@
 				</Button>
 			</form>
 		{/if}
+		{#if caps.canLink && forms.link}
+			<Button variant="outline" size="sm" onclick={() => (linkOpen = true)}>
+				<Link2 class="h-4 w-4 mr-1.5" />{t(locale, 'page.incident.linkVet')}
+			</Button>
+		{/if}
+		{#if caps.canAttachDocuments}
+			<input
+				bind:this={attachInput}
+				type="file"
+				multiple
+				accept={DOCUMENT_ACCEPT}
+				class="hidden"
+				data-testid="incident-attach-file"
+				onchange={(e) => {
+					const files = Array.from(e.currentTarget.files ?? []);
+					e.currentTarget.value = '';
+					void attachFiles(files);
+				}}
+			/>
+			<Button variant="outline" size="sm" disabled={attaching} onclick={() => attachInput?.click()}>
+				<Paperclip class="h-4 w-4 mr-1.5" />{t(locale, 'page.incident.attachDocument')}
+			</Button>
+			{#if paperlessEnabled}
+				<Button variant="outline" size="sm" onclick={() => (paperlessOpen = true)}>
+					{t(locale, 'paperless.picker.button')}
+				</Button>
+			{/if}
+		{/if}
 		<Button variant="outline" size="sm" onclick={() => window.print()}>
 			<Printer class="h-4 w-4 mr-1.5" />{t(locale, 'page.incident.print')}
 		</Button>
@@ -226,6 +316,17 @@
 			</Button>
 		{/if}
 	</div>
+
+	{#if attachFailures.length > 0}
+		<div role="alert" class="space-y-1 text-sm text-destructive print:hidden">
+			<p>{t(locale, 'page.incident.attachFailed')}</p>
+			<ul class="list-disc pl-5">
+				{#each attachFailures as f, i (i)}
+					<li>{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 
 	<section
 		class="space-y-3 rounded-2xl border bg-card p-5 break-inside-avoid"
@@ -283,6 +384,7 @@
 			{caps}
 			{canModifyMedia}
 			{allowTime}
+			unlinkAction={caps.canLink ? forms.unlink : undefined}
 			editAction={forms.editUpdate}
 			deleteAction={forms.deleteUpdate}
 			{mediaUrl}
@@ -363,6 +465,31 @@
 			/>
 		{/if}
 	</Modal>
+{/if}
+
+{#if linkOpen && forms.link}
+	<Modal title={t(locale, 'page.incident.linkPickerTitle')} onclose={() => (linkOpen = false)}>
+		<LinkEventPicker
+			items={linkCandidates.map((c) => ({
+				id: c.id,
+				label: c.title,
+				badge: healthTypeLabel(locale, c.type),
+				date: c.occurredAt
+			}))}
+			action={forms.link}
+			idField="healthEventId"
+			emptyText={t(locale, 'page.incident.linkNone')}
+			onlinked={() => (linkOpen = false)}
+		/>
+	</Modal>
+{/if}
+
+{#if paperlessEnabled && caps.canAttachDocuments}
+	<PaperlessPicker
+		open={paperlessOpen}
+		onpick={pickFromPaperless}
+		onclose={() => (paperlessOpen = false)}
+	/>
 {/if}
 
 {#if resolveOpen && forms.resolve}

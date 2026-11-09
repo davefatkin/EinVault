@@ -230,6 +230,14 @@
 		onPreviewDocument={(doc) => (previewDoc = doc)}
 		footer={data.companion.isActive !== false ? detailActions : undefined}
 		journalHref={(d) => `/${data.companion.id}/journal/${d}`}
+		incidentLinks={selected.kind === 'health' && data.companion.isActive !== false
+			? {
+					companionId: data.companion.id,
+					incidents: data.incidentLinksByEvent[selected.item.id] ?? [],
+					linkAction: '?/linkIncident',
+					unlinkAction: '?/unlinkIncident'
+				}
+			: undefined}
 	/>
 {/if}
 

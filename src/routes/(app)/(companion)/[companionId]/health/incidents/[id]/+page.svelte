@@ -17,6 +17,7 @@
 		canAddUpdate: active && data.detail.incident.resolvedAt === null,
 		canResolve: active,
 		canLink: active,
+		canAttachDocuments: active,
 		canDelete: active,
 		canEditUpdate: () => active
 	});
@@ -68,6 +69,8 @@
 			{caps}
 			{mediaUrl}
 			{forms}
+			linkCandidates={data.linkCandidates}
+			paperlessEnabled={data.paperlessEnabled}
 			uploadMaxMb={data.uploadMaxMb}
 			videoMaxMb={data.videoMaxMb}
 			currentUserId={data.user?.id ?? ''}
