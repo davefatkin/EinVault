@@ -34,7 +34,7 @@
 		documentCategoryLabel,
 		reminderTypeLabel
 	} from '#lib/i18n/labels.js';
-	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
@@ -453,10 +453,7 @@
 				{#if companion.isActive !== false}
 					<div class="flex gap-2 px-5 py-4">
 						{#if selected.kind === 'reminder'}
-							{@const allowLogEvent =
-								REMINDER_TO_HEALTH_TYPE[
-									selected.item.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-								] !== null}
+							{@const allowLogEvent = reminderAllowsLogEvent(selected.item)}
 							<Button
 								href="/{companion.id}/reminders?edit={selected.item.id}"
 								variant="soft"
@@ -691,9 +688,7 @@
 				<div class="space-y-1">
 					{#each upcomingReminders.slice(0, 5) as reminder (reminder.id)}
 						{@const urgency = urgencyOf(reminder.dueAt)}
-						{@const allowLogEvent =
-							REMINDER_TO_HEALTH_TYPE[reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
-							null}
+						{@const allowLogEvent = reminderAllowsLogEvent(reminder)}
 						<div class="flex items-center gap-1 -mx-2 rounded-md transition-colors">
 							<button
 								type="button"

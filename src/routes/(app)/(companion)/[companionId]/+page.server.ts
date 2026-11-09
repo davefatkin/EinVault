@@ -6,7 +6,7 @@ import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
 import { localDateISO } from '#lib/date.js';
 import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { reminderLogEventUrl } from '#lib/health.js';
 import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
@@ -146,17 +146,8 @@ export const actions: Actions = {
 
 		completeReminder(existing, locals.user.id);
 
-		if (andEvent) {
-			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
-			redirect(
-				303,
-				healthEventPrefillUrl(params.companionId, {
-					title: existing.title,
-					description: existing.description,
-					type: mapped ?? undefined
-				})
-			);
-		}
+		const logEventUrl = andEvent ? reminderLogEventUrl(existing) : null;
+		if (logEventUrl) redirect(303, logEventUrl);
 
 		return { completeSuccess: true };
 	},

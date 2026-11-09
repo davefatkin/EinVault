@@ -14,7 +14,10 @@ function form(fields: Record<string, string>) {
 }
 
 type Action = (e: never) => Promise<unknown>;
-async function call(name: 'add' | 'update' | 'restore', fields: Record<string, string>) {
+async function call(
+	name: 'add' | 'update' | 'restore' | 'complete',
+	fields: Record<string, string>
+) {
 	const event = {
 		request: { formData: async () => form(fields) },
 		params: { companionId },
@@ -287,6 +290,57 @@ describe('reminders linked to a medication', () => {
 		expect(left.find((d) => d.id === second.doseId)).toMatchObject({
 			reminderId: null,
 			source: 'reminder'
+		});
+	});
+
+	it('update refuses moving a dose reminder past the last day', async () => {
+		const m = await med(companionId, '2030-06-19');
+		await linkedSeries(m, 'rl-move');
+		const late = await call('update', base({ id: 'rl-move', title: 'rl-move' }));
+		expect(late.status).toBe(400);
+		expect(late.data?.error).toBe('This reminder is due after the medication ends.');
+		expect((await row('rl-move')).dueAt).toEqual(day(1));
+
+		const lastDay = day(19);
+		const ok = await call('update', base({ id: 'rl-move', dueAt: lastDay.toISOString() }));
+		expect(ok).toEqual({ updateSuccess: true });
+		expect((await row('rl-move')).dueAt).toEqual(lastDay);
+	});
+
+	it('update leaves the due date check alone when the date does not move', async () => {
+		const m = await med(companionId, '2030-06-19');
+		await linkedSeries(m, 'rl-keep');
+		await db
+			.update(schema.reminders)
+			.set({ dueAt: day(25) })
+			.where(eq(schema.reminders.id, 'rl-keep'));
+		const res = await call(
+			'update',
+			base({ id: 'rl-keep', title: 'renamed', dueAt: day(25).toISOString() })
+		);
+		expect(res).toEqual({ updateSuccess: true });
+		expect((await row('rl-keep')).title).toBe('renamed');
+	});
+
+	it('complete ignores Log event for a dose reminder', async () => {
+		const m = await med();
+		await linkedSeries(m, 'rl-and-event');
+		const res = await call('complete', { id: 'rl-and-event', andEvent: '1' });
+		expect(res).toEqual({ completeSuccess: true });
+		expect((await row('rl-and-event')).completedAt).not.toBeNull();
+		expect(await dosesFor(m)).toHaveLength(1);
+	});
+
+	it('complete still offers Log event for an unlinked reminder', async () => {
+		await db.insert(schema.reminders).values({
+			id: 'rl-plain-event',
+			companionId,
+			title: 'Checkup',
+			type: 'vet',
+			dueAt: day(1)
+		});
+		await expect(call('complete', { id: 'rl-plain-event', andEvent: '1' })).rejects.toMatchObject({
+			status: 303
 		});
 	});
 

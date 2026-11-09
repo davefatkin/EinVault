@@ -56,6 +56,49 @@ export function reminderPrefillUrl(
 }
 
 /**
+ * The reminders page's `?new=1` form for a dose reminder: type medication,
+ * title = name, notes = dose, plus the hidden link to the medication.
+ */
+export function medicationReminderPrefillUrl(
+	companionId: string,
+	medication: { id: string; name: string; dose: string | null }
+): string {
+	const url = reminderPrefillUrl(companionId, 'medication', medication.name, medication.dose);
+	return `${url}&medicationId=${encodeURIComponent(medication.id)}`;
+}
+
+/**
+ * Whether completing a reminder may offer "Log event". A medication-linked
+ * reminder already logs a dose, so it never does; nor do reminder types with
+ * no matching health event type.
+ */
+export function reminderAllowsLogEvent(reminder: {
+	type: string;
+	medicationId?: string | null;
+}): boolean {
+	return !reminder.medicationId && REMINDER_TO_HEALTH_TYPE[reminder.type as ReminderType] !== null;
+}
+
+/**
+ * Where a "Done & Log Event" completion goes next, or null to stay put:
+ * medication-linked reminders already logged their dose.
+ */
+export function reminderLogEventUrl(reminder: {
+	companionId: string;
+	type: ReminderType;
+	title: string;
+	description: string | null;
+	medicationId: string | null;
+}): string | null {
+	if (reminder.medicationId) return null;
+	return healthEventPrefillUrl(reminder.companionId, {
+		title: reminder.title,
+		description: reminder.description,
+		type: REMINDER_TO_HEALTH_TYPE[reminder.type] ?? undefined
+	});
+}
+
+/**
  * Build a URL for the health page's `?new=1` prefill flow from a reminder's
  * fields. Mirrors `reminderPrefillUrl` but the other direction. `type` is
  * optional; omit it when the reminder type doesn't map to a sensible health

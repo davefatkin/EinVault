@@ -226,6 +226,7 @@ const messages = {
 	'nav.reminders': 'Reminders',
 	'nav.documents': 'Documents',
 	'nav.notes': 'Notes',
+	'nav.medications': 'Medications',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
 	'nav.adminCompanions': 'Companions',
@@ -1420,9 +1421,64 @@ const messages = {
 	'demo.roleMember': 'Member',
 	'demo.roleCaretaker': 'Caretaker',
 	'demo.sourceLink': 'Source',
-	'demo.writeBlocked': "This demo is read-only — your change wasn't saved."
+	'demo.writeBlocked': "This demo is read-only — your change wasn't saved.",
 
 	// Meta
+	'page.medications.title': 'Medications',
+	'page.medications.add': 'Add medication',
+	'page.medications.newTitle': 'New medication',
+	'page.medications.active': 'Active',
+	'page.medications.ended': 'Ended',
+	'page.medications.endedBadge': 'Ended',
+	'page.medications.empty': 'No medications yet',
+	'page.medications.emptyBody':
+		'Add a medication to keep its dose, schedule, and last dose in one place.',
+	'page.medications.noActive': 'No active medications.',
+	'page.medications.archivedNotice':
+		'{name} is archived. Medications stay available for reference.',
+	'page.medications.backToList': 'All medications',
+	'page.medications.labelName': 'Name',
+	'page.medications.labelDose': 'Dose',
+	'page.medications.labelInstructions': 'Instructions',
+	'page.medications.labelStartedOn': 'Start date',
+	'page.medications.labelEndedOn': 'End date',
+	'page.medications.endedOnHint':
+		'Leave empty if there is no planned end. The last day still counts.',
+	'page.medications.placeholderName': 'e.g. Carprofen',
+	'page.medications.placeholderDose': 'e.g. 1 tablet',
+	'page.medications.placeholderInstructions': 'e.g. Give with food',
+	'page.medications.save': 'Save medication',
+	'page.medications.given': 'Given',
+	'page.medications.givenTitle': 'Log a dose given now',
+	'page.medications.doseLogged': 'Dose of {name} logged',
+	'page.medications.nextDue': 'Next due',
+	'page.medications.lastGiven': 'Last given',
+	'page.medications.notGivenYet': 'Not given yet',
+	'page.medications.byName': 'by {name}',
+	'page.medications.scheduleAt': '{recurrence} at {times}',
+	'page.medications.startedOn': 'Started {date}',
+	'page.medications.endsOn': 'Ends {date}',
+	'page.medications.endedOn': 'Ended {date}',
+	'page.medications.addDoseReminder': 'Add a dose reminder',
+	'page.medications.once': 'Once',
+	'page.medications.doseReminders': 'Dose reminders',
+	'page.medications.noDoseReminders':
+		'No dose reminders. Add one to get a reminder when a dose is due.',
+	'page.medications.endedNoReminders': 'Restart this medication to add dose reminders again.',
+	'page.medications.doseHistory': 'Dose history',
+	'page.medications.noDoses': 'No doses logged yet.',
+	'page.medications.fromReminder': 'From reminder',
+	'page.medications.loggedByHand': 'Logged by hand',
+	'page.medications.givenBy': 'Given by {name}',
+	'page.medications.showMore': 'Show more',
+	'page.medications.end': 'End',
+	'page.medications.endConfirm': 'End {name} today? Its upcoming dose reminders will be deleted.',
+	'page.medications.endConfirmButton': 'End medication',
+	'page.medications.restart': 'Restart',
+	'page.medications.deleteConfirm':
+		'Delete {name} and its dose history? Upcoming dose reminders are deleted too; completed ones stay in the reminder history. This cannot be undone.',
+	'page.health.medicationsHintPrefix': 'Tracking a medication?',
+	'page.health.medicationsHintLink': 'Use the Medications page'
 } as const;
 
 export type Messages = typeof messages;

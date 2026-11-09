@@ -7,7 +7,7 @@ import { generateId } from '#lib/server/utils.js';
 import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { validateLeadDays } from '#lib/reminderLeadTimes.js';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { reminderLogEventUrl } from '#lib/health.js';
 import { getMedication } from '#lib/server/medications.js';
 import { isMedicationActive } from '#lib/medications.js';
 import { localDateISO } from '#lib/date.js';
@@ -118,7 +118,7 @@ export const actions: Actions = {
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
-			columns: { id: true, dueAt: true, notifyLeadDays: true }
+			columns: { id: true, dueAt: true, notifyLeadDays: true, medicationId: true }
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
@@ -138,6 +138,13 @@ export const actions: Actions = {
 		// The datetime-local input drops seconds, so compare at minute precision.
 		const dueChanged =
 			Math.floor(existing.dueAt.getTime() / 60_000) !== Math.floor(dueAt.getTime() / 60_000);
+
+		// A dose reminder can't move past its medication's last day (same rule as add).
+		if (dueChanged && existing.medicationId) {
+			const medication = await getMedication(params.companionId, existing.medicationId);
+			if (medication?.endedOn && localDateISO(dueAt) > medication.endedOn)
+				return fail(400, { error: t(locals.locale, 'error.reminderAfterMedicationEnd') });
+		}
 		if (dueChanged || nextLeads !== existing.notifyLeadDays) {
 			leadFields.leadArmedAt = nextLeads ? new Date() : null;
 		}
@@ -188,17 +195,8 @@ export const actions: Actions = {
 				)
 			);
 
-		if (andEvent) {
-			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
-			redirect(
-				303,
-				healthEventPrefillUrl(params.companionId, {
-					title: existing.title,
-					description: existing.description,
-					type: mapped ?? undefined
-				})
-			);
-		}
+		const logEventUrl = andEvent ? reminderLogEventUrl(existing) : null;
+		if (logEventUrl) redirect(303, logEventUrl);
 
 		return { completeSuccess: true };
 	},

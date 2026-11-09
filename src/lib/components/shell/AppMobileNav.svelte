@@ -16,7 +16,8 @@
 		BookOpen,
 		Weight,
 		FileText,
-		StickyNote
+		StickyNote,
+		Pill
 	} from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
@@ -166,6 +167,15 @@
 		if (href === '/') return page.url.pathname === '/';
 		return page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 	}
+
+	// Companion sections with no bottom tab get an icon in the top bar.
+	function headerLinks(companionId: string) {
+		return [
+			{ href: `/${companionId}/medications`, label: t(locale, 'nav.medications'), icon: Pill },
+			{ href: `/${companionId}/documents`, label: t(locale, 'nav.documents'), icon: FileText },
+			{ href: `/${companionId}/notes`, label: t(locale, 'nav.notes'), icon: StickyNote }
+		];
+	}
 </script>
 
 <!-- Top bar -->
@@ -210,32 +220,22 @@
 			</div>
 		{/if}
 
-		<!-- Right: documents (companion context) + search -->
+		<!-- Right: companion sections without a tab (companion context) + search -->
 		{#if isCompanionContext && activeCompanion}
-			<a
-				href={`/${activeCompanion.id}/documents`}
-				aria-label={t(locale, 'nav.documents')}
-				aria-current={isTabActive(`/${activeCompanion.id}/documents`) ? 'page' : undefined}
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
-					`/${activeCompanion.id}/documents`
-				)
-					? 'text-primary'
-					: ''}"
-			>
-				<FileText class="h-5 w-5" />
-			</a>
-			<a
-				href={`/${activeCompanion.id}/notes`}
-				aria-label={t(locale, 'nav.notes')}
-				aria-current={isTabActive(`/${activeCompanion.id}/notes`) ? 'page' : undefined}
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
-					`/${activeCompanion.id}/notes`
-				)
-					? 'text-primary'
-					: ''}"
-			>
-				<StickyNote class="h-5 w-5" />
-			</a>
+			{#each headerLinks(activeCompanion.id) as link (link.href)}
+				<a
+					href={link.href}
+					aria-label={link.label}
+					aria-current={isTabActive(link.href) ? 'page' : undefined}
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
+						link.href
+					)
+						? 'text-primary'
+						: ''}"
+				>
+					<link.icon class="h-5 w-5" />
+				</a>
+			{/each}
 		{/if}
 		<button
 			type="button"

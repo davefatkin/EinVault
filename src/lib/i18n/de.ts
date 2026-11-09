@@ -240,6 +240,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.reminders': 'Erinnerungen',
 	'nav.documents': 'Dokumente',
 	'nav.notes': 'Notizen',
+	'nav.medications': 'Medikamente',
 	'nav.settings': 'Einstellungen',
 	'nav.admin': 'Verwaltung',
 	'nav.adminCompanions': 'Begleiter',
@@ -1448,9 +1449,66 @@ const messages: Record<keyof Messages, string> = {
 	'demo.roleMember': 'Mitglied',
 	'demo.roleCaretaker': 'Betreuer',
 	'demo.sourceLink': 'Quellcode',
-	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.'
+	'demo.writeBlocked': 'Diese Demo ist schreibgeschützt — deine Änderung wurde nicht gespeichert.',
 
 	// Meta
+	'page.medications.title': 'Medikamente',
+	'page.medications.add': 'Medikament hinzufügen',
+	'page.medications.newTitle': 'Neues Medikament',
+	'page.medications.active': 'Aktiv',
+	'page.medications.ended': 'Beendet',
+	'page.medications.endedBadge': 'Beendet',
+	'page.medications.empty': 'Noch keine Medikamente',
+	'page.medications.emptyBody':
+		'Füge ein Medikament hinzu, um Dosis, Zeitplan und letzte Gabe an einem Ort zu haben.',
+	'page.medications.noActive': 'Keine aktiven Medikamente.',
+	'page.medications.archivedNotice':
+		'{name} ist archiviert. Medikamente bleiben zum Nachschlagen verfügbar.',
+	'page.medications.backToList': 'Alle Medikamente',
+	'page.medications.labelName': 'Name',
+	'page.medications.labelDose': 'Dosis',
+	'page.medications.labelInstructions': 'Hinweise',
+	'page.medications.labelStartedOn': 'Startdatum',
+	'page.medications.labelEndedOn': 'Enddatum',
+	'page.medications.endedOnHint':
+		'Leer lassen, wenn kein Ende geplant ist. Der letzte Tag zählt noch mit.',
+	'page.medications.placeholderName': 'z. B. Carprofen',
+	'page.medications.placeholderDose': 'z. B. 1 Tablette',
+	'page.medications.placeholderInstructions': 'z. B. Mit Futter geben',
+	'page.medications.save': 'Medikament speichern',
+	'page.medications.given': 'Gegeben',
+	'page.medications.givenTitle': 'Jetzt gegebene Dosis eintragen',
+	'page.medications.doseLogged': 'Dosis von {name} eingetragen',
+	'page.medications.nextDue': 'Nächste Gabe',
+	'page.medications.lastGiven': 'Zuletzt gegeben',
+	'page.medications.notGivenYet': 'Noch nicht gegeben',
+	'page.medications.byName': 'von {name}',
+	'page.medications.scheduleAt': '{recurrence} um {times}',
+	'page.medications.startedOn': 'Begonnen am {date}',
+	'page.medications.endsOn': 'Endet am {date}',
+	'page.medications.endedOn': 'Beendet am {date}',
+	'page.medications.addDoseReminder': 'Dosis-Erinnerung hinzufügen',
+	'page.medications.once': 'Einmalig',
+	'page.medications.doseReminders': 'Dosis-Erinnerungen',
+	'page.medications.noDoseReminders':
+		'Keine Dosis-Erinnerungen. Füge eine hinzu, um an fällige Gaben erinnert zu werden.',
+	'page.medications.endedNoReminders':
+		'Starte das Medikament neu, um wieder Dosis-Erinnerungen hinzuzufügen.',
+	'page.medications.doseHistory': 'Verlauf der Gaben',
+	'page.medications.noDoses': 'Noch keine Gaben eingetragen.',
+	'page.medications.fromReminder': 'Aus Erinnerung',
+	'page.medications.loggedByHand': 'Von Hand eingetragen',
+	'page.medications.givenBy': 'Gegeben von {name}',
+	'page.medications.showMore': 'Mehr anzeigen',
+	'page.medications.end': 'Beenden',
+	'page.medications.endConfirm':
+		'{name} heute beenden? Die anstehenden Dosis-Erinnerungen werden gelöscht.',
+	'page.medications.endConfirmButton': 'Medikament beenden',
+	'page.medications.restart': 'Neu starten',
+	'page.medications.deleteConfirm':
+		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',
+	'page.health.medicationsHintPrefix': 'Geht es um ein Medikament?',
+	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

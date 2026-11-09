@@ -238,6 +238,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.reminders': 'Rappels',
 	'nav.documents': 'Documents',
 	'nav.notes': 'Notes',
+	'nav.medications': 'Médicaments',
 	'nav.settings': 'Paramètres',
 	'nav.admin': 'Administration',
 	'nav.adminCompanions': 'Compagnons',
@@ -1450,9 +1451,65 @@ const messages: Record<keyof Messages, string> = {
 	'demo.roleCaretaker': 'Gardien',
 	'demo.sourceLink': 'Source',
 	'demo.writeBlocked':
-		"Cette démo est en lecture seule — votre modification n'a pas été enregistrée."
+		"Cette démo est en lecture seule — votre modification n'a pas été enregistrée.",
 
 	// Meta
+	'page.medications.title': 'Médicaments',
+	'page.medications.add': 'Ajouter un médicament',
+	'page.medications.newTitle': 'Nouveau médicament',
+	'page.medications.active': 'En cours',
+	'page.medications.ended': 'Terminés',
+	'page.medications.endedBadge': 'Terminé',
+	'page.medications.empty': 'Aucun médicament pour le moment',
+	'page.medications.emptyBody':
+		'Ajoutez un médicament pour garder sa dose, son horaire et la dernière prise au même endroit.',
+	'page.medications.noActive': 'Aucun médicament en cours.',
+	'page.medications.archivedNotice': '{name} est archivé. Les médicaments restent consultables.',
+	'page.medications.backToList': 'Tous les médicaments',
+	'page.medications.labelName': 'Nom',
+	'page.medications.labelDose': 'Dose',
+	'page.medications.labelInstructions': 'Instructions',
+	'page.medications.labelStartedOn': 'Date de début',
+	'page.medications.labelEndedOn': 'Date de fin',
+	'page.medications.endedOnHint':
+		"Laissez vide s'il n'y a pas de fin prévue. Le dernier jour compte encore.",
+	'page.medications.placeholderName': 'ex. : Carprofène',
+	'page.medications.placeholderDose': 'ex. : 1 comprimé',
+	'page.medications.placeholderInstructions': 'ex. : À donner avec la nourriture',
+	'page.medications.save': 'Enregistrer le médicament',
+	'page.medications.given': 'Donné',
+	'page.medications.givenTitle': 'Noter une dose donnée maintenant',
+	'page.medications.doseLogged': 'Dose de {name} notée',
+	'page.medications.nextDue': 'Prochaine prise',
+	'page.medications.lastGiven': 'Dernière prise',
+	'page.medications.notGivenYet': 'Pas encore donné',
+	'page.medications.byName': 'par {name}',
+	'page.medications.scheduleAt': '{recurrence} à {times}',
+	'page.medications.startedOn': 'Commencé le {date}',
+	'page.medications.endsOn': 'Se termine le {date}',
+	'page.medications.endedOn': 'Terminé le {date}',
+	'page.medications.addDoseReminder': 'Ajouter un rappel de prise',
+	'page.medications.once': 'Une fois',
+	'page.medications.doseReminders': 'Rappels de prise',
+	'page.medications.noDoseReminders':
+		'Aucun rappel de prise. Ajoutez-en un pour être prévenu quand une dose est due.',
+	'page.medications.endedNoReminders':
+		'Relancez ce médicament pour ajouter de nouveau des rappels de prise.',
+	'page.medications.doseHistory': 'Historique des prises',
+	'page.medications.noDoses': 'Aucune prise notée pour le moment.',
+	'page.medications.fromReminder': 'Depuis un rappel',
+	'page.medications.loggedByHand': 'Notée à la main',
+	'page.medications.givenBy': 'Donnée par {name}',
+	'page.medications.showMore': 'Afficher plus',
+	'page.medications.end': 'Terminer',
+	'page.medications.endConfirm':
+		"Terminer {name} aujourd'hui ? Ses prochains rappels de prise seront supprimés.",
+	'page.medications.endConfirmButton': 'Terminer le médicament',
+	'page.medications.restart': 'Relancer',
+	'page.medications.deleteConfirm':
+		"Supprimer {name} et son historique des prises ? Les prochains rappels de prise sont aussi supprimés ; ceux déjà faits restent dans l'historique des rappels. Cette action est irréversible.",
+	'page.health.medicationsHintPrefix': "Il s'agit d'un médicament ?",
+	'page.health.medicationsHintLink': 'Utilisez la page Médicaments'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;
