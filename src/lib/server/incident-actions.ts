@@ -6,6 +6,7 @@ import {
 	editIncidentUpdate,
 	parseIncidentUpdateForm
 } from '#lib/server/incidents.js';
+import { enqueueIncidentAlert } from '#lib/server/notify/incidents.js';
 import { checkIncidentWrite, type IncidentWriteAction } from '#lib/server/permissions.js';
 
 // Form actions shared by the owner and caretaker incident pages. Both routes
@@ -50,6 +51,12 @@ export function incidentUpdateActions({ allowTime }: { allowTime: boolean }) {
 				parsed.value,
 				event.locals.user!.id
 			);
+			// Owners' own updates alert nobody; only a caretaker's reach the owners.
+			if (event.locals.user!.role === 'caretaker')
+				await enqueueIncidentAlert(
+					{ kind: 'incidentUpdated', incidentId: g.incident.id, updateId },
+					event.locals.user!.id
+				);
 			return { updateId };
 		},
 

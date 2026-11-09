@@ -11,6 +11,7 @@
 		reminderEnabled,
 		shiftEnabled,
 		celebrationEnabled,
+		incidentEnabled,
 		showCelebrations,
 		hasEmail,
 		mailEnabled,
@@ -24,6 +25,7 @@
 		reminderEnabled: boolean;
 		shiftEnabled: boolean;
 		celebrationEnabled: boolean;
+		incidentEnabled: boolean;
 		showCelebrations: boolean;
 		hasEmail: boolean;
 		mailEnabled: boolean;
@@ -149,6 +151,22 @@
 							>{t(locale, 'page.settings.notifyCelebrationEmailLabel')}</Label
 						>
 					</label>
+					<label
+						class="flex items-center gap-2.5 {!hasEmail ? 'opacity-50' : ''}"
+						class:cursor-not-allowed={!hasEmail}
+					>
+						<input
+							type="checkbox"
+							name="notifyIncidentEmail"
+							checked={incidentEnabled}
+							disabled={emailControlsDisabled}
+							onchange={() => formEl.requestSubmit()}
+							class="h-4 w-4 rounded border-input accent-primary disabled:cursor-not-allowed"
+						/>
+						<Label class={hasEmail ? 'cursor-pointer' : 'cursor-not-allowed'}
+							>{t(locale, 'page.settings.notifyIncidentEmailLabel')}</Label
+						>
+					</label>
 				{/if}
 				{#if !hasEmail}
 					<!-- Disabled checkboxes do not submit; preserve stored flags. -->
@@ -159,6 +177,11 @@
 							name="notifyCelebrationEmail"
 							value="on"
 						/>{/if}
+					{#if showCelebrations && incidentEnabled}<input
+							type="hidden"
+							name="notifyIncidentEmail"
+							value="on"
+						/>{/if}
 				{/if}
 			{:else}
 				<!-- Email unconfigured: keep stored flags intact across topic edits. -->
@@ -167,6 +190,11 @@
 				{#if showCelebrations && celebrationEnabled}<input
 						type="hidden"
 						name="notifyCelebrationEmail"
+						value="on"
+					/>{/if}
+				{#if showCelebrations && incidentEnabled}<input
+						type="hidden"
+						name="notifyIncidentEmail"
 						value="on"
 					/>{/if}
 			{/if}

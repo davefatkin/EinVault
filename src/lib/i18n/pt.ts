@@ -340,6 +340,8 @@ const messages: Record<keyof Messages, string> = {
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
 	'page.settings.notifyCelebrationEmailLabel':
 		'Comemorações (aniversários exatos e dias de chegada a casa)',
+	'page.settings.notifyIncidentEmailLabel':
+		'Incidentes (registrados ou atualizados por um cuidador)',
 	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
 	'page.settings.notificationsNeedEmail':
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
@@ -1259,6 +1261,19 @@ const messages: Record<keyof Messages, string> = {
 	'email.celebration.cta': 'Abrir no EinVault',
 	'email.celebration.footer':
 		'Você está recebendo este e-mail porque os e-mails de comemorações estão ativados nas suas configurações do EinVault.',
+
+	// Email and ntfy: caretaker incident alerts
+	'email.incident.loggedSubject': 'Novo incidente para {name}: {title}',
+	'email.incident.updatedSubject': 'Atualização de incidente para {name}: {title}',
+	'email.incident.greeting': 'Olá, {name}!',
+	'email.incident.loggedBody': 'Um cuidador registrou um incidente para {companion}.',
+	'email.incident.updatedBody':
+		'Um cuidador adicionou uma atualização a um incidente para {companion}.',
+	'email.incident.titleLine': 'Incidente: {title}',
+	'email.incident.severityLine': 'Gravidade: {severity}',
+	'email.incident.cta': 'Abrir no EinVault',
+	'email.incident.footer':
+		'Você está recebendo este e-mail porque os alertas de incidentes estão ativados nas suas configurações do EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Pesquisar diários, notas, mídia, saúde, documentos…',

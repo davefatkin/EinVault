@@ -61,6 +61,7 @@
 			reminderEnabled={data.user?.notifyReminderEmail ?? false}
 			shiftEnabled={data.user?.notifyShiftEmail ?? false}
 			celebrationEnabled={data.user?.notifyCelebrationEmail ?? false}
+			incidentEnabled={data.user?.notifyIncidentEmail ?? true}
 			showCelebrations={data.user?.role !== 'caretaker'}
 			hasEmail={Boolean(data.user?.email)}
 			mailEnabled={data.mailEnabled}

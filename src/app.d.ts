@@ -20,6 +20,7 @@ declare global {
 				notifyReminderEmail: boolean;
 				notifyShiftEmail: boolean;
 				notifyCelebrationEmail: boolean;
+				notifyIncidentEmail: boolean;
 				ntfyTopic: string | null;
 				avatarPath: string | null;
 				totpEnabled: boolean;

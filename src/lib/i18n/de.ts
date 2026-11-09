@@ -342,6 +342,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
 	'page.settings.notifyCelebrationEmailLabel': 'Feiern (genaue Geburtstage und Ankunftstage)',
+	'page.settings.notifyIncidentEmailLabel':
+		'Vorfälle (von einer Betreuungsperson erfasst oder aktualisiert)',
 	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
 	'page.settings.notificationsNeedEmail':
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
@@ -1265,6 +1267,19 @@ const messages: Record<keyof Messages, string> = {
 	'email.celebration.cta': 'In EinVault öffnen',
 	'email.celebration.footer':
 		'Du erhältst diese E-Mail, weil Feier-E-Mails in deinen EinVault-Einstellungen aktiviert sind.',
+
+	// Email and ntfy: caretaker incident alerts
+	'email.incident.loggedSubject': 'Neuer Vorfall für {name}: {title}',
+	'email.incident.updatedSubject': 'Vorfall-Update für {name}: {title}',
+	'email.incident.greeting': 'Hallo {name},',
+	'email.incident.loggedBody': 'Eine Betreuungsperson hat einen Vorfall für {companion} erfasst.',
+	'email.incident.updatedBody':
+		'Eine Betreuungsperson hat ein Update zu einem Vorfall für {companion} hinzugefügt.',
+	'email.incident.titleLine': 'Vorfall: {title}',
+	'email.incident.severityLine': 'Schweregrad: {severity}',
+	'email.incident.cta': 'In EinVault öffnen',
+	'email.incident.footer':
+		'Du erhältst diese E-Mail, weil Vorfall-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
 	// Search palette
 	'search.placeholder': 'Tagebücher, Notizen, Medien, Gesundheit, Dokumente durchsuchen…',

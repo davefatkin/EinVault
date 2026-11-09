@@ -326,6 +326,7 @@ const messages = {
 	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
+	'page.settings.notifyIncidentEmailLabel': 'Incidents (logged or updated by a caretaker)',
 	'page.settings.notificationsUpdated': 'Notification settings updated.',
 	'page.settings.notificationsNeedEmail':
 		'Add an email address to your account to receive email notifications.',
@@ -1240,6 +1241,18 @@ const messages = {
 	'email.celebration.cta': 'Open in EinVault',
 	'email.celebration.footer':
 		'You are receiving this because celebration emails are on in your EinVault settings.',
+
+	// Email and ntfy: caretaker incident alerts
+	'email.incident.loggedSubject': 'New incident for {name}: {title}',
+	'email.incident.updatedSubject': 'Incident update for {name}: {title}',
+	'email.incident.greeting': 'Hi {name},',
+	'email.incident.loggedBody': 'A caretaker logged an incident for {companion}.',
+	'email.incident.updatedBody': 'A caretaker added an update to an incident for {companion}.',
+	'email.incident.titleLine': 'Incident: {title}',
+	'email.incident.severityLine': 'Severity: {severity}',
+	'email.incident.cta': 'Open in EinVault',
+	'email.incident.footer':
+		'You are receiving this because incident alerts are on in your EinVault settings.',
 
 	// Search palette
 	'search.placeholder': 'Search journals, notes, media, health, documents…',

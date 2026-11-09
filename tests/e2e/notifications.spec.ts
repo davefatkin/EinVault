@@ -444,3 +444,100 @@ base('homecoming day sends celebration email and ntfy push', async ({}, testInfo
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+// ---------------------------------------------------------------------------
+// Caretaker incident activity: ntfy to every owner, nothing for owner writes
+// ---------------------------------------------------------------------------
+
+base('caretaker incident activity pushes to owners via ntfy', async ({ browser }, testInfo) => {
+	const dir = path.join(
+		REPO_ROOT,
+		'.test-data',
+		`notifications-incident-${testInfo.workerIndex}-${testInfo.testId}`
+	);
+	const ntfy = await startNtfyFake();
+	const dbPath = createSeededDb(dir);
+	const db = new Database(dbPath);
+	const setTopic = db.prepare('UPDATE users SET ntfy_topic = ? WHERE id = ?');
+	setTopic.run('e2e-incident-member', SEED.member.id);
+	setTopic.run('e2e-incident-admin', SEED.admin.id);
+	setTopic.run('e2e-incident-caretaker', SEED.caretaker.id);
+	db.close();
+	let server: AppServer | undefined;
+	const contexts: Array<{ close(): Promise<void> }> = [];
+	try {
+		server = await startAppServer({
+			dbPath,
+			env: { NOTIFY_SCAN_INTERVAL_MS: '250', NTFY_URL: ntfy.url }
+		});
+		const baseURL = server.baseURL;
+		const EIN = SEED.companions.ein.id;
+		const title = 'Cut paw on the fence';
+		const updateBody = 'Bleeding has stopped, paw is swollen';
+
+		const care = await browser.newContext({ baseURL });
+		contexts.push(care);
+		const carePage = await care.newPage();
+		await login(carePage, baseURL, SEED.caretaker.username);
+		await carePage.goto(`/care/${EIN}/incidents/new`);
+		await carePage.locator('#incident-title').fill(title);
+		await carePage.locator('#incident-severity').selectOption('moderate');
+		await carePage.getByRole('button', { name: 'Save incident' }).click();
+		await expect(carePage).toHaveURL(new RegExp(`/care/${EIN}/incidents/(?!new$)[^/?#]+$`), {
+			timeout: 10_000
+		});
+		const id = new URL(carePage.url()).pathname.split('/').pop()!;
+
+		const logged = (topic: string) => (p: NtfyPublish) =>
+			p.topic === topic &&
+			(p.title ?? '').includes(title) &&
+			(p.title ?? '').includes('New incident');
+		const loggedPush = await ntfy.waitForPublish(logged('e2e-incident-member'), 20_000);
+		await ntfy.waitForPublish(logged('e2e-incident-admin'), 20_000);
+		expect(loggedPush.message).toContain('Moderate');
+		expect(loggedPush.click ?? '').toContain(`/${EIN}/health/incidents/${id}`);
+
+		await carePage.getByRole('button', { name: 'Update', exact: true }).click();
+		const dialog = carePage.getByRole('dialog');
+		await dialog.locator('textarea[name="body"]').fill(updateBody);
+		await dialog.getByRole('button', { name: 'Save update' }).click();
+		await expect(carePage.getByRole('dialog')).toHaveCount(0, { timeout: 15_000 });
+		const updated = await ntfy.waitForPublish(
+			(p) =>
+				p.topic === 'e2e-incident-member' &&
+				(p.title ?? '').includes(title) &&
+				(p.title ?? '').includes('Incident update'),
+			20_000
+		);
+		// Topics can be public: the update text never leaves the app.
+		expect(updated.message).not.toContain(updateBody);
+		expect(
+			ntfy.publishes.filter(
+				(p) => p.topic === 'e2e-incident-caretaker' && (p.title ?? '').includes(title)
+			)
+		).toHaveLength(0);
+
+		// An owner's own update alerts nobody.
+		const own = await browser.newContext({ baseURL });
+		contexts.push(own);
+		const ownPage = await own.newPage();
+		await login(ownPage, baseURL, SEED.member.username);
+		await ownPage.goto(`/${EIN}/health/incidents/${id}`);
+		await ownPage.getByRole('button', { name: 'Update', exact: true }).click();
+		const ownDialog = ownPage.getByRole('dialog');
+		await ownDialog.locator('textarea[name="body"]').fill('Owner note');
+		await ownDialog.getByRole('button', { name: 'Save update' }).click();
+		await expect(ownPage.getByRole('dialog')).toHaveCount(0, { timeout: 15_000 });
+		await ownPage.waitForTimeout(1_500);
+		expect(
+			ntfy.publishes.filter(
+				(p) => p.topic === 'e2e-incident-admin' && (p.title ?? '').includes(title)
+			)
+		).toHaveLength(2);
+	} finally {
+		for (const c of contexts) await c.close();
+		await server?.stop();
+		await ntfy.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});

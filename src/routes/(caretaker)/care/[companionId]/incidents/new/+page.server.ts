@@ -5,6 +5,7 @@ import { careIncidentPath } from '#lib/incidents.js';
 import { authorizeCompanions } from '#lib/server/companion-scope.js';
 import { failCareError } from '#lib/server/care-errors.js';
 import { createIncident, parseIncidentForm } from '#lib/server/incidents.js';
+import { enqueueIncidentAlert } from '#lib/server/notify/incidents.js';
 import { UPLOAD_MAX_MB, VIDEO_MAX_MB } from '#lib/server/env.js';
 
 // Caretaker "Log incident". The load checks the assignment itself against the
@@ -34,6 +35,7 @@ export const actions: Actions = {
 		if (!parsed.ok) return fail(400, { error: parsed.message });
 
 		const id = await createIncident(params.companionId, parsed.value, locals.user.id);
+		await enqueueIncidentAlert({ kind: 'incidentLogged', incidentId: id }, locals.user.id);
 		if (data.get('afterSave') !== 'client') redirect(303, careIncidentPath(params.companionId, id));
 		return { id };
 	}
