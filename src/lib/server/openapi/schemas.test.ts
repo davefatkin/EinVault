@@ -227,7 +227,9 @@ describe('response schemas match their serializers', () => {
 			completedBy: null,
 			outcome: null,
 			createdAt: new Date(),
-			loggedBy: 'user-1'
+			loggedBy: 'user-1',
+			notifyLeadDays: null,
+			leadArmedAt: null
 		};
 		const result = toApiReminder(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Reminder.shape).sort());

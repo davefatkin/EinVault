@@ -281,6 +281,13 @@
       "when": 1794227090364,
       "tag": "0039_messy_devos",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1794239437847,
+      "tag": "0040_white_thundra",
+      "breakpoints": true
     }
   ]
 }

@@ -140,6 +140,7 @@ export const passwordResetTokens = sqliteTable(
 // makes producers idempotent across overlapping scans and restarts.
 export type OutboxPayload =
 	| { kind: 'reminderDue'; reminderId: string; dueAtEpoch: number }
+	| { kind: 'reminderUpcoming'; reminderId: string; dueAtEpoch: number; leadDays: number }
 	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'celebration'; companionId: string; date: string }
@@ -569,7 +570,9 @@ export const reminders = sqliteTable(
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
-		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
+		notifyLeadDays: text('notify_lead_days'),
+		leadArmedAt: integer('lead_armed_at', { mode: 'timestamp' })
 	},
 	(t) => ({
 		companionIdx: index('reminder_companion_idx').on(t.companionId),
