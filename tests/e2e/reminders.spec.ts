@@ -16,6 +16,7 @@ async function addReminder(
 		type?: string;
 		dueAt: string;
 		recurring?: { interval: number; unit: 'day' | 'week' | 'month' | 'year' };
+		leads?: string[];
 	}
 ) {
 	await page.getByRole('button', { name: 'Add Reminder' }).click();
@@ -34,6 +35,10 @@ async function addReminder(
 		await page.locator('#add-isRecurring').check();
 		await page.locator('#add-recurrenceInterval').fill(String(interval));
 		await page.locator('select[name="recurrenceUnit"]').selectOption(unit);
+	}
+
+	for (const lead of opts.leads ?? []) {
+		await page.getByRole('button', { name: lead, exact: true }).click();
 	}
 
 	await page.getByRole('button', { name: 'Save Reminder' }).click();
@@ -482,6 +487,61 @@ test.describe('reminders', () => {
 		await expect(toast).toHaveCount(0, { timeout: 5_000 });
 		await expect(remindersSection.getByText('e2e-rem-skip-caretaker')).toHaveCount(0, {
 			timeout: 8_000
+		});
+	});
+	test.describe('heads-ups', () => {
+		test('add a reminder with two heads-ups and see them on the reminder', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await addReminder(asMember, {
+				title: 'e2e-rem-lead-add',
+				dueAt: tomorrow(),
+				leads: ['1 week', '2 days']
+			});
+			const card = activeSection(asMember).locator('div').filter({ hasText: 'e2e-rem-lead-add' });
+			await expect(card.getByText('Heads-up 7 days and 2 days before').first()).toBeVisible({
+				timeout: 8_000
+			});
+		});
+
+		test('edit heads-ups on an active reminder', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await addReminder(asMember, {
+				title: 'e2e-rem-lead-edit',
+				dueAt: tomorrow(),
+				leads: ['1 week', '2 days']
+			});
+			// Cards are direct children of the group container.
+			const card = activeSection(asMember).locator('> *').filter({ hasText: 'e2e-rem-lead-edit' });
+			await card.getByRole('button', { name: 'Edit', exact: true }).click();
+			const week = asMember.getByRole('button', { name: '1 week', exact: true });
+			await expect(week).toHaveAttribute('aria-pressed', 'true');
+			await week.click();
+			await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+			await expect(card.getByText('Heads-up 2 days before')).toBeVisible({ timeout: 8_000 });
+			await expect(card.getByText('Heads-up 7 days and 2 days before')).toHaveCount(0);
+		});
+
+		test('weekly reminder hides heads-ups a week or longer', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			const chip = (n: string) => asMember.getByRole('button', { name: n, exact: true });
+			await expect(chip('1 week')).toBeVisible();
+			await asMember.locator('#add-isRecurring').check();
+			await asMember.locator('#add-recurrenceInterval').fill('1');
+			await asMember.locator('select[name="recurrenceUnit"]').selectOption('week');
+			await expect(chip('2 days')).toBeVisible();
+			await expect(chip('1 week')).toHaveCount(0);
+			await expect(chip('2 weeks')).toHaveCount(0);
+			await expect(chip('30 days')).toHaveCount(0);
+		});
+
+		test("a fourth heads-up can't be picked", async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			const chip = (n: string) => asMember.getByRole('button', { name: n, exact: true });
+			for (const n of ['1 day', '2 days', '3 days']) await chip(n).click();
+			for (const n of ['1 week', '2 weeks', '30 days']) await expect(chip(n)).toBeDisabled();
+			await expect(chip('1 day')).toBeEnabled();
 		});
 	});
 });
