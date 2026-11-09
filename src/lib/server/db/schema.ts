@@ -49,6 +49,9 @@ export const users = sqliteTable(
 			.notNull()
 			.default(false),
 		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
+		notifyIncidentEmail: integer('notify_incident_email', { mode: 'boolean' })
+			.notNull()
+			.default(true),
 		notifyCelebrationEmail: integer('notify_celebration_email', { mode: 'boolean' })
 			.notNull()
 			.default(false),
@@ -139,7 +142,9 @@ export type OutboxPayload =
 	| { kind: 'reminderDue'; reminderId: string; dueAtEpoch: number }
 	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number }
-	| { kind: 'celebration'; companionId: string; date: string };
+	| { kind: 'celebration'; companionId: string; date: string }
+	| { kind: 'incidentLogged'; incidentId: string }
+	| { kind: 'incidentUpdated'; incidentId: string; updateId: string };
 
 export const notificationOutbox = sqliteTable(
 	'notification_outbox',
@@ -270,13 +275,16 @@ export const healthEvents = sqliteTable(
 			.notNull()
 			.references(() => companions.id, { onDelete: 'cascade' }),
 		type: text('type', {
-			enum: ['vet_visit', 'vaccination', 'medication', 'procedure', 'other']
+			enum: ['vet_visit', 'vaccination', 'medication', 'procedure', 'other', 'incident']
 		}).notNull(),
 		title: text('title').notNull(),
 		notes: text('notes'),
 		occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
 		vetName: text('vet_name'),
 		vetClinic: text('vet_clinic'),
+		// Incident-only (type = 'incident'): severity when logged, and when it ended.
+		severity: text('severity', { enum: ['mild', 'moderate', 'severe'] }),
+		resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
@@ -286,6 +294,49 @@ export const healthEvents = sqliteTable(
 		companionIdx: index('health_companion_idx').on(t.companionId),
 		typeIdx: index('health_type_idx').on(t.type)
 	})
+);
+
+// Dated follow-ups on an incident (issue #282).
+export const healthEventUpdates = sqliteTable(
+	'health_event_updates',
+	{
+		id: text('id').primaryKey(),
+		healthEventId: text('health_event_id')
+			.notNull()
+			.references(() => healthEvents.id, { onDelete: 'cascade' }),
+		body: text('body').notNull(),
+		severity: text('severity', { enum: ['mild', 'moderate', 'severe'] }),
+		occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [index('health_event_update_idx').on(t.healthEventId, t.occurredAt)]
+);
+
+// Links an incident to other health events (e.g. the vet visit about it).
+// The server helper enforces same companion, incident_id is an incident and
+// the linked event is not.
+export const healthEventLinks = sqliteTable(
+	'health_event_links',
+	{
+		incidentId: text('incident_id')
+			.notNull()
+			.references(() => healthEvents.id, { onDelete: 'cascade' }),
+		healthEventId: text('health_event_id')
+			.notNull()
+			.references(() => healthEvents.id, { onDelete: 'cascade' }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => [
+		primaryKey({ columns: [t.incidentId, t.healthEventId] }),
+		index('health_event_link_event_idx').on(t.healthEventId),
+		// Bare column names on purpose, as in media_one_parent.
+		check('health_event_links_distinct', sql`incident_id <> health_event_id`)
+	]
 );
 
 // companion documents (issue #95)
@@ -384,6 +435,12 @@ export const media = sqliteTable(
 		healthEventId: text('health_event_id').references(() => healthEvents.id, {
 			onDelete: 'cascade'
 		}),
+		// Incident update photo (null = incident overview). Outside media_one_parent:
+		// health_event_id is the incident either way. Write helpers verify the update
+		// belongs to that incident.
+		updateId: text('update_id').references(() => healthEventUpdates.id, {
+			onDelete: 'cascade'
+		}),
 		filename: text('filename').notNull(),
 		provider: text('provider', { enum: ['local', 's3', 'immich'] })
 			.notNull()
@@ -421,6 +478,7 @@ export const media = sqliteTable(
 		index('media_entry_idx').on(t.entryId, t.createdAt),
 		index('media_note_idx').on(t.noteId, t.createdAt),
 		index('media_health_event_idx').on(t.healthEventId, t.createdAt),
+		index('media_update_idx').on(t.updateId, t.createdAt),
 		// The worker scans WHERE status = 'processing' ORDER BY created_at, id.
 		index('media_status_idx').on(t.status, t.createdAt),
 		// Bare column names on purpose: `${t.entryId}` renders as "media"."entry_id",
@@ -782,7 +840,32 @@ export const healthEventsRelations = relations(healthEvents, ({ one, many }) => 
 	logger: one(users, { fields: [healthEvents.loggedBy], references: [users.id] }),
 	documents: many(documents),
 	media: many(media),
-	journalLinks: many(journalEntryHealthEvents)
+	journalLinks: many(journalEntryHealthEvents),
+	updates: many(healthEventUpdates),
+	incidentLinks: many(healthEventLinks, { relationName: 'incidentLinks' }),
+	eventLinks: many(healthEventLinks, { relationName: 'eventLinks' })
+}));
+
+export const healthEventUpdatesRelations = relations(healthEventUpdates, ({ one, many }) => ({
+	healthEvent: one(healthEvents, {
+		fields: [healthEventUpdates.healthEventId],
+		references: [healthEvents.id]
+	}),
+	logger: one(users, { fields: [healthEventUpdates.loggedBy], references: [users.id] }),
+	media: many(media)
+}));
+
+export const healthEventLinksRelations = relations(healthEventLinks, ({ one }) => ({
+	incident: one(healthEvents, {
+		fields: [healthEventLinks.incidentId],
+		references: [healthEvents.id],
+		relationName: 'incidentLinks'
+	}),
+	event: one(healthEvents, {
+		fields: [healthEventLinks.healthEventId],
+		references: [healthEvents.id],
+		relationName: 'eventLinks'
+	})
 }));
 
 export const journalEntryHealthEventsRelations = relations(journalEntryHealthEvents, ({ one }) => ({
@@ -825,6 +908,10 @@ export const mediaRelations = relations(media, ({ one }) => ({
 	entry: one(journalEntries, { fields: [media.entryId], references: [journalEntries.id] }),
 	note: one(notes, { fields: [media.noteId], references: [notes.id] }),
 	healthEvent: one(healthEvents, { fields: [media.healthEventId], references: [healthEvents.id] }),
+	update: one(healthEventUpdates, {
+		fields: [media.updateId],
+		references: [healthEventUpdates.id]
+	}),
 	logger: one(users, { fields: [media.loggedBy], references: [users.id] })
 }));
 

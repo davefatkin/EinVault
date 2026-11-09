@@ -7,7 +7,8 @@
 
 import type { UserRef } from '#lib/types.js';
 
-export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';
+export type HealthEventType =
+	'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other' | 'incident';
 export type ReminderType = 'vet' | 'medication' | 'vaccination' | 'grooming' | 'other';
 
 // Mirrors the CASE in migration 0011's backfill INSERT. Keep them in sync if
@@ -19,7 +20,8 @@ export const HEALTH_TO_REMINDER_TYPE = {
 	vaccination: 'vaccination',
 	medication: 'medication',
 	procedure: 'vet',
-	other: 'other'
+	other: 'other',
+	incident: 'other'
 } as const satisfies Record<HealthEventType, ReminderType>;
 
 // Reverse mapping for the "Log event" flow on reminder dismissal. `null`

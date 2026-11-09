@@ -551,16 +551,28 @@ async function drain(): Promise<void> {
 					await deliverReminder(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebration(row, row.payload);
-				} else {
+				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
 					await deliverShift(row, row.payload);
+				} else {
+					// Incident alerts get a deliverer in a later task.
+					console.error(
+						`[notify] no deliverer for payload '${row.payload.kind}'; skipping row ${row.id}`
+					);
+					await markSkipped(row.id);
 				}
 			} else if (row.channel === 'ntfy') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminderNtfy(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebrationNtfy(row, row.payload);
-				} else {
+				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
 					await deliverShiftNtfy(row, row.payload);
+				} else {
+					// Incident alerts get a deliverer in a later task.
+					console.error(
+						`[notify] no deliverer for payload '${row.payload.kind}'; skipping row ${row.id}`
+					);
+					await markSkipped(row.id);
 				}
 			} else {
 				// apprise lands in a later PR.

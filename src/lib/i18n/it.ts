@@ -41,6 +41,7 @@ const messages: Record<keyof Messages, string> = {
 	'enum.healthType.medication': 'Farmaco',
 	'enum.healthType.procedure': 'Procedura',
 	'enum.healthType.other': 'Altro',
+	'enum.healthType.incident': 'Incidente',
 
 	// Enum: Daily event / activity types
 	'enum.activityType.walk': 'Passeggiata',

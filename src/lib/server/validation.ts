@@ -132,13 +132,15 @@ export function parseCompanionTargets(body: {
 
 // Health event type
 
-export type HealthEventType = 'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other';
+export type HealthEventType =
+	'vet_visit' | 'vaccination' | 'medication' | 'procedure' | 'other' | 'incident';
 const HEALTH_EVENT_TYPES = [
 	'vet_visit',
 	'vaccination',
 	'medication',
 	'procedure',
-	'other'
+	'other',
+	'incident'
 ] as const satisfies readonly HealthEventType[];
 
 export function parseHealthEventType(value: string): HealthEventType | null {

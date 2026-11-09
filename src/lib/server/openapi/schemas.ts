@@ -156,7 +156,7 @@ export const QuickLogList = z.object({ quickLogs: z.array(QuickLog) }).openapi('
 export const ExecuteResponse = z.object({ ids: z.array(z.string()) }).openapi('ExecuteResponse');
 
 export const HealthEventType = z
-	.enum(['vet_visit', 'vaccination', 'medication', 'procedure', 'other'])
+	.enum(['vet_visit', 'vaccination', 'medication', 'procedure', 'other', 'incident'])
 	.openapi('HealthEventType');
 
 export const HealthRequest = z

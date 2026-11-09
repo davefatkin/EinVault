@@ -39,6 +39,7 @@ const messages = {
 	'enum.healthType.medication': 'Medication',
 	'enum.healthType.procedure': 'Procedure',
 	'enum.healthType.other': 'Other',
+	'enum.healthType.incident': 'Incident',
 
 	// Enum: Daily event / activity types
 	'enum.activityType.walk': 'Walk',
