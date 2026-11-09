@@ -14,6 +14,7 @@
 	import { Printer, Video } from '@lucide/svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
+	import SeverityChip from '#lib/components/incidents/SeverityChip.svelte';
 	import NoteContent from '#lib/components/notes/NoteContent.svelte';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -357,6 +358,43 @@
 					)}
 				{/if}
 			</div>
+		</section>
+	{/if}
+
+	{#if sheet.openIncidents.length > 0}
+		{@const off = excludedSections.has('incidents')}
+		<section
+			data-testid="sheet-incidents"
+			class={[
+				'break-inside-avoid rounded-xl border border-border bg-card p-4',
+				off && 'print:hidden'
+			]}
+		>
+			{@render sectionHeading('incidents', t(locale, 'page.health.openIncidents'))}
+			<ul class={['space-y-3', off && 'opacity-40']}>
+				{#each sheet.openIncidents as incident (incident.id)}
+					<li class="break-inside-avoid">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+							<h3 class="font-semibold break-words text-foreground">{incident.title}</h3>
+							{#if incident.currentSeverity}
+								<SeverityChip severity={incident.currentSeverity} />
+							{/if}
+						</div>
+						<p class="text-xs text-muted-foreground print:text-foreground">
+							{t(locale, 'page.incident.started')}
+							<LocalTime date={incident.occurredAt} />
+						</p>
+						{#if incident.latestUpdate}
+							<p class="mt-1 text-sm whitespace-pre-line text-foreground">
+								<span class="text-xs font-semibold text-muted-foreground print:text-foreground"
+									>{t(locale, 'page.sheet.latestUpdate')}:</span
+								>
+								{incident.latestUpdate.body}
+							</p>
+						{/if}
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 

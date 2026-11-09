@@ -706,6 +706,7 @@ const messages = {
 	// Page: caretaker sheet (#280)
 	'page.sheet.title': 'Caretaker sheet',
 	'page.sheet.sectionNotes': 'Notes',
+	'page.sheet.latestUpdate': 'Latest update',
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Printed {date} from EinVault',
 	'page.sheet.print': 'Print',

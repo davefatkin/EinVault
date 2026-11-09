@@ -1,5 +1,6 @@
 import type { Species } from '#lib/activityTypes.js';
 import type { MediaItem } from '#lib/media.js';
+import type { OpenIncidentSummary } from '#lib/incidents.js';
 
 // Printable caretaker sheet (#280). Client-safe: CaretakerSheet.svelte reads
 // these types and #lib/server/caretaker-sheet.ts builds the value, mapping
@@ -40,10 +41,11 @@ export type CaretakerSheet = {
 	emergency: { name: string | null; phone: string | null } | null; // null when both are empty
 	owners: { id: string; displayName: string; phone: string | null; email: string | null }[]; // only with a phone or email
 	notes: SheetNote[];
+	openIncidents: OpenIncidentSummary[]; // open only, newest first
 };
 
 /** Sections with their own Include checkbox. */
-export type SheetSection = 'header' | 'contacts' | 'household' | 'routine' | 'notes';
+export type SheetSection = 'header' | 'contacts' | 'household' | 'routine' | 'notes' | 'incidents';
 
 /** Every photo on the sheet, in print order. Videos have no Include choice. */
 export function sheetPhotoIds(sheet: Pick<CaretakerSheet, 'notes'>): string[] {

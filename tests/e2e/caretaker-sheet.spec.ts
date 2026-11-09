@@ -3,6 +3,7 @@ import { test, expect } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { pngUpload, mp4Upload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
+import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
 
 // Printable caretaker sheet (#280). Print checks emulate print media and always
 // reset it. Include choices are page state, so nothing here writes seeded data;
@@ -288,6 +289,36 @@ test.describe('caretaker sheet', () => {
 				.toBe('rgb(0, 0, 0)');
 		} finally {
 			await asMember.emulateMedia({ media: null, colorScheme: null });
+		}
+	});
+
+	test('open incidents show for owner and caretaker; Include hides them in print', async ({
+		asMember,
+		asCaretaker
+	}) => {
+		const title = 'E2E Sheet limp';
+		const id = await createIncidentViaUi(asMember, EIN, { title, severity: 'moderate' });
+		try {
+			await openSheet(asMember);
+			const section = asMember.getByTestId('sheet-incidents');
+			await expect(section.getByRole('heading', { name: 'Open incidents' })).toBeVisible();
+			await expect(section.getByText(title)).toBeVisible();
+			await expect(section.getByText('Moderate', { exact: true })).toBeVisible();
+
+			await asCaretaker.goto(`/care/${EIN}/sheet`);
+			await waitForHydration(asCaretaker);
+			await expect(asCaretaker.getByTestId('sheet-incidents').getByText(title)).toBeVisible();
+
+			await inPrint(asMember, async () => {
+				await expect(section).toBeVisible();
+			});
+			await include(asMember, 'Open incidents').uncheck();
+			await expect(section.getByText('Not printed', { exact: true })).toBeVisible();
+			await inPrint(asMember, async () => {
+				await expect(section).toBeHidden();
+			});
+		} finally {
+			await deleteIncidentViaUi(asMember, EIN, id);
 		}
 	});
 });

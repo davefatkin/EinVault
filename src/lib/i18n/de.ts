@@ -719,6 +719,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: caretaker sheet (#280)
 	'page.sheet.title': 'Betreuerblatt',
 	'page.sheet.sectionNotes': 'Notizen',
+	'page.sheet.latestUpdate': 'Letztes Update',
 	'page.sheet.video': 'Video in EinVault',
 	'page.sheet.printedOn': 'Gedruckt am {date} aus EinVault',
 	'page.sheet.print': 'Drucken',

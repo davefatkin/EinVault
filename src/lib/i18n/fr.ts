@@ -718,6 +718,7 @@ const messages: Record<keyof Messages, string> = {
 	// Page: caretaker sheet (#280)
 	'page.sheet.title': 'Fiche pour le gardien',
 	'page.sheet.sectionNotes': 'Notes',
+	'page.sheet.latestUpdate': 'Dernière mise à jour',
 	'page.sheet.video': 'Vidéo dans EinVault',
 	'page.sheet.printedOn': 'Imprimé le {date} depuis EinVault',
 	'page.sheet.print': 'Imprimer',
