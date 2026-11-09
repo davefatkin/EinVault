@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { Check } from '@lucide/svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { addToast } from '#lib/components/ui/toast/index.js';
@@ -33,7 +33,7 @@
 					title: String(result.data?.error ?? t(locale, 'media.actionFailed')),
 					durationMs: 6000
 				});
-				await invalidateAll();
+				await refreshAll();
 			} else {
 				await update();
 			}
