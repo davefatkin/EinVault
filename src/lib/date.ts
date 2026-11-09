@@ -6,6 +6,12 @@ export function localDateISO(d: Date = new Date()): string {
 	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/** Value for a datetime-local input (`YYYY-MM-DDTHH:mm`) in the runtime's zone. */
+export function localDatetimeValue(d: Date = new Date()): string {
+	const p = (n: number) => String(n).padStart(2, '0');
+	return `${localDateISO(d)}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 /** Strict `YYYY-MM-DD` parse; null unless it is a real calendar date. */
 export function parseYmd(s: string | null | undefined): { y: number; m: number; d: number } | null {
 	const match = s ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(s) : null;

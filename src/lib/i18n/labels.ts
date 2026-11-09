@@ -9,6 +9,7 @@ import {
 } from '#lib/activityTypes.js';
 import { SPECIES_ICON, speciesIcon, subtypesFor } from '#lib/species.js';
 import { formatDateOnly } from '#lib/date.js';
+import { SEVERITIES, type Severity } from '#lib/incidents.js';
 
 // Icons are not translatable — they stay constant across locales.
 
@@ -86,6 +87,10 @@ export function moodLabel(locale: Locale, mood: string): string {
 
 export function healthTypeLabel(locale: Locale, type: string): string {
 	return t(locale, `enum.healthType.${type}` as MessageKey);
+}
+
+export function severityLabel(locale: Locale, severity: Severity): string {
+	return t(locale, `enum.severity.${severity}`);
 }
 
 export function documentCategoryLabel(locale: Locale, category: string): string {
@@ -168,6 +173,10 @@ export function healthTypeOptions(locale: Locale) {
 		value: v,
 		label: healthTypeLabel(locale, v)
 	}));
+}
+
+export function severityOptions(locale: Locale) {
+	return SEVERITIES.map((v) => ({ value: v, label: severityLabel(locale, v) }));
 }
 
 export function activityTypeOptions(

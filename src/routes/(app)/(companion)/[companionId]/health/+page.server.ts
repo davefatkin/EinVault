@@ -7,12 +7,47 @@ import { reminderPrefillUrl } from '#lib/health.js';
 import { createHealthEvent, parseHealthEventForm } from '#lib/server/health.js';
 import { createWeightEntry, parseWeightForm } from '#lib/server/weight.js';
 import { getJournalDatesByEvent, deleteHealthEvent } from '#lib/server/journal-links.js';
+import { listOpenIncidents } from '#lib/server/incidents.js';
+import { incidentPath } from '#lib/incidents.js';
 
-export const load: PageServerLoad = async ({ params, locals, parent }) => {
+// Incidents have their own page. Old ?detailHealth= links (journal chips,
+// search hits) and ?incidentUpdate= search hits land there, but only for an
+// incident of this companion.
+async function incidentRedirect(companionId: string, url: URL): Promise<string | null> {
+	const healthId = url.searchParams.get('detailHealth');
+	if (healthId) {
+		const ev = await db.query.healthEvents.findFirst({
+			where: and(
+				eq(schema.healthEvents.id, healthId),
+				eq(schema.healthEvents.companionId, companionId),
+				eq(schema.healthEvents.type, 'incident')
+			),
+			columns: { id: true }
+		});
+		if (ev) return incidentPath(companionId, ev.id);
+	}
+	const updateId = url.searchParams.get('incidentUpdate');
+	if (updateId) {
+		const update = await db.query.healthEventUpdates.findFirst({
+			where: eq(schema.healthEventUpdates.id, updateId),
+			columns: { id: true },
+			with: { healthEvent: { columns: { id: true, companionId: true, type: true } } }
+		});
+		const ev = update?.healthEvent;
+		if (ev && ev.companionId === companionId && ev.type === 'incident') {
+			return `${incidentPath(companionId, ev.id)}#update-${update.id}`;
+		}
+	}
+	return null;
+}
+
+export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	const { companion } = await parent();
+	const to = await incidentRedirect(params.companionId, url);
+	if (to) redirect(303, to);
 
-	const [healthEvents, weightEntries, linkedDocuments] = await Promise.all([
+	const [healthEvents, weightEntries, linkedDocuments, openIncidents] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
 			orderBy: (h, { desc }) => [desc(h.occurredAt)],
@@ -26,7 +61,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		db.query.documents.findMany({
 			where: eq(schema.documents.companionId, params.companionId),
 			columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
-		})
+		}),
+		listOpenIncidents([params.companionId])
 	]);
 
 	const journalDates = await getJournalDatesByEvent(
@@ -35,7 +71,14 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	);
 	const journalDatesByEvent = Object.fromEntries(journalDates);
 
-	return { companion, healthEvents, weightEntries, linkedDocuments, journalDatesByEvent };
+	return {
+		companion,
+		healthEvents,
+		weightEntries,
+		linkedDocuments,
+		journalDatesByEvent,
+		openIncidents
+	};
 };
 
 export const actions: Actions = {

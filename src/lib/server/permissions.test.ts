@@ -467,8 +467,11 @@ describe('checkIncidentWrite', () => {
 		expect(await outcome(ctOn, 'inc-open', 'media', 'up-elsewhere')).toBe(404);
 	});
 
-	it('403 for a caretaker editUpdate without an updateId', async () => {
-		expect(await outcome(ctOn, 'inc-open', 'editUpdate')).toBe(403);
+	it('404 for editUpdate without an updateId, for every role', async () => {
+		for (const user of [mem, adm, ctOn, ctOff]) {
+			const r = await check(user, 'inc-open', 'editUpdate');
+			expect(r).toMatchObject({ ok: false, status: 404, key: 'error.incidentNotFound' });
+		}
 	});
 });
 

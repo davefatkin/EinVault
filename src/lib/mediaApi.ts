@@ -175,3 +175,22 @@ export function incidentMediaApi(
 		capMessage: (max) => t(locale, 'error.maxIncidentMediaExceeded', { max })
 	};
 }
+
+/**
+ * Uploads files one at a time, for forms that save the record first and its
+ * media after. Returns the files that failed, with the server's message.
+ */
+export async function uploadEach(
+	api: MediaApi,
+	files: File[]
+): Promise<{ name: string; message: string }[]> {
+	const failed: { name: string; message: string }[] = [];
+	for (const file of files) {
+		try {
+			await api.upload(file);
+		} catch (err) {
+			failed.push({ name: file.name, message: err instanceof Error ? err.message : '' });
+		}
+	}
+	return failed;
+}

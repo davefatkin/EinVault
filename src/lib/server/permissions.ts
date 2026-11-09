@@ -94,6 +94,9 @@ export async function checkIncidentWrite(
 	opts: { updateId?: string; now?: Date } = {}
 ): Promise<IncidentWriteCheck> {
 	if (!user) return deny(401, 'error.unauthorized');
+	// Editing or deleting an update always names the update. Without one there
+	// is nothing to act on, whatever the role.
+	if (action === 'editUpdate' && !opts.updateId) return notFound();
 	const isCaretaker = user.role === 'caretaker';
 
 	if (isCaretaker) {
