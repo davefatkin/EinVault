@@ -433,7 +433,7 @@ export function buildOpenApiDocument() {
 		tags: ['medications'],
 		summary: 'Record a medication dose',
 		description:
-			'Body optional: { givenAt?, note? }. If a linked reminder occurrence is due today (or overdue) it is completed, which writes the dose (completedReminderId); otherwise a standalone dose is written. The token acts as its user, so a caretaker must be on shift and assigned. An ended medication is a 409. Send an Idempotency-Key header to make a retry a no-op.',
+			'Body optional: { givenAt?, note? }. The dose completes a linked reminder occurrence (completedReminderId) when one matches: the latest missed occurrence from an earlier day (older missed ones are skipped), else the earliest open one due no more than 3 hours after givenAt on the same day. Otherwise a standalone dose is written and no reminder changes. The token acts as its user, so a caretaker must be on shift and assigned. A givenAt before the start date is a 400 (givenBeforeStart); an ended medication is a 409. Send an Idempotency-Key header to make a retry a no-op.',
 		security: secured,
 		request: {
 			params: z.object({ id: z.string() }),
@@ -444,7 +444,7 @@ export function buildOpenApiDocument() {
 				description: 'Created',
 				content: { 'application/json': { schema: MedicationDoseResponse } }
 			},
-			400: errorResponse('invalidGivenAt / noteTooLong / invalidBody'),
+			400: errorResponse('invalidGivenAt / givenBeforeStart / noteTooLong / invalidBody'),
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('noActiveShift'),
 			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),

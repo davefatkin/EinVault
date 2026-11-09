@@ -28,11 +28,15 @@ function call(
 	return (action as Action)(event as never) as Promise<Result>;
 }
 
-async function med(companion = companionId, endedOn: string | null = null) {
+async function med(
+	companion = companionId,
+	endedOn: string | null = null,
+	startedOn = '2026-01-01'
+) {
 	const id = `mp-med-${Math.random().toString(36).slice(2)}`;
 	await db
 		.insert(schema.medications)
-		.values({ id, companionId: companion, name: 'Carprofen', startedOn: '2026-01-01', endedOn });
+		.values({ id, companionId: companion, name: 'Carprofen', startedOn, endedOn });
 	return id;
 }
 const doses = (m: string) =>
@@ -90,6 +94,14 @@ describe('medications page actions', () => {
 		const res = await call(actions.given, { id: ended });
 		expect(res.status).toBe(400);
 		expect(res.data?.error).toBe('This medication has ended.');
+	});
+
+	it("given refuses a medication that hasn't started yet", async () => {
+		const m = await med(companionId, null, '2999-01-01');
+		const res = await call(actions.given, { id: m });
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe("This medication hasn't started yet.");
+		expect(await doses(m)).toHaveLength(0);
 	});
 
 	it("detail actions don't touch another companion's medication", async () => {

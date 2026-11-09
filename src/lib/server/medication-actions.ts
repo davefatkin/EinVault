@@ -1,5 +1,5 @@
 import { fail, type Action, type RequestEvent } from '@sveltejs/kit';
-import { t } from '#lib/i18n/index.js';
+import { t, type Locale } from '#lib/i18n/index.js';
 import { getMedication, logDose } from '#lib/server/medications.js';
 import type { MedicationFormValues } from '#lib/medications.js';
 
@@ -13,6 +13,15 @@ export function ownerOnly(locals: Locals) {
 	return null;
 }
 
+/** The form failure for a dose logDose refused, or null when it wrote one. */
+export function doseRefusal(outcome: Awaited<ReturnType<typeof logDose>>, locale: Locale) {
+	if (outcome === 'notFound') return fail(404, { error: t(locale, 'error.medicationNotFound') });
+	if (outcome === 'ended') return fail(400, { error: t(locale, 'error.medicationEnded') });
+	if (outcome === 'beforeStart')
+		return fail(400, { error: t(locale, 'error.medicationNotStarted') });
+	return null;
+}
+
 /** "Given" on the owner medication pages. logDose isn't companion-scoped, so check first. */
 export const givenAction: Action<{ companionId: string }> = async ({ request, params, locals }) => {
 	const denied = ownerOnly(locals);
@@ -21,10 +30,8 @@ export const givenAction: Action<{ companionId: string }> = async ({ request, pa
 	const id = String(data.get('id') ?? '');
 	const medication = id ? await getMedication(params.companionId, id) : undefined;
 	if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
-	const outcome = await logDose(medication.id, locals.user!);
-	if (outcome === 'notFound')
-		return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
-	if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+	const refused = doseRefusal(await logDose(medication.id, locals.user!), locals.locale);
+	if (refused) return refused;
 	return { doseLogged: medication.name };
 };
 

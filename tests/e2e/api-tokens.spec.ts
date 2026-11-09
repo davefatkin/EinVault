@@ -1336,6 +1336,14 @@ test.describe('api tokens', () => {
 			expect(badAt.status()).toBe(400);
 			expect((await badAt.json()).code).toBe('invalidGivenAt');
 
+			// A dose before the start date (2026-01-01) is refused.
+			const early = await asMember.request.post(`${base}/api/medications/${med}/doses`, {
+				headers,
+				data: { givenAt: new Date(2025, 11, 31, 12).toISOString() }
+			});
+			expect(early.status()).toBe(400);
+			expect((await early.json()).code).toBe('givenBeforeStart');
+
 			// Idempotency: a keyed retry writes one dose.
 			const key = { ...headers, 'Idempotency-Key': 'med-dose-1' };
 			const first = await asMember.request.post(`${base}/api/medications/${med}/doses`, {

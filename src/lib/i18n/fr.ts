@@ -1133,6 +1133,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'La date de fin ne peut pas précéder la date de début.',
 	'error.medicationNotFound': 'Médicament introuvable.',
 	'error.medicationEnded': 'Ce médicament est terminé.',
+	'error.medicationNotStarted': "Ce médicament n'a pas encore commencé.",
+	'error.doseBeforeStart': 'Une dose ne peut pas être donnée avant la date de début du médicament.',
+	'error.doseNotFound': 'Dose introuvable.',
 	'error.invalidMedicationStatus': 'status doit être "active" ou "all".',
 	'error.mustBeOnShiftToLogDose':
 		'Vous devez être en service pour enregistrer une prise de médicament.',
@@ -1510,6 +1513,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endNow': 'Terminer maintenant',
 	'page.medications.removeEndDate': 'Supprimer la date de fin',
 	'page.medications.restart': 'Relancer',
+	'page.medications.removeDose': 'Retirer',
+	'page.medications.removeDoseLabel': 'Retirer cette dose',
+	'page.medications.removeDoseConfirm':
+		"Retirer cette dose de l'historique ? Si elle vient d'un rappel, ce rappel reste fait. Utilisez Restaurer sur la page Rappels pour le rouvrir.",
 	'page.medications.deleteConfirm':
 		"Supprimer {name} et son historique des prises ? Les prochains rappels de prise sont aussi supprimés ; ceux déjà faits restent dans l'historique des rappels. Cette action est irréversible.",
 	'page.health.medicationsHintPrefix': "Il s'agit d'un médicament ?",

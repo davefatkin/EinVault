@@ -1129,6 +1129,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'La fecha de fin no puede ser anterior a la de inicio.',
 	'error.medicationNotFound': 'Medicamento no encontrado.',
 	'error.medicationEnded': 'Este medicamento ha finalizado.',
+	'error.medicationNotStarted': 'Este medicamento aún no ha comenzado.',
+	'error.doseBeforeStart':
+		'No se puede registrar una dosis antes de la fecha de inicio del medicamento.',
+	'error.doseNotFound': 'Dosis no encontrada.',
 	'error.invalidMedicationStatus': 'status debe ser "active" o "all".',
 	'error.mustBeOnShiftToLogDose': 'Debes estar de turno para registrar dosis de medicación.',
 	'error.reminderAfterMedicationEnd':
@@ -1503,6 +1507,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endNow': 'Finalizar ahora',
 	'page.medications.removeEndDate': 'Quitar fecha de fin',
 	'page.medications.restart': 'Reiniciar',
+	'page.medications.removeDose': 'Quitar',
+	'page.medications.removeDoseLabel': 'Quitar esta dosis',
+	'page.medications.removeDoseConfirm':
+		'¿Quitar esta dosis del historial? Si vino de un recordatorio, ese recordatorio sigue hecho. Usa Restaurar en la página de Recordatorios para reabrirlo.',
 	'page.medications.deleteConfirm':
 		'¿Eliminar {name} y su historial de dosis? También se eliminan los próximos recordatorios de dosis; los completados se quedan en el historial de recordatorios. No se puede deshacer.',
 	'page.health.medicationsHintPrefix': '¿Es un medicamento?',

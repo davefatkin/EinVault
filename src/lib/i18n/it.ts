@@ -1127,6 +1127,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'La data di fine non può precedere la data di inizio.',
 	'error.medicationNotFound': 'Farmaco non trovato.',
 	'error.medicationEnded': 'Questo farmaco è terminato.',
+	'error.medicationNotStarted': 'Questo farmaco non è ancora iniziato.',
+	'error.doseBeforeStart': 'Non si può registrare una dose prima della data di inizio del farmaco.',
+	'error.doseNotFound': 'Dose non trovata.',
 	'error.invalidMedicationStatus': 'status deve essere "active" oppure "all".',
 	'error.mustBeOnShiftToLogDose': 'Devi essere di turno per registrare le somministrazioni.',
 	'error.reminderAfterMedicationEnd': 'Questo promemoria scade dopo la fine del farmaco.',
@@ -1501,6 +1504,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endNow': 'Termina ora',
 	'page.medications.removeEndDate': 'Rimuovi data di fine',
 	'page.medications.restart': 'Riavvia',
+	'page.medications.removeDose': 'Rimuovi',
+	'page.medications.removeDoseLabel': 'Rimuovi questa dose',
+	'page.medications.removeDoseConfirm':
+		'Rimuovere questa dose dalla cronologia? Se proviene da un promemoria, quel promemoria resta fatto. Usa Ripristina nella pagina Promemoria per riaprirlo.',
 	'page.medications.deleteConfirm':
 		'Eliminare {name} e il suo storico delle dosi? Vengono eliminati anche i prossimi promemoria per le dosi; quelli completati restano nello storico dei promemoria. Non si può annullare.',
 	'page.health.medicationsHintPrefix': 'Si tratta di un farmaco?',

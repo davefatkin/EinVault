@@ -1109,6 +1109,9 @@ const messages = {
 	'error.medicationEndBeforeStart': 'The end date cannot be before the start date.',
 	'error.medicationNotFound': 'Medication not found.',
 	'error.medicationEnded': 'This medication has ended.',
+	'error.medicationNotStarted': "This medication hasn't started yet.",
+	'error.doseBeforeStart': "A dose can't be given before the medication's start date.",
+	'error.doseNotFound': 'Dose not found.',
 	'error.invalidMedicationStatus': 'status must be "active" or "all".',
 	'error.mustBeOnShiftToLogDose': 'You must be on shift to log medication doses.',
 	'error.reminderAfterMedicationEnd': 'This reminder is due after the medication ends.',
@@ -1478,6 +1481,10 @@ const messages = {
 	'page.medications.endNow': 'End now',
 	'page.medications.removeEndDate': 'Remove end date',
 	'page.medications.restart': 'Restart',
+	'page.medications.removeDose': 'Remove',
+	'page.medications.removeDoseLabel': 'Remove this dose',
+	'page.medications.removeDoseConfirm':
+		'Remove this dose from the history? If it came from a reminder, that reminder stays done. Use Restore on the Reminders page to reopen it.',
 	'page.medications.deleteConfirm':
 		'Delete {name} and its dose history? Upcoming dose reminders are deleted too; completed ones stay in the reminder history. This cannot be undone.',
 	'page.health.medicationsHintPrefix': 'Tracking a medication?',

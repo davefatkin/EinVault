@@ -5,7 +5,7 @@ import { t, type Locale } from '#lib/i18n/index.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
-import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
 import {
 	isMedicationActive,
 	type DoseView,
@@ -331,61 +331,50 @@ export async function sweepEndedMedicationReminders(
 	);
 }
 
-/** Upper bound on missed occurrences `logDose` skips in one call. */
-const MAX_MISSED_SKIPS = 400;
+/** Upper bound on missed occurrences `logDose` walks through in one call. */
+const MAX_CATCH_UP = 400;
+
+/** How far ahead of a dose time "Given" still counts as that dose. */
+const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
+
+type Reminder = typeof schema.reminders.$inferSelect;
+type LogDoseResult =
+	{ doseId: string; completedReminderId: string | null } | 'notFound' | 'ended' | 'beforeStart';
 
 /**
- * Record that a dose was given (every "Given" button and the dose API).
- * Occurrences of linked recurring reminders missed on earlier days are skipped
- * first (oldest first, so each series spawns forward to today). Then, if an
- * occurrence is due by the end of today (local), the earliest one is
- * completed, which writes the dose; otherwise a standalone manual dose is
- * written. Callers check that the medication belongs to the companion they
- * act on.
+ * Record that a dose was given at T (`givenAt`, default now) on local day D
+ * (every "Given" button and the dose API). Refused before the start date.
+ *
+ * 1. Catch-up, oldest first, over open linked occurrences due before D: an
+ *    occurrence whose series already has a newer one due by D was missed and
+ *    is skipped; otherwise it is the latest one due, so this (late) dose
+ *    completes it and nothing else is touched.
+ * 2. Else the earliest open occurrence due by T + 3 hours (and on day D) is
+ *    completed. Later ones are never touched, so a double tap at 8:10 can't
+ *    take the 20:00 dose, nor a backdated dose today's.
+ * 3. Else a standalone manual dose is written at T.
+ *
+ * Callers check that the medication belongs to the companion they act on.
  */
 export async function logDose(
 	medicationId: string,
 	actor: { id: string },
 	opts: { givenAt?: Date; note?: string; now?: Date } = {}
-): Promise<{ doseId: string; completedReminderId: string | null } | 'notFound' | 'ended'> {
+): Promise<LogDoseResult> {
 	const now = opts.now ?? new Date();
+	const givenAt = opts.givenAt ?? now;
+	const day = localDateISO(givenAt);
 	const medication = await db.query.medications.findFirst({
 		where: eq(schema.medications.id, medicationId),
-		columns: { id: true, endedOn: true }
+		columns: { id: true, startedOn: true, endedOn: true }
 	});
 	if (!medication) return 'notFound';
 	if (!isMedicationActive(medication.endedOn, localDateISO(now))) return 'ended';
+	if (day < medication.startedOn) return 'beforeStart';
 
-	const startOfToday = new Date(now);
-	startOfToday.setHours(0, 0, 0, 0);
-	for (let i = 0; i < MAX_MISSED_SKIPS; i++) {
-		const missed = await db.query.reminders.findFirst({
-			where: and(
-				eq(schema.reminders.medicationId, medicationId),
-				isNull(schema.reminders.completedAt),
-				eq(schema.reminders.isRecurring, true),
-				lt(schema.reminders.dueAt, startOfToday)
-			),
-			orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
-		});
-		if (!missed) break;
-		skipReminder(missed, actor.id);
-	}
-
-	const endOfToday = new Date(now);
-	endOfToday.setHours(23, 59, 59, 999);
-	const due = await db.query.reminders.findFirst({
-		where: and(
-			eq(schema.reminders.medicationId, medicationId),
-			isNull(schema.reminders.completedAt),
-			lte(schema.reminders.dueAt, endOfToday)
-		),
-		orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
-	});
-	if (due) {
-		const givenAt = opts.givenAt ?? now;
-		const res = completeReminder(due, actor.id, { givenAt, note: opts.note });
-		if (res?.doseId) return { doseId: res.doseId, completedReminderId: due.id };
+	const complete = async (occurrence: Reminder): Promise<LogDoseResult | null> => {
+		const res = completeReminder(occurrence, actor.id, { givenAt, note: opts.note });
+		if (res?.doseId) return { doseId: res.doseId, completedReminderId: occurrence.id };
 		// Completed but no dose: the medication was deleted or ended in between.
 		if (res) {
 			const current = await db.query.medications.findFirst({
@@ -396,18 +385,55 @@ export async function logDose(
 		}
 		// Lost a race: someone else just completed it and that wrote the dose.
 		const existing = await db.query.medicationDoses.findFirst({
-			where: eq(schema.medicationDoses.reminderId, due.id),
+			where: eq(schema.medicationDoses.reminderId, occurrence.id),
 			columns: { id: true }
 		});
-		if (existing) return { doseId: existing.id, completedReminderId: due.id };
-		// Resolved some other way (skipped): log the dose by hand below.
+		if (existing) return { doseId: existing.id, completedReminderId: occurrence.id };
+		return null; // resolved some other way (skipped)
+	};
+
+	const startOfDay = new Date(givenAt);
+	startOfDay.setHours(0, 0, 0, 0);
+	for (let i = 0; i < MAX_CATCH_UP; i++) {
+		const earlier = await db.query.reminders.findFirst({
+			where: and(
+				eq(schema.reminders.medicationId, medicationId),
+				isNull(schema.reminders.completedAt),
+				lt(schema.reminders.dueAt, startOfDay)
+			),
+			orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
+		});
+		if (!earlier) break;
+		const next = computeNextDueAt(earlier);
+		if (next && localDateISO(next) <= day) {
+			skipReminder(earlier, actor.id);
+			continue;
+		}
+		const done = await complete(earlier);
+		if (done) return done;
+	}
+
+	const endOfDay = new Date(givenAt);
+	endOfDay.setHours(23, 59, 59, 999);
+	const windowEnd = new Date(Math.min(givenAt.getTime() + DOSE_WINDOW_MS, endOfDay.getTime()));
+	const due = await db.query.reminders.findFirst({
+		where: and(
+			eq(schema.reminders.medicationId, medicationId),
+			isNull(schema.reminders.completedAt),
+			lte(schema.reminders.dueAt, windowEnd)
+		),
+		orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
+	});
+	if (due) {
+		const done = await complete(due);
+		if (done) return done;
 	}
 
 	const doseId = generateId(15);
 	await db.insert(schema.medicationDoses).values({
 		id: doseId,
 		medicationId,
-		givenAt: opts.givenAt ?? now,
+		givenAt,
 		givenBy: actor.id,
 		source: 'manual',
 		note: opts.note ?? null

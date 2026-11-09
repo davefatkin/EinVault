@@ -1129,6 +1129,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'A data de fim não pode ser anterior à data de início.',
 	'error.medicationNotFound': 'Medicamento não encontrado.',
 	'error.medicationEnded': 'Este medicamento terminou.',
+	'error.medicationNotStarted': 'Este medicamento ainda não começou.',
+	'error.doseBeforeStart':
+		'Não é possível registrar uma dose antes da data de início do medicamento.',
+	'error.doseNotFound': 'Dose não encontrada.',
 	'error.invalidMedicationStatus': 'status deve ser "active" ou "all".',
 	'error.mustBeOnShiftToLogDose':
 		'Você precisa estar de plantão para registrar doses de medicação.',
@@ -1503,6 +1507,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endNow': 'Terminar agora',
 	'page.medications.removeEndDate': 'Remover data de fim',
 	'page.medications.restart': 'Reiniciar',
+	'page.medications.removeDose': 'Remover',
+	'page.medications.removeDoseLabel': 'Remover esta dose',
+	'page.medications.removeDoseConfirm':
+		'Remover esta dose do histórico? Se veio de um lembrete, esse lembrete continua concluído. Use Restaurar na página Lembretes para reabri-lo.',
 	'page.medications.deleteConfirm':
 		'Eliminar {name} e o histórico de doses? Os próximos lembretes de dose também são eliminados; os concluídos ficam no histórico de lembretes. Não é possível desfazer.',
 	'page.health.medicationsHintPrefix': 'É um medicamento?',

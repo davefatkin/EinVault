@@ -1133,6 +1133,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'Das Enddatum darf nicht vor dem Startdatum liegen.',
 	'error.medicationNotFound': 'Medikament nicht gefunden.',
 	'error.medicationEnded': 'Dieses Medikament ist abgesetzt.',
+	'error.medicationNotStarted': 'Dieses Medikament hat noch nicht begonnen.',
+	'error.doseBeforeStart':
+		'Eine Dosis kann nicht vor dem Startdatum des Medikaments gegeben werden.',
+	'error.doseNotFound': 'Dosis nicht gefunden.',
 	'error.invalidMedicationStatus': 'status muss "active" oder "all" sein.',
 	'error.mustBeOnShiftToLogDose': 'Du musst im Dienst sein, um Medikamentengaben einzutragen.',
 	'error.reminderAfterMedicationEnd':
@@ -1508,6 +1512,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endNow': 'Jetzt beenden',
 	'page.medications.removeEndDate': 'Enddatum entfernen',
 	'page.medications.restart': 'Neu starten',
+	'page.medications.removeDose': 'Entfernen',
+	'page.medications.removeDoseLabel': 'Diese Dosis entfernen',
+	'page.medications.removeDoseConfirm':
+		'Diese Dosis aus dem Verlauf entfernen? Stammt sie von einer Erinnerung, bleibt diese erledigt. Mit „Wiederherstellen“ auf der Seite Erinnerungen lässt sie sich wieder öffnen.',
 	'page.medications.deleteConfirm':
 		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',
 	'page.health.medicationsHintPrefix': 'Geht es um ein Medikament?',

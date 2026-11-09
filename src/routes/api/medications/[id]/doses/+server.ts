@@ -12,8 +12,8 @@ import { parseLoggedAt } from '#lib/server/validation.js';
 import { MedicationDoseRequest } from '#lib/server/openapi/schemas.js';
 
 // POST /api/medications/{id}/doses: record that a dose was given. Body is
-// optional: { givenAt?, note? }. Completes the due linked reminder occurrence
-// when there is one, else writes a standalone dose (see logDose). The token
+// optional: { givenAt?, note? }. Completes the matching linked reminder
+// occurrence when there is one, else writes a standalone dose (see logDose). The token
 // acts as its user, so a caretaker must be on shift and assigned. An id on a
 // companion this token can't access reads as 404. Send an Idempotency-Key
 // header to make a retry a no-op.
@@ -73,6 +73,8 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 			if (result === 'notFound') notFound();
 			if (result === 'ended')
 				error(409, t(locale, 'error.medicationEnded'), { code: 'medicationEnded' });
+			if (result === 'beforeStart')
+				error(400, t(locale, 'error.doseBeforeStart'), { code: 'givenBeforeStart' });
 			if (typeof result === 'string') notFound();
 			return { status: 201, data: result };
 		}

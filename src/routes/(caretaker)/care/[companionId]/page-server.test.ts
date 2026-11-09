@@ -107,11 +107,11 @@ describe('given action', () => {
 			endAt: new Date(Date.now() + 3600_000)
 		} as typeof schema.caretakerShifts.$inferInsert);
 	}
-	async function med(companionId: string, endedOn: string | null = null) {
+	async function med(companionId: string, endedOn: string | null = null, startedOn = '2026-01-01') {
 		const id = `cpg-med-${Math.random().toString(36).slice(2)}`;
 		await db
 			.insert(schema.medications)
-			.values({ id, companionId, name: 'Carprofen', startedOn: '2026-01-01', endedOn });
+			.values({ id, companionId, name: 'Carprofen', startedOn, endedOn });
 		return id;
 	}
 	const doses = (m: string) =>
@@ -165,6 +165,15 @@ describe('given action', () => {
 		await onShift();
 		const m = await med(comp, '2020-01-01');
 		expect((await give(comp, m)).status).toBe(400);
+		expect(await doses(m)).toHaveLength(0);
+	});
+
+	it("refuses a medication that hasn't started yet", async () => {
+		await onShift();
+		const m = await med(comp, null, '2999-01-01');
+		const res = await give(comp, m);
+		expect(res.status).toBe(400);
+		expect(res.data).toEqual({ error: "This medication hasn't started yet." });
 		expect(await doses(m)).toHaveLength(0);
 	});
 

@@ -11,6 +11,7 @@ import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { listSharedNotes } from '#lib/server/notes.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
 import { getMedication, listMedicationSummaries, logDose } from '#lib/server/medications.js';
+import { doseRefusal } from '#lib/server/medication-actions.js';
 import { caretakerMedicationCaps } from '#lib/medications.js';
 
 // Actions need their own assignment + shift gate: the load()'s assignment
@@ -205,10 +206,8 @@ export const actions: Actions = {
 		const medication = id ? await getMedication(params.companionId, id) : undefined;
 		if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
 
-		const outcome = await logDose(medication.id, locals.user);
-		if (outcome === 'notFound')
-			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
-		if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+		const refused = doseRefusal(await logDose(medication.id, locals.user), locals.locale);
+		if (refused) return refused;
 		return { doseLogged: medication.name };
 	},
 
