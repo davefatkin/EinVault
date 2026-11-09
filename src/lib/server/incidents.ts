@@ -99,10 +99,11 @@ export async function getIncidentUpdate(incidentId: string, updateId: string) {
 	});
 }
 
+/** Without `occurredAt` the update keeps its time. */
 export async function editIncidentUpdate(
 	incidentId: string,
 	updateId: string,
-	input: IncidentUpdateInput
+	input: Omit<IncidentUpdateInput, 'occurredAt'> & { occurredAt?: Date }
 ): Promise<boolean> {
 	const rows = await db
 		.update(schema.healthEventUpdates)

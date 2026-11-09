@@ -1,23 +1,25 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad, RequestEvent } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { loadIncidentDetail } from '#lib/server/incident-detail.js';
 import {
 	createIncidentUpdate,
-	deleteIncidentUpdate,
-	editIncidentUpdate,
 	parseIncidentForm,
 	parseIncidentUpdateForm,
 	setIncidentResolved,
 	updateIncidentOverview
 } from '#lib/server/incidents.js';
 import {
+	formString,
+	gateIncidentWrite as gate,
+	incidentUpdateActions
+} from '#lib/server/incident-actions.js';
+import {
 	linkToIncident,
 	listLinkCandidates,
 	unlinkFromIncident
 } from '#lib/server/incident-links.js';
 import { deleteHealthEvent } from '#lib/server/journal-links.js';
-import { checkIncidentWrite, type IncidentWriteAction } from '#lib/server/permissions.js';
 import { parseFormTimestamp } from '#lib/server/validation.js';
 import { UPLOAD_MAX_MB, VIDEO_MAX_MB } from '#lib/server/env.js';
 
@@ -36,55 +38,8 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	};
 };
 
-type Event = RequestEvent;
-
-// Every action starts here: the permission check maps straight to fail().
-async function gate(event: Event, action: IncidentWriteAction, updateId?: string) {
-	const { locals, params } = event;
-	const check = await checkIncidentWrite(locals.user, params.companionId, params.id, action, {
-		updateId
-	});
-	if (!check.ok) return { fail: fail(check.status, { error: t(locals.locale, check.key) }) };
-	return { incident: check.incident };
-}
-
-const formId = (data: FormData, name: string) => {
-	const v = data.get(name);
-	return typeof v === 'string' ? v : '';
-};
-
 export const actions: Actions = {
-	addUpdate: async (event) => {
-		const g = await gate(event, 'addUpdate');
-		if (g.fail) return g.fail;
-		const data = await event.request.formData();
-		const parsed = parseIncidentUpdateForm(data, event.locals.locale, { allowTime: true });
-		if (!parsed.ok) return fail(400, { error: parsed.message });
-		const updateId = await createIncidentUpdate(g.incident.id, parsed.value, event.locals.user!.id);
-		return { updateId };
-	},
-
-	editUpdate: async (event) => {
-		const data = await event.request.formData();
-		const updateId = formId(data, 'updateId');
-		const g = await gate(event, 'editUpdate', updateId);
-		if (g.fail) return g.fail;
-		const parsed = parseIncidentUpdateForm(data, event.locals.locale, { allowTime: true });
-		if (!parsed.ok) return fail(400, { error: parsed.message });
-		if (!(await editIncidentUpdate(g.incident.id, updateId, parsed.value)))
-			return fail(404, { error: t(event.locals.locale, 'error.incidentNotFound') });
-		return { ok: true };
-	},
-
-	deleteUpdate: async (event) => {
-		const data = await event.request.formData();
-		const updateId = formId(data, 'updateId');
-		const g = await gate(event, 'editUpdate', updateId);
-		if (g.fail) return g.fail;
-		if (!(await deleteIncidentUpdate(g.incident.id, updateId)))
-			return fail(404, { error: t(event.locals.locale, 'error.incidentNotFound') });
-		return { ok: true };
-	},
+	...incidentUpdateActions({ allowTime: true }),
 
 	editOverview: async (event) => {
 		const g = await gate(event, 'overview');
@@ -107,7 +62,7 @@ export const actions: Actions = {
 		if (!resolvedAt) return fail(400, { error: t(locals.locale, 'error.invalidDateTime') });
 		if (resolvedAt < g.incident.occurredAt)
 			return fail(400, { error: t(locals.locale, 'error.resolvedBeforeStart') });
-		if (formId(data, 'body').trim()) {
+		if (formString(data, 'body').trim()) {
 			const parsed = parseIncidentUpdateForm(data, locals.locale, { allowTime: false });
 			if (!parsed.ok) return fail(400, { error: parsed.message });
 			await createIncidentUpdate(
@@ -142,7 +97,7 @@ export const actions: Actions = {
 		const outcome = await linkToIncident(
 			params.companionId,
 			g.incident.id,
-			formId(data, 'healthEventId')
+			formString(data, 'healthEventId')
 		);
 		if (outcome !== 'linked')
 			return fail(outcome === 'notFound' ? 404 : 400, {
@@ -157,7 +112,11 @@ export const actions: Actions = {
 		if (g.fail) return g.fail;
 		const data = await event.request.formData();
 		if (
-			!(await unlinkFromIncident(params.companionId, g.incident.id, formId(data, 'healthEventId')))
+			!(await unlinkFromIncident(
+				params.companionId,
+				g.incident.id,
+				formString(data, 'healthEventId')
+			))
 		)
 			return fail(404, { error: t(locals.locale, 'error.eventNotFound') });
 		return { ok: true };

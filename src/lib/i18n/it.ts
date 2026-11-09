@@ -702,6 +702,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.sectionSchedules': 'Orari',
 	'page.dashboard.caretaker.sectionContacts': 'Contatti',
 	'page.dashboard.caretaker.logActivity': 'Registra attività',
+	'page.dashboard.caretaker.logIncident': 'Registra incidente',
 	'page.dashboard.caretaker.activityEmpty': 'Nessuna attività registrata oggi.',
 	'page.dashboard.caretaker.modalLabelType': 'Tipo',
 	'page.dashboard.caretaker.modalLabelNotes': 'Note',

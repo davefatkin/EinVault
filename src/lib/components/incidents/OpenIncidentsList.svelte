@@ -1,9 +1,8 @@
 <script lang="ts">
-	import LocalTime from '#lib/components/LocalTime.svelte';
 	import SeverityChip from './SeverityChip.svelte';
+	import OpenIncidentMeta from './OpenIncidentMeta.svelte';
 	import { stripMarkdown } from '#lib/markdown.js';
-	import { incidentDayNumber, type OpenIncidentSummary } from '#lib/incidents.js';
-	import { t, getLocale } from '#lib/i18n/index.js';
+	import type { OpenIncidentSummary } from '#lib/incidents.js';
 
 	// Open incidents as a list of links, each with its current severity, day
 	// count, last activity and the latest update.
@@ -12,7 +11,6 @@
 		href
 	}: { incidents: OpenIncidentSummary[]; href: (incident: OpenIncidentSummary) => string } =
 		$props();
-	const locale = getLocale();
 </script>
 
 <ul class="divide-y divide-border rounded-2xl border border-gold/40 bg-gold/5">
@@ -25,12 +23,7 @@
 					>{incident.title}</a
 				>
 				{#if incident.currentSeverity}<SeverityChip severity={incident.currentSeverity} />{/if}
-				<span class="text-xs text-muted-foreground">
-					{t(locale, 'page.incident.day', { day: incidentDayNumber(incident.occurredAt) })}
-					·
-					{t(locale, 'page.incident.updated')}
-					<LocalTime date={incident.lastActivityAt} format="relative" />
-				</span>
+				<OpenIncidentMeta {incident} />
 			</div>
 			{#if incident.latestUpdate}
 				<p class="mt-0.5 truncate text-xs text-muted-foreground">

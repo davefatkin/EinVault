@@ -694,6 +694,7 @@ const messages = {
 	'page.dashboard.caretaker.sectionSchedules': 'Schedules',
 	'page.dashboard.caretaker.sectionContacts': 'Contacts',
 	'page.dashboard.caretaker.logActivity': 'Log activity',
+	'page.dashboard.caretaker.logIncident': 'Log incident',
 	'page.dashboard.caretaker.activityEmpty': 'Nothing logged yet today.',
 	'page.dashboard.caretaker.modalLabelType': 'Type',
 	'page.dashboard.caretaker.modalLabelNotes': 'Notes',

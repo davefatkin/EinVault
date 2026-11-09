@@ -7,6 +7,7 @@ import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
+import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
 
 const COMP = 'seed-comp-ein';
 
@@ -345,6 +346,38 @@ test('the age tooltip opens on tap and closes on Escape @mobile', async ({ asMem
 	expect(box!.x + box!.width).toBeLessThanOrEqual(vp.width);
 	await asMember.keyboard.press('Escape');
 	await expect(tip).toBeHidden();
+});
+
+test('open incident banner shows on the companion dashboard and disappears when resolved @mobile', async ({
+	asMember
+}) => {
+	const title = `e2e-dash-inc-${Date.now().toString(36)}`;
+	const banner = asMember.getByRole('region', { name: 'Open incidents' });
+	let id: string | undefined;
+	try {
+		await asMember.goto(`/${COMP}`);
+		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
+		await expect(banner).toHaveCount(0);
+
+		id = await createIncidentViaUi(asMember, COMP, { title, severity: 'severe' });
+		await asMember.goto(`/${COMP}`);
+		await expect(banner).toContainText(title);
+		await expect(banner).toContainText('Severe');
+		await expect(banner).toContainText('Day 1');
+		await banner.getByRole('link', { name: new RegExp(title) }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health/incidents/${id}$`));
+
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Mark resolved' }).click();
+		await asMember.getByRole('dialog').getByRole('button', { name: 'Mark resolved' }).click();
+		await expect(asMember.getByTestId('incident-status')).toContainText('Resolved');
+
+		await asMember.goto(`/${COMP}`);
+		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
+		await expect(banner).toHaveCount(0);
+	} finally {
+		if (id) await deleteIncidentViaUi(asMember, COMP, id);
+	}
 });
 
 test('the default seeded world shows no celebrations banner', async ({ asAdmin }) => {

@@ -49,6 +49,8 @@
 	import { convertWeight } from '#lib/weightChart.js';
 	import { SPECIES_QUICK_DEFAULTS, toSpecies } from '#lib/species.js';
 	import MoodTrendCard from '#lib/components/companion/MoodTrendCard.svelte';
+	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
+	import { incidentPath } from '#lib/incidents.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -69,10 +71,12 @@
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
 	);
 
-	// Care status derived from outstanding reminders
+	// Care status derived from outstanding reminders and open incidents
 	let status = $derived(
 		careStatus(
-			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null }))
+			upcomingReminders.map((r) => ({ dueAt: r.dueAt, completedAt: r.completedAt ?? null })),
+			undefined,
+			data.openIncidents.length
 		)
 	);
 
@@ -646,6 +650,11 @@
 			</div>
 		</div>
 	</Card>
+
+	<OpenIncidentBanner
+		incidents={data.openIncidents}
+		hrefFor={(id) => incidentPath(companion.id, id)}
+	/>
 
 	<MoodTrendCard
 		companionId={companion.id}

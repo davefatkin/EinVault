@@ -10,6 +10,7 @@ import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
 import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
+import { listOpenIncidents } from '#lib/server/incidents.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent, cookies }) => {
@@ -27,7 +28,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		todayJournal,
 		activeCaretakerShift,
 		recentDocuments,
-		moodHistory
+		moodHistory,
+		openIncidents
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -100,7 +102,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 					gte(schema.journalEntries.date, addDaysISO(moodToday, -(MOOD_TREND_MAX - 1)))
 				)
 			)
-			.then((rows) => rows.filter((r): r is { date: string; mood: Mood } => r.mood !== null))
+			.then((rows) => rows.filter((r): r is { date: string; mood: Mood } => r.mood !== null)),
+		listOpenIncidents([params.companionId])
 	]);
 
 	const quickLogButtons = await listQuickLogButtons(
@@ -122,6 +125,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		recentDocuments,
 		quickLogButtons,
 		moodHistory,
+		openIncidents,
 		moodTrendDays: resolveMoodTrendDays(locals.user.moodTrendDays),
 		moodToday
 	};

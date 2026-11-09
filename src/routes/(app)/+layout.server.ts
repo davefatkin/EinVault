@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
-import { and, eq, inArray, isNull, lte } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, lte } from 'drizzle-orm';
 import { careStatus, type CareStatus } from '#lib/careStatus.js';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
@@ -27,22 +27,38 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 	// Compute per-companion care status in a single reminders query.
 	// We fetch reminders due within the next 7 days (captures overdue + today + soon).
+	// An open incident counts as needing attention too (one grouped query).
 	const companionStatus: Record<string, CareStatus> = {};
+	const openIncidentCounts: Record<string, number> = {};
 	if (companions.length > 0) {
 		const now = new Date();
 		const in7d = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 		const ids = companions.map((c) => c.id);
 
-		const upcomingReminders = await db
-			.select({ companionId: schema.reminders.companionId, dueAt: schema.reminders.dueAt })
-			.from(schema.reminders)
-			.where(
-				and(
-					inArray(schema.reminders.companionId, ids),
-					isNull(schema.reminders.completedAt),
-					lte(schema.reminders.dueAt, in7d)
+		const [upcomingReminders, incidentCounts] = await Promise.all([
+			db
+				.select({ companionId: schema.reminders.companionId, dueAt: schema.reminders.dueAt })
+				.from(schema.reminders)
+				.where(
+					and(
+						inArray(schema.reminders.companionId, ids),
+						isNull(schema.reminders.completedAt),
+						lte(schema.reminders.dueAt, in7d)
+					)
+				),
+			db
+				.select({ companionId: schema.healthEvents.companionId, n: count() })
+				.from(schema.healthEvents)
+				.where(
+					and(
+						inArray(schema.healthEvents.companionId, ids),
+						eq(schema.healthEvents.type, 'incident'),
+						isNull(schema.healthEvents.resolvedAt)
+					)
 				)
-			);
+				.groupBy(schema.healthEvents.companionId)
+		]);
+		for (const row of incidentCounts) openIncidentCounts[row.companionId] = row.n;
 
 		// Group reminders by companionId
 		const byCompanion = new Map<string, { dueAt: Date; completedAt: Date | null }[]>();
@@ -53,7 +69,11 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		}
 
 		for (const c of companions) {
-			companionStatus[c.id] = careStatus(byCompanion.get(c.id) ?? [], now);
+			companionStatus[c.id] = careStatus(
+				byCompanion.get(c.id) ?? [],
+				now,
+				openIncidentCounts[c.id] ?? 0
+			);
 		}
 	}
 
@@ -61,6 +81,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		user: locals.user,
 		companions,
 		archivedCompanions,
-		companionStatus
+		companionStatus,
+		openIncidentCounts
 	};
 };
