@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import {
 	parseMedicationForm,
@@ -16,6 +16,7 @@ import {
 	formatMedicationScheduleLine,
 	medicationScheduleMarkdown,
 	startMedicationSweep,
+	medicationActiveSql,
 	type MedicationInput
 } from './medications';
 
@@ -306,6 +307,29 @@ describe('sweepEndedMedicationReminders', () => {
 		expect(left).not.toContain(pastOpen);
 		expect(left).toEqual(expect.arrayContaining([pastDone, t, a]));
 		expect(await sweepEndedMedicationReminders(TODAY)).toBe(0);
+	});
+	it('copes with more ended medications than SQLite takes as bound parameters', async () => {
+		db.run(sql`
+			with recursive n(i) as (select 1 union all select i + 1 from n where i < 40000)
+			insert into medications (id, companion_id, name, started_on, ended_on)
+			select 'bulk-' || i, ${C1}, 'Old', '2026-01-01', '2026-02-01' from n`);
+		const last = await addReminder('bulk-40000');
+		expect(await sweepEndedMedicationReminders(TODAY)).toBe(1);
+		expect(await reminderIds()).not.toContain(last);
+	});
+});
+
+describe('medicationActiveSql', () => {
+	it('matches no end date and end dates on or after today', async () => {
+		await createMedication(C1, input({ name: 'open' }), U1);
+		await createMedication(C1, input({ name: 'today', endedOn: TODAY }), U1);
+		await createMedication(C1, input({ name: 'later', endedOn: '2026-11-10' }), U1);
+		await createMedication(C1, input({ name: 'past', endedOn: '2026-11-08' }), U1);
+		const rows = await db
+			.select({ name: schema.medications.name })
+			.from(schema.medications)
+			.where(medicationActiveSql(TODAY));
+		expect(rows.map((r) => r.name).sort()).toEqual(['later', 'open', 'today']);
 	});
 });
 

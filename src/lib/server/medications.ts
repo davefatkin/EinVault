@@ -50,6 +50,11 @@ export function parseMedicationForm(
 	};
 }
 
+/** SQL for "active on `today`": no end date, or ending today or later. */
+export function medicationActiveSql(today: string) {
+	return sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`;
+}
+
 export async function createMedication(
 	companionId: string,
 	input: MedicationInput,
@@ -183,9 +188,7 @@ export async function listMedicationSummaries(
 		.where(
 			and(
 				inArray(schema.medications.companionId, companionIds),
-				opts.activeOnly
-					? sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`
-					: undefined
+				opts.activeOnly ? medicationActiveSql(today) : undefined
 			)
 		)
 		.orderBy(asc(schema.medications.name), asc(schema.medications.id));
@@ -289,12 +292,7 @@ export async function medicationScheduleMarkdown(
 			instructions: schema.medications.instructions
 		})
 		.from(schema.medications)
-		.where(
-			and(
-				inArray(schema.medications.companionId, companionIds),
-				sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`
-			)
-		)
+		.where(and(inArray(schema.medications.companionId, companionIds), medicationActiveSql(today)))
 		.orderBy(asc(schema.medications.name), asc(schema.medications.id));
 	const lines = new Map<string, string[]>();
 	for (const r of rows) {
@@ -334,25 +332,15 @@ export async function listDoses(medicationId: string, limit = 50, offset = 0): P
 export async function sweepEndedMedicationReminders(
 	today: string = localDateISO()
 ): Promise<number> {
-	return db.transaction(
-		(tx) => {
-			const ended = tx
-				.select({ id: schema.medications.id })
-				.from(schema.medications)
-				.where(and(isNotNull(schema.medications.endedOn), lt(schema.medications.endedOn, today)))
-				.all()
-				.map((m) => m.id);
-			if (ended.length === 0) return 0;
-			return tx
-				.delete(schema.reminders)
-				.where(
-					and(inArray(schema.reminders.medicationId, ended), isNull(schema.reminders.completedAt))
-				)
-				.returning({ id: schema.reminders.id })
-				.all().length;
-		},
-		{ behavior: 'immediate' }
-	);
+	const ended = db
+		.select({ id: schema.medications.id })
+		.from(schema.medications)
+		.where(and(isNotNull(schema.medications.endedOn), lt(schema.medications.endedOn, today)));
+	const removed = await db
+		.delete(schema.reminders)
+		.where(and(inArray(schema.reminders.medicationId, ended), isNull(schema.reminders.completedAt)))
+		.returning({ id: schema.reminders.id });
+	return removed.length;
 }
 
 /** Upper bound on missed occurrences `logDose` walks through in one call. */

@@ -7,7 +7,8 @@ import {
 	toApiIncidentUpdate,
 	toApiIncidentLink,
 	toApiReminder,
-	toApiMedication
+	toApiMedication,
+	toApiMedicationMinimal
 } from './api-serializers';
 
 // A companion row carrying PII the write-scope shape must never leak, plus a
@@ -245,23 +246,28 @@ describe('medication serializers', () => {
 		).toBeNull();
 	});
 
-	it('omitPeople hides who gave the last dose', () => {
+	it('toApiMedicationMinimal (write scope) keeps only what a device needs', () => {
 		const at = new Date();
 		const m = {
 			id: 'm',
 			companionId: 'c',
 			name: 'P',
-			dose: null,
-			instructions: null,
+			dose: '1 tablet',
+			instructions: 'with food',
 			startedOn: '2026-01-01',
 			endedOn: null,
 			active: true,
-			nextDueAt: null,
+			nextDueAt: at,
 			lastGiven: { at, by: { displayName: 'Jet' } },
 			schedule: []
 		} as never;
-		expect(toApiMedication(m, { omitPeople: true }).lastGiven).toEqual({ at, by: null });
-		expect(toApiMedication(m).lastGiven).toEqual({ at, by: 'Jet' });
+		expect(toApiMedicationMinimal(m)).toEqual({
+			id: 'm',
+			companionId: 'c',
+			name: 'P',
+			active: true,
+			nextDueAt: at
+		});
 	});
 
 	it('companion alias comes from the argument, not the cleared column', () => {

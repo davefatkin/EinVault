@@ -7,14 +7,14 @@
 // presume one app process per database — the same accepted constraint as the
 // video worker.
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
-import { and, eq, gt, gte, isNotNull, isNull, lte, or } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import * as env from '$app/env/private';
 import { celebrationLines, celebrationOn } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';
 import { MAX_LEAD_DAYS, parseLeadDays } from '#lib/reminderLeadTimes.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { sweepEndedMedicationReminders } from '#lib/server/medications.js';
+import { medicationActiveSql, sweepEndedMedicationReminders } from '#lib/server/medications.js';
 import { isMedicationActive } from '#lib/medications.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
 import {
@@ -94,11 +94,7 @@ async function caretakerAssignments(): Promise<Set<string>> {
 
 /** Unlinked, or linked to a medication still active on `today` (R1 safety net). */
 function medicationStillActive(today: string) {
-	return or(
-		isNull(schema.reminders.medicationId),
-		isNull(schema.medications.endedOn),
-		gte(schema.medications.endedOn, today)
-	);
+	return or(isNull(schema.reminders.medicationId), medicationActiveSql(today));
 }
 
 /** Delivery re-check: the reminder's medication, if any, has not ended. */
@@ -305,9 +301,14 @@ export async function produceCelebrations(now: Date): Promise<EnqueueRow[]> {
 }
 
 export async function produce(now: Date = new Date()): Promise<void> {
-	// R1 safety net: ended medications keep no open reminders.
-	const swept = await sweepEndedMedicationReminders(localDateISO(now));
-	if (swept > 0) console.info(`[notify] removed ${swept} reminder(s) of ended medications`);
+	// R1 safety net: ended medications keep no open reminders. A failure here
+	// must not hold up notifications (the producers skip ended medications).
+	try {
+		const swept = await sweepEndedMedicationReminders(localDateISO(now));
+		if (swept > 0) console.info(`[notify] removed ${swept} reminder(s) of ended medications`);
+	} catch (err) {
+		console.error('[notify] medication reminder sweep failed:', err);
+	}
 	const rows = [
 		...(await produceReminders(now)),
 		...(await produceReminderHeadsUps(now)),

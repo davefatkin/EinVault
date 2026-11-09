@@ -409,7 +409,7 @@ export function buildOpenApiDocument() {
 		tags: ['medications'],
 		summary: 'List medications',
 		description:
-			'Medications for one companion (companionId) or every companion the token may access. status=active (default) or all; caretakers only ever get active ones. Works with full- and write-scope tokens so a log-only device can find ids for POST /api/medications/{id}/doses.',
+			'Medications for one companion (companionId) or every companion the token may access. status=active (default) or all; caretakers only ever get active ones. Works with full- and write-scope tokens so a log-only device can find ids for POST /api/medications/{id}/doses. Write-scope tokens get active medications only, with just id, companionId, name, active and nextDueAt.',
 		security: secured,
 		request: {
 			query: z.object({

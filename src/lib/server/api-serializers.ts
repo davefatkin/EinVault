@@ -254,21 +254,26 @@ export function toApiNote(row: NoteWithTags) {
 
 // Public shape for a medication (GET /api/medications). The recurrence-engine
 // details of linked reminders stay internal; nextDueAt is enough for a device.
-// `omitPeople` (write-scope tokens) drops who gave the last dose, like the
-// minimal companion shape drops PII.
-export function toApiMedication(m: MedicationSummary, opts: { omitPeople?: boolean } = {}) {
+export function toApiMedication(m: MedicationSummary) {
 	return {
-		id: m.id,
-		companionId: m.companionId,
-		name: m.name,
+		...toApiMedicationMinimal(m),
 		dose: m.dose,
 		instructions: m.instructions,
 		startedOn: m.startedOn,
 		endedOn: m.endedOn,
+		lastGiven: m.lastGiven ? { at: m.lastGiven.at, by: m.lastGiven.by?.displayName ?? null } : null
+	};
+}
+
+// Minimal medication shape for `write`-scoped tokens (log-only devices): just
+// enough to find the id for POST /api/medications/{id}/doses, like
+// toApiCompanionMinimal. No dose, instructions, or who gave the last dose.
+export function toApiMedicationMinimal(m: MedicationSummary) {
+	return {
+		id: m.id,
+		companionId: m.companionId,
+		name: m.name,
 		active: m.active,
-		nextDueAt: m.nextDueAt,
-		lastGiven: m.lastGiven
-			? { at: m.lastGiven.at, by: opts.omitPeople ? null : (m.lastGiven.by?.displayName ?? null) }
-			: null
+		nextDueAt: m.nextDueAt
 	};
 }

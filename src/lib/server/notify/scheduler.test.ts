@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { sendMail } from '#lib/server/mail/index.js';
 import { sendNtfy } from './ntfy';
+import { sweepEndedMedicationReminders } from '#lib/server/medications.js';
 import {
 	celebrationContext,
 	deliverReminderUpcoming,
@@ -17,6 +18,13 @@ vi.mock('#lib/server/mail/index.js', () => ({
 	isMailEnabled: () => true,
 	sendMail: vi.fn(async () => {})
 }));
+vi.mock('#lib/server/medications.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/medications.js')>();
+	return {
+		...actual,
+		sweepEndedMedicationReminders: vi.fn(actual.sweepEndedMedicationReminders)
+	};
+});
 vi.mock('./links', () => ({ publicLink: (path: string) => `https://vault.test${path}` }));
 vi.mock('./ntfy', () => ({
 	isNtfyEnabled: () => true,
@@ -307,6 +315,22 @@ describe('reminders linked to an ended medication', () => {
 			(r) => (r.payload as { kind: string }).kind === 'reminderDue'
 		);
 		expect(ids(due)).toEqual(['r-active']);
+	});
+
+	it('a failing sweep does not stop the producers', async () => {
+		vi.mocked(sweepEndedMedicationReminders).mockRejectedValueOnce(new Error('locked'));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		try {
+			await rem('r-active', 'm-active', dueNow);
+			await produce(now());
+			const due = (await db.select().from(schema.notificationOutbox)).filter(
+				(r) => (r.payload as { kind: string }).kind === 'reminderDue'
+			);
+			expect(ids(due)).toEqual(['r-active']);
+			expect(error).toHaveBeenCalled();
+		} finally {
+			error.mockRestore();
+		}
 	});
 
 	it('the due producer skips a reminder whose medication has ended', async () => {

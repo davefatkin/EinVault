@@ -1248,30 +1248,42 @@ test.describe('api tokens', () => {
 
 			const raw = await createToken(asMember, 'Med write bot', '/settings', 'write');
 			const headers = { Authorization: `Bearer ${raw}` };
+			const fullRaw = await createToken(asMember, 'Med full bot');
+			const fullHeaders = { Authorization: `Bearer ${fullRaw}` };
 			const base = app.server.baseURL;
 
-			// A write-scope token can read the list (to discover ids); active only by default.
+			// A write-scope token can read the list (to discover ids): active
+			// medications only, in the minimal shape.
 			const list = await asMember.request.get(`${base}/api/medications?companionId=${EIN}`, {
 				headers
 			});
 			expect(list.status()).toBe(200);
-			const names = (await list.json()).medications.map((m: { name: string }) => m.name);
+			const listed = (await list.json()).medications;
+			const names = listed.map((m: { name: string }) => m.name);
 			expect(names).toContain('E2E Carprofen');
 			expect(names).not.toContain('E2E Old Course');
-
-			const all = await asMember.request.get(
+			expect(Object.keys(listed.find((m: { id: string }) => m.id === med)).sort()).toEqual([
+				'active',
+				'companionId',
+				'id',
+				'name',
+				'nextDueAt'
+			]);
+			const writeAll = await asMember.request.get(
 				`${base}/api/medications?companionId=${EIN}&status=all`,
 				{ headers }
 			);
+			expect((await writeAll.json()).medications.map((m: { id: string }) => m.id)).not.toContain(
+				ended
+			);
+
+			// A full-scope token gets ended ones too with status=all.
+			const all = await asMember.request.get(
+				`${base}/api/medications?companionId=${EIN}&status=all`,
+				{ headers: fullHeaders }
+			);
 			const allMeds = (await all.json()).medications;
 			expect(allMeds.find((m: { id: string }) => m.id === ended).active).toBe(false);
-
-			// Write scope gets the PII-free view: no name of who gave the last dose.
-			expect(
-				allMeds.every(
-					(m: { lastGiven: { by: unknown } | null }) => !m.lastGiven || m.lastGiven.by === null
-				)
-			).toBe(true);
 
 			const bad = await asMember.request.get(`${base}/api/medications?status=nope`, { headers });
 			expect(bad.status()).toBe(400);
@@ -1364,26 +1376,25 @@ test.describe('api tokens', () => {
 			expect(bodyless.status()).toBe(201);
 			expect(dosesFor(app.dataDir, med)).toHaveLength(3);
 
-			// lastGiven exists now; write scope still hides who gave it.
+			// A full-scope token sees the last dose and who gave it.
 			const after = await asMember.request.get(`${base}/api/medications?companionId=${EIN}`, {
-				headers
+				headers: fullHeaders
 			});
 			const lastGiven = (await after.json()).medications.find(
 				(m: { id: string }) => m.id === med
 			).lastGiven;
 			expect(lastGiven.at).toBeTruthy();
-			expect(lastGiven.by).toBeNull();
+			expect(lastGiven.by).toBe(SEED.member.displayName);
 
 			// A full-scope token sees the deprecated alias as markdown; write-scope has none.
-			const fullRaw = await createToken(asMember, 'Med full bot');
 			const detail = await asMember.request.get(`${base}/api/companions/${EIN}`, {
-				headers: { Authorization: `Bearer ${fullRaw}` }
+				headers: fullHeaders
 			});
 			const alias = (await detail.json()).companion.medicationSchedule as string;
 			expect(alias.split('\n')).toContain('- E2E Carprofen, 1 tablet: with food');
 			expect(alias).not.toContain('E2E Old Course');
 			const listAll = await asMember.request.get(`${base}/api/companions`, {
-				headers: { Authorization: `Bearer ${fullRaw}` }
+				headers: fullHeaders
 			});
 			const julia = (await listAll.json()).companions.find((c: { id: string }) => c.id === JULIA);
 			expect(julia.medicationSchedule).toBeNull();

@@ -463,21 +463,24 @@ export const UserPublic = z
 	})
 	.openapi('UserPublic');
 
+// Write-scope tokens get only id/companionId/name/active/nextDueAt (via
+// toApiMedicationMinimal); the fields they omit are optional here.
 export const Medication = z
 	.object({
 		id: z.string(),
 		companionId: z.string(),
 		name: z.string(),
-		dose: z.string().nullable(),
-		instructions: z.string().nullable(),
-		startedOn: z.string().openapi({ description: 'YYYY-MM-DD, local date.' }),
+		active: z.boolean(),
+		nextDueAt: z.string().nullable(),
+		dose: z.string().nullable().optional(),
+		instructions: z.string().nullable().optional(),
+		startedOn: z.string().optional().openapi({ description: 'YYYY-MM-DD, local date.' }),
 		endedOn: z
 			.string()
 			.nullable()
+			.optional()
 			.openapi({ description: 'YYYY-MM-DD, inclusive: active through this day.' }),
-		active: z.boolean(),
-		nextDueAt: z.string().nullable(),
-		lastGiven: z.object({ at: z.string(), by: z.string().nullable() }).nullable()
+		lastGiven: z.object({ at: z.string(), by: z.string().nullable() }).nullable().optional()
 	})
 	.openapi('Medication');
 
