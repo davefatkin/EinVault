@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+	doseCovered,
 	formatMedicationSchedule,
 	medicationEndState,
 	todayInZone,
@@ -79,5 +80,42 @@ describe('todayInZone', () => {
 		const now = new Date(Date.UTC(2026, 10, 9, 2, 30));
 		expect(todayInZone('UTC', now)).toBe('2026-11-09');
 		expect(todayInZone('America/New_York', now)).toBe('2026-11-08');
+	});
+});
+
+describe('doseCovered', () => {
+	const utc = (d: number, h: number, m = 0) => new Date(Date.UTC(2026, 10, d, h, m));
+	const now = utc(9, 8, 10);
+	const given = (at: Date) => ({ at });
+
+	it('is false before any dose', () => {
+		expect(doseCovered({ lastGiven: null, nextDueAt: utc(9, 20) }, now, 'UTC')).toBe(false);
+		expect(doseCovered({ lastGiven: null, nextDueAt: null }, now, 'UTC')).toBe(false);
+	});
+
+	it('stays covered until the next dose reminder is within 3 hours', () => {
+		const med = { lastGiven: given(utc(9, 8, 5)), nextDueAt: utc(9, 20) };
+		expect(doseCovered(med, now, 'UTC')).toBe(true);
+		expect(doseCovered(med, utc(9, 16, 59), 'UTC')).toBe(true);
+		expect(doseCovered(med, utc(9, 17), 'UTC')).toBe(false);
+	});
+
+	it('is not covered while a dose reminder is overdue', () => {
+		const med = { lastGiven: given(utc(8, 8)), nextDueAt: utc(9, 8) };
+		expect(doseCovered(med, now, 'UTC')).toBe(false);
+	});
+
+	it('without an open reminder, is covered for the rest of the day given', () => {
+		const med = { lastGiven: given(utc(9, 7)), nextDueAt: null };
+		expect(doseCovered(med, now, 'UTC')).toBe(true);
+		expect(doseCovered(med, utc(9, 23, 59), 'UTC')).toBe(true);
+		expect(doseCovered(med, utc(10, 0, 1), 'UTC')).toBe(false);
+	});
+
+	it('uses the household time zone for the day', () => {
+		// 03:00 UTC on the 10th is still the 9th in New York.
+		const med = { lastGiven: given(utc(9, 20)), nextDueAt: null };
+		expect(doseCovered(med, utc(10, 3), 'America/New_York')).toBe(true);
+		expect(doseCovered(med, utc(10, 3), 'UTC')).toBe(false);
 	});
 });

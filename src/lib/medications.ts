@@ -76,6 +76,26 @@ export type MedicationFormValues = {
 	endedOn: string | null;
 };
 
+/** How far ahead of a dose time "Given" still counts as that dose. */
+export const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * Whether the current dose looks covered already, so "Given" turns quiet and
+ * asks before logging another. With a dose reminder coming up: until it is
+ * within DOSE_WINDOW_MS (when a tap would complete it). Otherwise (as-needed,
+ * or no open reminder): for the rest of the local day the last dose was given.
+ */
+export function doseCovered(
+	medication: { lastGiven: { at: Date } | null; nextDueAt: Date | null },
+	now: Date,
+	timeZone?: string
+): boolean {
+	if (!medication.lastGiven) return false;
+	if (medication.nextDueAt)
+		return new Date(medication.nextDueAt).getTime() > now.getTime() + DOSE_WINDOW_MS;
+	return todayInZone(timeZone, new Date(medication.lastGiven.at)) === todayInZone(timeZone, now);
+}
+
 export type MedicationCaps = { canLogDose: boolean; canEdit: boolean };
 
 export function ownerMedicationCaps(companionActive: boolean): MedicationCaps {

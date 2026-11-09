@@ -7,6 +7,7 @@ import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
 import {
+	DOSE_WINDOW_MS,
 	isMedicationActive,
 	type DoseView,
 	type MedicationScheduleItem,
@@ -375,8 +376,6 @@ export async function sweepEndedMedicationReminders(
 /** Upper bound on missed occurrences `logDose` walks through in one call. */
 const MAX_CATCH_UP = 400;
 
-/** How far ahead of a dose time "Given" still counts as that dose. */
-const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
 // How far ahead of the server clock a givenAt may be and still count (as now).
 const FUTURE_GRACE_MS = 5 * 60 * 1000;
 

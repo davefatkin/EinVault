@@ -1454,6 +1454,12 @@ const messages = {
 	'page.medications.save': 'Save medication',
 	'page.medications.given': 'Given',
 	'page.medications.givenTitle': 'Log a dose given now',
+	'page.medications.givenAt': 'Given {when}',
+	'page.medications.givenAgainTitle': 'Already given. Log another dose?',
+	'page.medications.givenAgainConfirm': '{name} was already given ({when}). Log another dose?',
+	'page.medications.givenAgainConfirmBy':
+		'{name} was already given ({when}, by {by}). Log another dose?',
+	'page.medications.givenAgainButton': 'Log another dose',
 	'page.medications.doseLogged': 'Dose of {name} logged',
 	'page.medications.nextDue': 'Next due',
 	'page.medications.lastGiven': 'Last given',

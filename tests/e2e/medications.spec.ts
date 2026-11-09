@@ -99,6 +99,28 @@ test.describe('medications (owner)', () => {
 			await asMember.getByRole('button', { name: 'Given' }).click();
 			const history = asMember.getByRole('region', { name: 'Dose history' });
 			await expect(history.getByText(SEED.member.displayName)).toBeVisible({ timeout: 8_000 });
+			const removeButtons = history.getByRole('button', { name: 'Remove this dose' });
+			await expect(removeButtons).toHaveCount(1);
+
+			// Once given, the button turns quiet, shows when, and asks before
+			// logging another dose. Cancel logs nothing; confirming logs one more.
+			const givenAgain = asMember.getByRole('button', { name: /^Given \S/ });
+			await expect(givenAgain).toBeVisible();
+			await givenAgain.click();
+			const againDialog = asMember.getByRole('dialog');
+			await expect(againDialog).toContainText('already given');
+			await againDialog.getByRole('button', { name: 'Cancel' }).click();
+			await expect(againDialog).toHaveCount(0);
+			await expect(removeButtons).toHaveCount(1);
+			await givenAgain.click();
+			await asMember.getByRole('dialog').getByRole('button', { name: 'Log another dose' }).click();
+			await expect(removeButtons).toHaveCount(2, { timeout: 8_000 });
+			await removeButtons.first().click();
+			await asMember
+				.getByRole('dialog')
+				.getByRole('button', { name: 'Remove', exact: true })
+				.click();
+			await expect(removeButtons).toHaveCount(1, { timeout: 8_000 });
 
 			// A mistaken dose can be removed; the dialog says a reminder would stay done.
 			await history.getByRole('button', { name: 'Remove this dose' }).click();

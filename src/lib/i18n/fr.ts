@@ -1484,6 +1484,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.save': 'Enregistrer le médicament',
 	'page.medications.given': 'Donné',
 	'page.medications.givenTitle': 'Noter une dose donnée maintenant',
+	'page.medications.givenAt': 'Donné {when}',
+	'page.medications.givenAgainTitle': 'Déjà donné. Noter une autre dose ?',
+	'page.medications.givenAgainConfirm': '{name} a déjà été donné ({when}). Noter une autre dose ?',
+	'page.medications.givenAgainConfirmBy':
+		'{name} a déjà été donné ({when}, par {by}). Noter une autre dose ?',
+	'page.medications.givenAgainButton': 'Noter une autre dose',
 	'page.medications.doseLogged': 'Dose de {name} notée',
 	'page.medications.nextDue': 'Prochaine prise',
 	'page.medications.lastGiven': 'Dernière prise',
