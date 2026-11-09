@@ -7,7 +7,8 @@ import {
 	index,
 	real,
 	primaryKey,
-	check
+	check,
+	type AnySQLiteColumn
 } from 'drizzle-orm/sqlite-core';
 // Relative, not #lib: this file is loaded outside Vite (drizzle-kit, Playwright seed).
 import { DAILY_EVENT_TYPES, WEIGHT_UNITS, SPECIES, DOCUMENT_CATEGORIES } from '../../activityTypes';
@@ -573,12 +574,64 @@ export const reminders = sqliteTable(
 			.default(sql`(unixepoch())`),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
 		notifyLeadDays: text('notify_lead_days'),
-		leadArmedAt: integer('lead_armed_at', { mode: 'timestamp' })
+		leadArmedAt: integer('lead_armed_at', { mode: 'timestamp' }),
+		medicationId: text('medication_id').references((): AnySQLiteColumn => medications.id, {
+			onDelete: 'set null'
+		})
 	},
 	(t) => ({
+		medicationIdx: index('reminder_medication_idx').on(t.medicationId),
 		companionIdx: index('reminder_companion_idx').on(t.companionId),
 		dueIdx: index('reminder_due_idx').on(t.dueAt),
 		seriesDueIdx: index('reminder_series_due_idx').on(t.seriesId, t.dueAt)
+	})
+);
+
+// medications (issue #279). Frequency lives in linked reminders, not here.
+
+export const medications = sqliteTable(
+	'medications',
+	{
+		id: text('id').primaryKey(),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		dose: text('dose'),
+		instructions: text('instructions'),
+		// Local dates, YYYY-MM-DD. Active while endedOn is null or >= today.
+		startedOn: text('started_on').notNull(),
+		endedOn: text('ended_on'),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => ({
+		companionEndedIdx: index('medication_companion_ended_idx').on(t.companionId, t.endedOn)
+	})
+);
+
+export const medicationDoses = sqliteTable(
+	'medication_doses',
+	{
+		id: text('id').primaryKey(),
+		medicationId: text('medication_id')
+			.notNull()
+			.references(() => medications.id, { onDelete: 'cascade' }),
+		givenAt: integer('given_at', { mode: 'timestamp' }).notNull(),
+		givenBy: text('given_by').references(() => users.id, { onDelete: 'set null' }),
+		reminderId: text('reminder_id').references(() => reminders.id, { onDelete: 'set null' }),
+		source: text('source', { enum: ['reminder', 'manual'] }).notNull(),
+		note: text('note'),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => ({
+		medicationGivenIdx: index('medication_dose_given_idx').on(t.medicationId, t.givenAt),
+		// NULLs are distinct in SQLite, so only non-null reminder ids collide.
+		reminderUnique: uniqueIndex('medication_dose_reminder_uniq').on(t.reminderId)
 	})
 );
 
@@ -927,7 +980,25 @@ export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
 	logger: one(users, { fields: [weightEntries.loggedBy], references: [users.id] })
 }));
 
+export const medicationsRelations = relations(medications, ({ one, many }) => ({
+	logger: one(users, { fields: [medications.loggedBy], references: [users.id] }),
+	doses: many(medicationDoses),
+	reminders: many(reminders)
+}));
+
+export const medicationDosesRelations = relations(medicationDoses, ({ one }) => ({
+	medication: one(medications, {
+		fields: [medicationDoses.medicationId],
+		references: [medications.id]
+	}),
+	giver: one(users, { fields: [medicationDoses.givenBy], references: [users.id] })
+}));
+
 export const remindersRelations = relations(reminders, ({ one }) => ({
+	medication: one(medications, {
+		fields: [reminders.medicationId],
+		references: [medications.id]
+	}),
 	logger: one(users, {
 		fields: [reminders.loggedBy],
 		references: [users.id],
