@@ -8,6 +8,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import { insertMedication, deleteMedications, dosesFor } from '../lib/medications';
 
 const COMP = 'seed-comp-ein';
 
@@ -469,3 +470,32 @@ celebrate(
 		await baseExpect(banner).toHaveCount(0);
 	}
 );
+
+test('medications card shows active medications with Given, and is hidden without any @mobile', async ({
+	app,
+	asMember
+}) => {
+	const active = 'e2e-dash-med';
+	const ended = 'e2e-dash-med-ended';
+	const card = asMember.getByTestId('dashboard-medications');
+	try {
+		await asMember.goto(`/${COMP}`);
+		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
+		await expect(card).toHaveCount(0);
+
+		const id = insertMedication(app.dataDir, { companionId: COMP, name: active, dose: '2 ml' });
+		insertMedication(app.dataDir, { companionId: COMP, name: ended, endedOn: '2020-01-01' });
+		await asMember.goto(`/${COMP}`);
+		await waitForHydration(asMember);
+		await expect(card.getByText(active, { exact: true })).toBeVisible();
+		await expect(card.getByText('2 ml')).toBeVisible();
+		await expect(card.getByText(ended)).toHaveCount(0);
+
+		await card.getByRole('button', { name: 'Given' }).click();
+		await expect(asMember.getByText(/Dose of .* logged/).first()).toBeVisible({ timeout: 8_000 });
+		await expect.poll(() => dosesFor(app.dataDir, id).length).toBe(1);
+		expect(dosesFor(app.dataDir, id)[0].givenBy).toBe(SEED.member.id);
+	} finally {
+		deleteMedications(app.dataDir, active, ended);
+	}
+});

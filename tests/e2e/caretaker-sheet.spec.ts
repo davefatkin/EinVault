@@ -4,6 +4,7 @@ import { SEED } from '../lib/seed';
 import { pngUpload, mp4Upload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import { insertMedication, deleteMedications } from '../lib/medications';
 
 // Printable caretaker sheet (#280). Print checks emulate print media and always
 // reset it. Include choices are page state, so nothing here writes seeded data;
@@ -202,6 +203,39 @@ test.describe('caretaker sheet', () => {
 			expect(await pageTop(box), `checkbox for ${name}`).toBeCloseTo(before, 0);
 			expect(await pageTop(below), `content below ${name}`).toBeCloseTo(belowBefore, 0);
 			await box.check();
+		}
+	});
+
+	test('active medications print in the routine section under its Include toggle', async ({
+		app,
+		asMember
+	}) => {
+		const active = 'e2e-sheet-med';
+		const ended = 'e2e-sheet-med-ended';
+		insertMedication(app.dataDir, {
+			companionId: EIN,
+			name: active,
+			dose: '1 tablet',
+			instructions: 'Give **with** food'
+		});
+		insertMedication(app.dataDir, { companionId: EIN, name: ended, endedOn: '2020-01-01' });
+		try {
+			await openSheet(asMember);
+			const routine = asMember.locator('section').filter({
+				has: asMember.getByRole('heading', { name: 'Schedules', exact: true })
+			});
+			const meds = routine.getByTestId('sheet-medications');
+			await expect(meds.getByText(active, { exact: true })).toBeVisible();
+			await expect(meds.getByText('1 tablet')).toBeVisible();
+			await expect(meds.locator('strong', { hasText: 'with' })).toBeVisible();
+			await expect(asMember.getByText(ended)).toHaveCount(0);
+
+			await include(asMember, 'Schedules').uncheck();
+			await inPrint(asMember, async () => {
+				await expect(routine).toBeHidden();
+			});
+		} finally {
+			deleteMedications(app.dataDir, active, ended);
 		}
 	});
 

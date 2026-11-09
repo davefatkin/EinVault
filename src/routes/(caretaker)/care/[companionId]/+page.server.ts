@@ -10,6 +10,8 @@ import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { listSharedNotes } from '#lib/server/notes.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
+import { getMedication, listMedicationSummaries, logDose } from '#lib/server/medications.js';
+import { caretakerMedicationCaps } from '#lib/medications.js';
 
 // Actions need their own assignment + shift gate: the load()'s assignment
 // check does not protect POSTs, so without this an on-shift caretaker could
@@ -117,7 +119,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		sharedNotes: await listSharedNotes(params.companionId),
 		// Open incidents show on or off shift, like the notes; adding to them
 		// needs a shift.
-		openIncidents: await listOpenIncidents([params.companionId])
+		openIncidents: await listOpenIncidents([params.companionId]),
+		// Active medications show on or off shift; "Given" needs a shift.
+		medications: await listMedicationSummaries([params.companionId], { activeOnly: true }),
+		medicationCaps: caretakerMedicationCaps(isOnShift)
 	};
 };
 
@@ -170,6 +175,41 @@ export const actions: Actions = {
 		skipReminder(existing, locals.user.id);
 
 		return { skipSuccess: true };
+	},
+
+	// "Given" for a medication. logDose isn't companion-scoped, so besides the
+	// assignment and shift gate this checks the companion is active and the
+	// medication belongs to it and is still active.
+	given: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const guard = await caretakerActionGuard(
+			locals.user.id,
+			params.companionId,
+			locals.locale,
+			'error.mustBeOnShiftToLogDose'
+		);
+		if (guard) return guard;
+
+		const companion = await db.query.companions.findFirst({
+			where: and(
+				eq(schema.companions.id, params.companionId),
+				eq(schema.companions.isActive, true)
+			),
+			columns: { id: true }
+		});
+		if (!companion) return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+		const medication = id ? await getMedication(params.companionId, id) : undefined;
+		if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+
+		const outcome = await logDose(medication.id, locals.user);
+		if (outcome === 'notFound')
+			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+		if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+		return { doseLogged: medication.name };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {

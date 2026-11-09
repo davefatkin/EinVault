@@ -19,7 +19,8 @@
 		UserCheck,
 		FileText,
 		X,
-		Activity
+		Activity,
+		Pill
 	} from '@lucide/svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -51,6 +52,8 @@
 	import MoodTrendCard from '#lib/components/companion/MoodTrendCard.svelte';
 	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
 	import { incidentPath } from '#lib/incidents.js';
+	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
+	import { ownerMedicationCaps } from '#lib/medications.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let {
@@ -661,6 +664,42 @@
 		initialDays={data.moodTrendDays}
 	/>
 
+	<!-- Medications card: only while something is active -->
+	{#if data.medications.length > 0}
+		<Card data-testid="dashboard-medications">
+			<CardHeader class="pb-3">
+				<div class="flex items-center justify-between">
+					<CardTitle class="text-sm font-semibold flex items-center gap-2">
+						<Pill class="h-4 w-4" />
+						{t(locale, 'page.medications.title')}
+					</CardTitle>
+					<Button
+						href="/{companion.id}/medications"
+						variant="ghost"
+						size="sm"
+						class="h-7 text-xs text-primary px-2"
+					>
+						{t(locale, 'page.dashboard.medicationsViewAll')}
+					</Button>
+				</div>
+			</CardHeader>
+			<CardContent class="px-0 pt-0 pb-2">
+				<ul class="divide-y divide-border">
+					{#each data.medications as medication (medication.id)}
+						<li>
+							<MedicationSummaryRow
+								{medication}
+								caps={ownerMedicationCaps(companion.isActive !== false)}
+								givenAction="?/given"
+								detailHref="/{companion.id}/medications/{medication.id}"
+							/>
+						</li>
+					{/each}
+				</ul>
+			</CardContent>
+		</Card>
+	{/if}
+
 	<!-- Upcoming reminders card -->
 	<Card>
 		<CardHeader class="pb-3">
@@ -785,7 +824,7 @@
 					buttons={data.quickLogButtons}
 					companions={data.companions ?? []}
 					primaryCompanionId={companion.id}
-					{form}
+					form={form && ('quickLogExecuted' in form || 'quickLogError' in form) ? form : null}
 					{species}
 				/>
 			</div>

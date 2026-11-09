@@ -82,6 +82,11 @@ export function ownerMedicationCaps(companionActive: boolean): MedicationCaps {
 	return { canLogDose: companionActive, canEdit: companionActive };
 }
 
+/** Caretakers read active medications always; "Given" needs a shift. Never edit. */
+export function caretakerMedicationCaps(isOnShift: boolean): MedicationCaps {
+	return { canLogDose: isOnShift, canEdit: false };
+}
+
 function minutesOfDay(d: Date, timeZone?: string): number {
 	const parts = new Intl.DateTimeFormat('en-US', {
 		hour: 'numeric',
