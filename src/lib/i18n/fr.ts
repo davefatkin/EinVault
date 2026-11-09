@@ -150,6 +150,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
 	'error.invalidMoodTrendRange': 'Période invalide.',
 	'error.invalidRecurrence': 'Configuration de récurrence invalide.',
+	'error.invalidLeadDays': 'Rappels anticipés invalides.',
+	'error.tooManyLeadDays': 'Utilisez au maximum 3 rappels anticipés.',
+	'error.leadDaysTooLong':
+		'Les rappels anticipés doivent être plus courts que la période de répétition.',
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
 	'error.invalidStatus': 'status doit être "due" ou "all".',

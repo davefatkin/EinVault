@@ -368,3 +368,61 @@ describe('completeReminder outcome', () => {
 		expect(after.outcome).toBe('completed');
 	});
 });
+
+describe('lead times carry to the next occurrence', () => {
+	for (const [name, fn] of [
+		['completeReminder', completeReminder],
+		['skipReminder', skipReminder]
+	] as const) {
+		it(`${name} copies notifyLeadDays and arms the new row`, async () => {
+			const id = `lead-carry-${name}`;
+			await db.insert(schema.reminders).values({
+				id,
+				companionId: 'c-rem',
+				title: 'Weekly',
+				type: 'other',
+				dueAt: new Date(2026, 0, 15, 9, 0, 0),
+				isRecurring: true,
+				recurrenceUnit: 'week',
+				recurrenceInterval: 1,
+				seriesId: id,
+				notifyLeadDays: '2',
+				loggedBy: 'u-rem'
+			} as typeof schema.reminders.$inferInsert);
+			const row = (await db.query.reminders.findFirst({
+				where: eq(schema.reminders.id, id)
+			}))!;
+			const before = Date.now();
+			const res = fn(row, 'u-rem')!;
+			const next = (await db.query.reminders.findFirst({
+				where: eq(schema.reminders.id, res.nextReminderId!)
+			}))!;
+			expect(next.notifyLeadDays).toBe('2');
+			expect(next.leadArmedAt).toBeInstanceOf(Date);
+			expect(Math.abs(next.leadArmedAt!.getTime() - before)).toBeLessThan(5000);
+		});
+	}
+
+	it('leaves a reminder without leads unarmed', async () => {
+		const id = 'lead-carry-none';
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Plain',
+			type: 'other',
+			dueAt: new Date(2026, 0, 15, 9, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'week',
+			recurrenceInterval: 1,
+			seriesId: id,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		const row = (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+		const res = completeReminder(row, 'u-rem')!;
+		const next = (await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, res.nextReminderId!)
+		}))!;
+		expect(next.notifyLeadDays).toBeNull();
+		expect(next.leadArmedAt).toBeNull();
+	});
+});
