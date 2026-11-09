@@ -1090,6 +1090,7 @@ const messages = {
 	'error.noteTooManyFilterTags': 'Filter by at most {max} tags.',
 	'error.noteInvalidTag': 'Each tag must be 1 to {max} characters.',
 	'error.noteNotFound': 'Note not found.',
+	'error.incidentNotFound': 'Incident not found.',
 	'error.invalidDuration': 'Duration must be a whole number of minutes, at most 480.',
 	'error.invalidLoggedAt': 'loggedAt must be a valid ISO 8601 date-time within the allowed range.',
 	'error.journalTooLong': 'Journal entry is too long (max {max} characters).',

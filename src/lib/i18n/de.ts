@@ -1112,6 +1112,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTooManyFilterTags': 'Höchstens {max} Schlagwörter zum Filtern.',
 	'error.noteInvalidTag': 'Jedes Schlagwort muss 1 bis {max} Zeichen lang sein.',
 	'error.noteNotFound': 'Notiz nicht gefunden.',
+	'error.incidentNotFound': 'Vorfall nicht gefunden.',
 	'error.invalidDuration': 'Die Dauer muss eine ganze Zahl von Minuten sein, höchstens 480.',
 	'error.invalidLoggedAt':
 		'loggedAt muss ein gültiges ISO-8601-Datum/Uhrzeit im erlaubten Bereich sein.',

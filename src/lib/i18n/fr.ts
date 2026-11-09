@@ -1113,6 +1113,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.noteTooManyFilterTags': 'Filtrez par {max} tags au maximum.',
 	'error.noteInvalidTag': 'Chaque tag doit comporter de 1 à {max} caractères.',
 	'error.noteNotFound': 'Note introuvable.',
+	'error.incidentNotFound': 'Incident introuvable.',
 	'error.invalidDuration': 'La durée doit être un nombre entier de minutes, au maximum 480.',
 	'error.invalidLoggedAt':
 		'loggedAt doit être une date-heure ISO 8601 valide dans la plage autorisée.',
