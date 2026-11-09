@@ -1,4 +1,5 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { eq } from 'drizzle-orm';
 import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -1116,6 +1117,26 @@ export async function ensureDemoUsers(db: SeedDb): Promise<number> {
 }
 
 /**
+ * Demo-only heads-ups: one recurring and one one-off seeded reminder get lead
+ * times, armed 30 days back so they behave like long-standing settings. Called
+ * from refreshDemoContent only; never from seedRows, so e2e gets no extra pushes.
+ */
+export function seedDemoReminderHeadsUps(
+	db: BetterSQLite3Database<typeof schema>,
+	opts: { now: number }
+): void {
+	const armed = new Date(opts.now - 30 * 24 * 60 * 60 * 1000);
+	db.update(schema.reminders)
+		.set({ notifyLeadDays: '2', leadArmedAt: armed })
+		.where(eq(schema.reminders.id, 'seed-reminder-recurring'))
+		.run();
+	db.update(schema.reminders)
+		.set({ notifyLeadDays: '7,1', leadArmedAt: armed })
+		.where(eq(schema.reminders.id, 'seed-reminder-1'))
+		.run();
+}
+
+/**
  * Demo-only incidents: one open (Ein) and one resolved (Edward). Called from
  * refreshDemoContent after seedContent; never from seedRows, so e2e stays free
  * of incident banners. Anchored to `now` like the rest of the seed.
@@ -1257,6 +1278,7 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// for the whole window between refreshes (issue #158).
 		seedContent(tx as never, { now, shiftEndHours: 25 });
 		seedDemoIncidents(tx as never, { now });
+		seedDemoReminderHeadsUps(tx as never, { now });
 	});
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }

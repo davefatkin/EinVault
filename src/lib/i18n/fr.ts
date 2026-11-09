@@ -150,6 +150,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': "Valeur de fenêtre d'annulation invalide.",
 	'error.invalidMoodTrendRange': 'Période invalide.',
 	'error.invalidRecurrence': 'Configuration de récurrence invalide.',
+	'error.invalidLeadDays': 'Rappels anticipés invalides.',
+	'error.tooManyLeadDays': 'Utilisez au maximum 3 rappels anticipés.',
+	'error.leadDaysTooLong':
+		'Les rappels anticipés doivent être plus courts que la période de répétition.',
 	'error.invalidDefaultRecurrence': 'Unité de récurrence par défaut invalide.',
 	'error.invalidRole': 'Rôle invalide.',
 	'error.invalidStatus': 'status doit être "due" ou "all".',
@@ -330,11 +334,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Récurrence par défaut mise à jour.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		"Recevez des e-mails d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des e-mails d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionNtfy':
-		"Recevez des notifications push d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionBoth':
-		"Recevez des e-mails et des notifications push d'EinVault. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
+		"Recevez des e-mails et des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
@@ -346,7 +350,7 @@ const messages: Record<keyof Messages, string> = {
 		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications par e-mail.',
 	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
 	'page.settings.ntfyTopicHint':
-		"Les notifications push couvrent les rappels dus, les alertes de garde, les célébrations (anniversaires et jours d'arrivée à la maison) et les incidents signalés ou mis à jour par un soignant, pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner, et les push d'incident contiennent le titre et la gravité de l'incident. Laissez vide pour désactiver les push.",
+		"Les notifications push couvrent les rappels dus (et les alertes anticipées définies), les alertes de garde, les célébrations (anniversaires et jours d'arrivée à la maison) et les incidents signalés ou mis à jour par un soignant, pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner, et les push d'incident contiennent le titre et la gravité de l'incident. Laissez vide pour désactiver les push.",
 	'page.settings.securityCard': 'Sécurité',
 	'page.settings.twofaOn': "L'authentification à deux facteurs est activée.",
 	'page.settings.twofaOff':
@@ -944,6 +948,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurer',
 	'page.reminders.completedCount': '{count} rappel terminé',
 	'page.reminders.completedCountPlural': '{count} rappels terminés',
+	'page.reminders.leadDay': '{count} jour',
+	'page.reminders.leadDays': '{count} jours',
+	'page.reminders.leadAnd': 'et',
+	'page.reminders.leadSummary': 'Préavis {list} avant',
+	'page.reminders.leadLabel': 'Préavis',
+	'page.reminders.leadWeek': '1 semaine',
+	'page.reminders.leadWeeks': '{count} semaines',
 	'page.reminders.sortBy': 'Trier par',
 	'page.reminders.sortCreated': 'Créé',
 	'page.reminders.sortDue': "Date d'échéance",
@@ -1258,6 +1269,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'Ouvrir EinVault',
 	'email.reminder.footer':
 		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages EinVault.',
+
+	'email.reminderUpcoming.subjectToday': "Prévu aujourd'hui : {title}",
+	'email.reminderUpcoming.subjectTomorrow': 'Prévu demain : {title}',
+	'email.reminderUpcoming.subjectDays': 'Prévu dans {days} jours : {title}',
+	'email.reminderUpcoming.body': '{companion} a un rappel à venir : {title}',
+	'email.reminderUpcoming.dueLine': 'Échéance : {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Garde bientôt commencée : {caretaker}',

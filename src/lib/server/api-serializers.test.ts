@@ -5,7 +5,8 @@ import {
 	toApiNote,
 	toApiHealthEvent,
 	toApiIncidentUpdate,
-	toApiIncidentLink
+	toApiIncidentLink,
+	toApiReminder
 } from './api-serializers';
 
 // A companion row carrying PII the write-scope shape must never leak, plus a
@@ -163,5 +164,29 @@ describe('api incident serializers', () => {
 		expect(Object.keys(out).sort()).toEqual(
 			['id', 'notes', 'occurredAt', 'title', 'type', 'vetClinic', 'vetName'].sort()
 		);
+	});
+});
+
+describe('toApiReminder', () => {
+	const base = {
+		id: 'r1',
+		companionId: 'c1',
+		title: 'Booster',
+		description: null,
+		type: 'vet',
+		dueAt: new Date('2025-01-01T00:00:00Z'),
+		isRecurring: false,
+		completedAt: null,
+		outcome: null,
+		seriesId: null
+	};
+
+	it('returns leadDays from the stored text', () => {
+		const out = toApiReminder({ ...base, notifyLeadDays: '7,2' } as never);
+		expect(out.leadDays).toEqual([7, 2]);
+	});
+
+	it('returns an empty array when no heads-ups are set', () => {
+		expect(toApiReminder({ ...base, notifyLeadDays: null } as never).leadDays).toEqual([]);
 	});
 });

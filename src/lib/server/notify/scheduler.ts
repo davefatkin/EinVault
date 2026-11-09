@@ -1,29 +1,35 @@
 // Notification scheduler (issue #12). A 60-second in-process interval that
-// (a) produces outbox rows for newly-due reminders and for shifts entering
-// the 24h lead window, then (b) drains the queue through SMTP. Single-flight
+// produces outbox rows for due reminders and reminder heads-ups, shifts
+// entering the 24h lead window, and celebrations, then drains the queue
+// through email and ntfy (incident alerts are enqueued on write). Single-flight
 // like the video worker: overlapping ticks are no-ops. Single-process
 // assumption: the in-memory flag and the select-then-claim pattern both
 // presume one app process per database — the same accepted constraint as the
 // video worker.
 // Delivery is at-least-once: a crash between sendMail and markSent re-sends that one notification after boot recovery — accepted trade-off.
-import { and, eq, gt, isNull, lte } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, lte } from 'drizzle-orm';
 import * as env from '$app/env/private';
 import { celebrationLines, celebrationOn } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';
+import { MAX_LEAD_DAYS, parseLeadDays } from '#lib/reminderLeadTimes.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
 import {
 	buildCelebrationEmail,
 	buildReminderEmail,
+	buildReminderUpcomingEmail,
 	buildShiftEmail,
-	formatWhen
+	formatWhen,
+	reminderUpcomingSubject
 } from '#lib/server/mail/templates.js';
 import { buildCelebrationRows } from './celebrations';
 import { deliverIncident, deliverIncidentNtfy } from './incidents';
 import { publicLink } from './links';
 import { isNtfyEnabled, sendNtfy } from './ntfy';
+import { buildReminderHeadsUpRows } from './reminder-heads-up';
 import {
+	CATCH_UP_MS,
 	claimNext,
 	cleanupOldRows,
 	enqueue,
@@ -44,10 +50,6 @@ const SCAN_INTERVAL_MS = (() => {
 	const raw = Number(env.NOTIFY_SCAN_INTERVAL_MS);
 	return Number.isFinite(raw) && raw >= 250 ? raw : 60 * 1000;
 })();
-// First-deploy guard: reminders overdue longer than this never produce a
-// notification. Without it, enabling the feature on an existing install would
-// email every historically overdue reminder at once.
-const CATCH_UP_MS = 24 * 60 * 60 * 1000;
 // Shift alerts fire when a boundary (start or end) enters this window.
 const SHIFT_LEAD_MS = 24 * 60 * 60 * 1000;
 
@@ -77,6 +79,17 @@ async function categoryRecipients(
 		.where(eq(schema.users.isActive, true));
 }
 
+/**
+ * `companionId:userId` for every caretaker assignment. Caretakers are eligible
+ * for reminder notifications only for companions they are assigned to. Shift
+ * status is deliberately ignored: assigned means notified (product call: a
+ * reminder due off-shift is still that caretaker's companion).
+ */
+async function caretakerAssignments(): Promise<Set<string>> {
+	const assignments = await db.query.companionCaretakers.findMany();
+	return new Set(assignments.map((a) => `${a.companionId}:${a.userId}`));
+}
+
 /** Due reminders → one outbox row per eligible recipient. */
 async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 	const due = await db
@@ -98,11 +111,7 @@ async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 	if (due.length === 0) return [];
 
 	const recipients = await categoryRecipients(schema.users.notifyReminderEmail);
-	// Caretakers are eligible only for companions they are assigned to. Shift
-	// status is deliberately ignored: assigned means notified (product call —
-	// a reminder due off-shift is still that caretaker's companion).
-	const assignments = await db.query.companionCaretakers.findMany();
-	const assigned = new Set(assignments.map((a) => `${a.companionId}:${a.userId}`));
+	const assigned = await caretakerAssignments();
 
 	const mailOn = isMailEnabled();
 	const ntfyOn = isNtfyEnabled();
@@ -138,6 +147,42 @@ async function produceReminders(now: Date): Promise<EnqueueRow[]> {
 		}
 	}
 	return rows;
+}
+
+/**
+ * Reminders with lead times whose shortest eligible heads-up has come (see
+ * pickHeadsUp) → one outbox row per eligible recipient, same recipients as
+ * the due notification. The due_at bound keeps the scan to reminders a lead
+ * could reach (plus a day of slack for DST).
+ */
+async function produceReminderHeadsUps(now: Date): Promise<EnqueueRow[]> {
+	const horizon = new Date(now.getTime() + (MAX_LEAD_DAYS + 1) * 24 * 60 * 60 * 1000);
+	const candidates = await db
+		.select({
+			id: schema.reminders.id,
+			companionId: schema.reminders.companionId,
+			dueAt: schema.reminders.dueAt,
+			notifyLeadDays: schema.reminders.notifyLeadDays,
+			leadArmedAt: schema.reminders.leadArmedAt,
+			createdAt: schema.reminders.createdAt
+		})
+		.from(schema.reminders)
+		.innerJoin(schema.companions, eq(schema.reminders.companionId, schema.companions.id))
+		.where(
+			and(
+				isNull(schema.reminders.completedAt),
+				isNotNull(schema.reminders.notifyLeadDays),
+				gt(schema.reminders.dueAt, now),
+				lte(schema.reminders.dueAt, horizon),
+				eq(schema.companions.isActive, true)
+			)
+		);
+	if (candidates.length === 0) return [];
+	const recipients = await categoryRecipients(schema.users.notifyReminderEmail);
+	return buildReminderHeadsUpRows(candidates, recipients, await caretakerAssignments(), now, {
+		mailOn: isMailEnabled(),
+		ntfyOn: isNtfyEnabled()
+	});
 }
 
 /**
@@ -232,6 +277,7 @@ async function produce(): Promise<void> {
 	const now = new Date();
 	const rows = [
 		...(await produceReminders(now)),
+		...(await produceReminderHeadsUps(now)),
 		...(await produceShifts(now)),
 		...(await produceCelebrations(now))
 	];
@@ -302,6 +348,91 @@ async function deliverReminder(
 		link
 	);
 	await sendMail(message);
+	await markSent(row.id);
+}
+
+type ReminderUpcomingPayload = { reminderId: string; dueAtEpoch: number; leadDays: number };
+
+/**
+ * Delivery re-check for a heads-up row: the reminder is still open, still due
+ * at the row's occurrence time, still carries the row's lead and is not yet
+ * due; the recipient is active, still has the row's channel and, as a
+ * caretaker, is still assigned; the companion is active. Returns what to
+ * render and where to send it, or null to skip.
+ */
+export async function reminderUpcomingContext(
+	row: Pick<ClaimedNotification, 'userId' | 'channel'>,
+	payload: ReminderUpcomingPayload,
+	now: Date
+) {
+	const reminder = await db.query.reminders.findFirst({
+		where: eq(schema.reminders.id, payload.reminderId)
+	});
+	if (!reminder || reminder.completedAt) return null;
+	if (Math.floor(reminder.dueAt.getTime() / 1000) !== payload.dueAtEpoch) return null;
+	if (!parseLeadDays(reminder.notifyLeadDays).includes(payload.leadDays)) return null;
+	if (reminder.dueAt <= now) return null;
+	const user = await eligibleRecipient(row.userId);
+	if (!user) return null;
+	let address: string | null = null;
+	if (row.channel === 'email') address = user.notifyReminderEmail ? user.email : null;
+	else if (row.channel === 'ntfy') address = user.ntfyTopic;
+	if (!address) return null;
+	if (user.role === 'caretaker') {
+		const stillAssigned = await db.query.companionCaretakers.findFirst({
+			where: and(
+				eq(schema.companionCaretakers.companionId, reminder.companionId),
+				eq(schema.companionCaretakers.userId, user.id)
+			)
+		});
+		if (!stillAssigned) return null;
+	}
+	const companion = await db.query.companions.findFirst({
+		where: eq(schema.companions.id, reminder.companionId)
+	});
+	if (!companion || !companion.isActive) return null;
+	return { reminder, companion, user, address };
+}
+
+export async function deliverReminderUpcoming(
+	row: ClaimedNotification,
+	payload: ReminderUpcomingPayload
+): Promise<void> {
+	const now = new Date();
+	const ctx = await reminderUpcomingContext(row, payload, now);
+	if (!ctx) {
+		await markSkipped(row.id);
+		return;
+	}
+	const { reminder, companion, user, address } = ctx;
+	const message = buildReminderUpcomingEmail(
+		user.locale,
+		{ displayName: user.displayName, email: address },
+		{ title: reminder.title, description: reminder.description, dueAt: reminder.dueAt },
+		companion.name,
+		publicLink(`/${companion.id}/reminders`),
+		now
+	);
+	await sendMail(message);
+	await markSent(row.id);
+}
+
+export async function deliverReminderUpcomingNtfy(
+	row: ClaimedNotification,
+	payload: ReminderUpcomingPayload
+): Promise<void> {
+	const now = new Date();
+	const ctx = await reminderUpcomingContext(row, payload, now);
+	if (!ctx) {
+		await markSkipped(row.id);
+		return;
+	}
+	const { reminder, companion, user, address } = ctx;
+	await sendNtfy(address, {
+		title: reminderUpcomingSubject(user.locale, reminder.title, reminder.dueAt, now),
+		message: `${t(user.locale, 'email.reminderUpcoming.body', { companion: companion.name, title: reminder.title })}\n${t(user.locale, 'email.reminderUpcoming.dueLine', { due: formatWhen(user.locale, reminder.dueAt) })}`,
+		click: publicLink(`/${companion.id}/reminders`)
+	});
 	await markSent(row.id);
 }
 
@@ -531,8 +662,17 @@ async function deliverCelebrationNtfy(
 	await markSent(row.id);
 }
 
+/** A kind this build has no deliverer for: skip it rather than strand a claimed row. */
+async function skipUnknownKind(row: ClaimedNotification): Promise<void> {
+	const kind = (row.payload as { kind?: unknown }).kind;
+	console.error(
+		`[notify] no deliverer for kind '${String(kind)}' on channel '${row.channel}'; skipping row ${row.id}`
+	);
+	await markSkipped(row.id);
+}
+
 /** Drain the queue until empty. Per-row errors requeue/fail that row only. */
-async function drain(): Promise<void> {
+export async function drain(): Promise<void> {
 	// One attempt per row per pass: rows requeued after a failure are excluded
 	// until the next scan, so the 60s tick acts as retry backoff instead of
 	// burning every attempt back-to-back against a struggling SMTP server.
@@ -544,6 +684,8 @@ async function drain(): Promise<void> {
 			if (row.channel === 'email') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminder(row, row.payload);
+				} else if (row.payload.kind === 'reminderUpcoming') {
+					await deliverReminderUpcoming(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebration(row, row.payload);
 				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
@@ -553,10 +695,14 @@ async function drain(): Promise<void> {
 					row.payload.kind === 'incidentUpdated'
 				) {
 					await deliverIncident(row, row.payload);
+				} else {
+					await skipUnknownKind(row);
 				}
 			} else if (row.channel === 'ntfy') {
 				if (row.payload.kind === 'reminderDue') {
 					await deliverReminderNtfy(row, row.payload);
+				} else if (row.payload.kind === 'reminderUpcoming') {
+					await deliverReminderUpcomingNtfy(row, row.payload);
 				} else if (row.payload.kind === 'celebration') {
 					await deliverCelebrationNtfy(row, row.payload);
 				} else if (row.payload.kind === 'shiftStart' || row.payload.kind === 'shiftEnd') {
@@ -566,6 +712,8 @@ async function drain(): Promise<void> {
 					row.payload.kind === 'incidentUpdated'
 				) {
 					await deliverIncidentNtfy(row, row.payload);
+				} else {
+					await skipUnknownKind(row);
 				}
 			} else {
 				// apprise lands in a later PR.

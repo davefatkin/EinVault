@@ -6,7 +6,14 @@ import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
+import { validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+
+const LEAD_ERROR_KEYS = {
+	invalid: 'error.invalidLeadDays',
+	tooMany: 'error.tooManyLeadDays',
+	tooLong: 'error.leadDaysTooLong'
+} as const;
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -46,6 +53,12 @@ export const actions: Actions = {
 		if (isRecurring && !recurrence)
 			return fail(400, { error: t(locals.locale, 'error.invalidRecurrence') });
 
+		const leads = validateLeadDays(
+			String(data.get('notifyLeadDays') ?? ''),
+			recurrence ? { unit: recurrence.unit, interval: recurrence.interval } : null
+		);
+		if (!leads.ok) return fail(400, { error: t(locals.locale, LEAD_ERROR_KEYS[leads.reason]) });
+
 		const id = generateId(15);
 		await db.insert(schema.reminders).values({
 			id,
@@ -60,6 +73,8 @@ export const actions: Actions = {
 			recurrenceAnchor: recurrence?.anchor ?? null,
 			recurrenceAnchorValue: recurrence?.anchorValue ?? null,
 			seriesId: isRecurring ? id : null,
+			notifyLeadDays: leads.value,
+			leadArmedAt: leads.value ? new Date() : null,
 			loggedBy: locals.user.id
 		});
 
@@ -87,13 +102,34 @@ export const actions: Actions = {
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
-			columns: { id: true }
+			columns: { id: true, dueAt: true, notifyLeadDays: true }
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		// Only touch lead times when the form sends the field; an empty value clears them.
+		// Re-arm only when the due date or the lead list actually changes.
+		const leadFields: { notifyLeadDays?: string | null; leadArmedAt?: Date | null } = {};
+		let nextLeads = existing.notifyLeadDays;
+		if (data.has('notifyLeadDays')) {
+			const leads = validateLeadDays(
+				String(data.get('notifyLeadDays') ?? ''),
+				recurrence ? { unit: recurrence.unit, interval: recurrence.interval } : null
+			);
+			if (!leads.ok) return fail(400, { error: t(locals.locale, LEAD_ERROR_KEYS[leads.reason]) });
+			nextLeads = leads.value;
+			leadFields.notifyLeadDays = leads.value;
+		}
+		// The datetime-local input drops seconds, so compare at minute precision.
+		const dueChanged =
+			Math.floor(existing.dueAt.getTime() / 60_000) !== Math.floor(dueAt.getTime() / 60_000);
+		if (dueChanged || nextLeads !== existing.notifyLeadDays) {
+			leadFields.leadArmedAt = nextLeads ? new Date() : null;
+		}
 
 		await db
 			.update(schema.reminders)
 			.set({
+				...leadFields,
 				title,
 				description,
 				type,

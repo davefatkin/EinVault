@@ -4,7 +4,13 @@ import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { db, schema } from '#lib/server/db/index.js';
 import { currentSeverity } from '#lib/incidents.js';
-import { seedRows, seedDemoIncidents, SEED, copyDemoPhotoFiles } from '#lib/server/db/demo-seed.js';
+import {
+	seedRows,
+	seedDemoIncidents,
+	seedDemoReminderHeadsUps,
+	SEED,
+	copyDemoPhotoFiles
+} from '#lib/server/db/demo-seed.js';
 
 // copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
 // a developer's journal photos in the ./data directory. Stub the fs operations
@@ -351,5 +357,36 @@ describe('seedDemoIncidents', () => {
 		expect(await incidents()).toHaveLength(2);
 		expect(await db.select().from(schema.healthEventUpdates)).toHaveLength(5);
 		expect(await db.select().from(schema.healthEventLinks)).toHaveLength(1);
+	});
+});
+
+describe('seedDemoReminderHeadsUps', () => {
+	const now = 1_700_000_000_000;
+
+	beforeEach(async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	const withLeads = async () =>
+		(await db.query.reminders.findMany()).filter((r) => r.notifyLeadDays !== null);
+
+	it('seedRows alone leaves every reminder without heads-ups', async () => {
+		seedRows(db as never, { now });
+		expect(await withLeads()).toEqual([]);
+	});
+
+	it('sets heads-ups on exactly two reminders, one recurring, armed 30 days back', async () => {
+		seedRows(db as never, { now });
+		seedDemoReminderHeadsUps(db as never, { now });
+		const rows = await withLeads();
+		expect(rows).toHaveLength(2);
+		expect(rows.filter((r) => r.isRecurring).map((r) => r.notifyLeadDays)).toEqual(['2']);
+		expect(rows.filter((r) => !r.isRecurring).map((r) => r.notifyLeadDays)).toEqual(['7,1']);
+		for (const r of rows) {
+			expect(r.leadArmedAt!.getTime()).toBe(now - 30 * 24 * 60 * 60 * 1000);
+		}
 	});
 });

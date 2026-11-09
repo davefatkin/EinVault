@@ -149,6 +149,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',
 	'error.invalidMoodTrendRange': 'Periodo non valido.',
 	'error.invalidRecurrence': 'Configurazione ricorrenza non valida.',
+	'error.invalidLeadDays': 'Preavvisi non validi.',
+	'error.tooManyLeadDays': 'Usa al massimo 3 preavvisi.',
+	'error.leadDaysTooLong': 'I preavvisi devono essere più brevi del periodo di ripetizione.',
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
 	'error.invalidStatus': 'status deve essere "due" oppure "all".',
@@ -328,11 +331,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Ricorrenza predefinita aggiornata.',
 	'page.settings.notificationsCard': 'Notifiche',
 	'page.settings.notificationsDescription':
-		'Ricevi e-mail da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi e-mail da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Ricevi notifiche push da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notificationsDescriptionBoth':
-		'Ricevi e-mail e notifiche push da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi e-mail e notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notifyReminderEmailLabel': 'Inviami una e-mail quando un promemoria è in scadenza',
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
@@ -344,7 +347,7 @@ const messages: Record<keyof Messages, string> = {
 		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche via e-mail.',
 	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
 	'page.settings.ntfyTopicHint':
-		"Le notifiche push coprono i promemoria in scadenza, gli avvisi di turno, le celebrazioni (compleanni e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
+		"Le notifiche push coprono i promemoria in scadenza (e gli eventuali preavvisi impostati), gli avvisi di turno, le celebrazioni (compleanni e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
 	'page.settings.securityCard': 'Sicurezza',
 	'page.settings.twofaOn': "L'autenticazione a due fattori è attiva.",
 	'page.settings.twofaOff':
@@ -939,6 +942,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Ripristina',
 	'page.reminders.completedCount': '{count} promemoria completato',
 	'page.reminders.completedCountPlural': '{count} promemoria completati',
+	'page.reminders.leadDay': '{count} giorno',
+	'page.reminders.leadDays': '{count} giorni',
+	'page.reminders.leadAnd': 'e',
+	'page.reminders.leadSummary': 'Preavviso {list} prima',
+	'page.reminders.leadLabel': 'Preavviso',
+	'page.reminders.leadWeek': '1 settimana',
+	'page.reminders.leadWeeks': '{count} settimane',
 	'page.reminders.sortBy': 'Ordina per',
 	'page.reminders.sortCreated': 'Creato',
 	'page.reminders.sortDue': 'Data di scadenza',
@@ -1253,6 +1263,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'Apri EinVault',
 	'email.reminder.footer':
 		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di EinVault.',
+
+	'email.reminderUpcoming.subjectToday': 'In scadenza oggi: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'In scadenza domani: {title}',
+	'email.reminderUpcoming.subjectDays': 'In scadenza tra {days} giorni: {title}',
+	'email.reminderUpcoming.body': '{companion} ha un promemoria in arrivo: {title}',
+	'email.reminderUpcoming.dueLine': 'Scadenza: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno in arrivo: {caretaker}',

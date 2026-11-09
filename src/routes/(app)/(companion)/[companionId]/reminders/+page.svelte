@@ -26,6 +26,8 @@
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
 	import { clearSubmittingFlag } from '#lib/clearSubmittingFlag.js';
+	import LeadDaysPicker from '#lib/components/reminders/LeadDaysPicker.svelte';
+	import { formatLeadDays, parseLeadDays } from '#lib/reminderLeadTimes.js';
 	import RecurrenceEditor from '#lib/components/reminders/RecurrenceEditor.svelte';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
@@ -36,6 +38,15 @@
 	const locale = getLocale();
 	let showForm = $state(false);
 	let submitting = $state(false);
+	let addLeads = $state<number[]>([]);
+	let addRecurrence = $state<{ unit: 'day' | 'week' | 'month' | 'year'; interval: number } | null>(
+		null
+	);
+	let editLeads = $state<number[]>([]);
+	let editRecurrence = $state<{
+		unit: 'day' | 'week' | 'month' | 'year';
+		interval: number;
+	} | null>(null);
 
 	const REMINDER_TYPES = reminderTypeOptions(locale);
 	const REMINDER_TYPE_VALUES = REMINDER_TYPES.map((t) => t.value);
@@ -52,6 +63,8 @@
 	let prefillApplied = $state(false);
 
 	function resetPrefill() {
+		addLeads = [];
+		addRecurrence = null;
 		prefillTitle = '';
 		prefillType = '';
 		prefillDescription = '';
@@ -147,6 +160,11 @@
 	});
 
 	function startEdit(reminder: (typeof data.reminders)[0]) {
+		editLeads = parseLeadDays(reminder.notifyLeadDays);
+		editRecurrence =
+			reminder.isRecurring && reminder.recurrenceUnit && reminder.recurrenceInterval
+				? { unit: reminder.recurrenceUnit, interval: reminder.recurrenceInterval }
+				: null;
 		editingId = reminder.id;
 	}
 
@@ -293,6 +311,9 @@
 						>
 						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
 					</div>
+				{/if}
+				{#if parseLeadDays(r.notifyLeadDays).length}
+					<p class="text-foreground">{formatLeadDays(locale, parseLeadDays(r.notifyLeadDays))}</p>
 				{/if}
 				{#if r.description}
 					<div class="pt-1">
@@ -467,7 +488,12 @@
 							rows={3}
 						/>
 					</div>
-					<RecurrenceEditor userDefault={data.defaultRecurrenceUnit} idPrefix="add" />
+					<RecurrenceEditor
+						userDefault={data.defaultRecurrenceUnit}
+						idPrefix="add"
+						onRecurrenceChange={(r) => (addRecurrence = r)}
+					/>
+					<LeadDaysPicker bind:value={addLeads} recurrence={addRecurrence} />
 
 					<div class="flex gap-3">
 						<Button type="submit" disabled={submitting}>
@@ -582,7 +608,9 @@
 								value={reminder}
 								userDefault={data.defaultRecurrenceUnit}
 								idPrefix="edit-{reminder.id}"
+								onRecurrenceChange={(r) => (editRecurrence = r)}
 							/>
+							<LeadDaysPicker bind:value={editLeads} recurrence={editRecurrence} />
 							<div class="flex gap-3">
 								<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
 								<Button type="button" variant="outline" size="sm" onclick={() => (editingId = null)}
@@ -626,6 +654,11 @@
 											variant="inline"
 										/>
 									</p>
+									{#if parseLeadDays(reminder.notifyLeadDays).length}
+										<p class="text-xs mt-0.5 text-muted-foreground">
+											{formatLeadDays(locale, parseLeadDays(reminder.notifyLeadDays))}
+										</p>
+									{/if}
 								</div>
 							</button>
 							{#if data.companion.isActive !== false}

@@ -147,6 +147,9 @@ const messages = {
 	'error.invalidReminderUndo': 'Invalid undo window value.',
 	'error.invalidMoodTrendRange': 'Invalid mood range.',
 	'error.invalidRecurrence': 'Invalid recurrence configuration.',
+	'error.invalidLeadDays': 'Invalid heads-up times.',
+	'error.tooManyLeadDays': 'Use at most 3 heads-up times.',
+	'error.leadDaysTooLong': 'Heads-up times must be shorter than the repeat period.',
 	'error.invalidDefaultRecurrence': 'Invalid default recurrence unit.',
 	'error.invalidRole': 'Invalid role.',
 	'error.invalidStatus': 'status must be "due" or "all".',
@@ -318,11 +321,11 @@ const messages = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Default recurrence updated.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		'Get emails from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get emails from EinVault. Reminders can warn you ahead of time too, if heads-ups are set. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Get push notifications from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get push notifications from EinVault. Reminders can warn you ahead of time too, if heads-ups are set. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionBoth':
-		'Get emails and push notifications from EinVault. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
+		'Get emails and push notifications from EinVault. Reminders can warn you ahead of time too, if heads-ups are set. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
@@ -332,7 +335,7 @@ const messages = {
 		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
-		'Pushes cover due reminders, shift alerts, celebrations (birthdays and homecoming days), and incidents a caretaker logs or updates, for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe, and incident pushes include the incident title and severity. Leave empty to disable pushes.',
+		'Pushes cover due reminders (plus any heads-ups set ahead of them), shift alerts, celebrations (birthdays and homecoming days), and incidents a caretaker logs or updates, for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe, and incident pushes include the incident title and severity. Leave empty to disable pushes.',
 	'page.settings.securityCard': 'Security',
 	'page.settings.twofaOn': 'Two-factor authentication is on.',
 	'page.settings.twofaOff': 'Add a second step at sign-in with an authenticator app.',
@@ -928,6 +931,13 @@ const messages = {
 	'page.reminders.restore': 'Restore',
 	'page.reminders.completedCount': '{count} completed reminder',
 	'page.reminders.completedCountPlural': '{count} completed reminders',
+	'page.reminders.leadDay': '{count} day',
+	'page.reminders.leadDays': '{count} days',
+	'page.reminders.leadAnd': 'and',
+	'page.reminders.leadSummary': 'Heads-up {list} before',
+	'page.reminders.leadLabel': 'Heads-up',
+	'page.reminders.leadWeek': '1 week',
+	'page.reminders.leadWeeks': '{count} weeks',
 	'page.reminders.sortBy': 'Sort by',
 	'page.reminders.sortCreated': 'Created',
 	'page.reminders.sortDue': 'Due date',
@@ -1233,6 +1243,13 @@ const messages = {
 	'email.reminder.cta': 'Open EinVault',
 	'email.reminder.footer':
 		'You are receiving this because reminder email notifications are enabled in your EinVault settings.',
+
+	// Email: reminder heads-up
+	'email.reminderUpcoming.subjectToday': 'Coming up today: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Coming up tomorrow: {title}',
+	'email.reminderUpcoming.subjectDays': 'Coming up in {days} days: {title}',
+	'email.reminderUpcoming.body': '{companion} has a reminder coming up: {title}',
+	'email.reminderUpcoming.dueLine': 'Due: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Shift starting soon: {caretaker}',

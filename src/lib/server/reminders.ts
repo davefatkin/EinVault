@@ -103,6 +103,8 @@ function resolveReminder(
 				recurrenceAnchor: reminder.recurrenceAnchor,
 				recurrenceAnchorValue: reminder.recurrenceAnchorValue,
 				seriesId: reminder.seriesId ?? reminder.id,
+				notifyLeadDays: reminder.notifyLeadDays,
+				leadArmedAt: reminder.notifyLeadDays ? new Date() : null,
 				loggedBy: reminder.loggedBy
 			})
 			.run();

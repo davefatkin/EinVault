@@ -9,6 +9,7 @@ import type {
 	caretakerShifts,
 	users
 } from '#lib/server/db/schema.js';
+import { parseLeadDays } from '#lib/reminderLeadTimes.js';
 import type { NoteWithTags } from '#lib/server/notes.js';
 import type { LinkedEvent } from '#lib/incidents.js';
 import type { QuickLogButton } from '#lib/server/quick-logs.js';
@@ -170,7 +171,8 @@ export function toApiReminder(row: ReminderRow) {
 		isRecurring: row.isRecurring,
 		completedAt: row.completedAt,
 		outcome: row.outcome,
-		seriesId: row.seriesId
+		seriesId: row.seriesId,
+		leadDays: parseLeadDays(row.notifyLeadDays)
 	};
 }
 

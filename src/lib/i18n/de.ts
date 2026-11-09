@@ -150,6 +150,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': 'Ungültiger Wert für Rückgängig-Fenster.',
 	'error.invalidMoodTrendRange': 'Ungültiger Zeitraum.',
 	'error.invalidRecurrence': 'Ungültige Wiederholungskonfiguration.',
+	'error.invalidLeadDays': 'Ungültige Vorab-Hinweise.',
+	'error.tooManyLeadDays': 'Höchstens 3 Vorab-Hinweise sind möglich.',
+	'error.leadDaysTooLong': 'Vorab-Hinweise müssen kürzer sein als der Wiederholungszeitraum.',
 	'error.invalidDefaultRecurrence': 'Ungültige Standard-Wiederholungseinheit.',
 	'error.invalidRole': 'Ungültige Rolle.',
 	'error.invalidStatus': 'status muss "due" oder "all" sein.',
@@ -333,11 +336,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Standard-Wiederholung aktualisiert.',
 	'page.settings.notificationsCard': 'Benachrichtigungen',
 	'page.settings.notificationsDescription':
-		'Erhalte E-Mails von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte E-Mails von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Erhalte Push-Benachrichtigungen von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionBoth':
-		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
+		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
@@ -349,7 +352,7 @@ const messages: Record<keyof Messages, string> = {
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten umfassen fällige Erinnerungen, Schichtmeldungen, Feiern (Geburtstage und Ankunftstage) und Vorfälle, die eine Betreuungsperson erfasst oder aktualisiert, für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren, und Vorfall-Pushes enthalten Titel und Schweregrad des Vorfalls. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen (samt eingestellter Vorwarnungen), Schichtmeldungen, Feiern (Geburtstage und Ankunftstage) und Vorfälle, die eine Betreuungsperson erfasst oder aktualisiert, für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren, und Vorfall-Pushes enthalten Titel und Schweregrad des Vorfalls. Leer lassen, um Push zu deaktivieren.',
 	'page.settings.securityCard': 'Sicherheit',
 	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
 	'page.settings.twofaOff':
@@ -944,6 +947,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Wiederherstellen',
 	'page.reminders.completedCount': '{count} erledigte Erinnerung',
 	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',
+	'page.reminders.leadDay': '{count} Tag',
+	'page.reminders.leadDays': '{count} Tage',
+	'page.reminders.leadAnd': 'und',
+	'page.reminders.leadSummary': 'Vorab-Hinweis {list} vorher',
+	'page.reminders.leadLabel': 'Vorab-Hinweis',
+	'page.reminders.leadWeek': '1 Woche',
+	'page.reminders.leadWeeks': '{count} Wochen',
 	'page.reminders.sortBy': 'Sortieren nach',
 	'page.reminders.sortCreated': 'Erstellt',
 	'page.reminders.sortDue': 'Fälligkeitsdatum',
@@ -1259,6 +1269,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'EinVault öffnen',
 	'email.reminder.footer':
 		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+
+	'email.reminderUpcoming.subjectToday': 'Heute fällig: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Morgen fällig: {title}',
+	'email.reminderUpcoming.subjectDays': 'In {days} Tagen fällig: {title}',
+	'email.reminderUpcoming.body': 'Für {companion} steht bald eine Erinnerung an: {title}',
+	'email.reminderUpcoming.dueLine': 'Fällig: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Schicht beginnt bald: {caretaker}',

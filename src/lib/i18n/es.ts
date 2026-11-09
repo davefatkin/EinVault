@@ -150,6 +150,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': 'Valor de ventana de deshacer no válido.',
 	'error.invalidMoodTrendRange': 'Periodo no válido.',
 	'error.invalidRecurrence': 'Configuración de recurrencia no válida.',
+	'error.invalidLeadDays': 'Avisos previos no válidos.',
+	'error.tooManyLeadDays': 'Usa como máximo 3 avisos previos.',
+	'error.leadDaysTooLong': 'Los avisos previos deben ser más cortos que el período de repetición.',
 	'error.invalidDefaultRecurrence': 'Unidad de recurrencia predeterminada no válida.',
 	'error.invalidRole': 'Rol no válido.',
 	'error.invalidStatus': 'status debe ser "due" o "all".',
@@ -332,11 +335,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Recurrencia predeterminada actualizada.',
 	'page.settings.notificationsCard': 'Notificaciones',
 	'page.settings.notificationsDescription':
-		'Recibe correos de EinVault. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
+		'Recibe correos de EinVault. Los recordatorios también pueden avisarte con antelación si hay avisos previos configurados. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Recibe notificaciones push de EinVault. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
+		'Recibe notificaciones push de EinVault. Los recordatorios también pueden avisarte con antelación si hay avisos previos configurados. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notificationsDescriptionBoth':
-		'Recibe correos y notificaciones push de EinVault. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
+		'Recibe correos y notificaciones push de EinVault. Los recordatorios también pueden avisarte con antelación si hay avisos previos configurados. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notifyReminderEmailLabel': 'Enviarme un correo cuando venza un recordatorio',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviarme un correo 24 horas antes de que un turno empiece o termine',
@@ -349,7 +352,7 @@ const messages: Record<keyof Messages, string> = {
 		'Añade un correo electrónico a tu cuenta para recibir notificaciones por correo.',
 	'page.settings.ntfyTopicLabel': 'Tema de ntfy',
 	'page.settings.ntfyTopicHint':
-		'Las notificaciones push cubren recordatorios vencidos, avisos de turnos, celebraciones (cumpleaños y días de llegada a casa) e incidentes que un cuidador registra o actualiza, de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse, y los avisos de incidentes incluyen el título y la gravedad del incidente. Déjalo vacío para desactivar los push.',
+		'Las notificaciones push cubren recordatorios vencidos (y los avisos previos configurados), avisos de turnos, celebraciones (cumpleaños y días de llegada a casa) e incidentes que un cuidador registra o actualiza, de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse, y los avisos de incidentes incluyen el título y la gravedad del incidente. Déjalo vacío para desactivar los push.',
 	'page.settings.securityCard': 'Seguridad',
 	'page.settings.twofaOn': 'La autenticación de dos factores está activada.',
 	'page.settings.twofaOff': 'Añade un segundo paso al iniciar sesión con una app autenticadora.',
@@ -942,6 +945,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} recordatorio completado',
 	'page.reminders.completedCountPlural': '{count} recordatorios completados',
+	'page.reminders.leadDay': '{count} día',
+	'page.reminders.leadDays': '{count} días',
+	'page.reminders.leadAnd': 'y',
+	'page.reminders.leadSummary': 'Aviso previo {list} antes',
+	'page.reminders.leadLabel': 'Aviso previo',
+	'page.reminders.leadWeek': '1 semana',
+	'page.reminders.leadWeeks': '{count} semanas',
 	'page.reminders.sortBy': 'Ordenar por',
 	'page.reminders.sortCreated': 'Creado',
 	'page.reminders.sortDue': 'Fecha de vencimiento',
@@ -1254,6 +1264,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'Abrir EinVault',
 	'email.reminder.footer':
 		'Recibes este correo porque las notificaciones de recordatorios están activadas en tus ajustes de EinVault.',
+
+	'email.reminderUpcoming.subjectToday': 'Vence hoy: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Vence mañana: {title}',
+	'email.reminderUpcoming.subjectDays': 'Vence en {days} días: {title}',
+	'email.reminderUpcoming.body': '{companion} tiene un recordatorio próximo: {title}',
+	'email.reminderUpcoming.dueLine': 'Vence: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno a punto de empezar: {caretaker}',
