@@ -37,12 +37,20 @@ describe('Log event for reminders', () => {
 	it('is offered for mapped types only when the reminder has no medication', () => {
 		expect(reminderAllowsLogEvent(base)).toBe(true);
 		expect(reminderAllowsLogEvent({ ...base, type: 'grooming' })).toBe(false);
-		expect(reminderAllowsLogEvent({ type: 'medication', medicationId: 'm1' })).toBe(false);
-		expect(reminderAllowsLogEvent({ type: 'medication', medicationId: null })).toBe(true);
+		expect(reminderAllowsLogEvent({ ...base, medicationId: 'm1' })).toBe(false);
 	});
-	it('has no follow-up URL for a medication-linked reminder', () => {
+	it('is never offered for medication reminders, linked or not', () => {
+		expect(reminderAllowsLogEvent({ type: 'medication', medicationId: null })).toBe(false);
+		expect(reminderAllowsLogEvent({ type: 'medication', medicationId: 'm1' })).toBe(false);
+	});
+	it('has a follow-up URL exactly when the button is offered', () => {
 		expect(reminderLogEventUrl(base)).toBe('/c1/health?new=1&title=Checkup&type=vet_visit');
-		expect(reminderLogEventUrl({ ...base, type: 'other' })).toBe('/c1/health?new=1&title=Checkup');
-		expect(reminderLogEventUrl({ ...base, type: 'medication', medicationId: 'm1' })).toBeNull();
+		for (const r of [
+			{ ...base, type: 'other' as const },
+			{ ...base, type: 'medication' as const },
+			{ ...base, type: 'medication' as const, medicationId: 'm1' },
+			{ ...base, medicationId: 'm1' }
+		])
+			expect(reminderLogEventUrl(r)).toBeNull();
 	});
 });
