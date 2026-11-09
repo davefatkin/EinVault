@@ -143,6 +143,37 @@ describe('medications page actions', () => {
 		expect(rows.map((r) => r.endedOn).sort()).toEqual(['2020-01-01', null].sort());
 	});
 
+	it('deleteDose removes a dose of this medication, owners only', async () => {
+		const m = await med();
+		expect(await call(actions.given, { id: m })).toEqual({ doseLogged: 'Carprofen' });
+		const [dose] = await doses(m);
+		const caretaker = await call(
+			detailActions.deleteDose,
+			{ doseId: dose.id },
+			{
+				id: m,
+				role: 'caretaker'
+			}
+		);
+		expect(caretaker.status).toBe(403);
+		const elsewhere = await call(
+			detailActions.deleteDose,
+			{ doseId: dose.id },
+			{
+				id: m,
+				companionId: other
+			}
+		);
+		expect(elsewhere.status).toBe(404);
+		expect(await doses(m)).toHaveLength(1);
+		expect(await call(detailActions.deleteDose, { doseId: dose.id }, { id: m })).toEqual({
+			doseRemoved: true
+		});
+		expect(await doses(m)).toHaveLength(0);
+		const again = await call(detailActions.deleteDose, { doseId: dose.id }, { id: m });
+		expect(again).toMatchObject({ status: 404, data: { error: 'Dose not found.' } });
+	});
+
 	it("detail actions don't touch another companion's medication", async () => {
 		const m = await med(other);
 		for (const name of ['end', 'restart', 'delete'] as const) {

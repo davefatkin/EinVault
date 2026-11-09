@@ -11,6 +11,7 @@ import {
 	deleteMedication,
 	listMedicationSummaries,
 	listDoses,
+	deleteDose,
 	sweepEndedMedicationReminders,
 	logDose,
 	formatMedicationScheduleLine,
@@ -290,6 +291,36 @@ describe('listDoses', () => {
 			note: null
 		});
 		expect((await listDoses(a, 1, 1)).map((d) => d.givenAt.getTime() / 1000)).toEqual([200]);
+	});
+});
+
+describe('deleteDose', () => {
+	it('removes only that dose; its reminder stays completed', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const done = await addReminder(id, true);
+		const linked = await addDose(id, 100);
+		await db
+			.update(schema.medicationDoses)
+			.set({ reminderId: done, source: 'reminder' })
+			.where(eq(schema.medicationDoses.id, linked));
+		const kept = await addDose(id, 200);
+		expect(await deleteDose(C1, id, linked)).toBe(true);
+		expect((await listDoses(id)).map((d) => d.id)).toEqual([kept]);
+		const [reminder] = await db
+			.select()
+			.from(schema.reminders)
+			.where(eq(schema.reminders.id, done));
+		expect(reminder).toMatchObject({ outcome: 'completed' });
+		expect(reminder.completedAt).not.toBeNull();
+	});
+	it("refuses another companion's or another medication's dose", async () => {
+		const id = await createMedication(C1, input(), U1);
+		const otherMed = await createMedication(C1, input({ name: 'Other' }), U1);
+		const dose = await addDose(id, 100);
+		expect(await deleteDose(C2, id, dose)).toBe(false);
+		expect(await deleteDose(C1, otherMed, dose)).toBe(false);
+		expect(await deleteDose(C1, id, 'nope')).toBe(false);
+		expect((await listDoses(id)).map((d) => d.id)).toEqual([dose]);
 	});
 });
 

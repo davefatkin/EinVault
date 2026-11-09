@@ -40,6 +40,9 @@
 	let confirmDelete = $state(false);
 	let endForm = $state<HTMLFormElement | null>(null);
 	let deleteForm = $state<HTMLFormElement | null>(null);
+	// The dose the Remove dialog asks about; one dialog and form serve every row.
+	let removeDoseId = $state<string | null>(null);
+	let removeDoseForm = $state<HTMLFormElement | null>(null);
 
 	const sectionHeading =
 		'mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground';
@@ -206,6 +209,18 @@
 									? t(locale, 'page.medications.fromReminder')
 									: t(locale, 'page.medications.loggedByHand')}
 							</Badge>
+							{#if caps.canEdit}
+								<Button
+									variant="ghost"
+									size="icon-sm"
+									class="text-muted-foreground"
+									aria-label={t(locale, 'page.medications.removeDoseLabel')}
+									title={t(locale, 'page.medications.removeDoseLabel')}
+									onclick={() => (removeDoseId = dose.id)}
+								>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							{/if}
 							{#if dose.note}
 								<p class="w-full text-xs text-muted-foreground">{dose.note}</p>
 							{/if}
@@ -233,6 +248,19 @@
 				endForm?.requestSubmit();
 			}}
 			oncancel={() => (confirmEnd = false)}
+		/>
+		<form bind:this={removeDoseForm} method="POST" action="?/deleteDose" use:enhance class="hidden">
+			<input type="hidden" name="doseId" value={removeDoseId ?? ''} />
+		</form>
+		<ConfirmDialog
+			open={removeDoseId !== null}
+			message={t(locale, 'page.medications.removeDoseConfirm')}
+			confirmLabel={t(locale, 'page.medications.removeDose')}
+			onconfirm={() => {
+				removeDoseForm?.requestSubmit();
+				removeDoseId = null;
+			}}
+			oncancel={() => (removeDoseId = null)}
 		/>
 		<ConfirmDialog
 			open={confirmDelete}

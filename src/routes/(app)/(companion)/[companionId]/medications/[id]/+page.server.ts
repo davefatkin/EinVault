@@ -5,6 +5,7 @@ import { t } from '#lib/i18n/index.js';
 import { localDateISO } from '#lib/date.js';
 import { db, schema } from '#lib/server/db/index.js';
 import {
+	deleteDose,
 	deleteMedication,
 	endMedication,
 	listDoses,
@@ -104,5 +105,15 @@ export const actions: Actions = {
 		redirect(303, `/${params.companionId}/medications`);
 	},
 
-	given: givenAction
+	given: givenAction,
+
+	deleteDose: async ({ request, params, locals }) => {
+		const denied = await ownerOnly(locals, params.companionId);
+		if (denied) return denied;
+		const data = await request.formData();
+		const doseId = String(data.get('doseId') ?? '');
+		if (!doseId || !(await deleteDose(params.companionId, params.id, doseId)))
+			return fail(404, { error: t(locals.locale, 'error.doseNotFound') });
+		return { doseRemoved: true };
+	}
 };

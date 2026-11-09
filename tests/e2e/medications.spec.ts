@@ -100,6 +100,13 @@ test.describe('medications (owner)', () => {
 			const history = asMember.getByRole('region', { name: 'Dose history' });
 			await expect(history.getByText(SEED.member.displayName)).toBeVisible({ timeout: 8_000 });
 
+			// A mistaken dose can be removed; the dialog says a reminder would stay done.
+			await history.getByRole('button', { name: 'Remove this dose' }).click();
+			const removeDialog = asMember.getByRole('dialog');
+			await expect(removeDialog).toContainText('stays done');
+			await removeDialog.getByRole('button', { name: 'Remove', exact: true }).click();
+			await expect(history.getByText('No doses logged yet.')).toBeVisible({ timeout: 8_000 });
+
 			// End makes today the last day: still active (a dose can be logged until
 			// midnight), shown as ending today, and its reminder is gone.
 			await asMember.getByRole('button', { name: 'End', exact: true }).click();

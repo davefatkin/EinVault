@@ -328,6 +328,35 @@ export async function listDoses(medicationId: string, limit = 50, offset = 0): P
 	}));
 }
 
+/**
+ * Remove a dose logged by mistake: only the dose row, and only when it belongs
+ * to this medication of this companion. A reminder it completed stays
+ * completed (Restore on the reminders page reopens it).
+ */
+export async function deleteDose(
+	companionId: string,
+	medicationId: string,
+	doseId: string
+): Promise<boolean> {
+	const owned = db
+		.select({ id: schema.medications.id })
+		.from(schema.medications)
+		.where(
+			and(eq(schema.medications.id, medicationId), eq(schema.medications.companionId, companionId))
+		);
+	const removed = await db
+		.delete(schema.medicationDoses)
+		.where(
+			and(
+				eq(schema.medicationDoses.id, doseId),
+				eq(schema.medicationDoses.medicationId, medicationId),
+				inArray(schema.medicationDoses.medicationId, owned)
+			)
+		)
+		.returning({ id: schema.medicationDoses.id });
+	return removed.length > 0;
+}
+
 /** Safety net: ended medications never keep open reminders. */
 export async function sweepEndedMedicationReminders(
 	today: string = localDateISO()
