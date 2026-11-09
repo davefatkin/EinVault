@@ -2,7 +2,12 @@ import { test, expect } from '../lib/fixtures';
 import type { Page } from '@playwright/test';
 import { waitForHydration } from '../lib/hydration';
 import { pdfUpload, pngUpload } from '../lib/files';
-import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import {
+	createIncidentViaUi,
+	deleteIncidentViaUi,
+	incidentUrl,
+	waitForCreatedIncidentId
+} from '../lib/incidents';
 
 // Owner incident page (#282). Every test creates its own incident with a unique
 // title and deletes it in `finally`, so no open incident outlives the test.
@@ -36,11 +41,10 @@ test.describe('incidents (owner)', () => {
 			await asMember.locator('#incident-severity').selectOption('severe');
 			await asMember.locator('#incident-notes').fill('Started after the long hike.');
 			await asMember.locator('#incident-files').setInputFiles(pngUpload('paw.png'));
+			const created = waitForCreatedIncidentId(asMember, 'create');
 			await asMember.getByRole('button', { name: 'Save incident' }).click();
-			await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health/incidents/(?!new$)[^/?#]+$`), {
-				timeout: 10_000
-			});
-			id = new URL(asMember.url()).pathname.split('/').pop();
+			id = await created;
+			await expect(asMember).toHaveURL(incidentUrl(COMP, id), { timeout: 10_000 });
 
 			await expect(asMember.getByRole('heading', { level: 1, name: title })).toBeVisible();
 			await expect(statusChip(asMember)).toContainText('Ongoing');

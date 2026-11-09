@@ -2,7 +2,11 @@ import { test, expect } from '../lib/fixtures';
 import { todayUTC } from '../lib/dates';
 import { pdfUpload, pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
-import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import {
+	createIncidentViaUi,
+	deleteIncidentViaUi,
+	waitForCreatedIncidentId
+} from '../lib/incidents';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
@@ -397,11 +401,12 @@ test.describe('caretaker incidents', () => {
 			await asCaretaker.locator('#incident-title').fill(title);
 			await asCaretaker.locator('#incident-severity').selectOption('mild');
 			await asCaretaker.locator('#incident-files').setInputFiles(pngUpload('care-new.png'));
+			const created = waitForCreatedIncidentId(asCaretaker, 'create');
 			await asCaretaker.getByRole('button', { name: 'Save incident' }).click();
-			await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/incidents/(?!new$)[^/?#]+$`), {
+			id = await created;
+			await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/incidents/${id}$`), {
 				timeout: 10_000
 			});
-			id = new URL(asCaretaker.url()).pathname.split('/').pop();
 			await expect(asCaretaker.getByRole('heading', { level: 1, name: title })).toBeVisible();
 			// Photos picked while logging go on the overview.
 			await expect(asCaretaker.locator('img[alt="care-new.png"]').first()).toBeVisible();
@@ -422,6 +427,7 @@ test.describe('caretaker incidents', () => {
 			await asCaretaker.goto(`/care/${EIN}/incidents/${id}`);
 			await expect(asCaretaker.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
 
+			await waitForHydration(asMember);
 			await asMember.getByRole('button', { name: 'Mark resolved' }).click();
 			await asMember.getByRole('dialog').getByRole('button', { name: 'Mark resolved' }).click();
 			await expect(asMember.getByTestId('incident-status')).toContainText('Resolved');
