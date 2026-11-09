@@ -25,6 +25,7 @@
 	} = $props();
 	const locale = getLocale();
 
+	let saving = $state(false);
 	let gone = false;
 	$effect(() => () => {
 		gone = true;
@@ -36,7 +37,7 @@
 	}
 </script>
 
-<Modal title={t(locale, 'page.incident.newTitle')} {onclose}>
+<Modal title={t(locale, 'page.incident.newTitle')} {onclose} locked={saving}>
 	<IncidentCreateForm
 		{companionId}
 		action="?/addIncident"
@@ -45,6 +46,7 @@
 		oncancel={onclose}
 		beforeSubmit={flush}
 		{defaultStart}
+		onphase={(p) => (saving = p === 'saving')}
 		allowStart
 		{uploadMaxMb}
 		{videoMaxMb}

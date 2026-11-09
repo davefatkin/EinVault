@@ -18,6 +18,7 @@
 		oncancel,
 		beforeSubmit,
 		defaultStart,
+		onphase,
 		allowStart,
 		showReminder = false,
 		uploadMaxMb,
@@ -35,6 +36,8 @@
 		beforeSubmit?: () => Promise<void>;
 		/** Start the form opens with (owners only). */
 		defaultStart?: Date;
+		/** Reports the save phase, so a host can lock itself while saving. */
+		onphase?: (phase: 'form' | 'saving' | 'failed') => void;
 		/** Owners set the start; caretakers log "now". */
 		allowStart: boolean;
 		showReminder?: boolean;
@@ -54,6 +57,7 @@
 	let files = $state<File[]>([]);
 	let failures = $state<{ name: string; message: string }[]>([]);
 	let nextUrl = $state('');
+	$effect(() => onphase?.(phase));
 
 	// Same order as the journal day's health event modal: save the incident,
 	// then upload the picked files to its overview, then move on. The incident
