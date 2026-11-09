@@ -100,6 +100,12 @@ describe('doseCovered', () => {
 		expect(doseCovered(med, utc(9, 17), 'UTC')).toBe(false);
 	});
 
+	it("stays covered when the next reminder is within 3 hours but past midnight, which a tap can't reach", () => {
+		const med = { lastGiven: given(utc(9, 20)), nextDueAt: utc(10, 0, 30) };
+		expect(doseCovered(med, utc(9, 22, 30), 'UTC')).toBe(true);
+		expect(doseCovered(med, utc(10, 0, 1), 'UTC')).toBe(false);
+	});
+
 	it('is not covered while a dose reminder is overdue', () => {
 		const med = { lastGiven: given(utc(8, 8)), nextDueAt: utc(9, 8) };
 		expect(doseCovered(med, now, 'UTC')).toBe(false);

@@ -110,6 +110,7 @@
 	open={confirming}
 	message={confirmMessage}
 	confirmLabel={t(locale, 'page.medications.givenAgainButton')}
+	confirmVariant="softSuccess"
 	onconfirm={() => {
 		confirming = false;
 		formEl?.requestSubmit();

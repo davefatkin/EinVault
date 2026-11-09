@@ -81,9 +81,13 @@ export const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 /**
  * Whether the current dose looks covered already, so "Given" turns quiet and
- * asks before logging another. With a dose reminder coming up: until it is
- * within DOSE_WINDOW_MS (when a tap would complete it). Otherwise (as-needed,
- * or no open reminder): for the rest of the local day the last dose was given.
+ * asks before logging another. With a dose reminder coming up: until a tap
+ * would complete it, which mirrors logDose's window (due within
+ * DOSE_WINDOW_MS and on the same household-local day, so a reminder just
+ * past midnight stays out of reach). Otherwise (as-needed, or no open
+ * reminder): for the rest of the local day the last dose was given. A
+ * schedule tighter than the window is never covered: the next tap completes
+ * the next reminder, which is a real dose, not an extra one.
  */
 export function doseCovered(
 	medication: { lastGiven: { at: Date } | null; nextDueAt: Date | null },
@@ -91,8 +95,13 @@ export function doseCovered(
 	timeZone?: string
 ): boolean {
 	if (!medication.lastGiven) return false;
-	if (medication.nextDueAt)
-		return new Date(medication.nextDueAt).getTime() > now.getTime() + DOSE_WINDOW_MS;
+	if (medication.nextDueAt) {
+		const next = new Date(medication.nextDueAt);
+		return (
+			next.getTime() > now.getTime() + DOSE_WINDOW_MS ||
+			todayInZone(timeZone, next) > todayInZone(timeZone, now)
+		);
+	}
 	return todayInZone(timeZone, new Date(medication.lastGiven.at)) === todayInZone(timeZone, now);
 }
 
