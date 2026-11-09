@@ -5,11 +5,11 @@ import { incidentMediaUrl } from '#lib/media.js';
 import { MAX_INCIDENT_MEDIA } from '#lib/incidents.js';
 import { generateId } from '#lib/server/utils.js';
 import { assertCanWriteIncident } from '#lib/server/permissions.js';
-import { getIncident } from '#lib/server/incidents.js';
-import { isAssigned } from '#lib/server/media-access.js';
 import { prepareMediaUpload } from '#lib/server/storage/media-upload.js';
 import { kickWorker } from '#lib/server/video/worker.js';
 import {
+	canModifyIncidentMedia,
+	checkIncidentMediaRead,
 	countIncidentMedia,
 	deleteIncidentMediaItem,
 	getIncidentMediaItem,
@@ -24,22 +24,13 @@ import {
 // assertCanWriteIncident (action 'media'), the status poll through the small
 // read rule below. demoReadOnly and twoFactorGate still apply via hooks.
 
-// Read rule for the status poll: owners see any incident of the companion;
-// caretakers need assignment and an open incident (no shift, like asset URLs).
 async function assertCanReadIncident(
 	locals: RequestEvent['locals'],
 	companionId: string,
 	incidentId: string
 ): Promise<void> {
-	const user = locals.user;
-	if (!user) error(401, t(locals.locale, 'error.unauthorized'));
-	if (user.role === 'caretaker' && !(await isAssigned(companionId, user.id))) {
-		error(403, t(locals.locale, 'error.forbidden'));
-	}
-	const incident = await getIncident(companionId, incidentId);
-	if (!incident || (user.role === 'caretaker' && incident.resolvedAt)) {
-		error(404, t(locals.locale, 'error.incidentNotFound'));
-	}
+	const res = await checkIncidentMediaRead(locals.user, companionId, incidentId);
+	if (!res.ok) error(res.status, t(locals.locale, res.key));
 }
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -107,6 +98,7 @@ async function gateExistingMedia(
 		updateId: item?.updateId ?? undefined
 	});
 	if (!item) error(404, t(locals.locale, 'error.photoNotFound'));
+	if (!canModifyIncidentMedia(locals.user!, item)) error(403, t(locals.locale, 'error.forbidden'));
 	return item;
 }
 

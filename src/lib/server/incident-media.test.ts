@@ -32,7 +32,9 @@ const {
 	saveIncidentMediaUpload,
 	getIncidentMediaItem,
 	setIncidentMediaCaption,
-	deleteIncidentMediaItem
+	deleteIncidentMediaItem,
+	checkIncidentMediaRead,
+	canModifyIncidentMedia
 } = await import('./incident-media');
 
 const C1 = 'c-im-1';
@@ -196,5 +198,74 @@ describe('list, caption, delete', () => {
 		await deleteIncidentMediaItem(item);
 		expect(await getIncidentMediaItem(I1, 'o1')).toBeUndefined();
 		expect(store.deletes).toEqual([`health/${C1}/${I1}/o1.jpg`]);
+	});
+});
+
+describe('checkIncidentMediaRead', () => {
+	const CT = { id: 'u-im-ct', role: 'caretaker' as const };
+	const CT_OTHER = { id: 'u-im-ct2', role: 'caretaker' as const };
+	const MEM = { id: U1, role: 'member' as const };
+	const CA = 'c-im-arch';
+	const IA = 'i-im-arch';
+
+	beforeAll(async () => {
+		await db.insert(schema.users).values([
+			{ id: CT.id, username: 'imct', displayName: 'C', role: 'caretaker', passwordHash: 'x' },
+			{ id: CT_OTHER.id, username: 'imct2', displayName: 'D', role: 'caretaker', passwordHash: 'x' }
+		]);
+		await db.insert(schema.companions).values({ id: CA, name: 'Old', isActive: false });
+		await db.insert(schema.companionCaretakers).values([
+			{ companionId: C1, userId: CT.id },
+			{ companionId: CA, userId: CT.id }
+		]);
+	});
+	beforeEach(async () => {
+		await db.delete(schema.healthEvents).where(eq(schema.healthEvents.id, IA));
+		await db.insert(schema.healthEvents).values({
+			id: IA,
+			companionId: CA,
+			type: 'incident',
+			title: 'x',
+			severity: 'mild',
+			occurredAt: new Date()
+		});
+	});
+
+	it('rejects anonymous with 401', async () => {
+		expect(await checkIncidentMediaRead(null, C1, I1)).toMatchObject({ ok: false, status: 401 });
+	});
+	it('allows an assigned caretaker on an open incident', async () => {
+		expect(await checkIncidentMediaRead(CT, C1, I1)).toEqual({ ok: true });
+	});
+	it('403s an unassigned caretaker', async () => {
+		expect(await checkIncidentMediaRead(CT_OTHER, C1, I1)).toMatchObject({ status: 403 });
+	});
+	it('404s a caretaker on a resolved incident', async () => {
+		await db
+			.update(schema.healthEvents)
+			.set({ resolvedAt: new Date() })
+			.where(eq(schema.healthEvents.id, I1));
+		expect(await checkIncidentMediaRead(CT, C1, I1)).toMatchObject({ status: 404 });
+		expect(await checkIncidentMediaRead(MEM, C1, I1)).toEqual({ ok: true });
+	});
+	it('404s a caretaker on an archived companion; owners still read', async () => {
+		expect(await checkIncidentMediaRead(CT, CA, IA)).toMatchObject({ ok: false, status: 404 });
+		expect(await checkIncidentMediaRead(MEM, CA, IA)).toEqual({ ok: true });
+	});
+	it('404s a wrong companion for the incident', async () => {
+		expect(await checkIncidentMediaRead(MEM, CA, I1)).toMatchObject({ status: 404 });
+	});
+});
+
+describe('canModifyIncidentMedia', () => {
+	it('lets a caretaker modify only their own uploads', () => {
+		const ct = { id: 'ct', role: 'caretaker' as const };
+		expect(canModifyIncidentMedia(ct, { loggedBy: 'ct' })).toBe(true);
+		expect(canModifyIncidentMedia(ct, { loggedBy: 'owner' })).toBe(false);
+		expect(canModifyIncidentMedia(ct, { loggedBy: null })).toBe(false);
+	});
+	it('does not restrict members or admins', () => {
+		expect(canModifyIncidentMedia({ id: 'm', role: 'member' }, { loggedBy: 'x' })).toBe(true);
+		expect(canModifyIncidentMedia({ id: 'a', role: 'admin' }, { loggedBy: null })).toBe(true);
 	});
 });

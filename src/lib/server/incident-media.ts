@@ -3,8 +3,11 @@ import { db, schema } from '#lib/server/db/index.js';
 import type { Media } from '#lib/server/db/schema.js';
 import { MEDIA_ITEM_COLUMNS, WITH_LOGGER } from '#lib/server/media-columns.js';
 import { toMediaItem, type MediaItem, type MediaStatus } from '#lib/media.js';
-import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
-import { deleteMediaBlobs } from '#lib/server/storage/media-blobs.js';
+import type { MessageKey } from '#lib/i18n/index.js';
+import { getIncident } from '#lib/server/incidents.js';
+import { isAssigned } from '#lib/server/media-access.js';
+import { STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { deleteMediaBlobs, storeThenInsert } from '#lib/server/storage/media-blobs.js';
 import type { PreparedMedia } from '#lib/server/storage/media-upload.js';
 
 // Incident media. Rows always carry healthEventId = the incident; updateId is
@@ -169,18 +172,8 @@ export async function saveIncidentMediaUpload(input: {
 }): Promise<IncidentMediaOutcome | 'putFailed'> {
 	const { companionId, incidentId, updateId, mediaId, prepared } = input;
 	const key = incidentMediaKey(companionId, incidentId, prepared.filename);
-	try {
-		await getStorage().put({ key, body: prepared.body, contentType: prepared.contentType });
-	} catch (err) {
-		console.error('[incident-media] storage put failed:', err);
-		return 'putFailed';
-	}
-	const orphan = [
-		{ provider: STORAGE_BACKEND, storageKey: key, originalKey: null, posterKey: null }
-	];
-	let outcome: IncidentMediaOutcome;
-	try {
-		outcome = insertIncidentMedia(
+	return storeThenInsert(key, prepared, 'incident-media', () =>
+		insertIncidentMedia(
 			incidentId,
 			updateId,
 			{
@@ -196,13 +189,8 @@ export async function saveIncidentMediaUpload(input: {
 				loggedBy: input.loggedBy
 			},
 			input.max
-		);
-	} catch (err) {
-		await deleteMediaBlobs(orphan, 'incident-media');
-		throw err;
-	}
-	if (outcome !== 'ok') await deleteMediaBlobs(orphan, 'incident-media');
-	return outcome;
+		)
+	);
 }
 
 export async function setIncidentMediaCaption(
@@ -229,4 +217,39 @@ export async function deleteIncidentMediaItem(item: Media): Promise<void> {
 			posterKey: schema.media.posterKey
 		});
 	if (deleted.length > 0) await deleteMediaBlobs(deleted, 'incident-media');
+}
+
+type Viewer = { id: string; role: 'admin' | 'member' | 'caretaker' };
+
+// Read rule for the status poll. Owners see any incident of the companion;
+// caretakers need assignment (403), an active companion and an open incident
+// (404). No shift, like asset URLs.
+export async function checkIncidentMediaRead(
+	user: Viewer | null,
+	companionId: string,
+	incidentId: string
+): Promise<{ ok: true } | { ok: false; status: 401 | 403 | 404; key: MessageKey }> {
+	if (!user) return { ok: false, status: 401, key: 'error.unauthorized' };
+	const isCaretaker = user.role === 'caretaker';
+	if (isCaretaker && !(await isAssigned(companionId, user.id))) {
+		return { ok: false, status: 403, key: 'error.forbidden' };
+	}
+	const incident = await getIncident(companionId, incidentId);
+	if (!incident || (isCaretaker && incident.resolvedAt)) {
+		return { ok: false, status: 404, key: 'error.incidentNotFound' };
+	}
+	if (isCaretaker) {
+		const companion = await db.query.companions.findFirst({
+			where: eq(schema.companions.id, companionId),
+			columns: { isActive: true }
+		});
+		if (!companion?.isActive) return { ok: false, status: 404, key: 'error.incidentNotFound' };
+	}
+	return { ok: true };
+}
+
+// Caretakers may only change or remove photos they uploaded themselves, on top
+// of the incident write gate: an owner's photo stays put. Owners unrestricted.
+export function canModifyIncidentMedia(user: Viewer, item: Pick<Media, 'loggedBy'>): boolean {
+	return user.role !== 'caretaker' || item.loggedBy === user.id;
 }
