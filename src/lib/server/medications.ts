@@ -77,6 +77,20 @@ function deleteOpenLinkedReminders(tx: Tx, medicationId: string) {
 		.run();
 }
 
+/** Open linked occurrences due after the last day (local) can never be given. */
+function deleteOpenLinkedRemindersAfter(tx: Tx, medicationId: string, endedOn: string) {
+	const late = tx
+		.select({ id: schema.reminders.id, dueAt: schema.reminders.dueAt })
+		.from(schema.reminders)
+		.where(
+			and(eq(schema.reminders.medicationId, medicationId), isNull(schema.reminders.completedAt))
+		)
+		.all()
+		.filter((r) => localDateISO(r.dueAt) > endedOn)
+		.map((r) => r.id);
+	if (late.length > 0) tx.delete(schema.reminders).where(inArray(schema.reminders.id, late)).run();
+}
+
 export async function updateMedication(
 	companionId: string,
 	id: string,
@@ -93,26 +107,36 @@ export async function updateMedication(
 				.all();
 			if (rows.length === 0) return false;
 			if (!isMedicationActive(input.endedOn, today)) deleteOpenLinkedReminders(tx, id);
+			else if (input.endedOn) deleteOpenLinkedRemindersAfter(tx, id, input.endedOn);
 			return true;
 		},
 		{ behavior: 'immediate' }
 	);
 }
 
+/**
+ * End an active medication today. Refused (no change) when it has already
+ * ended or hasn't started yet.
+ */
 export async function endMedication(
 	companionId: string,
 	id: string,
 	today: string = localDateISO()
-): Promise<boolean> {
+): Promise<true | 'notFound' | 'ended' | 'notStarted'> {
 	return db.transaction(
 		(tx) => {
-			const rows = tx
-				.update(schema.medications)
-				.set({ endedOn: today })
+			const medication = tx
+				.select({ startedOn: schema.medications.startedOn, endedOn: schema.medications.endedOn })
+				.from(schema.medications)
 				.where(and(eq(schema.medications.id, id), eq(schema.medications.companionId, companionId)))
-				.returning({ id: schema.medications.id })
-				.all();
-			if (rows.length === 0) return false;
+				.get();
+			if (!medication) return 'notFound';
+			if (!isMedicationActive(medication.endedOn, today)) return 'ended';
+			if (today < medication.startedOn) return 'notStarted';
+			tx.update(schema.medications)
+				.set({ endedOn: today })
+				.where(eq(schema.medications.id, id))
+				.run();
 			// Ending today still allows today's dose, but nothing may fire or spawn.
 			deleteOpenLinkedReminders(tx, id);
 			return true;

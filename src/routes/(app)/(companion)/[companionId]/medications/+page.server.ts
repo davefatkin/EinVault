@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 
 export const actions: Actions = {
 	create: async ({ request, params, locals }) => {
-		const denied = ownerOnly(locals);
+		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		const data = await request.formData();
 		const parsed = parseMedicationForm(data, locals.locale);

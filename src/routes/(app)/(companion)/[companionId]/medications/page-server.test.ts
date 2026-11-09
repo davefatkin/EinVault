@@ -6,6 +6,7 @@ import { actions as detailActions } from './[id]/+page.server';
 
 const companionId = 'mp-comp';
 const other = 'mp-other';
+const archived = 'mp-archived';
 
 function form(fields: Record<string, string>) {
 	const fd = new FormData();
@@ -18,11 +19,11 @@ type Action = (e: never) => Promise<unknown>;
 function call(
 	action: unknown,
 	fields: Record<string, string>,
-	opts: { role?: string; id?: string } = {}
+	opts: { role?: string; id?: string; companionId?: string } = {}
 ) {
 	const event = {
 		request: { formData: async () => form(fields) },
-		params: { companionId, id: opts.id ?? '' },
+		params: { companionId: opts.companionId ?? companionId, id: opts.id ?? '' },
 		locals: { user: { id: 'mp-user', role: opts.role ?? 'member' }, locale: 'en' }
 	};
 	return (action as Action)(event as never) as Promise<Result>;
@@ -52,7 +53,8 @@ describe('medications page actions', () => {
 		} as typeof schema.users.$inferInsert);
 		await db.insert(schema.companions).values([
 			{ id: companionId, name: 'MP' },
-			{ id: other, name: 'Other' }
+			{ id: other, name: 'Other' },
+			{ id: archived, name: 'Gone', isActive: false }
 		] as (typeof schema.companions.$inferInsert)[]);
 	});
 
@@ -102,6 +104,43 @@ describe('medications page actions', () => {
 		expect(res.status).toBe(400);
 		expect(res.data?.error).toBe("This medication hasn't started yet.");
 		expect(await doses(m)).toHaveLength(0);
+	});
+
+	it('refuses an unknown or archived companion', async () => {
+		const missing = await call(actions.create, { name: 'mp-ghost' }, { companionId: 'nope' });
+		expect(missing.status).toBe(404);
+		expect((await call(actions.create, { name: 'mp-x' }, { companionId: archived })).status).toBe(
+			403
+		);
+		const m = await med(archived);
+		expect((await call(actions.given, { id: m }, { companionId: archived })).status).toBe(403);
+		for (const name of ['update', 'end', 'restart', 'delete'] as const) {
+			const res = await call(
+				detailActions[name],
+				{ name: 'mp-y' },
+				{ id: m, companionId: archived }
+			);
+			expect(res.status).toBe(403);
+		}
+		expect(await doses(m)).toHaveLength(0);
+		const row = await db.query.medications.findFirst({ where: eq(schema.medications.id, m) });
+		expect(row).toMatchObject({ name: 'Carprofen', endedOn: null });
+	});
+
+	it('end refuses an ended medication and one that has not started', async () => {
+		const ended = await med(companionId, '2020-01-01');
+		const res = await call(detailActions.end, {}, { id: ended });
+		expect(res).toMatchObject({ status: 400, data: { error: 'This medication has ended.' } });
+		const future = await med(companionId, null, '2999-01-01');
+		const early = await call(detailActions.end, {}, { id: future });
+		expect(early).toMatchObject({
+			status: 400,
+			data: { error: "This medication hasn't started yet." }
+		});
+		const rows = await db.query.medications.findMany({
+			where: (m, { inArray }) => inArray(m.id, [ended, future])
+		});
+		expect(rows.map((r) => r.endedOn).sort()).toEqual(['2020-01-01', null].sort());
 	});
 
 	it("detail actions don't touch another companion's medication", async () => {

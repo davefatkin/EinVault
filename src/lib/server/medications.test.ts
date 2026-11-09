@@ -151,7 +151,22 @@ describe('endMedication', () => {
 	it('refuses another companion', async () => {
 		const id = await createMedication(C1, input(), U1);
 		const open = await addReminder(id);
-		expect(await endMedication(C2, id, TODAY)).toBe(false);
+		expect(await endMedication(C2, id, TODAY)).toBe('notFound');
+		expect(await reminderIds()).toContain(open);
+	});
+	it('ends a course early, but leaves an ended medication alone', async () => {
+		const course = await createMedication(C1, input({ endedOn: '2026-11-16' }), U1);
+		expect(await endMedication(C1, course, TODAY)).toBe(true);
+		expect((await getMedication(C1, course))?.endedOn).toBe(TODAY);
+		const old = await createMedication(C1, input({ endedOn: '2026-11-05' }), U1);
+		expect(await endMedication(C1, old, TODAY)).toBe('ended');
+		expect((await getMedication(C1, old))?.endedOn).toBe('2026-11-05');
+	});
+	it("refuses a medication that hasn't started yet", async () => {
+		const id = await createMedication(C1, input({ startedOn: '2026-11-10' }), U1);
+		const open = await addReminder(id);
+		expect(await endMedication(C1, id, TODAY)).toBe('notStarted');
+		expect((await getMedication(C1, id))?.endedOn).toBeNull();
 		expect(await reminderIds()).toContain(open);
 	});
 });
@@ -174,6 +189,17 @@ describe('updateMedication', () => {
 	it('returns false for another companion', async () => {
 		const id = await createMedication(C1, input(), U1);
 		expect(await updateMedication(C2, id, input({ name: 'X' }), TODAY)).toBe(false);
+	});
+	it('deletes open occurrences due after a new end date, keeping earlier ones', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const tomorrow = await addReminder(id, false, new Date(2026, 10, 10, 8));
+		const lastDay = await addReminder(id, false, new Date(2026, 10, 15, 23, 30));
+		const after = await addReminder(id, false, new Date(2026, 10, 16, 0, 30));
+		const done = await addReminder(id, true, new Date(2026, 10, 20, 8));
+		expect(await updateMedication(C1, id, input({ endedOn: '2026-11-15' }), TODAY)).toBe(true);
+		const left = await reminderIds();
+		expect(left).toEqual(expect.arrayContaining([tomorrow, lastDay, done]));
+		expect(left).not.toContain(after);
 	});
 });
 

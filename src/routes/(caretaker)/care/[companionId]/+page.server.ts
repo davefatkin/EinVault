@@ -14,9 +14,9 @@ import { getMedication, listMedicationSummaries, logDose } from '#lib/server/med
 import { doseRefusal } from '#lib/server/medication-actions.js';
 import { caretakerMedicationCaps } from '#lib/medications.js';
 
-// Actions need their own assignment + shift gate: the load()'s assignment
-// check does not protect POSTs, so without this an on-shift caretaker could
-// act on companions they are not assigned to.
+// Actions need their own assignment + shift + active-companion gate: the
+// load()'s assignment check does not protect POSTs, so without this an
+// on-shift caretaker could act on companions they are not assigned to.
 async function caretakerActionGuard(
 	userId: string,
 	companionId: string,
@@ -33,6 +33,13 @@ async function caretakerActionGuard(
 
 	const { isOnShift } = await getShiftStatus(userId);
 	if (!isOnShift) return fail(403, { error: t(locale, shiftErrorKey) });
+
+	// An archived companion is read-only, even for an assigned caretaker on shift.
+	const companion = await db.query.companions.findFirst({
+		where: and(eq(schema.companions.id, companionId), eq(schema.companions.isActive, true)),
+		columns: { id: true }
+	});
+	if (!companion) return fail(404, { error: t(locale, 'error.companionNotFound') });
 
 	return null;
 }
@@ -179,8 +186,8 @@ export const actions: Actions = {
 	},
 
 	// "Given" for a medication. logDose isn't companion-scoped, so besides the
-	// assignment and shift gate this checks the companion is active and the
-	// medication belongs to it and is still active.
+	// guard (assignment, shift, active companion) this checks the medication
+	// belongs to the companion and is still active.
 	given: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 
@@ -191,15 +198,6 @@ export const actions: Actions = {
 			'error.mustBeOnShiftToLogDose'
 		);
 		if (guard) return guard;
-
-		const companion = await db.query.companions.findFirst({
-			where: and(
-				eq(schema.companions.id, params.companionId),
-				eq(schema.companions.isActive, true)
-			),
-			columns: { id: true }
-		});
-		if (!companion) return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');

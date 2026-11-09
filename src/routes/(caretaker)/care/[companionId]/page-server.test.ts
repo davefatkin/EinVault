@@ -184,6 +184,36 @@ describe('given action', () => {
 		expect(await doses(m)).toHaveLength(0);
 	});
 
+	it('complete and skip refuse an archived companion', async () => {
+		await onShift();
+		const reminderId = `cpg-rem-${Math.random().toString(36).slice(2)}`;
+		await db.insert(schema.reminders).values({
+			id: reminderId,
+			companionId: archived,
+			title: 'Pill',
+			type: 'medication',
+			dueAt: new Date(),
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			recurrenceAnchor: 'interval'
+		} as typeof schema.reminders.$inferInsert);
+		for (const name of ['complete', 'skip'] as const) {
+			const fd = new FormData();
+			fd.set('id', reminderId);
+			const res = await (actions[name] as unknown as (e: never) => Promise<{ status?: number }>)({
+				request: { formData: async () => fd },
+				params: { companionId: archived },
+				locals: { user: { id: user, role: 'caretaker' }, locale: 'en' }
+			} as never);
+			expect(res.status).toBe(404);
+		}
+		const row = await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, reminderId)
+		});
+		expect(row?.completedAt).toBeNull();
+	});
+
 	it('refuses a missing medication id', async () => {
 		await onShift();
 		expect((await give(comp, 'nope')).status).toBe(404);

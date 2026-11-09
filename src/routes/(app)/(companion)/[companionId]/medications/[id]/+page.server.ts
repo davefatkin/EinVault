@@ -66,7 +66,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 
 export const actions: Actions = {
 	update: async ({ request, params, locals }) => {
-		const denied = ownerOnly(locals);
+		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		const data = await request.formData();
 		const parsed = parseMedicationForm(data, locals.locale);
@@ -77,15 +77,19 @@ export const actions: Actions = {
 	},
 
 	end: async ({ params, locals }) => {
-		const denied = ownerOnly(locals);
+		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
-		if (!(await endMedication(params.companionId, params.id)))
+		const outcome = await endMedication(params.companionId, params.id);
+		if (outcome === 'notFound')
 			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+		if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+		if (outcome === 'notStarted')
+			return fail(400, { error: t(locals.locale, 'error.medicationNotStarted') });
 		return { ended: true };
 	},
 
 	restart: async ({ params, locals }) => {
-		const denied = ownerOnly(locals);
+		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		if (!(await restartMedication(params.companionId, params.id)))
 			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
@@ -93,7 +97,7 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ params, locals }) => {
-		const denied = ownerOnly(locals);
+		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		if (!(await deleteMedication(params.companionId, params.id)))
 			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
