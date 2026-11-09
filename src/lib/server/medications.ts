@@ -20,11 +20,15 @@ export interface MedicationInput {
 	endedOn: string | null;
 }
 
-export function parseMedicationForm(data: FormData, locale: Locale): FormParse<MedicationInput> {
+export function parseMedicationForm(
+	data: FormData,
+	locale: Locale,
+	today: string = localDateISO()
+): FormParse<MedicationInput> {
 	const name = String(data.get('name') ?? '').trim();
 	const dose = String(data.get('dose') ?? '').trim();
 	const instructions = String(data.get('instructions') ?? '').trim();
-	const startedOn = String(data.get('startedOn') ?? '').trim();
+	const startedOn = String(data.get('startedOn') ?? '').trim() || today;
 	const endedOn = String(data.get('endedOn') ?? '').trim();
 	if (!name) return { ok: false, message: t(locale, 'error.nameRequired') };
 	if ([name, dose, instructions].some((v) => exceedsLen(v, MAX_NOTE_LEN)))

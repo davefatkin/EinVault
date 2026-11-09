@@ -93,10 +93,18 @@ describe('parseMedicationForm', () => {
 			value: { name: 'Pill', dose: '1', instructions: null, startedOn: '2026-11-01', endedOn: null }
 		});
 	});
+	it('defaults an empty or missing start date to today', () => {
+		const r = parseMedicationForm(form({ name: 'Pill', startedOn: '' }), 'en', TODAY);
+		expect(r).toMatchObject({ ok: true, value: { startedOn: TODAY } });
+		expect(parseMedicationForm(form({ name: 'Pill' }), 'en', TODAY)).toMatchObject({
+			ok: true,
+			value: { startedOn: TODAY }
+		});
+	});
 	it('rejects missing name, bad dates, end before start, long fields', () => {
 		expect(parseMedicationForm(form({ ...base, name: ' ' }), 'en').ok).toBe(false);
 		expect(parseMedicationForm(form({ ...base, startedOn: '2026-13-01' }), 'en').ok).toBe(false);
-		expect(parseMedicationForm(form({ ...base, startedOn: '' }), 'en').ok).toBe(false);
+		expect(parseMedicationForm(form({ ...base, startedOn: 'junk' }), 'en').ok).toBe(false);
 		expect(parseMedicationForm(form({ ...base, endedOn: 'nope' }), 'en').ok).toBe(false);
 		expect(parseMedicationForm(form({ ...base, endedOn: '2026-10-31' }), 'en').ok).toBe(false);
 		expect(parseMedicationForm(form({ ...base, instructions: 'x'.repeat(5001) }), 'en').ok).toBe(
@@ -189,8 +197,8 @@ describe('deleteMedication', () => {
 describe('listMedicationSummaries', () => {
 	it('computes next due, last given, schedule and active (inclusive)', async () => {
 		const a = await createMedication(C1, input({ name: 'A', endedOn: TODAY }), U1);
-		const b = await createMedication(C1, input({ name: 'B', endedOn: '2026-11-08' }), U1);
-		const c = await createMedication(C2, input({ name: 'C' }), null);
+		await createMedication(C1, input({ name: 'B', endedOn: '2026-11-08' }), U1);
+		await createMedication(C2, input({ name: 'C' }), null);
 		await addReminder(a, false, new Date(2000 * 1000));
 		await addReminder(a, false, new Date(1000 * 1000));
 		await addReminder(a, true, new Date(10 * 1000));
@@ -220,8 +228,6 @@ describe('listMedicationSummaries', () => {
 
 		const active = await listMedicationSummaries([C1], { activeOnly: true, today: TODAY });
 		expect(active.map((m) => m.id)).toEqual([a]);
-		expect(b).toBeTruthy();
-		expect(c).toBeTruthy();
 		expect(await listMedicationSummaries([], { activeOnly: false })).toEqual([]);
 	});
 	it('reports a null giver when the latest dose has no user', async () => {
