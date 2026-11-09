@@ -48,6 +48,9 @@ export const actions: Actions = {
 		const data = await event.request.formData();
 		const parsed = parseIncidentForm(data, event.locals.locale, { allowStart: true });
 		if (!parsed.ok) return fail(400, { error: parsed.message });
+		const { resolvedAt } = g.incident;
+		if (resolvedAt && resolvedBeforeStart(parsed.value.occurredAt, resolvedAt))
+			return fail(400, { error: t(event.locals.locale, 'error.resolvedBeforeStart') });
 		await updateIncidentOverview(event.params.companionId, g.incident.id, parsed.value);
 		return { ok: true };
 	},

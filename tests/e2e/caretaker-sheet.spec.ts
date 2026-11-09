@@ -299,11 +299,21 @@ test.describe('caretaker sheet', () => {
 		const title = 'E2E Sheet limp';
 		const id = await createIncidentViaUi(asMember, EIN, { title, severity: 'moderate' });
 		try {
+			await waitForHydration(asMember);
+			await asMember.getByRole('button', { name: 'Update', exact: true }).click();
+			const dialog = asMember.getByRole('dialog');
+			await dialog.locator('textarea[name="body"]').fill('**Walking** better');
+			await dialog.getByRole('button', { name: 'Save update' }).click();
+			await expect(asMember.getByRole('dialog')).toHaveCount(0, { timeout: 10_000 });
+
 			await openSheet(asMember);
 			const section = asMember.getByTestId('sheet-incidents');
 			await expect(section.getByRole('heading', { name: 'Open incidents' })).toBeVisible();
 			await expect(section.getByText(title)).toBeVisible();
 			await expect(section.getByText('Moderate', { exact: true })).toBeVisible();
+			// The latest update prints as plain text, without markdown markers.
+			await expect(section).toContainText('Walking better');
+			await expect(section).not.toContainText('**');
 
 			await asCaretaker.goto(`/care/${EIN}/sheet`);
 			await waitForHydration(asCaretaker);

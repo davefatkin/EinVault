@@ -18,7 +18,7 @@
 	import NoteContent from '#lib/components/notes/NoteContent.svelte';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { renderMarkdown } from '#lib/markdown.js';
+	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
 	import { noteMediaUrl } from '#lib/media.js';
 	import { formatAge, formatFullAge } from '#lib/age.js';
 	import { homeSinceLabel, sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
@@ -389,7 +389,7 @@
 								<span class="text-xs font-semibold text-muted-foreground print:text-foreground"
 									>{t(locale, 'page.sheet.latestUpdate')}:</span
 								>
-								{incident.latestUpdate.body}
+								{stripMarkdown(incident.latestUpdate.body)}
 							</p>
 						{/if}
 					</li>

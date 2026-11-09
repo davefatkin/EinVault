@@ -26,9 +26,10 @@ export const actions: Actions = {
 		// Actions run before the layout load that 404s an unknown companion.
 		const companion = await db.query.companions.findFirst({
 			where: eq(schema.companions.id, params.companionId),
-			columns: { id: true }
+			columns: { id: true, isActive: true }
 		});
 		if (!companion) return fail(404, { error: t(locals.locale, 'error.companionNotFound') });
+		if (!companion.isActive) return fail(403, { error: t(locals.locale, 'error.forbidden') });
 		const data = await request.formData();
 		const parsed = parseIncidentForm(data, locals.locale, { allowStart: true });
 		if (!parsed.ok) return fail(400, { error: parsed.message });

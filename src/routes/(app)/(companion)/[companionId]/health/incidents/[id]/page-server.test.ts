@@ -38,6 +38,14 @@ describe('incident page actions', () => {
 				type: 'incident',
 				title: 'Itch',
 				occurredAt: new Date(2026, 0, 5)
+			},
+			{
+				id: 'ip-inc3',
+				companionId: C,
+				type: 'incident',
+				title: 'Cough',
+				occurredAt: new Date(2026, 0, 5),
+				resolvedAt: new Date(2026, 0, 9, 10, 0, 0)
 			}
 		] as (typeof schema.healthEvents.$inferInsert)[]);
 		await db.insert(schema.healthEventUpdates).values({
@@ -77,6 +85,38 @@ describe('incident page actions', () => {
 			where: eq(schema.healthEventUpdates.healthEventId, 'ip-inc2')
 		});
 		expect(ups.map((u) => u.id)).toEqual(['ip-up-other']);
+	});
+
+	it('editOverview rejects a start after the resolved time, to the minute', async () => {
+		const edit = (start: Date) =>
+			call(actions.editOverview, 'ip-inc3', { title: 'Cough', occurredAt: start.toISOString() });
+		const startOf = async () =>
+			(
+				await db.query.healthEvents.findFirst({ where: eq(schema.healthEvents.id, 'ip-inc3') })
+			)?.occurredAt.toISOString();
+
+		const late = await edit(new Date(2026, 0, 9, 10, 1));
+		expect(late).toMatchObject({
+			status: 400,
+			data: { error: "The resolved date can't be before the start." }
+		});
+		expect(await startOf()).toBe(new Date(2026, 0, 5).toISOString());
+
+		// Same minute as the resolve time is fine, as is any earlier start.
+		const sameMinute = new Date(2026, 0, 9, 10, 0, 30);
+		expect(await edit(sameMinute)).toEqual({ ok: true });
+		expect(await startOf()).toBe(sameMinute.toISOString());
+		expect(await edit(new Date(2026, 0, 3))).toEqual({ ok: true });
+	});
+
+	it('editOverview on an open incident takes any start', async () => {
+		const later = new Date(2026, 1, 1);
+		expect(
+			await call(actions.editOverview, 'ip-inc2', {
+				title: 'Itch',
+				occurredAt: later.toISOString()
+			})
+		).toEqual({ ok: true });
 	});
 
 	it('edit and delete need an update of this incident', async () => {
