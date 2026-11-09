@@ -119,7 +119,9 @@ export const actions: Actions = {
 			nextLeads = leads.value;
 			leadFields.notifyLeadDays = leads.value;
 		}
-		const dueChanged = existing.dueAt.getTime() !== dueAt.getTime();
+		// The datetime-local input drops seconds, so compare at minute precision.
+		const dueChanged =
+			Math.floor(existing.dueAt.getTime() / 60_000) !== Math.floor(dueAt.getTime() / 60_000);
 		if (dueChanged || nextLeads !== existing.notifyLeadDays) {
 			leadFields.leadArmedAt = nextLeads ? new Date() : null;
 		}

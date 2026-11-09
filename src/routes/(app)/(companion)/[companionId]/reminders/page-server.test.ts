@@ -143,6 +143,13 @@ describe('reminders add/update lead times', () => {
 		expect(Math.abs(r.leadArmedAt!.getTime() - before)).toBeLessThan(5000);
 	});
 
+	it('update re-saving the same minute leaves arming alone', async () => {
+		await seed('u-minute', { dueAt: new Date(2030, 5, 20, 9, 0, 30) });
+		await upd('u-minute', { dueAt: new Date(2030, 5, 20, 9, 0, 0).toISOString() });
+		const r = await row('u-minute');
+		expect(r.leadArmedAt).toEqual(new Date(2030, 0, 1));
+	});
+
 	it('update with nothing changed leaves arming alone (order-insensitive)', async () => {
 		await seed('u-same', { notifyLeadDays: '7,2' });
 		await upd('u-same', { notifyLeadDays: '2,7' });
