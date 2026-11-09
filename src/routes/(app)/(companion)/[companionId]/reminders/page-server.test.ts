@@ -225,6 +225,19 @@ describe('reminders linked to a medication', () => {
 		expect(await lastTitled('med-ended')).toBeUndefined();
 	});
 
+	it('add refuses a reminder due after the medication ends', async () => {
+		// base() is due 2030-06-20.
+		const m = await med(companionId, '2030-06-19');
+		const res = await call('add', base({ title: 'med-late', medicationId: m }));
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('This reminder is due after the medication ends.');
+		expect(await lastTitled('med-late')).toBeUndefined();
+		const lastDay = await med(companionId, '2030-06-20');
+		await expect(
+			call('add', base({ title: 'med-last-day', medicationId: lastDay }))
+		).rejects.toMatchObject({ status: 303 });
+	});
+
 	it('add with an empty medicationId stores no link', async () => {
 		await call('add', base({ title: 'med-none', medicationId: '' }));
 		expect((await lastTitled('med-none'))?.medicationId).toBeNull();
@@ -248,7 +261,7 @@ describe('reminders linked to a medication', () => {
 	const dosesFor = (m: string) =>
 		db.query.medicationDoses.findMany({ where: eq(schema.medicationDoses.medicationId, m) });
 
-	it("restore removes the restored occurrence's dose and later occurrences' doses", async () => {
+	it("restore removes only the restored occurrence's dose", async () => {
 		const m = await med();
 		await linkedSeries(m, 'rl-series');
 		const first = completeReminder(await row('rl-series'), 'rl-user')!;
@@ -267,7 +280,14 @@ describe('reminders linked to a medication', () => {
 		expect(
 			await db.query.reminders.findFirst({ where: eq(schema.reminders.id, second.nextReminderId!) })
 		).toBeUndefined();
-		expect((await dosesFor(m)).map((d) => d.id)).toEqual(['rl-manual']);
+		// The later occurrence is gone but its dose was really given: it stays,
+		// unlinked, still marked as coming from a reminder.
+		const left = await dosesFor(m);
+		expect(left.map((d) => d.id).sort()).toEqual([second.doseId!, 'rl-manual'].sort());
+		expect(left.find((d) => d.id === second.doseId)).toMatchObject({
+			reminderId: null,
+			source: 'reminder'
+		});
 	});
 
 	it('restore is refused when the medication has ended', async () => {

@@ -5,7 +5,7 @@ import { t, type Locale } from '#lib/i18n/index.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
-import { completeReminder } from '#lib/server/reminders.js';
+import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import {
 	isMedicationActive,
 	type DoseView,
@@ -284,12 +284,17 @@ export async function sweepEndedMedicationReminders(
 	);
 }
 
+/** Upper bound on missed occurrences `logDose` skips in one call. */
+const MAX_MISSED_SKIPS = 400;
+
 /**
- * Record that a dose was given (every "Given" button and the dose API). If an
- * occurrence of a linked reminder is due by the end of today (local), the
- * earliest one is completed, which writes the dose; otherwise a standalone
- * manual dose is written. Callers check that the medication belongs to the
- * companion they act on.
+ * Record that a dose was given (every "Given" button and the dose API).
+ * Occurrences of linked recurring reminders missed on earlier days are skipped
+ * first (oldest first, so each series spawns forward to today). Then, if an
+ * occurrence is due by the end of today (local), the earliest one is
+ * completed, which writes the dose; otherwise a standalone manual dose is
+ * written. Callers check that the medication belongs to the companion they
+ * act on.
  */
 export async function logDose(
 	medicationId: string,
@@ -304,6 +309,22 @@ export async function logDose(
 	if (!medication) return 'notFound';
 	if (!isMedicationActive(medication.endedOn, localDateISO(now))) return 'ended';
 
+	const startOfToday = new Date(now);
+	startOfToday.setHours(0, 0, 0, 0);
+	for (let i = 0; i < MAX_MISSED_SKIPS; i++) {
+		const missed = await db.query.reminders.findFirst({
+			where: and(
+				eq(schema.reminders.medicationId, medicationId),
+				isNull(schema.reminders.completedAt),
+				eq(schema.reminders.isRecurring, true),
+				lt(schema.reminders.dueAt, startOfToday)
+			),
+			orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
+		});
+		if (!missed) break;
+		skipReminder(missed, actor.id);
+	}
+
 	const endOfToday = new Date(now);
 	endOfToday.setHours(23, 59, 59, 999);
 	const due = await db.query.reminders.findFirst({
@@ -315,9 +336,17 @@ export async function logDose(
 		orderBy: [asc(schema.reminders.dueAt), asc(schema.reminders.id)]
 	});
 	if (due) {
-		const res = completeReminder(due, actor.id, { givenAt: opts.givenAt, note: opts.note });
-		// Completed but no dose: the medication was deleted in between.
-		if (res) return res.doseId ? { doseId: res.doseId, completedReminderId: due.id } : 'notFound';
+		const givenAt = opts.givenAt ?? now;
+		const res = completeReminder(due, actor.id, { givenAt, note: opts.note });
+		if (res?.doseId) return { doseId: res.doseId, completedReminderId: due.id };
+		// Completed but no dose: the medication was deleted or ended in between.
+		if (res) {
+			const current = await db.query.medications.findFirst({
+				where: eq(schema.medications.id, medicationId),
+				columns: { id: true }
+			});
+			return current ? 'ended' : 'notFound';
+		}
 		// Lost a race: someone else just completed it and that wrote the dose.
 		const existing = await db.query.medicationDoses.findFirst({
 			where: eq(schema.medicationDoses.reminderId, due.id),
@@ -337,4 +366,40 @@ export async function logDose(
 		note: opts.note ?? null
 	});
 	return { doseId, completedReminderId: null };
+}
+
+const SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+let sweepTimer: ReturnType<typeof setInterval> | null = null;
+let sweeping = false;
+
+async function runSweep(): Promise<void> {
+	if (sweeping) return;
+	sweeping = true;
+	try {
+		const removed = await sweepEndedMedicationReminders();
+		if (removed > 0)
+			console.info(`[medications] removed ${removed} reminder(s) of ended medications`);
+	} catch (err) {
+		console.error('[medications] reminder sweep failed:', err);
+	} finally {
+		sweeping = false;
+	}
+}
+
+/**
+ * Boot entry point for the R1 safety net, independent of notification
+ * settings: sweep once now, then every 10 minutes. The timer is unref'd so it
+ * never keeps the process alive. Starting twice is a no-op. Returns a stop
+ * function (for tests).
+ */
+export function startMedicationSweep(): () => void {
+	if (!sweepTimer) {
+		void runSweep();
+		sweepTimer = setInterval(() => void runSweep(), SWEEP_INTERVAL_MS);
+		sweepTimer.unref();
+	}
+	return () => {
+		if (sweepTimer) clearInterval(sweepTimer);
+		sweepTimer = null;
+	};
 }

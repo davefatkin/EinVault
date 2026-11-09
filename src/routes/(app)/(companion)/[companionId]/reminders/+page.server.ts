@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and, lt, gt, inArray, isNotNull } from 'drizzle-orm';
+import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { parseReminderType, parseRecurrence } from '#lib/server/validation.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
@@ -69,6 +69,8 @@ export const actions: Actions = {
 			if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
 			if (!isMedicationActive(medication.endedOn, localDateISO()))
 				return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
+			if (medication.endedOn && localDateISO(dueAt) > medication.endedOn)
+				return fail(400, { error: t(locals.locale, 'error.reminderAfterMedicationEnd') });
 		}
 
 		const id = generateId(15);
@@ -229,48 +231,47 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		// An ended medication never gets an open reminder back (R1).
-		if (existing.medicationId) {
-			const medication = await getMedication(params.companionId, existing.medicationId);
-			if (medication && !isMedicationActive(medication.endedOn, localDateISO()))
-				return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
-		}
+		const outcome = db.transaction(
+			(tx) => {
+				// An ended medication never gets an open reminder back (R1).
+				if (existing.medicationId) {
+					const medication = tx
+						.select({ endedOn: schema.medications.endedOn })
+						.from(schema.medications)
+						.where(eq(schema.medications.id, existing.medicationId))
+						.get();
+					if (medication && !isMedicationActive(medication.endedOn, localDateISO()))
+						return 'ended' as const;
+				}
 
-		db.transaction((tx) => {
-			// If recurring, delete all future instances in this series. Spawned
-			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
-			// the same fallback: rows whose own seriesId is null still own the
-			// instances their id seeded.
-			const later = existing.isRecurring
-				? tx
-						.select({ id: schema.reminders.id })
-						.from(schema.reminders)
+				// Undoing a completion undoes its dose. Doses of later occurrences
+				// deleted below were really given: they stay, unlinked by the FK.
+				tx.delete(schema.medicationDoses).where(eq(schema.medicationDoses.reminderId, id)).run();
+
+				tx.update(schema.reminders)
+					.set({ completedAt: null, completedBy: null, outcome: null })
+					.where(eq(schema.reminders.id, id))
+					.run();
+
+				// If recurring, delete all future instances in this series. Spawned
+				// instances carry seriesId = origin.seriesId ?? origin.id, so match on
+				// the same fallback: rows whose own seriesId is null still own the
+				// instances their id seeded.
+				if (existing.isRecurring) {
+					tx.delete(schema.reminders)
 						.where(
 							and(
 								eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
 								gt(schema.reminders.dueAt, existing.dueAt)
 							)
 						)
-						.all()
-						.map((r) => r.id)
-				: [];
-
-			// Undoing a completion undoes its dose, and the doses of the later
-			// occurrences going away. Delete them before the reminders: the FK
-			// would otherwise null reminder_id and orphan them.
-			tx.delete(schema.medicationDoses)
-				.where(inArray(schema.medicationDoses.reminderId, [id, ...later]))
-				.run();
-
-			tx.update(schema.reminders)
-				.set({ completedAt: null, completedBy: null, outcome: null })
-				.where(eq(schema.reminders.id, id))
-				.run();
-
-			if (later.length > 0) {
-				tx.delete(schema.reminders).where(inArray(schema.reminders.id, later)).run();
-			}
-		});
+						.run();
+				}
+				return 'restored' as const;
+			},
+			{ behavior: 'immediate' }
+		);
+		if (outcome === 'ended') return fail(400, { error: t(locals.locale, 'error.medicationEnded') });
 
 		return { restoreSuccess: true };
 	},

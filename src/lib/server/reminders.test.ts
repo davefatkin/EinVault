@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { and, eq, isNull } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 import { computeNextDueAt, completeReminder, skipReminder } from './reminders';
 
 type Reminder = typeof schema.reminders.$inferSelect;
@@ -519,15 +520,18 @@ describe('medication-linked reminders', () => {
 	});
 
 	it('a course stops by itself: no occurrence spawns past ended_on', async () => {
-		// Daily 9:00 reminder, course ends tomorrow (inclusive).
-		const m = await med('2026-01-16');
-		const today = await linked(m, new Date(2026, 0, 15, 9, 0, 0));
+		// Daily 9:00 reminder from today; the course ends tomorrow (inclusive).
+		const now = new Date();
+		const day = (offset: number) =>
+			new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 9, 0, 0);
+		const m = await med(localDateISO(day(1)));
+		const today = await linked(m, day(0));
 		const first = completeReminder(today, 'u-rem')!;
 		expect(first.nextReminderId).not.toBeNull();
 		const tomorrow = (await db.query.reminders.findFirst({
 			where: eq(schema.reminders.id, first.nextReminderId!)
 		}))!;
-		expect(tomorrow.dueAt).toEqual(new Date(2026, 0, 16, 9, 0, 0));
+		expect(tomorrow.dueAt).toEqual(day(1));
 		const last = completeReminder(tomorrow, 'u-rem')!;
 		expect(last.nextReminderId).toBeNull();
 		expect(await dosesFor(m)).toHaveLength(2);
@@ -535,6 +539,17 @@ describe('medication-linked reminders', () => {
 			where: and(eq(schema.reminders.medicationId, m), isNull(schema.reminders.completedAt))
 		});
 		expect(open).toHaveLength(0);
+	});
+
+	it('completing after the medication ended writes no dose and spawns nothing', async () => {
+		// Ended long ago; the next occurrence would still fall on or before ended_on.
+		const m = await med('2000-01-10');
+		const r = await linked(m, new Date(2000, 0, 1, 9, 0, 0));
+		const res = completeReminder(r, 'u-rem')!;
+		expect(res).toMatchObject({ doseId: null, nextReminderId: null });
+		const done = (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, r.id) }))!;
+		expect(done.outcome).toBe('completed');
+		expect(await dosesFor(m)).toHaveLength(0);
 	});
 
 	it('skipping the last day of a course spawns nothing either', async () => {

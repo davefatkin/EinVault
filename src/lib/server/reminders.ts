@@ -2,6 +2,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { localDateISO } from '#lib/date.js';
+import { isMedicationActive } from '#lib/medications.js';
 import {
 	clampDayOfMonth,
 	unpackMonthDay,
@@ -107,7 +108,12 @@ function resolveReminder(
 					.get()
 			: undefined;
 
-		if (medication && outcome === 'completed') {
+		// An ended medication (as of the completion's local date) takes no dose
+		// and keeps no open reminder (R1); the completion itself still stands.
+		const medicationActive =
+			!!medication && isMedicationActive(medication.endedOn, localDateISO(completedAt));
+
+		if (medication && medicationActive && outcome === 'completed') {
 			doseId = generateId(15);
 			tx.insert(schema.medicationDoses)
 				.values({
@@ -124,6 +130,7 @@ function resolveReminder(
 
 		const nextDueAt = computeNextDueAt(reminder);
 		if (!nextDueAt) return;
+		if (medication && !medicationActive) return;
 		// A course stops by itself: nothing spawns past the medication's last day.
 		if (medication?.endedOn && localDateISO(nextDueAt) > medication.endedOn) return;
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import {
@@ -13,6 +13,7 @@ import {
 	listDoses,
 	sweepEndedMedicationReminders,
 	logDose,
+	startMedicationSweep,
 	type MedicationInput
 } from './medications';
 
@@ -287,6 +288,35 @@ describe('logDose', () => {
 	const reminderRow = async (id: string) =>
 		(await db.select().from(schema.reminders).where(eq(schema.reminders.id, id)))[0];
 
+	it("skips missed occurrences from earlier days, then completes today's", async () => {
+		const id = await createMedication(C1, input(), U1);
+		// Daily 8:00 series, last resolved three days ago: the 6th is still open.
+		const missed = await addReminder(id, false, at(8, 0, 6));
+		const res = await logDose(id, { id: U1 }, { now });
+		const rows = await db
+			.select()
+			.from(schema.reminders)
+			.where(eq(schema.reminders.medicationId, id));
+		const byDay = new Map(rows.map((r) => [r.dueAt.getDate(), r]));
+		expect(byDay.get(6)).toMatchObject({ id: missed, outcome: 'skipped' });
+		expect(byDay.get(7)?.outcome).toBe('skipped');
+		expect(byDay.get(8)?.outcome).toBe('skipped');
+		expect(byDay.get(9)?.outcome).toBe('completed');
+		expect(res).toMatchObject({ completedReminderId: byDay.get(9)!.id });
+		expect(byDay.get(10)?.completedAt).toBeNull();
+		expect(rows.filter((r) => !r.completedAt && r.dueAt <= now)).toEqual([]);
+		const given = await doses(id);
+		expect(given).toHaveLength(1);
+		expect(given[0]).toMatchObject({ source: 'reminder', reminderId: byDay.get(9)!.id });
+	});
+
+	it('defaults the occurrence dose time to now as well', async () => {
+		const id = await createMedication(C1, input(), U1);
+		await addReminder(id, false, at(8));
+		await logDose(id, { id: U1 }, { now });
+		expect((await doses(id))[0].givenAt).toEqual(now);
+	});
+
 	it('Given at 8:05 completes the 8:00 occurrence: one linked dose, nothing left overdue', async () => {
 		const id = await createMedication(C1, input(), U1);
 		const r8 = await addReminder(id, false, at(8));
@@ -349,5 +379,29 @@ describe('logDose', () => {
 		expect(await logDose(lastDay, { id: U1 }, { now })).toMatchObject({
 			completedReminderId: null
 		});
+	});
+});
+
+describe('startMedicationSweep', () => {
+	it('sweeps at boot and every 10 minutes, and starts only once', async () => {
+		vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+		try {
+			const ended = await createMedication(C1, input({ endedOn: '2000-01-01' }), U1);
+			const first = await addReminder(ended);
+			const stop = startMedicationSweep();
+			const again = startMedicationSweep();
+			await vi.waitFor(async () => expect(await reminderIds()).not.toContain(first));
+			const second = await addReminder(ended);
+			await vi.advanceTimersByTimeAsync(9 * 60 * 1000);
+			expect(await reminderIds()).toContain(second);
+			await vi.advanceTimersByTimeAsync(60 * 1000);
+			await vi.waitFor(async () => expect(await reminderIds()).not.toContain(second));
+			expect(vi.getTimerCount()).toBe(1);
+			stop();
+			again();
+			expect(vi.getTimerCount()).toBe(0);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

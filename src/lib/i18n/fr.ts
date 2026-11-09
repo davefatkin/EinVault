@@ -1135,6 +1135,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'La date de fin ne peut pas précéder la date de début.',
 	'error.medicationNotFound': 'Médicament introuvable.',
 	'error.medicationEnded': 'Ce médicament est terminé.',
+	'error.reminderAfterMedicationEnd': 'Ce rappel tombe après la fin du médicament.',
 	'error.fieldTooLong': 'Trop long ({max} caractères max.).',
 	'error.noteTitleTooLong': 'Le titre est trop long (max {max} caractères).',
 	'error.noteTitleNewline': 'Le titre doit tenir sur une seule ligne.',

@@ -1131,6 +1131,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.medicationEndBeforeStart': 'A data de fim não pode ser anterior à data de início.',
 	'error.medicationNotFound': 'Medicamento não encontrado.',
 	'error.medicationEnded': 'Este medicamento terminou.',
+	'error.reminderAfterMedicationEnd': 'Este lembrete vence depois do fim do medicamento.',
 	'error.fieldTooLong': 'Demasiado longo (máx. {max} caracteres).',
 	'error.noteTitleTooLong': 'O título é demasiado longo (máx. {max} caracteres).',
 	'error.noteTitleNewline': 'O título deve ter uma única linha.',
