@@ -283,6 +283,8 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByRole('heading', { name: N.einCommands.title })).toBeVisible();
 
 		await asMember.goto(`/${EIN}/notes/${N.einCommands.id}?edit=1`);
+		// The dirty guard tracks input only once the editor is hydrated.
+		await waitForHydration(asMember);
 		await asMember.getByLabel('Title', { exact: true }).fill('Dirty title');
 		await asMember.getByRole('link', { name: 'All notes' }).click();
 		const dialog = asMember.getByRole('dialog');
