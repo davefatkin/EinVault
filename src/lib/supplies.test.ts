@@ -160,5 +160,6 @@ describe('formatLastsDays', () => {
 		expect(formatLastsDays('en', 1)).toBe('One lasts about 1 day');
 		expect(formatLastsDays('en', 30)).toBe('One lasts about 30 days');
 		expect(formatLastsDays('de', 1)).toBe('Eine Packung reicht etwa 1 Tag');
+		expect(formatLastsDays('es', 1)).toBe('Uno dura aproximadamente 1 día');
 	});
 });

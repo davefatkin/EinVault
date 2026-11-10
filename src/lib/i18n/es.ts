@@ -1593,7 +1593,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.expiresOn': 'Caduca el {date}',
 	'page.supplies.expiredOn': 'Caducó el {date}',
 	'page.supplies.runsOutOn': 'Se acaba hacia el {date}',
-	'page.supplies.lastsDay': 'Uno dura unos {count} día',
+	'page.supplies.lastsDay': 'Uno dura aproximadamente {count} día',
 	'page.supplies.lastsDays': 'Uno dura unos {count} días',
 	'page.supplies.lastBought': 'Última compra el {date}',
 	'page.supplies.lowStockAt': 'Aviso con {count}',
