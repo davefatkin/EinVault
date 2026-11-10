@@ -4,6 +4,7 @@ import path from 'node:path';
 import { TOTP, Secret } from 'otpauth';
 import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
+import { waitForHydration } from '../lib/hydration';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -250,16 +251,18 @@ test.describe('2FA @desktop', () => {
 		await adminPage.goto('/admin/users');
 		await expect(adminPage).toHaveURL(/admin\/users/, { timeout: 10_000 });
 
-		// Change the require-2fa select to "Everyone".
-		// The select has onchange → requestSubmit, which POSTs and reloads.
-		// After reload the admin themselves (no 2FA) will be redirected to /2fa-setup
-		// by the enforcement gate. That's expected — we just need the DB write to have
-		// happened, so wait for any navigation away from /admin/users.
-		const select = adminPage.locator('select#require2fa');
-		await select.selectOption('everyone');
-		// Either we see a success alert (briefly) or we get redirected — either way
-		// wait for a page-level change.
-		await adminPage.waitForURL(/\/admin\/users|\/2fa-setup/, { timeout: 10_000 });
+		// Change the require-2fa select to "Everyone". The select submits from its
+		// onchange handler, which only exists once the page has hydrated. Wait for
+		// the action's response before closing the context: closing aborts a POST
+		// still in flight and the setting never lands. The admin (no 2FA) may then
+		// be sent to /2fa-setup by the refreshed page; that doesn't matter here.
+		await waitForHydration(adminPage);
+		const saved = adminPage.waitForResponse(
+			(r) => r.request().method() === 'POST' && r.url().endsWith('?/setRequire2fa'),
+			{ timeout: 10_000 }
+		);
+		await adminPage.locator('select#require2fa').selectOption('everyone');
+		expect((await (await saved).json()).type).toBe('success');
 
 		await adminCtx.close();
 
