@@ -1574,11 +1574,13 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Entrada do histórico não encontrada.',
 	'error.invalidPurchaseQuantity': 'Introduza uma quantidade maior que 0.',
 	'error.invalidCost': 'Introduza um valor válido.',
-	'error.purchaseNeedsStock': 'Informe quantos você tem agora para salvar um custo ou recibo.',
+	'error.purchaseNeedsStock':
+		'Informe um estoque inicial maior que 0 para salvar um custo ou recibo.',
 	'error.purchaseNeedsDate':
 		'Informe quando você comprou um pela última vez para salvar um custo ou recibo.',
 	'error.supplyNeedsActivePet': 'Escolha pelo menos um animal que não esteja arquivado.',
 	'error.purchaseFailed': 'Não foi possível guardar a compra. Tente novamente.',
+	'error.supplySaveFailed': 'Não foi possível salvar o suprimento. Tente novamente.',
 	'supply.countLeft': 'restam {count} {unit}',
 	'supply.countLeftNoUnit': 'restam {count}',
 	'supply.notBoughtYet': 'Ainda não comprado',

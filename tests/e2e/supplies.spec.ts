@@ -138,7 +138,7 @@ test.describe('supplies (owner)', () => {
 			await asMember.locator('#supply-cost').fill('18.75');
 			await asMember.getByRole('button', { name: 'Save supply' }).click();
 			await expect(
-				asMember.getByText('Enter how many you have now to save a cost or receipt.')
+				asMember.getByText('Enter a starting count above 0 to save a cost or receipt.')
 			).toBeVisible();
 			await expect(asMember.locator('#supply-cost')).toHaveValue('18.75');
 

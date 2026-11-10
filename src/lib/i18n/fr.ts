@@ -1580,11 +1580,13 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': "Entrée de l'historique introuvable.",
 	'error.invalidPurchaseQuantity': 'Saisissez une quantité supérieure à 0.',
 	'error.invalidCost': 'Saisissez un montant valide.',
-	'error.purchaseNeedsStock': 'Indiquez combien vous en avez pour enregistrer un coût ou un reçu.',
+	'error.purchaseNeedsStock':
+		'Indiquez un stock de départ supérieur à 0 pour enregistrer un coût ou un reçu.',
 	'error.purchaseNeedsDate':
 		'Indiquez la date de votre dernier achat pour enregistrer un coût ou un reçu.',
 	'error.supplyNeedsActivePet': "Choisissez au moins un animal qui n'est pas archivé.",
 	'error.purchaseFailed': "L'achat n'a pas pu être enregistré. Réessayez.",
+	'error.supplySaveFailed': "La fourniture n'a pas pu être enregistrée. Réessayez.",
 	'supply.countLeft': 'reste {count} {unit}',
 	'supply.countLeftNoUnit': 'reste {count}',
 	'supply.notBoughtYet': 'Pas encore acheté',

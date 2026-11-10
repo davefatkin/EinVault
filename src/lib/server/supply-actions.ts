@@ -217,6 +217,7 @@ function insertReceipt(
 async function commitWithReceipt<T>(
 	receipt: StagedReceipt | null,
 	locale: Locale,
+	failKey: MessageKey,
 	extra: Record<string, unknown>,
 	write: (tx: Tx) => T | 'capReached'
 ): Promise<
@@ -226,11 +227,11 @@ async function commitWithReceipt<T>(
 	try {
 		outcome = db.transaction(write, { behavior: 'immediate' });
 	} catch (err) {
-		console.error('[supplies] purchase failed:', err);
+		console.error(`[supplies] save failed (${failKey}):`, err);
 		if (receipt) await discardStored(receipt.stored);
 		return {
 			ok: false,
-			failure: fail(400, { error: t(locale, 'error.purchaseFailed'), ...extra })
+			failure: fail(400, { error: t(locale, failKey), ...extra })
 		};
 	}
 	if (outcome === 'capReached') {
@@ -285,24 +286,32 @@ export const createAction: Action<{ companionId: string }> = async ({
 	if ('error' in staged) return fail(staged.status, { error: staged.error, values });
 	const { receipt } = staged;
 
-	const result = await commitWithReceipt(receipt, locale, { values }, (tx) => {
-		let documentId: string | null = null;
-		if (receipt) {
-			const inserted = insertReceipt(tx, receipt, {
-				supplyName: parsed.value.name,
-				date: date!,
-				locale,
-				uploadedBy: locals.user!.id
+	// Resolved once, so the receipt and the purchase share the date.
+	const input = { ...parsed.value, firstPurchaseDate: date };
+	const result = await commitWithReceipt(
+		receipt,
+		locale,
+		'error.supplySaveFailed',
+		{ values },
+		(tx) => {
+			let documentId: string | null = null;
+			if (receipt) {
+				const inserted = insertReceipt(tx, receipt, {
+					supplyName: parsed.value.name,
+					date: date!,
+					locale,
+					uploadedBy: locals.user!.id
+				});
+				if (inserted === 'capReached') return 'capReached';
+				documentId = inserted;
+			}
+			return insertSupply(tx, input, parsed.companionIds, locals.user!.id, currency, {
+				costMinor: cost,
+				documentId,
+				companionId: receipt ? home : null
 			});
-			if (inserted === 'capReached') return 'capReached';
-			documentId = inserted;
 		}
-		return insertSupply(tx, parsed.value, parsed.companionIds, locals.user!.id, currency, {
-			costMinor: cost,
-			documentId,
-			companionId: receipt ? home : null
-		});
-	});
+	);
 	if (!result.ok) return result.failure;
 	redirect(303, `/${home}/supplies/${result.value}`);
 };
@@ -358,7 +367,7 @@ export const purchaseAction: Action<{ companionId: string; id: string }> = async
 	if ('error' in staged) return fail(staged.status, { error: staged.error });
 	const { receipt } = staged;
 
-	const result = await commitWithReceipt(receipt, locale, {}, (tx) => {
+	const result = await commitWithReceipt(receipt, locale, 'error.purchaseFailed', {}, (tx) => {
 		let documentId: string | null = null;
 		if (receipt) {
 			const inserted = insertReceipt(tx, receipt, {

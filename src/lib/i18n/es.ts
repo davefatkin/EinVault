@@ -1574,11 +1574,13 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Entrada del historial no encontrada.',
 	'error.invalidPurchaseQuantity': 'Introduce una cantidad mayor que 0.',
 	'error.invalidCost': 'Introduce un importe válido.',
-	'error.purchaseNeedsStock': 'Indique cuántos tiene ahora para guardar un costo o un recibo.',
+	'error.purchaseNeedsStock':
+		'Indica unas existencias iniciales mayores que 0 para guardar un costo o un recibo.',
 	'error.purchaseNeedsDate':
-		'Indique cuándo compró uno por última vez para guardar un costo o un recibo.',
+		'Indica cuándo compraste uno por última vez para guardar un costo o un recibo.',
 	'error.supplyNeedsActivePet': 'Elige al menos una mascota que no esté archivada.',
 	'error.purchaseFailed': 'No se pudo guardar la compra. Inténtalo de nuevo.',
+	'error.supplySaveFailed': 'No se pudo guardar el suministro. Inténtalo de nuevo.',
 	'supply.countLeft': 'quedan {count} {unit}',
 	'supply.countLeftNoUnit': 'quedan {count}',
 	'supply.notBoughtYet': 'Aún no comprado',

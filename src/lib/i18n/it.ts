@@ -1572,11 +1572,13 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Voce dello storico non trovata.',
 	'error.invalidPurchaseQuantity': 'Inserisci una quantità maggiore di 0.',
 	'error.invalidCost': 'Inserisci un importo valido.',
-	'error.purchaseNeedsStock': 'Indica quanti ne hai ora per salvare un costo o una ricevuta.',
+	'error.purchaseNeedsStock':
+		'Indica una scorta iniziale maggiore di 0 per salvare un costo o una ricevuta.',
 	'error.purchaseNeedsDate':
 		"Indica quando ne hai acquistato uno l'ultima volta per salvare un costo o una ricevuta.",
 	'error.supplyNeedsActivePet': 'Scegli almeno un animale non archiviato.',
 	'error.purchaseFailed': "Non è stato possibile salvare l'acquisto. Riprova.",
+	'error.supplySaveFailed': 'Non è stato possibile salvare la scorta. Riprova.',
 	'supply.countLeft': 'rimangono {count} {unit}',
 	'supply.countLeftNoUnit': 'rimangono {count}',
 	'supply.notBoughtYet': 'Non ancora acquistato',

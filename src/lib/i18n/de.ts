@@ -1581,11 +1581,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidPurchaseQuantity': 'Gib eine Menge über 0 ein.',
 	'error.invalidCost': 'Gib einen gültigen Betrag ein.',
 	'error.purchaseNeedsStock':
-		'Geben Sie den aktuellen Bestand an, um Kosten oder einen Beleg zu speichern.',
+		'Gib einen Anfangsbestand über 0 an, um Kosten oder einen Beleg zu speichern.',
 	'error.purchaseNeedsDate':
-		'Geben Sie an, wann Sie zuletzt eines gekauft haben, um Kosten oder einen Beleg zu speichern.',
+		'Gib an, wann du zuletzt eines gekauft hast, um Kosten oder einen Beleg zu speichern.',
 	'error.supplyNeedsActivePet': 'Wähle mindestens ein Tier, das nicht archiviert ist.',
 	'error.purchaseFailed': 'Der Kauf konnte nicht gespeichert werden. Versuch es noch einmal.',
+	'error.supplySaveFailed': 'Der Vorrat konnte nicht gespeichert werden. Versuch es noch einmal.',
 	'supply.countLeft': 'noch {count} {unit}',
 	'supply.countLeftNoUnit': 'noch {count}',
 	'supply.notBoughtYet': 'Noch nicht gekauft',

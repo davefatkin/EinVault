@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import sharp from 'sharp';
 import { db, schema } from '#lib/server/db/index.js';
 import { MAX_DOCUMENTS_PER_COMPANION } from '#lib/server/env.js';
@@ -276,6 +276,33 @@ describe('supply actions', () => {
 				expect(store.deletes).toEqual(store.puts);
 			});
 
+			it('a failed save removes the stored receipt and keeps what was typed', async () => {
+				db.run(
+					sql.raw(
+						"CREATE TEMP TRIGGER sa_boom BEFORE INSERT ON supplies WHEN NEW.name = 'sa-boom' BEGIN SELECT RAISE(ABORT, 'boom'); END"
+					)
+				);
+				try {
+					const res = await call(newActions.create, {
+						...counted,
+						name: 'sa-boom',
+						cost: '3',
+						receipt: await png(),
+						companionIds: [EIN]
+					});
+					expect(res).toMatchObject({
+						status: 400,
+						data: { error: "The supply couldn't be saved. Try again.", values: { cost: '3' } }
+					});
+				} finally {
+					db.run(sql.raw('DROP TRIGGER sa_boom'));
+				}
+				expect(await named('sa-boom')).toHaveLength(0);
+				expect((await docsOf(EIN)).some((d) => d.title === 'Receipt: sa-boom')).toBe(false);
+				expect(store.puts).toHaveLength(1);
+				expect(store.deletes).toEqual(store.puts);
+			});
+
 			it('refuses a cost or receipt with no starting stock, before storing anything', async () => {
 				const none = await call(newActions.create, {
 					...counted,
@@ -284,7 +311,7 @@ describe('supply actions', () => {
 					cost: '5',
 					companionIds: [EIN]
 				});
-				expect(none.data?.error).toBe('Enter how many you have now to save a cost or receipt.');
+				expect(none.data?.error).toBe('Enter a starting count above 0 to save a cost or receipt.');
 				const undated = await call(newActions.create, {
 					name: 'sa-nostock',
 					kind: 'duration',

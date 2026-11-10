@@ -727,8 +727,9 @@ export function parseAmount(raw: unknown): number | null | 'invalid' | 'tooLarge
  *   different one), `notes`, `expiresOn` (YYYY-MM-DD, optional).
  * - Counted: `unit` (max 50), `startingQuantity` (create only), `lowStockAt`;
  *   both decimals from 0 to MAX_SUPPLY_QUANTITY with `.` or `,`, blank for none.
- * - Duration: `lastsDays` (1-365, required), `firstPurchaseDate` (create
- *   only, optional, not in the future).
+ * - Duration: `lastsDays` (1-365, required).
+ * - `firstPurchaseDate` (create only, optional, not in the future): duration,
+ *   the first purchase; counted, when the starting stock was bought.
  * - `alertsEnabled`: checkbox, any value means on.
  * - `runOutLeadDays`, `expiryLeadDays`: the comma-joined text LeadDaysPicker
  *   posts; blank (every chip cleared) turns that warning off.

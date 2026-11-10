@@ -1548,11 +1548,12 @@ const messages = {
 	'error.supplyEventNotFound': 'History entry not found.',
 	'error.invalidPurchaseQuantity': 'Enter a quantity above 0.',
 	'error.invalidCost': 'Enter a valid cost.',
-	'error.purchaseNeedsStock': 'Enter how many you have now to save a cost or receipt.',
+	'error.purchaseNeedsStock': 'Enter a starting count above 0 to save a cost or receipt.',
 	'error.purchaseNeedsDate': 'Enter when you last bought one to save a cost or receipt.',
 	'error.supplyNeedsActivePet': "Choose at least one pet that isn't archived.",
 	'error.purchaseFailed': "The purchase couldn't be saved. Try again.",
 	// Supplies
+	'error.supplySaveFailed': "The supply couldn't be saved. Try again.",
 	'supply.countLeft': '{count} {unit} left',
 	'supply.countLeftNoUnit': '{count} left',
 	'supply.notBoughtYet': 'Not bought yet',
