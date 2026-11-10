@@ -596,6 +596,10 @@ export const reminders = sqliteTable(
 );
 
 // medications (issue #279). Frequency lives in linked reminders, not here.
+//
+// A drizzle-kit rebuild of this table drops the search_medication_* triggers.
+// Re-add them in the same migration; see
+// drizzle/0044_search_medications_supplies.sql.
 
 export const medications = sqliteTable(
 	'medications',
@@ -619,7 +623,8 @@ export const medications = sqliteTable(
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
-		companionEndedIdx: index('medication_companion_ended_idx').on(t.companionId, t.endedOn)
+		companionEndedIdx: index('medication_companion_ended_idx').on(t.companionId, t.endedOn),
+		supplyIdx: index('medication_supply_idx').on(t.supplyId)
 	})
 );
 
@@ -647,6 +652,10 @@ export const medicationDoses = sqliteTable(
 );
 
 // supplies (issue #279): household stock tied to medications
+//
+// A drizzle-kit rebuild of supplies or supply_companions drops the
+// search_supply_* triggers. Re-add them in the same migration; see
+// drizzle/0044_search_medications_supplies.sql.
 
 export const supplies = sqliteTable('supplies', {
 	id: text('id').primaryKey(),
@@ -692,7 +701,8 @@ export const supplyCompanions = sqliteTable(
 			.references(() => companions.id, { onDelete: 'cascade' })
 	},
 	(t) => ({
-		pk: primaryKey({ columns: [t.supplyId, t.companionId] })
+		pk: primaryKey({ columns: [t.supplyId, t.companionId] }),
+		companionIdx: index('supply_companion_companion_idx').on(t.companionId)
 	})
 );
 

@@ -860,7 +860,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.weightHistoryTitle': 'Storico peso',
 	'page.health.healthEventsTitle': 'Eventi sanitari',
 	'page.health.emptyBody':
-		'Registra visite veterinarie, vaccinazioni e farmaci per costruire la cartella.',
+		'Registra visite veterinarie, vaccinazioni e procedure per costruire la cartella.',
 	'page.health.noHealthEvents': 'Nessun evento sanitario registrato.',
 	'page.health.detailWeightEntry': 'Voce peso',
 	'page.health.detailWeight': 'Peso',
@@ -924,6 +924,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailType': 'Tipo',
 	'page.reminders.detailDue': 'Scadenza',
 	'page.reminders.detailRepeats': 'Si ripete',
+	'page.reminders.detailMedication': 'Farmaco',
 	'page.reminders.detailEveryDay': 'Ogni giorno',
 	'page.reminders.detailEveryDays': 'Ogni {count} giorni',
 	'page.reminders.detailEveryWeek': 'Ogni settimana',
@@ -956,7 +957,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.sortAscending': 'Ordine crescente',
 	'page.reminders.sortDescending': 'Ordine decrescente',
 	'page.reminders.emptyBody':
-		'Imposta visite veterinarie, farmaci o toelettatura per non dimenticare nulla.',
+		'Imposta visite veterinarie, vaccinazioni o toelettatura per non dimenticare nulla. I promemoria per le dosi si aggiungono dalla pagina del farmaco.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utenti',
@@ -968,11 +969,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelUsername': 'Nome utente',
 	'page.admin.labelPassword': 'Password',
 	'page.admin.labelRole': 'Ruolo',
+	'page.admin.roleHelpMember': 'Vede e modifica le schede di tutti i compagni.',
+	'page.admin.roleHelpAdmin':
+		'Tutto ciò che può fare un membro, più la gestione degli utenti, l’archiviazione dei compagni e le impostazioni della casa.',
+	'page.admin.roleHelpCaretaker':
+		'Vede solo i compagni assegnati e può registrare le cure solo durante un turno programmato.',
 	'page.admin.labelEmail': 'Email',
 	'page.admin.labelPhone': 'Telefono',
 	'page.admin.labelOptional': '(facoltativo)',
 	'page.admin.createUserSubmit': 'Crea utente',
 	'page.admin.userCreated': 'Utente creato con successo.',
+	'page.admin.caretakerCreated':
+		'Custode creato. Ora assegnagli i compagni di cui si occupa e aggiungi un turno.',
+	'page.admin.caretakerSetUp': 'Assegna compagni e turni',
 	'page.admin.userUpdated': 'Utente aggiornato con successo.',
 	'page.admin.assignmentsUpdated': 'Assegnazioni compagni aggiornate.',
 	'page.admin.joined': 'Iscritto',
@@ -1336,6 +1345,8 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.weight': 'Peso',
 	'search.group.media': 'Foto e video',
 	'search.group.note': 'Note',
+	'search.group.medication': 'Farmaci',
+	'search.group.supply': 'Scorte',
 	'search.filter.after': 'Dopo',
 	'search.filter.before': 'Prima',
 	'search.filter.removeCompanion': 'Rimuovi filtro {name}',
@@ -1510,6 +1521,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endsOn': 'Termina il {date}',
 	'page.medications.endedOn': 'Terminato il {date}',
 	'page.medications.addDoseReminder': 'Aggiungi un promemoria per la dose',
+	'page.medications.linkLabel': 'Farmaco: {name}',
 	'page.medications.once': 'Una volta',
 	'page.medications.doseReminders': 'Promemoria delle dosi',
 	'page.medications.noDoseReminders':
@@ -1555,6 +1567,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLastsDays': 'Indica quanti giorni dura una confezione, da 1 a 365.',
 	'error.purchaseInFuture': 'La data di acquisto non può essere nel futuro.',
 	'page.dashboard.suppliesViewAll': 'Vedi tutti',
+	'page.dashboard.medicationsEmpty':
+		'Tieni dose, orari e ultima somministrazione di ogni farmaco in un unico posto.',
+	'page.dashboard.suppliesEmpty':
+		'Ricevi un avviso prima che finiscano cibo, farmaci o altre scorte.',
 	'error.invalidDoseUnits': 'Indica quanto usa una dose: da {min} a {max}.',
 	'error.invalidCurrency': 'Scegli una valuta valida.',
 	'page.medications.labelSupply': 'Scorta',
@@ -1648,6 +1664,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelBoughtOn': 'Acquistato il',
 	'page.supplies.labelExpiresOn': 'Scade il',
 	'page.supplies.labelPets': 'Per',
+	'page.supplies.medicationsHeading': 'Farmaci che usano questa scorta',
 	'page.supplies.archivedPet': '{name} (archiviato)',
 	'page.supplies.labelNotes': 'Note',
 	'page.supplies.warnings': 'Avvisi',

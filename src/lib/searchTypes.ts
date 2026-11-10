@@ -8,6 +8,8 @@ export const SEARCH_ENTITY_TYPES = [
 	'health',
 	'weight',
 	'reminder',
+	'medication',
+	'supply',
 	'document',
 	'media',
 	'note'

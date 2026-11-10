@@ -11,8 +11,8 @@ import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
-import { listMedicationSummaries } from '#lib/server/medications.js';
-import { loadSupplyStates, toSupplySummary } from '#lib/server/supplies.js';
+import { companionHasMedications, listMedicationSummaries } from '#lib/server/medications.js';
+import { companionHasSupplies, loadSupplyStates, toSupplySummary } from '#lib/server/supplies.js';
 import { givenAction } from '#lib/server/medication-actions.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
@@ -34,7 +34,9 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		moodHistory,
 		openIncidents,
 		medications,
-		supplyStates
+		supplyStates,
+		hasMedications,
+		hasSupplies
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -112,7 +114,10 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		// The card shows only while something is active.
 		listMedicationSummaries([params.companionId], { activeOnly: true, includeSupply: true }),
 		// Only supplies with warnings on that need attention; autoship items stay quiet.
-		loadSupplyStates({ companionId: params.companionId, today: moodToday, alertsOnly: true })
+		loadSupplyStates({ companionId: params.companionId, today: moodToday, alertsOnly: true }),
+		// With none at all, the cards turn into a short prompt to add one.
+		companionHasMedications(params.companionId),
+		companionHasSupplies(params.companionId)
 	]);
 	const supplies = supplyStates.filter((s) => s.runningLow || s.expiring).map(toSupplySummary);
 
@@ -138,6 +143,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		openIncidents,
 		medications,
 		supplies,
+		noMedications: !hasMedications,
+		noSupplies: !hasSupplies,
 		moodTrendDays: resolveMoodTrendDays(locals.user.moodTrendDays),
 		moodToday
 	};

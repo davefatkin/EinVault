@@ -28,7 +28,9 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		orderBy: (r, { asc }) => [asc(r.dueAt)],
 		with: {
 			logger: { columns: { displayName: true } },
-			completer: { columns: { displayName: true } }
+			completer: { columns: { displayName: true } },
+			// A dose reminder links back to its medication.
+			medication: { columns: { id: true, name: true } }
 		}
 	});
 

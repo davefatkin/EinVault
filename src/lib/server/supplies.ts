@@ -20,7 +20,7 @@ import type { MessageKey } from '#lib/i18n/index.js';
 import { localDateISO, parseYmd } from '#lib/date.js';
 import { parseLeadDays, validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
-import type { MedicationSupplyOption } from '#lib/medications.js';
+import { isMedicationActive, type MedicationSupplyOption } from '#lib/medications.js';
 import {
 	dailyUse,
 	MAX_LASTS_DAYS,
@@ -492,6 +492,16 @@ export async function getSupplyForCompanion(companionId: string, id: string) {
 	return row;
 }
 
+/** Whether any supply is linked to this companion. */
+export async function companionHasSupplies(companionId: string): Promise<boolean> {
+	const [row] = await db
+		.select({ id: schema.supplyCompanions.supplyId })
+		.from(schema.supplyCompanions)
+		.where(eq(schema.supplyCompanions.companionId, companionId))
+		.limit(1);
+	return row !== undefined;
+}
+
 /** Counted supplies linked to this companion, by name: what a medication can draw from. */
 export async function listCountedSupplyOptions(
 	companionId: string
@@ -508,6 +518,37 @@ export async function listCountedSupplyOptions(
 		)
 		.where(eq(schema.supplies.kind, 'counted'))
 		.orderBy(asc(schema.supplies.name), asc(schema.supplies.id));
+}
+
+export type SupplyMedication = {
+	id: string;
+	name: string;
+	companionId: string;
+	companionName: string;
+	endedOn: string | null;
+	active: boolean;
+};
+
+/** The medications drawing from a supply, with each one's pet: active first, then by name. */
+export async function listSupplyMedications(
+	supplyId: string,
+	today: string
+): Promise<SupplyMedication[]> {
+	const rows = await db
+		.select({
+			id: schema.medications.id,
+			name: schema.medications.name,
+			companionId: schema.medications.companionId,
+			companionName: schema.companions.name,
+			endedOn: schema.medications.endedOn
+		})
+		.from(schema.medications)
+		.innerJoin(schema.companions, eq(schema.companions.id, schema.medications.companionId))
+		.where(eq(schema.medications.supplyId, supplyId))
+		.orderBy(asc(schema.medications.name), asc(schema.companions.name), asc(schema.medications.id));
+	return rows
+		.map((r) => ({ ...r, active: isMedicationActive(r.endedOn, today) }))
+		.sort((a, b) => Number(b.active) - Number(a.active));
 }
 
 /**

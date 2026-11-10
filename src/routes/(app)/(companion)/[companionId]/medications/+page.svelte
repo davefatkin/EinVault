@@ -9,6 +9,9 @@
 	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
 	import { ownerMedicationCaps } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { tick } from 'svelte';
+	import { page } from '$app/state';
+	import { stripUrlParams } from '#lib/stripUrlParams.js';
 
 	let { data, form } = $props();
 	const locale = getLocale();
@@ -21,6 +24,13 @@
 	const ended = $derived(data.medications.filter((m) => !m.active));
 
 	let showForm = $state(false);
+	// The dashboard's "Add medication" lands here with ?new=1: open the form
+	// once, then drop the param so a reload doesn't reopen it.
+	$effect(() => {
+		if (page.url.searchParams.get('new') !== '1') return;
+		if (caps.canEdit) showForm = true;
+		tick().then(() => stripUrlParams('new'));
+	});
 	// A failed save (also without JS) keeps the form open with what was typed,
 	// until Cancel dismisses those values.
 	const formValues = $derived(form && 'values' in form ? form.values : null);

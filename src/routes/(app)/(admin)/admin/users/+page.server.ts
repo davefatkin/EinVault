@@ -91,15 +91,18 @@ export const actions: Actions = {
 		}
 
 		const passwordHash = await bcrypt.hash(password, 12);
+		const id = generateId(15);
 		await db.insert(schema.users).values({
-			id: generateId(15),
+			id,
 			username,
 			displayName,
 			passwordHash,
 			role
 		});
 
-		return { createSuccess: true };
+		// A caretaker sees nothing until assigned companions and a shift; the
+		// page offers to open their drawer for that.
+		return { createSuccess: true, createdUserId: id, createdRole: role };
 	},
 
 	toggleActive: async ({ request, locals }) => {

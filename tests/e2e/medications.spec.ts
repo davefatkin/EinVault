@@ -92,6 +92,19 @@ test.describe('medications (owner)', () => {
 			await expect(
 				card.getByRole('button', { name: 'Mark done and log a Health Event' })
 			).toHaveCount(0);
+			// It links back to its medication, on the card and in the detail view.
+			const medHref = new URL(detailUrl).pathname;
+			await expect(card.getByRole('link', { name: `Medication: ${name}` })).toHaveAttribute(
+				'href',
+				medHref
+			);
+			await card.getByRole('button', { name: new RegExp(name) }).click();
+			const detail = asMember.getByRole('dialog');
+			await expect(detail.getByRole('link', { name: `Medication: ${name}` })).toHaveAttribute(
+				'href',
+				medHref
+			);
+			await detail.getByRole('button', { name: 'Close', exact: true }).click();
 
 			// Given logs a dose by the member.
 			await asMember.goto(detailUrl);

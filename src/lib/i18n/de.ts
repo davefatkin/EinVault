@@ -865,7 +865,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.weightHistoryTitle': 'Gewichtsverlauf',
 	'page.health.healthEventsTitle': 'Gesundheitsereignisse',
 	'page.health.emptyBody':
-		'Erfasse Tierarztbesuche, Impfungen und Medikamente, um die Akte aufzubauen.',
+		'Erfasse Tierarztbesuche, Impfungen und Eingriffe, um die Akte aufzubauen.',
 	'page.health.noHealthEvents': 'Noch keine Gesundheitsereignisse erfasst.',
 	'page.health.detailWeightEntry': 'Gewichtseintrag',
 	'page.health.detailWeight': 'Gewicht',
@@ -929,6 +929,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailType': 'Typ',
 	'page.reminders.detailDue': 'Fällig',
 	'page.reminders.detailRepeats': 'Wiederholt sich',
+	'page.reminders.detailMedication': 'Medikament',
 	'page.reminders.detailEveryDay': 'Täglich',
 	'page.reminders.detailEveryDays': 'Alle {count} Tage',
 	'page.reminders.detailEveryWeek': 'Wöchentlich',
@@ -961,7 +962,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.sortAscending': 'Aufsteigend sortieren',
 	'page.reminders.sortDescending': 'Absteigend sortieren',
 	'page.reminders.emptyBody':
-		'Lege Tierarzttermine, Medikamente oder Pflege fest, damit nichts vergessen wird.',
+		'Lege Tierarzttermine, Impfungen oder Pflege fest, damit nichts vergessen wird. Dosis-Erinnerungen fügst du auf der Seite des Medikaments hinzu.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Benutzer',
@@ -973,11 +974,19 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelUsername': 'Benutzername',
 	'page.admin.labelPassword': 'Passwort',
 	'page.admin.labelRole': 'Rolle',
+	'page.admin.roleHelpMember': 'Sieht und bearbeitet die Einträge aller Begleiter.',
+	'page.admin.roleHelpAdmin':
+		'Alles, was ein Mitglied kann, dazu Benutzer verwalten, Begleiter archivieren und Haushaltseinstellungen ändern.',
+	'page.admin.roleHelpCaretaker':
+		'Sieht nur die zugewiesenen Begleiter und kann nur während einer geplanten Schicht Pflege erfassen.',
 	'page.admin.labelEmail': 'E-Mail',
 	'page.admin.labelPhone': 'Telefon',
 	'page.admin.labelOptional': '(optional)',
 	'page.admin.createUserSubmit': 'Benutzer erstellen',
 	'page.admin.userCreated': 'Benutzer erfolgreich erstellt.',
+	'page.admin.caretakerCreated':
+		'Betreuer erstellt. Weise als Nächstes die Begleiter zu, die betreut werden sollen, und lege eine Schicht an.',
+	'page.admin.caretakerSetUp': 'Begleiter und Schichten zuweisen',
 	'page.admin.userUpdated': 'Benutzer erfolgreich aktualisiert.',
 	'page.admin.assignmentsUpdated': 'Begleiterzuweisungen aktualisiert.',
 	'page.admin.joined': 'Beigetreten',
@@ -1344,6 +1353,8 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.weight': 'Gewicht',
 	'search.group.media': 'Fotos & Videos',
 	'search.group.note': 'Notizen',
+	'search.group.medication': 'Medikamente',
+	'search.group.supply': 'Vorräte',
 	'search.filter.after': 'Nach',
 	'search.filter.before': 'Vor',
 	'search.filter.removeCompanion': '{name}-Filter entfernen',
@@ -1518,6 +1529,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endsOn': 'Endet am {date}',
 	'page.medications.endedOn': 'Beendet am {date}',
 	'page.medications.addDoseReminder': 'Dosis-Erinnerung hinzufügen',
+	'page.medications.linkLabel': 'Medikament: {name}',
 	'page.medications.once': 'Einmalig',
 	'page.medications.doseReminders': 'Dosis-Erinnerungen',
 	'page.medications.noDoseReminders':
@@ -1563,6 +1575,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
 	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.',
 	'page.dashboard.suppliesViewAll': 'Alle anzeigen',
+	'page.dashboard.medicationsEmpty':
+		'Behalte Dosis, Zeitplan und letzte Gabe jedes Medikaments an einem Ort.',
+	'page.dashboard.suppliesEmpty':
+		'Werde gewarnt, bevor Futter, Medikamente oder andere Vorräte ausgehen.',
 	'error.invalidDoseUnits': 'Gib an, wie viel eine Dosis verbraucht: von {min} bis {max}.',
 	'error.invalidCurrency': 'Wähle eine gültige Währung.',
 	'page.medications.labelSupply': 'Vorrat',
@@ -1657,6 +1673,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelBoughtOn': 'Gekauft am',
 	'page.supplies.labelExpiresOn': 'Läuft ab am',
 	'page.supplies.labelPets': 'Für',
+	'page.supplies.medicationsHeading': 'Medikamente, die diesen Vorrat nutzen',
 	'page.supplies.archivedPet': '{name} (archiviert)',
 	'page.supplies.labelNotes': 'Notizen',
 	'page.supplies.warnings': 'Warnungen',

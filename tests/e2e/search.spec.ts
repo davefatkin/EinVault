@@ -1,7 +1,11 @@
+import Database from 'better-sqlite3';
+import path from 'node:path';
 import { type Page } from '@playwright/test';
 import { test, expect } from '../lib/fixtures';
 import { waitForHydration } from '../lib/hydration';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import { insertMedication, deleteMedications } from '../lib/medications';
+import { SEED } from '../lib/seed';
 
 const COMP = 'seed-comp-ein';
 
@@ -437,5 +441,110 @@ test.describe('global search palette', () => {
 	test('caretaker gets 403 on /api/search with type filter', async ({ asCaretaker }) => {
 		const res = await asCaretaker.request.get('/api/search?q=seed&type=health');
 		expect(res.status()).toBe(403);
+	});
+});
+
+test.describe('medications and supplies in search', () => {
+	const EDWARD = SEED.companions.edward.id;
+
+	async function openPalette(page: Page) {
+		await page.goto('/');
+		await waitForHydration(page);
+		await page.getByRole('button', { name: 'Open search' }).click();
+		const dialog = page.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible({ timeout: 8_000 });
+		return dialog;
+	}
+
+	/** A supply shared by Ein and Edward, straight in the worker DB; pair with deleteSupply. */
+	function insertSharedSupply(dataDir: string, id: string, name: string) {
+		const sqlite = new Database(path.join(dataDir, 'einvault.db'));
+		try {
+			sqlite.pragma('foreign_keys = ON');
+			sqlite
+				.prepare("INSERT INTO supplies (id, name, kind, notes) VALUES (?, ?, 'counted', ?)")
+				.run(id, name, 'kept by the back door');
+			const link = sqlite.prepare(
+				'INSERT INTO supply_companions (supply_id, companion_id) VALUES (?, ?)'
+			);
+			link.run(id, COMP);
+			link.run(id, EDWARD);
+		} finally {
+			sqlite.close();
+		}
+	}
+
+	function deleteSupply(dataDir: string, id: string) {
+		const sqlite = new Database(path.join(dataDir, 'einvault.db'));
+		try {
+			sqlite.pragma('foreign_keys = ON');
+			sqlite.prepare('DELETE FROM supplies WHERE id = ?').run(id);
+		} finally {
+			sqlite.close();
+		}
+	}
+
+	test('a medication result opens its page', async ({ asMember, app }) => {
+		const name = `e2e-srch-med-${Date.now().toString(36)}`;
+		const id = insertMedication(app.dataDir, {
+			companionId: COMP,
+			name,
+			dose: '2 drops',
+			instructions: 'quarnelize gently'
+		});
+		try {
+			const dialog = await openPalette(asMember);
+			await asMember.keyboard.type('quarnelize');
+			await expect(
+				dialog.locator('#search-results').getByText('Medications', { exact: true })
+			).toBeVisible({ timeout: 8_000 });
+			await dialog.getByRole('option').filter({ hasText: name }).click();
+			await expect(asMember).toHaveURL(`/${COMP}/medications/${id}`, { timeout: 8_000 });
+			await expect(asMember).toHaveTitle(new RegExp(`^${name} \\|`));
+		} finally {
+			deleteMedications(app.dataDir, [id]);
+		}
+	});
+
+	test('a supply shared by two pets shows once and opens its page', async ({ asMember, app }) => {
+		const id = `e2e-srch-sup-${Date.now().toString(36)}`;
+		const name = `${id} bags`;
+		insertSharedSupply(app.dataDir, id, name);
+		try {
+			const dialog = await openPalette(asMember);
+			await asMember.keyboard.type(id);
+			const options = dialog.getByRole('option').filter({ hasText: name });
+			await expect(options).toHaveCount(1, { timeout: 8_000 });
+			await expect(
+				dialog.locator('#search-results').getByText('Supplies', { exact: true })
+			).toBeVisible();
+			await options.click();
+			// Opens under one of its pets: Edward, whose name sorts first.
+			await expect(asMember).toHaveURL(`/${EDWARD}/supplies/${id}`, { timeout: 8_000 });
+			await expect(asMember).toHaveTitle(new RegExp(`^${name} \\| Edward`));
+		} finally {
+			deleteSupply(app.dataDir, id);
+		}
+	});
+
+	test('#supply browses supplies only', async ({ asMember, app }) => {
+		const id = `e2e-srch-sup-${Date.now().toString(36)}`;
+		const name = `${id} bags`;
+		insertSharedSupply(app.dataDir, id, name);
+		const medId = insertMedication(app.dataDir, { companionId: COMP, name: `${id} med` });
+		try {
+			const dialog = await openPalette(asMember);
+			await selectSigilOption(asMember, '#supply', 'Supplies');
+			await expect(dialog.getByRole('button', { name: 'Remove Supplies filter' })).toBeVisible({
+				timeout: 8_000
+			});
+			const results = dialog.locator('#search-results');
+			await expect(results.getByText('Supplies', { exact: true })).toBeVisible({ timeout: 8_000 });
+			await expect(dialog.getByRole('option').filter({ hasText: name })).toHaveCount(1);
+			await expect(results.getByText('Medications', { exact: true })).toHaveCount(0);
+		} finally {
+			deleteSupply(app.dataDir, id);
+			deleteMedications(app.dataDir, [medId]);
+		}
 	});
 });

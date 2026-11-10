@@ -850,7 +850,7 @@ const messages = {
 	'page.health.savingWeight': 'Saving...',
 	'page.health.weightHistoryTitle': 'Weight History',
 	'page.health.healthEventsTitle': 'Health Events',
-	'page.health.emptyBody': 'Log vet visits, vaccinations, and medications to build the record.',
+	'page.health.emptyBody': 'Log vet visits, vaccinations, and procedures to build the record.',
 	'page.health.noHealthEvents': 'No health events logged yet.',
 	'page.health.detailWeightEntry': 'Weight entry',
 	'page.health.detailWeight': 'Weight',
@@ -913,6 +913,7 @@ const messages = {
 	'page.reminders.detailType': 'Type',
 	'page.reminders.detailDue': 'Due',
 	'page.reminders.detailRepeats': 'Repeats',
+	'page.reminders.detailMedication': 'Medication',
 	'page.reminders.detailEveryDay': 'Every day',
 	'page.reminders.detailEveryDays': 'Every {count} days',
 	'page.reminders.detailEveryWeek': 'Every week',
@@ -944,7 +945,8 @@ const messages = {
 	'page.reminders.sortCompleted': 'Completed',
 	'page.reminders.sortAscending': 'Sort ascending',
 	'page.reminders.sortDescending': 'Sort descending',
-	'page.reminders.emptyBody': 'Set vet visits, medications, or grooming so nothing slips.',
+	'page.reminders.emptyBody':
+		"Set vet visits, vaccinations, or grooming so nothing slips. Add dose reminders from a medication's page.",
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Users',
@@ -956,11 +958,19 @@ const messages = {
 	'page.admin.labelUsername': 'Username',
 	'page.admin.labelPassword': 'Password',
 	'page.admin.labelRole': 'Role',
+	'page.admin.roleHelpMember': "Sees and edits every companion's records.",
+	'page.admin.roleHelpAdmin':
+		'Everything a member can do, plus managing users, archiving companions, and household settings.',
+	'page.admin.roleHelpCaretaker':
+		'Sees only the companions assigned to them, and can log care only during a scheduled shift.',
 	'page.admin.labelEmail': 'Email',
 	'page.admin.labelPhone': 'Phone',
 	'page.admin.labelOptional': '(optional)',
 	'page.admin.createUserSubmit': 'Create user',
 	'page.admin.userCreated': 'User created successfully.',
+	'page.admin.caretakerCreated':
+		'Caretaker created. Next, assign the companions they look after and add a shift.',
+	'page.admin.caretakerSetUp': 'Assign companions and shifts',
 	'page.admin.userUpdated': 'User updated successfully.',
 	'page.admin.assignmentsUpdated': 'Companion assignments updated.',
 	'page.admin.joined': 'Joined',
@@ -1316,6 +1326,8 @@ const messages = {
 	'search.group.weight': 'Weight',
 	'search.group.media': 'Photos & videos',
 	'search.group.note': 'Notes',
+	'search.group.medication': 'Medications',
+	'search.group.supply': 'Supplies',
 	'search.filter.after': 'After',
 	'search.filter.before': 'Before',
 	'search.filter.removeCompanion': 'Remove {name} filter',
@@ -1488,6 +1500,7 @@ const messages = {
 	'page.medications.endsOn': 'Ends {date}',
 	'page.medications.endedOn': 'Ended {date}',
 	'page.medications.addDoseReminder': 'Add a dose reminder',
+	'page.medications.linkLabel': 'Medication: {name}',
 	'page.medications.once': 'Once',
 	'page.medications.doseReminders': 'Dose reminders',
 	'page.medications.noDoseReminders':
@@ -1531,6 +1544,9 @@ const messages = {
 	'error.invalidLastsDays': 'Enter how many days one lasts, from 1 to 365.',
 	'error.purchaseInFuture': "A purchase date can't be in the future.",
 	'page.dashboard.suppliesViewAll': 'View All',
+	'page.dashboard.medicationsEmpty':
+		"Keep each medication's dose, schedule, and last dose in one place.",
+	'page.dashboard.suppliesEmpty': 'Get a warning before food, medicine, or other supplies run out.',
 	'error.invalidDoseUnits': 'Enter how much one dose uses, from {min} to {max}.',
 	'error.invalidCurrency': 'Choose a valid currency.',
 	'page.medications.labelSupply': 'Supply',
@@ -1622,6 +1638,7 @@ const messages = {
 	'page.supplies.labelBoughtOn': 'Bought on',
 	'page.supplies.labelExpiresOn': 'Expires on',
 	'page.supplies.labelPets': 'For',
+	'page.supplies.medicationsHeading': 'Medications using this supply',
 	'page.supplies.archivedPet': '{name} (archived)',
 	'page.supplies.labelNotes': 'Notes',
 	'page.supplies.warnings': 'Warnings',

@@ -21,7 +21,8 @@
 		X,
 		Activity,
 		Pill,
-		Package
+		Package,
+		Plus
 	} from '@lucide/svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -666,7 +667,34 @@
 		initialDays={data.moodTrendDays}
 	/>
 
-	<!-- Medications card: only while something is active -->
+	<!-- With none added yet: a quiet card with one line and an add button in the header. -->
+	{#snippet addFirstCard(card: {
+		testId: string;
+		icon: typeof Pill;
+		title: string;
+		line: string;
+		href: string;
+		label: string;
+	})}
+		<Card data-testid={card.testId}>
+			<CardHeader class="pb-2">
+				<div class="flex items-center justify-between">
+					<CardTitle class="text-sm font-semibold flex items-center gap-2">
+						<card.icon class="h-4 w-4" />
+						{card.title}
+					</CardTitle>
+					<Button href={card.href} variant="ghost" size="sm" class="h-7 text-xs text-primary px-2">
+						<Plus class="h-3.5 w-3.5 mr-1" />{card.label}
+					</Button>
+				</div>
+			</CardHeader>
+			<CardContent class="pt-0">
+				<p class="text-sm text-muted-foreground">{card.line}</p>
+			</CardContent>
+		</Card>
+	{/snippet}
+
+	<!-- Medications card: while something is active, or a prompt when there are none -->
 	{#if data.medications.length > 0}
 		<Card data-testid="dashboard-medications">
 			<CardHeader class="pb-3">
@@ -700,9 +728,18 @@
 				</ul>
 			</CardContent>
 		</Card>
+	{:else if data.noMedications && companion.isActive !== false}
+		{@render addFirstCard({
+			testId: 'dashboard-medications-empty',
+			icon: Pill,
+			title: t(locale, 'page.medications.title'),
+			line: t(locale, 'page.dashboard.medicationsEmpty'),
+			href: `/${companion.id}/medications?new=1`,
+			label: t(locale, 'page.medications.add')
+		})}
 	{/if}
 
-	<!-- Supplies card: only while something needs attention -->
+	<!-- Supplies card: while something needs attention, or a prompt when there are none -->
 	{#if data.supplies.length > 0}
 		<Card data-testid="dashboard-supplies">
 			<CardHeader class="pb-3">
@@ -729,6 +766,15 @@
 				</ul>
 			</CardContent>
 		</Card>
+	{:else if data.noSupplies && companion.isActive !== false}
+		{@render addFirstCard({
+			testId: 'dashboard-supplies-empty',
+			icon: Package,
+			title: t(locale, 'page.supplies.title'),
+			line: t(locale, 'page.dashboard.suppliesEmpty'),
+			href: `/${companion.id}/supplies/new`,
+			label: t(locale, 'page.supplies.add')
+		})}
 	{/if}
 
 	<!-- Upcoming reminders card -->

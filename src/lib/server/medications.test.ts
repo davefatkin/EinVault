@@ -11,6 +11,7 @@ import {
 	restartMedication,
 	deleteMedication,
 	listMedicationSummaries,
+	companionHasMedications,
 	listDoses,
 	deleteDose,
 	sweepEndedMedicationReminders,
@@ -253,6 +254,15 @@ describe('create / get', () => {
 	});
 });
 
+describe('companionHasMedications', () => {
+	it('counts ended medications too, per companion', async () => {
+		expect(await companionHasMedications(C1)).toBe(false);
+		await createMedication(C1, input({ endedOn: '2026-11-02' }), U1);
+		expect(await companionHasMedications(C1)).toBe(true);
+		expect(await companionHasMedications(C2)).toBe(false);
+	});
+});
+
 describe('endMedication', () => {
 	it('sets ended_on and deletes open linked reminders, keeping completed ones', async () => {
 		const id = await createMedication(C1, input(), U1);
@@ -462,6 +472,10 @@ describe('sweepEndedMedicationReminders', () => {
 		const last = await addReminder('bulk-40000');
 		expect(await sweepEndedMedicationReminders(TODAY)).toBe(1);
 		expect(await reminderIds()).not.toContain(last);
+		// Each medication delete scans the search index for its row; emptying
+		// those rows first keeps the 40,000 deletes from going quadratic.
+		db.run(sql`delete from search_index where entity_type = 'medication'`);
+		db.run(sql`delete from medications where id like 'bulk-%'`);
 	});
 });
 

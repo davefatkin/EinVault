@@ -9,6 +9,7 @@ import {
 	deleteSupplyEvent,
 	getSupplyForCompanion,
 	listSupplyEvents,
+	listSupplyMedications,
 	loadSupplyStates,
 	parseAmount,
 	toSupplySummary
@@ -37,14 +38,16 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		Math.max(1, Math.floor(Number(url.searchParams.get('history')) || 1)),
 		MAX_EVENT_PAGES
 	);
-	const [events, { currency }] = await Promise.all([
+	const [events, { currency }, medications] = await Promise.all([
 		listSupplyEvents(state.id, pages * EVENT_PAGE + 1),
-		getAppSettings()
+		getAppSettings(),
+		listSupplyMedications(state.id, today)
 	]);
 	return {
 		companion,
 		supply: toSupplySummary(state),
 		notes: row.notes,
+		medications,
 		events: events.slice(0, pages * EVENT_PAGE),
 		// At the cap there is no next page, so "Show more" goes away.
 		moreEvents: events.length > pages * EVENT_PAGE && pages < MAX_EVENT_PAGES ? pages + 1 : null,

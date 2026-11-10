@@ -30,6 +30,7 @@
 	import { formatLeadDays, parseLeadDays } from '#lib/reminderLeadTimes.js';
 	import RecurrenceEditor from '#lib/components/reminders/RecurrenceEditor.svelte';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import MedicationLinkChip from '#lib/components/medications/MedicationLinkChip.svelte';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import { reminderBuckets } from '#lib/reminderBuckets.js';
@@ -309,6 +310,17 @@
 							>{t(locale, 'page.reminders.overdue')}</Badge
 						>{/if}
 				</div>
+				{#if r.medication}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.reminders.detailMedication')}</span
+						>
+						<MedicationLinkChip
+							name={r.medication.name}
+							href="/{data.companion.id}/medications/{r.medication.id}"
+						/>
+					</div>
+				{/if}
 				{#if r.isRecurring}
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -631,43 +643,55 @@
 						<div
 							class="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
 						>
-							<button
-								type="button"
-								onclick={() => openDetail(reminder)}
-								class="flex flex-1 items-start gap-3 text-left rounded-md min-w-0"
-							>
-								<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
-								<div class="min-w-0">
-									<div class="flex items-center gap-2 flex-wrap">
-										<span class="font-medium text-foreground">{reminder.title}</span>
-										{#if overdue}<Badge variant="coral">{t(locale, 'page.reminders.overdue')}</Badge
-											>{/if}
-										{#if reminder.isRecurring}
-											<Badge variant="secondary"
-												>{formatRecurrence(reminder, locale, 'short')}</Badge
+							<div class="flex-1 min-w-0">
+								<button
+									type="button"
+									onclick={() => openDetail(reminder)}
+									class="flex w-full items-start gap-3 text-left rounded-md min-w-0"
+								>
+									<span class="text-xl mt-0.5">{TYPE_ICONS[reminder.type] ?? '📌'}</span>
+									<div class="min-w-0">
+										<div class="flex items-center gap-2 flex-wrap">
+											<span class="font-medium text-foreground">{reminder.title}</span>
+											{#if overdue}<Badge variant="coral"
+													>{t(locale, 'page.reminders.overdue')}</Badge
+												>{/if}
+											{#if reminder.isRecurring}
+												<Badge variant="secondary"
+													>{formatRecurrence(reminder, locale, 'short')}</Badge
+												>
+											{/if}
+										</div>
+										{#if reminder.description}
+											<div
+												class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
 											>
+												{@html renderMarkdown(reminder.description)}
+											</div>
+										{/if}
+										<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
+											Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
+												user={reminder.logger}
+												variant="inline"
+											/>
+										</p>
+										{#if parseLeadDays(reminder.notifyLeadDays).length}
+											<p class="text-xs mt-0.5 text-muted-foreground">
+												{formatLeadDays(locale, parseLeadDays(reminder.notifyLeadDays))}
+											</p>
 										{/if}
 									</div>
-									{#if reminder.description}
-										<div
-											class="prose prose-sm dark:prose-invert max-w-none mt-0.5 text-muted-foreground"
-										>
-											{@html renderMarkdown(reminder.description)}
-										</div>
-									{/if}
-									<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
-										Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
-											user={reminder.logger}
-											variant="inline"
+								</button>
+								<!-- Outside the button: a link can't sit inside one. Indented past the type icon. -->
+								{#if reminder.medication}
+									<div class="mt-1.5 pl-9">
+										<MedicationLinkChip
+											name={reminder.medication.name}
+											href="/{data.companion.id}/medications/{reminder.medication.id}"
 										/>
-									</p>
-									{#if parseLeadDays(reminder.notifyLeadDays).length}
-										<p class="text-xs mt-0.5 text-muted-foreground">
-											{formatLeadDays(locale, parseLeadDays(reminder.notifyLeadDays))}
-										</p>
-									{/if}
-								</div>
-							</button>
+									</div>
+								{/if}
+							</div>
 							{#if data.companion.isActive !== false}
 								<div class="flex items-center gap-1 shrink-0 self-end sm:self-auto">
 									<Button

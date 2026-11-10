@@ -89,8 +89,31 @@ const HREF_BY_TYPE: Record<
 	reminder: (c, _d, id) => `/${c}/reminders?detail=${id}`,
 	document: (c, _d, id) => `/${c}/documents?preview=${id}`,
 	media: (c, d, id) => `/${c}/journal/${d}?media=${id}`,
-	note: (c, _d, id) => `/${c}/notes/${id}`
+	note: (c, _d, id) => `/${c}/notes/${id}`,
+	medication: (c, _d, id) => `/${c}/medications/${id}`,
+	supply: (c, _d, id) => `/${c}/supplies/${id}`
 };
+
+/**
+ * A supply has one index row per linked companion. Keep the row of one pet so
+ * it shows once and its id stays unique in the palette: among the pets the
+ * companion filter allows, active ones first, then by name.
+ */
+export function supplyOnceClause(companionIds: string[]): { sql: string; params: string[] } {
+	const allowed = companionIds.length
+		? ` AND sc.companion_id IN (${companionIds.map(() => '?').join(', ')})`
+		: '';
+	return {
+		sql: `(s.entity_type <> 'supply' OR s.companion_id = (
+				SELECT sc.companion_id FROM supply_companions sc
+				JOIN companions sc_c ON sc_c.id = sc.companion_id
+				WHERE sc.supply_id = s.entity_id${allowed}
+				ORDER BY sc_c.is_active DESC, sc_c.name, sc_c.id
+				LIMIT 1
+			))`,
+		params: companionIds
+	};
+}
 
 interface SearchRow {
 	entity_type: IndexEntityType;
@@ -106,10 +129,11 @@ interface SearchRow {
 export function search(filters: SearchFilters): SearchResult[] {
 	const match = buildMatchQuery(filters.text);
 	const fc = buildFilterClause(filters);
+	const once = supplyOnceClause(filters.companionIds);
 	let rows: SearchRow[];
 
 	if (match) {
-		const where = ['search_index MATCH ?', fc.sql].filter(Boolean).join(' AND ');
+		const where = ['search_index MATCH ?', fc.sql, once.sql].filter(Boolean).join(' AND ');
 		const stmt = db.$client.prepare(`
 			SELECT
 				s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
@@ -121,7 +145,7 @@ export function search(filters: SearchFilters): SearchResult[] {
 			ORDER BY bm25(search_index), s.event_date DESC
 			LIMIT 20
 		`);
-		rows = stmt.all(match, ...fc.params) as SearchRow[];
+		rows = stmt.all(match, ...fc.params, ...once.params) as SearchRow[];
 	} else if (hasActiveFilters(filters)) {
 		// Browse: filters only, no MATCH. FTS5 full-scans the virtual table by the
 		// UNINDEXED columns (no B-tree index possible on an FTS5 table — do not
@@ -134,11 +158,11 @@ export function search(filters: SearchFilters): SearchResult[] {
 				c.name AS companion_name
 			FROM search_index s
 			JOIN companions c ON c.id = s.companion_id
-			WHERE ${fc.sql}
+			WHERE ${fc.sql} AND ${once.sql}
 			ORDER BY s.event_date DESC
 			LIMIT 20
 		`);
-		rows = stmt.all(...fc.params) as SearchRow[];
+		rows = stmt.all(...fc.params, ...once.params) as SearchRow[];
 	} else {
 		return [];
 	}

@@ -8,6 +8,7 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
+import { createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 import { insertMedication, deleteMedications, dosesFor } from '../lib/medications';
 
 const COMP = 'seed-comp-ein';
@@ -313,6 +314,9 @@ test.describe('mood trend card', () => {
 
 		const card = asAdmin.getByTestId('mood-trend');
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toBeVisible();
+		// A new companion gets the add prompts; an archived one does not.
+		const addPrompts = asAdmin.getByTestId(/^dashboard-(medications|supplies)-empty$/);
+		await expect(addPrompts).toHaveCount(2);
 
 		// Archive the companion via the real UI flow (see companions.spec.ts).
 		await asAdmin.goto(`/companions/${id}/edit`);
@@ -328,6 +332,7 @@ test.describe('mood trend card', () => {
 		await asAdmin.goto(`/${id}`);
 		await expect(card.getByText('No moods logged yet')).toBeVisible();
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toHaveCount(0);
+		await expect(addPrompts).toHaveCount(0);
 	});
 });
 
@@ -471,7 +476,7 @@ celebrate(
 	}
 );
 
-test('medications card shows active medications with Given, and is hidden without any @mobile', async ({
+test('medications card shows active medications with Given, and prompts to add one without any @mobile', async ({
 	app,
 	asMember
 }) => {
@@ -479,17 +484,33 @@ test('medications card shows active medications with Given, and is hidden withou
 	const ended = 'e2e-dash-med-ended';
 	const card = asMember.getByTestId('dashboard-medications');
 	const ids: string[] = [];
+	// A fresh companion, so the zero-state prompt never depends on what other specs left on Ein.
+	const petName = `e2e-dash-meds-${Date.now()}`;
 	try {
-		await asMember.goto(`/${COMP}`);
-		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
+		const comp = await createCompanionViaUi(asMember, petName);
+		await asMember.goto(`/${comp}`);
+		await expect(asMember.getByRole('heading', { name: petName })).toBeVisible();
 		await expect(card).toHaveCount(0);
 
-		const id = insertMedication(app.dataDir, { companionId: COMP, name: active, dose: '2 ml' });
-		ids.push(id);
+		// With none at all, a quiet prompt opens the Medications add form.
+		const empty = asMember.getByTestId('dashboard-medications-empty');
+		await waitForHydration(asMember);
+		await empty.getByRole('link', { name: 'Add medication' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${comp}/medications$`), { timeout: 8_000 });
+		await expect(asMember.getByRole('button', { name: 'Save medication' })).toBeVisible();
+
+		// An ended medication alone hides the prompt and shows no card.
 		ids.push(
-			insertMedication(app.dataDir, { companionId: COMP, name: ended, endedOn: '2020-01-01' })
+			insertMedication(app.dataDir, { companionId: comp, name: ended, endedOn: '2020-01-01' })
 		);
-		await asMember.goto(`/${COMP}`);
+		await asMember.goto(`/${comp}`);
+		await expect(asMember.getByRole('heading', { name: petName })).toBeVisible();
+		await expect(empty).toHaveCount(0);
+		await expect(card).toHaveCount(0);
+
+		const id = insertMedication(app.dataDir, { companionId: comp, name: active, dose: '2 ml' });
+		ids.push(id);
+		await asMember.goto(`/${comp}`);
 		await waitForHydration(asMember);
 		await expect(card.getByText(active, { exact: true })).toBeVisible();
 		await expect(card.getByText('2 ml')).toBeVisible();
@@ -501,5 +522,6 @@ test('medications card shows active medications with Given, and is hidden withou
 		expect(dosesFor(app.dataDir, id)[0].givenBy).toBe(SEED.member.id);
 	} finally {
 		deleteMedications(app.dataDir, ids);
+		deleteCompanionByName(app.dataDir, petName);
 	}
 });

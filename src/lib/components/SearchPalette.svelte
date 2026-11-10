@@ -362,7 +362,9 @@
 			daily: 'search.group.daily',
 			weight: 'search.group.weight',
 			media: 'search.group.media',
-			note: 'search.group.note'
+			note: 'search.group.note',
+			medication: 'search.group.medication',
+			supply: 'search.group.supply'
 		};
 		return t(locale, keyMap[type]);
 	}
