@@ -1598,6 +1598,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.expiresOn': 'Expire le {date}',
 	'page.supplies.expiredOn': 'Expiré le {date}',
 	'page.supplies.runsOutOn': 'Épuisé vers le {date}',
+	'page.supplies.lastsDay': 'Un dure environ {count} jour',
 	'page.supplies.lastsDays': 'Un dure environ {count} jours',
 	'page.supplies.lastBought': 'Dernier achat le {date}',
 	'page.supplies.lowStockAt': 'Alerte à {count}',

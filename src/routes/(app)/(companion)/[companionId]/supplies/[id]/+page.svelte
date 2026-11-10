@@ -19,7 +19,7 @@
 	import CorrectCountDialog from '#lib/components/supplies/CorrectCountDialog.svelte';
 	import { formatDateOnly } from '#lib/date.js';
 	import { todayInZone } from '#lib/medications.js';
-	import { formatAmount, supplyStockLine } from '#lib/supplies.js';
+	import { formatAmount, formatLastsDays, supplyStockLine } from '#lib/supplies.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 
 	let { data, form } = $props();
@@ -37,9 +37,7 @@
 			supply.runOutOn && supply.daysLeft
 				? t(locale, 'page.supplies.runsOutOn', { date: date(supply.runOutOn) })
 				: null,
-			supply.lastsDays !== null && !counted
-				? t(locale, 'page.supplies.lastsDays', { count: supply.lastsDays })
-				: null,
+			supply.lastsDays !== null && !counted ? formatLastsDays(locale, supply.lastsDays) : null,
 			supply.stockedOn && !counted
 				? t(locale, 'page.supplies.lastBought', { date: date(supply.stockedOn) })
 				: null,

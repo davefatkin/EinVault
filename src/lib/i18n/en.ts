@@ -1567,6 +1567,7 @@ const messages = {
 	'page.supplies.expiresOn': 'Expires {date}',
 	'page.supplies.expiredOn': 'Expired {date}',
 	'page.supplies.runsOutOn': 'Runs out around {date}',
+	'page.supplies.lastsDay': 'One lasts about {count} day',
 	'page.supplies.lastsDays': 'One lasts about {count} days',
 	'page.supplies.lastBought': 'Last bought {date}',
 	'page.supplies.lowStockAt': 'Warns at {count}',

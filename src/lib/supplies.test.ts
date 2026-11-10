@@ -7,6 +7,7 @@ import {
 	isLowStock,
 	supplyAttention,
 	formatRunOut,
+	formatLastsDays,
 	supplyStockLine
 } from './supplies';
 
@@ -151,5 +152,13 @@ describe('supplyStockLine', () => {
 		const duration = { kind: 'duration' as const, unit: null, quantity: null };
 		expect(supplyStockLine('en', { ...duration, daysLeft: 12 })).toBe('about 12 days left');
 		expect(supplyStockLine('en', { ...duration, daysLeft: null })).toBe('Not bought yet');
+	});
+});
+
+describe('formatLastsDays', () => {
+	it('says day for one and days for more', () => {
+		expect(formatLastsDays('en', 1)).toBe('One lasts about 1 day');
+		expect(formatLastsDays('en', 30)).toBe('One lasts about 30 days');
+		expect(formatLastsDays('de', 1)).toBe('Eine Packung reicht etwa 1 Tag');
 	});
 });

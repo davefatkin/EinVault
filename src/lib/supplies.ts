@@ -120,6 +120,13 @@ export function formatRunOut(locale: Locale, daysLeft: number): string {
 	return t(locale, 'supply.runOut.weeks', { count: Math.floor(daysLeft / 7) });
 }
 
+/** "One lasts about 1 day" or "One lasts about 30 days". */
+export function formatLastsDays(locale: Locale, days: number): string {
+	return t(locale, days === 1 ? 'page.supplies.lastsDay' : 'page.supplies.lastsDays', {
+		count: days
+	});
+}
+
 /** A count for display: up to two decimals (half tablets), locale digits. */
 export function formatAmount(locale: Locale, n: number, signed = false): string {
 	return new Intl.NumberFormat(locale, {
