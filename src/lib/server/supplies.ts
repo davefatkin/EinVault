@@ -12,6 +12,7 @@ import {
 	dailyUse,
 	projectRunOut,
 	supplyAttention,
+	type SupplyEventView,
 	type SupplyKind,
 	type SupplySummary
 } from '#lib/supplies.js';
@@ -423,6 +424,47 @@ export async function getSupplyForCompanion(companionId: string, id: string) {
 	return row;
 }
 
+/**
+ * A supply's history, newest first (insertion order breaks ties within a
+ * second), with the pet of each use, who logged it and the receipt link.
+ */
+export async function listSupplyEvents(
+	supplyId: string,
+	limit: number
+): Promise<SupplyEventView[]> {
+	const rows = await db
+		.select({
+			id: schema.supplyEvents.id,
+			type: schema.supplyEvents.type,
+			at: schema.supplyEvents.at,
+			quantityDelta: schema.supplyEvents.quantityDelta,
+			costMinor: schema.supplyEvents.costMinor,
+			currency: schema.supplyEvents.currency,
+			note: schema.supplyEvents.note,
+			companionName: schema.companions.name,
+			createdBy: schema.users.displayName,
+			docCompanionId: schema.documents.companionId,
+			docFilename: schema.documents.filename,
+			docTitle: schema.documents.title
+		})
+		.from(schema.supplyEvents)
+		.leftJoin(schema.companions, eq(schema.companions.id, schema.supplyEvents.companionId))
+		.leftJoin(schema.users, eq(schema.users.id, schema.supplyEvents.createdBy))
+		.leftJoin(schema.documents, eq(schema.documents.id, schema.supplyEvents.documentId))
+		.where(eq(schema.supplyEvents.supplyId, supplyId))
+		.orderBy(desc(schema.supplyEvents.at), desc(sql`${schema.supplyEvents}.rowid`))
+		.limit(limit);
+	return rows.map(({ docCompanionId, docFilename, docTitle, companionName, ...r }) => ({
+		...r,
+		// Only a use names its pet; a purchase's pet is where the receipt went.
+		companionName: r.type === 'use' ? companionName : null,
+		receipt:
+			docCompanionId && docFilename
+				? { url: `/api/documents/${docCompanionId}/${docFilename}`, title: docTitle ?? '' }
+				: null
+	}));
+}
+
 export type SupplyState = SupplySummary & {
 	stockVersion: string;
 	runOutLeads: number[];
@@ -431,6 +473,27 @@ export type SupplyState = SupplySummary & {
 	lowAlerted: string | null;
 	expiryAlerted: string | null;
 };
+
+/** The display fields of a state, without the warning bookkeeping. */
+export function toSupplySummary(s: SupplyState): SupplySummary {
+	return {
+		id: s.id,
+		name: s.name,
+		kind: s.kind,
+		unit: s.unit,
+		quantity: s.quantity,
+		lastsDays: s.lastsDays,
+		stockedOn: s.stockedOn,
+		expiresOn: s.expiresOn,
+		alertsEnabled: s.alertsEnabled,
+		lowStockAt: s.lowStockAt,
+		runOutOn: s.runOutOn,
+		daysLeft: s.daysLeft,
+		runningLow: s.runningLow,
+		expiring: s.expiring,
+		companions: s.companions
+	};
+}
 
 /**
  * Supplies with their run-out projection and attention flags as of `today`,
@@ -561,7 +624,7 @@ const LEAD_ERROR_KEYS = {
 } as const satisfies Record<string, MessageKey>;
 
 /** A non-negative decimal (`.` or `,`); null when blank. */
-function parseAmount(raw: unknown): number | null | 'invalid' {
+export function parseAmount(raw: unknown): number | null | 'invalid' {
 	const text = String(raw ?? '').trim();
 	if (!text) return null;
 	if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return 'invalid';

@@ -5,7 +5,8 @@ import {
 	shortestEligibleLead,
 	isLowStock,
 	supplyAttention,
-	formatRunOut
+	formatRunOut,
+	supplyStockLine
 } from './supplies';
 
 describe('dailyUse', () => {
@@ -100,5 +101,24 @@ describe('formatRunOut', () => {
 		expect(formatRunOut('en', 14)).toBe('about 2 weeks left');
 		expect(formatRunOut('en', 20)).toBe('about 2 weeks left');
 		expect(formatRunOut('de', 5)).toContain('5');
+	});
+});
+
+describe('supplyStockLine', () => {
+	const counted = { kind: 'counted' as const, unit: 'tablets', quantity: 42, daysLeft: null };
+	it('counts, then adds a short run-out after a count', () => {
+		expect(supplyStockLine('en', counted)).toBe('42 tablets left');
+		expect(supplyStockLine('en', { ...counted, daysLeft: 21 })).toBe(
+			'42 tablets left · about 3 weeks'
+		);
+		expect(supplyStockLine('en', { ...counted, quantity: 0.5, unit: null, daysLeft: 0 })).toBe(
+			'0.5 left · runs out today'
+		);
+		expect(supplyStockLine('en', { ...counted, quantity: 0, daysLeft: 0 })).toBe('0 tablets left');
+	});
+	it('gives a duration supply its run-out line, or says it was never bought', () => {
+		const duration = { kind: 'duration' as const, unit: null, quantity: null };
+		expect(supplyStockLine('en', { ...duration, daysLeft: 12 })).toBe('about 12 days left');
+		expect(supplyStockLine('en', { ...duration, daysLeft: null })).toBe('Not bought yet');
 	});
 });

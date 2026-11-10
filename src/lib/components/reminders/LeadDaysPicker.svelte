@@ -11,11 +11,14 @@
 	let {
 		value = $bindable([]),
 		recurrence = null,
-		name = 'notifyLeadDays'
+		name = 'notifyLeadDays',
+		label
 	}: {
 		value?: number[];
 		recurrence?: { unit: 'day' | 'week' | 'month' | 'year'; interval: number } | null;
 		name?: string;
+		/** The legend; "Heads-up" by default. */
+		label?: string;
 	} = $props();
 
 	const locale = getLocale();
@@ -26,7 +29,7 @@
 	// kept in `value` so they come back if the period grows again (e.g. while retyping it).
 	const effective = $derived(pruneLeadDays(value, recurrence));
 
-	function label(n: number): string {
+	function chipLabel(n: number): string {
 		if (n === 7 || n === 14) {
 			return t(locale, n === 7 ? 'page.reminders.leadWeek' : 'page.reminders.leadWeeks', {
 				count: n / 7
@@ -46,7 +49,7 @@
 
 <fieldset class="space-y-1.5">
 	<legend class="text-sm font-medium text-foreground"
-		>{t(locale, 'page.reminders.leadLabel')}</legend
+		>{label ?? t(locale, 'page.reminders.leadLabel')}</legend
 	>
 	<input type="hidden" {name} value={serializeLeadDays(effective) ?? ''} />
 	<div class="flex flex-wrap gap-2">
@@ -66,7 +69,7 @@
 				{#if active}
 					<Check class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
 				{/if}
-				{label(n)}
+				{chipLabel(n)}
 			</button>
 		{/each}
 	</div>

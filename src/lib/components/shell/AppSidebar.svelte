@@ -12,6 +12,7 @@
 		FileText,
 		StickyNote,
 		Pill,
+		Package,
 		Search,
 		ChevronDown,
 		LayoutGrid,
@@ -93,6 +94,11 @@
 						href: `/${activeCompanion.id}/medications`,
 						label: t(locale, 'nav.medications'),
 						icon: Pill
+					},
+					{
+						href: `/${activeCompanion.id}/supplies`,
+						label: t(locale, 'nav.supplies'),
+						icon: Package
 					},
 					{
 						href: `/${activeCompanion.id}/documents`,
