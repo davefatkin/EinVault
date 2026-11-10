@@ -7,15 +7,7 @@
 	import PawLogo from '#lib/components/PawLogo.svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
-	import {
-		Home,
-		ClipboardList,
-		NotebookPen,
-		Lock,
-		Settings,
-		LogOut,
-		ChevronRight
-	} from '@lucide/svelte';
+	import { ClipboardList, NotebookPen, Lock, Settings, LogOut, ChevronRight } from '@lucide/svelte';
 	import AppFooter from '#lib/components/AppFooter.svelte';
 	import { ToastRegion } from '#lib/components/ui/toast/index.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -34,32 +26,6 @@
 	let activeCompanionId = $derived(page.params.companionId ?? null);
 	let activeCompanion = $derived(
 		data.companions.find((c) => c.id === activeCompanionId) ?? data.companions[0] ?? null
-	);
-
-	// Desktop pill nav items (Overview / Journal / Log)
-	let navItems = $derived(
-		activeCompanion
-			? [
-					{
-						href: `/care/${activeCompanion.id}`,
-						label: t(locale, 'nav.caretaker.overview'),
-						icon: Home,
-						restricted: false
-					},
-					{
-						href: `/care/${activeCompanion.id}/journal`,
-						label: t(locale, 'nav.journal'),
-						icon: NotebookPen,
-						restricted: true
-					},
-					{
-						href: `/care/${activeCompanion.id}/log`,
-						label: t(locale, 'nav.caretaker.logActivity'),
-						icon: ClipboardList,
-						restricted: true
-					}
-				]
-			: []
 	);
 
 	// Quick add (on shift only)
@@ -198,30 +164,32 @@
 	<div
 		class="mx-auto w-full max-w-3xl px-4 sm:px-6 py-6 flex-1 pb-20 md:pb-6 print:max-w-none print:p-0"
 	>
-		{#if navItems.length > 0}
+		{#if activeCompanion}
 			<nav
 				class="hidden md:flex gap-1 mb-6 rounded-xl border border-border bg-muted p-1 print:hidden"
 				aria-label={t(locale, 'aria.caretakerNav')}
 			>
-				{#each navItems as item (item.href)}
-					{@const isActive =
-						page.url.pathname === item.href ||
-						(page.url.pathname.startsWith(item.href + '/') &&
-							item.href !== `/care/${activeCompanion?.id}`)}
-					{@const isLocked = item.restricted && !data.isOnShift}
-					{@const NavIcon = item.icon}
-					{#if isLocked}
+				{#each CARETAKER_SECTIONS as section (section.key)}
+					{@const isActive = isSectionActive(
+						'caretaker',
+						section.path,
+						page.url.pathname,
+						activeCompanion.id
+					)}
+					{@const label = t(locale, section.labelKey)}
+					{@const NavIcon = NAV_ICONS[section.key]}
+					{#if section.restricted && !data.isOnShift}
 						<span
-							aria-label="{item.label} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
 							class="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium opacity-40 cursor-not-allowed text-muted-foreground"
 						>
 							<NavIcon class="h-4 w-4 shrink-0" />
-							{item.label}
+							{label}
+							<span class="sr-only">({t(locale, 'layout.caretaker.requiresActiveShift')})</span>
 							<Lock class="h-3 w-3 ml-0.5" aria-hidden="true" />
 						</span>
 					{:else}
 						<a
-							href={item.href}
+							href={sectionHref('caretaker', activeCompanion.id, section.path)}
 							aria-current={isActive ? 'page' : undefined}
 							class="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors
 								{isActive
@@ -229,7 +197,7 @@
 								: 'text-muted-foreground hover:text-foreground hover:bg-accent'}"
 						>
 							<NavIcon class="h-4 w-4 shrink-0" />
-							{item.label}
+							{label}
 						</a>
 					{/if}
 				{/each}

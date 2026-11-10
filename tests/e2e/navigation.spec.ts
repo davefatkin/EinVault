@@ -390,6 +390,13 @@ test('caretaker on-shift desktop: Journal and Log are links (not locked)', async
 	const nav = asCaretaker.getByRole('navigation', { name: 'Caretaker navigation' });
 	await expect(nav.getByRole('link', { name: 'Journal' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
+	await expect(nav.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
+
+	// On a section page that section is current, not Overview.
+	await nav.getByRole('link', { name: 'Journal' }).click();
+	await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/journal`));
+	await expect(nav.getByRole('link', { name: 'Journal' })).toHaveAttribute('aria-current', 'page');
+	await expect(nav.getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current');
 });
 
 test('caretaker has no Open search control on care page', async ({ asCaretaker }) => {
@@ -504,14 +511,29 @@ offShiftTest(
 
 		await page.goto(`/care/${EIN}`);
 
+		// Locked items show their label and carry a visually hidden note that
+		// they need an active shift, like the phone bar's locked tabs.
 		const nav = page.getByRole('navigation', { name: 'Caretaker navigation' });
-		// Locked items are <span> elements with aria-label containing "requires active shift"
-		await expect(nav.locator('[aria-label*="requires active shift"]').first()).toBeVisible({
-			timeout: 8_000
+		const journalLocked = nav.locator('span', { hasText: 'Journal' }).filter({
+			hasText: 'requires active shift'
 		});
+		const logLocked = nav.locator('span', { hasText: 'Log activity' }).filter({
+			hasText: 'requires active shift'
+		});
+		await expect(journalLocked).toHaveCount(1, { timeout: 8_000 });
+		await expect(logLocked).toHaveCount(1);
+		await expect(journalLocked).toBeVisible();
+		await expect(logLocked).toBeVisible();
+		await expect(nav).toContainText('Journal (requires active shift)');
+		await expect(nav).toContainText('Log activity (requires active shift)');
+		await expect(nav.locator('[aria-label]')).toHaveCount(0);
 		// No active links for Journal or Log in the pill nav
-		await expect(nav.getByRole('link', { name: 'Journal' })).toHaveCount(0);
-		await expect(nav.getByRole('link', { name: 'Log activity' })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Journal/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Log activity/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: 'Overview' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
 
 		await ctx.close();
 	}
