@@ -978,6 +978,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelOptional': '(facoltativo)',
 	'page.admin.createUserSubmit': 'Crea utente',
 	'page.admin.userCreated': 'Utente creato con successo.',
+	'page.admin.caretakerCreated':
+		'Custode creato. Ora assegnagli i compagni di cui si occupa e aggiungi un turno.',
+	'page.admin.caretakerSetUp': 'Assegna compagni e turni',
 	'page.admin.userUpdated': 'Utente aggiornato con successo.',
 	'page.admin.assignmentsUpdated': 'Assegnazioni compagni aggiornate.',
 	'page.admin.joined': 'Iscritto',

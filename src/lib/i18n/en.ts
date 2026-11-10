@@ -967,6 +967,9 @@ const messages = {
 	'page.admin.labelOptional': '(optional)',
 	'page.admin.createUserSubmit': 'Create user',
 	'page.admin.userCreated': 'User created successfully.',
+	'page.admin.caretakerCreated':
+		'Caretaker created. Next, assign the companions they look after and add a shift.',
+	'page.admin.caretakerSetUp': 'Assign companions and shifts',
 	'page.admin.userUpdated': 'User updated successfully.',
 	'page.admin.assignmentsUpdated': 'Companion assignments updated.',
 	'page.admin.joined': 'Joined',

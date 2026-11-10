@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 // Helper: log in as a freshly-created user in an isolated context.
 // Returns the page (already past login) and a cleanup function.
@@ -240,6 +241,36 @@ test.describe('admin-users', () => {
 		);
 		await expect(newPassPage).not.toHaveURL(/auth\/login/, { timeout: 10_000 });
 		await cleanup();
+	});
+
+	// -----------------------------------------------------------------------
+	// 5b. A new caretaker gets a next step that opens their drawer.
+	// -----------------------------------------------------------------------
+	test('creating a caretaker offers to assign companions and shifts', async ({ asAdmin }) => {
+		const username = `e2e-caretaker-${Date.now()}`;
+		await asAdmin.goto('/admin/users');
+		await waitForHydration(asAdmin);
+		await asAdmin.getByRole('button', { name: /new user/i }).click();
+
+		const form = asAdmin.locator('form[action="?/create"]');
+		await form.getByLabel(/display name/i).fill('E2E Caretaker');
+		await form.getByLabel(/username/i).fill(username);
+		await form.getByLabel(/password/i).fill(INITIAL_PASSWORD);
+		await form.getByLabel('Role').selectOption('caretaker');
+		await expect(form.getByLabel('Role')).toHaveAccessibleDescription(
+			'Sees only the companions assigned to them, and can log care only during a scheduled shift.'
+		);
+		await form.getByRole('button', { name: /create user/i }).click();
+
+		await expect(asAdmin.getByText(/Caretaker created\. Next, assign/)).toBeVisible({
+			timeout: 10_000
+		});
+		await expect(asAdmin.getByText(/user created successfully/i)).toHaveCount(0);
+		await asAdmin.getByRole('button', { name: 'Assign companions and shifts' }).click();
+		const dialog = asAdmin.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 4_000 });
+		await expect(dialog.getByText('E2E Caretaker', { exact: true })).toBeVisible();
+		await expect(dialog.getByRole('checkbox', { name: /^Ein\b/ })).toBeVisible();
 	});
 
 	// -----------------------------------------------------------------------

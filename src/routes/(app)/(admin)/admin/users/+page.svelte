@@ -74,7 +74,17 @@
 
 	{#if form?.createSuccess}
 		<Alert variant="success">
-			<AlertDescription>{t(locale, 'page.admin.userCreated')}</AlertDescription>
+			{#if form.createdRole === 'caretaker'}
+				{@const createdId = form.createdUserId}
+				<AlertDescription class="flex flex-wrap items-center justify-between gap-2">
+					<span>{t(locale, 'page.admin.caretakerCreated')}</span>
+					<Button variant="soft" size="sm" onclick={() => (manageUserId = createdId)}>
+						{t(locale, 'page.admin.caretakerSetUp')}
+					</Button>
+				</AlertDescription>
+			{:else}
+				<AlertDescription>{t(locale, 'page.admin.userCreated')}</AlertDescription>
+			{/if}
 		</Alert>
 	{/if}
 

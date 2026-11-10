@@ -984,6 +984,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelOptional': '(facultatif)',
 	'page.admin.createUserSubmit': "Créer l'utilisateur",
 	'page.admin.userCreated': 'Utilisateur créé avec succès.',
+	'page.admin.caretakerCreated':
+		'Gardien créé. Attribuez-lui maintenant ses compagnons et ajoutez une garde.',
+	'page.admin.caretakerSetUp': 'Attribuer compagnons et gardes',
 	'page.admin.userUpdated': 'Utilisateur mis à jour avec succès.',
 	'page.admin.assignmentsUpdated': 'Assignations de compagnons mises à jour.',
 	'page.admin.joined': 'Inscrit',

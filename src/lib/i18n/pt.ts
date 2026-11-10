@@ -981,6 +981,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelOptional': '(opcional)',
 	'page.admin.createUserSubmit': 'Criar utilizador',
 	'page.admin.userCreated': 'Utilizador criado com sucesso.',
+	'page.admin.caretakerCreated':
+		'Cuidador criado. Agora atribua-lhe os companheiros de que cuida e adicione um turno.',
+	'page.admin.caretakerSetUp': 'Atribuir companheiros e turnos',
 	'page.admin.userUpdated': 'Utilizador atualizado com sucesso.',
 	'page.admin.assignmentsUpdated': 'Atribuições de companheiros atualizadas.',
 	'page.admin.joined': 'Registado',

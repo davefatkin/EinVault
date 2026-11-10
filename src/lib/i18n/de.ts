@@ -983,6 +983,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelOptional': '(optional)',
 	'page.admin.createUserSubmit': 'Benutzer erstellen',
 	'page.admin.userCreated': 'Benutzer erfolgreich erstellt.',
+	'page.admin.caretakerCreated':
+		'Betreuer erstellt. Weise als Nächstes die Begleiter zu, die betreut werden sollen, und lege eine Schicht an.',
+	'page.admin.caretakerSetUp': 'Begleiter und Schichten zuweisen',
 	'page.admin.userUpdated': 'Benutzer erfolgreich aktualisiert.',
 	'page.admin.assignmentsUpdated': 'Begleiterzuweisungen aktualisiert.',
 	'page.admin.joined': 'Beigetreten',
