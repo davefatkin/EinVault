@@ -22,6 +22,7 @@ Thumbs.db
 
 # Tests
 .test-data/
+.vitest/
 test-results/
 playwright-report/
 blob-report/
