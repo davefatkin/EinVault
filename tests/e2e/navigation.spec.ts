@@ -434,6 +434,36 @@ test.describe('pet switcher', () => {
 		}
 	});
 
+	test('sidebar groups sections under Health and Records', async ({ asMember, app }, testInfo) => {
+		test.skip(testInfo.project.name !== 'desktop', 'the sidebar is desktop-only');
+		const medId = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-sidebar-med' });
+		try {
+			await asMember.goto(`/${EIN}/medications/${medId}`);
+			const sidebar = asMember.getByRole('complementary', { name: 'Main navigation' });
+			const links = sidebar.getByRole('navigation').getByRole('link');
+			await expect(links).toHaveText([
+				'Dashboard',
+				'Journal',
+				'Reminders',
+				'Health',
+				'Medications',
+				'Supplies',
+				'Documents',
+				'Notes'
+			]);
+			await expect(sidebar.getByText('Health', { exact: true }).first()).toBeVisible();
+			await expect(sidebar.getByRole('group', { name: 'Health' })).toBeVisible();
+			await expect(sidebar.getByRole('group', { name: 'Records' })).toBeVisible();
+			await expect(sidebar.getByText('Records', { exact: true })).toBeVisible();
+			await expect(links.filter({ hasText: 'Medications' })).toHaveAttribute(
+				'aria-current',
+				'page'
+			);
+		} finally {
+			deleteMedications(app.dataDir, [medId]);
+		}
+	});
+
 	test('sidebar switcher shows care status', async ({ asMember }, testInfo) => {
 		test.skip(testInfo.project.name === 'mobile', 'the sidebar is desktop-only');
 		await asMember.goto(`/${EIN}`);

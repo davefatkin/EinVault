@@ -3,26 +3,21 @@
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import PawLogo from '#lib/components/PawLogo.svelte';
-	import {
-		House,
-		NotebookPen,
-		HeartPulse,
-		Bell,
-		FileText,
-		StickyNote,
-		Pill,
-		Package,
-		Search,
-		ChevronDown,
-		LayoutGrid,
-		PlusCircle
-	} from '@lucide/svelte';
+	import { Search, ChevronDown, LayoutGrid, PlusCircle } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { modKeyLabel } from '#lib/shortcuts.js';
 	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
 	import CompanionSwitcher from './CompanionSwitcher.svelte';
+	import {
+		OWNER_SECTIONS,
+		NAV_GROUP_LABELS,
+		isSectionActive,
+		sectionHref,
+		type NavGroup
+	} from '#lib/nav/sections.js';
+	import { NAV_ICONS } from '#lib/nav/icons.js';
 
 	type Companion = {
 		id: string;
@@ -69,48 +64,8 @@
 		activeCompanion === null && page.url.pathname === '/' && companions.length > 1
 	);
 
-	let navItems = $derived(
-		activeCompanion
-			? [
-					{ href: `/${activeCompanion.id}`, label: t(locale, 'nav.dashboard'), icon: House },
-					{
-						href: `/${activeCompanion.id}/journal`,
-						label: t(locale, 'nav.journal'),
-						icon: NotebookPen
-					},
-					{
-						href: `/${activeCompanion.id}/health`,
-						label: t(locale, 'nav.health'),
-						icon: HeartPulse
-					},
-					{
-						href: `/${activeCompanion.id}/reminders`,
-						label: t(locale, 'nav.reminders'),
-						icon: Bell
-					},
-					{
-						href: `/${activeCompanion.id}/medications`,
-						label: t(locale, 'nav.medications'),
-						icon: Pill
-					},
-					{
-						href: `/${activeCompanion.id}/supplies`,
-						label: t(locale, 'nav.supplies'),
-						icon: Package
-					},
-					{
-						href: `/${activeCompanion.id}/documents`,
-						label: t(locale, 'nav.documents'),
-						icon: FileText
-					},
-					{
-						href: `/${activeCompanion.id}/notes`,
-						label: t(locale, 'nav.notes'),
-						icon: StickyNote
-					}
-				]
-			: []
-	);
+	const NAV_GROUPS: NavGroup[] = ['primary', 'health', 'records'];
+	const sectionsByGroup = (group: NavGroup) => OWNER_SECTIONS.filter((x) => x.group === group);
 
 	let searchShortcut = $state('Ctrl+K');
 	onMount(() => {
@@ -225,27 +180,46 @@
 	</div>
 
 	<!-- Section nav (companion context only) -->
-	{#if navItems.length > 0}
+	{#if activeCompanion}
 		<nav class="flex-1 overflow-y-auto px-3 py-1">
-			{#each navItems as item (item.href)}
-				{@const isActive =
-					page.url.pathname === item.href ||
-					(page.url.pathname.startsWith(item.href + '/') &&
-						item.href !== `/${activeCompanion?.id}`)}
-				{@const NavIcon = item.icon}
-				<a
-					href={item.href}
-					aria-current={isActive ? 'page' : undefined}
-					class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors mb-0.5 {isActive
-						? 'text-foreground'
-						: 'text-muted-foreground hover:text-foreground hover:bg-accent'}"
-					style={isActive
-						? 'background: linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08));'
-						: ''}
-				>
-					<NavIcon class="h-4 w-4 shrink-0 {isActive ? 'text-primary' : 'text-muted-foreground'}" />
-					{item.label}
-				</a>
+			{#each NAV_GROUPS as group (group)}
+				{@const headingId = group === 'primary' ? undefined : `sidebar-group-${group}`}
+				<div class={group === 'primary' ? '' : 'mt-3'}>
+					{#if group !== 'primary'}
+						<p
+							id={headingId}
+							class="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60"
+						>
+							{t(locale, NAV_GROUP_LABELS[group])}
+						</p>
+					{/if}
+					<div role="group" aria-labelledby={headingId}>
+						{#each sectionsByGroup(group) as section (section.key)}
+							{@const isActive = isSectionActive(
+								'owner',
+								section.path,
+								page.url.pathname,
+								activeCompanion.id
+							)}
+							{@const NavIcon = NAV_ICONS[section.key]}
+							<a
+								href={sectionHref('owner', activeCompanion.id, section.path)}
+								aria-current={isActive ? 'page' : undefined}
+								class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors mb-0.5 {isActive
+									? 'text-foreground'
+									: 'text-muted-foreground hover:text-foreground hover:bg-accent'}"
+								style={isActive
+									? 'background: linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08));'
+									: ''}
+							>
+								<NavIcon
+									class="h-4 w-4 shrink-0 {isActive ? 'text-primary' : 'text-muted-foreground'}"
+								/>
+								{t(locale, section.labelKey)}
+							</a>
+						{/each}
+					</div>
+				</div>
 			{/each}
 		</nav>
 	{:else}
