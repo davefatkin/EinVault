@@ -152,6 +152,7 @@
 			{submit}
 			submitting={phase === 'saving'}
 			oncancel={onclose}
+			medicationsHref="/{companionId}/medications"
 		>
 			{#snippet extra()}
 				<div class="space-y-1.5">

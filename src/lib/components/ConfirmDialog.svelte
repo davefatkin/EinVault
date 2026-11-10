@@ -7,11 +7,20 @@
 		open: boolean;
 		message: string;
 		confirmLabel?: string;
+		/** Confirm button style; destructive unless the action isn't. */
+		confirmVariant?: 'softDestructive' | 'softSuccess';
 		onconfirm: () => void;
 		oncancel: () => void;
 	}
 
-	let { open, message, confirmLabel, onconfirm, oncancel }: Props = $props();
+	let {
+		open,
+		message,
+		confirmLabel,
+		confirmVariant = 'softDestructive',
+		onconfirm,
+		oncancel
+	}: Props = $props();
 	const locale = getLocale();
 
 	let dialogEl = $state<HTMLElement | null>(null);
@@ -84,7 +93,7 @@
 				<Button variant="ghost" size="sm" onclick={oncancel}
 					>{t(locale, 'component.confirmDialog.cancel')}</Button
 				>
-				<Button variant="softDestructive" size="sm" onclick={onconfirm}
+				<Button variant={confirmVariant} size="sm" onclick={onconfirm}
 					>{confirmLabel ?? t(locale, 'component.confirmDialog.delete')}</Button
 				>
 			</div>

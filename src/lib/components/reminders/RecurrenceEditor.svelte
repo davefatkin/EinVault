@@ -30,11 +30,14 @@
 			recurrenceAnchorValue: null
 		},
 		userDefault = null,
-		idPrefix = 'rec'
+		idPrefix = 'rec',
+		onRecurrenceChange
 	}: {
 		value?: EditorValue;
 		userDefault?: RecurrenceUnit | null;
 		idPrefix?: string;
+		/** Reports the live repeat settings (null when not recurring) to siblings that depend on them. */
+		onRecurrenceChange?: (r: { unit: RecurrenceUnit; interval: number } | null) => void;
 	} = $props();
 
 	const locale = getLocale();
@@ -84,6 +87,10 @@
 		if (unit === 'week' && anchor !== 'interval' && anchor !== 'day_of_week') anchor = 'interval';
 		if (unit === 'month' && anchor !== 'interval' && anchor !== 'day_of_month') anchor = 'interval';
 		if (unit === 'year' && anchor !== 'interval' && anchor !== 'day_of_year') anchor = 'interval';
+	});
+
+	$effect(() => {
+		onRecurrenceChange?.(isRecurring ? { unit, interval } : null);
 	});
 
 	const intervalMax = $derived(RECURRENCE_INTERVAL_MAX[unit]);

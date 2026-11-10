@@ -10,10 +10,13 @@ import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { listSharedNotes } from '#lib/server/notes.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
+import { getMedication, listMedicationSummaries, logDose } from '#lib/server/medications.js';
+import { doseRefusal } from '#lib/server/medication-actions.js';
+import { caretakerMedicationCaps } from '#lib/medications.js';
 
-// Actions need their own assignment + shift gate: the load()'s assignment
-// check does not protect POSTs, so without this an on-shift caretaker could
-// act on companions they are not assigned to.
+// Actions need their own assignment + shift + active-companion gate: the
+// load()'s assignment check does not protect POSTs, so without this an
+// on-shift caretaker could act on companions they are not assigned to.
 async function caretakerActionGuard(
 	userId: string,
 	companionId: string,
@@ -30,6 +33,13 @@ async function caretakerActionGuard(
 
 	const { isOnShift } = await getShiftStatus(userId);
 	if (!isOnShift) return fail(403, { error: t(locale, shiftErrorKey) });
+
+	// An archived companion is read-only, even for an assigned caretaker on shift.
+	const companion = await db.query.companions.findFirst({
+		where: and(eq(schema.companions.id, companionId), eq(schema.companions.isActive, true)),
+		columns: { id: true }
+	});
+	if (!companion) return fail(404, { error: t(locale, 'error.companionNotFound') });
 
 	return null;
 }
@@ -117,7 +127,10 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		sharedNotes: await listSharedNotes(params.companionId),
 		// Open incidents show on or off shift, like the notes; adding to them
 		// needs a shift.
-		openIncidents: await listOpenIncidents([params.companionId])
+		openIncidents: await listOpenIncidents([params.companionId]),
+		// Active medications show on or off shift; "Given" needs a shift.
+		medications: await listMedicationSummaries([params.companionId], { activeOnly: true }),
+		medicationCaps: caretakerMedicationCaps(isOnShift)
 	};
 };
 
@@ -170,6 +183,30 @@ export const actions: Actions = {
 		skipReminder(existing, locals.user.id);
 
 		return { skipSuccess: true };
+	},
+
+	// "Given" for a medication. logDose isn't companion-scoped, so besides the
+	// guard (assignment, shift, active companion) this checks the medication
+	// belongs to the companion and is still active.
+	given: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const guard = await caretakerActionGuard(
+			locals.user.id,
+			params.companionId,
+			locals.locale,
+			'error.mustBeOnShiftToLogDose'
+		);
+		if (guard) return guard;
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+		const medication = id ? await getMedication(params.companionId, id) : undefined;
+		if (!medication) return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });
+
+		const refused = doseRefusal(await logDose(medication.id, locals.user), locals.locale);
+		if (refused) return refused;
+		return { doseLogged: medication.name };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {

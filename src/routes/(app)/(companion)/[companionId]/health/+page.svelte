@@ -60,8 +60,11 @@
 	let submittingHealth = $state(false);
 	let submittingWeight = $state(false);
 
-	const HEALTH_TYPES = healthTypeOptions(locale);
-	const HEALTH_TYPE_VALUES = HEALTH_TYPES.map((ht) => ht.value);
+	// New events can't pick Medication (R2), so neither can a ?new prefill; the
+	// edit select keeps it for events that already have it.
+	const NEW_HEALTH_TYPE_VALUES = healthTypeOptions(locale, { includeMedication: false }).map(
+		(ht) => ht.value
+	);
 
 	// Prefill state for the "Log event" flow from the reminders pages.
 	// Empty strings mean "no prefill" and the form falls back to defaults.
@@ -141,7 +144,7 @@
 		} else {
 			prefillTitle = (params.get('title') ?? '').slice(0, 200);
 			const rawType = params.get('type') ?? '';
-			prefillType = (HEALTH_TYPE_VALUES as string[]).includes(rawType)
+			prefillType = (NEW_HEALTH_TYPE_VALUES as string[]).includes(rawType)
 				? (rawType as HealthEventType)
 				: '';
 			prefillDescription = (params.get('description') ?? '').slice(0, 2000);
@@ -383,6 +386,7 @@
 					defaultAt={todayISO}
 					submitting={submittingHealth}
 					prefill={{ title: prefillTitle, type: prefillType, notes: prefillDescription }}
+					medicationsHref="/{data.companion.id}/medications"
 					submit={() => {
 						submittingHealth = true;
 						return async ({ update }) => {
@@ -642,7 +646,7 @@
 										<div class="space-y-1.5">
 											<Label for="edit-type-{event.id}">{t(locale, 'page.health.labelType')}</Label>
 											<Select id="edit-type-{event.id}" name="type" required>
-												{#each HEALTH_TYPES as ht (ht.value)}
+												{#each healthTypeOptions( locale, { includeMedication: event.type === 'medication' } ) as ht (ht.value)}
 													<option value={ht.value} selected={event.type === ht.value}
 														>{ht.label}</option
 													>

@@ -4,7 +4,13 @@ import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { db, schema } from '#lib/server/db/index.js';
 import { currentSeverity } from '#lib/incidents.js';
-import { seedRows, seedDemoIncidents, SEED, copyDemoPhotoFiles } from '#lib/server/db/demo-seed.js';
+import {
+	seedRows,
+	seedDemoIncidents,
+	seedDemoReminderHeadsUps,
+	SEED,
+	copyDemoPhotoFiles
+} from '#lib/server/db/demo-seed.js';
 
 // copyDemoPhotoFiles does rmSync on the real uploads dir, which would destroy
 // a developer's journal photos in the ./data directory. Stub the fs operations
@@ -20,6 +26,23 @@ vi.mock('node:fs', async (importOriginal) => {
 });
 
 describe('seedRows', () => {
+	it('seeds no medications and leaves medication_schedule null', async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+		seedRows(db as never, { now: 1_700_000_000_000 });
+		expect(await db.select().from(schema.medications)).toEqual([]);
+		expect(await db.select().from(schema.medicationDoses)).toEqual([]);
+		const comps = await db.query.companions.findMany();
+		expect(comps.length).toBeGreaterThan(0);
+		expect(comps.every((c) => c.medicationSchedule === null)).toBe(true);
+		const linked = await db.query.reminders.findMany({
+			where: (r, { isNotNull }) => isNotNull(r.medicationId)
+		});
+		expect(linked).toEqual([]);
+	});
+
 	beforeEach(async () => {
 		// Each test needs a clean slate. The test DB is shared within this file,
 		// so clear seeded tables before each test (cascade deletes handle children).
@@ -180,6 +203,43 @@ describe('refreshDemoContent', () => {
 		await db.delete(schema.companionCaretakers);
 		await db.delete(schema.companions);
 		await db.delete(schema.users);
+	});
+
+	it('seeds the demo medications with a linked daily reminder and past doses', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, DATA_DIR);
+		refreshDemoContent(db, true, DATA_DIR);
+		const meds = await db.select().from(schema.medications);
+		const byName = new Map(meds.map((m) => [m.name, m]));
+		expect(meds).toHaveLength(4);
+		const carprofen = byName.get('Carprofen')!;
+		expect(carprofen).toMatchObject({
+			companionId: SEED.companions.ein.id,
+			dose: '1 tablet',
+			instructions: 'With food.'
+		});
+		expect(carprofen.endedOn).toBeTruthy();
+		const heartworm = byName.get('Heartworm chew')!;
+		expect(heartworm.companionId).toBe(SEED.companions.ein.id);
+		const recurring = await db.query.reminders.findFirst({
+			where: (r, { eq }) => eq(r.id, 'seed-reminder-recurring')
+		});
+		expect(recurring?.medicationId).toBe(heartworm.id);
+		const open = await db.query.reminders.findMany({
+			where: (r, { and, eq, isNull }) =>
+				and(eq(r.medicationId, carprofen.id), isNull(r.completedAt))
+		});
+		expect(open).toHaveLength(1);
+		expect(open[0]).toMatchObject({ recurrenceUnit: 'day', recurrenceInterval: 1 });
+		expect(open[0].dueAt.getHours()).toBe(8);
+		const companions = new Set(meds.map((m) => m.companionId));
+		expect(companions).toEqual(
+			new Set([SEED.companions.ein.id, SEED.companions.edward.id, SEED.companions.julia.id])
+		);
+		const doses = await db.select().from(schema.medicationDoses);
+		expect(doses.length).toBeGreaterThanOrEqual(3);
+		expect(new Set(doses.map((d) => d.source))).toEqual(new Set(['manual', 'reminder']));
 	});
 
 	it('refuses to run when demoMode is false (fail closed)', async () => {
@@ -351,5 +411,36 @@ describe('seedDemoIncidents', () => {
 		expect(await incidents()).toHaveLength(2);
 		expect(await db.select().from(schema.healthEventUpdates)).toHaveLength(5);
 		expect(await db.select().from(schema.healthEventLinks)).toHaveLength(1);
+	});
+});
+
+describe('seedDemoReminderHeadsUps', () => {
+	const now = 1_700_000_000_000;
+
+	beforeEach(async () => {
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	const withLeads = async () =>
+		(await db.query.reminders.findMany()).filter((r) => r.notifyLeadDays !== null);
+
+	it('seedRows alone leaves every reminder without heads-ups', async () => {
+		seedRows(db as never, { now });
+		expect(await withLeads()).toEqual([]);
+	});
+
+	it('sets heads-ups on exactly two reminders, one recurring, armed 30 days back', async () => {
+		seedRows(db as never, { now });
+		seedDemoReminderHeadsUps(db as never, { now });
+		const rows = await withLeads();
+		expect(rows).toHaveLength(2);
+		expect(rows.filter((r) => r.isRecurring).map((r) => r.notifyLeadDays)).toEqual(['2']);
+		expect(rows.filter((r) => !r.isRecurring).map((r) => r.notifyLeadDays)).toEqual(['7,1']);
+		for (const r of rows) {
+			expect(r.leadArmedAt!.getTime()).toBe(now - 30 * 24 * 60 * 60 * 1000);
+		}
 	});
 });

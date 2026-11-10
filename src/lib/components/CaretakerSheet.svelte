@@ -9,7 +9,7 @@
 	// checkboxes. The sheet uses no <nav>, <aside> or <header> elements (the
 	// e2e print checks rely on that), and its images are not lazy-loaded, since
 	// lazy images can be missing from a printout.
-	import { onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { Printer, Video } from '@lucide/svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
@@ -23,6 +23,7 @@
 	import { formatAge, formatFullAge } from '#lib/age.js';
 	import { homeSinceLabel, sexLabel, speciesLabel, speciesLabels } from '#lib/i18n/labels.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatMedicationSchedule } from '#lib/medications.js';
 	import {
 		photoSelection,
 		sheetPhotoIds,
@@ -45,6 +46,7 @@
 		shell: 'app' | 'care';
 	} = $props();
 	const locale = getLocale();
+	const timeZone = getContext<string | undefined>('serverTimezone');
 
 	let mounted = $state(false);
 	onMount(() => {
@@ -78,7 +80,7 @@
 			.join(' · ')
 	);
 	const hasRoutine = $derived(
-		!!(sheet.schedules.feeding || sheet.schedules.walk || sheet.schedules.medication)
+		!!(sheet.schedules.feeding || sheet.schedules.walk || sheet.medications.length > 0)
 	);
 
 	const photoIds = $derived(sheetPhotoIds(sheet));
@@ -351,11 +353,27 @@
 				{#if sheet.schedules.walk}
 					{@render schedule(labels.scheduleCardTitle, sheet.schedules.walk)}
 				{/if}
-				{#if sheet.schedules.medication}
-					{@render schedule(
-						t(locale, 'page.dashboard.caretaker.cardMedicationSchedule'),
-						sheet.schedules.medication
-					)}
+				{#if sheet.medications.length > 0}
+					<div data-testid="sheet-medications">
+						<h3 class="mb-1 text-xs font-semibold text-muted-foreground">
+							{t(locale, 'page.medications.title')}
+						</h3>
+						<ul class="space-y-3">
+							{#each sheet.medications as medication (medication.id)}
+								{@const when = formatMedicationSchedule(medication.schedule, locale, timeZone)}
+								{@const doseLine = [medication.dose, when].filter(Boolean).join(' · ')}
+								<li class="break-inside-avoid">
+									<p class="font-medium break-words text-foreground">{medication.name}</p>
+									{#if doseLine}<p class="text-sm text-foreground">{doseLine}</p>{/if}
+									{#if medication.instructions}
+										<div class="prose prose-sm dark:prose-invert max-w-none">
+											{@html renderMarkdown(medication.instructions)}
+										</div>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					</div>
 				{/if}
 			</div>
 		</section>

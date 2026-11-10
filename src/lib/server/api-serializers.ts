@@ -9,9 +9,11 @@ import type {
 	caretakerShifts,
 	users
 } from '#lib/server/db/schema.js';
+import { parseLeadDays } from '#lib/reminderLeadTimes.js';
 import type { NoteWithTags } from '#lib/server/notes.js';
 import type { LinkedEvent } from '#lib/incidents.js';
 import type { QuickLogButton } from '#lib/server/quick-logs.js';
+import type { MedicationSummary } from '#lib/medications.js';
 
 type CompanionRow = typeof companions.$inferSelect;
 type DailyEventRow = typeof dailyEvents.$inferSelect;
@@ -128,7 +130,13 @@ export function toApiWeightEntry(row: WeightEntryRow) {
 // holder can't fetch the image anyway.
 // `sitterNotes` feeds the deprecated notesForSitter field (shared notes as
 // markdown, from sharedNotesMarkdown). The DB column is always NULL since #310.
-export function toApiCompanion(row: CompanionRow, sitterNotes: string | null = null) {
+// `medicationSchedule` feeds the deprecated alias (active medications as
+// markdown lines, from medicationScheduleMarkdown); the column is cleared.
+export function toApiCompanion(
+	row: CompanionRow,
+	sitterNotes: string | null = null,
+	medicationSchedule: string | null = null
+) {
 	return {
 		id: row.id,
 		name: row.name,
@@ -143,7 +151,7 @@ export function toApiCompanion(row: CompanionRow, sitterNotes: string | null = n
 		bio: row.bio,
 		feedingSchedule: row.feedingSchedule,
 		walkSchedule: row.walkSchedule,
-		medicationSchedule: row.medicationSchedule,
+		medicationSchedule,
 		emergencyContactName: row.emergencyContactName,
 		emergencyContactPhone: row.emergencyContactPhone,
 		vetName: row.vetName,
@@ -170,7 +178,9 @@ export function toApiReminder(row: ReminderRow) {
 		isRecurring: row.isRecurring,
 		completedAt: row.completedAt,
 		outcome: row.outcome,
-		seriesId: row.seriesId
+		seriesId: row.seriesId,
+		leadDays: parseLeadDays(row.notifyLeadDays),
+		medicationId: row.medicationId
 	};
 }
 
@@ -239,5 +249,31 @@ export function toApiNote(row: NoteWithTags) {
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 		updatedBy: row.updatedBy
+	};
+}
+
+// Public shape for a medication (GET /api/medications). The recurrence-engine
+// details of linked reminders stay internal; nextDueAt is enough for a device.
+export function toApiMedication(m: MedicationSummary) {
+	return {
+		...toApiMedicationMinimal(m),
+		dose: m.dose,
+		instructions: m.instructions,
+		startedOn: m.startedOn,
+		endedOn: m.endedOn,
+		lastGiven: m.lastGiven ? { at: m.lastGiven.at, by: m.lastGiven.by?.displayName ?? null } : null
+	};
+}
+
+// Minimal medication shape for `write`-scoped tokens (log-only devices): just
+// enough to find the id for POST /api/medications/{id}/doses, like
+// toApiCompanionMinimal. No dose, instructions, or who gave the last dose.
+export function toApiMedicationMinimal(m: MedicationSummary) {
+	return {
+		id: m.id,
+		companionId: m.companionId,
+		name: m.name,
+		active: m.active,
+		nextDueAt: m.nextDueAt
 	};
 }

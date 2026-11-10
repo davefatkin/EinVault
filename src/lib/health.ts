@@ -25,11 +25,12 @@ export const HEALTH_TO_REMINDER_TYPE = {
 } as const satisfies Record<HealthEventType, ReminderType>;
 
 // Reverse mapping for the "Log event" flow on reminder dismissal. `null`
-// means "no sensible default health type for this reminder kind" so the
-// URL builder omits `?type=` and the destination form picks its own default.
+// means "no health event to log for this reminder kind", so "Log event" is
+// not offered. Medication reminders map to null: doses belong on the
+// Medications page, and new health events no longer take that type.
 export const REMINDER_TO_HEALTH_TYPE = {
 	vet: 'vet_visit',
-	medication: 'medication',
+	medication: null,
 	vaccination: 'vaccination',
 	grooming: null,
 	other: null
@@ -53,6 +54,50 @@ export function reminderPrefillUrl(
 	];
 	if (notes) parts.push(`description=${encodeURIComponent(notes.slice(0, 2000))}`);
 	return `/${companionId}/reminders?${parts.join('&')}`;
+}
+
+/**
+ * The reminders page's `?new=1` form for a dose reminder: type medication,
+ * title = name, notes = dose, plus the hidden link to the medication.
+ */
+export function medicationReminderPrefillUrl(
+	companionId: string,
+	medication: { id: string; name: string; dose: string | null }
+): string {
+	const url = reminderPrefillUrl(companionId, 'medication', medication.name, medication.dose);
+	return `${url}&medicationId=${encodeURIComponent(medication.id)}`;
+}
+
+/**
+ * Whether completing a reminder may offer "Log event": only for reminder
+ * types with a matching health event type, and never for a reminder linked
+ * to a medication (it logs a dose already).
+ */
+export function reminderAllowsLogEvent(reminder: {
+	type: string;
+	medicationId?: string | null;
+}): boolean {
+	return !reminder.medicationId && REMINDER_TO_HEALTH_TYPE[reminder.type as ReminderType] !== null;
+}
+
+/**
+ * Where a "Done & Log Event" completion goes next, or null to stay put. The
+ * same rule as the button: no URL when reminderAllowsLogEvent says no.
+ */
+export function reminderLogEventUrl(reminder: {
+	companionId: string;
+	type: ReminderType;
+	title: string;
+	description: string | null;
+	medicationId: string | null;
+}): string | null {
+	const type = REMINDER_TO_HEALTH_TYPE[reminder.type];
+	if (!type || !reminderAllowsLogEvent(reminder)) return null;
+	return healthEventPrefillUrl(reminder.companionId, {
+		title: reminder.title,
+		description: reminder.description,
+		type
+	});
 }
 
 /**

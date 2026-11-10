@@ -9,6 +9,8 @@ import {
 	toApiHealthEvent,
 	toApiWeightEntry,
 	toApiReminder,
+	toApiMedication,
+	toApiMedicationMinimal,
 	toApiShift,
 	toApiUser,
 	toApiUserPublic
@@ -24,6 +26,7 @@ import {
 	HealthEvent,
 	WeightEntry,
 	Reminder,
+	Medication,
 	Shift,
 	User,
 	UserPublic
@@ -227,10 +230,50 @@ describe('response schemas match their serializers', () => {
 			completedBy: null,
 			outcome: null,
 			createdAt: new Date(),
-			loggedBy: 'user-1'
+			loggedBy: 'user-1',
+			notifyLeadDays: null,
+			leadArmedAt: null,
+			medicationId: null
 		};
 		const result = toApiReminder(row);
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Reminder.shape).sort());
+	});
+
+	it('toApiMedication output keys match Medication.shape', () => {
+		const result = toApiMedication({
+			id: 'm1',
+			companionId: 'c1',
+			name: 'Carprofen',
+			dose: null,
+			instructions: null,
+			startedOn: '2026-11-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: null,
+			lastGiven: null,
+			schedule: []
+		});
+		expect(Object.keys(result).sort()).toEqual(Object.keys(Medication.shape).sort());
+	});
+
+	it('toApiMedicationMinimal keys are in Medication.shape; the rest are optional', () => {
+		const result = toApiMedicationMinimal({
+			id: 'm1',
+			companionId: 'c1',
+			name: 'Carprofen',
+			dose: null,
+			instructions: null,
+			startedOn: '2026-11-01',
+			endedOn: null,
+			active: true,
+			nextDueAt: null,
+			lastGiven: null,
+			schedule: []
+		});
+		const shape = Medication.shape as Record<string, { isOptional(): boolean }>;
+		for (const key of Object.keys(result)) expect(shape[key]?.isOptional()).toBe(false);
+		for (const key of Object.keys(shape).filter((k) => !(k in result)))
+			expect(shape[key].isOptional()).toBe(true);
 	});
 
 	it('toApiShift output keys match Shift.shape', () => {

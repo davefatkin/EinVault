@@ -1,6 +1,7 @@
 import type { Species } from '#lib/activityTypes.js';
 import type { MediaItem } from '#lib/media.js';
 import type { OpenIncidentSummary } from '#lib/incidents.js';
+import type { MedicationScheduleItem } from '#lib/medications.js';
 
 // Printable caretaker sheet (#280). Client-safe: CaretakerSheet.svelte reads
 // these types and #lib/server/caretaker-sheet.ts builds the value, mapping
@@ -22,6 +23,15 @@ export type SheetNote = {
 	media: SheetMedia[];
 };
 
+/** An active medication on the sheet (read-only: no dose history, no who). */
+export type SheetMedication = {
+	id: string;
+	name: string;
+	dose: string | null;
+	instructions: string | null; // markdown
+	schedule: MedicationScheduleItem[];
+};
+
 export type CaretakerSheet = {
 	companion: {
 		id: string;
@@ -36,7 +46,8 @@ export type CaretakerSheet = {
 		avatarPath: string | null; // CompanionAvatar builds the URL itself
 	};
 	latestWeight: { weight: number; unit: string; recordedAt: Date } | null;
-	schedules: { feeding: string | null; walk: string | null; medication: string | null }; // markdown
+	schedules: { feeding: string | null; walk: string | null }; // markdown
+	medications: SheetMedication[]; // active only, by name
 	vet: { name: string | null; clinic: string | null; phone: string | null } | null; // null when all three are empty
 	emergency: { name: string | null; phone: string | null } | null; // null when both are empty
 	owners: { id: string; displayName: string; phone: string | null; email: string | null }[]; // only with a phone or email
