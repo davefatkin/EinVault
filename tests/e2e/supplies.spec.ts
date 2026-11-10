@@ -5,6 +5,7 @@ import { test, expect, type AppWorker } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
+import { createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 
 const EIN = SEED.companions.ein.id;
 const EDWARD = SEED.companions.edward.id;
@@ -34,11 +35,11 @@ function resetCurrency(app: AppWorker) {
 }
 
 /** Opens the add form from the list and fills what both kinds share. */
-async function startSupply(page: Page, name: string) {
-	await page.goto(BASE);
+async function startSupply(page: Page, name: string, base = BASE) {
+	await page.goto(base);
 	await waitForHydration(page);
 	await page.getByRole('link', { name: 'Add supply' }).first().click();
-	await expect(page).toHaveURL(new RegExp(`${BASE}/new$`));
+	await expect(page).toHaveURL(new RegExp(`${base}/new$`));
 	await waitForHydration(page);
 	await page.locator('#supply-name').fill(name);
 }
@@ -222,8 +223,14 @@ test.describe('supplies (owner)', () => {
 });
 
 /** Adds a counted supply of `quantity` tablets (optionally warning at `lowAt`) and returns its URL. */
-async function addCountedSupply(page: Page, name: string, quantity: number, lowAt?: number) {
-	await startSupply(page, name);
+async function addCountedSupply(
+	page: Page,
+	name: string,
+	quantity: number,
+	lowAt?: number,
+	base = BASE
+) {
+	await startSupply(page, name, base);
 	await page.locator('#supply-unit').fill('tablets');
 	await page.locator('#supply-startingQuantity').fill(String(quantity));
 	if (lowAt !== undefined) await page.locator('#supply-lowStockAt').fill(String(lowAt));
@@ -340,42 +347,47 @@ test.describe('medications and supplies', () => {
 		app
 	}) => {
 		const name = `e2e-dash-${Date.now()}`;
+		const petName = `e2e-dash-pet-${Date.now()}`;
 		const empty = asMember.getByTestId('dashboard-supplies-empty');
 		try {
+			// A fresh companion, so the zero-state prompt never depends on what other specs left on Ein.
+			const comp = await createCompanionViaUi(asMember, petName);
+			const base = `/${comp}/supplies`;
 			// None at all: a quiet prompt to add the first one.
-			await asMember.goto(`/${EIN}`);
+			await asMember.goto(`/${comp}`);
 			await expect(empty.getByRole('link', { name: 'Add supply' })).toHaveAttribute(
 				'href',
-				`${BASE}/new`
+				`${base}/new`
 			);
 
 			// One that needs nothing: no card and no prompt.
-			await addCountedSupply(asMember, name, 30);
-			await asMember.goto(`/${EIN}`);
+			await addCountedSupply(asMember, name, 30, undefined, base);
+			await asMember.goto(`/${comp}`);
 			await waitForHydration(asMember);
 			await expect(asMember.getByTestId('dashboard-supplies')).toHaveCount(0);
 			await expect(empty).toHaveCount(0);
 
 			// Down to its low-stock count: the card appears with the row.
-			await asMember.goto(BASE);
+			await asMember.goto(base);
 			await asMember.getByRole('link', { name }).click();
 			await waitForHydration(asMember);
 			await asMember.getByRole('link', { name: 'Edit', exact: true }).click();
 			await waitForHydration(asMember);
 			await asMember.locator('#supply-lowStockAt').fill('30');
 			await asMember.getByRole('button', { name: 'Save supply' }).click();
-			await expect(asMember).toHaveURL(new RegExp(`${BASE}/(?!new$)[^/]+$`), { timeout: 8_000 });
+			await expect(asMember).toHaveURL(new RegExp(`${base}/(?!new$)[^/]+$`), { timeout: 8_000 });
 
-			await asMember.goto(`/${EIN}`);
+			await asMember.goto(`/${comp}`);
 			const card = asMember.getByTestId('dashboard-supplies');
 			await expect(card).toBeVisible();
 			await expect(card.getByRole('link', { name })).toBeVisible();
 			await expect(card.getByText('Running low')).toBeVisible();
 			await expect(card.getByText('30 tablets left')).toBeVisible();
 			await card.getByRole('link', { name: 'View All' }).click();
-			await expect(asMember).toHaveURL(new RegExp(`${BASE}$`));
+			await expect(asMember).toHaveURL(new RegExp(`${base}$`));
 		} finally {
 			cleanup(app, name);
+			deleteCompanionByName(app.dataDir, petName);
 		}
 	});
 });
