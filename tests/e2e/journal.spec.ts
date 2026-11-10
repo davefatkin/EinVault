@@ -842,6 +842,11 @@ test.describe('journal day editor', () => {
 			const dialog = asMember.getByRole('dialog', { name: 'New incident' });
 			await dialog.locator('#incident-title').fill(title);
 			await dialog.locator('#incident-severity').selectOption('mild');
+			// The default start is this day at the browser's time of day, which on
+			// some host clocks is another server-UTC day; the incident is then only
+			// linked here and its chip opens the detail modal. Noon keeps the day
+			// for any browser offset under 12h.
+			await dialog.locator('#incident-start').fill('2026-05-12T12:00');
 			const created = waitForCreatedIncidentId(asMember, 'addIncident');
 			await dialog.getByRole('button', { name: 'Save incident' }).click();
 			id = await created;
