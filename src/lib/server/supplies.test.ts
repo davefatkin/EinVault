@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { localDateISO } from '#lib/date.js';
+import { isLowStock } from '#lib/supplies.js';
 import { logDose } from './medications';
 import {
 	applyDoseStock,
@@ -218,6 +219,25 @@ describe('applyDoseStock / restoreDoseStock', () => {
 		expect((await supplyRow(s)).quantity).toBe(5);
 	});
 
+	it('tenths add up exactly: 5.3 less three 0.1 doses is 5, 0.3 less three is 0', async () => {
+		const s = await createSupply(input({ startingQuantity: 5.3 }), [C1], U1);
+		const m = await med(s, 0.1);
+		for (let i = 0; i < 3; i++) await dose(m);
+		const row = await supplyRow(s);
+		expect(row.quantity).toBe(5);
+		expect(isLowStock(row.quantity, 5)).toBe(true);
+		const deltas = (await eventsOf(s)).filter((e) => e.type === 'use').map((e) => e.quantityDelta);
+		expect(deltas).toEqual([-0.1, -0.1, -0.1]);
+
+		const small = await createSupply(input({ startingQuantity: 0.3 }), [C1], U1);
+		const sm = await med(small, 0.1);
+		const ds = [await dose(sm), await dose(sm), await dose(sm)];
+		expect((await supplyRow(small)).quantity).toBe(0);
+		// Restoring them all comes back to exactly 0.3.
+		restore(ds);
+		expect((await supplyRow(small)).quantity).toBe(0.3);
+	});
+
 	it('deleting the medication keeps the count and the use event, unlinked', async () => {
 		const s = await createSupply(input({ startingQuantity: 5 }), [C1], U1);
 		const m = await med(s);
@@ -289,6 +309,16 @@ describe('correctCount', () => {
 		expect(await correctCount(s, 20, U1, null)).toBe('unchanged');
 		expect(await supplyRow(s)).toEqual(before);
 		expect((await eventsOf(s)).filter((e) => e.type === 'correction')).toEqual([]);
+	});
+
+	it('compares and records rounded values', async () => {
+		const s = await createSupply(input({ startingQuantity: 0.3 }), [C1], U1);
+		// 0.1 + 0.2 is 0.30000000000000004 in floating point: the same count.
+		expect(await correctCount(s, 0.1 + 0.2, U1, null)).toBe('unchanged');
+		expect(await correctCount(s, 0.7, U1, null)).toBe('corrected');
+		const [corr] = (await eventsOf(s)).filter((e) => e.type === 'correction');
+		expect(corr.quantityDelta).toBe(0.4);
+		expect((await supplyRow(s)).quantity).toBe(0.7);
 	});
 
 	it('refuses a duration supply or a missing one', async () => {

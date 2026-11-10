@@ -44,10 +44,24 @@ export interface SupplyInput {
 	notes: string | null;
 }
 
-/** Applied change for `delta` at `before`, clamped so the quantity never drops below 0. */
-function clampedDelta(before: number, delta: number): number {
-	const applied = before + delta < 0 ? -before : delta;
-	return applied === 0 ? 0 : applied; // never store -0
+/**
+ * A quantity or delta rounded to 6 decimals, so tenths add up exactly and no
+ * 1e-17 residue is left behind. Never -0.
+ */
+function roundQuantity(x: number): number {
+	const r = Math.round(x * 1e6) / 1e6;
+	return r === 0 ? 0 : r;
+}
+
+/**
+ * Applies `delta` at `before`, clamped so the quantity never drops below 0.
+ * Both results are rounded, and `applied` is exactly `after - before`, so
+ * reversing it restores `before`.
+ */
+function applyDelta(before: number, delta: number): { after: number; applied: number } {
+	const from = roundQuantity(before);
+	const after = Math.max(0, roundQuantity(from + delta));
+	return { after, applied: roundQuantity(after - from) };
 }
 
 /**
@@ -73,10 +87,9 @@ export function applyDoseStock(
 		.where(eq(schema.medications.id, dose.medicationId))
 		.get();
 	if (!row || row.kind !== 'counted') return;
-	const before = row.quantity ?? 0;
-	const applied = clampedDelta(before, -row.doseUnits);
+	const { after, applied } = applyDelta(row.quantity ?? 0, -row.doseUnits);
 	tx.update(schema.supplies)
-		.set({ quantity: before + applied })
+		.set({ quantity: after })
 		.where(eq(schema.supplies.id, row.supplyId))
 		.run();
 	tx.insert(schema.supplyEvents)
@@ -124,7 +137,9 @@ export function restoreDoseStock(tx: Tx, doseIds: string[]): void {
 
 function reverseDelta(tx: Tx, supplyId: string, delta: number | null) {
 	tx.update(schema.supplies)
-		.set({ quantity: sql`max(0, coalesce(${schema.supplies.quantity}, 0) - ${delta ?? 0})` })
+		.set({
+			quantity: sql`max(0, round(coalesce(${schema.supplies.quantity}, 0) - ${delta ?? 0}, 6))`
+		})
 		.where(eq(schema.supplies.id, supplyId))
 		.run();
 }
@@ -181,9 +196,8 @@ export function logPurchase(
 		.where(eq(schema.supplies.id, supplyId))
 		.get();
 	if (!supply) throw new Error(`Supply not found: ${supplyId}`);
-	const counted = supply.kind === 'counted';
-	const before = supply.quantity ?? 0;
-	const applied = counted ? clampedDelta(before, p.quantity ?? 0) : null;
+	const stock =
+		supply.kind === 'counted' ? applyDelta(supply.quantity ?? 0, p.quantity ?? 0) : null;
 
 	const id = generateId(15);
 	tx.insert(schema.supplyEvents)
@@ -192,7 +206,7 @@ export function logPurchase(
 			supplyId,
 			type: 'purchase',
 			at: purchaseAt(p.date, now),
-			quantityDelta: applied,
+			quantityDelta: stock?.applied ?? null,
 			companionId: p.companionId,
 			costMinor: p.costMinor,
 			currency: p.costMinor === null ? null : p.currency,
@@ -203,9 +217,9 @@ export function logPurchase(
 		.run();
 	tx.update(schema.supplies)
 		.set({
-			...(applied === null
+			...(stock === null
 				? { stockedOn: latestPurchaseDate(tx, supplyId) }
-				: { quantity: before + applied }),
+				: { quantity: stock.after }),
 			...(p.expiresOn ? { expiresOn: p.expiresOn } : {}),
 			stockVersion: generateId(15)
 		})
@@ -348,21 +362,22 @@ export async function correctCount(
 				.where(eq(schema.supplies.id, supplyId))
 				.get();
 			if (!supply || supply.kind !== 'counted') return 'notFound';
-			const current = supply.quantity ?? 0;
-			if (actual === current) return 'unchanged';
+			const current = roundQuantity(supply.quantity ?? 0);
+			const target = roundQuantity(actual);
+			if (target === current) return 'unchanged';
 			tx.insert(schema.supplyEvents)
 				.values({
 					id: generateId(15),
 					supplyId,
 					type: 'correction',
 					at: new Date(),
-					quantityDelta: actual - current,
+					quantityDelta: roundQuantity(target - current),
 					note,
 					createdBy: actorId
 				})
 				.run();
 			tx.update(schema.supplies)
-				.set({ quantity: actual, stockVersion: generateId(15) })
+				.set({ quantity: target, stockVersion: generateId(15) })
 				.where(eq(schema.supplies.id, supplyId))
 				.run();
 			return 'corrected';
