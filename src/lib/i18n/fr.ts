@@ -1352,6 +1352,8 @@ const messages: Record<keyof Messages, string> = {
 	'search.group.weight': 'Poids',
 	'search.group.media': 'Photos et vidéos',
 	'search.group.note': 'Notes',
+	'search.group.medication': 'Médicaments',
+	'search.group.supply': 'Fournitures',
 	'search.filter.after': 'Après',
 	'search.filter.before': 'Avant',
 	'search.filter.removeCompanion': 'Retirer le filtre {name}',

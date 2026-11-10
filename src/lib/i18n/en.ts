@@ -1326,6 +1326,8 @@ const messages = {
 	'search.group.weight': 'Weight',
 	'search.group.media': 'Photos & videos',
 	'search.group.note': 'Notes',
+	'search.group.medication': 'Medications',
+	'search.group.supply': 'Supplies',
 	'search.filter.after': 'After',
 	'search.filter.before': 'Before',
 	'search.filter.removeCompanion': 'Remove {name} filter',

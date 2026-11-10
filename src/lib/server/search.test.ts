@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 import { search, buildMatchQuery, buildFilterClause, hasActiveFilters } from './search';
-import type { SearchFilters } from './search';
+import type { SearchFilters, SearchResult } from './search';
+import { createSupply, updateSupply, deleteSupply, type SupplyInput } from './supplies';
 
 function q(partial: Partial<SearchFilters>): SearchFilters {
 	return { text: '', companionIds: [], types: [], ...partial };
@@ -349,5 +351,231 @@ describe('incident update search', () => {
 	it('a query matching both an update and a journal entry returns both', () => {
 		const results = search(q({ text: 'gnarlwort' }));
 		expect(results.map((r) => r.id).sort()).toEqual(['hu-1', 'j-inc']);
+	});
+});
+
+describe('medication search', () => {
+	const C = 'c-s-med';
+	beforeAll(async () => {
+		await db.insert(schema.companions).values({
+			id: C,
+			name: 'Pillbox'
+		} as typeof schema.companions.$inferInsert);
+	});
+
+	function rowid(id: string) {
+		return (
+			db.$client
+				.prepare(
+					"SELECT rowid FROM search_index WHERE entity_type = 'medication' AND entity_id = ?"
+				)
+				.all(id) as { rowid: number }[]
+		).map((r) => r.rowid);
+	}
+
+	it('indexes inserts, reindexes updates, and drops deletes', async () => {
+		await db.insert(schema.medications).values({
+			id: 'm-s1',
+			companionId: C,
+			name: 'Vorbitrex',
+			dose: '5 mg',
+			instructions: 'with breakfast',
+			startedOn: '2026-03-01'
+		});
+		expect(search(q({ text: 'vorbitrex' }))).toEqual([
+			{
+				type: 'medication',
+				id: 'm-s1',
+				companionId: C,
+				companionName: 'Pillbox',
+				title: 'Vorbitrex',
+				snippet: '5 mg with breakfast',
+				date: '2026-03-01',
+				href: `/${C}/medications/m-s1`
+			}
+		]);
+		expect(search(q({ text: 'breakfast' }))[0]?.id).toBe('m-s1');
+
+		await db
+			.update(schema.medications)
+			.set({ name: 'Quellmax', dose: null, instructions: 'at bedtime', startedOn: '2026-03-05' })
+			.where(eq(schema.medications.id, 'm-s1'));
+		expect(search(q({ text: 'vorbitrex' }))).toEqual([]);
+		expect(search(q({ text: 'breakfast' }))).toEqual([]);
+		expect(search(q({ text: 'quellmax' }))[0]).toMatchObject({
+			id: 'm-s1',
+			snippet: 'at bedtime',
+			date: '2026-03-05'
+		});
+
+		// Columns outside the index leave its row alone.
+		const before = rowid('m-s1');
+		await db
+			.update(schema.medications)
+			.set({ endedOn: '2026-04-01', doseUnits: 2 })
+			.where(eq(schema.medications.id, 'm-s1'));
+		expect(rowid('m-s1')).toEqual(before);
+
+		await db.delete(schema.medications).where(eq(schema.medications.id, 'm-s1'));
+		expect(search(q({ text: 'quellmax' }))).toEqual([]);
+		expect(rowid('m-s1')).toEqual([]);
+	});
+
+	it('filters to medications with the medication type', async () => {
+		await db.insert(schema.medications).values({
+			id: 'm-s2',
+			companionId: C,
+			name: 'Dravolin',
+			startedOn: '2026-03-02'
+		});
+		await db.insert(schema.journalEntries).values({
+			id: 'j-s-med',
+			companionId: C,
+			date: '2026-03-02',
+			body: 'dravolin went down easily',
+			loggedBy: 'u-s'
+		} as typeof schema.journalEntries.$inferInsert);
+		expect(
+			search(q({ text: 'dravolin' }))
+				.map((r) => r.type)
+				.sort()
+		).toEqual(['journal', 'medication']);
+		expect(search(q({ text: 'dravolin', types: ['medication'] })).map((r) => r.id)).toEqual([
+			'm-s2'
+		]);
+	});
+});
+
+describe('supply search', () => {
+	// Names sort Alpha before Bravo, so Alpha's row is the one shown when both are active.
+	const A = 'c-s-sup-a';
+	const B = 'c-s-sup-b';
+	const supplyInput = (p: Partial<SupplyInput> = {}): SupplyInput => ({
+		name: 'Glimmerkibble',
+		kind: 'counted',
+		unit: 'cups',
+		startingQuantity: null,
+		firstPurchaseDate: null,
+		lastsDays: null,
+		expiresOn: null,
+		alertsEnabled: true,
+		runOutLeadDays: '7',
+		expiryLeadDays: '14',
+		lowStockAt: null,
+		notes: 'grain free bag',
+		...p
+	});
+
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: A, name: 'Alpha' },
+			{ id: B, name: 'Bravo' }
+		] as (typeof schema.companions.$inferInsert)[]);
+	});
+
+	function rows(id: string) {
+		return db.$client
+			.prepare(
+				"SELECT rowid, companion_id AS companionId, title FROM search_index WHERE entity_type = 'supply' AND entity_id = ? ORDER BY companion_id"
+			)
+			.all(id) as { rowid: number; companionId: string; title: string }[];
+	}
+
+	it('indexes a new supply once per linked pet, follows renames, link changes and deletes', async () => {
+		const id = await createSupply(supplyInput(), [A], 'u-s');
+		expect(rows(id).map((r) => r.companionId)).toEqual([A]);
+		expect(search(q({ text: 'glimmerkibble' }))).toEqual([
+			{
+				type: 'supply',
+				id,
+				companionId: A,
+				companionName: 'Alpha',
+				title: 'Glimmerkibble',
+				snippet: 'grain free bag',
+				date: localDateISO(),
+				href: `/${A}/supplies/${id}`
+			}
+		]);
+		expect(search(q({ text: 'grain' }))[0]?.id).toBe(id);
+
+		// Rename and add a pet in one edit.
+		await updateSupply(id, supplyInput({ name: 'Shimmerkibble', notes: null }), [A, B]);
+		expect(search(q({ text: 'glimmerkibble' }))).toEqual([]);
+		expect(search(q({ text: 'grain' }))).toEqual([]);
+		expect(rows(id)).toMatchObject([
+			{ companionId: A, title: 'Shimmerkibble' },
+			{ companionId: B, title: 'Shimmerkibble' }
+		]);
+
+		// Stock changes leave the index alone.
+		const before = rows(id).map((r) => r.rowid);
+		await db
+			.update(schema.supplies)
+			.set({ quantity: 12, stockVersion: 'v2' })
+			.where(eq(schema.supplies.id, id));
+		expect(rows(id).map((r) => r.rowid)).toEqual(before);
+
+		// Taking a pet off drops only its row.
+		await updateSupply(id, supplyInput({ name: 'Shimmerkibble', notes: null }), [B]);
+		expect(rows(id).map((r) => r.companionId)).toEqual([B]);
+		await db.delete(schema.supplyCompanions).where(eq(schema.supplyCompanions.supplyId, id));
+		expect(rows(id)).toEqual([]);
+		await db.insert(schema.supplyCompanions).values({ supplyId: id, companionId: A });
+		expect(rows(id).map((r) => r.companionId)).toEqual([A]);
+
+		await deleteSupply(id);
+		expect(rows(id)).toEqual([]);
+	});
+
+	it('shows a shared supply once, on an active pet, and on the filtered pet', async () => {
+		const id = await createSupply(supplyInput({ name: 'Wobblechew', notes: null }), [A, B], 'u-s');
+		const ids = (r: SearchResult[]) => r.map((x) => `${x.id}@${x.companionId}`);
+
+		expect(ids(search(q({ text: 'wobblechew' })))).toEqual([`${id}@${A}`]);
+		// Filter-only browse dedupes too.
+		expect(ids(search(q({ types: ['supply'] })).filter((r) => r.id === id))).toEqual([
+			`${id}@${A}`
+		]);
+		// The @companion filter picks that pet's row, with its link.
+		expect(search(q({ text: 'wobblechew', companionIds: [B] }))).toMatchObject([
+			{ id, companionId: B, href: `/${B}/supplies/${id}` }
+		]);
+		expect(ids(search(q({ types: ['supply'], companionIds: [B] })))).toContain(`${id}@${B}`);
+		// Two pet filters still show it once.
+		expect(ids(search(q({ text: 'wobblechew', companionIds: [A, B] })))).toEqual([`${id}@${A}`]);
+		// A pet it is not linked to finds nothing.
+		expect(search(q({ text: 'wobblechew', companionIds: ['c-s'] }))).toEqual([]);
+
+		// An archived pet gives way to an active one.
+		await db.update(schema.companions).set({ isActive: false }).where(eq(schema.companions.id, A));
+		try {
+			expect(ids(search(q({ text: 'wobblechew' })))).toEqual([`${id}@${B}`]);
+		} finally {
+			await db.update(schema.companions).set({ isActive: true }).where(eq(schema.companions.id, A));
+		}
+		await deleteSupply(id);
+	});
+
+	it('deleting a pet drops its medication and supply rows', async () => {
+		const C = 'c-s-gone';
+		await db.insert(schema.companions).values({
+			id: C,
+			name: 'Gone'
+		} as typeof schema.companions.$inferInsert);
+		await db.insert(schema.medications).values({
+			id: 'm-s-gone',
+			companionId: C,
+			name: 'Fizzlomab',
+			startedOn: '2026-03-01'
+		});
+		const id = await createSupply(supplyInput({ name: 'Fizzlefood' }), [C, B], 'u-s');
+		await db.delete(schema.companions).where(eq(schema.companions.id, C));
+		const left = db.$client
+			.prepare(
+				"SELECT entity_id AS id, companion_id AS companionId FROM search_index WHERE entity_id IN ('m-s-gone', ?)"
+			)
+			.all(id);
+		expect(left).toEqual([{ id, companionId: B }]);
+		await deleteSupply(id);
 	});
 });

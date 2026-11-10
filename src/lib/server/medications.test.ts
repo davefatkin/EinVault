@@ -472,6 +472,10 @@ describe('sweepEndedMedicationReminders', () => {
 		const last = await addReminder('bulk-40000');
 		expect(await sweepEndedMedicationReminders(TODAY)).toBe(1);
 		expect(await reminderIds()).not.toContain(last);
+		// Each medication delete scans the search index for its row; emptying
+		// those rows first keeps the 40,000 deletes from going quadratic.
+		db.run(sql`delete from search_index where entity_type = 'medication'`);
+		db.run(sql`delete from medications where id like 'bulk-%'`);
 	});
 });
 

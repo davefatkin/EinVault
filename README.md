@@ -61,7 +61,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users
 - **Bearer-token API:** log activities and journal entries, manage notes, record health and weight, manage reminders, list medications and log doses, and read companion, shift, and roster data headlessly from smart buttons, scripts, and devices
 - **Reminders:** recurring and one-time reminders for medications, vaccinations, grooming, and more
-- **Search:** full-text search across journals, notes, health, activity, reminders, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
+- **Search:** full-text search across journals, notes, health, activity, reminders, medications, supplies, documents, and media, with `@companion`, `#type`, and date-range filters (members and admins)
 - **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
