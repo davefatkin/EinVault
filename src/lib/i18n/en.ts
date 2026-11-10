@@ -960,7 +960,7 @@ const messages = {
 	'page.admin.labelRole': 'Role',
 	'page.admin.roleHelpMember': "Sees and edits every companion's records.",
 	'page.admin.roleHelpAdmin':
-		'Everything a member can do, plus managing users, archiving companions, and household settings.',
+		'Everything a member can do, plus managing users, archiving companions, deleting activities others logged, and household settings.',
 	'page.admin.roleHelpCaretaker':
 		'Sees only the companions assigned to them, and can log care only during a scheduled shift.',
 	'page.admin.labelEmail': 'Email',

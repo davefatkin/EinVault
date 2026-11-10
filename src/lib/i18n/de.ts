@@ -976,7 +976,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelRole': 'Rolle',
 	'page.admin.roleHelpMember': 'Sieht und bearbeitet die Einträge aller Begleiter.',
 	'page.admin.roleHelpAdmin':
-		'Alles, was ein Mitglied kann, dazu Benutzer verwalten, Begleiter archivieren und Haushaltseinstellungen ändern.',
+		'Alles, was ein Mitglied kann, dazu Benutzer verwalten, Begleiter archivieren, von anderen erfasste Aktivitäten löschen und Haushaltseinstellungen ändern.',
 	'page.admin.roleHelpCaretaker':
 		'Sieht nur die zugewiesenen Begleiter und kann nur während einer geplanten Schicht Pflege erfassen.',
 	'page.admin.labelEmail': 'E-Mail',

@@ -974,7 +974,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelRole': 'Função',
 	'page.admin.roleHelpMember': 'Vê e edita os registos de todos os companheiros.',
 	'page.admin.roleHelpAdmin':
-		'Tudo o que um membro pode fazer, mais gerir utilizadores, arquivar companheiros e as definições da casa.',
+		'Tudo o que um membro pode fazer, mais gerir utilizadores, arquivar companheiros, eliminar atividades registadas por outros e as definições da casa.',
 	'page.admin.roleHelpCaretaker':
 		'Vê apenas os companheiros que lhe foram atribuídos e só pode registar cuidados durante um turno agendado.',
 	'page.admin.labelEmail': 'E-mail',
