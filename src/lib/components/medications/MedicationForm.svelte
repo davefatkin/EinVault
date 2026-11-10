@@ -5,7 +5,8 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import type { MedicationFormValues } from '#lib/medications.js';
+	import { Select } from '#lib/components/ui/select/index.js';
+	import type { MedicationFormValues, MedicationSupplyOption } from '#lib/medications.js';
 
 	// Add and edit form for a medication. Schedules are dose reminders, so
 	// there are no time fields here.
@@ -13,6 +14,8 @@
 		action,
 		values,
 		today,
+		supplies,
+		companionId,
 		cancelHref,
 		oncancel,
 		onsaved
@@ -22,6 +25,9 @@
 		values?: MedicationFormValues | null;
 		/** Local YYYY-MM-DD, from the server so SSR and hydration agree. */
 		today: string;
+		/** Counted supplies of this pet that doses can draw from, plus an unlinked current one. */
+		supplies: MedicationSupplyOption[];
+		companionId: string;
 		cancelHref?: string;
 		oncancel?: () => void;
 		/** Called after a successful save that stays on the page. */
@@ -29,6 +35,10 @@
 	} = $props();
 	const locale = getLocale();
 	let submitting = $state(false);
+	// The form seeds its fields once, like the other inputs.
+	// svelte-ignore state_referenced_locally
+	let supplyId = $state(values?.supplyId ?? '');
+	const unit = $derived(supplies.find((s) => s.id === supplyId)?.unit ?? null);
 </script>
 
 <form
@@ -103,6 +113,44 @@
 				{t(locale, 'page.medications.endedOnHint')}
 			</p>
 		</div>
+	</div>
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+		<div class="space-y-1.5">
+			<Label for="med-supplyId">{t(locale, 'page.medications.labelSupply')}</Label>
+			<Select id="med-supplyId" name="supplyId" bind:value={supplyId}>
+				<option value="">{t(locale, 'page.medications.supplyNone')}</option>
+				{#each supplies as supply (supply.id)}
+					<option value={supply.id}
+						>{supply.unlinked
+							? t(locale, 'page.medications.supplyUnlinked', { name: supply.name })
+							: supply.name}</option
+					>
+				{/each}
+			</Select>
+			<p class="text-xs text-muted-foreground">
+				<a href="/{companionId}/supplies/new" class="text-primary hover:underline"
+					>{t(locale, 'page.medications.newSupply')}</a
+				>
+			</p>
+		</div>
+		{#if supplyId}
+			<div class="space-y-1.5">
+				<Label for="med-doseUnits">
+					{unit
+						? t(locale, 'page.medications.labelDoseUnitsWithUnit', { unit })
+						: t(locale, 'page.medications.labelDoseUnits')}
+				</Label>
+				<Input
+					id="med-doseUnits"
+					name="doseUnits"
+					type="text"
+					inputmode="decimal"
+					autocomplete="off"
+					value={values?.doseUnits || '1'}
+				/>
+				<p class="text-xs text-muted-foreground">{t(locale, 'page.medications.doseUnitsHint')}</p>
+			</div>
+		{/if}
 	</div>
 	<div class="flex flex-wrap gap-3">
 		<Button type="submit" disabled={submitting}>

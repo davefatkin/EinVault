@@ -56,6 +56,8 @@ export function medicationFormValues(data: FormData): MedicationFormValues {
 		dose: field('dose'),
 		instructions: field('instructions'),
 		startedOn: field('startedOn'),
-		endedOn: field('endedOn')
+		endedOn: field('endedOn'),
+		supplyId: field('supplyId'),
+		doseUnits: field('doseUnits')
 	};
 }

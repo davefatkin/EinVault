@@ -251,7 +251,9 @@ describe('response schemas match their serializers', () => {
 			active: true,
 			nextDueAt: null,
 			lastGiven: null,
-			schedule: []
+			schedule: [],
+			doseUnits: 1,
+			supply: null
 		});
 		expect(Object.keys(result).sort()).toEqual(Object.keys(Medication.shape).sort());
 	});
@@ -268,7 +270,9 @@ describe('response schemas match their serializers', () => {
 			active: true,
 			nextDueAt: null,
 			lastGiven: null,
-			schedule: []
+			schedule: [],
+			doseUnits: 1,
+			supply: null
 		});
 		const shape = Medication.shape as Record<string, { isOptional(): boolean }>;
 		for (const key of Object.keys(result)) expect(shape[key]?.isOptional()).toBe(false);

@@ -2,16 +2,10 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and, count } from 'drizzle-orm';
-import { generateId } from '#lib/server/utils.js';
-import {
-	getPaperlessClient,
-	paperlessKey,
-	PAPERLESS_DOC_ID_RE
-} from '#lib/server/storage/index.js';
-import { documentExtFromMime, isAllowedDocumentMime } from '#lib/server/storage/mime.js';
+import { eq } from 'drizzle-orm';
+import { getPaperlessClient, PAPERLESS_DOC_ID_RE } from '#lib/server/storage/index.js';
+import { insertDocumentRow, preparePaperless } from '#lib/server/documents.js';
 import { MAX_DOCUMENTS_PER_COMPANION, PAPERLESS_CONFIG } from '#lib/server/env.js';
-import { isValidDate } from '#lib/server/validation.js';
 
 const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -42,84 +36,34 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	});
 	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
-	const doc = await client.getDocument(paperlessId);
-	if (!doc) error(404, t(locals.locale, 'error.notFound'));
-
-	// The import endpoint is the security boundary — the picker is advisory.
-	// Enforce the tag scope here even though the search proxy also filters.
-	if (PAPERLESS_CONFIG.tagId !== null && !doc.tags.includes(PAPERLESS_CONFIG.tagId)) {
+	const prep = await preparePaperless(paperlessId);
+	if (!prep.ok) {
+		if (prep.error === 'invalidType') error(400, t(locals.locale, 'error.invalidFileType'));
 		error(404, t(locals.locale, 'error.notFound'));
 	}
-
-	// We serve the archived version (always PDF) when Paperless has one;
-	// otherwise the original must itself be an allowed type.
-	const mimeType = doc.hasArchiveVersion ? 'application/pdf' : doc.originalMimeType;
-	if (!isAllowedDocumentMime(mimeType)) {
-		error(400, t(locals.locale, 'error.invalidFileType'));
-	}
-
-	const documentId = generateId(15);
-	// Ext matches what we actually serve: pdf for archived versions, the
-	// original's ext for the rare no-archive case.
-	const filename = `${documentId}.${documentExtFromMime(mimeType)}`;
-	const title = (doc.title || filename).slice(0, 255);
-	// Paperless `created` is an ISO datetime; keep the date part, but don't
-	// trust upstream format blindly.
-	const createdDate = doc.created?.slice(0, 10) ?? '';
-	const documentDate = isValidDate(createdDate) ? createdDate : null;
-	const uploadedBy = locals.user.id;
+	const { stored } = prep;
 
 	const result = db.transaction(
-		(tx) => {
-			// Idempotency guard: the same Paperless doc twice on one companion
-			// is almost certainly a double-click.
-			const dupe = tx
-				.select({ id: schema.documents.id })
-				.from(schema.documents)
-				.where(
-					and(
-						eq(schema.documents.companionId, companionId),
-						eq(schema.documents.storageKey, paperlessKey(paperlessId))
-					)
-				)
-				.all();
-			if (dupe.length > 0) return { ok: true as const, existingId: dupe[0].id };
-			const rows = tx
-				.select({ value: count() })
-				.from(schema.documents)
-				.where(eq(schema.documents.companionId, companionId))
-				.all();
-			const docCount = rows[0]?.value ?? 0;
-			if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
-			tx.insert(schema.documents)
-				.values({
-					id: documentId,
-					companionId,
-					filename,
-					provider: 'paperless',
-					storageKey: paperlessKey(paperlessId),
-					title,
-					category,
-					documentDate,
-					originalName: null,
-					mimeType,
-					sizeBytes: null,
-					uploadedBy
-				})
-				.run();
-			return { ok: true as const, existingId: null };
-		},
+		(tx) =>
+			insertDocumentRow(tx, companionId, stored, {
+				title: (stored.upstreamTitle || stored.filename).slice(0, 255),
+				category,
+				documentDate: stored.upstreamDate,
+				healthEventId: null,
+				originalName: null,
+				uploadedBy: locals.user!.id
+			}),
 		{ behavior: 'immediate' }
 	);
 
-	if (!result.ok) {
+	if (result === 'capReached') {
 		error(
 			400,
 			t(locals.locale, 'error.maxDocumentsExceeded', { max: MAX_DOCUMENTS_PER_COMPANION })
 		);
 	}
 
-	const finalId = result.existingId ?? documentId;
+	const finalId = result === 'inserted' ? stored.id : result.existingId;
 	const created = await db.query.documents.findFirst({
 		where: eq(schema.documents.id, finalId),
 		with: { healthEvent: { columns: { id: true, title: true } } }

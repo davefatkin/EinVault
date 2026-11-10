@@ -12,6 +12,7 @@ import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
 import { listMedicationSummaries } from '#lib/server/medications.js';
+import { loadSupplyStates, toSupplySummary } from '#lib/server/supplies.js';
 import { givenAction } from '#lib/server/medication-actions.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
@@ -32,7 +33,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		recentDocuments,
 		moodHistory,
 		openIncidents,
-		medications
+		medications,
+		supplyStates
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -108,8 +110,11 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 			.then((rows) => rows.filter((r): r is { date: string; mood: Mood } => r.mood !== null)),
 		listOpenIncidents([params.companionId]),
 		// The card shows only while something is active.
-		listMedicationSummaries([params.companionId], { activeOnly: true })
+		listMedicationSummaries([params.companionId], { activeOnly: true, includeSupply: true }),
+		// Only supplies with warnings on that need attention; autoship items stay quiet.
+		loadSupplyStates({ companionId: params.companionId, today: moodToday, alertsOnly: true })
 	]);
+	const supplies = supplyStates.filter((s) => s.runningLow || s.expiring).map(toSupplySummary);
 
 	const quickLogButtons = await listQuickLogButtons(
 		{ id: locals.user.id, role: locals.user.role },
@@ -132,6 +137,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		moodHistory,
 		openIncidents,
 		medications,
+		supplies,
 		moodTrendDays: resolveMoodTrendDays(locals.user.moodTrendDays),
 		moodToday
 	};

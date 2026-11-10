@@ -4,6 +4,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { sendMail } from '#lib/server/mail/index.js';
 import { sendNtfy } from './ntfy';
 import { sweepEndedMedicationReminders } from '#lib/server/medications.js';
+import { produceSupplyAlerts } from './supply-alerts';
 import {
 	celebrationContext,
 	deliverReminderUpcoming,
@@ -24,6 +25,10 @@ vi.mock('#lib/server/medications.js', async (importOriginal) => {
 		...actual,
 		sweepEndedMedicationReminders: vi.fn(actual.sweepEndedMedicationReminders)
 	};
+});
+vi.mock('./supply-alerts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('./supply-alerts')>();
+	return { ...actual, produceSupplyAlerts: vi.fn(actual.produceSupplyAlerts) };
 });
 vi.mock('./links', () => ({ publicLink: (path: string) => `https://vault.test${path}` }));
 vi.mock('./ntfy', () => ({
@@ -328,6 +333,22 @@ describe('reminders linked to an ended medication', () => {
 			);
 			expect(ids(due)).toEqual(['r-active']);
 			expect(error).toHaveBeenCalled();
+		} finally {
+			error.mockRestore();
+		}
+	});
+
+	it('a failing supply producer does not fail the scan', async () => {
+		vi.mocked(produceSupplyAlerts).mockRejectedValueOnce(new Error('Invalid date'));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		try {
+			await rem('r-active', 'm-active', dueNow);
+			await expect(produce(now())).resolves.toBeUndefined();
+			const due = (await db.select().from(schema.notificationOutbox)).filter(
+				(r) => (r.payload as { kind: string }).kind === 'reminderDue'
+			);
+			expect(ids(due)).toEqual(['r-active']);
+			expect(error).toHaveBeenCalledWith('[notify] supply alerts failed:', expect.any(Error));
 		} finally {
 			error.mockRestore();
 		}

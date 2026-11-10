@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { createSupply, type SupplyInput } from './supplies';
 import {
 	parseMedicationForm,
 	createMedication,
@@ -17,9 +18,9 @@ import {
 	formatMedicationScheduleLine,
 	medicationScheduleMarkdown,
 	startMedicationSweep,
-	medicationActiveSql,
 	type MedicationInput
 } from './medications';
+import { medicationActiveSql } from './medication-sql';
 
 const C1 = 'c-med-1';
 const C2 = 'c-med-2';
@@ -33,6 +34,8 @@ function input(p: Partial<MedicationInput> = {}): MedicationInput {
 		instructions: null,
 		startedOn: '2026-11-01',
 		endedOn: null,
+		supplyId: null,
+		doseUnits: 1,
 		...p
 	};
 }
@@ -101,7 +104,15 @@ describe('parseMedicationForm', () => {
 	it('parses and normalizes', () => {
 		expect(parseMedicationForm(form({ ...base, dose: ' 1 ' }), 'en')).toEqual({
 			ok: true,
-			value: { name: 'Pill', dose: '1', instructions: null, startedOn: '2026-11-01', endedOn: null }
+			value: {
+				name: 'Pill',
+				dose: '1',
+				instructions: null,
+				startedOn: '2026-11-01',
+				endedOn: null,
+				supplyId: null,
+				doseUnits: 1
+			}
 		});
 	});
 	it('defaults an empty or missing start date to today', () => {
@@ -122,6 +133,110 @@ describe('parseMedicationForm', () => {
 			false
 		);
 		expect(parseMedicationForm(form({ ...base, endedOn: '2026-11-01' }), 'en').ok).toBe(true);
+	});
+});
+
+describe('parseMedicationForm supply link', () => {
+	const form = (o: Record<string, string>) => {
+		const f = new FormData();
+		for (const [k, v] of Object.entries({ name: 'Pill', startedOn: '2026-11-01', ...o }))
+			f.set(k, v);
+		return f;
+	};
+	const supply = (p: Partial<SupplyInput>, companions: string[]) =>
+		createSupply(
+			{
+				name: 'Tablets',
+				kind: 'counted',
+				unit: 'tablets',
+				startingQuantity: 10,
+				firstPurchaseDate: null,
+				lastsDays: null,
+				expiresOn: null,
+				alertsEnabled: true,
+				runOutLeadDays: '7',
+				expiryLeadDays: '14',
+				lowStockAt: null,
+				notes: null,
+				...p
+			},
+			companions,
+			U1
+		);
+
+	it('accepts a counted supply of this pet and half units', async () => {
+		const id = await supply({}, [C1]);
+		const r = parseMedicationForm(form({ supplyId: id, doseUnits: '0.5' }), 'en', TODAY, C1);
+		expect(r).toMatchObject({ ok: true, value: { supplyId: id, doseUnits: 0.5 } });
+		// A comma is a decimal separator too.
+		expect(
+			parseMedicationForm(form({ supplyId: id, doseUnits: '1,5' }), 'en', TODAY, C1)
+		).toMatchObject({ ok: true, value: { doseUnits: 1.5 } });
+	});
+	it('defaults to 1 unit and ignores units without a supply', () => {
+		expect(parseMedicationForm(form({ doseUnits: '3' }), 'en', TODAY, C1)).toMatchObject({
+			ok: true,
+			value: { supplyId: null, doseUnits: 1 }
+		});
+	});
+	it("rejects a duration supply, another pet's supply and an unknown one", async () => {
+		const duration = await supply(
+			{ kind: 'duration', unit: null, startingQuantity: null, lastsDays: 30 },
+			[C1]
+		);
+		const other = await supply({}, [C2]);
+		for (const supplyId of [duration, other, 'nope']) {
+			expect(parseMedicationForm(form({ supplyId }), 'en', TODAY, C1)).toEqual({
+				ok: false,
+				message: 'Supply not found.'
+			});
+		}
+		// Without a pet to check against, nothing can be linked.
+		const mine = await supply({}, [C1]);
+		expect(parseMedicationForm(form({ supplyId: mine }), 'en', TODAY).ok).toBe(false);
+	});
+	it('rejects units below 0.01, above 1000, and anything but a plain decimal', async () => {
+		const id = await supply({}, [C1]);
+		const bad = ['0', '-1', 'abc', '1001', 'Infinity', '1e2', '0x10', '0.001', '0.009', '.5', '1.'];
+		for (const doseUnits of bad) {
+			const r = parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1);
+			expect(r, doseUnits).toEqual({
+				ok: false,
+				message: 'Enter how much one dose uses, from 0.01 to 1000.'
+			});
+		}
+		for (const doseUnits of ['1000', '0.01', '0,25'])
+			expect(parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1).ok).toBe(true);
+	});
+});
+
+describe('listMedicationSummaries supply', () => {
+	it('carries the supply only when asked, and the default dose size otherwise', async () => {
+		const sid = await createSupply(
+			{
+				name: 'Tablets',
+				kind: 'counted',
+				unit: 'tablets',
+				startingQuantity: 10,
+				firstPurchaseDate: null,
+				lastsDays: null,
+				expiresOn: null,
+				alertsEnabled: true,
+				runOutLeadDays: '7',
+				expiryLeadDays: '14',
+				lowStockAt: null,
+				notes: null
+			},
+			[C1],
+			U1
+		);
+		await createMedication(C1, input({ supplyId: sid, doseUnits: 2 }), U1);
+		const [owner] = await listMedicationSummaries([C1], { activeOnly: false, includeSupply: true });
+		expect(owner.supply).toMatchObject({ id: sid, name: 'Tablets', quantity: 10, unit: 'tablets' });
+		expect(owner.doseUnits).toBe(2);
+		const [plain] = await listMedicationSummaries([C1], { activeOnly: false });
+		expect(plain.supply).toBeNull();
+		expect(plain.doseUnits).toBe(1);
 	});
 });
 
@@ -606,5 +721,65 @@ describe('medicationScheduleMarkdown (deprecated API alias)', () => {
 		const map = await medicationScheduleMarkdown([C1, C2], TODAY);
 		expect(map.get(C1)).toBe('- Antibiotic, 2 ml\n- Carprofen, 1 tablet: with food');
 		expect(map.has(C2)).toBe(false);
+	});
+});
+
+describe('supply stock', () => {
+	const now = new Date(2026, 10, 9, 8, 5, 0);
+	let k = 0;
+	async function linkSupply(medicationId: string, quantity: number) {
+		const supplyId = `sup-med-${++k}`;
+		await db
+			.insert(schema.supplies)
+			.values({ id: supplyId, name: 'Carprofen', kind: 'counted', quantity });
+		await db
+			.update(schema.medications)
+			.set({ supplyId })
+			.where(eq(schema.medications.id, medicationId));
+		return supplyId;
+	}
+	const stock = async (supplyId: string) =>
+		(await db.query.supplies.findFirst({ where: eq(schema.supplies.id, supplyId) }))!.quantity;
+	const usesOf = (supplyId: string) =>
+		db.query.supplyEvents.findMany({ where: eq(schema.supplyEvents.supplyId, supplyId) });
+
+	it('a manual dose subtracts once', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await stock(s)).toBe(2);
+		const uses = await usesOf(s);
+		expect(uses).toHaveLength(1);
+		expect(uses[0]).toMatchObject({ quantityDelta: -1, doseId: res.doseId, at: now });
+	});
+
+	it('a dose that completes a reminder subtracts once', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		await addReminder(id, false, new Date(2026, 10, 9, 8, 0, 0));
+		const res = await logDose(id, { id: U1 }, { now });
+		expect(res).toMatchObject({ completedReminderId: expect.any(String) });
+		expect(await stock(s)).toBe(2);
+		expect(await usesOf(s)).toHaveLength(1);
+	});
+
+	it('removing a dose taken at 0.5 left puts back 0.5, not 1', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 0.5);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await stock(s)).toBe(0);
+		expect((await usesOf(s))[0].quantityDelta).toBe(-0.5);
+		expect(await deleteDose(C1, id, res.doseId)).toBe(true);
+		expect(await stock(s)).toBe(0.5);
+		expect(await usesOf(s)).toEqual([]);
+	});
+
+	it('a refused dose delete leaves the stock alone', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await deleteDose(C2, id, res.doseId)).toBe(false);
+		expect(await stock(s)).toBe(2);
+		expect(await usesOf(s)).toHaveLength(1);
 	});
 });

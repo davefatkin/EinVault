@@ -4,6 +4,7 @@
 	import { renderMarkdown } from '#lib/markdown.js';
 	import { formatDateOnly } from '#lib/date.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { supplyStockLine } from '#lib/supplies.js';
 	import {
 		formatMedicationSchedule,
 		medicationEndState,
@@ -23,6 +24,9 @@
 
 	const schedule = $derived(formatMedicationSchedule(medication.schedule, locale, timeZone));
 	const doseLine = $derived([medication.dose, schedule].filter(Boolean).join(' · '));
+	const stockLine = $derived(
+		medication.supply ? supplyStockLine(locale, { ...medication.supply, kind: 'counted' }) : null
+	);
 	const overdue = $derived(
 		medication.nextDueAt !== null && new Date(medication.nextDueAt).getTime() < Date.now()
 	);
@@ -54,6 +58,13 @@
 		<div class="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
 			{@html renderMarkdown(medication.instructions)}
 		</div>
+	{/if}
+	{#if medication.supply && stockLine}
+		<p class="text-xs text-muted-foreground" data-testid="medication-stock">
+			<a href="/{medication.companionId}/supplies/{medication.supply.id}" class="hover:underline"
+				>{medication.supply.name}</a
+			>: {stockLine}
+		</p>
 	{/if}
 	<dl class="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
 		{#if medication.active && medication.nextDueAt}

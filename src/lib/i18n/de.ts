@@ -241,6 +241,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.documents': 'Dokumente',
 	'nav.notes': 'Notizen',
 	'nav.medications': 'Medikamente',
+	'nav.supplies': 'Vorräte',
 	'nav.settings': 'Einstellungen',
 	'nav.admin': 'Verwaltung',
 	'nav.adminCompanions': 'Begleiter',
@@ -342,7 +343,8 @@ const messages: Record<keyof Messages, string> = {
 		'Erhalte Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionBoth':
 		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
-	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
+	'page.settings.notifyReminderEmailLabel':
+		'E-Mails zu Erinnerungen, Vorwarnungen und Vorratswarnungen senden',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
 	'page.settings.notifyCelebrationEmailLabel': 'Feiern (genaue Geburtstage und Ankunftstage)',
@@ -1314,6 +1316,22 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.footer':
 		'Du erhältst diese E-Mail, weil Vorfall-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Wird knapp: {name}, {left}',
+	'email.supply.outSubject': 'Aufgebraucht: {name}',
+	'email.supply.lowSubject': 'Wird knapp: {name}',
+	'email.supply.expirySubject': 'Läuft bald ab: {name}, Ablauf am {date}',
+	'email.supply.expiredSubject': 'Abgelaufen: {name}',
+	'email.supply.greeting': 'Hallo {name},',
+	'email.supply.runOutBody': '{name} für {companions} reicht voraussichtlich bis etwa {date}.',
+	'email.supply.outBody': '{name} für {companions} ist aufgebraucht.',
+	'email.supply.lowBody': 'Von {name} für {companions} sind nur noch {count} da.',
+	'email.supply.expiryBody': '{name} für {companions} läuft am {date} ab.',
+	'email.supply.expiredBody': '{name} für {companions} ist am {date} abgelaufen.',
+	'email.supply.cta': 'In EinVault öffnen',
+	'email.supply.footer':
+		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+
 	// Search palette
 	'search.placeholder': 'Tagebücher, Notizen, Medien, Gesundheit, Dokumente durchsuchen…',
 	'search.hint': 'Mindestens 2 Zeichen eingeben',
@@ -1527,7 +1545,146 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',
 	'page.health.medicationsHintPrefix': 'Geht es um ein Medikament?',
-	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite'
+	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite',
+	'supply.runOut.out': 'Aufgebraucht',
+	'supply.runOut.day': 'noch etwa {count} Tag',
+	'supply.runOut.days': 'noch etwa {count} Tage',
+	'supply.runOut.weeks': 'noch etwa {count} Wochen',
+	'supply.runOutShort.today': 'reicht nur noch heute',
+	'supply.runOutShort.day': 'etwa {count} Tag',
+	'supply.runOutShort.days': 'etwa {count} Tage',
+	'supply.runOutShort.weeks': 'etwa {count} Wochen',
+	'error.supplyNameTooLong': 'Der Name darf höchstens 200 Zeichen lang sein.',
+	'error.supplyUnitTooLong': 'Die Einheit darf höchstens 50 Zeichen lang sein.',
+	'error.supplyNotesTooLong': 'Notizen dürfen höchstens 5000 Zeichen lang sein.',
+	'error.invalidSupplyKind': 'Wähle aus, wie dieser Vorrat erfasst wird.',
+	'error.invalidQuantity': 'Gib eine Zahl von 0 oder mehr ein.',
+	'error.quantityTooLarge': 'Gib eine Zahl bis höchstens {max} ein.',
+	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
+	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.',
+	'page.dashboard.suppliesViewAll': 'Alle anzeigen',
+	'error.invalidDoseUnits': 'Gib an, wie viel eine Dosis verbraucht: von {min} bis {max}.',
+	'error.invalidCurrency': 'Wähle eine gültige Währung.',
+	'page.medications.labelSupply': 'Vorrat',
+	'page.medications.supplyNone': 'Keiner',
+	'page.medications.supplyUnlinked': '{name} (nicht mehr verknüpft)',
+	'page.medications.newSupply': 'Neuer Vorrat',
+	'page.medications.labelDoseUnits': 'Einheiten pro Dosis',
+	'page.medications.labelDoseUnitsWithUnit': 'Einheiten pro Dosis ({unit})',
+	'page.medications.doseUnitsHint':
+		'Jede Dosis nimmt so viel aus dem Vorrat. Für eine halbe Tablette gib 0,5 an.',
+	'page.admin.currencyLabel': 'Währung',
+	'page.admin.currencyHelp':
+		'Wird für die Kosten bei Vorratskäufen verwendet. Bereits erfasste Käufe behalten ihre Währung.',
+	'error.supplyNotFound': 'Vorrat nicht gefunden.',
+	'error.supplyEventNotFound': 'Eintrag im Verlauf nicht gefunden.',
+	'error.invalidPurchaseQuantity': 'Gib eine Menge über 0 ein.',
+	'error.invalidCost': 'Gib einen gültigen Betrag ein.',
+	'error.purchaseNeedsStock':
+		'Gib einen Anfangsbestand über 0 an, um Kosten oder einen Beleg zu speichern.',
+	'error.purchaseNeedsDate':
+		'Gib an, wann du zuletzt eines gekauft hast, um Kosten oder einen Beleg zu speichern.',
+	'error.supplyNeedsActivePet': 'Wähle mindestens ein Tier, das nicht archiviert ist.',
+	'error.purchaseFailed': 'Der Kauf konnte nicht gespeichert werden. Versuch es noch einmal.',
+	'error.supplySaveFailed': 'Der Vorrat konnte nicht gespeichert werden. Versuch es noch einmal.',
+	'supply.countLeft': 'noch {count} {unit}',
+	'supply.countLeftNoUnit': 'noch {count}',
+	'supply.notBoughtYet': 'Noch nicht gekauft',
+	'page.supplies.title': 'Vorräte',
+	'page.supplies.add': 'Vorrat hinzufügen',
+	'page.supplies.newTitle': 'Neuer Vorrat',
+	'page.supplies.editTitle': 'Vorrat bearbeiten',
+	'page.supplies.empty': 'Noch keine Vorräte',
+	'page.supplies.emptyBody':
+		'Füge Medikamente, Futter und andere Dinge hinzu, die du kaufst. So siehst du, wie lange sie reichen, und wirst gewarnt, bevor sie ausgehen.',
+	'page.supplies.archivedNotice':
+		'{name} ist archiviert. Vorräte bleiben zum Nachschlagen verfügbar.',
+	'page.supplies.backToList': 'Alle Vorräte',
+	'page.supplies.sharedWith': 'Geteilt mit {names}',
+	'page.supplies.expiresOn': 'Läuft ab am {date}',
+	'page.supplies.expiredOn': 'Abgelaufen am {date}',
+	'page.supplies.runsOutOn': 'Reicht bis etwa {date}',
+	'page.supplies.lastsDay': 'Eine Packung reicht etwa {count} Tag',
+	'page.supplies.lastsDays': 'Eine Packung reicht etwa {count} Tage',
+	'page.supplies.lastBought': 'Zuletzt gekauft am {date}',
+	'page.supplies.lowStockAt': 'Warnung bei {count}',
+	'page.supplies.badgeRunningLow': 'Wird knapp',
+	'page.supplies.badgeExpiring': 'Läuft ab',
+	'page.supplies.badgeExpired': 'Abgelaufen',
+	'page.supplies.badgeWarningsOff': 'Warnungen aus',
+	'page.supplies.logPurchase': 'Kauf erfassen',
+	'page.supplies.correctCount': 'Bestand korrigieren',
+	'page.supplies.deleteConfirm':
+		'{name} und den Verlauf löschen? Belege bleiben auf der Dokumente-Seite, und Medikamente, die ihn nutzen, laufen ohne ihn weiter. Das kann nicht rückgängig gemacht werden.',
+	'page.supplies.history': 'Verlauf',
+	'page.supplies.noHistory': 'Noch nichts erfasst.',
+	'page.supplies.showMore': 'Mehr anzeigen',
+	'page.supplies.eventPurchase': 'Gekauft',
+	'page.supplies.eventUse': 'Verbraucht',
+	'page.supplies.eventCorrection': 'Bestand korrigiert',
+	'page.supplies.eventForPet': 'für {name}',
+	'page.supplies.eventBy': 'von {name}',
+	'page.supplies.receipt': 'Beleg',
+	'page.supplies.receiptTitle': 'Beleg: {name}',
+	'page.supplies.deleteEvent': 'Aus dem Verlauf löschen',
+	'page.supplies.deletePurchaseConfirm':
+		'Diesen Kauf aus dem Verlauf löschen? Seine Menge wird vom Bestand abgezogen. Ein Beleg bleibt auf der Dokumente-Seite.',
+	'page.supplies.deletePurchaseConfirmDuration':
+		'Diesen Kauf aus dem Verlauf löschen? Der Countdown geht zurück auf den Kauf davor. Ein Beleg bleibt auf der Dokumente-Seite.',
+	'page.supplies.deleteCorrectionConfirm':
+		'Diese Korrektur aus dem Verlauf löschen? Der Bestand ändert sich um denselben Wert zurück.',
+	'page.supplies.labelName': 'Name',
+	'page.supplies.placeholderName': 'z. B. Kotbeutel',
+	'page.supplies.labelKind': 'Art der Erfassung',
+	'page.supplies.kindCounted': 'Stückzahl',
+	'page.supplies.kindCountedHint':
+		'Eine genaue Anzahl, z. B. Tabletten. Gaben eines verknüpften Medikaments werden davon abgezogen.',
+	'page.supplies.kindDuration': 'Reicht etwa',
+	'page.supplies.kindDurationHint':
+		'Wie lange eine Packung reicht, z. B. ein Sack Futter. Jeder Kauf startet den Countdown neu.',
+	'page.supplies.kindFixedHint':
+		'Wie ein Vorrat gezählt wird, lässt sich nach dem Anlegen nicht mehr ändern.',
+	'page.supplies.labelUnit': 'Einheit',
+	'page.supplies.placeholderUnit': 'z. B. Tabletten',
+	'page.supplies.labelStartingQuantity': 'Aktuelle Menge',
+	'page.supplies.labelLastsDays': 'Eine Packung reicht etwa (Tage)',
+	'page.supplies.labelFirstPurchaseDate': 'Zuletzt gekauft am',
+	'page.supplies.firstPurchaseHint':
+		'Der Countdown startet an diesem Datum. Lass es leer, wenn du noch keine gekauft hast.',
+	'page.supplies.startingStock': 'Anfangsbestand',
+	'page.supplies.startingStockHint':
+		'Wird als erster Kauf gespeichert. Kosten und Beleg sind optional.',
+	'page.supplies.labelBoughtOn': 'Gekauft am',
+	'page.supplies.labelExpiresOn': 'Läuft ab am',
+	'page.supplies.labelPets': 'Für',
+	'page.supplies.archivedPet': '{name} (archiviert)',
+	'page.supplies.labelNotes': 'Notizen',
+	'page.supplies.warnings': 'Warnungen',
+	'page.supplies.labelAlertsEnabled': 'Warne mich, bevor er ausgeht oder abläuft',
+	'page.supplies.alertsHint':
+		'Schalte das für Dinge im Abo aus. Sie bleiben ohne Warnungen in der Liste.',
+	'page.supplies.runOutLead': 'Bevor er ausgeht',
+	'page.supplies.expiryLead': 'Bevor er abläuft',
+	'page.supplies.labelLowStockAt': 'Auch warnen, wenn der Bestand sinkt auf',
+	'page.supplies.lowStockHint': 'Leer lassen für keine Mengenwarnung.',
+	'page.supplies.save': 'Vorrat speichern',
+	'page.supplies.labelPurchaseDate': 'Datum',
+	'page.supplies.labelQuantity': 'Menge',
+	'page.supplies.labelCost': 'Preis ({currency})',
+	'page.supplies.labelNewExpiry': 'Neues Ablaufdatum',
+	'page.supplies.newExpiryHint': 'Ersetzt das bisherige Ablaufdatum.',
+	'page.supplies.labelReceipt': 'Beleg',
+	'page.supplies.receiptHint':
+		'Ein Foto oder PDF. Es wird auch auf der Dokumente-Seite gespeichert.',
+	'page.supplies.receiptFor': 'Beleg ablegen bei',
+	'page.supplies.paperlessPicked': 'Paperless-Dokument {id}',
+	'page.supplies.clearReceipt': 'Beleg entfernen',
+	'page.supplies.labelNote': 'Notiz',
+	'page.supplies.savePurchase': 'Kauf speichern',
+	'page.supplies.correctHint':
+		'Zähl nach, was wirklich da ist. Der Unterschied kommt in den Verlauf.',
+	'page.supplies.labelActual': 'Tatsächliche Menge',
+	'page.supplies.saveCount': 'Menge speichern'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

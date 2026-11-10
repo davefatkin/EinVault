@@ -302,6 +302,13 @@
       "when": 1794249623746,
       "tag": "0042_medication_schedule_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1794272752950,
+      "tag": "0043_cheerful_maverick",
+      "breakpoints": true
     }
   ]
 }

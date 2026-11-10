@@ -6,6 +6,7 @@ import {
 	listMedicationSummaries,
 	parseMedicationForm
 } from '#lib/server/medications.js';
+import { listCountedSupplyOptions } from '#lib/server/supplies.js';
 import { givenAction, medicationFormValues, ownerOnly } from '#lib/server/medication-actions.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
@@ -15,9 +16,11 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const today = localDateISO();
 	const medications = await listMedicationSummaries([params.companionId], {
 		activeOnly: false,
-		today
+		today,
+		includeSupply: true
 	});
-	return { companion, medications, today };
+	const supplyOptions = await listCountedSupplyOptions(params.companionId);
+	return { companion, medications, supplyOptions, today };
 };
 
 export const actions: Actions = {
@@ -25,7 +28,7 @@ export const actions: Actions = {
 		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		const data = await request.formData();
-		const parsed = parseMedicationForm(data, locals.locale);
+		const parsed = parseMedicationForm(data, locals.locale, localDateISO(), params.companionId);
 		if (!parsed.ok) return fail(400, { error: parsed.message, values: medicationFormValues(data) });
 		await createMedication(params.companionId, parsed.value, locals.user!.id);
 		return { created: true };

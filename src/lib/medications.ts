@@ -57,6 +57,18 @@ export type MedicationSummary = {
 	nextDueAt: Date | null;
 	lastGiven: { at: Date; by: UserRef } | null;
 	schedule: MedicationScheduleItem[];
+	/** Units one dose takes from the supply (1 when none). Owner pages only. */
+	doseUnits: number;
+	/** The counted supply doses draw from. Always null on caretaker pages. */
+	supply: MedicationSupply | null;
+};
+
+export type MedicationSupply = {
+	id: string;
+	name: string;
+	quantity: number;
+	unit: string | null;
+	daysLeft: number | null;
 };
 
 export type DoseView = {
@@ -74,7 +86,52 @@ export type MedicationFormValues = {
 	instructions: string | null;
 	startedOn: string;
 	endedOn: string | null;
+	/** Id of the counted supply doses draw from; empty for none. */
+	supplyId: string;
+	/** Units per dose, as typed. */
+	doseUnits: string;
 };
+
+/** The form's starting values for an existing medication. */
+export function medicationFormValuesOf(
+	m: Pick<
+		MedicationSummary,
+		'name' | 'dose' | 'instructions' | 'startedOn' | 'endedOn' | 'doseUnits' | 'supply'
+	>
+): MedicationFormValues {
+	return {
+		name: m.name,
+		dose: m.dose,
+		instructions: m.instructions,
+		startedOn: m.startedOn,
+		endedOn: m.endedOn,
+		supplyId: m.supply?.id ?? '',
+		doseUnits: String(m.doseUnits)
+	};
+}
+
+/**
+ * A counted supply the form offers to link. `unlinked` marks the medication's
+ * current supply when its pet is no longer linked to it.
+ */
+export type MedicationSupplyOption = {
+	id: string;
+	name: string;
+	unit: string | null;
+	unlinked?: boolean;
+};
+
+/**
+ * The form's options plus the medication's current supply when it isn't one
+ * of them, so an unrelated edit never silently changes it.
+ */
+export function withCurrentSupply(
+	options: MedicationSupplyOption[],
+	current: MedicationSupply | null
+): MedicationSupplyOption[] {
+	if (!current || options.some((o) => o.id === current.id)) return options;
+	return [...options, { id: current.id, name: current.name, unit: current.unit, unlinked: true }];
+}
 
 /** How far ahead of a dose time "Given" still counts as that dose. */
 export const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;

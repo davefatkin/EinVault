@@ -13,6 +13,7 @@
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import UserManageDrawer from '#lib/components/admin/UserManageDrawer.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { COMMON_CURRENCIES } from '#lib/money.js';
 
 	const locale = getLocale();
 
@@ -22,6 +23,13 @@
 	let manageUserId = $state<string | null>(null);
 
 	let manageUser = $derived(data.users.find((u) => u.id === manageUserId) ?? null);
+
+	// The common ones, plus the saved value when it isn't among them.
+	const currencyOptions = $derived<string[]>(
+		(COMMON_CURRENCIES as readonly string[]).includes(data.currency)
+			? [...COMMON_CURRENCIES]
+			: [...COMMON_CURRENCIES, data.currency]
+	);
 
 	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'gold' } as const;
 </script>
@@ -118,7 +126,7 @@
 	{/if}
 
 	<!-- Security section -->
-	{#if form?.require2faSuccess}
+	{#if form?.require2faSuccess || form?.currencySuccess}
 		<Alert variant="success">
 			<AlertDescription>{t(locale, 'common.saved')}</AlertDescription>
 		</Alert>
@@ -155,6 +163,24 @@
 							{t(locale, 'page.admin.require2faHelp')}
 						{/if}
 					</p>
+				</div>
+			</form>
+			<form method="POST" action="?/setCurrency" use:enhance class="mt-4 space-y-3">
+				<div class="space-y-1.5">
+					<Label for="currency">{t(locale, 'page.admin.currencyLabel')}</Label>
+					<Select
+						id="currency"
+						name="currency"
+						onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}
+					>
+						{#each currencyOptions as code (code)}
+							<option value={code} selected={data.currency === code}>{code}</option>
+						{/each}
+					</Select>
+					{#if form?.currencyError}
+						<p class="text-xs text-coral">{form.currencyError}</p>
+					{/if}
+					<p class="text-xs text-muted-foreground">{t(locale, 'page.admin.currencyHelp')}</p>
 				</div>
 			</form>
 		</CardContent>

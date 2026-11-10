@@ -9,6 +9,7 @@ import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { reminderLogEventUrl } from '#lib/health.js';
 import { getMedication } from '#lib/server/medications.js';
+import { restoreDoseStock } from '#lib/server/supplies.js';
 import { isMedicationActive } from '#lib/medications.js';
 import { localDateISO } from '#lib/date.js';
 
@@ -242,8 +243,16 @@ export const actions: Actions = {
 						return 'ended' as const;
 				}
 
-				// Undoing a completion undoes its dose. Doses of later occurrences
-				// deleted below were really given: they stay, unlinked by the FK.
+				// Undoing a completion undoes its dose and puts its supply use back.
+				// Doses of later occurrences deleted below were really given: they
+				// stay, unlinked by the FK, and so does their stock use.
+				const doseIds = tx
+					.select({ id: schema.medicationDoses.id })
+					.from(schema.medicationDoses)
+					.where(eq(schema.medicationDoses.reminderId, id))
+					.all()
+					.map((d) => d.id);
+				restoreDoseStock(tx, doseIds);
 				tx.delete(schema.medicationDoses).where(eq(schema.medicationDoses.reminderId, id)).run();
 
 				tx.update(schema.reminders)

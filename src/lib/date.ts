@@ -48,3 +48,20 @@ export function formatYmd(
 export function formatDateOnly(ymd: string, locale: Locale): string | null {
 	return formatYmd(ymd, locale, { dateStyle: 'medium' });
 }
+
+/** Adds calendar days to a `YYYY-MM-DD` date. Pure date math, so DST never shifts the result. */
+export function addDaysYmd(ymd: string, days: number): string {
+	const p = parseYmd(ymd);
+	if (!p) throw new Error(`Invalid date: ${ymd}`);
+	const d = new Date(Date.UTC(p.y, p.m - 1, p.d + days));
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+/** Calendar days from `from` to `to` (negative when `to` is earlier). */
+export function daysBetweenYmd(from: string, to: string): number {
+	const a = parseYmd(from);
+	const b = parseYmd(to);
+	if (!a || !b) throw new Error(`Invalid date: ${from} / ${to}`);
+	return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000);
+}

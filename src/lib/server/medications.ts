@@ -6,6 +6,10 @@ import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
+import { applyDoseStock, loadSupplyStates, restoreDoseStock } from '#lib/server/supplies.js';
+import { MAX_DOSE_UNITS, MIN_DOSE_UNITS } from '#lib/supplies.js';
+import { medicationActiveSql } from '#lib/server/medication-sql.js';
+import type { Tx } from '#lib/server/db/tx.js';
 import {
 	DOSE_WINDOW_MS,
 	isMedicationActive,
@@ -20,12 +24,37 @@ export interface MedicationInput {
 	instructions: string | null;
 	startedOn: string;
 	endedOn: string | null;
+	/** A counted supply linked to the companion, or null. */
+	supplyId: string | null;
+	/** Units one dose takes from the supply; 1 without one. */
+	doseUnits: number;
 }
 
+/** Whether `supplyId` is a counted supply linked to `companionId`. */
+function isCountedSupplyOf(companionId: string, supplyId: string): boolean {
+	return !!db
+		.select({ id: schema.supplies.id })
+		.from(schema.supplies)
+		.innerJoin(
+			schema.supplyCompanions,
+			and(
+				eq(schema.supplyCompanions.supplyId, schema.supplies.id),
+				eq(schema.supplyCompanions.companionId, companionId)
+			)
+		)
+		.where(and(eq(schema.supplies.id, supplyId), eq(schema.supplies.kind, 'counted')))
+		.get();
+}
+
+/**
+ * `companionId` is the pet the medication belongs to; a chosen supply must be
+ * a counted one linked to that pet.
+ */
 export function parseMedicationForm(
 	data: FormData,
 	locale: Locale,
-	today: string = localDateISO()
+	today: string = localDateISO(),
+	companionId?: string
 ): FormParse<MedicationInput> {
 	const name = String(data.get('name') ?? '').trim();
 	const dose = String(data.get('dose') ?? '').trim();
@@ -39,6 +68,19 @@ export function parseMedicationForm(
 		return { ok: false, message: t(locale, 'error.invalidDate') };
 	if (endedOn && endedOn < startedOn)
 		return { ok: false, message: t(locale, 'error.medicationEndBeforeStart') };
+	const supplyId = String(data.get('supplyId') ?? '').trim();
+	if (supplyId && (!companionId || !isCountedSupplyOf(companionId, supplyId)))
+		return { ok: false, message: t(locale, 'error.supplyNotFound') };
+	const rawUnits = String(data.get('doseUnits') ?? '').trim();
+	const doseUnits = rawUnits ? Number(rawUnits.replace(',', '.')) : 1;
+	if (
+		(rawUnits && !/^\d+([.,]\d+)?$/.test(rawUnits)) ||
+		!(doseUnits >= MIN_DOSE_UNITS && doseUnits <= MAX_DOSE_UNITS)
+	)
+		return {
+			ok: false,
+			message: t(locale, 'error.invalidDoseUnits', { min: MIN_DOSE_UNITS, max: MAX_DOSE_UNITS })
+		};
 	return {
 		ok: true,
 		value: {
@@ -46,14 +88,11 @@ export function parseMedicationForm(
 			dose: dose || null,
 			instructions: instructions || null,
 			startedOn,
-			endedOn: endedOn || null
+			endedOn: endedOn || null,
+			supplyId: supplyId || null,
+			doseUnits: supplyId ? doseUnits : 1
 		}
 	};
-}
-
-/** SQL for "active on `today`": no end date, or ending today or later. */
-export function medicationActiveSql(today: string) {
-	return sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`;
 }
 
 export async function createMedication(
@@ -71,8 +110,6 @@ export async function getMedication(companionId: string, id: string) {
 		where: and(eq(schema.medications.id, id), eq(schema.medications.companionId, companionId))
 	});
 }
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** R1: an ended medication never keeps open reminders. */
 function deleteOpenLinkedReminders(tx: Tx, medicationId: string) {
@@ -179,7 +216,7 @@ export async function deleteMedication(companionId: string, id: string): Promise
 
 export async function listMedicationSummaries(
 	companionIds: string[],
-	opts: { activeOnly: boolean; today?: string }
+	opts: { activeOnly: boolean; today?: string; includeSupply?: boolean }
 ): Promise<MedicationSummary[]> {
 	if (companionIds.length === 0) return [];
 	const today = opts.today ?? localDateISO();
@@ -248,6 +285,24 @@ export async function listMedicationSummaries(
 		])
 	);
 
+	// Supply data is for owners; callers that don't ask (caretakers, the API)
+	// get null and the default dose size.
+	const supplyBy = new Map<string, MedicationSummary['supply']>();
+	if (opts.includeSupply) {
+		const supplyIds = [...new Set(meds.map((m) => m.supplyId).filter((v) => v !== null))];
+		for (const supplyId of supplyIds) {
+			const [state] = await loadSupplyStates({ supplyId, today });
+			if (state?.kind === 'counted')
+				supplyBy.set(supplyId, {
+					id: state.id,
+					name: state.name,
+					quantity: state.quantity ?? 0,
+					unit: state.unit,
+					daysLeft: state.daysLeft
+				});
+		}
+	}
+
 	return meds.map((m) => ({
 		id: m.id,
 		companionId: m.companionId,
@@ -259,7 +314,9 @@ export async function listMedicationSummaries(
 		active: isMedicationActive(m.endedOn, today),
 		nextDueAt: nextBy.get(m.id) ?? null,
 		lastGiven: lastBy.get(m.id) ?? null,
-		schedule: scheduleBy.get(m.id) ?? []
+		schedule: scheduleBy.get(m.id) ?? [],
+		doseUnits: opts.includeSupply ? m.doseUnits : 1,
+		supply: (m.supplyId && supplyBy.get(m.supplyId)) || null
 	}));
 }
 
@@ -331,31 +388,38 @@ export async function listDoses(medicationId: string, limit = 50, offset = 0): P
 
 /**
  * Remove a dose logged by mistake: only the dose row, and only when it belongs
- * to this medication of this companion. A reminder it completed stays
- * completed (Restore on the reminders page reopens it).
+ * to this medication of this companion. Its supply use is put back. A reminder
+ * it completed stays completed (Restore on the reminders page reopens it).
  */
 export async function deleteDose(
 	companionId: string,
 	medicationId: string,
 	doseId: string
 ): Promise<boolean> {
-	const owned = db
-		.select({ id: schema.medications.id })
-		.from(schema.medications)
-		.where(
-			and(eq(schema.medications.id, medicationId), eq(schema.medications.companionId, companionId))
-		);
-	const removed = await db
-		.delete(schema.medicationDoses)
-		.where(
-			and(
-				eq(schema.medicationDoses.id, doseId),
-				eq(schema.medicationDoses.medicationId, medicationId),
-				inArray(schema.medicationDoses.medicationId, owned)
-			)
-		)
-		.returning({ id: schema.medicationDoses.id });
-	return removed.length > 0;
+	return db.transaction(
+		(tx) => {
+			const owned = tx
+				.select({ id: schema.medicationDoses.id })
+				.from(schema.medicationDoses)
+				.innerJoin(
+					schema.medications,
+					eq(schema.medications.id, schema.medicationDoses.medicationId)
+				)
+				.where(
+					and(
+						eq(schema.medicationDoses.id, doseId),
+						eq(schema.medications.id, medicationId),
+						eq(schema.medications.companionId, companionId)
+					)
+				)
+				.get();
+			if (!owned) return false;
+			restoreDoseStock(tx, [doseId]);
+			tx.delete(schema.medicationDoses).where(eq(schema.medicationDoses.id, doseId)).run();
+			return true;
+		},
+		{ behavior: 'immediate' }
+	);
 }
 
 /** Safety net: ended medications never keep open reminders. */
@@ -479,14 +543,22 @@ export async function logDose(
 	}
 
 	const doseId = generateId(15);
-	await db.insert(schema.medicationDoses).values({
-		id: doseId,
-		medicationId,
-		givenAt,
-		givenBy: actor.id,
-		source: 'manual',
-		note: opts.note ?? null
-	});
+	db.transaction(
+		(tx) => {
+			tx.insert(schema.medicationDoses)
+				.values({
+					id: doseId,
+					medicationId,
+					givenAt,
+					givenBy: actor.id,
+					source: 'manual',
+					note: opts.note ?? null
+				})
+				.run();
+			applyDoseStock(tx, { id: doseId, medicationId, givenAt, givenBy: actor.id });
+		},
+		{ behavior: 'immediate' }
+	);
 	return { doseId, completedReminderId: null };
 }
 

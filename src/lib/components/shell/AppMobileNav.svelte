@@ -17,7 +17,8 @@
 		Weight,
 		FileText,
 		StickyNote,
-		Pill
+		Pill,
+		Package
 	} from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
@@ -172,6 +173,7 @@
 	function headerLinks(companionId: string) {
 		return [
 			{ href: `/${companionId}/medications`, label: t(locale, 'nav.medications'), icon: Pill },
+			{ href: `/${companionId}/supplies`, label: t(locale, 'nav.supplies'), icon: Package },
 			{ href: `/${companionId}/documents`, label: t(locale, 'nav.documents'), icon: FileText },
 			{ href: `/${companionId}/notes`, label: t(locale, 'nav.notes'), icon: StickyNote }
 		];

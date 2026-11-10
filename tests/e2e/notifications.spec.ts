@@ -615,3 +615,74 @@ base('caretaker incident activity pushes to owners via ntfy', async ({ browser }
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+// ---------------------------------------------------------------------------
+// Supply warnings: run-out push to an admin, nothing for warnings off
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line no-empty-pattern
+base('a supply running out pushes a warning, none with warnings off', async ({}, testInfo) => {
+	const dir = path.join(
+		REPO_ROOT,
+		'.test-data',
+		`notifications-supply-${testInfo.workerIndex}-${testInfo.testId}`
+	);
+	// Household local time is about noon: past the 09:00 gate, far from midnight.
+	const { tz } = noonZone();
+	const ntfy = await startNtfyFake();
+	const dbPath = createSeededDb(dir);
+	const db = new Database(dbPath);
+	const ein = SEED.companions.ein.id;
+	// A daily dose due tomorrow (so the reminder itself stays quiet).
+	const tomorrow = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+	const addSupply = (id: string, name: string, alertsEnabled: boolean) => {
+		db.prepare(
+			`INSERT INTO supplies (id, name, kind, quantity, alerts_enabled, run_out_lead_days)
+			 VALUES (?, ?, 'counted', 3, ?, '7')`
+		).run(id, name, alertsEnabled ? 1 : 0);
+		db.prepare('INSERT INTO supply_companions (supply_id, companion_id) VALUES (?, ?)').run(
+			id,
+			ein
+		);
+		db.prepare(
+			`INSERT INTO medications (id, companion_id, name, started_on, supply_id)
+			 VALUES (?, ?, ?, '2026-01-01', ?)`
+		).run(`med-${id}`, ein, name, id);
+		db.prepare(
+			`INSERT INTO reminders (id, companion_id, title, type, due_at, is_recurring,
+			   recurrence_unit, recurrence_interval, recurrence_anchor, medication_id)
+			 VALUES (?, ?, ?, 'medication', ?, 1, 'day', 1, 'interval', ?)`
+		).run(`rem-${id}`, ein, name, tomorrow, `med-${id}`);
+	};
+	addSupply('e2e-supply-on', 'E2E Carprofen', true);
+	addSupply('e2e-supply-off', 'E2E Autoship kibble', false);
+	db.prepare('UPDATE users SET ntfy_topic = ? WHERE id = ?').run('e2e-supply-admin', SEED.admin.id);
+	db.close();
+	let server: AppServer | undefined;
+	try {
+		server = await startAppServer({
+			dbPath,
+			env: { TZ: tz, NOTIFY_SCAN_INTERVAL_MS: '250', NTFY_URL: ntfy.url }
+		});
+
+		const push = await ntfy.waitForPublish(
+			(p) => p.topic === 'e2e-supply-admin' && !!p.title?.includes('E2E Carprofen'),
+			20_000
+		);
+		expect(push.title).toBe('Running low: E2E Carprofen, about 3 days left');
+		expect(push.click ?? '').toContain(`/${ein}/supplies/e2e-supply-on`);
+
+		// Later scans don't resend, and the supply with warnings off stays quiet.
+		await expect
+			.poll(() => ntfy.publishes.filter((p) => p.title?.includes('E2E Carprofen')).length, {
+				timeout: 1_500,
+				intervals: [200]
+			})
+			.toBe(1);
+		expect(ntfy.publishes.filter((p) => p.title?.includes('E2E Autoship kibble'))).toHaveLength(0);
+	} finally {
+		await server?.stop();
+		await ntfy.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});

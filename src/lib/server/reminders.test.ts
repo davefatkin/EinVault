@@ -579,4 +579,44 @@ describe('medication-linked reminders', () => {
 		const [dose] = await dosesFor(m);
 		expect(dose).toMatchObject({ id: res.doseId, givenAt, note: 'with food' });
 	});
+
+	async function withSupply(m: string, quantity: number) {
+		const supplyId = `sup-rem-${++k}`;
+		await db
+			.insert(schema.supplies)
+			.values({ id: supplyId, name: 'Pills', kind: 'counted', quantity });
+		await db.update(schema.medications).set({ supplyId }).where(eq(schema.medications.id, m));
+		return supplyId;
+	}
+	const stock = async (supplyId: string) =>
+		(await db.query.supplies.findFirst({ where: eq(schema.supplies.id, supplyId) }))!.quantity;
+	const usesOf = (supplyId: string) =>
+		db.query.supplyEvents.findMany({ where: eq(schema.supplyEvents.supplyId, supplyId) });
+
+	it('completing subtracts one dose from the supply, once', async () => {
+		const m = await med();
+		const s = await withSupply(m, 10);
+		const r = await linked(m);
+		const givenAt = new Date(2026, 0, 15, 8, 55, 0);
+		const res = completeReminder(r, 'u-rem', { givenAt })!;
+		expect(completeReminder(r, 'u-rem')).toBeNull();
+		expect(await stock(s)).toBe(9);
+		const uses = await usesOf(s);
+		expect(uses).toHaveLength(1);
+		expect(uses[0]).toMatchObject({
+			type: 'use',
+			quantityDelta: -1,
+			doseId: res.doseId,
+			companionId: 'c-rem',
+			at: givenAt
+		});
+	});
+
+	it('skipping leaves the supply alone', async () => {
+		const m = await med();
+		const s = await withSupply(m, 10);
+		skipReminder(await linked(m), 'u-rem');
+		expect(await stock(s)).toBe(10);
+		expect(await usesOf(s)).toEqual([]);
+	});
 });

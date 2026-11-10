@@ -1405,6 +1405,144 @@ export function seedDemoIncidents(
 }
 
 /**
+ * Demo-only supplies. Ein's Carprofen (counted, linked to the medication,
+ * running low) and heartworm chews (counted), dog food (duration, warnings
+ * off), poop bags (duration, shared by Ein and Edward), and flea drops
+ * (counted, expiring soon). Seeded doses bypass the stock hooks, so
+ * quantities are set directly with matching purchase events. Called from
+ * refreshDemoContent after seedDemoMedications; never from seedRows.
+ */
+export function seedDemoSupplies(
+	db: BetterSQLite3Database<typeof schema>,
+	opts: { now: number }
+): void {
+	const now = opts.now;
+	const day = 24 * 60 * 60 * 1000;
+	const ein = SEED.companions.ein.id;
+	const edward = SEED.companions.edward.id;
+	const spike = SEED.admin.id;
+	const localDate = (ms: number) => {
+		const d = new Date(ms);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	};
+	const carprofen = 'seed-supply-ein-carprofen';
+	const heartworm = 'seed-supply-ein-heartworm';
+	const dogFood = 'seed-supply-dog-food';
+	const poopBags = 'seed-supply-poop-bags';
+	const flea = 'seed-supply-flea-drops';
+
+	db.insert(schema.supplies)
+		.values([
+			{
+				id: carprofen,
+				name: 'Carprofen tablets',
+				kind: 'counted',
+				unit: 'tablets',
+				quantity: 4,
+				lowStockAt: 5,
+				expiresOn: localDate(now + 120 * day)
+			},
+			{
+				id: heartworm,
+				name: 'Heartworm chews',
+				kind: 'counted',
+				unit: 'chews',
+				quantity: 5,
+				lowStockAt: 1,
+				expiresOn: localDate(now + 300 * day)
+			},
+			{
+				id: dogFood,
+				name: 'Dog food',
+				kind: 'duration',
+				lastsDays: 30,
+				stockedOn: localDate(now - 12 * day),
+				alertsEnabled: false
+			},
+			{
+				id: poopBags,
+				name: 'Poop bags',
+				kind: 'duration',
+				lastsDays: 60,
+				stockedOn: localDate(now - 20 * day)
+			},
+			{
+				id: flea,
+				name: 'Flea and tick drops',
+				kind: 'counted',
+				unit: 'doses',
+				quantity: 3,
+				lowStockAt: 1,
+				expiresOn: localDate(now + 8 * day)
+			}
+		])
+		.run();
+	db.insert(schema.supplyCompanions)
+		.values([
+			{ supplyId: carprofen, companionId: ein },
+			{ supplyId: heartworm, companionId: ein },
+			{ supplyId: dogFood, companionId: ein },
+			{ supplyId: poopBags, companionId: ein },
+			{ supplyId: poopBags, companionId: edward },
+			{ supplyId: flea, companionId: ein }
+		])
+		.run();
+	db.insert(schema.supplyEvents)
+		.values([
+			{
+				id: 'seed-supply-event-carprofen',
+				supplyId: carprofen,
+				type: 'purchase',
+				at: new Date(now - 7 * day),
+				quantityDelta: 14,
+				costMinor: 2400,
+				currency: 'USD',
+				createdBy: spike
+			},
+			{
+				id: 'seed-supply-event-heartworm',
+				supplyId: heartworm,
+				type: 'purchase',
+				at: new Date(now - 120 * day),
+				quantityDelta: 6,
+				createdBy: spike
+			},
+			{
+				id: 'seed-supply-event-dog-food',
+				supplyId: dogFood,
+				type: 'purchase',
+				at: new Date(now - 12 * day),
+				createdBy: spike
+			},
+			{
+				id: 'seed-supply-event-poop-bags',
+				supplyId: poopBags,
+				type: 'purchase',
+				at: new Date(now - 20 * day),
+				createdBy: spike
+			},
+			{
+				id: 'seed-supply-event-flea',
+				supplyId: flea,
+				type: 'purchase',
+				at: new Date(now - 90 * day),
+				quantityDelta: 3,
+				createdBy: spike
+			}
+		])
+		.run();
+	db.update(schema.medications)
+		.set({ supplyId: carprofen })
+		.where(eq(schema.medications.id, 'seed-med-ein-carprofen'))
+		.run();
+	db.update(schema.medications)
+		.set({ supplyId: heartworm })
+		.where(eq(schema.medications.id, 'seed-med-ein-heartworm'))
+		.run();
+}
+
+/**
  * Wipes all demo content rows (companions + their cascade children,
  * plus explicit deletes for tables with user FK), then re-seeds
  * anchored to `now`. Also copies photo files.
@@ -1431,6 +1569,9 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		// quick_logs hangs off users, so the companion cascade below doesn't reach
 		// it; delete explicitly (this cascades to quick_log_companions).
 		tx.delete(schema.quickLogs).run();
+		// Supplies don't hang off companions; deleting them cascades their links
+		// and events. medications.supply_id is cleared by the companion cascade.
+		tx.delete(schema.supplies).run();
 		// companions cascade to: journalEntries -> media, healthEvents -> media,
 		// healthEventUpdates (-> media) and healthEventLinks,
 		// weightEntries, dailyEvents, reminders, notes -> noteTags, media
@@ -1441,6 +1582,7 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		seedDemoIncidents(tx as never, { now });
 		seedDemoReminderHeadsUps(tx as never, { now });
 		seedDemoMedications(tx as never, { now });
+		seedDemoSupplies(tx as never, { now });
 	});
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }

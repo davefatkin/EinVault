@@ -2,31 +2,21 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t, type Locale } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and, count, desc } from 'drizzle-orm';
-import { generateId } from '#lib/server/utils.js';
-import sharp from 'sharp';
-import { getStorage, STORAGE_BACKEND } from '#lib/server/storage/index.js';
+import { eq, and, desc } from 'drizzle-orm';
 import { MAX_DOCUMENTS_PER_COMPANION, UPLOAD_MAX_MB } from '#lib/server/env.js';
 import {
-	documentExtFromMime,
-	isAllowedDocumentMime,
-	looksLikeDocument
-} from '#lib/server/storage/mime.js';
+	discardStored,
+	insertDocumentRow,
+	prepareUpload,
+	storePrepared,
+	type StoredDocument
+} from '#lib/server/documents.js';
 import { isValidDate } from '#lib/server/validation.js';
 
-const MAX_DOCUMENT_SIZE = UPLOAD_MAX_MB * 1024 * 1024;
-// Bound decoded pixels so a small, highly-compressible image can't decode to
-// sharp's ~268MP default and pressure memory. 50MP comfortably covers a
-// high-DPI document scan while capping the per-request decode buffer.
-const MAX_DECODE_PIXELS = 50_000_000;
 const CATEGORIES = ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] as const;
 type Category = (typeof CATEGORIES)[number];
 
 // NOT exported: SvelteKit only allows HTTP-verb exports from +server.ts.
-function documentKey(companionId: string, filename: string): string {
-	return `documents/${companionId}/${filename}`;
-}
-
 function parseCategory(raw: unknown): Category {
 	return CATEGORIES.includes(raw as Category) ? (raw as Category) : 'other';
 }
@@ -90,16 +80,14 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!companion) error(404, t(locals.locale, 'error.companionNotFound'));
 
 	const formData = await request.formData();
-	const file = formData.get('file') as File | null;
-	if (!file || file.size === 0) error(400, t(locals.locale, 'error.noFileProvided'));
-	if (!isAllowedDocumentMime(file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
-	if (file.size > MAX_DOCUMENT_SIZE)
-		error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
-
-	const raw = Buffer.from(await file.arrayBuffer());
-	// Reject mislabeled bytes before trusting the client mime (PDFs are
-	// stored as-is; HTML-prefix polyglots must die here).
-	if (!looksLikeDocument(raw, file.type)) error(400, t(locals.locale, 'error.invalidFileType'));
+	const prep = await prepareUpload(formData.get('file') as File | null);
+	if (!prep.ok) {
+		if (prep.error === 'noFile') error(400, t(locals.locale, 'error.noFileProvided'));
+		if (prep.error === 'tooLarge')
+			error(400, t(locals.locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB }));
+		error(400, t(locals.locale, 'error.invalidFileType'));
+	}
+	const { prepared } = prep;
 
 	const titleRaw = String(formData.get('title') ?? '').trim();
 	const category = parseCategory(formData.get('category'));
@@ -111,94 +99,34 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		locals.locale
 	);
 
-	const documentId = generateId(15);
-	let processed: Buffer;
-	let mimeType: string;
-	if (file.type === 'application/pdf') {
-		// PDFs cannot be re-encoded; stored as-is. Serving-side hardening
-		// (CSP sandbox, nosniff, DB-row content type) covers them.
-		processed = raw;
-		mimeType = 'application/pdf';
-	} else if (file.type === 'image/png') {
-		// Lossless re-encode: launders structure, strips EXIF, keeps receipts
-		// crisp. Larger resize cap than journal photos — these must stay legible.
-		try {
-			processed = await sharp(raw, { limitInputPixels: MAX_DECODE_PIXELS })
-				.resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
-				.png()
-				.toBuffer();
-		} catch {
-			error(400, t(locals.locale, 'error.invalidFileType'));
-		}
-		mimeType = 'image/png';
-	} else {
-		// jpeg / webp / heic -> JPEG q90. Also converts HEIC to a universally
-		// renderable format. sharp without libheif throws on HEIC: surface as
-		// invalid file type rather than a 500.
-		try {
-			processed = await sharp(raw, { limitInputPixels: MAX_DECODE_PIXELS })
-				.rotate()
-				.resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
-				.jpeg({ quality: 90 })
-				.toBuffer();
-		} catch {
-			error(400, t(locals.locale, 'error.invalidFileType'));
-		}
-		mimeType = 'image/jpeg';
-	}
-
-	const ext = documentExtFromMime(mimeType);
-	const filename = `${documentId}.${ext}`;
-	const key = documentKey(companionId, filename);
-	const title = (titleRaw || file.name || filename).slice(0, 255);
-	const originalName = (file.name || '').slice(0, 255) || null;
-	const uploadedBy = locals.user.id;
-
+	let stored: StoredDocument;
 	try {
-		await getStorage().put({ key, body: processed, contentType: mimeType });
+		stored = await storePrepared(companionId, prepared);
 	} catch (err) {
 		console.error('[documents] storage put failed:', err);
 		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
+	const documentId = stored.id;
+	const filename = stored.filename;
 
 	// Count + insert in one immediate transaction so two concurrent uploads
 	// cannot both pass the cap check (from-immich TOCTOU pattern).
 	const result = db.transaction(
-		(tx) => {
-			const rows = tx
-				.select({ value: count() })
-				.from(schema.documents)
-				.where(eq(schema.documents.companionId, companionId))
-				.all();
-			const docCount = rows[0]?.value ?? 0;
-			if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
-			tx.insert(schema.documents)
-				.values({
-					id: documentId,
-					companionId,
-					healthEventId,
-					filename,
-					provider: STORAGE_BACKEND,
-					storageKey: key,
-					title,
-					category,
-					documentDate,
-					originalName,
-					mimeType,
-					sizeBytes: processed.length,
-					uploadedBy
-				})
-				.run();
-			return { ok: true as const };
-		},
+		(tx) =>
+			insertDocumentRow(tx, companionId, stored, {
+				title: (titleRaw || prepared.fileName || filename).slice(0, 255),
+				category,
+				documentDate,
+				healthEventId,
+				originalName: prepared.originalName,
+				uploadedBy: locals.user!.id
+			}),
 		{ behavior: 'immediate' }
 	);
 
-	if (!result.ok) {
+	if (result === 'capReached') {
 		// Cap hit after the object was stored: remove the orphan.
-		await getStorage()
-			.delete(key)
-			.catch((err) => console.warn(`[documents] orphan cleanup failed for ${key}:`, err));
+		await discardStored(stored);
 		error(
 			400,
 			t(locals.locale, 'error.maxDocumentsExceeded', { max: MAX_DOCUMENTS_PER_COMPANION })

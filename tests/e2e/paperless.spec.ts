@@ -127,6 +127,58 @@ test('imports from Paperless on a journal day and says where it was filed', asyn
 	);
 });
 
+test('a supply purchase takes its receipt from Paperless', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const base = world.server.baseURL;
+	const ein = SEED.companions.ein.id;
+	await login(page, base, SEED.member.username);
+	await page.goto(`${base}/${ein}/supplies/new`);
+	await waitForHydration(page);
+	await page.locator('#supply-name').fill('Paperless tablets');
+	await page.locator('#supply-startingQuantity').fill('10');
+	await page.getByRole('button', { name: 'Save supply' }).click();
+	await expect(page).toHaveURL(/\/supplies\/(?!new$)[^/]+$/, { timeout: 8_000 });
+	await waitForHydration(page);
+
+	async function buyWithPaperless(quantity: string, left: string) {
+		await page.getByRole('button', { name: 'Log purchase' }).click();
+		const purchase = page.getByRole('dialog', { name: 'Log purchase' });
+		await purchase.locator('#purchase-quantity').fill(quantity);
+		await purchase.getByRole('button', { name: /add from paperless/i }).click();
+		const picker = page.getByRole('dialog', { name: /paperless/i });
+		await expect(picker.getByRole('button', { name: /vaccination record/i })).toBeVisible({
+			timeout: 10_000
+		});
+		// Escape closes the picker only; the purchase and what was typed stay.
+		await page.keyboard.press('Escape');
+		await expect(picker).toHaveCount(0);
+		await expect(purchase.locator('#purchase-quantity')).toHaveValue(quantity);
+		await purchase.getByRole('button', { name: /add from paperless/i }).click();
+		await picker.getByRole('button', { name: /vaccination record/i }).click();
+		await expect(purchase.getByText('Paperless document 1')).toBeVisible();
+		await purchase.getByRole('button', { name: 'Save purchase' }).click();
+		await expect(purchase).toHaveCount(0, { timeout: 10_000 });
+		await expect(page.getByText(left).first()).toBeVisible();
+	}
+
+	await buyWithPaperless('5', '15 left');
+	// The same Paperless document again links the receipt already on Ein.
+	await buyWithPaperless('5', '20 left');
+	const receipts = page.getByRole('region', { name: 'History' }).getByRole('link', {
+		name: 'Receipt'
+	});
+	await expect(receipts).toHaveCount(2);
+	const [first, second] = await Promise.all([
+		receipts.nth(0).getAttribute('href'),
+		receipts.nth(1).getAttribute('href')
+	]);
+	expect(first).toBe(second);
+	expect(first).toMatch(new RegExp(`^/api/documents/${ein}/`));
+
+	await page.goto(base + EIN_DOCS_URL);
+	await expect(page.getByText('Receipt: Paperless tablets')).toHaveCount(1);
+});
+
 test('search filters documents in the picker', async ({ world, page }) => {
 	world.fake.setDocuments(DOCS);
 

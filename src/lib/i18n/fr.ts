@@ -239,6 +239,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.documents': 'Documents',
 	'nav.notes': 'Notes',
 	'nav.medications': 'Médicaments',
+	'nav.supplies': 'Fournitures',
 	'nav.settings': 'Paramètres',
 	'nav.admin': 'Administration',
 	'nav.adminCompanions': 'Compagnons',
@@ -340,7 +341,8 @@ const messages: Record<keyof Messages, string> = {
 		"Recevez des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionBoth':
 		"Recevez des e-mails et des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
-	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
+	'page.settings.notifyReminderEmailLabel':
+		"M'envoyer un e-mail pour les rappels, les alertes anticipées et les alertes de stock",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
 	'page.settings.notifyCelebrationEmailLabel':
@@ -1313,6 +1315,22 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.footer':
 		"Vous recevez cet e-mail car les alertes d'incident sont activées dans vos réglages EinVault.",
 
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Stock bas : {name}, {left}',
+	'email.supply.outSubject': 'Épuisé : {name}',
+	'email.supply.lowSubject': 'Stock bas : {name}',
+	'email.supply.expirySubject': 'Expire bientôt : {name}, expire le {date}',
+	'email.supply.expiredSubject': 'Expiré : {name}',
+	'email.supply.greeting': 'Bonjour {name},',
+	'email.supply.runOutBody': '{name} pour {companions} devrait être épuisé vers le {date}.',
+	'email.supply.outBody': '{name} pour {companions} est épuisé.',
+	'email.supply.lowBody': 'Il ne reste que {count} de {name} pour {companions}.',
+	'email.supply.expiryBody': '{name} pour {companions} expire le {date}.',
+	'email.supply.expiredBody': '{name} pour {companions} a expiré le {date}.',
+	'email.supply.cta': 'Ouvrir dans EinVault',
+	'email.supply.footer':
+		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages EinVault.',
+
 	// Search palette
 	'search.placeholder': 'Rechercher journaux, notes, médias, santé, documents…',
 	'search.hint': 'Saisissez au moins 2 caractères pour rechercher',
@@ -1527,7 +1545,145 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		"Supprimer {name} et son historique des prises ? Les prochains rappels de prise sont aussi supprimés ; ceux déjà faits restent dans l'historique des rappels. Cette action est irréversible.",
 	'page.health.medicationsHintPrefix': "Il s'agit d'un médicament ?",
-	'page.health.medicationsHintLink': 'Utilisez la page Médicaments'
+	'page.health.medicationsHintLink': 'Utilisez la page Médicaments',
+	'supply.runOut.out': 'Épuisé',
+	'supply.runOut.day': 'environ {count} jour restant',
+	'supply.runOut.days': 'environ {count} jours restants',
+	'supply.runOut.weeks': 'environ {count} semaines restantes',
+	'supply.runOutShort.today': "s'épuise aujourd'hui",
+	'supply.runOutShort.day': 'environ {count} jour',
+	'supply.runOutShort.days': 'environ {count} jours',
+	'supply.runOutShort.weeks': 'environ {count} semaines',
+	'error.supplyNameTooLong': 'Le nom ne doit pas dépasser 200 caractères.',
+	'error.supplyUnitTooLong': "L'unité ne doit pas dépasser 50 caractères.",
+	'error.supplyNotesTooLong': 'Les notes ne doivent pas dépasser 5000 caractères.',
+	'error.invalidSupplyKind': 'Choisissez comment suivre cette fourniture.',
+	'error.invalidQuantity': 'Saisissez un nombre supérieur ou égal à 0.',
+	'error.quantityTooLarge': 'Saisissez un nombre inférieur ou égal à {max}.',
+	'error.invalidLastsDays': 'Indiquez combien de jours dure une unité, de 1 à 365.',
+	'error.purchaseInFuture': "La date d'achat ne peut pas être dans le futur.",
+	'page.dashboard.suppliesViewAll': 'Tout voir',
+	'error.invalidDoseUnits': 'Indiquez ce que consomme une dose : de {min} à {max}.',
+	'error.invalidCurrency': 'Choisissez une devise valide.',
+	'page.medications.labelSupply': 'Fourniture',
+	'page.medications.supplyNone': 'Aucune',
+	'page.medications.supplyUnlinked': '{name} (plus associée)',
+	'page.medications.newSupply': 'Nouvelle fourniture',
+	'page.medications.labelDoseUnits': 'Unités par dose',
+	'page.medications.labelDoseUnitsWithUnit': 'Unités par dose ({unit})',
+	'page.medications.doseUnitsHint':
+		'Chaque dose prend cette quantité dans la fourniture. Saisissez 0,5 pour un demi-comprimé.',
+	'page.admin.currencyLabel': 'Devise',
+	'page.admin.currencyHelp':
+		'Utilisée pour le coût des achats de fournitures. Les achats déjà saisis gardent leur devise.',
+	'error.supplyNotFound': 'Fourniture introuvable.',
+	'error.supplyEventNotFound': "Entrée de l'historique introuvable.",
+	'error.invalidPurchaseQuantity': 'Saisissez une quantité supérieure à 0.',
+	'error.invalidCost': 'Saisissez un montant valide.',
+	'error.purchaseNeedsStock':
+		'Indiquez un stock de départ supérieur à 0 pour enregistrer un coût ou un reçu.',
+	'error.purchaseNeedsDate':
+		'Indiquez la date de votre dernier achat pour enregistrer un coût ou un reçu.',
+	'error.supplyNeedsActivePet': "Choisissez au moins un animal qui n'est pas archivé.",
+	'error.purchaseFailed': "L'achat n'a pas pu être enregistré. Réessayez.",
+	'error.supplySaveFailed': "La fourniture n'a pas pu être enregistrée. Réessayez.",
+	'supply.countLeft': 'reste {count} {unit}',
+	'supply.countLeftNoUnit': 'reste {count}',
+	'supply.notBoughtYet': 'Pas encore acheté',
+	'page.supplies.title': 'Fournitures',
+	'page.supplies.add': 'Ajouter une fourniture',
+	'page.supplies.newTitle': 'Nouvelle fourniture',
+	'page.supplies.editTitle': 'Modifier la fourniture',
+	'page.supplies.empty': 'Aucune fourniture pour le moment',
+	'page.supplies.emptyBody':
+		"Ajoutez les médicaments, la nourriture et les autres achats pour voir combien de temps ils durent et être prévenu avant d'en manquer.",
+	'page.supplies.archivedNotice': '{name} est archivé. Les fournitures restent consultables.',
+	'page.supplies.backToList': 'Toutes les fournitures',
+	'page.supplies.sharedWith': 'Partagé avec {names}',
+	'page.supplies.expiresOn': 'Expire le {date}',
+	'page.supplies.expiredOn': 'Expiré le {date}',
+	'page.supplies.runsOutOn': 'Épuisé vers le {date}',
+	'page.supplies.lastsDay': 'Un dure environ {count} jour',
+	'page.supplies.lastsDays': 'Un dure environ {count} jours',
+	'page.supplies.lastBought': 'Dernier achat le {date}',
+	'page.supplies.lowStockAt': 'Alerte à {count}',
+	'page.supplies.badgeRunningLow': 'Bientôt épuisé',
+	'page.supplies.badgeExpiring': 'Expire bientôt',
+	'page.supplies.badgeExpired': 'Expiré',
+	'page.supplies.badgeWarningsOff': 'Alertes désactivées',
+	'page.supplies.logPurchase': 'Noter un achat',
+	'page.supplies.correctCount': 'Corriger le stock',
+	'page.supplies.deleteConfirm':
+		"Supprimer {name} et son historique ? Les reçus restent sur la page Documents, et les médicaments qui l'utilisent continuent sans. Cette action est irréversible.",
+	'page.supplies.history': 'Historique',
+	'page.supplies.noHistory': "Rien n'a encore été noté.",
+	'page.supplies.showMore': 'Afficher plus',
+	'page.supplies.eventPurchase': 'Acheté',
+	'page.supplies.eventUse': 'Utilisé',
+	'page.supplies.eventCorrection': 'Stock corrigé',
+	'page.supplies.eventForPet': 'pour {name}',
+	'page.supplies.eventBy': 'par {name}',
+	'page.supplies.receipt': 'Reçu',
+	'page.supplies.receiptTitle': 'Reçu : {name}',
+	'page.supplies.deleteEvent': "Supprimer de l'historique",
+	'page.supplies.deletePurchaseConfirm':
+		"Supprimer cet achat de l'historique ? Sa quantité est retirée du stock. Un reçu reste sur la page Documents.",
+	'page.supplies.deletePurchaseConfirmDuration':
+		"Supprimer cet achat de l'historique ? Le compte à rebours repart de l'achat précédent. Un reçu reste sur la page Documents.",
+	'page.supplies.deleteCorrectionConfirm':
+		"Supprimer cette correction de l'historique ? Le stock revient en arrière d'autant.",
+	'page.supplies.labelName': 'Nom',
+	'page.supplies.placeholderName': 'p. ex. Sacs à crottes',
+	'page.supplies.labelKind': 'Comment le suivre',
+	'page.supplies.kindCounted': 'Compter',
+	'page.supplies.kindCountedHint':
+		"Un nombre exact, comme des comprimés. Les prises d'un médicament lié en sont déduites.",
+	'page.supplies.kindDuration': 'Dure environ',
+	'page.supplies.kindDurationHint':
+		'Combien de temps dure un exemplaire, comme un sac de croquettes. Chaque achat relance le compte à rebours.',
+	'page.supplies.kindFixedHint':
+		"Le mode de suivi d'une fourniture ne peut plus changer une fois qu'elle a un historique.",
+	'page.supplies.labelUnit': 'Unité',
+	'page.supplies.placeholderUnit': 'p. ex. comprimés',
+	'page.supplies.labelStartingQuantity': 'Quantité actuelle',
+	'page.supplies.labelLastsDays': 'Un dure environ (jours)',
+	'page.supplies.labelFirstPurchaseDate': 'Dernier achat le',
+	'page.supplies.firstPurchaseHint':
+		"Le compte à rebours démarre à cette date. Laissez vide si vous n'en avez pas encore acheté.",
+	'page.supplies.startingStock': 'Stock de départ',
+	'page.supplies.startingStockHint':
+		'Enregistré comme premier achat. Le coût et le reçu sont facultatifs.',
+	'page.supplies.labelBoughtOn': 'Acheté le',
+	'page.supplies.labelExpiresOn': 'Expire le',
+	'page.supplies.labelPets': 'Pour',
+	'page.supplies.archivedPet': '{name} (archivé)',
+	'page.supplies.labelNotes': 'Notes',
+	'page.supplies.warnings': 'Alertes',
+	'page.supplies.labelAlertsEnabled': "M'alerter avant épuisement ou expiration",
+	'page.supplies.alertsHint':
+		'Désactivez-le pour ce qui arrive par abonnement. Cela reste dans la liste, sans alertes.',
+	'page.supplies.runOutLead': 'Avant épuisement',
+	'page.supplies.expiryLead': 'Avant expiration',
+	'page.supplies.labelLowStockAt': 'Alerter aussi quand le stock descend à',
+	'page.supplies.lowStockHint': 'Laissez vide pour ne pas alerter selon le stock.',
+	'page.supplies.save': 'Enregistrer la fourniture',
+	'page.supplies.labelPurchaseDate': 'Date',
+	'page.supplies.labelQuantity': 'Quantité',
+	'page.supplies.labelCost': 'Prix ({currency})',
+	'page.supplies.labelNewExpiry': "Nouvelle date d'expiration",
+	'page.supplies.newExpiryHint': "Remplace la date d'expiration actuelle.",
+	'page.supplies.labelReceipt': 'Reçu',
+	'page.supplies.receiptHint':
+		'Une photo ou un PDF. Il est aussi enregistré sur la page Documents.',
+	'page.supplies.receiptFor': 'Classer le reçu sous',
+	'page.supplies.paperlessPicked': 'Document Paperless {id}',
+	'page.supplies.clearReceipt': 'Retirer le reçu',
+	'page.supplies.labelNote': 'Note',
+	'page.supplies.savePurchase': "Enregistrer l'achat",
+	'page.supplies.correctHint':
+		"Comptez ce qu'il reste vraiment. La différence est notée dans l'historique.",
+	'page.supplies.labelActual': 'Quantité réelle',
+	'page.supplies.saveCount': 'Enregistrer le stock'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;
