@@ -23,6 +23,16 @@ function cleanup(app: AppWorker, name: string) {
 	}
 }
 
+/** Puts the household currency back to USD straight in the worker's DB. */
+function resetCurrency(app: AppWorker) {
+	const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+	try {
+		sqlite.prepare("UPDATE app_settings SET currency = 'USD'").run();
+	} finally {
+		sqlite.close();
+	}
+}
+
 /** Opens the add form from the list and fills what both kinds share. */
 async function startSupply(page: Page, name: string) {
 	await page.goto(BASE);
@@ -339,7 +349,9 @@ test('the admin currency setting changes what new purchases show', async ({
 	} finally {
 		cleanup(app, name);
 		// The admin session and DB are shared per worker; other specs assert "$".
-		await setCurrency('USD');
+		// The UI resets the server's settings cache; if the page is what broke,
+		// write the DB instead so this never hides the real failure.
+		await setCurrency('USD').catch(() => resetCurrency(app));
 	}
 });
 
