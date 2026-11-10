@@ -1,4 +1,5 @@
 import { db, schema } from '#lib/server/db/index.js';
+import type { Tx } from '#lib/server/db/tx.js';
 import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
 import type { HealthEventType } from '#lib/health.js';
 import { deleteMediaBlobs, type StoredMediaRef } from '#lib/server/storage/media-blobs.js';
@@ -66,8 +67,6 @@ export async function linkHealthEvent(
 	await db.insert(links).values({ entryId, healthEventId }).onConflictDoNothing();
 	return 'linked';
 }
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** Delete the entry when nothing keeps it: empty body, no mood, no media, no links. */
 function deleteEntryIfEmpty(tx: Tx, entryId: string): void {

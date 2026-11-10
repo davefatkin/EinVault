@@ -18,9 +18,9 @@ import {
 	formatMedicationScheduleLine,
 	medicationScheduleMarkdown,
 	startMedicationSweep,
-	medicationActiveSql,
 	type MedicationInput
 } from './medications';
+import { medicationActiveSql } from './medication-sql';
 
 const C1 = 'c-med-1';
 const C2 = 'c-med-2';

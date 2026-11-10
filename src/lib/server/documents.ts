@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import type { DocumentCategory } from '#lib/activityTypes.js';
 import { schema } from '#lib/server/db/index.js';
 import { MAX_DOCUMENTS_PER_COMPANION, PAPERLESS_CONFIG, UPLOAD_MAX_MB } from '#lib/server/env.js';
-import type { Tx } from '#lib/server/medications.js';
+import type { Tx } from '#lib/server/db/tx.js';
 import {
 	getPaperlessClient,
 	getStorage,

@@ -14,7 +14,8 @@ import { localDateISO } from '#lib/date.js';
 import { MAX_LEAD_DAYS, parseLeadDays } from '#lib/reminderLeadTimes.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { medicationActiveSql, sweepEndedMedicationReminders } from '#lib/server/medications.js';
+import { medicationActiveSql } from '#lib/server/medication-sql.js';
+import { sweepEndedMedicationReminders } from '#lib/server/medications.js';
 import { isMedicationActive } from '#lib/medications.js';
 import { isMailEnabled, sendMail } from '#lib/server/mail/index.js';
 import {

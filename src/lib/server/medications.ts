@@ -7,6 +7,8 @@ import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
 import { applyDoseStock, loadSupplyStates, restoreDoseStock } from '#lib/server/supplies.js';
+import { medicationActiveSql } from '#lib/server/medication-sql.js';
+import type { Tx } from '#lib/server/db/tx.js';
 import {
 	DOSE_WINDOW_MS,
 	isMedicationActive,
@@ -88,11 +90,6 @@ export function parseMedicationForm(
 	};
 }
 
-/** SQL for "active on `today`": no end date, or ending today or later. */
-export function medicationActiveSql(today: string) {
-	return sql`(${schema.medications.endedOn} is null or ${schema.medications.endedOn} >= ${today})`;
-}
-
 export async function createMedication(
 	companionId: string,
 	input: MedicationInput,
@@ -108,9 +105,6 @@ export async function getMedication(companionId: string, id: string) {
 		where: and(eq(schema.medications.id, id), eq(schema.medications.companionId, companionId))
 	});
 }
-
-/** A synchronous better-sqlite3 transaction handle. */
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** R1: an ended medication never keeps open reminders. */
 function deleteOpenLinkedReminders(tx: Tx, medicationId: string) {
