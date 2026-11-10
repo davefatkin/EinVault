@@ -421,6 +421,26 @@ describe('medication search', () => {
 		expect(rowid('m-s1')).toEqual([]);
 	});
 
+	it('reindexes a medication when only its dose or instructions change', async () => {
+		await db.insert(schema.medications).values({
+			id: 'm-s3',
+			companionId: C,
+			name: 'Plainpill',
+			startedOn: '2026-03-03'
+		});
+		await db
+			.update(schema.medications)
+			.set({ dose: '3 zentradrops' })
+			.where(eq(schema.medications.id, 'm-s3'));
+		expect(search(q({ text: 'zentradrops' }))[0]?.id).toBe('m-s3');
+		await db
+			.update(schema.medications)
+			.set({ instructions: 'after the quorvanian walk' })
+			.where(eq(schema.medications.id, 'm-s3'));
+		expect(search(q({ text: 'quorvanian' }))[0]?.id).toBe('m-s3');
+		await db.delete(schema.medications).where(eq(schema.medications.id, 'm-s3'));
+	});
+
 	it('filters to medications with the medication type', async () => {
 		await db.insert(schema.medications).values({
 			id: 'm-s2',
@@ -525,6 +545,21 @@ describe('supply search', () => {
 
 		await deleteSupply(id);
 		expect(rows(id)).toEqual([]);
+	});
+
+	it("reindexes every link when only a supply's name or notes change", async () => {
+		const id = await createSupply(supplyInput({ name: 'Plainbag', notes: null }), [A, B], 'u-s');
+		await db.update(schema.supplies).set({ name: 'Frondlebag' }).where(eq(schema.supplies.id, id));
+		expect(rows(id)).toMatchObject([
+			{ companionId: A, title: 'Frondlebag' },
+			{ companionId: B, title: 'Frondlebag' }
+		]);
+		await db
+			.update(schema.supplies)
+			.set({ notes: 'zesterine flavor' })
+			.where(eq(schema.supplies.id, id));
+		expect(search(q({ text: 'zesterine' })).map((r) => r.id)).toEqual([id]);
+		await deleteSupply(id);
 	});
 
 	it('shows a shared supply once, on an active pet, and on the filtered pet', async () => {

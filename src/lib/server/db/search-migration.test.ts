@@ -26,7 +26,7 @@ describe('medication and supply search migration', () => {
 				 ('m2', 'c2', 'Drops', NULL, NULL, '2026-10-01')`
 			)
 			.run();
-		// 2026-11-09 12:00 UTC: the same calendar day in any timezone within UTC±11.
+		// 2026-11-09 12:00 UTC; the expected local day comes from SQLite itself.
 		sqlite
 			.prepare(
 				`INSERT INTO supplies (id, name, kind, notes, created_at) VALUES
@@ -37,6 +37,11 @@ describe('medication and supply search migration', () => {
 		sqlite.prepare("INSERT INTO supply_companions VALUES ('s1', 'c1'), ('s1', 'c2')").run();
 
 		migrate(drizzle(sqlite), { migrationsFolder: DRIZZLE_DIR });
+		const createdDay = (
+			sqlite.prepare("SELECT date(1794225600, 'unixepoch', 'localtime') AS d").get() as {
+				d: string;
+			}
+		).d;
 
 		expect(indexRows(sqlite)).toEqual([
 			{
@@ -61,7 +66,7 @@ describe('medication and supply search migration', () => {
 				companion_id: 'c1',
 				title: 'Tablets',
 				body: 'blue box',
-				event_date: '2026-11-09'
+				event_date: createdDay
 			},
 			{
 				entity_type: 'supply',
@@ -69,7 +74,7 @@ describe('medication and supply search migration', () => {
 				companion_id: 'c2',
 				title: 'Tablets',
 				body: 'blue box',
-				event_date: '2026-11-09'
+				event_date: createdDay
 			}
 		]);
 
