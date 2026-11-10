@@ -623,7 +623,8 @@ export const medications = sqliteTable(
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
-		companionEndedIdx: index('medication_companion_ended_idx').on(t.companionId, t.endedOn)
+		companionEndedIdx: index('medication_companion_ended_idx').on(t.companionId, t.endedOn),
+		supplyIdx: index('medication_supply_idx').on(t.supplyId)
 	})
 );
 
@@ -700,7 +701,8 @@ export const supplyCompanions = sqliteTable(
 			.references(() => companions.id, { onDelete: 'cascade' })
 	},
 	(t) => ({
-		pk: primaryKey({ columns: [t.supplyId, t.companionId] })
+		pk: primaryKey({ columns: [t.supplyId, t.companionId] }),
+		companionIdx: index('supply_companion_companion_idx').on(t.companionId)
 	})
 );
 
