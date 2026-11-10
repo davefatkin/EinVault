@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Component } from 'svelte';
 	import { page } from '$app/state';
 	import CompanionSwitcher from './CompanionSwitcher.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
@@ -11,7 +12,6 @@
 		Search,
 		LayoutGrid,
 		UserRound,
-		Plus,
 		Activity,
 		BookOpen,
 		Weight,
@@ -24,6 +24,9 @@
 	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
 	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
+	import BottomBar from './BottomBar.svelte';
+	import BottomTab from './BottomTab.svelte';
+	import QuickAdd from './QuickAdd.svelte';
 
 	type Companion = {
 		id: string;
@@ -122,7 +125,7 @@
 
 	type FabKey = 'journal' | 'health' | 'reminders' | 'weight';
 
-	const FAB_ICONS: Record<FabKey, typeof BookOpen> = {
+	const FAB_ICONS: Record<FabKey, Component> = {
 		journal: BookOpen,
 		health: Activity,
 		reminders: Bell,
@@ -158,10 +161,6 @@
 				)
 			: []
 	);
-
-	function handleFabKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') fabOpen = false;
-	}
 
 	function isTabActive(href: string): boolean {
 		if (href === `/${activeCompanion?.id}`) return page.url.pathname === href;
@@ -267,123 +266,33 @@
 </header>
 
 <!-- Bottom tab bar -->
-<nav
-	aria-label={t(locale, 'aria.mainNav')}
-	class="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card pb-safe md:hidden print:hidden"
->
-	<div class="relative flex items-end">
-		{#if isCompanionContext}
-			<!-- Left 2 tabs -->
-			{#each companionTabs.slice(0, 2) as tab (tab.href)}
-				{@const active = isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				<a
+<BottomBar label={t(locale, 'aria.mainNav')}>
+	{#if isCompanionContext}
+		{#each companionTabs.slice(0, 2) as tab (tab.href)}
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={isTabActive(tab.href)} />
+		{/each}
+
+		<QuickAdd actions={fabActions} icons={FAB_ICONS} bind:open={fabOpen} />
+
+		{#each companionTabs.slice(2, 4) as tab (tab.href)}
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={isTabActive(tab.href)} />
+		{/each}
+	{:else}
+		<!-- Overview context: 3 equal tabs, no FAB -->
+		{#each overviewTabs as tab (tab.key)}
+			{#if tab.key === 'overview'}
+				<BottomTab
 					href={tab.href}
-					aria-current={active ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<TabIcon class="h-5 w-5 mb-0.5" />
-					{tab.label}
-				</a>
-			{/each}
-
-			<!-- Central FAB slot -->
-			<div class="flex flex-col items-center flex-1 relative" style="padding-bottom: 8px;">
-				<!-- FAB menu -->
-				{#if fabOpen}
-					<button
-						type="button"
-						class="fixed inset-0 z-40 cursor-default"
-						onclick={() => (fabOpen = false)}
-						aria-label={t(locale, 'aria.closeQuickAdd')}
-						tabindex="-1"
-					></button>
-					<div
-						class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
-					>
-						{#each fabActions as action (action.key)}
-							{@const ActionIcon = FAB_ICONS[action.key as FabKey] ?? BookOpen}
-							<a
-								href={action.href}
-								onclick={() => (fabOpen = false)}
-								class="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent {action.highlight
-									? 'bg-primary/10 text-primary font-medium'
-									: 'text-foreground'}"
-							>
-								<ActionIcon
-									class="h-4 w-4 shrink-0 {action.highlight
-										? 'text-primary'
-										: 'text-muted-foreground'}"
-								/>
-								{action.label}
-							</a>
-						{/each}
-					</div>
-				{/if}
-
-				<!-- FAB button -->
-				<button
-					type="button"
-					onclick={() => (fabOpen = !fabOpen)}
-					onkeydown={handleFabKeydown}
-					aria-label={t(locale, 'nav.fab.quickAdd')}
-					aria-expanded={fabOpen}
-					class="relative -top-3 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
-					style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)); box-shadow: 0 8px 20px hsl(var(--primary) / 0.4);"
-				>
-					<Plus class="h-6 w-6 transition-transform {fabOpen ? 'rotate-45' : ''}" />
-				</button>
-			</div>
-
-			<!-- Right 2 tabs -->
-			{#each companionTabs.slice(2, 4) as tab (tab.href)}
-				{@const active = isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				<a
-					href={tab.href}
-					aria-current={active ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<TabIcon class="h-5 w-5 mb-0.5" />
-					{tab.label}
-				</a>
-			{/each}
-		{:else}
-			<!-- Overview context: 3 equal tabs, no FAB -->
-			{#each overviewTabs as tab (tab.key)}
-				{@const isAction = tab.key === 'search' || tab.key === 'you'}
-				{@const active = !isAction && isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				{#if isAction}
-					<button
-						type="button"
-						onclick={() => tab.action?.()}
-						aria-label={tab.label}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors min-h-[56px] justify-end pb-2 hover:text-foreground"
-					>
-						<TabIcon class="h-5 w-5 mb-0.5" />
-						{tab.label}
-					</button>
-				{:else}
-					<a
-						href={tab.href}
-						aria-current={active ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-							? 'text-primary'
-							: 'text-muted-foreground'}"
-					>
-						<TabIcon class="h-5 w-5 mb-0.5" />
-						{tab.label}
-					</a>
-				{/if}
-			{/each}
-		{/if}
-	</div>
-</nav>
+					label={tab.label}
+					icon={tab.icon}
+					active={isTabActive(tab.href)}
+				/>
+			{:else}
+				<BottomTab label={tab.label} icon={tab.icon} onclick={() => tab.action?.()} />
+			{/if}
+		{/each}
+	{/if}
+</BottomBar>
 
 {#if user}
 	<AccountSheet {user} open={accountOpen} onclose={() => (accountOpen = false)} variant="sheet" />

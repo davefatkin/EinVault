@@ -280,11 +280,10 @@ const offShiftTest = base.extend<{ world: OffShiftWorld }>({
 });
 
 offShiftTest(
-	'caretaker off-shift: Journal and Log are locked @mobile',
+	'caretaker off shift: locked tabs keep their label and say they need a shift @mobile',
 	async ({ world, browser }, testInfo) => {
 		test.skip(testInfo.project.name !== 'mobile', 'mobile bottom nav is mobile-only');
 
-		// Log in as caretaker against the off-shift server
 		const ctx = await browser.newContext({ baseURL: world.server.baseURL });
 		const page = await ctx.newPage();
 		await page.goto('/auth/login');
@@ -295,21 +294,24 @@ offShiftTest(
 
 		await page.goto(`/care/${EIN}`);
 
-		// Journal and Log tabs render as <span> (not <a>) with aria-label containing
-		// "requires active shift" text
+		// Locked tabs are non-interactive, show their label, and carry a visually
+		// hidden note that they need an active shift.
 		const nav = page.getByRole('navigation', { name: 'Caretaker navigation' });
-		const journalLocked = nav.locator('[aria-label*="requires active shift"]', {
-			hasText: /Journal/i
+		const journalLocked = nav.locator('span', { hasText: 'Journal' }).filter({
+			hasText: 'requires active shift'
 		});
-		const logLocked = nav.locator('[aria-label*="requires active shift"]', {
-			hasText: /Log activity/i
+		const logLocked = nav.locator('span', { hasText: 'Log activity' }).filter({
+			hasText: 'requires active shift'
 		});
-		await expect(journalLocked).toBeVisible({ timeout: 8_000 });
-		await expect(logLocked).toBeVisible({ timeout: 8_000 });
+		await expect(journalLocked.first()).toBeVisible({ timeout: 8_000 });
+		await expect(logLocked.first()).toBeVisible({ timeout: 8_000 });
+		await expect(nav.getByText('Journal', { exact: true })).toBeVisible();
+		await expect(nav.getByText('Log activity', { exact: true })).toBeVisible();
 
-		// No active-link version of Journal or Log (locked items are spans, not anchors)
-		await expect(nav.getByRole('link', { name: 'Journal' })).toHaveCount(0);
-		await expect(nav.getByRole('link', { name: 'Log activity' })).toHaveCount(0);
+		// No link version of Journal or Log, and no Quick add on the bar
+		await expect(nav.getByRole('link', { name: /Journal/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Log activity/ })).toHaveCount(0);
+		await expect(nav.getByRole('button', { name: 'Quick add' })).toHaveCount(0);
 
 		await ctx.close();
 	}

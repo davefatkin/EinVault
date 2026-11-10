@@ -14,14 +14,18 @@
 		Lock,
 		Settings,
 		LogOut,
-		ChevronRight,
-		Plus
+		ChevronRight
 	} from '@lucide/svelte';
 	import AppFooter from '#lib/components/AppFooter.svelte';
 	import { ToastRegion } from '#lib/components/ui/toast/index.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionSwitcher from '#lib/components/shell/CompanionSwitcher.svelte';
 	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
+	import { CARETAKER_SECTIONS, sectionHref, isSectionActive } from '#lib/nav/sections.js';
+	import { NAV_ICONS } from '#lib/nav/icons.js';
+	import BottomBar from '#lib/components/shell/BottomBar.svelte';
+	import BottomTab from '#lib/components/shell/BottomTab.svelte';
+	import QuickAdd from '#lib/components/shell/QuickAdd.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -58,8 +62,8 @@
 			: []
 	);
 
-	// FAB
-	const CARE_FAB_ICONS = { log: ClipboardList, journal: NotebookPen } as const;
+	// Quick add (on shift only)
+	const CARE_FAB_ICONS = { log: ClipboardList, journal: NotebookPen };
 
 	let fabOpen = $state(false);
 
@@ -69,12 +73,12 @@
 					[
 						{
 							key: 'log',
-							href: `/care/${activeCompanion.id}/log`,
+							href: sectionHref('caretaker', activeCompanion.id, 'log'),
 							label: t(locale, 'nav.caretaker.logActivity')
 						},
 						{
 							key: 'journal',
-							href: `/care/${activeCompanion.id}/journal`,
+							href: sectionHref('caretaker', activeCompanion.id, 'journal'),
 							label: t(locale, 'nav.caretaker.addJournal')
 						}
 					],
@@ -83,24 +87,7 @@
 			: []
 	);
 
-	function handleFabKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') fabOpen = false;
-	}
-
-	// Mobile nav active states (derived so they update reactively)
-	let overviewHref = $derived(activeCompanion ? `/care/${activeCompanion.id}` : '');
-	let journalHref = $derived(activeCompanion ? `/care/${activeCompanion.id}/journal` : '');
-	let logHref = $derived(activeCompanion ? `/care/${activeCompanion.id}/log` : '');
-	let overviewActive = $derived(page.url.pathname === overviewHref);
-	let journalActive = $derived(
-		page.url.pathname === journalHref || page.url.pathname.startsWith(journalHref + '/')
-	);
-	let logActive = $derived(
-		page.url.pathname === logHref || page.url.pathname.startsWith(logHref + '/')
-	);
-	let journalLabel = $derived(t(locale, 'nav.journal'));
-	let logLabel = $derived(t(locale, 'nav.caretaker.logActivity'));
-	let overviewLabel = $derived(t(locale, 'nav.caretaker.overview'));
+	let settingsActive = $derived(page.url.pathname.startsWith('/care/settings'));
 </script>
 
 <div class="min-h-screen flex flex-col bg-background print:min-h-0">
@@ -254,152 +241,34 @@
 		</main>
 	</div>
 
-	<AppFooter version={data.version} year={data.year} />
+	<AppFooter version={data.version} year={data.year} hasBottomBar={true} />
 
 	<ToastRegion ariaLabel={t(locale, 'common.reminder.toastAriaRegion')} />
 
 	<!-- Mobile bottom nav -->
-	{#if navItems.length > 0}
-		<nav
-			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30 print:hidden"
-			aria-label={t(locale, 'aria.caretakerNav')}
-		>
-			<div class="relative flex items-end">
-				<!-- Overview tab -->
-				<a
-					href={overviewHref}
-					aria-current={overviewActive ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
-						{overviewActive ? 'text-primary' : 'text-muted-foreground'}"
-				>
-					<Home class="h-5 w-5 mb-0.5" />
-					{overviewLabel}
-				</a>
-
-				<!-- Journal tab (restricted) -->
-				{#if !data.isOnShift}
-					<span
-						aria-label="{journalLabel} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
-					>
-						<NotebookPen class="h-5 w-5 mb-0.5" />
-						{journalLabel}
-					</span>
-				{:else}
-					<a
-						href={journalHref}
-						aria-current={journalActive ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
-							{journalActive ? 'text-primary' : 'text-muted-foreground'}"
-					>
-						<NotebookPen class="h-5 w-5 mb-0.5" />
-						{journalLabel}
-					</a>
+	<BottomBar label={t(locale, 'aria.caretakerNav')}>
+		{#if activeCompanion}
+			{#each CARETAKER_SECTIONS as section (section.key)}
+				{#if section.key === 'log'}
+					{#if data.isOnShift}
+						<QuickAdd actions={fabActions} icons={CARE_FAB_ICONS} bind:open={fabOpen} />
+					{/if}
 				{/if}
-
-				<!-- Central FAB slot (on shift only) -->
-				{#if data.isOnShift}
-					<div class="flex flex-col items-center flex-1 relative" style="padding-bottom: 8px;">
-						<!-- FAB menu -->
-						{#if fabOpen}
-							<button
-								type="button"
-								class="fixed inset-0 z-40 cursor-default"
-								onclick={() => (fabOpen = false)}
-								aria-label={t(locale, 'aria.closeQuickAdd')}
-								tabindex="-1"
-							></button>
-							<div
-								class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
-							>
-								{#each fabActions as action (action.key)}
-									{@const ActionIcon =
-										CARE_FAB_ICONS[action.key as keyof typeof CARE_FAB_ICONS] ?? ClipboardList}
-									<a
-										href={action.href}
-										onclick={() => (fabOpen = false)}
-										class="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent {action.highlight
-											? 'bg-primary/10 text-primary font-medium'
-											: 'text-foreground'}"
-									>
-										<ActionIcon
-											class="h-4 w-4 shrink-0 {action.highlight
-												? 'text-primary'
-												: 'text-muted-foreground'}"
-										/>
-										{action.label}
-									</a>
-								{/each}
-							</div>
-						{/if}
-
-						<!-- FAB button -->
-						<button
-							type="button"
-							onclick={() => (fabOpen = !fabOpen)}
-							onkeydown={handleFabKeydown}
-							aria-label={t(locale, 'nav.fab.quickAdd')}
-							aria-expanded={fabOpen}
-							class="relative -top-3 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
-							style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)); box-shadow: 0 8px 20px hsl(var(--primary) / 0.4);"
-						>
-							<Plus class="h-6 w-6 transition-transform {fabOpen ? 'rotate-45' : ''}" />
-						</button>
-					</div>
-				{/if}
-
-				<!-- Log tab (restricted) -->
-				{#if !data.isOnShift}
-					<span
-						aria-label="{logLabel} ({t(locale, 'layout.caretaker.requiresActiveShift')})"
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap opacity-40 cursor-not-allowed text-muted-foreground min-h-[56px] justify-end pb-2"
-					>
-						<ClipboardList class="h-5 w-5 mb-0.5" />
-						{logLabel}
-					</span>
-				{:else}
-					<a
-						href={logHref}
-						aria-current={logActive ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
-							{logActive ? 'text-primary' : 'text-muted-foreground'}"
-					>
-						<ClipboardList class="h-5 w-5 mb-0.5" />
-						{logLabel}
-					</a>
-				{/if}
-
-				<!-- Settings tab -->
-				<a
-					href="/care/settings"
-					aria-current={page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors min-h-[56px] justify-end pb-2
-						{page.url.pathname.startsWith('/care/settings') ? 'text-primary' : 'text-muted-foreground'}"
-				>
-					<Settings class="h-5 w-5 mb-0.5" />
-					{t(locale, 'nav.settings')}
-				</a>
-			</div>
-		</nav>
-	{:else}
-		<nav
-			class="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-30 print:hidden"
-			aria-label={t(locale, 'aria.caretakerNav')}
-		>
-			<div class="flex">
-				<a
-					href="/care/settings"
-					aria-current={page.url.pathname.startsWith('/care/settings') ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-						'/care/settings'
-					)
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<Settings class="h-5 w-5 mb-0.5" />
-					{t(locale, 'nav.settings')}
-				</a>
-			</div>
-		</nav>
-	{/if}
+				<BottomTab
+					href={sectionHref('caretaker', activeCompanion.id, section.path)}
+					label={t(locale, section.labelKey)}
+					icon={NAV_ICONS[section.key]}
+					active={isSectionActive('caretaker', section.path, page.url.pathname, activeCompanion.id)}
+					locked={section.restricted && !data.isOnShift}
+					lockedNote={t(locale, 'layout.caretaker.requiresActiveShift')}
+				/>
+			{/each}
+		{/if}
+		<BottomTab
+			href="/care/settings"
+			label={t(locale, 'nav.settings')}
+			icon={NAV_ICONS.settings}
+			active={settingsActive}
+		/>
+	</BottomBar>
 </div>

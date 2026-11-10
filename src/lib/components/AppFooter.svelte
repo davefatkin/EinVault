@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { t, getLocale } from '#lib/i18n/index.js';
 
-	let { version, year }: { version?: string; year?: number } = $props();
+	let {
+		version,
+		year,
+		hasBottomBar = false
+	}: { version?: string; year?: number; hasBottomBar?: boolean } = $props();
 	const locale = getLocale();
 </script>
 
 <footer
-	class="text-center text-xs text-muted-foreground/60 pt-2 pb-24 md:pb-2 space-x-2 print:hidden"
+	class="text-center text-xs text-muted-foreground/60 pt-2 space-x-2 print:hidden {hasBottomBar
+		? 'pb-24 md:pb-2'
+		: 'pb-2'}"
 >
 	<a
 		href="https://github.com/davefatkin/einvault"

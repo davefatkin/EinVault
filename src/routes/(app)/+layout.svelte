@@ -75,7 +75,7 @@
 			{@render children()}
 		</main>
 
-		<AppFooter version={data.version} year={data.year} />
+		<AppFooter version={data.version} year={data.year} hasBottomBar={true} />
 	</div>
 </div>
 
