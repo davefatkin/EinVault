@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
+import { createSupply, type SupplyInput } from './supplies';
 import {
 	parseMedicationForm,
 	createMedication,
@@ -33,6 +34,8 @@ function input(p: Partial<MedicationInput> = {}): MedicationInput {
 		instructions: null,
 		startedOn: '2026-11-01',
 		endedOn: null,
+		supplyId: null,
+		doseUnits: 1,
 		...p
 	};
 }
@@ -101,7 +104,15 @@ describe('parseMedicationForm', () => {
 	it('parses and normalizes', () => {
 		expect(parseMedicationForm(form({ ...base, dose: ' 1 ' }), 'en')).toEqual({
 			ok: true,
-			value: { name: 'Pill', dose: '1', instructions: null, startedOn: '2026-11-01', endedOn: null }
+			value: {
+				name: 'Pill',
+				dose: '1',
+				instructions: null,
+				startedOn: '2026-11-01',
+				endedOn: null,
+				supplyId: null,
+				doseUnits: 1
+			}
 		});
 	});
 	it('defaults an empty or missing start date to today', () => {
@@ -122,6 +133,107 @@ describe('parseMedicationForm', () => {
 			false
 		);
 		expect(parseMedicationForm(form({ ...base, endedOn: '2026-11-01' }), 'en').ok).toBe(true);
+	});
+});
+
+describe('parseMedicationForm supply link', () => {
+	const form = (o: Record<string, string>) => {
+		const f = new FormData();
+		for (const [k, v] of Object.entries({ name: 'Pill', startedOn: '2026-11-01', ...o }))
+			f.set(k, v);
+		return f;
+	};
+	const supply = (p: Partial<SupplyInput>, companions: string[]) =>
+		createSupply(
+			{
+				name: 'Tablets',
+				kind: 'counted',
+				unit: 'tablets',
+				startingQuantity: 10,
+				firstPurchaseDate: null,
+				lastsDays: null,
+				expiresOn: null,
+				alertsEnabled: true,
+				runOutLeadDays: '7',
+				expiryLeadDays: '14',
+				lowStockAt: null,
+				notes: null,
+				...p
+			},
+			companions,
+			U1
+		);
+
+	it('accepts a counted supply of this pet and half units', async () => {
+		const id = await supply({}, [C1]);
+		const r = parseMedicationForm(form({ supplyId: id, doseUnits: '0.5' }), 'en', TODAY, C1);
+		expect(r).toMatchObject({ ok: true, value: { supplyId: id, doseUnits: 0.5 } });
+		// A comma is a decimal separator too.
+		expect(
+			parseMedicationForm(form({ supplyId: id, doseUnits: '1,5' }), 'en', TODAY, C1)
+		).toMatchObject({ ok: true, value: { doseUnits: 1.5 } });
+	});
+	it('defaults to 1 unit and ignores units without a supply', () => {
+		expect(parseMedicationForm(form({ doseUnits: '3' }), 'en', TODAY, C1)).toMatchObject({
+			ok: true,
+			value: { supplyId: null, doseUnits: 1 }
+		});
+	});
+	it("rejects a duration supply, another pet's supply and an unknown one", async () => {
+		const duration = await supply(
+			{ kind: 'duration', unit: null, startingQuantity: null, lastsDays: 30 },
+			[C1]
+		);
+		const other = await supply({}, [C2]);
+		for (const supplyId of [duration, other, 'nope']) {
+			expect(parseMedicationForm(form({ supplyId }), 'en', TODAY, C1)).toEqual({
+				ok: false,
+				message: 'Supply not found.'
+			});
+		}
+		// Without a pet to check against, nothing can be linked.
+		const mine = await supply({}, [C1]);
+		expect(parseMedicationForm(form({ supplyId: mine }), 'en', TODAY).ok).toBe(false);
+	});
+	it('rejects units of 0, negative, junk and above 1000', async () => {
+		const id = await supply({}, [C1]);
+		for (const doseUnits of ['0', '-1', 'abc', '1001', 'Infinity'])
+			expect(parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1).ok).toBe(
+				false
+			);
+		expect(parseMedicationForm(form({ supplyId: id, doseUnits: '1000' }), 'en', TODAY, C1).ok).toBe(
+			true
+		);
+	});
+});
+
+describe('listMedicationSummaries supply', () => {
+	it('carries the supply only when asked, and the default dose size otherwise', async () => {
+		const sid = await createSupply(
+			{
+				name: 'Tablets',
+				kind: 'counted',
+				unit: 'tablets',
+				startingQuantity: 10,
+				firstPurchaseDate: null,
+				lastsDays: null,
+				expiresOn: null,
+				alertsEnabled: true,
+				runOutLeadDays: '7',
+				expiryLeadDays: '14',
+				lowStockAt: null,
+				notes: null
+			},
+			[C1],
+			U1
+		);
+		await createMedication(C1, input({ supplyId: sid, doseUnits: 2 }), U1);
+		const [owner] = await listMedicationSummaries([C1], { activeOnly: false, includeSupply: true });
+		expect(owner.supply).toMatchObject({ id: sid, name: 'Tablets', quantity: 10, unit: 'tablets' });
+		expect(owner.doseUnits).toBe(2);
+		const [plain] = await listMedicationSummaries([C1], { activeOnly: false });
+		expect(plain.supply).toBeNull();
+		expect(plain.doseUnits).toBe(1);
 	});
 });
 

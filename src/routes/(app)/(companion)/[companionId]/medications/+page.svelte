@@ -68,6 +68,8 @@
 				<MedicationForm
 					action="?/create"
 					values={formValues}
+					supplies={data.supplyOptions}
+					companionId={data.companion.id}
 					today={data.today}
 					oncancel={closeForm}
 					onsaved={closeForm}

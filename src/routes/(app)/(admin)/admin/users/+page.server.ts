@@ -7,8 +7,9 @@ import { generateId } from '#lib/server/utils.js';
 import bcrypt from 'bcryptjs';
 import { invalidateAllUserSessions } from '#lib/server/auth/session.js';
 import { parseRole, EMAIL_RE } from '#lib/server/validation.js';
-import { getAppSettings, setRequire2fa } from '#lib/server/app-settings.js';
+import { getAppSettings, setCurrency, setRequire2fa } from '#lib/server/app-settings.js';
 import type { Require2fa } from '#lib/server/app-settings.js';
+import { isValidCurrency } from '#lib/money.js';
 import { adminResetTwoFactor } from '#lib/server/auth/enrollment.js';
 import { isTwoFactorConfigured } from '#lib/server/auth/totp-crypto.js';
 import { notifyApiAccessChanged } from '#lib/server/api-access.js';
@@ -41,7 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		orderBy: (s, { asc }) => [asc(s.startAt)]
 	});
 
-	const { require2fa } = await getAppSettings();
+	const { require2fa, currency } = await getAppSettings();
 	const twoFactorAvailable = isTwoFactorConfigured();
 
 	return {
@@ -51,6 +52,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		shifts,
 		currentUserId: locals.user.id,
 		require2fa,
+		currency,
 		twoFactorAvailable,
 		apiTokensEnabled: API_TOKENS_ENABLED
 	};
@@ -352,6 +354,18 @@ export const actions: Actions = {
 
 		await setRequire2fa(value as Require2fa, locals.user.id);
 		return { require2faSuccess: true };
+	},
+
+	setCurrency: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') error(403, t(locals.locale, 'error.forbidden'));
+
+		const code = String((await request.formData()).get('currency') ?? '');
+		if (!isValidCurrency(code)) {
+			return fail(400, { currencyError: t(locals.locale, 'error.invalidCurrency') });
+		}
+
+		await setCurrency(code, locals.user.id);
+		return { currencySuccess: true };
 	},
 
 	resetTwoFactor: async ({ request, locals }) => {

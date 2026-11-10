@@ -21,7 +21,7 @@
 	import MedicationFacts from '#lib/components/medications/MedicationFacts.svelte';
 	import MedicationForm from '#lib/components/medications/MedicationForm.svelte';
 	import MedicationGivenButton from '#lib/components/medications/MedicationGivenButton.svelte';
-	import { ownerMedicationCaps } from '#lib/medications.js';
+	import { medicationFormValuesOf, ownerMedicationCaps } from '#lib/medications.js';
 	import { medicationReminderPrefillUrl } from '#lib/health.js';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -81,7 +81,9 @@
 				{#key med.id}
 					<MedicationForm
 						action="?/update"
-						values={formValues ?? med}
+						values={formValues ?? medicationFormValuesOf(med)}
+						supplies={data.supplyOptions}
+						companionId={data.companion.id}
 						today={data.today}
 						cancelHref="{base}/{med.id}"
 					/>

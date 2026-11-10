@@ -8,6 +8,7 @@ import type { MessageKey } from '#lib/i18n/index.js';
 import { localDateISO, parseYmd } from '#lib/date.js';
 import { parseLeadDays, validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
+import type { MedicationSupplyOption } from '#lib/medications.js';
 import {
 	dailyUse,
 	projectRunOut,
@@ -422,6 +423,24 @@ export async function getSupplyForCompanion(companionId: string, id: string) {
 		.where(eq(schema.supplies.id, id))
 		.limit(1);
 	return row;
+}
+
+/** Counted supplies linked to this companion, by name: what a medication can draw from. */
+export async function listCountedSupplyOptions(
+	companionId: string
+): Promise<MedicationSupplyOption[]> {
+	return db
+		.select({ id: schema.supplies.id, name: schema.supplies.name, unit: schema.supplies.unit })
+		.from(schema.supplies)
+		.innerJoin(
+			schema.supplyCompanions,
+			and(
+				eq(schema.supplyCompanions.supplyId, schema.supplies.id),
+				eq(schema.supplyCompanions.companionId, companionId)
+			)
+		)
+		.where(eq(schema.supplies.kind, 'counted'))
+		.orderBy(asc(schema.supplies.name), asc(schema.supplies.id));
 }
 
 /**

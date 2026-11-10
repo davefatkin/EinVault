@@ -14,6 +14,7 @@ import {
 	restartMedication,
 	updateMedication
 } from '#lib/server/medications.js';
+import { listCountedSupplyOptions } from '#lib/server/supplies.js';
 import { givenAction, medicationFormValues, ownerOnly } from '#lib/server/medication-actions.js';
 
 const DOSE_PAGE = 50;
@@ -25,7 +26,11 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	const { companion } = await parent();
 	const today = localDateISO();
 	const medication = (
-		await listMedicationSummaries([params.companionId], { activeOnly: false, today })
+		await listMedicationSummaries([params.companionId], {
+			activeOnly: false,
+			today,
+			includeSupply: true
+		})
 	).find((m) => m.id === params.id);
 	if (!medication) error(404, t(locals.locale, 'error.medicationNotFound'));
 
@@ -60,6 +65,7 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		doses: doses.slice(0, pages * DOSE_PAGE),
 		// At the cap there is no next page, so "Show more" goes away.
 		moreDoses: doses.length > pages * DOSE_PAGE && pages < MAX_DOSE_PAGES ? pages + 1 : null,
+		supplyOptions: await listCountedSupplyOptions(params.companionId),
 		editing: url.searchParams.get('edit') === '1',
 		today
 	};
@@ -70,7 +76,7 @@ export const actions: Actions = {
 		const denied = await ownerOnly(locals, params.companionId);
 		if (denied) return denied;
 		const data = await request.formData();
-		const parsed = parseMedicationForm(data, locals.locale);
+		const parsed = parseMedicationForm(data, locals.locale, localDateISO(), params.companionId);
 		if (!parsed.ok) return fail(400, { error: parsed.message, values: medicationFormValues(data) });
 		if (!(await updateMedication(params.companionId, params.id, parsed.value)))
 			return fail(404, { error: t(locals.locale, 'error.medicationNotFound') });

@@ -32,3 +32,20 @@ export function parseMoney(raw: string, currency: string): number | null | 'inva
 	const minor = Number(match[1] + frac.padEnd(digits, '0'));
 	return Number.isSafeInteger(minor) ? minor : 'invalid';
 }
+
+/** The currencies the admin setting offers; any other code the runtime knows is still accepted. */
+export const COMMON_CURRENCIES = [
+	'USD',
+	'EUR',
+	'GBP',
+	'CAD',
+	'AUD',
+	'CHF',
+	'JPY',
+	'NZD',
+	'SEK',
+	'NOK',
+	'DKK',
+	'BRL',
+	'MXN'
+] as const;

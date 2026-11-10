@@ -1559,6 +1559,20 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidQuantity': 'Gib eine Zahl von 0 oder mehr ein.',
 	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
 	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.',
+	'page.dashboard.suppliesViewAll': 'Alle anzeigen',
+	'error.invalidDoseUnits':
+		'Gib an, wie viel eine Dosis verbraucht: mehr als 0 und höchstens {max}.',
+	'error.invalidCurrency': 'Wähle eine gültige Währung.',
+	'page.medications.labelSupply': 'Vorrat',
+	'page.medications.supplyNone': 'Keiner',
+	'page.medications.newSupply': 'Neuer Vorrat',
+	'page.medications.labelDoseUnits': 'Einheiten pro Dosis',
+	'page.medications.labelDoseUnitsWithUnit': 'Einheiten pro Dosis ({unit})',
+	'page.medications.doseUnitsHint':
+		'Jede Dosis nimmt so viel aus dem Vorrat. Für eine halbe Tablette gib 0,5 an.',
+	'page.admin.currencyLabel': 'Währung',
+	'page.admin.currencyHelp':
+		'Wird für die Kosten bei Vorratskäufen verwendet. Bereits erfasste Käufe behalten ihre Währung.',
 	'error.supplyNotFound': 'Vorrat nicht gefunden.',
 	'error.supplyEventNotFound': 'Eintrag im Verlauf nicht gefunden.',
 	'error.invalidPurchaseQuantity': 'Gib eine Menge über 0 ein.',

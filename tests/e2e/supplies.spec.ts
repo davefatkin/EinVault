@@ -15,6 +15,7 @@ function cleanup(app: AppWorker, name: string) {
 	const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
 	try {
 		sqlite.pragma('foreign_keys = ON');
+		sqlite.prepare('DELETE FROM medications WHERE name = ?').run(`${name} med`);
 		sqlite.prepare('DELETE FROM supplies WHERE name = ?').run(name);
 		sqlite.prepare('DELETE FROM documents WHERE title = ?').run(`Receipt: ${name}`);
 	} finally {
@@ -176,6 +177,170 @@ test.describe('supplies (owner)', () => {
 		await expect(asMember).toHaveURL(new RegExp(`${BASE}$`));
 		await expect(asMember.getByRole('heading', { name: 'Supplies', level: 1 })).toBeVisible();
 	});
+});
+
+/** Adds a counted supply of `quantity` tablets (optionally warning at `lowAt`) and returns its URL. */
+async function addCountedSupply(page: Page, name: string, quantity: number, lowAt?: number) {
+	await startSupply(page, name);
+	await page.locator('#supply-unit').fill('tablets');
+	await page.locator('#supply-startingQuantity').fill(String(quantity));
+	if (lowAt !== undefined) await page.locator('#supply-lowStockAt').fill(String(lowAt));
+	await save(page);
+	return page.url();
+}
+
+test.describe('medications and supplies', () => {
+	test('doses subtract from a linked supply, for members and caretakers', async ({
+		asMember,
+		asCaretaker,
+		app
+	}) => {
+		const name = `e2e-linked-${Date.now()}`;
+		const medName = `${name} med`;
+		try {
+			await addCountedSupply(asMember, name, 10);
+
+			await asMember.goto(`/${EIN}/medications`);
+			await waitForHydration(asMember);
+			await asMember.getByRole('button', { name: 'Add medication' }).first().click();
+			await asMember.getByLabel('Name').fill(medName);
+			// Units per dose shows only once a supply is chosen.
+			await expect(asMember.locator('#med-doseUnits')).toHaveCount(0);
+			await asMember.locator('#med-supplyId').selectOption({ label: name });
+			await expect(asMember.locator('#med-doseUnits')).toHaveValue('1');
+			await expect(asMember.getByRole('link', { name: 'New supply' })).toHaveAttribute(
+				'href',
+				`${BASE}/new`
+			);
+			await asMember.getByRole('button', { name: 'Save medication' }).click();
+			await expect(asMember.getByRole('button', { name: 'Save medication' })).toHaveCount(0, {
+				timeout: 8_000
+			});
+
+			await asMember.getByRole('link', { name: medName }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/medications/[^/?]+$`));
+			const detailUrl = asMember.url();
+			await waitForHydration(asMember);
+			const stock = asMember.getByTestId('medication-stock');
+			await expect(stock).toContainText('10 tablets left');
+
+			// Given takes one; removing that dose gives it back.
+			await asMember.getByRole('button', { name: 'Given' }).click();
+			await expect(stock).toContainText('9 tablets left', { timeout: 8_000 });
+			await asMember
+				.getByRole('region', { name: 'Dose history' })
+				.getByRole('button', { name: 'Remove this dose' })
+				.click();
+			await asMember
+				.getByRole('dialog')
+				.getByRole('button', { name: 'Remove', exact: true })
+				.click();
+			await expect(stock).toContainText('10 tablets left', { timeout: 8_000 });
+
+			// A caretaker on shift taps Given: it subtracts, and they see no supply.
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			const card = asCaretaker.getByTestId('care-medications');
+			const row = card.getByRole('listitem').filter({ hasText: medName });
+			await expect(row).toBeVisible({ timeout: 8_000 });
+			await expect(row.getByTestId('medication-stock')).toHaveCount(0);
+			await expect(row).not.toContainText('tablets');
+			await row.getByRole('button', { name: 'Given' }).click();
+			await expect(asCaretaker.getByText(/Dose of .* logged/).first()).toBeVisible({
+				timeout: 8_000
+			});
+
+			await asMember.goto(detailUrl);
+			await waitForHydration(asMember);
+			await expect(asMember.getByTestId('medication-stock')).toContainText('9 tablets left');
+
+			// Edit keeps the link and units.
+			await asMember.getByRole('link', { name: 'Edit', exact: true }).first().click();
+			await waitForHydration(asMember);
+			await expect(asMember.locator('#med-supplyId')).toHaveValue(/.+/);
+			await expect(asMember.locator('#med-doseUnits')).toHaveValue('1');
+			await asMember.locator('#med-doseUnits').fill('0.5');
+			await asMember.getByRole('button', { name: 'Save medication' }).click();
+			await expect(asMember).toHaveURL(detailUrl, { timeout: 8_000 });
+			// The caretaker's dose covers today, so this one asks first.
+			await asMember.getByRole('button', { name: /^Given/ }).click();
+			await asMember.getByRole('dialog').getByRole('button', { name: 'Log another dose' }).click();
+			await expect(asMember.getByTestId('medication-stock')).toContainText('8.5 tablets left', {
+				timeout: 8_000
+			});
+		} finally {
+			cleanup(app, name);
+		}
+	});
+
+	test('the dashboard shows a Supplies card only for supplies that need attention', async ({
+		asMember,
+		app
+	}) => {
+		const name = `e2e-dash-${Date.now()}`;
+		try {
+			await addCountedSupply(asMember, name, 30);
+			await asMember.goto(`/${EIN}`);
+			await waitForHydration(asMember);
+			await expect(asMember.getByTestId('dashboard-supplies')).toHaveCount(0);
+
+			// Down to its low-stock count: the card appears with the row.
+			await asMember.goto(BASE);
+			await asMember.getByRole('link', { name }).click();
+			await waitForHydration(asMember);
+			await asMember.getByRole('link', { name: 'Edit', exact: true }).click();
+			await waitForHydration(asMember);
+			await asMember.locator('#supply-lowStockAt').fill('30');
+			await asMember.getByRole('button', { name: 'Save supply' }).click();
+			await expect(asMember).toHaveURL(new RegExp(`${BASE}/(?!new$)[^/]+$`), { timeout: 8_000 });
+
+			await asMember.goto(`/${EIN}`);
+			const card = asMember.getByTestId('dashboard-supplies');
+			await expect(card).toBeVisible();
+			await expect(card.getByRole('link', { name })).toBeVisible();
+			await expect(card.getByText('Running low')).toBeVisible();
+			await expect(card.getByText('30 tablets left')).toBeVisible();
+			await card.getByRole('link', { name: 'View All' }).click();
+			await expect(asMember).toHaveURL(new RegExp(`${BASE}$`));
+		} finally {
+			cleanup(app, name);
+		}
+	});
+});
+
+test('the admin currency setting changes what new purchases show', async ({
+	asAdmin,
+	asMember,
+	app
+}) => {
+	const name = `e2e-currency-${Date.now()}`;
+	const setCurrency = async (code: string) => {
+		await asAdmin.goto('/admin/users');
+		await waitForHydration(asAdmin);
+		await asAdmin.locator('select#currency').selectOption(code);
+		await expect(asAdmin.getByText('Saved')).toBeVisible({ timeout: 8_000 });
+	};
+	try {
+		await setCurrency('EUR');
+		await asAdmin.reload();
+		await expect(asAdmin.locator('select#currency')).toHaveValue('EUR');
+
+		const detailUrl = await addCountedSupply(asMember, name, 5);
+		await asMember.goto(detailUrl);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Log purchase' }).click();
+		const dialog = asMember.getByRole('dialog');
+		await dialog.locator('#purchase-quantity').fill('1');
+		await dialog.locator('#purchase-cost').fill('7.50');
+		await dialog.getByRole('button', { name: 'Save purchase' }).click();
+		await expect(dialog).toHaveCount(0, { timeout: 8_000 });
+		const history = asMember.getByRole('region', { name: 'History' });
+		await expect(history.getByText('€7.50')).toBeVisible();
+	} finally {
+		cleanup(app, name);
+		// The admin session and DB are shared per worker; other specs assert "$".
+		await setCurrency('USD');
+	}
 });
 
 test('caretakers cannot reach supplies', async ({ asCaretaker }) => {

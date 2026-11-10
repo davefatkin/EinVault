@@ -20,7 +20,8 @@
 		FileText,
 		X,
 		Activity,
-		Pill
+		Pill,
+		Package
 	} from '@lucide/svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
@@ -53,6 +54,7 @@
 	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
 	import { incidentPath } from '#lib/incidents.js';
 	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
+	import SupplySummaryRow from '#lib/components/supplies/SupplySummaryRow.svelte';
 	import { ownerMedicationCaps } from '#lib/medications.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -694,6 +696,35 @@
 								detailHref="/{companion.id}/medications/{medication.id}"
 							/>
 						</li>
+					{/each}
+				</ul>
+			</CardContent>
+		</Card>
+	{/if}
+
+	<!-- Supplies card: only while something needs attention -->
+	{#if data.supplies.length > 0}
+		<Card data-testid="dashboard-supplies">
+			<CardHeader class="pb-3">
+				<div class="flex items-center justify-between">
+					<CardTitle class="text-sm font-semibold flex items-center gap-2">
+						<Package class="h-4 w-4" />
+						{t(locale, 'page.supplies.title')}
+					</CardTitle>
+					<Button
+						href="/{companion.id}/supplies"
+						variant="ghost"
+						size="sm"
+						class="h-7 text-xs text-primary px-2"
+					>
+						{t(locale, 'page.dashboard.suppliesViewAll')}
+					</Button>
+				</div>
+			</CardHeader>
+			<CardContent class="px-0 pt-0 pb-2">
+				<ul class="divide-y divide-border">
+					{#each data.supplies as supply (supply.id)}
+						<li><SupplySummaryRow {supply} companionId={companion.id} /></li>
 					{/each}
 				</ul>
 			</CardContent>

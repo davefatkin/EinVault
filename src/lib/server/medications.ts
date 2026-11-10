@@ -6,7 +6,7 @@ import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
-import { applyDoseStock, restoreDoseStock } from '#lib/server/supplies.js';
+import { applyDoseStock, loadSupplyStates, restoreDoseStock } from '#lib/server/supplies.js';
 import {
 	DOSE_WINDOW_MS,
 	isMedicationActive,
@@ -21,12 +21,39 @@ export interface MedicationInput {
 	instructions: string | null;
 	startedOn: string;
 	endedOn: string | null;
+	/** A counted supply linked to the companion, or null. */
+	supplyId: string | null;
+	/** Units one dose takes from the supply; 1 without one. */
+	doseUnits: number;
 }
 
+export const MAX_DOSE_UNITS = 1000;
+
+/** Whether `supplyId` is a counted supply linked to `companionId`. */
+function isCountedSupplyOf(companionId: string, supplyId: string): boolean {
+	return !!db
+		.select({ id: schema.supplies.id })
+		.from(schema.supplies)
+		.innerJoin(
+			schema.supplyCompanions,
+			and(
+				eq(schema.supplyCompanions.supplyId, schema.supplies.id),
+				eq(schema.supplyCompanions.companionId, companionId)
+			)
+		)
+		.where(and(eq(schema.supplies.id, supplyId), eq(schema.supplies.kind, 'counted')))
+		.get();
+}
+
+/**
+ * `companionId` is the pet the medication belongs to; a chosen supply must be
+ * a counted one linked to that pet.
+ */
 export function parseMedicationForm(
 	data: FormData,
 	locale: Locale,
-	today: string = localDateISO()
+	today: string = localDateISO(),
+	companionId?: string
 ): FormParse<MedicationInput> {
 	const name = String(data.get('name') ?? '').trim();
 	const dose = String(data.get('dose') ?? '').trim();
@@ -40,6 +67,13 @@ export function parseMedicationForm(
 		return { ok: false, message: t(locale, 'error.invalidDate') };
 	if (endedOn && endedOn < startedOn)
 		return { ok: false, message: t(locale, 'error.medicationEndBeforeStart') };
+	const supplyId = String(data.get('supplyId') ?? '').trim();
+	if (supplyId && (!companionId || !isCountedSupplyOf(companionId, supplyId)))
+		return { ok: false, message: t(locale, 'error.supplyNotFound') };
+	const rawUnits = String(data.get('doseUnits') ?? '').trim();
+	const doseUnits = rawUnits ? Number(rawUnits.replace(',', '.')) : 1;
+	if (!Number.isFinite(doseUnits) || doseUnits <= 0 || doseUnits > MAX_DOSE_UNITS)
+		return { ok: false, message: t(locale, 'error.invalidDoseUnits', { max: MAX_DOSE_UNITS }) };
 	return {
 		ok: true,
 		value: {
@@ -47,7 +81,9 @@ export function parseMedicationForm(
 			dose: dose || null,
 			instructions: instructions || null,
 			startedOn,
-			endedOn: endedOn || null
+			endedOn: endedOn || null,
+			supplyId: supplyId || null,
+			doseUnits: supplyId ? doseUnits : 1
 		}
 	};
 }
@@ -181,7 +217,7 @@ export async function deleteMedication(companionId: string, id: string): Promise
 
 export async function listMedicationSummaries(
 	companionIds: string[],
-	opts: { activeOnly: boolean; today?: string }
+	opts: { activeOnly: boolean; today?: string; includeSupply?: boolean }
 ): Promise<MedicationSummary[]> {
 	if (companionIds.length === 0) return [];
 	const today = opts.today ?? localDateISO();
@@ -250,6 +286,24 @@ export async function listMedicationSummaries(
 		])
 	);
 
+	// Supply data is for owners; callers that don't ask (caretakers, the API)
+	// get null and the default dose size.
+	const supplyBy = new Map<string, MedicationSummary['supply']>();
+	if (opts.includeSupply) {
+		const supplyIds = [...new Set(meds.map((m) => m.supplyId).filter((v) => v !== null))];
+		for (const supplyId of supplyIds) {
+			const [state] = await loadSupplyStates({ supplyId, today });
+			if (state?.kind === 'counted')
+				supplyBy.set(supplyId, {
+					id: state.id,
+					name: state.name,
+					quantity: state.quantity ?? 0,
+					unit: state.unit,
+					daysLeft: state.daysLeft
+				});
+		}
+	}
+
 	return meds.map((m) => ({
 		id: m.id,
 		companionId: m.companionId,
@@ -261,7 +315,9 @@ export async function listMedicationSummaries(
 		active: isMedicationActive(m.endedOn, today),
 		nextDueAt: nextBy.get(m.id) ?? null,
 		lastGiven: lastBy.get(m.id) ?? null,
-		schedule: scheduleBy.get(m.id) ?? []
+		schedule: scheduleBy.get(m.id) ?? [],
+		doseUnits: opts.includeSupply ? m.doseUnits : 1,
+		supply: (m.supplyId && supplyBy.get(m.supplyId)) || null
 	}));
 }
 

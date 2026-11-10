@@ -57,6 +57,18 @@ export type MedicationSummary = {
 	nextDueAt: Date | null;
 	lastGiven: { at: Date; by: UserRef } | null;
 	schedule: MedicationScheduleItem[];
+	/** Units one dose takes from the supply (1 when none). Owner pages only. */
+	doseUnits: number;
+	/** The counted supply doses draw from. Always null on caretaker pages. */
+	supply: MedicationSupply | null;
+};
+
+export type MedicationSupply = {
+	id: string;
+	name: string;
+	quantity: number;
+	unit: string | null;
+	daysLeft: number | null;
 };
 
 export type DoseView = {
@@ -74,7 +86,32 @@ export type MedicationFormValues = {
 	instructions: string | null;
 	startedOn: string;
 	endedOn: string | null;
+	/** Id of the counted supply doses draw from; empty for none. */
+	supplyId: string;
+	/** Units per dose, as typed. */
+	doseUnits: string;
 };
+
+/** The form's starting values for an existing medication. */
+export function medicationFormValuesOf(
+	m: Pick<
+		MedicationSummary,
+		'name' | 'dose' | 'instructions' | 'startedOn' | 'endedOn' | 'doseUnits' | 'supply'
+	>
+): MedicationFormValues {
+	return {
+		name: m.name,
+		dose: m.dose,
+		instructions: m.instructions,
+		startedOn: m.startedOn,
+		endedOn: m.endedOn,
+		supplyId: m.supply?.id ?? '',
+		doseUnits: String(m.doseUnits)
+	};
+}
+
+/** A counted supply the form offers to link. */
+export type MedicationSupplyOption = { id: string; name: string; unit: string | null };
 
 /** How far ahead of a dose time "Given" still counts as that dose. */
 export const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
