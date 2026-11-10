@@ -313,6 +313,8 @@ test.describe('notes (owner)', () => {
 
 	test('tag input keeps invalid text and explains why', async ({ asMember }) => {
 		await asMember.goto(`/${EIN}/notes/new`);
+		// Enter only validates once the tag input's key handler has hydrated.
+		await waitForHydration(asMember);
 		const tagBox = asMember.getByRole('combobox');
 		const long = 'x'.repeat(33);
 		await tagBox.fill(long);

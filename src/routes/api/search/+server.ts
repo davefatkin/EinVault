@@ -23,7 +23,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				companionIds: p.getAll('companion'),
 				types,
 				after: after && DATE_RE.test(after) ? after : undefined,
-				before: before && DATE_RE.test(before) ? before : undefined
+				before: before && DATE_RE.test(before) ? before : undefined,
+				preferCompanionId: p.get('prefer') || undefined
 			})
 		});
 	} catch (err) {

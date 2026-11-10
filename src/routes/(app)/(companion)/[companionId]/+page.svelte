@@ -5,6 +5,7 @@
 	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
+	import MedicationLinkChip from '#lib/components/medications/MedicationLinkChip.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -361,6 +362,17 @@
 							>
 							<span class="text-foreground"><LocalTime date={r.dueAt} format="datetime" /></span>
 						</div>
+						{#if r.medication}
+							<div class="flex items-center gap-3">
+								<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+									>{t(locale, 'page.reminders.detailMedication')}</span
+								>
+								<MedicationLinkChip
+									name={r.medication.name}
+									href="/{companion.id}/medications/{r.medication.id}"
+								/>
+							</div>
+						{/if}
 						{#if r.isRecurring}
 							<div class="flex items-center gap-3">
 								<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"

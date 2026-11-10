@@ -977,7 +977,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelRole': 'Rôle',
 	'page.admin.roleHelpMember': 'Voit et modifie les dossiers de tous les compagnons.',
 	'page.admin.roleHelpAdmin':
-		'Tout ce que peut faire un membre, plus la gestion des utilisateurs, l’archivage des compagnons et les réglages du foyer.',
+		'Tout ce que peut faire un membre, plus la gestion des utilisateurs, l’archivage des compagnons, la suppression des activités enregistrées par d’autres et les réglages du foyer.',
 	'page.admin.roleHelpCaretaker':
 		'Ne voit que les compagnons qui lui sont attribués et ne peut consigner des soins que pendant une garde planifiée.',
 	'page.admin.labelEmail': 'E-mail',

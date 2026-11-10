@@ -525,3 +525,59 @@ test('medications card shows active medications with Given, and prompts to add o
 		deleteCompanionByName(app.dataDir, petName);
 	}
 });
+
+test('a dose reminder links to its medication in the dashboard detail and when completed', async ({
+	app,
+	asMember
+}) => {
+	// A fresh companion, so its only reminders are the two below.
+	const petName = `e2e-dose-link-${Date.now()}`;
+	const medName = `${petName}-med`;
+	const ids: string[] = [];
+	try {
+		const comp = await createCompanionViaUi(asMember, petName);
+		const medId = insertMedication(app.dataDir, { companionId: comp, name: medName });
+		ids.push(medId);
+		const now = Math.floor(Date.now() / 1000);
+		const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+		try {
+			const insert = sqlite.prepare(
+				`INSERT INTO reminders (id, companion_id, title, type, due_at, completed_at, outcome, medication_id)
+				 VALUES (?, ?, ?, 'medication', ?, ?, ?, ?)`
+			);
+			insert.run(`${petName}-open`, comp, `${petName} open`, now + 2 * 86400, null, null, medId);
+			insert.run(`${petName}-done`, comp, `${petName} done`, now - 86400, now, 'completed', medId);
+		} finally {
+			sqlite.close();
+		}
+		const medHref = `/${comp}/medications/${medId}`;
+
+		// The dashboard's reminder detail links to the medication.
+		await asMember.goto(`/${comp}`);
+		await waitForHydration(asMember);
+		await reminderRow(asMember, `${petName} open`)
+			.getByRole('button', { name: new RegExp(`${petName} open`) })
+			.click();
+		const detail = asMember.getByRole('dialog');
+		await expect(detail.getByRole('link', { name: `Medication: ${medName}` })).toHaveAttribute(
+			'href',
+			medHref
+		);
+
+		// So does the completed reminder on the reminders page.
+		await asMember.goto(`/${comp}/reminders`);
+		await waitForHydration(asMember);
+		const completed = asMember
+			.locator('details')
+			.filter({ has: asMember.locator('#completed-sort') });
+		await completed.locator('summary').click();
+		await expect(completed.getByText(`${petName} done`)).toBeVisible();
+		await expect(completed.getByRole('link', { name: `Medication: ${medName}` })).toHaveAttribute(
+			'href',
+			medHref
+		);
+	} finally {
+		deleteMedications(app.dataDir, ids);
+		deleteCompanionByName(app.dataDir, petName);
+	}
+});

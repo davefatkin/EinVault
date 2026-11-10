@@ -57,7 +57,11 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
 			limit: 5,
-			with: { logger: { columns: { displayName: true } } }
+			with: {
+				logger: { columns: { displayName: true } },
+				// A dose reminder links back to its medication.
+				medication: { columns: { id: true, name: true } }
+			}
 		}),
 		db.query.weightEntries.findMany({
 			where: eq(schema.weightEntries.companionId, params.companionId),
