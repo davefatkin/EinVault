@@ -938,11 +938,17 @@
 						{:else}
 							<CardContent class="py-3">
 								<div class="flex items-center justify-between gap-4">
-									<div class="flex items-center gap-2 text-sm">
+									<div class="flex min-w-0 flex-wrap items-center gap-2 text-sm">
 										<span>{TYPE_ICONS[reminder.type] ?? '📌'}</span>
 										<span class="line-through text-muted-foreground">{reminder.title}</span>
 										{#if reminder.outcome === 'skipped'}
 											<Badge variant="secondary">{t(locale, 'page.reminders.skippedBadge')}</Badge>
+										{/if}
+										{#if reminder.medication}
+											<MedicationLinkChip
+												name={reminder.medication.name}
+												href="/{data.companion.id}/medications/{reminder.medication.id}"
+											/>
 										{/if}
 										<span class="text-xs text-muted-foreground"
 											><LocalTime date={reminder.dueAt} /></span
