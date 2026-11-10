@@ -1495,7 +1495,11 @@ const messages = {
 	'page.medications.deleteConfirm':
 		'Delete {name} and its dose history? Upcoming dose reminders are deleted too; completed ones stay in the reminder history. This cannot be undone.',
 	'page.health.medicationsHintPrefix': 'Tracking a medication?',
-	'page.health.medicationsHintLink': 'Use the Medications page'
+	'page.health.medicationsHintLink': 'Use the Medications page',
+	'supply.runOut.out': 'Out',
+	'supply.runOut.day': 'about {count} day left',
+	'supply.runOut.days': 'about {count} days left',
+	'supply.runOut.weeks': 'about {count} weeks left'
 } as const;
 
 export type Messages = typeof messages;

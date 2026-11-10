@@ -98,6 +98,8 @@ export const appSettings = sqliteTable('app_settings', {
 	require2fa: text('require_2fa', { enum: ['off', 'admins', 'everyone'] })
 		.notNull()
 		.default('off'),
+	// ISO 4217 code; stamped onto supply purchases at write time.
+	currency: text('currency').notNull().default('USD'),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }),
 	updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
 });
@@ -146,7 +148,10 @@ export type OutboxPayload =
 	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'celebration'; companionId: string; date: string }
 	| { kind: 'incidentLogged'; incidentId: string }
-	| { kind: 'incidentUpdated'; incidentId: string; updateId: string };
+	| { kind: 'incidentUpdated'; incidentId: string; updateId: string }
+	| { kind: 'supplyRunOut'; supplyId: string; stockVersion: string; leadDays: number }
+	| { kind: 'supplyLowStock'; supplyId: string; stockVersion: string }
+	| { kind: 'supplyExpiry'; supplyId: string; expiresOn: string; leadDays: number };
 
 export const notificationOutbox = sqliteTable(
 	'notification_outbox',
@@ -602,6 +607,9 @@ export const medications = sqliteTable(
 		// Local dates, YYYY-MM-DD. Active while endedOn is null or >= today.
 		startedOn: text('started_on').notNull(),
 		endedOn: text('ended_on'),
+		// Counted supply this medication draws from, and how many units one dose uses.
+		supplyId: text('supply_id').references(() => supplies.id, { onDelete: 'set null' }),
+		doseUnits: real('dose_units').notNull().default(1),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
@@ -632,6 +640,82 @@ export const medicationDoses = sqliteTable(
 		medicationGivenIdx: index('medication_dose_given_idx').on(t.medicationId, t.givenAt),
 		// NULLs are distinct in SQLite, so only non-null reminder ids collide.
 		reminderUnique: uniqueIndex('medication_dose_reminder_uniq').on(t.reminderId)
+	})
+);
+
+// supplies (issue #279): household stock tied to medications
+
+export const supplies = sqliteTable('supplies', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	kind: text('kind', { enum: ['counted', 'duration'] }).notNull(),
+	// Counted only.
+	unit: text('unit'),
+	quantity: real('quantity'),
+	lowStockAt: real('low_stock_at'),
+	// Duration only; stockedOn is the latest purchase date.
+	lastsDays: integer('lasts_days'),
+	stockedOn: text('stocked_on'),
+	// Local dates, YYYY-MM-DD.
+	expiresOn: text('expires_on'),
+	alertsEnabled: integer('alerts_enabled', { mode: 'boolean' }).notNull().default(true),
+	// Canonical lead lists, same format as reminders.notify_lead_days.
+	runOutLeadDays: text('run_out_lead_days').default('7'),
+	expiryLeadDays: text('expiry_lead_days').default('14'),
+	// Fresh id on every purchase, correction and deletion of either; warnings dedupe on it.
+	stockVersion: text('stock_version')
+		.notNull()
+		.default(sql`(lower(hex(randomblob(8))))`),
+	// What was last warned about, so a still-true condition cannot refire after
+	// outbox cleanup: "{stock_version}:{lead}", "{stock_version}", "{expires_on}:{lead}".
+	runOutAlerted: text('run_out_alerted'),
+	lowAlerted: text('low_alerted'),
+	expiryAlerted: text('expiry_alerted'),
+	notes: text('notes'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' })
+});
+
+export const supplyCompanions = sqliteTable(
+	'supply_companions',
+	{
+		supplyId: text('supply_id')
+			.notNull()
+			.references(() => supplies.id, { onDelete: 'cascade' }),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' })
+	},
+	(t) => ({
+		pk: primaryKey({ columns: [t.supplyId, t.companionId] })
+	})
+);
+
+export const supplyEvents = sqliteTable(
+	'supply_events',
+	{
+		id: text('id').primaryKey(),
+		supplyId: text('supply_id')
+			.notNull()
+			.references(() => supplies.id, { onDelete: 'cascade' }),
+		type: text('type', { enum: ['purchase', 'use', 'correction'] }).notNull(),
+		at: integer('at', { mode: 'timestamp' }).notNull(),
+		// Delta actually applied to quantity after clamping at 0 (counted only).
+		quantityDelta: real('quantity_delta'),
+		doseId: text('dose_id').references(() => medicationDoses.id, { onDelete: 'set null' }),
+		companionId: text('companion_id').references(() => companions.id, { onDelete: 'set null' }),
+		// Minor units (cents) plus the ISO code copied from app settings at write time.
+		costMinor: integer('cost_minor'),
+		currency: text('currency'),
+		documentId: text('document_id').references(() => documents.id, { onDelete: 'set null' }),
+		note: text('note'),
+		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => ({
+		supplyAtIdx: index('supply_event_supply_at_idx').on(t.supplyId, t.at),
+		doseUnique: uniqueIndex('supply_event_dose_uniq').on(t.doseId)
 	})
 );
 
@@ -796,6 +880,8 @@ export type NoteTag = typeof noteTags.$inferSelect;
 export type Media = typeof media.$inferSelect;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
+export type Supply = typeof supplies.$inferSelect;
+export type SupplyEvent = typeof supplyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type CompanionCaretaker = typeof companionCaretakers.$inferSelect;
 export type CaretakerShift = typeof caretakerShifts.$inferSelect;
@@ -980,7 +1066,27 @@ export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
 	logger: one(users, { fields: [weightEntries.loggedBy], references: [users.id] })
 }));
 
+export const suppliesRelations = relations(supplies, ({ many }) => ({
+	companions: many(supplyCompanions),
+	events: many(supplyEvents),
+	medications: many(medications)
+}));
+
+export const supplyCompanionsRelations = relations(supplyCompanions, ({ one }) => ({
+	supply: one(supplies, { fields: [supplyCompanions.supplyId], references: [supplies.id] }),
+	companion: one(companions, {
+		fields: [supplyCompanions.companionId],
+		references: [companions.id]
+	})
+}));
+
+export const supplyEventsRelations = relations(supplyEvents, ({ one }) => ({
+	supply: one(supplies, { fields: [supplyEvents.supplyId], references: [supplies.id] }),
+	companion: one(companions, { fields: [supplyEvents.companionId], references: [companions.id] })
+}));
+
 export const medicationsRelations = relations(medications, ({ one, many }) => ({
+	supply: one(supplies, { fields: [medications.supplyId], references: [supplies.id] }),
 	logger: one(users, { fields: [medications.loggedBy], references: [users.id] }),
 	doses: many(medicationDoses),
 	reminders: many(reminders)

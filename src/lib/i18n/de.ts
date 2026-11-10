@@ -1527,7 +1527,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		'{name} und den Verlauf der Gaben löschen? Anstehende Dosis-Erinnerungen werden ebenfalls gelöscht, erledigte bleiben im Erinnerungsverlauf. Das kann nicht rückgängig gemacht werden.',
 	'page.health.medicationsHintPrefix': 'Geht es um ein Medikament?',
-	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite'
+	'page.health.medicationsHintLink': 'Nutze die Medikamente-Seite',
+	'supply.runOut.out': 'Aufgebraucht',
+	'supply.runOut.day': 'noch etwa {count} Tag',
+	'supply.runOut.days': 'noch etwa {count} Tage',
+	'supply.runOut.weeks': 'noch etwa {count} Wochen'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

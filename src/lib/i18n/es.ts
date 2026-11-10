@@ -1521,7 +1521,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		'¿Eliminar {name} y su historial de dosis? También se eliminan los próximos recordatorios de dosis; los completados se quedan en el historial de recordatorios. No se puede deshacer.',
 	'page.health.medicationsHintPrefix': '¿Es un medicamento?',
-	'page.health.medicationsHintLink': 'Usa la página de Medicamentos'
+	'page.health.medicationsHintLink': 'Usa la página de Medicamentos',
+	'supply.runOut.out': 'Agotado',
+	'supply.runOut.day': 'queda aproximadamente {count} día',
+	'supply.runOut.days': 'quedan aproximadamente {count} días',
+	'supply.runOut.weeks': 'quedan aproximadamente {count} semanas'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

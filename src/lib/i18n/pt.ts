@@ -1521,7 +1521,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		'Eliminar {name} e o histórico de doses? Os próximos lembretes de dose também são eliminados; os concluídos ficam no histórico de lembretes. Não é possível desfazer.',
 	'page.health.medicationsHintPrefix': 'É um medicamento?',
-	'page.health.medicationsHintLink': 'Use a página de Medicamentos'
+	'page.health.medicationsHintLink': 'Use a página de Medicamentos',
+	'supply.runOut.out': 'Esgotado',
+	'supply.runOut.day': 'cerca de {count} dia restante',
+	'supply.runOut.days': 'cerca de {count} dias restantes',
+	'supply.runOut.weeks': 'cerca de {count} semanas restantes'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

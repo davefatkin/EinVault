@@ -1519,7 +1519,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		'Eliminare {name} e il suo storico delle dosi? Vengono eliminati anche i prossimi promemoria per le dosi; quelli completati restano nello storico dei promemoria. Non si può annullare.',
 	'page.health.medicationsHintPrefix': 'Si tratta di un farmaco?',
-	'page.health.medicationsHintLink': 'Usa la pagina Farmaci'
+	'page.health.medicationsHintLink': 'Usa la pagina Farmaci',
+	'supply.runOut.out': 'Esaurito',
+	'supply.runOut.day': 'circa {count} giorno rimasto',
+	'supply.runOut.days': 'circa {count} giorni rimasti',
+	'supply.runOut.weeks': 'circa {count} settimane rimaste'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

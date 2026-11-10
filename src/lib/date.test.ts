@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { daysInMonth, formatDateOnly, formatYmd, parseYmd } from './date';
+import {
+	addDaysYmd,
+	daysBetweenYmd,
+	daysInMonth,
+	formatDateOnly,
+	formatYmd,
+	parseYmd
+} from './date';
 
 describe('parseYmd', () => {
 	it('parses real calendar dates', () => {
@@ -57,5 +64,18 @@ describe('formatYmd', () => {
 
 	it('is null for junk', () => {
 		expect(formatYmd('2019-02-30', 'en', { day: 'numeric' })).toBeNull();
+	});
+});
+
+describe('addDaysYmd / daysBetweenYmd', () => {
+	it('adds calendar days across a DST change', () => {
+		expect(addDaysYmd('2026-03-07', 2)).toBe('2026-03-09');
+		expect(addDaysYmd('2026-12-30', 3)).toBe('2027-01-02');
+		expect(addDaysYmd('2026-03-01', -1)).toBe('2026-02-28');
+	});
+	it('counts calendar days across a DST change', () => {
+		expect(daysBetweenYmd('2026-03-07', '2026-03-09')).toBe(2);
+		expect(daysBetweenYmd('2026-11-09', '2026-11-02')).toBe(-7);
+		expect(daysBetweenYmd('2026-11-09', '2026-11-09')).toBe(0);
 	});
 });

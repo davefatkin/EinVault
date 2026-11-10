@@ -1527,7 +1527,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.deleteConfirm':
 		"Supprimer {name} et son historique des prises ? Les prochains rappels de prise sont aussi supprimés ; ceux déjà faits restent dans l'historique des rappels. Cette action est irréversible.",
 	'page.health.medicationsHintPrefix': "Il s'agit d'un médicament ?",
-	'page.health.medicationsHintLink': 'Utilisez la page Médicaments'
+	'page.health.medicationsHintLink': 'Utilisez la page Médicaments',
+	'supply.runOut.out': 'Épuisé',
+	'supply.runOut.day': 'environ {count} jour restant',
+	'supply.runOut.days': 'environ {count} jours restants',
+	'supply.runOut.weeks': 'environ {count} semaines restantes'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;
