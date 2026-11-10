@@ -55,7 +55,8 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const values = supplyFormValues(data);
 		const parsed = parseSupplyForm(data);
-		if (!parsed.ok) return fail(400, { error: t(locals.locale, parsed.error), values });
+		if (!parsed.ok)
+			return fail(400, { error: t(locals.locale, parsed.error, parsed.vars), values });
 		const options = await supplyCompanionOptions(await linkedCompanionIds(params.id));
 		const refused = refuseCompanions(parsed.companionIds, options, locals.locale, values);
 		if (refused) return refused;

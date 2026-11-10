@@ -9,6 +9,15 @@ type Unit = 'day' | 'week' | 'month' | 'year';
 /** A run-out further out than this (about ten years) projects as this many days. */
 export const MAX_PROJECTION_DAYS = 3650;
 
+export const MAX_SUPPLY_NAME_LEN = 200;
+export const MAX_SUPPLY_UNIT_LEN = 50;
+export const MAX_LASTS_DAYS = 365;
+/** Largest starting, purchased, corrected or low-stock count. */
+export const MAX_SUPPLY_QUANTITY = 100_000;
+/** Units one dose takes from its supply: a plain decimal in this range. */
+export const MIN_DOSE_UNITS = 0.01;
+export const MAX_DOSE_UNITS = 1000;
+
 /** Units used per day across recurring dose series: sum of doseUnits / period. */
 export function dailyUse(series: { doseUnits: number; unit: Unit; interval: number }[]): number {
 	let total = 0;

@@ -24,7 +24,11 @@ import { localDateISO } from '#lib/date.js';
 import { parseMoney } from '#lib/money.js';
 import { parseLeadDays } from '#lib/reminderLeadTimes.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
-import type { SupplyCompanionOption, SupplyFormValues } from '#lib/supplies.js';
+import {
+	MAX_SUPPLY_QUANTITY,
+	type SupplyCompanionOption,
+	type SupplyFormValues
+} from '#lib/supplies.js';
 
 type Locals = RequestEvent['locals'];
 type Failure = ActionFailure<{ error: string }>;
@@ -149,6 +153,7 @@ export const purchaseAction: Action<{ companionId: string; id: string }> = async
 	let quantity: number | null = null;
 	if (supply.kind === 'counted') {
 		const parsed = parseAmount(data.get('quantity'));
+		if (parsed === 'tooLarge') return bad('error.quantityTooLarge', { max: MAX_SUPPLY_QUANTITY });
 		if (typeof parsed !== 'number' || !(parsed > 0)) return bad('error.invalidPurchaseQuantity');
 		quantity = parsed;
 	}

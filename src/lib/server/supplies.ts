@@ -12,16 +12,16 @@ import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import type { MedicationSupplyOption } from '#lib/medications.js';
 import {
 	dailyUse,
+	MAX_LASTS_DAYS,
+	MAX_SUPPLY_NAME_LEN,
+	MAX_SUPPLY_QUANTITY,
+	MAX_SUPPLY_UNIT_LEN,
 	projectRunOut,
 	supplyAttention,
 	type SupplyEventView,
 	type SupplyKind,
 	type SupplySummary
 } from '#lib/supplies.js';
-
-export const MAX_SUPPLY_NAME_LEN = 200;
-export const MAX_SUPPLY_UNIT_LEN = 50;
-export const MAX_LASTS_DAYS = 365;
 
 export interface SupplyInput {
 	name: string;
@@ -643,13 +643,14 @@ const LEAD_ERROR_KEYS = {
 	tooLong: 'error.leadDaysTooLong'
 } as const satisfies Record<string, MessageKey>;
 
-/** A non-negative decimal (`.` or `,`); null when blank. */
-export function parseAmount(raw: unknown): number | null | 'invalid' {
+/** A count from 0 to MAX_SUPPLY_QUANTITY, as a decimal (`.` or `,`); null when blank. */
+export function parseAmount(raw: unknown): number | null | 'invalid' | 'tooLarge' {
 	const text = String(raw ?? '').trim();
 	if (!text) return null;
 	if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return 'invalid';
 	const n = Number(text.replace(',', '.'));
-	return Number.isFinite(n) ? n : 'invalid';
+	if (!Number.isFinite(n)) return 'invalid';
+	return n > MAX_SUPPLY_QUANTITY ? 'tooLarge' : n;
 }
 
 /**
@@ -658,7 +659,7 @@ export function parseAmount(raw: unknown): number | null | 'invalid' {
  *   post the existing kind as a hidden field, since `updateSupply` refuses a
  *   different one), `notes`, `expiresOn` (YYYY-MM-DD, optional).
  * - Counted: `unit` (max 50), `startingQuantity` (create only), `lowStockAt`;
- *   both decimals >= 0 with `.` or `,`, blank for none.
+ *   both decimals from 0 to MAX_SUPPLY_QUANTITY with `.` or `,`, blank for none.
  * - Duration: `lastsDays` (1-365, required), `firstPurchaseDate` (create
  *   only, optional, not in the future).
  * - `alertsEnabled`: checkbox, any value means on.
@@ -670,7 +671,9 @@ export function parseAmount(raw: unknown): number | null | 'invalid' {
 export function parseSupplyForm(
 	data: FormData,
 	today: string = localDateISO()
-): { ok: true; value: SupplyInput; companionIds: string[] } | { ok: false; error: MessageKey } {
+):
+	| { ok: true; value: SupplyInput; companionIds: string[] }
+	| { ok: false; error: MessageKey; vars?: Record<string, number> } {
 	const text = (key: string) => String(data.get(key) ?? '').trim();
 	const name = text('name');
 	const kind = text('kind');
@@ -697,6 +700,8 @@ export function parseSupplyForm(
 		const low = parseAmount(data.get('lowStockAt'));
 		if (start === 'invalid' || low === 'invalid')
 			return { ok: false, error: 'error.invalidQuantity' };
+		if (start === 'tooLarge' || low === 'tooLarge')
+			return { ok: false, error: 'error.quantityTooLarge', vars: { max: MAX_SUPPLY_QUANTITY } };
 		startingQuantity = start;
 		lowStockAt = low;
 	} else {

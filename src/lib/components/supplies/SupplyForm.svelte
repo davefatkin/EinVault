@@ -6,7 +6,13 @@
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import LeadDaysPicker from '#lib/components/reminders/LeadDaysPicker.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
-	import type { SupplyCompanionOption, SupplyFormValues } from '#lib/supplies.js';
+	import {
+		MAX_LASTS_DAYS,
+		MAX_SUPPLY_NAME_LEN,
+		MAX_SUPPLY_UNIT_LEN,
+		type SupplyCompanionOption,
+		type SupplyFormValues
+	} from '#lib/supplies.js';
 
 	// Add and edit form for a supply. The kind is chosen on create and fixed
 	// after (the edit form posts it back as a hidden field). Starting stock is
@@ -67,7 +73,7 @@
 			type="text"
 			autocomplete="off"
 			required
-			maxlength={200}
+			maxlength={MAX_SUPPLY_NAME_LEN}
 			placeholder={t(locale, 'page.supplies.placeholderName')}
 			value={initial?.name ?? ''}
 		/>
@@ -129,7 +135,7 @@
 					name="unit"
 					type="text"
 					autocomplete="off"
-					maxlength={50}
+					maxlength={MAX_SUPPLY_UNIT_LEN}
 					placeholder={t(locale, 'page.supplies.placeholderUnit')}
 					value={initial?.unit ?? ''}
 				/>
@@ -159,7 +165,7 @@
 					name="lastsDays"
 					type="number"
 					min={1}
-					max={365}
+					max={MAX_LASTS_DAYS}
 					step={1}
 					required
 					value={initial?.lastsDays ?? ''}

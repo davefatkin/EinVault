@@ -1557,11 +1557,11 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyNotesTooLong': 'Notizen dürfen höchstens 5000 Zeichen lang sein.',
 	'error.invalidSupplyKind': 'Wähle aus, wie dieser Vorrat erfasst wird.',
 	'error.invalidQuantity': 'Gib eine Zahl von 0 oder mehr ein.',
+	'error.quantityTooLarge': 'Gib eine Zahl bis höchstens {max} ein.',
 	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
 	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.',
 	'page.dashboard.suppliesViewAll': 'Alle anzeigen',
-	'error.invalidDoseUnits':
-		'Gib an, wie viel eine Dosis verbraucht: mehr als 0 und höchstens {max}.',
+	'error.invalidDoseUnits': 'Gib an, wie viel eine Dosis verbraucht: von {min} bis {max}.',
 	'error.invalidCurrency': 'Wähle eine gültige Währung.',
 	'page.medications.labelSupply': 'Vorrat',
 	'page.medications.supplyNone': 'Keiner',

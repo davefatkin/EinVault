@@ -7,6 +7,7 @@ import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
 import { applyDoseStock, loadSupplyStates, restoreDoseStock } from '#lib/server/supplies.js';
+import { MAX_DOSE_UNITS, MIN_DOSE_UNITS } from '#lib/supplies.js';
 import { medicationActiveSql } from '#lib/server/medication-sql.js';
 import type { Tx } from '#lib/server/db/tx.js';
 import {
@@ -28,8 +29,6 @@ export interface MedicationInput {
 	/** Units one dose takes from the supply; 1 without one. */
 	doseUnits: number;
 }
-
-export const MAX_DOSE_UNITS = 1000;
 
 /** Whether `supplyId` is a counted supply linked to `companionId`. */
 function isCountedSupplyOf(companionId: string, supplyId: string): boolean {
@@ -74,8 +73,14 @@ export function parseMedicationForm(
 		return { ok: false, message: t(locale, 'error.supplyNotFound') };
 	const rawUnits = String(data.get('doseUnits') ?? '').trim();
 	const doseUnits = rawUnits ? Number(rawUnits.replace(',', '.')) : 1;
-	if (!Number.isFinite(doseUnits) || doseUnits <= 0 || doseUnits > MAX_DOSE_UNITS)
-		return { ok: false, message: t(locale, 'error.invalidDoseUnits', { max: MAX_DOSE_UNITS }) };
+	if (
+		(rawUnits && !/^\d+([.,]\d+)?$/.test(rawUnits)) ||
+		!(doseUnits >= MIN_DOSE_UNITS && doseUnits <= MAX_DOSE_UNITS)
+	)
+		return {
+			ok: false,
+			message: t(locale, 'error.invalidDoseUnits', { min: MIN_DOSE_UNITS, max: MAX_DOSE_UNITS })
+		};
 	return {
 		ok: true,
 		value: {

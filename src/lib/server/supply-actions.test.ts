@@ -141,7 +141,9 @@ describe('supply actions', () => {
 			{ date: localDateISO(tomorrow), quantity: '5' },
 			{ date: localDateISO(), quantity: '0' },
 			{ date: localDateISO(), quantity: '5', cost: '-1' },
-			{ date: localDateISO(), quantity: '5', cost: '1.234' }
+			{ date: localDateISO(), quantity: '5', cost: '1.234' },
+			{ date: localDateISO(), quantity: '100001' },
+			{ date: localDateISO(), quantity: '1e2' }
 		];
 		for (const fields of cases) {
 			expect((await call(detailActions.purchase, fields, { id })).status).toBe(400);
@@ -175,6 +177,9 @@ describe('supply actions', () => {
 		expect((await supplyRow(id))?.stockVersion).toBe(after?.stockVersion);
 		expect((await call(detailActions.correct, { actual: '-1' }, { id })).status).toBe(400);
 		expect((await call(detailActions.correct, { actual: 'abc' }, { id })).status).toBe(400);
+		const over = await call(detailActions.correct, { actual: '100001' }, { id });
+		expect(over).toMatchObject({ status: 400, data: { error: 'Enter a number up to 100000.' } });
+		expect((await supplyRow(id))?.quantity).toBe(7);
 	});
 
 	it('deleteEvent reverses a purchase; delete removes the supply', async () => {

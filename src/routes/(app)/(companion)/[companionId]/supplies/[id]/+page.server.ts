@@ -16,6 +16,7 @@ import {
 import { purchaseAction, supplyOwnerOnly } from '#lib/server/supply-actions.js';
 import { exceedsLen } from '#lib/server/validation.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
+import { MAX_SUPPLY_QUANTITY } from '#lib/supplies.js';
 
 const EVENT_PAGE = 50;
 const MAX_EVENT_PAGES = 20;
@@ -60,6 +61,10 @@ export const actions: Actions = {
 		if (denied) return denied;
 		const data = await request.formData();
 		const actual = parseAmount(data.get('actual'));
+		if (actual === 'tooLarge')
+			return fail(400, {
+				error: t(locals.locale, 'error.quantityTooLarge', { max: MAX_SUPPLY_QUANTITY })
+			});
 		if (typeof actual !== 'number')
 			return fail(400, { error: t(locals.locale, 'error.invalidQuantity') });
 		const note = String(data.get('note') ?? '').trim();

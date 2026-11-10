@@ -195,15 +195,18 @@ describe('parseMedicationForm supply link', () => {
 		const mine = await supply({}, [C1]);
 		expect(parseMedicationForm(form({ supplyId: mine }), 'en', TODAY).ok).toBe(false);
 	});
-	it('rejects units of 0, negative, junk and above 1000', async () => {
+	it('rejects units below 0.01, above 1000, and anything but a plain decimal', async () => {
 		const id = await supply({}, [C1]);
-		for (const doseUnits of ['0', '-1', 'abc', '1001', 'Infinity'])
-			expect(parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1).ok).toBe(
-				false
-			);
-		expect(parseMedicationForm(form({ supplyId: id, doseUnits: '1000' }), 'en', TODAY, C1).ok).toBe(
-			true
-		);
+		const bad = ['0', '-1', 'abc', '1001', 'Infinity', '1e2', '0x10', '0.001', '0.009', '.5', '1.'];
+		for (const doseUnits of bad) {
+			const r = parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1);
+			expect(r, doseUnits).toEqual({
+				ok: false,
+				message: 'Enter how much one dose uses, from 0.01 to 1000.'
+			});
+		}
+		for (const doseUnits of ['1000', '0.01', '0,25'])
+			expect(parseMedicationForm(form({ supplyId: id, doseUnits }), 'en', TODAY, C1).ok).toBe(true);
 	});
 });
 

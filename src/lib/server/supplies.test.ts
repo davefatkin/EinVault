@@ -476,6 +476,8 @@ describe('parseSupplyForm', () => {
 		['an unknown kind', counted({ kind: 'bulk' }), 'error.invalidSupplyKind'],
 		['a negative quantity', counted({ startingQuantity: '-1' }), 'error.invalidQuantity'],
 		['a junk low-stock count', counted({ lowStockAt: 'lots' }), 'error.invalidQuantity'],
+		['an exponent', counted({ startingQuantity: '1e2' }), 'error.invalidQuantity'],
+		['a hex count', counted({ lowStockAt: '0x10' }), 'error.invalidQuantity'],
 		['a lead of 91', counted({ runOutLeadDays: '91' }), 'error.invalidLeadDays'],
 		['four leads', counted({ expiryLeadDays: '1,2,3,7' }), 'error.tooManyLeadDays'],
 		['a bad expiry', counted({ expiresOn: '2026-02-30' }), 'error.invalidDate'],
@@ -502,6 +504,13 @@ describe('parseSupplyForm', () => {
 		]
 	])('rejects %s', (_label, fd, error) => {
 		expect(parseSupplyForm(fd, TODAY)).toEqual({ ok: false, error });
+	});
+
+	it('caps the starting and low-stock counts at MAX_SUPPLY_QUANTITY', () => {
+		const tooLarge = { ok: false, error: 'error.quantityTooLarge', vars: { max: 100000 } };
+		expect(parseSupplyForm(counted({ startingQuantity: '100000.5' }), TODAY)).toEqual(tooLarge);
+		expect(parseSupplyForm(counted({ lowStockAt: '100001' }), TODAY)).toEqual(tooLarge);
+		expect(parseSupplyForm(counted({ startingQuantity: '100000' }), TODAY).ok).toBe(true);
 	});
 });
 
