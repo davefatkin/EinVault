@@ -159,6 +159,7 @@ describe('pickSupplyAlerts', () => {
 		daysLeft: 5,
 		runningLow: true,
 		expiring: false,
+		expired: false,
 		companions: [],
 		stockVersion: 'v1',
 		runOutLeads: [14, 7],
@@ -385,6 +386,19 @@ describe('deliverSupplyAlert / deliverSupplyAlertNtfy', () => {
 			'Expiring soon: Eye drops, expires Nov 23',
 			'Running low: Carprofen'
 		]);
+	});
+
+	it('says expired once the date has passed', async () => {
+		await supply({ name: 'Eye drops', quantity: 3, expiresOn: '2026-11-05' });
+		await produceSupplyAlerts(NOON);
+		const push = await outboxRow('adm', 'ntfy');
+		await deliverSupplyAlertNtfy(push, push.payload as never);
+		const [, msg] = vi.mocked(sendNtfy).mock.calls[0];
+		expect(msg.title).toBe('Expired: Eye drops');
+		expect(msg.message).toBe('Eye drops for Ein expired on Nov 5, 2026.');
+		const mail = await outboxRow('adm', 'email');
+		await deliverSupplyAlert(mail, mail.payload as never);
+		expect(vi.mocked(sendMail).mock.calls[0][0].subject).toBe('Expired: Eye drops');
 	});
 
 	it('skips a run-out warning after a purchase changed the stock version', async () => {

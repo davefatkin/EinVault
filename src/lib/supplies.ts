@@ -79,27 +79,35 @@ export type SupplySummary = {
 	daysLeft: number | null;
 	runningLow: boolean;
 	expiring: boolean;
+	/** Expiring with the date already past: badged "Expired". */
+	expired: boolean;
 	companions: { id: string; name: string; isActive: boolean }[];
 };
 
-/** Which badges a supply earns today, independent of alertsEnabled. */
+/**
+ * Which badges a supply earns today, independent of alertsEnabled. An empty
+ * counted supply is running low even with no schedule or low-stock count.
+ * `expired` is the part of `expiring` whose date has already passed.
+ */
 export function supplyAttention(
 	s: Pick<SupplySummary, 'kind' | 'quantity' | 'lowStockAt' | 'expiresOn' | 'daysLeft'>,
 	runOutLeads: number[],
 	expiryLeads: number[],
 	today: string
-): { runningLow: boolean; expiring: boolean } {
-	const runningLow =
-		s.daysLeft !== null &&
-		(s.daysLeft === 0 || shortestEligibleLead(runOutLeads, s.daysLeft) !== null);
-	const low = runningLow || isLowStock(s.quantity, s.lowStockAt);
-	// A counted supply at 0 is out, not expiring.
+): { runningLow: boolean; expiring: boolean; expired: boolean } {
 	const outCounted = s.kind === 'counted' && s.quantity !== null && s.quantity <= 0;
+	const runningLow =
+		outCounted ||
+		isLowStock(s.quantity, s.lowStockAt) ||
+		(s.daysLeft !== null &&
+			(s.daysLeft === 0 || shortestEligibleLead(runOutLeads, s.daysLeft) !== null));
+	// A counted supply at 0 is out, not expiring.
+	const daysToExpiry = s.expiresOn === null ? null : daysBetweenYmd(today, s.expiresOn);
 	const expiring =
 		!outCounted &&
-		s.expiresOn !== null &&
-		shortestEligibleLead(expiryLeads, daysBetweenYmd(today, s.expiresOn)) !== null;
-	return { runningLow: low, expiring };
+		daysToExpiry !== null &&
+		shortestEligibleLead(expiryLeads, daysToExpiry) !== null;
+	return { runningLow, expiring, expired: expiring && daysToExpiry! < 0 };
 }
 
 /** "Out", "about N days left", or "about N weeks left" from 14 days. */

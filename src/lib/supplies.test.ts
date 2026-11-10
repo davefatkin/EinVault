@@ -97,6 +97,12 @@ describe('supplyAttention', () => {
 			true
 		);
 	});
+	it('flags an empty counted supply with no schedule and no low-stock count', () => {
+		expect(supplyAttention({ ...base, quantity: 0 }, [], [], today).runningLow).toBe(true);
+		expect(supplyAttention({ ...base, quantity: 0.5 }, [], [], today).runningLow).toBe(false);
+		const duration = { ...base, kind: 'duration' as const, quantity: null };
+		expect(supplyAttention(duration, [], [], today).runningLow).toBe(false);
+	});
 	it('flags expiry within a lead, but not for an empty counted supply', () => {
 		const exp = { ...base, expiresOn: '2026-11-20' };
 		expect(supplyAttention(exp, [], [14], today).expiring).toBe(true);
@@ -105,6 +111,16 @@ describe('supplyAttention', () => {
 		expect(
 			supplyAttention({ ...exp, kind: 'duration', quantity: null }, [], [14], today).expiring
 		).toBe(true);
+	});
+	it('says expired, not expiring, once the date has passed', () => {
+		const at = (expiresOn: string) => supplyAttention({ ...base, expiresOn }, [], [14], today);
+		expect(at('2026-11-08')).toMatchObject({ expiring: true, expired: true });
+		expect(at('2026-11-09')).toMatchObject({ expiring: true, expired: false });
+		expect(at('2026-11-20')).toMatchObject({ expiring: true, expired: false });
+		// An empty counted supply is out, not expired.
+		expect(
+			supplyAttention({ ...base, quantity: 0, expiresOn: '2026-11-08' }, [], [14], today)
+		).toMatchObject({ expiring: false, expired: false });
 	});
 });
 

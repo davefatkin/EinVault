@@ -225,13 +225,16 @@ export async function supplyAlertContext(
 		if (s.stockVersion === payload.stockVersion && isLowStock(s.quantity, s.lowStockAt)) {
 			alert = { kind: 'supplyLowStock', quantity: s.quantity ?? 0, unit: s.unit };
 		}
-	} else if (
-		s.expiresOn === payload.expiresOn &&
-		s.expiryLeads.includes(payload.leadDays) &&
-		!(s.kind === 'counted' && (s.quantity ?? 0) <= 0) &&
-		daysBetweenYmd(today, payload.expiresOn) <= payload.leadDays
-	) {
-		alert = { kind: 'supplyExpiry', expiresOn: payload.expiresOn };
+	} else {
+		const daysToExpiry = daysBetweenYmd(today, payload.expiresOn);
+		if (
+			s.expiresOn === payload.expiresOn &&
+			s.expiryLeads.includes(payload.leadDays) &&
+			!(s.kind === 'counted' && (s.quantity ?? 0) <= 0) &&
+			daysToExpiry <= payload.leadDays
+		) {
+			alert = { kind: 'supplyExpiry', expiresOn: payload.expiresOn, expired: daysToExpiry < 0 };
+		}
 	}
 	if (!alert) return null;
 

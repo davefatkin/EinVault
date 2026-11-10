@@ -368,7 +368,7 @@ export function buildIncidentEmail(
 export type SupplyAlert =
 	| { kind: 'supplyRunOut'; daysLeft: number; runOutOn: string }
 	| { kind: 'supplyLowStock'; quantity: number; unit: string | null }
-	| { kind: 'supplyExpiry'; expiresOn: string };
+	| { kind: 'supplyExpiry'; expiresOn: string; expired: boolean };
 
 export interface SupplyAlertInput {
 	name: string;
@@ -376,7 +376,10 @@ export interface SupplyAlertInput {
 	alert: SupplyAlert;
 }
 
-/** "Running low: Carprofen, about 7 days left", "Running low: Poop bags", "Expiring soon: Eye drops, expires Nov 23". */
+/**
+ * "Running low: Carprofen, about 7 days left", "Running low: Poop bags",
+ * "Expiring soon: Eye drops, expires Nov 23", "Expired: Eye drops".
+ */
 export function supplyAlertSubject(locale: Locale, s: SupplyAlertInput): string {
 	const a = s.alert;
 	if (a.kind === 'supplyRunOut') {
@@ -388,6 +391,7 @@ export function supplyAlertSubject(locale: Locale, s: SupplyAlertInput): string 
 				});
 	}
 	if (a.kind === 'supplyLowStock') return t(locale, 'email.supply.lowSubject', { name: s.name });
+	if (a.expired) return t(locale, 'email.supply.expiredSubject', { name: s.name });
 	return t(locale, 'email.supply.expirySubject', {
 		name: s.name,
 		date: formatYmd(a.expiresOn, locale, { month: 'short', day: 'numeric' }) ?? a.expiresOn
@@ -416,7 +420,7 @@ export function supplyAlertLine(locale: Locale, s: SupplyAlertInput): string {
 			count: a.unit ? `${amount} ${a.unit}` : amount
 		});
 	}
-	return t(locale, 'email.supply.expiryBody', {
+	return t(locale, a.expired ? 'email.supply.expiredBody' : 'email.supply.expiryBody', {
 		...params,
 		date: formatDateOnly(a.expiresOn, locale) ?? a.expiresOn
 	});

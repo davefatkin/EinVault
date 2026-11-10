@@ -1,4 +1,15 @@
-import { and, asc, desc, eq, exists, getTableColumns, inArray, isNull, notInArray, sql } from 'drizzle-orm';
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	exists,
+	getTableColumns,
+	inArray,
+	isNull,
+	notInArray,
+	sql
+} from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
 import { getAppSettings } from '#lib/server/app-settings.js';
@@ -537,6 +548,7 @@ export function toSupplySummary(s: SupplyState): SupplySummary {
 		daysLeft: s.daysLeft,
 		runningLow: s.runningLow,
 		expiring: s.expiring,
+		expired: s.expired,
 		companions: s.companions
 	};
 }
