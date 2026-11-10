@@ -240,12 +240,16 @@ test.describe('More sheet', () => {
 	});
 });
 
-async function setLocale(page: import('@playwright/test').Page, locale: string) {
-	await page.goto('/settings');
+async function setLocale(
+	page: import('@playwright/test').Page,
+	locale: string,
+	settingsPath = '/settings'
+) {
+	await page.goto(settingsPath);
 	await waitForHydration(page);
 	await page.locator('select[name="locale"]').selectOption(locale);
 	await page.waitForLoadState('networkidle');
-	// Wait for the save to land: the member's locale is shared by every later
+	// Wait for the save to land: the user's locale is shared by every later
 	// spec in this worker.
 	await expect(page.locator('html')).toHaveAttribute('lang', locale);
 }
@@ -304,6 +308,55 @@ test('caretaker on-shift: Journal and Log tabs are links (not locked) @mobile', 
 	const nav = asCaretaker.getByRole('navigation', { name: 'Caretaker navigation' });
 	await expect(nav.getByRole('link', { name: 'Journal' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
+});
+
+test('caretaker tab labels do not overlap at 360px in French @mobile', async ({
+	asCaretaker
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile bottom nav is mobile-only');
+	await asCaretaker.setViewportSize({ width: 360, height: 740 });
+	try {
+		await setLocale(asCaretaker, 'fr', '/care/settings');
+		// Journal, not the care page: its quick-log tiles are wider than 360px in
+		// French, and an overflowing page widens the layout viewport and the bar.
+		await asCaretaker.goto(`/care/${EIN}/journal`);
+		await waitForHydration(asCaretaker);
+		expect(await asCaretaker.evaluate(() => window.innerWidth)).toBe(360);
+		const nav = asCaretaker.getByRole('navigation', { name: 'Navigation gardien' });
+		await expect(nav.getByRole('link', { name: 'Enregistrer une activité' })).toBeVisible();
+		const { rowFits, boxes } = await nav.evaluate((el) => {
+			const row = el.firstElementChild as HTMLElement;
+			return {
+				rowFits: row.scrollWidth <= row.clientWidth,
+				boxes: [...el.querySelectorAll<HTMLElement>('[data-tab-label]')].map((label) => {
+					const tab = label.parentElement!.getBoundingClientRect();
+					// The text itself, not its span: a capped span keeps its width
+					// while the text runs past it.
+					const range = document.createRange();
+					range.selectNodeContents(label);
+					const text = range.getBoundingClientRect();
+					return {
+						text: label.textContent,
+						left: text.left,
+						right: text.right,
+						insideTab: text.left >= tab.left - 0.5 && text.right <= tab.right + 0.5
+					};
+				})
+			};
+		});
+		expect(rowFits, 'the bar is wider than the screen').toBe(true);
+		expect(boxes).toHaveLength(4);
+		for (const [i, box] of boxes.entries()) {
+			expect(box.insideTab, `"${box.text}" spills out of its tab`).toBe(true);
+			if (i > 0) {
+				expect(box.left, `"${box.text}" overlaps "${boxes[i - 1].text}"`).toBeGreaterThanOrEqual(
+					boxes[i - 1].right
+				);
+			}
+		}
+	} finally {
+		await setLocale(asCaretaker, 'en', '/care/settings');
+	}
 });
 
 test('caretaker on-shift: Quick add FAB is present and opens Log activity + Add journal entry @mobile', async ({

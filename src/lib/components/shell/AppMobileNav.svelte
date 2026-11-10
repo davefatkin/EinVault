@@ -218,7 +218,7 @@
 {#if activeCompanion}
 	<BottomBar label={t(locale, 'aria.mainNav')} inert={openPanel === 'more'}>
 		{#each tabs.slice(0, 2) as tab (tab.key)}
-			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} />
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} shrink />
 		{/each}
 
 		<!-- The button needs 48px of its slot; the rest goes to the tab labels
@@ -231,7 +231,7 @@
 		/>
 
 		{#each tabs.slice(2) as tab (tab.key)}
-			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} />
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} shrink />
 		{/each}
 
 		<BottomTab
@@ -243,6 +243,7 @@
 			haspopup="dialog"
 			expanded={openPanel === 'more'}
 			onclick={() => setPanel('more', openPanel !== 'more')}
+			shrink
 		/>
 	</BottomBar>
 
