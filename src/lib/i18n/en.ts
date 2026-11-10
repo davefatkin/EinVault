@@ -913,6 +913,7 @@ const messages = {
 	'page.reminders.detailType': 'Type',
 	'page.reminders.detailDue': 'Due',
 	'page.reminders.detailRepeats': 'Repeats',
+	'page.reminders.detailMedication': 'Medication',
 	'page.reminders.detailEveryDay': 'Every day',
 	'page.reminders.detailEveryDays': 'Every {count} days',
 	'page.reminders.detailEveryWeek': 'Every week',
@@ -1497,6 +1498,7 @@ const messages = {
 	'page.medications.endsOn': 'Ends {date}',
 	'page.medications.endedOn': 'Ended {date}',
 	'page.medications.addDoseReminder': 'Add a dose reminder',
+	'page.medications.linkLabel': 'Medication: {name}',
 	'page.medications.once': 'Once',
 	'page.medications.doseReminders': 'Dose reminders',
 	'page.medications.noDoseReminders':

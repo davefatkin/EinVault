@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { completeReminder } from '#lib/server/reminders.js';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 
 const companionId = 'rl-comp';
 const day = (n: number) => new Date(2030, 5, n, 9, 0, 0);
@@ -239,6 +239,35 @@ describe('reminders linked to a medication', () => {
 		await expect(
 			call('add', base({ title: 'med-last-day', medicationId: lastDay }))
 		).rejects.toMatchObject({ status: 303 });
+	});
+
+	it("load names each reminder's medication, and none for an unlinked one", async () => {
+		const m = await med();
+		await db
+			.update(schema.medications)
+			.set({ name: 'Rimadyl' })
+			.where(eq(schema.medications.id, m));
+		await db.insert(schema.reminders).values([
+			{
+				id: 'rl-load-linked',
+				companionId,
+				title: 'Dose',
+				type: 'medication',
+				dueAt: day(2),
+				medicationId: m
+			},
+			{ id: 'rl-load-plain', companionId, title: 'Vet', type: 'vet', dueAt: day(3) }
+		]);
+		const data = (await load({
+			params: { companionId },
+			locals: { user: { id: 'rl-user', role: 'member' }, locale: 'en' },
+			parent: async () => ({ companion: { id: companionId } })
+		} as unknown as Parameters<typeof load>[0])) as {
+			reminders: { id: string; medication: { id: string; name: string } | null }[];
+		};
+		const byId = new Map(data.reminders.map((r) => [r.id, r]));
+		expect(byId.get('rl-load-linked')?.medication).toEqual({ id: m, name: 'Rimadyl' });
+		expect(byId.get('rl-load-plain')?.medication).toBeNull();
 	});
 
 	it('add with an empty medicationId stores no link', async () => {

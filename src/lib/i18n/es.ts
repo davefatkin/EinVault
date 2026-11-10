@@ -927,6 +927,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailType': 'Tipo',
 	'page.reminders.detailDue': 'Vencimiento',
 	'page.reminders.detailRepeats': 'Se repite',
+	'page.reminders.detailMedication': 'Medicamento',
 	'page.reminders.detailEveryDay': 'Diario',
 	'page.reminders.detailEveryDays': 'Cada {count} días',
 	'page.reminders.detailEveryWeek': 'Semanal',
@@ -1520,6 +1521,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endsOn': 'Termina el {date}',
 	'page.medications.endedOn': 'Terminó el {date}',
 	'page.medications.addDoseReminder': 'Añadir un recordatorio de dosis',
+	'page.medications.linkLabel': 'Medicamento: {name}',
 	'page.medications.once': 'Una vez',
 	'page.medications.doseReminders': 'Recordatorios de dosis',
 	'page.medications.noDoseReminders':
