@@ -5,6 +5,8 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import LeadDaysPicker from '#lib/components/reminders/LeadDaysPicker.svelte';
+	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
+	import ReceiptField from '#lib/components/supplies/ReceiptField.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import {
 		MAX_LASTS_DAYS,
@@ -15,8 +17,9 @@
 	} from '#lib/supplies.js';
 
 	// Add and edit form for a supply. The kind is chosen on create and fixed
-	// after (the edit form posts it back as a hidden field). Starting stock is
-	// create only; later stock changes are purchases and corrections.
+	// after (the edit form posts it back as a hidden field). Starting stock, with
+	// its cost and receipt, is create only; later stock changes are purchases
+	// and corrections.
 	let {
 		action,
 		values = null,
@@ -24,7 +27,9 @@
 		companions,
 		companionId,
 		today,
-		cancelHref
+		cancelHref,
+		currency = '',
+		paperlessEnabled = false
 	}: {
 		action: string;
 		/** Starting values; a new supply starts empty, linked to this pet. */
@@ -36,6 +41,9 @@
 		/** Local YYYY-MM-DD, from the server so SSR and hydration agree. */
 		today: string;
 		cancelHref: string;
+		/** Create only: the first purchase's cost currency and receipt sources. */
+		currency?: string;
+		paperlessEnabled?: boolean;
 	} = $props();
 	const locale = getLocale();
 
@@ -48,6 +56,8 @@
 	// svelte-ignore state_referenced_locally
 	const checked = new Set(initial?.companionIds ?? [companionId]);
 	let submitting = $state(false);
+	let paperlessId = $state<number | null>(null);
+	let pickerOpen = $state(false);
 
 	const field = 'space-y-1.5';
 	const hint = 'text-xs text-muted-foreground';
@@ -56,6 +66,7 @@
 <form
 	method="POST"
 	{action}
+	enctype={editing ? undefined : 'multipart/form-data'}
 	use:enhance={() => {
 		submitting = true;
 		return async ({ update }) => {
@@ -140,21 +151,6 @@
 					value={initial?.unit ?? ''}
 				/>
 			</div>
-			{#if !editing}
-				<div class={field}>
-					<Label for="supply-startingQuantity"
-						>{t(locale, 'page.supplies.labelStartingQuantity')}</Label
-					>
-					<Input
-						id="supply-startingQuantity"
-						name="startingQuantity"
-						type="text"
-						inputmode="decimal"
-						autocomplete="off"
-						value={initial?.startingQuantity ?? ''}
-					/>
-				</div>
-			{/if}
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -171,25 +167,78 @@
 					value={initial?.lastsDays ?? ''}
 				/>
 			</div>
-			{#if !editing}
-				<div class={field}>
-					<Label for="supply-firstPurchaseDate"
-						>{t(locale, 'page.supplies.labelFirstPurchaseDate')}</Label
-					>
-					<Input
-						id="supply-firstPurchaseDate"
-						name="firstPurchaseDate"
-						type="date"
-						max={today}
-						aria-describedby="supply-firstPurchaseDate-hint"
-						value={initial?.firstPurchaseDate ?? ''}
-					/>
-					<p id="supply-firstPurchaseDate-hint" class={hint}>
-						{t(locale, 'page.supplies.firstPurchaseHint')}
-					</p>
-				</div>
-			{/if}
 		</div>
+	{/if}
+
+	{#if !editing}
+		<!-- Create only: the starting stock is the first purchase, with its cost and receipt. -->
+		<fieldset class="space-y-4 rounded-xl border p-4">
+			<legend class="px-1 text-sm font-semibold text-foreground">
+				{t(locale, 'page.supplies.startingStock')}
+			</legend>
+			<p class={hint}>{t(locale, 'page.supplies.startingStockHint')}</p>
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				{#if kind === 'counted'}
+					<div class={field}>
+						<Label for="supply-startingQuantity"
+							>{t(locale, 'page.supplies.labelStartingQuantity')}</Label
+						>
+						<Input
+							id="supply-startingQuantity"
+							name="startingQuantity"
+							type="text"
+							inputmode="decimal"
+							autocomplete="off"
+							value={initial?.startingQuantity ?? ''}
+						/>
+					</div>
+					<div class={field}>
+						<Label for="supply-firstPurchaseDate">{t(locale, 'page.supplies.labelBoughtOn')}</Label>
+						<Input
+							id="supply-firstPurchaseDate"
+							name="firstPurchaseDate"
+							type="date"
+							max={today}
+							value={initial?.firstPurchaseDate || today}
+						/>
+					</div>
+				{:else}
+					<div class={field}>
+						<Label for="supply-firstPurchaseDate"
+							>{t(locale, 'page.supplies.labelFirstPurchaseDate')}</Label
+						>
+						<Input
+							id="supply-firstPurchaseDate"
+							name="firstPurchaseDate"
+							type="date"
+							max={today}
+							aria-describedby="supply-firstPurchaseDate-hint"
+							value={initial?.firstPurchaseDate ?? ''}
+						/>
+						<p id="supply-firstPurchaseDate-hint" class={hint}>
+							{t(locale, 'page.supplies.firstPurchaseHint')}
+						</p>
+					</div>
+				{/if}
+				<div class={field}>
+					<Label for="supply-cost">{t(locale, 'page.supplies.labelCost', { currency })}</Label>
+					<Input
+						id="supply-cost"
+						name="cost"
+						type="text"
+						inputmode="decimal"
+						autocomplete="off"
+						value={initial?.cost ?? ''}
+					/>
+				</div>
+			</div>
+			<ReceiptField
+				idPrefix="supply"
+				{paperlessEnabled}
+				bind:paperlessId
+				onbrowse={() => (pickerOpen = true)}
+			/>
+		</fieldset>
 	{/if}
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -285,3 +334,14 @@
 		<Button variant="outline" href={cancelHref}>{t(locale, 'common.cancel')}</Button>
 	</div>
 </form>
+
+{#if !editing && paperlessEnabled}
+	<PaperlessPicker
+		open={pickerOpen}
+		onpick={(id) => {
+			paperlessId = id;
+			pickerOpen = false;
+		}}
+		onclose={() => (pickerOpen = false)}
+	/>
+{/if}

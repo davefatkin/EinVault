@@ -175,6 +175,8 @@ export type SupplyFormValues = {
 	startingQuantity: string;
 	lastsDays: string;
 	firstPurchaseDate: string;
+	/** Create only: the first purchase's cost. */
+	cost: string;
 	expiresOn: string;
 	alertsEnabled: boolean;
 	runOutLeadDays: number[];

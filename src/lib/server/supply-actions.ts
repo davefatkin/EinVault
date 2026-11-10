@@ -1,4 +1,4 @@
-import { fail, type Action, type ActionFailure, type RequestEvent } from '@sveltejs/kit';
+import { fail, redirect, type Action, type ActionFailure, type RequestEvent } from '@sveltejs/kit';
 import { asc, eq, inArray, or } from 'drizzle-orm';
 import { t, type Locale, type MessageKey } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
@@ -14,11 +14,15 @@ import {
 import { MAX_DOCUMENTS_PER_COMPANION, UPLOAD_MAX_MB } from '#lib/server/env.js';
 import { ownerOnly } from '#lib/server/medication-actions.js';
 import {
+	firstPurchaseDateOf,
 	getSupplyForCompanion,
+	insertSupply,
 	loadSupplyStates,
 	logPurchase,
-	parseAmount
+	parseAmount,
+	parseSupplyForm
 } from '#lib/server/supplies.js';
+import type { Tx } from '#lib/server/db/tx.js';
 import { exceedsLen, isValidDate } from '#lib/server/validation.js';
 import { localDateISO } from '#lib/date.js';
 import { parseMoney } from '#lib/money.js';
@@ -111,6 +115,7 @@ export function supplyFormValues(data: FormData): SupplyFormValues {
 		startingQuantity: field('startingQuantity'),
 		lastsDays: field('lastsDays'),
 		firstPurchaseDate: field('firstPurchaseDate'),
+		cost: field('cost'),
 		expiresOn: field('expiresOn'),
 		alertsEnabled: data.has('alertsEnabled'),
 		runOutLeadDays: parseLeadDays(field('runOutLeadDays') || null),
@@ -120,6 +125,187 @@ export function supplyFormValues(data: FormData): SupplyFormValues {
 		companionIds: data.getAll('companionIds').map(String)
 	};
 }
+
+/** A receipt stored before its transaction, waiting for its document row. */
+interface StagedReceipt {
+	stored: StoredDocument;
+	originalName: string | null;
+	companionId: string;
+}
+
+/** Whether the form carries a receipt: a non-empty file (an empty input still posts one) or a Paperless pick. */
+function receiptFile(data: FormData): File | null {
+	const file = data.get('receipt');
+	return file instanceof File && file.size > 0 ? file : null;
+}
+
+function hasReceipt(data: FormData): boolean {
+	return receiptFile(data) !== null || String(data.get('paperlessId') ?? '').trim() !== '';
+}
+
+/**
+ * Store the posted receipt (a `receipt` file or a `paperlessId`) under
+ * `companionId`, before any transaction. `receipt` is null when none was
+ * posted. Callers discard it on every failure after this.
+ */
+async function stageReceipt(
+	data: FormData,
+	companionId: string,
+	locale: Locale
+): Promise<{ receipt: StagedReceipt | null } | { status: number; error: string }> {
+	const upload = receiptFile(data);
+	const paperlessId = String(data.get('paperlessId') ?? '').trim();
+	try {
+		if (upload) {
+			const prep = await prepareUpload(upload);
+			if (!prep.ok)
+				return {
+					status: 400,
+					error:
+						prep.error === 'tooLarge'
+							? t(locale, 'error.fileTooLarge', { max: UPLOAD_MAX_MB })
+							: t(locale, 'error.invalidFileType')
+				};
+			const stored = await storePrepared(companionId, prep.prepared);
+			return { receipt: { stored, originalName: prep.prepared.originalName, companionId } };
+		}
+		if (paperlessId) {
+			const prep = await preparePaperless(paperlessId);
+			if (!prep.ok)
+				return {
+					status: 400,
+					error: t(
+						locale,
+						prep.error === 'invalidType' ? 'error.invalidFileType' : 'error.notFound'
+					)
+				};
+			return { receipt: { stored: prep.stored, originalName: null, companionId } };
+		}
+		return { receipt: null };
+	} catch (err) {
+		console.error('[supplies] receipt storage failed:', err);
+		return { status: 502, error: t(locale, 'error.purchaseFailed') };
+	}
+}
+
+/**
+ * The staged receipt's document row, in the purchase's transaction. Returns
+ * the document id, or 'capReached' with nothing written.
+ */
+function insertReceipt(
+	tx: Tx,
+	receipt: StagedReceipt,
+	p: { supplyName: string; date: string; locale: Locale; uploadedBy: string }
+): string | 'capReached' {
+	const inserted = insertDocumentRow(tx, receipt.companionId, receipt.stored, {
+		title: t(p.locale, 'page.supplies.receiptTitle', { name: p.supplyName }).slice(0, 255),
+		category: 'receipt',
+		documentDate: p.date,
+		healthEventId: null,
+		originalName: receipt.originalName,
+		uploadedBy: p.uploadedBy
+	});
+	if (inserted === 'capReached') return 'capReached';
+	// A Paperless document already on this pet is linked, not imported twice.
+	return inserted === 'inserted' ? receipt.stored.id : inserted.existingId;
+}
+
+/**
+ * Run `write` (the receipt row and the purchase) in one transaction. A throw
+ * or the document cap removes the stored receipt and becomes a failure.
+ */
+async function commitWithReceipt<T>(
+	receipt: StagedReceipt | null,
+	locale: Locale,
+	extra: Record<string, unknown>,
+	write: (tx: Tx) => T | 'capReached'
+): Promise<
+	{ ok: true; value: T } | { ok: false; failure: ActionFailure<Record<string, unknown>> }
+> {
+	let outcome: T | 'capReached';
+	try {
+		outcome = db.transaction(write, { behavior: 'immediate' });
+	} catch (err) {
+		console.error('[supplies] purchase failed:', err);
+		if (receipt) await discardStored(receipt.stored);
+		return {
+			ok: false,
+			failure: fail(400, { error: t(locale, 'error.purchaseFailed'), ...extra })
+		};
+	}
+	if (outcome === 'capReached') {
+		if (receipt) await discardStored(receipt.stored);
+		return {
+			ok: false,
+			failure: fail(400, {
+				error: t(locale, 'error.maxDocumentsExceeded', { max: MAX_DOCUMENTS_PER_COMPANION }),
+				...extra
+			})
+		};
+	}
+	return { ok: true, value: outcome };
+}
+
+/**
+ * New supply. On top of the supply form, an optional `cost` and receipt
+ * (`receipt` file or `paperlessId`) go on the first purchase, which needs a
+ * starting quantity (counted) or first purchase date (duration). The receipt
+ * is filed under the pet the supply opens on, a linked active pet.
+ */
+export const createAction: Action<{ companionId: string }> = async ({
+	request,
+	params,
+	locals
+}) => {
+	const denied = await ownerOnly(locals, params.companionId);
+	if (denied) return denied;
+	const locale = locals.locale;
+	const data = await request.formData();
+	const values = supplyFormValues(data);
+	const bad = (key: MessageKey, vars?: Record<string, string | number>) =>
+		fail(400, { error: t(locale, key, vars), values });
+
+	const today = localDateISO();
+	const parsed = parseSupplyForm(data, today);
+	if (!parsed.ok) return bad(parsed.error, parsed.vars);
+	const options = await supplyCompanionOptions();
+	const refused = refuseCompanions(parsed.companionIds, options, locale, values);
+	if (refused) return refused;
+	const { currency } = await getAppSettings();
+	const cost = parseMoney(String(data.get('cost') ?? '').trim(), currency);
+	if (cost === 'invalid') return bad('error.invalidCost');
+	const date = firstPurchaseDateOf(parsed.value, today);
+	if ((cost !== null || hasReceipt(data)) && !date)
+		return bad(
+			parsed.value.kind === 'counted' ? 'error.purchaseNeedsStock' : 'error.purchaseNeedsDate'
+		);
+
+	const home = supplyHome(params.companionId, parsed.companionIds, options);
+	const staged = await stageReceipt(data, home, locale);
+	if ('error' in staged) return fail(staged.status, { error: staged.error, values });
+	const { receipt } = staged;
+
+	const result = await commitWithReceipt(receipt, locale, { values }, (tx) => {
+		let documentId: string | null = null;
+		if (receipt) {
+			const inserted = insertReceipt(tx, receipt, {
+				supplyName: parsed.value.name,
+				date: date!,
+				locale,
+				uploadedBy: locals.user!.id
+			});
+			if (inserted === 'capReached') return 'capReached';
+			documentId = inserted;
+		}
+		return insertSupply(tx, parsed.value, parsed.companionIds, locals.user!.id, currency, {
+			costMinor: cost,
+			documentId,
+			companionId: receipt ? home : null
+		});
+	});
+	if (!result.ok) return result.failure;
+	redirect(303, `/${home}/supplies/${result.value}`);
+};
 
 /**
  * Log purchase on the supply page. Fields: `date` (not in the future),
@@ -168,77 +354,39 @@ export const purchaseAction: Action<{ companionId: string; id: string }> = async
 	if (!supply.companions.some((c) => c.isActive && c.id === receiptCompanionId))
 		return bad('error.companionNotFound');
 
-	// A form with an empty file input still posts a zero-byte file.
-	const file = data.get('receipt');
-	const upload = file instanceof File && file.size > 0 ? file : null;
-	const paperlessId = text('paperlessId');
-	let stored: StoredDocument | null = null;
-	let originalName: string | null = null;
-	try {
-		if (upload) {
-			const prep = await prepareUpload(upload);
-			if (!prep.ok) {
-				if (prep.error === 'tooLarge') return bad('error.fileTooLarge', { max: UPLOAD_MAX_MB });
-				return bad('error.invalidFileType');
-			}
-			originalName = prep.prepared.originalName;
-			stored = await storePrepared(receiptCompanionId, prep.prepared);
-		} else if (paperlessId) {
-			const prep = await preparePaperless(paperlessId);
-			if (!prep.ok)
-				return bad(prep.error === 'invalidType' ? 'error.invalidFileType' : 'error.notFound');
-			stored = prep.stored;
-		}
-	} catch (err) {
-		console.error('[supplies] receipt storage failed:', err);
-		return fail(502, { error: t(locale, 'error.purchaseFailed') });
-	}
+	const staged = await stageReceipt(data, receiptCompanionId, locale);
+	if ('error' in staged) return fail(staged.status, { error: staged.error });
+	const { receipt } = staged;
 
-	let outcome: 'logged' | 'capReached';
-	try {
-		outcome = db.transaction(
-			(tx) => {
-				let documentId: string | null = null;
-				if (stored) {
-					const inserted = insertDocumentRow(tx, receiptCompanionId, stored, {
-						title: t(locale, 'page.supplies.receiptTitle', { name: supply.name }).slice(0, 255),
-						category: 'receipt',
-						documentDate: date,
-						healthEventId: null,
-						originalName,
-						uploadedBy: locals.user!.id
-					});
-					if (inserted === 'capReached') return 'capReached';
-					// A Paperless document already on this pet is linked, not imported twice.
-					documentId = inserted === 'inserted' ? stored.id : inserted.existingId;
-				}
-				logPurchase(
-					tx,
-					params.id,
-					{
-						date,
-						quantity,
-						costMinor: cost,
-						currency,
-						expiresOn: expiresOn || null,
-						documentId,
-						companionId: stored ? receiptCompanionId : null,
-						note: note || null
-					},
-					locals.user!.id
-				);
-				return 'logged';
+	const result = await commitWithReceipt(receipt, locale, {}, (tx) => {
+		let documentId: string | null = null;
+		if (receipt) {
+			const inserted = insertReceipt(tx, receipt, {
+				supplyName: supply.name,
+				date,
+				locale,
+				uploadedBy: locals.user!.id
+			});
+			if (inserted === 'capReached') return 'capReached';
+			documentId = inserted;
+		}
+		logPurchase(
+			tx,
+			params.id,
+			{
+				date,
+				quantity,
+				costMinor: cost,
+				currency,
+				expiresOn: expiresOn || null,
+				documentId,
+				companionId: receipt ? receiptCompanionId : null,
+				note: note || null
 			},
-			{ behavior: 'immediate' }
+			locals.user!.id
 		);
-	} catch (err) {
-		console.error('[supplies] purchase failed:', err);
-		if (stored) await discardStored(stored);
-		return bad('error.purchaseFailed');
-	}
-	if (outcome === 'capReached') {
-		if (stored) await discardStored(stored);
-		return bad('error.maxDocumentsExceeded', { max: MAX_DOCUMENTS_PER_COMPANION });
-	}
+		return 'logged' as const;
+	});
+	if (!result.ok) return result.failure;
 	return { purchased: true };
 };

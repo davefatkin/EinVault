@@ -41,7 +41,10 @@ export interface SupplyInput {
 	unit: string | null;
 	/** Counted, create only: written as the first purchase when above 0. */
 	startingQuantity: number | null;
-	/** Duration, create only: written as the first purchase. */
+	/**
+	 * Create only, the first purchase's date. Duration: written as the first
+	 * purchase. Counted: when the starting quantity was bought (today when null).
+	 */
 	firstPurchaseDate: string | null;
 	/** Duration only, 1-365. */
 	lastsDays: number | null;
@@ -261,59 +264,85 @@ function linkCompanions(tx: Tx, supplyId: string, companionIds: string[]) {
 		.run();
 }
 
+/** What the create form adds to the first purchase: a cost and a stored receipt. */
+export interface FirstPurchaseExtras {
+	costMinor: number | null;
+	/** A document row already inserted in the same transaction. */
+	documentId: string | null;
+	/** The pet the receipt is filed under; set only with a receipt. */
+	companionId: string | null;
+}
+
 /**
- * Create a supply linked to `companionIds`. A counted supply starts at 0; a
- * starting quantity above 0, or a duration supply's first purchase date, is
- * written as a purchase with no cost so history starts with it.
+ * The first purchase's date, or null when there is none: a counted supply's
+ * starting quantity above 0 (bought on `firstPurchaseDate`, today when
+ * blank), or a duration supply's first purchase date.
  */
+export function firstPurchaseDateOf(input: SupplyInput, today: string): string | null {
+	if (input.kind === 'counted')
+		return input.startingQuantity ? (input.firstPurchaseDate ?? today) : null;
+	return input.firstPurchaseDate;
+}
+
+/**
+ * Insert a supply linked to `companionIds` in the caller's transaction (so a
+ * receipt row can share it). A counted supply starts at 0; its starting
+ * quantity, or a duration supply's first purchase date, is written as a
+ * purchase so history starts with it, carrying `extras` when given.
+ */
+export function insertSupply(
+	tx: Tx,
+	input: SupplyInput,
+	companionIds: string[],
+	actorId: string,
+	currency: string,
+	extras: FirstPurchaseExtras | null = null,
+	now: Date = new Date()
+): string {
+	const id = generateId(15);
+	const counted = input.kind === 'counted';
+	const firstDate = firstPurchaseDateOf(input, localDateISO(now));
+	tx.insert(schema.supplies)
+		.values({
+			id,
+			kind: input.kind,
+			...editableFields(input, input.kind),
+			quantity: counted ? 0 : null,
+			createdBy: actorId
+		})
+		.run();
+	linkCompanions(tx, id, companionIds);
+	if (firstDate) {
+		logPurchase(
+			tx,
+			id,
+			{
+				date: firstDate,
+				quantity: counted ? input.startingQuantity : null,
+				costMinor: extras?.costMinor ?? null,
+				currency,
+				expiresOn: null,
+				documentId: extras?.documentId ?? null,
+				companionId: extras?.companionId ?? null,
+				note: null
+			},
+			actorId,
+			now
+		);
+	}
+	return id;
+}
+
+/** insertSupply in its own transaction, with no cost or receipt. */
 export async function createSupply(
 	input: SupplyInput,
 	companionIds: string[],
 	actorId: string
 ): Promise<string> {
 	const { currency } = await getAppSettings();
-	const now = new Date();
-	const id = generateId(15);
-	const counted = input.kind === 'counted';
-	const firstDate = counted
-		? input.startingQuantity
-			? localDateISO(now)
-			: null
-		: input.firstPurchaseDate;
-	db.transaction(
-		(tx) => {
-			tx.insert(schema.supplies)
-				.values({
-					id,
-					kind: input.kind,
-					...editableFields(input, input.kind),
-					quantity: counted ? 0 : null,
-					createdBy: actorId
-				})
-				.run();
-			linkCompanions(tx, id, companionIds);
-			if (firstDate) {
-				logPurchase(
-					tx,
-					id,
-					{
-						date: firstDate,
-						quantity: counted ? input.startingQuantity : null,
-						costMinor: null,
-						currency,
-						expiresOn: null,
-						documentId: null,
-						companionId: null,
-						note: null
-					},
-					actorId,
-					now
-				);
-			}
-		},
-		{ behavior: 'immediate' }
-	);
-	return id;
+	return db.transaction((tx) => insertSupply(tx, input, companionIds, actorId, currency), {
+		behavior: 'immediate'
+	});
 }
 
 /**
@@ -730,7 +759,6 @@ export function parseSupplyForm(
 	let startingQuantity: number | null = null;
 	let lowStockAt: number | null = null;
 	let lastsDays: number | null = null;
-	let firstPurchaseDate: string | null = null;
 	if (kind === 'counted') {
 		if (exceedsLen(unit, MAX_SUPPLY_UNIT_LEN))
 			return { ok: false, error: 'error.supplyUnitTooLong' };
@@ -747,11 +775,12 @@ export function parseSupplyForm(
 		if (!/^\d+$/.test(lasts) || Number(lasts) < 1 || Number(lasts) > MAX_LASTS_DAYS)
 			return { ok: false, error: 'error.invalidLastsDays' };
 		lastsDays = Number(lasts);
-		const first = text('firstPurchaseDate');
-		if (first && !isValidDate(first)) return { ok: false, error: 'error.invalidDate' };
-		if (first > today) return { ok: false, error: 'error.purchaseInFuture' };
-		firstPurchaseDate = first || null;
 	}
+	// Create only: when the starting stock was bought (counted: today when blank).
+	const first = text('firstPurchaseDate');
+	if (first && !isValidDate(first)) return { ok: false, error: 'error.invalidDate' };
+	if (first > today) return { ok: false, error: 'error.purchaseInFuture' };
+	const firstPurchaseDate = first || null;
 
 	const runOut = validateLeadDays(text('runOutLeadDays'), null);
 	if (!runOut.ok) return { ok: false, error: LEAD_ERROR_KEYS[runOut.reason] };

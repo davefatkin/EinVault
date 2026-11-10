@@ -31,6 +31,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		startingQuantity: '',
 		lastsDays: amount(supply.lastsDays),
 		firstPurchaseDate: '',
+		cost: '',
 		expiresOn: supply.expiresOn ?? '',
 		alertsEnabled: supply.alertsEnabled,
 		runOutLeadDays: parseLeadDays(supply.runOutLeadDays),

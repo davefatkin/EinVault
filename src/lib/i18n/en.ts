@@ -1548,6 +1548,8 @@ const messages = {
 	'error.supplyEventNotFound': 'History entry not found.',
 	'error.invalidPurchaseQuantity': 'Enter a quantity above 0.',
 	'error.invalidCost': 'Enter a valid cost.',
+	'error.purchaseNeedsStock': 'Enter how many you have now to save a cost or receipt.',
+	'error.purchaseNeedsDate': 'Enter when you last bought one to save a cost or receipt.',
 	'error.supplyNeedsActivePet': "Choose at least one pet that isn't archived.",
 	'error.purchaseFailed': "The purchase couldn't be saved. Try again.",
 	// Supplies
@@ -1613,6 +1615,10 @@ const messages = {
 	'page.supplies.labelFirstPurchaseDate': 'Last bought on',
 	'page.supplies.firstPurchaseHint':
 		"The countdown starts on this date. Leave it empty if you haven't bought one yet.",
+	'page.supplies.startingStock': 'Starting stock',
+	'page.supplies.startingStockHint':
+		'Saved as the first purchase. The cost and receipt are optional.',
+	'page.supplies.labelBoughtOn': 'Bought on',
 	'page.supplies.labelExpiresOn': 'Expires on',
 	'page.supplies.labelPets': 'For',
 	'page.supplies.archivedPet': '{name} (archived)',

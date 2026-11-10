@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { FileText, X } from '@lucide/svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
+	import ReceiptField from '#lib/components/supplies/ReceiptField.svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { Select } from '#lib/components/ui/select/index.js';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
-	import { DOCUMENT_ACCEPT } from '#lib/documentsApi.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import type { SupplyKind } from '#lib/supplies.js';
 
@@ -44,12 +43,9 @@
 	let error = $state<string | null>(null);
 	let pickerOpen = $state(false);
 	let paperlessId = $state<number | null>(null);
-	let fileInput = $state<HTMLInputElement | null>(null);
 
-	// One receipt at a time: a file clears a Paperless pick and the other way round.
 	function pickPaperless(id: number) {
 		paperlessId = id;
-		if (fileInput) fileInput.value = '';
 		pickerOpen = false;
 	}
 
@@ -121,45 +117,12 @@
 			</div>
 		</div>
 
-		<div class={field}>
-			<Label for="purchase-receipt">{t(locale, 'page.supplies.labelReceipt')}</Label>
-			{#if paperlessId !== null}
-				<input type="hidden" name="paperlessId" value={paperlessId} />
-				<div class="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-					<FileText class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-					<span class="min-w-0 flex-1 truncate"
-						>{t(locale, 'page.supplies.paperlessPicked', { id: paperlessId })}</span
-					>
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon-sm"
-						aria-label={t(locale, 'page.supplies.clearReceipt')}
-						title={t(locale, 'page.supplies.clearReceipt')}
-						onclick={() => (paperlessId = null)}
-					>
-						<X class="h-4 w-4" />
-					</Button>
-				</div>
-			{/if}
-			<div class="flex flex-wrap items-center gap-2" hidden={paperlessId !== null}>
-				<input
-					bind:this={fileInput}
-					id="purchase-receipt"
-					name="receipt"
-					type="file"
-					accept={DOCUMENT_ACCEPT}
-					aria-describedby="purchase-receipt-hint"
-					class="min-w-0 max-w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground"
-				/>
-				{#if paperlessEnabled}
-					<Button type="button" variant="outline" size="sm" onclick={() => (pickerOpen = true)}>
-						<FileText class="h-4 w-4 mr-1.5" />{t(locale, 'paperless.picker.button')}
-					</Button>
-				{/if}
-			</div>
-			<p id="purchase-receipt-hint" class={hint}>{t(locale, 'page.supplies.receiptHint')}</p>
-		</div>
+		<ReceiptField
+			idPrefix="purchase"
+			{paperlessEnabled}
+			bind:paperlessId
+			onbrowse={() => (pickerOpen = true)}
+		/>
 
 		{#if companions.length > 1}
 			<div class={field}>

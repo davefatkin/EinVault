@@ -224,6 +224,88 @@ describe('supply actions', () => {
 			expect(store.puts).toHaveLength(1);
 			expect(store.deletes).toEqual(store.puts);
 		});
+		describe('create with a first purchase', () => {
+			const named = (name: string) =>
+				db.query.supplies.findMany({ where: eq(schema.supplies.name, name) });
+
+			it('saves the cost and receipt on the starting stock, on its bought-on date', async () => {
+				const res = await call(newActions.create, {
+					...counted,
+					name: 'sa-first',
+					firstPurchaseDate: '2026-11-01',
+					cost: '24.99',
+					receipt: await png(),
+					companionIds: [EIN]
+				});
+				expect(res.status).toBe(303);
+				const id = res.location!.split('/').pop()!;
+				const [doc] = (await docsOf(EIN)).filter((d) => d.title === 'Receipt: sa-first');
+				expect(doc).toMatchObject({ category: 'receipt', documentDate: '2026-11-01' });
+				const [bought] = await purchases(id);
+				expect(bought).toMatchObject({
+					quantityDelta: 6,
+					costMinor: 2499,
+					currency: 'USD',
+					documentId: doc.id,
+					companionId: EIN
+				});
+				expect(localDateISO(bought.at)).toBe('2026-11-01');
+			});
+
+			it('files the receipt under the pet the supply opens on', async () => {
+				const res = await call(newActions.create, {
+					...counted,
+					name: 'sa-elsewhere',
+					receipt: await png(),
+					companionIds: [ED]
+				});
+				expect(res.location).toMatch(new RegExp(`^/${ED}/supplies/`));
+				expect((await docsOf(ED)).some((d) => d.title === 'Receipt: sa-elsewhere')).toBe(true);
+			});
+
+			it('at the document cap saves nothing and removes the stored receipt', async () => {
+				const res = await call(
+					newActions.create,
+					{ ...counted, name: 'sa-capped', receipt: await png(), companionIds: [CAPPED] },
+					{ companionId: CAPPED }
+				);
+				expect(res.status).toBe(400);
+				expect(res.data?.values).toMatchObject({ name: 'sa-capped' });
+				expect(await named('sa-capped')).toHaveLength(0);
+				expect(store.puts).toHaveLength(1);
+				expect(store.deletes).toEqual(store.puts);
+			});
+
+			it('refuses a cost or receipt with no starting stock, before storing anything', async () => {
+				const none = await call(newActions.create, {
+					...counted,
+					name: 'sa-nostock',
+					startingQuantity: '',
+					cost: '5',
+					companionIds: [EIN]
+				});
+				expect(none.data?.error).toBe('Enter how many you have now to save a cost or receipt.');
+				const undated = await call(newActions.create, {
+					name: 'sa-nostock',
+					kind: 'duration',
+					lastsDays: '30',
+					receipt: await png(),
+					companionIds: [EIN]
+				});
+				expect(undated.data?.error).toBe(
+					'Enter when you last bought one to save a cost or receipt.'
+				);
+				const badCost = await call(newActions.create, {
+					...counted,
+					name: 'sa-nostock',
+					cost: 'abc',
+					companionIds: [EIN]
+				});
+				expect(badCost.status).toBe(400);
+				expect(await named('sa-nostock')).toHaveLength(0);
+				expect(store.puts).toEqual([]);
+			});
+		});
 	});
 
 	it('purchase refuses a receipt pet the supply is not linked to', async () => {

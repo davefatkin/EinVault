@@ -45,6 +45,8 @@
 				companions={data.companions}
 				companionId={data.companion.id}
 				today={data.today}
+				currency={data.currency}
+				paperlessEnabled={data.paperlessEnabled ?? false}
 				cancelHref={base}
 			/>
 		</CardContent>

@@ -8,6 +8,7 @@ import {
 	applyDoseStock,
 	restoreDoseStock,
 	createSupply,
+	insertSupply,
 	updateSupply,
 	deleteSupply,
 	logPurchase,
@@ -150,6 +151,52 @@ describe('createSupply', () => {
 		expect(ev).toHaveLength(1);
 		expect(ev[0]).toMatchObject({ type: 'purchase', quantityDelta: null });
 		expect(localDateISO(ev[0].at)).toBe('2026-11-01');
+	});
+});
+
+describe('insertSupply', () => {
+	it('a backdated counted start carries the cost, receipt and pet', async () => {
+		await db.insert(schema.documents).values({
+			id: 'doc-sup-1',
+			companionId: C1,
+			filename: 'r.png',
+			provider: 'local',
+			storageKey: 'documents/c-sup-1/r.png',
+			title: 'Receipt: Carprofen',
+			category: 'receipt',
+			mimeType: 'image/png',
+			uploadedBy: U1
+		});
+		const id = db.transaction((tx) =>
+			insertSupply(
+				tx,
+				input({ startingQuantity: 20, firstPurchaseDate: '2026-11-02' }),
+				[C1],
+				U1,
+				'EUR',
+				{ costMinor: 1999, documentId: 'doc-sup-1', companionId: C1 },
+				NOW
+			)
+		);
+		expect((await supplyRow(id)).quantity).toBe(20);
+		const [ev] = await eventsOf(id);
+		expect(ev).toMatchObject({
+			quantityDelta: 20,
+			costMinor: 1999,
+			currency: 'EUR',
+			documentId: 'doc-sup-1',
+			companionId: C1
+		});
+		expect(localDateISO(ev.at)).toBe('2026-11-02');
+	});
+
+	it('a counted start with no date is bought today', async () => {
+		const id = db.transaction((tx) =>
+			insertSupply(tx, input({ startingQuantity: 4 }), [C1], U1, 'USD', null, NOW)
+		);
+		const [ev] = await eventsOf(id);
+		expect(localDateISO(ev.at)).toBe(localDateISO(NOW));
+		expect(ev).toMatchObject({ costMinor: null, documentId: null, companionId: null });
 	});
 });
 
@@ -539,6 +586,17 @@ describe('parseSupplyForm', () => {
 			'lasts 366 days',
 			form({ name: 'Food', kind: 'duration', lastsDays: '366', companionIds: C1 }),
 			'error.invalidLastsDays'
+		],
+		[
+			'a future bought-on date for a counted start',
+			form({
+				name: 'Pills',
+				kind: 'counted',
+				startingQuantity: '5',
+				firstPurchaseDate: '2026-11-10',
+				companionIds: C1
+			}),
+			'error.purchaseInFuture'
 		],
 		[
 			'a future first purchase',

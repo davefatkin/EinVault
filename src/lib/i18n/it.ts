@@ -1572,6 +1572,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Voce dello storico non trovata.',
 	'error.invalidPurchaseQuantity': 'Inserisci una quantità maggiore di 0.',
 	'error.invalidCost': 'Inserisci un importo valido.',
+	'error.purchaseNeedsStock': 'Indica quanti ne hai ora per salvare un costo o una ricevuta.',
+	'error.purchaseNeedsDate':
+		"Indica quando ne hai acquistato uno l'ultima volta per salvare un costo o una ricevuta.",
 	'error.supplyNeedsActivePet': 'Scegli almeno un animale non archiviato.',
 	'error.purchaseFailed': "Non è stato possibile salvare l'acquisto. Riprova.",
 	'supply.countLeft': 'rimangono {count} {unit}',
@@ -1637,6 +1640,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelFirstPurchaseDate': 'Ultimo acquisto il',
 	'page.supplies.firstPurchaseHint':
 		'Il conto alla rovescia parte da questa data. Lasciala vuota se non ne hai ancora comprata una.',
+	'page.supplies.startingStock': 'Scorta iniziale',
+	'page.supplies.startingStockHint':
+		'Salvata come primo acquisto. Costo e ricevuta sono facoltativi.',
+	'page.supplies.labelBoughtOn': 'Acquistato il',
 	'page.supplies.labelExpiresOn': 'Scade il',
 	'page.supplies.labelPets': 'Per',
 	'page.supplies.archivedPet': '{name} (archiviato)',

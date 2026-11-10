@@ -1580,6 +1580,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Eintrag im Verlauf nicht gefunden.',
 	'error.invalidPurchaseQuantity': 'Gib eine Menge über 0 ein.',
 	'error.invalidCost': 'Gib einen gültigen Betrag ein.',
+	'error.purchaseNeedsStock':
+		'Geben Sie den aktuellen Bestand an, um Kosten oder einen Beleg zu speichern.',
+	'error.purchaseNeedsDate':
+		'Geben Sie an, wann Sie zuletzt eines gekauft haben, um Kosten oder einen Beleg zu speichern.',
 	'error.supplyNeedsActivePet': 'Wähle mindestens ein Tier, das nicht archiviert ist.',
 	'error.purchaseFailed': 'Der Kauf konnte nicht gespeichert werden. Versuch es noch einmal.',
 	'supply.countLeft': 'noch {count} {unit}',
@@ -1646,6 +1650,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelFirstPurchaseDate': 'Zuletzt gekauft am',
 	'page.supplies.firstPurchaseHint':
 		'Der Countdown startet an diesem Datum. Lass es leer, wenn du noch keine gekauft hast.',
+	'page.supplies.startingStock': 'Anfangsbestand',
+	'page.supplies.startingStockHint':
+		'Wird als erster Kauf gespeichert. Kosten und Beleg sind optional.',
+	'page.supplies.labelBoughtOn': 'Gekauft am',
 	'page.supplies.labelExpiresOn': 'Läuft ab am',
 	'page.supplies.labelPets': 'Für',
 	'page.supplies.archivedPet': '{name} (archiviert)',

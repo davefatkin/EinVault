@@ -126,6 +126,38 @@ test.describe('supplies (owner)', () => {
 		}
 	});
 
+	test('a new supply saves its starting stock with a cost and receipt', async ({
+		asMember,
+		app
+	}) => {
+		const name = `e2e-first-${Date.now()}`;
+		try {
+			await startSupply(asMember, name);
+			await asMember.locator('#supply-unit').fill('tablets');
+			// A cost needs a starting count to go on.
+			await asMember.locator('#supply-cost').fill('18.75');
+			await asMember.getByRole('button', { name: 'Save supply' }).click();
+			await expect(
+				asMember.getByText('Enter how many you have now to save a cost or receipt.')
+			).toBeVisible();
+			await expect(asMember.locator('#supply-cost')).toHaveValue('18.75');
+
+			await asMember.locator('#supply-startingQuantity').fill('12');
+			await asMember.locator('#supply-receipt').setInputFiles(pngUpload('receipt.png'));
+			await save(asMember);
+			await expect(asMember.getByText('12 tablets left').first()).toBeVisible();
+
+			const history = asMember.getByRole('region', { name: 'History' });
+			const bought = history.getByRole('listitem').filter({ hasText: '$18.75' });
+			await expect(bought).toHaveCount(1);
+			await expect(bought.getByRole('link', { name: 'Receipt' })).toBeVisible();
+			await asMember.goto(`/${EIN}/documents`);
+			await expect(asMember.getByText(`Receipt: ${name}`)).toBeVisible();
+		} finally {
+			cleanup(app, name);
+		}
+	});
+
 	test('a supply that lasts about 30 days from today', async ({ asMember, app }) => {
 		const name = `e2e-food-${Date.now()}`;
 		try {

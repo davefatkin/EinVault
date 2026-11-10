@@ -1574,6 +1574,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.supplyEventNotFound': 'Entrada do histórico não encontrada.',
 	'error.invalidPurchaseQuantity': 'Introduza uma quantidade maior que 0.',
 	'error.invalidCost': 'Introduza um valor válido.',
+	'error.purchaseNeedsStock': 'Informe quantos você tem agora para salvar um custo ou recibo.',
+	'error.purchaseNeedsDate':
+		'Informe quando você comprou um pela última vez para salvar um custo ou recibo.',
 	'error.supplyNeedsActivePet': 'Escolha pelo menos um animal que não esteja arquivado.',
 	'error.purchaseFailed': 'Não foi possível guardar a compra. Tente novamente.',
 	'supply.countLeft': 'restam {count} {unit}',
@@ -1640,6 +1643,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelFirstPurchaseDate': 'Última compra a',
 	'page.supplies.firstPurchaseHint':
 		'A contagem começa nesta data. Deixe em branco se ainda não comprou nenhum.',
+	'page.supplies.startingStock': 'Estoque inicial',
+	'page.supplies.startingStockHint':
+		'Salvo como a primeira compra. O custo e o recibo são opcionais.',
+	'page.supplies.labelBoughtOn': 'Comprado em',
 	'page.supplies.labelExpiresOn': 'Expira a',
 	'page.supplies.labelPets': 'Para',
 	'page.supplies.archivedPet': '{name} (arquivado)',
