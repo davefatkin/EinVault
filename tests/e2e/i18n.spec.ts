@@ -1,5 +1,6 @@
 import { test, expect } from '../lib/fixtures';
 import { waitForHydration } from '../lib/hydration';
+import { createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 
 test.describe('i18n', () => {
 	test('user pref persists across reload and can be restored', async ({ asMember, app }) => {
@@ -29,26 +30,29 @@ test.describe('i18n', () => {
 	});
 
 	test('dashboard health badges use translated type labels', async ({ asMember, app }) => {
-		const COMP = 'seed-comp-ein';
 		const title = 'e2e-i18n-vet';
-
-		// Seed health events are weeks old and fall outside Recent Activity; log a fresh one
-		await asMember.goto(`${app.server.baseURL}/${COMP}/health`);
-		await waitForHydration(asMember);
-		await asMember.getByRole('button', { name: 'Add Event' }).click();
-		await asMember.locator('#title').fill(title);
-		await asMember.locator('select[name="type"]').selectOption('vet_visit');
-		await asMember.getByRole('button', { name: 'Save Event' }).click();
-		await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
-
-		await asMember.goto(app.server.baseURL + '/settings');
-		await waitForHydration(asMember);
-		await asMember.locator('select[name="locale"]').selectOption('de');
-		await asMember.waitForLoadState('networkidle');
-		await expect(asMember.locator('html')).toHaveAttribute('lang', 'de');
+		// A fresh companion: the dashboard timeline shows only the newest 8 items,
+		// and the event's minute-precision time lands behind anything other specs
+		// in this worker logged on a seeded companion within the same minute.
+		const petName = `e2e-i18n-${Date.now()}`;
 
 		try {
-			await asMember.goto(`${app.server.baseURL}/${COMP}`);
+			const comp = await createCompanionViaUi(asMember, petName);
+			await asMember.goto(`${app.server.baseURL}/${comp}/health`);
+			await waitForHydration(asMember);
+			await asMember.getByRole('button', { name: 'Add Event' }).click();
+			await asMember.locator('#title').fill(title);
+			await asMember.locator('select[name="type"]').selectOption('vet_visit');
+			await asMember.getByRole('button', { name: 'Save Event' }).click();
+			await expect(asMember.getByText(title)).toBeVisible({ timeout: 8_000 });
+
+			await asMember.goto(app.server.baseURL + '/settings');
+			await waitForHydration(asMember);
+			await asMember.locator('select[name="locale"]').selectOption('de');
+			await asMember.waitForLoadState('networkidle');
+			await expect(asMember.locator('html')).toHaveAttribute('lang', 'de');
+
+			await asMember.goto(`${app.server.baseURL}/${comp}`);
 			await waitForHydration(asMember);
 			// 'Tierarztbesuch' is enum.healthType.vet_visit in de.ts
 			const row = asMember.getByRole('button').filter({ hasText: title });
@@ -58,10 +62,14 @@ test.describe('i18n', () => {
 			const dialog = asMember.locator('[role="dialog"]');
 			await expect(dialog.getByText('Tierarztbesuch', { exact: true })).toBeVisible();
 		} finally {
+			deleteCompanionByName(app.dataDir, petName);
 			await asMember.goto(app.server.baseURL + '/settings');
 			await waitForHydration(asMember);
 			await asMember.locator('select[name="locale"]').selectOption('en');
 			await asMember.waitForLoadState('networkidle');
+			// Wait for the save to land: the member's locale is shared by every
+			// later spec in this worker.
+			await expect(asMember.locator('html')).toHaveAttribute('lang', 'en');
 		}
 	});
 
