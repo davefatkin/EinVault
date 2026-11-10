@@ -55,6 +55,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Caretaker sheet:** a printable one-pager with schedules, contacts, and shared notes for sitters without an account; pick which sections, notes, and photos go on paper
 - **Health tracking:** vet visits, vaccinations, medications, procedures, and weight history
 - **Medications:** dose, instructions, and an optional end date for each medication, linked reminders that schedule the doses, a one-tap "Given" log with the last dose and next due time, and caretaker access on shift
+- **Supplies:** household stock tied to medications, counted (tablets, chews) or timed (a bag of food that lasts 30 days), with a purchase log and optional costs, run-out and expiry warnings, and doses that draw down the count. Warnings follow each user's reminder email setting
 - **Incidents:** track something that goes wrong, like a symptom or an injury, until it is resolved, with severity, dated updates with photos and videos, and links to vet visits; caretakers can log them on shift and owners get an alert
 - **Activity logging:** walks, meals, bathroom trips, litter box visits, treats, play sessions, and grooming, with the choices matched to each companion's species (dog, cat, or other)
 - **Quick logs:** personal one-tap buttons for repetitive events, reorderable and shareable with other users

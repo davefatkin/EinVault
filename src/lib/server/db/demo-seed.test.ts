@@ -444,3 +444,46 @@ describe('seedDemoReminderHeadsUps', () => {
 		}
 	});
 });
+
+describe('seedDemoSupplies', () => {
+	const now = 1_700_000_000_000;
+
+	beforeEach(async () => {
+		await db.delete(schema.supplies);
+		await db.delete(schema.caretakerShifts);
+		await db.delete(schema.companionCaretakers);
+		await db.delete(schema.companions);
+		await db.delete(schema.users);
+	});
+
+	it('seedRows alone creates no supplies', async () => {
+		seedRows(db as never, { now });
+		expect(await db.select().from(schema.supplies)).toEqual([]);
+	});
+
+	it('refreshDemoContent creates the five supplies once, Carprofen linked and running low', async () => {
+		const { ensureDemoUsers, refreshDemoContent } = await import('#lib/server/db/demo-seed.js');
+		const { loadSupplyStates } = await import('#lib/server/supplies.js');
+		await ensureDemoUsers(db);
+		refreshDemoContent(db, true, '/tmp/einvault-demo-test');
+		refreshDemoContent(db, true, '/tmp/einvault-demo-test');
+		expect(await db.select().from(schema.supplies)).toHaveLength(5);
+		const med = await db.query.medications.findFirst({
+			where: (m, { eq }) => eq(m.id, 'seed-med-ein-carprofen')
+		});
+		expect(med?.supplyId).toBe('seed-supply-ein-carprofen');
+		const d = new Date();
+		const pad = (n: number) => String(n).padStart(2, '0');
+		const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+		const states = await loadSupplyStates({ today });
+		const byId = new Map(states.map((s) => [s.id, s]));
+		expect(byId.get('seed-supply-ein-carprofen')?.runningLow).toBe(true);
+		expect(byId.get('seed-supply-dog-food')?.alertsEnabled).toBe(false);
+		expect(byId.get('seed-supply-poop-bags')?.companions).toHaveLength(2);
+		expect(states.filter((s) => s.expiring).map((s) => s.id)).toEqual(['seed-supply-flea-drops']);
+		const costed = await db.query.supplyEvents.findMany({
+			where: (e, { isNotNull }) => isNotNull(e.costMinor)
+		});
+		expect(costed.map((e) => e.currency)).toEqual(['USD']);
+	});
+});
