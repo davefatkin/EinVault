@@ -1,3 +1,5 @@
+import { parseNavPath } from './sections';
+
 /** A quick-add action shown in the FAB menu. `key` ties it to a section. */
 export interface FabAction {
 	key: string;
@@ -14,18 +16,11 @@ export type FabActionOrdered = FabAction & { highlight: boolean };
  * (`/care/{id}/...`) routes.
  */
 export function currentFabSection(pathname: string): string | null {
-	const parts = pathname.split('/').filter(Boolean);
-	if (parts[0] === 'care') {
-		const section = parts[2];
-		if (section === 'log') return 'log';
-		if (section === 'journal') return 'journal';
-		return null;
-	}
-	const section = parts[1];
-	if (section === 'journal') return 'journal';
-	if (section === 'health') return 'health';
-	if (section === 'reminders') return 'reminders';
-	return null;
+	const { audience, companionId, section } = parseNavPath(pathname);
+	if (!companionId) return null;
+	const allowed =
+		audience === 'caretaker' ? ['log', 'journal'] : ['journal', 'health', 'reminders'];
+	return allowed.includes(section) ? section : null;
 }
 
 /**
