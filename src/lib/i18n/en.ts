@@ -1636,6 +1636,7 @@ const messages = {
 	'page.supplies.labelBoughtOn': 'Bought on',
 	'page.supplies.labelExpiresOn': 'Expires on',
 	'page.supplies.labelPets': 'For',
+	'page.supplies.medicationsHeading': 'Medications using this supply',
 	'page.supplies.archivedPet': '{name} (archived)',
 	'page.supplies.labelNotes': 'Notes',
 	'page.supplies.warnings': 'Warnings',

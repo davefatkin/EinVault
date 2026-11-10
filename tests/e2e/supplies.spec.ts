@@ -240,7 +240,7 @@ test.describe('medications and supplies', () => {
 		const name = `e2e-linked-${Date.now()}`;
 		const medName = `${name} med`;
 		try {
-			await addCountedSupply(asMember, name, 10);
+			const supplyUrl = await addCountedSupply(asMember, name, 10);
 
 			await asMember.goto(`/${EIN}/medications`);
 			await waitForHydration(asMember);
@@ -310,6 +310,26 @@ test.describe('medications and supplies', () => {
 			await expect(asMember.getByTestId('medication-stock')).toContainText('8.5 tablets left', {
 				timeout: 8_000
 			});
+
+			// The supply lists the medication drawing from it, marked once it ends.
+			await asMember.goto(supplyUrl);
+			const using = asMember.getByRole('region', { name: 'Medications using this supply' });
+			const usedBy = using.getByRole('listitem').filter({ hasText: medName });
+			await expect(usedBy.getByRole('link', { name: medName })).toHaveAttribute(
+				'href',
+				new URL(detailUrl).pathname
+			);
+			await expect(usedBy.getByText('Ended', { exact: true })).toHaveCount(0);
+			const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+			try {
+				sqlite
+					.prepare("UPDATE medications SET ended_on = '2020-01-01' WHERE name = ?")
+					.run(medName);
+			} finally {
+				sqlite.close();
+			}
+			await asMember.reload();
+			await expect(usedBy.getByText('Ended', { exact: true })).toBeVisible();
 		} finally {
 			cleanup(app, name);
 		}

@@ -17,6 +17,7 @@
 	import SupplyHistory from '#lib/components/supplies/SupplyHistory.svelte';
 	import PurchaseDialog from '#lib/components/supplies/PurchaseDialog.svelte';
 	import CorrectCountDialog from '#lib/components/supplies/CorrectCountDialog.svelte';
+	import MedicationStatusBadge from '#lib/components/medications/MedicationStatusBadge.svelte';
 	import { formatDateOnly } from '#lib/date.js';
 	import { todayInZone } from '#lib/medications.js';
 	import { formatAmount, formatLastsDays, supplyStockLine } from '#lib/supplies.js';
@@ -138,6 +139,32 @@
 			{/if}
 		</CardContent>
 	</Card>
+
+	{#if data.medications.length > 0}
+		<section aria-labelledby="supply-medications">
+			<h2
+				id="supply-medications"
+				class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+			>
+				{t(locale, 'page.supplies.medicationsHeading')}
+			</h2>
+			<ul class="divide-y divide-border rounded-2xl border bg-card">
+				{#each data.medications as medication (medication.id)}
+					<li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 text-sm">
+						<a
+							href="/{medication.companionId}/medications/{medication.id}"
+							class="font-medium text-foreground hover:underline">{medication.name}</a
+						>
+						<!-- Shared between pets, or another pet's: say whose it is. -->
+						{#if supply.companions.length > 1 || medication.companionId !== data.companion.id}
+							<span class="text-xs text-muted-foreground">{medication.companionName}</span>
+						{/if}
+						<MedicationStatusBadge {medication} />
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 
 	<SupplyHistory
 		events={data.events}

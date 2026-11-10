@@ -16,6 +16,7 @@ import {
 	deleteSupplyEvent,
 	getSupplyForCompanion,
 	companionHasSupplies,
+	listSupplyMedications,
 	loadSupplyStates,
 	parseSupplyForm,
 	type SupplyInput
@@ -765,5 +766,59 @@ describe('companionHasSupplies', () => {
 		expect(await companionHasSupplies(c)).toBe(true);
 		await deleteSupply(id);
 		expect(await companionHasSupplies(c)).toBe(false);
+	});
+});
+
+describe('listSupplyMedications', () => {
+	it("lists each pet's medications on a shared supply, active first, with ended ones marked", async () => {
+		const shared = await createSupply(input({ name: 'Shared tabs' }), [C1, C2], U1);
+		const other = await createSupply(input({ name: 'Other tabs' }), [C1], U1);
+		const add = async (
+			id: string,
+			companionId: string,
+			name: string,
+			supplyId: string,
+			endedOn: string | null = null
+		) =>
+			db
+				.insert(schema.medications)
+				.values({ id, companionId, name, startedOn: '2026-01-01', endedOn, supplyId });
+		await add('m-lsm-1', C2, 'Zeta', shared);
+		await add('m-lsm-2', C1, 'Alpha', shared, '2026-01-31');
+		await add('m-lsm-3', C1, 'Beta', shared, '2026-11-09');
+		await add('m-lsm-4', C1, 'Elsewhere', other);
+
+		expect(await listSupplyMedications(shared, '2026-11-09')).toEqual([
+			{
+				id: 'm-lsm-3',
+				name: 'Beta',
+				companionId: C1,
+				companionName: 'Ein',
+				endedOn: '2026-11-09',
+				active: true
+			},
+			{
+				id: 'm-lsm-1',
+				name: 'Zeta',
+				companionId: C2,
+				companionName: 'Edward',
+				endedOn: null,
+				active: true
+			},
+			{
+				id: 'm-lsm-2',
+				name: 'Alpha',
+				companionId: C1,
+				companionName: 'Ein',
+				endedOn: '2026-01-31',
+				active: false
+			}
+		]);
+		expect(
+			await listSupplyMedications(
+				await createSupply(input({ name: 'Unused' }), [C1], U1),
+				'2026-11-09'
+			)
+		).toEqual([]);
 	});
 });

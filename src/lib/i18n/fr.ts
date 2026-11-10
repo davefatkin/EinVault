@@ -1670,6 +1670,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.labelBoughtOn': 'Acheté le',
 	'page.supplies.labelExpiresOn': 'Expire le',
 	'page.supplies.labelPets': 'Pour',
+	'page.supplies.medicationsHeading': 'Médicaments qui utilisent cette fourniture',
 	'page.supplies.archivedPet': '{name} (archivé)',
 	'page.supplies.labelNotes': 'Notes',
 	'page.supplies.warnings': 'Alertes',
