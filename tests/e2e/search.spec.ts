@@ -58,6 +58,8 @@ test.describe('global search palette', () => {
 
 	test('button click opens palette and finds seed health event', async ({ asMember }) => {
 		await asMember.goto('/');
+		// The button only opens the palette once its click handler has hydrated.
+		await waitForHydration(asMember);
 
 		await asMember.getByRole('button', { name: 'Open search' }).click();
 
