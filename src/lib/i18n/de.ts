@@ -1563,6 +1563,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
 	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.',
 	'page.dashboard.suppliesViewAll': 'Alle anzeigen',
+	'page.dashboard.medicationsEmpty':
+		'Behalte Dosis, Zeitplan und letzte Gabe jedes Medikaments an einem Ort.',
+	'page.dashboard.suppliesEmpty':
+		'Werde gewarnt, bevor Futter, Medikamente oder andere Vorräte ausgehen.',
 	'error.invalidDoseUnits': 'Gib an, wie viel eine Dosis verbraucht: von {min} bis {max}.',
 	'error.invalidCurrency': 'Wähle eine gültige Währung.',
 	'page.medications.labelSupply': 'Vorrat',

@@ -315,16 +315,26 @@ test.describe('medications and supplies', () => {
 		}
 	});
 
-	test('the dashboard shows a Supplies card only for supplies that need attention', async ({
+	test('the dashboard shows a Supplies card for supplies that need attention, or a prompt for none', async ({
 		asMember,
 		app
 	}) => {
 		const name = `e2e-dash-${Date.now()}`;
+		const empty = asMember.getByTestId('dashboard-supplies-empty');
 		try {
+			// None at all: a quiet prompt to add the first one.
+			await asMember.goto(`/${EIN}`);
+			await expect(empty.getByRole('link', { name: 'Add supply' })).toHaveAttribute(
+				'href',
+				`${BASE}/new`
+			);
+
+			// One that needs nothing: no card and no prompt.
 			await addCountedSupply(asMember, name, 30);
 			await asMember.goto(`/${EIN}`);
 			await waitForHydration(asMember);
 			await expect(asMember.getByTestId('dashboard-supplies')).toHaveCount(0);
+			await expect(empty).toHaveCount(0);
 
 			// Down to its low-stock count: the card appears with the row.
 			await asMember.goto(BASE);

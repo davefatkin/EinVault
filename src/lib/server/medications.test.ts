@@ -11,6 +11,7 @@ import {
 	restartMedication,
 	deleteMedication,
 	listMedicationSummaries,
+	companionHasMedications,
 	listDoses,
 	deleteDose,
 	sweepEndedMedicationReminders,
@@ -250,6 +251,15 @@ describe('create / get', () => {
 			loggedBy: U1
 		});
 		expect(await getMedication(C2, id)).toBeUndefined();
+	});
+});
+
+describe('companionHasMedications', () => {
+	it('counts ended medications too, per companion', async () => {
+		expect(await companionHasMedications(C1)).toBe(false);
+		await createMedication(C1, input({ endedOn: '2026-11-02' }), U1);
+		expect(await companionHasMedications(C1)).toBe(true);
+		expect(await companionHasMedications(C2)).toBe(false);
 	});
 });
 

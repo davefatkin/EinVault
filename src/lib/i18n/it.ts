@@ -1555,6 +1555,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLastsDays': 'Indica quanti giorni dura una confezione, da 1 a 365.',
 	'error.purchaseInFuture': 'La data di acquisto non può essere nel futuro.',
 	'page.dashboard.suppliesViewAll': 'Vedi tutti',
+	'page.dashboard.medicationsEmpty':
+		'Tieni dose, orari e ultima somministrazione di ogni farmaco in un unico posto.',
+	'page.dashboard.suppliesEmpty':
+		'Ricevi un avviso prima che finiscano cibo, farmaci o altre scorte.',
 	'error.invalidDoseUnits': 'Indica quanto usa una dose: da {min} a {max}.',
 	'error.invalidCurrency': 'Scegli una valuta valida.',
 	'page.medications.labelSupply': 'Scorta',

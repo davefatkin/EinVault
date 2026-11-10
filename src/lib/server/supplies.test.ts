@@ -15,6 +15,7 @@ import {
 	correctCount,
 	deleteSupplyEvent,
 	getSupplyForCompanion,
+	companionHasSupplies,
 	loadSupplyStates,
 	parseSupplyForm,
 	type SupplyInput
@@ -752,5 +753,17 @@ describe('loadSupplyStates', () => {
 		expect(await ids({ alertsOnly: true })).not.toContain(off);
 		expect(await ids({ activeOnly: true })).not.toContain(archived);
 		expect(await ids({ activeOnly: true })).toContain(on);
+	});
+});
+
+describe('companionHasSupplies', () => {
+	it('is true once a supply is linked to the companion, shared ones included', async () => {
+		const c = 'c-sup-has';
+		await db.insert(schema.companions).values({ id: c, name: 'Julia' });
+		expect(await companionHasSupplies(c)).toBe(false);
+		const id = await createSupply(input({ name: 'Shared' }), [C1, c], U1);
+		expect(await companionHasSupplies(c)).toBe(true);
+		await deleteSupply(id);
+		expect(await companionHasSupplies(c)).toBe(false);
 	});
 });

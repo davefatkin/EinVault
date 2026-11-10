@@ -313,6 +313,9 @@ test.describe('mood trend card', () => {
 
 		const card = asAdmin.getByTestId('mood-trend');
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toBeVisible();
+		// A new companion gets the add prompts; an archived one does not.
+		const addPrompts = asAdmin.getByTestId(/^dashboard-(medications|supplies)-empty$/);
+		await expect(addPrompts).toHaveCount(2);
 
 		// Archive the companion via the real UI flow (see companions.spec.ts).
 		await asAdmin.goto(`/companions/${id}/edit`);
@@ -328,6 +331,7 @@ test.describe('mood trend card', () => {
 		await asAdmin.goto(`/${id}`);
 		await expect(card.getByText('No moods logged yet')).toBeVisible();
 		await expect(card.getByRole('link', { name: "Log today's mood" })).toHaveCount(0);
+		await expect(addPrompts).toHaveCount(0);
 	});
 });
 
@@ -471,7 +475,7 @@ celebrate(
 	}
 );
 
-test('medications card shows active medications with Given, and is hidden without any @mobile', async ({
+test('medications card shows active medications with Given, and prompts to add one without any @mobile', async ({
 	app,
 	asMember
 }) => {
@@ -484,11 +488,24 @@ test('medications card shows active medications with Given, and is hidden withou
 		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
 		await expect(card).toHaveCount(0);
 
-		const id = insertMedication(app.dataDir, { companionId: COMP, name: active, dose: '2 ml' });
-		ids.push(id);
+		// With none at all, a quiet prompt opens the Medications add form.
+		const empty = asMember.getByTestId('dashboard-medications-empty');
+		await waitForHydration(asMember);
+		await empty.getByRole('link', { name: 'Add medication' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/medications$`), { timeout: 8_000 });
+		await expect(asMember.getByRole('button', { name: 'Save medication' })).toBeVisible();
+
+		// An ended medication alone hides the prompt and shows no card.
 		ids.push(
 			insertMedication(app.dataDir, { companionId: COMP, name: ended, endedOn: '2020-01-01' })
 		);
+		await asMember.goto(`/${COMP}`);
+		await expect(asMember.getByRole('heading', { name: /Ein/i })).toBeVisible();
+		await expect(empty).toHaveCount(0);
+		await expect(card).toHaveCount(0);
+
+		const id = insertMedication(app.dataDir, { companionId: COMP, name: active, dose: '2 ml' });
+		ids.push(id);
 		await asMember.goto(`/${COMP}`);
 		await waitForHydration(asMember);
 		await expect(card.getByText(active, { exact: true })).toBeVisible();

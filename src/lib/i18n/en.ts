@@ -1532,6 +1532,9 @@ const messages = {
 	'error.invalidLastsDays': 'Enter how many days one lasts, from 1 to 365.',
 	'error.purchaseInFuture': "A purchase date can't be in the future.",
 	'page.dashboard.suppliesViewAll': 'View All',
+	'page.dashboard.medicationsEmpty':
+		"Keep each medication's dose, schedule, and last dose in one place.",
+	'page.dashboard.suppliesEmpty': 'Get a warning before food, medicine, or other supplies run out.',
 	'error.invalidDoseUnits': 'Enter how much one dose uses, from {min} to {max}.',
 	'error.invalidCurrency': 'Choose a valid currency.',
 	'page.medications.labelSupply': 'Supply',

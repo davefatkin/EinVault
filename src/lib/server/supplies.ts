@@ -492,6 +492,16 @@ export async function getSupplyForCompanion(companionId: string, id: string) {
 	return row;
 }
 
+/** Whether any supply is linked to this companion. */
+export async function companionHasSupplies(companionId: string): Promise<boolean> {
+	const [row] = await db
+		.select({ id: schema.supplyCompanions.supplyId })
+		.from(schema.supplyCompanions)
+		.where(eq(schema.supplyCompanions.companionId, companionId))
+		.limit(1);
+	return row !== undefined;
+}
+
 /** Counted supplies linked to this companion, by name: what a medication can draw from. */
 export async function listCountedSupplyOptions(
 	companionId: string

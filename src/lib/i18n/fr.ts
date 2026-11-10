@@ -1563,6 +1563,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidLastsDays': 'Indiquez combien de jours dure une unité, de 1 à 365.',
 	'error.purchaseInFuture': "La date d'achat ne peut pas être dans le futur.",
 	'page.dashboard.suppliesViewAll': 'Tout voir',
+	'page.dashboard.medicationsEmpty':
+		'Gardez la dose, l’horaire et la dernière prise de chaque médicament au même endroit.',
+	'page.dashboard.suppliesEmpty':
+		'Soyez prévenu avant de manquer de nourriture, de médicaments ou d’autres fournitures.',
 	'error.invalidDoseUnits': 'Indiquez ce que consomme une dose : de {min} à {max}.',
 	'error.invalidCurrency': 'Choisissez une devise valide.',
 	'page.medications.labelSupply': 'Fourniture',

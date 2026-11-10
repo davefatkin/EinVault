@@ -214,6 +214,16 @@ export async function deleteMedication(companionId: string, id: string): Promise
 	);
 }
 
+/** Whether this companion has any medication, active or ended. */
+export async function companionHasMedications(companionId: string): Promise<boolean> {
+	const [row] = await db
+		.select({ id: schema.medications.id })
+		.from(schema.medications)
+		.where(eq(schema.medications.companionId, companionId))
+		.limit(1);
+	return row !== undefined;
+}
+
 export async function listMedicationSummaries(
 	companionIds: string[],
 	opts: { activeOnly: boolean; today?: string; includeSupply?: boolean }
