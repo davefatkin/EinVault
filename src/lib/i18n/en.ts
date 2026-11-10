@@ -850,7 +850,7 @@ const messages = {
 	'page.health.savingWeight': 'Saving...',
 	'page.health.weightHistoryTitle': 'Weight History',
 	'page.health.healthEventsTitle': 'Health Events',
-	'page.health.emptyBody': 'Log vet visits, vaccinations, and medications to build the record.',
+	'page.health.emptyBody': 'Log vet visits, vaccinations, and procedures to build the record.',
 	'page.health.noHealthEvents': 'No health events logged yet.',
 	'page.health.detailWeightEntry': 'Weight entry',
 	'page.health.detailWeight': 'Weight',
@@ -944,7 +944,8 @@ const messages = {
 	'page.reminders.sortCompleted': 'Completed',
 	'page.reminders.sortAscending': 'Sort ascending',
 	'page.reminders.sortDescending': 'Sort descending',
-	'page.reminders.emptyBody': 'Set vet visits, medications, or grooming so nothing slips.',
+	'page.reminders.emptyBody':
+		"Set vet visits, vaccinations, or grooming so nothing slips. Add dose reminders from a medication's page.",
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Users',

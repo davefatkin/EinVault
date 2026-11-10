@@ -866,7 +866,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.weightHistoryTitle': 'Historique du poids',
 	'page.health.healthEventsTitle': 'Événements de santé',
 	'page.health.emptyBody':
-		'Consignez visites vétérinaires, vaccins et médicaments pour constituer le dossier.',
+		'Consignez visites vétérinaires, vaccins et interventions pour constituer le dossier.',
 	'page.health.noHealthEvents': 'Aucun événement de santé enregistré.',
 	'page.health.detailWeightEntry': 'Entrée de poids',
 	'page.health.detailWeight': 'Poids',
@@ -962,7 +962,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.sortAscending': 'Tri croissant',
 	'page.reminders.sortDescending': 'Tri décroissant',
 	'page.reminders.emptyBody':
-		'Planifiez visites vétérinaires, médicaments ou toilettage pour ne rien oublier.',
+		'Planifiez visites vétérinaires, vaccins ou toilettage pour ne rien oublier. Les rappels de prise s’ajoutent depuis la page du médicament.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utilisateurs',

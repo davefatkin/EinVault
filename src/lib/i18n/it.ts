@@ -860,7 +860,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.weightHistoryTitle': 'Storico peso',
 	'page.health.healthEventsTitle': 'Eventi sanitari',
 	'page.health.emptyBody':
-		'Registra visite veterinarie, vaccinazioni e farmaci per costruire la cartella.',
+		'Registra visite veterinarie, vaccinazioni e procedure per costruire la cartella.',
 	'page.health.noHealthEvents': 'Nessun evento sanitario registrato.',
 	'page.health.detailWeightEntry': 'Voce peso',
 	'page.health.detailWeight': 'Peso',
@@ -956,7 +956,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.sortAscending': 'Ordine crescente',
 	'page.reminders.sortDescending': 'Ordine decrescente',
 	'page.reminders.emptyBody':
-		'Imposta visite veterinarie, farmaci o toelettatura per non dimenticare nulla.',
+		'Imposta visite veterinarie, vaccinazioni o toelettatura per non dimenticare nulla. I promemoria per le dosi si aggiungono dalla pagina del farmaco.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Utenti',

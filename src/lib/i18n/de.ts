@@ -865,7 +865,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.health.weightHistoryTitle': 'Gewichtsverlauf',
 	'page.health.healthEventsTitle': 'Gesundheitsereignisse',
 	'page.health.emptyBody':
-		'Erfasse Tierarztbesuche, Impfungen und Medikamente, um die Akte aufzubauen.',
+		'Erfasse Tierarztbesuche, Impfungen und Eingriffe, um die Akte aufzubauen.',
 	'page.health.noHealthEvents': 'Noch keine Gesundheitsereignisse erfasst.',
 	'page.health.detailWeightEntry': 'Gewichtseintrag',
 	'page.health.detailWeight': 'Gewicht',
@@ -961,7 +961,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.sortAscending': 'Aufsteigend sortieren',
 	'page.reminders.sortDescending': 'Absteigend sortieren',
 	'page.reminders.emptyBody':
-		'Lege Tierarzttermine, Medikamente oder Pflege fest, damit nichts vergessen wird.',
+		'Lege Tierarzttermine, Impfungen oder Pflege fest, damit nichts vergessen wird. Dosis-Erinnerungen fügst du auf der Seite des Medikaments hinzu.',
 
 	// Page: Admin users
 	'page.admin.usersTitle': 'Benutzer',
