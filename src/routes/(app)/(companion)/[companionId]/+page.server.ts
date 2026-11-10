@@ -6,11 +6,13 @@ import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
 import { localDateISO } from '#lib/date.js';
 import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { reminderLogEventUrl } from '#lib/health.js';
 import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { handleMoodTrendDaysUpdate } from '#lib/server/account.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
+import { listMedicationSummaries } from '#lib/server/medications.js';
+import { givenAction } from '#lib/server/medication-actions.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent, cookies }) => {
@@ -29,7 +31,8 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		activeCaretakerShift,
 		recentDocuments,
 		moodHistory,
-		openIncidents
+		openIncidents,
+		medications
 	] = await Promise.all([
 		db.query.healthEvents.findMany({
 			where: eq(schema.healthEvents.companionId, params.companionId),
@@ -103,7 +106,9 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 				)
 			)
 			.then((rows) => rows.filter((r): r is { date: string; mood: Mood } => r.mood !== null)),
-		listOpenIncidents([params.companionId])
+		listOpenIncidents([params.companionId]),
+		// The card shows only while something is active.
+		listMedicationSummaries([params.companionId], { activeOnly: true })
 	]);
 
 	const quickLogButtons = await listQuickLogButtons(
@@ -126,12 +131,15 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 		quickLogButtons,
 		moodHistory,
 		openIncidents,
+		medications,
 		moodTrendDays: resolveMoodTrendDays(locals.user.moodTrendDays),
 		moodToday
 	};
 };
 
 export const actions: Actions = {
+	given: givenAction,
+
 	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 
@@ -146,17 +154,8 @@ export const actions: Actions = {
 
 		completeReminder(existing, locals.user.id);
 
-		if (andEvent) {
-			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
-			redirect(
-				303,
-				healthEventPrefillUrl(params.companionId, {
-					title: existing.title,
-					description: existing.description,
-					type: mapped ?? undefined
-				})
-			);
-		}
+		const logEventUrl = andEvent ? reminderLogEventUrl(existing) : null;
+		if (logEventUrl) redirect(303, logEventUrl);
 
 		return { completeSuccess: true };
 	},

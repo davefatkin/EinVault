@@ -35,6 +35,7 @@
 	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
 	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
 	import { careIncidentPath } from '#lib/incidents.js';
+	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
@@ -493,7 +494,7 @@
 	{/if}
 
 	<!-- 4a. Schedules (reference): 1–3 cards, evenly spaced across one row (flex-1 each) -->
-	{#if companion.feedingSchedule || companion.walkSchedule || companion.medicationSchedule}
+	{#if companion.feedingSchedule || companion.walkSchedule}
 		<section>
 			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
 				{t(locale, 'page.dashboard.caretaker.sectionSchedules')}
@@ -521,18 +522,23 @@
 						</div>
 					</div>
 				{/if}
-				{#if companion.medicationSchedule}
-					<div class="flex-1 min-w-0 rounded-xl border border-border bg-card p-4">
-						<p class="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-							<span>💊</span>
-							{t(locale, 'page.dashboard.caretaker.cardMedicationSchedule')}
-						</p>
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(companion.medicationSchedule)}
-						</div>
-					</div>
-				{/if}
 			</div>
+		</section>
+	{/if}
+
+	<!-- 4a2. Medications (reference; "Given" on shift) -->
+	{#if data.medications.length > 0}
+		<section data-testid="care-medications">
+			<h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+				{t(locale, 'page.medications.title')}
+			</h2>
+			<ul class="divide-y divide-border rounded-2xl border bg-card">
+				{#each data.medications as medication (medication.id)}
+					<li>
+						<MedicationSummaryRow {medication} caps={data.medicationCaps} givenAction="?/given" />
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 

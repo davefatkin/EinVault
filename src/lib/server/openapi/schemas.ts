@@ -75,7 +75,11 @@ export const Companion = z
 		bio: z.string().nullable().optional(),
 		feedingSchedule: z.string().nullable().optional(),
 		walkSchedule: z.string().nullable().optional(),
-		medicationSchedule: z.string().nullable().optional(),
+		medicationSchedule: z.string().nullable().optional().openapi({
+			deprecated: true,
+			description:
+				'Deprecated. Active medications as markdown lines ("- Name, dose: instructions"); use /api/medications.'
+		}),
 		emergencyContactName: z.string().nullable().optional(),
 		emergencyContactPhone: z.string().nullable().optional(),
 		vetName: z.string().nullable().optional(),
@@ -394,7 +398,9 @@ export const Reminder = z
 		isRecurring: z.boolean(),
 		completedAt: z.string().nullable(),
 		outcome: z.enum(['completed', 'skipped']).nullable(),
-		seriesId: z.string().nullable()
+		seriesId: z.string().nullable(),
+		leadDays: z.array(z.number().int()),
+		medicationId: z.string().nullable()
 	})
 	.openapi('Reminder');
 
@@ -456,3 +462,41 @@ export const UserPublic = z
 		isActive: z.boolean()
 	})
 	.openapi('UserPublic');
+
+// Write-scope tokens get only id/companionId/name/active/nextDueAt (via
+// toApiMedicationMinimal); the fields they omit are optional here.
+export const Medication = z
+	.object({
+		id: z.string(),
+		companionId: z.string(),
+		name: z.string(),
+		active: z.boolean(),
+		nextDueAt: z.string().nullable(),
+		dose: z.string().nullable().optional(),
+		instructions: z.string().nullable().optional(),
+		startedOn: z.string().optional().openapi({ description: 'YYYY-MM-DD, local date.' }),
+		endedOn: z
+			.string()
+			.nullable()
+			.optional()
+			.openapi({ description: 'YYYY-MM-DD, inclusive: active through this day.' }),
+		lastGiven: z.object({ at: z.string(), by: z.string().nullable() }).nullable().optional()
+	})
+	.openapi('Medication');
+
+export const MedicationList = z
+	.object({ medications: z.array(Medication) })
+	.openapi('MedicationList');
+
+export const MedicationDoseRequest = z
+	.object({
+		givenAt: z.string().optional().openapi({
+			description: 'ISO 8601 timestamp the dose was given. Defaults to now.'
+		}),
+		note: z.string().max(MAX_NOTE_LEN).optional()
+	})
+	.openapi('MedicationDoseRequest');
+
+export const MedicationDoseResponse = z
+	.object({ doseId: z.string(), completedReminderId: z.string().nullable() })
+	.openapi('MedicationDoseResponse');

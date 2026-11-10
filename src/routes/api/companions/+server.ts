@@ -3,6 +3,7 @@ import { db, schema } from '#lib/server/db/index.js';
 import { apiRoute } from '#lib/server/auth/api-request.js';
 import { listAllowedCompanions } from '#lib/server/companion-scope.js';
 import { sharedNotesMarkdown } from '#lib/server/notes.js';
+import { medicationScheduleMarkdown } from '#lib/server/medications.js';
 import { toApiCompanion, toApiCompanionMinimal } from '#lib/server/api-serializers.js';
 
 // Bearer-token endpoint: list the companions the token user may target, so a
@@ -20,8 +21,12 @@ export const GET = apiRoute(async ({ user, scope }) => {
 	});
 
 	if (scope === 'write') return Response.json({ companions: rows.map(toApiCompanionMinimal) });
-	const sitterNotes = await sharedNotesMarkdown(rows.map((r) => r.id));
+	const rowIds = rows.map((r) => r.id);
+	const sitterNotes = await sharedNotesMarkdown(rowIds);
+	const medSchedule = await medicationScheduleMarkdown(rowIds);
 	return Response.json({
-		companions: rows.map((r) => toApiCompanion(r, sitterNotes.get(r.id) ?? null))
+		companions: rows.map((r) =>
+			toApiCompanion(r, sitterNotes.get(r.id) ?? null, medSchedule.get(r.id) ?? null)
+		)
 	});
 });

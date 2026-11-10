@@ -2,6 +2,7 @@ import { and, eq, ne } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { listSharedNotes } from '#lib/server/notes.js';
 import { listOpenIncidents } from '#lib/server/incidents.js';
+import { listMedicationSummaries } from '#lib/server/medications.js';
 import type { Locale } from '#lib/i18n/index.js';
 import type { CaretakerSheet } from '#lib/caretakerSheet.js';
 
@@ -20,7 +21,7 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 	});
 	if (!companion) return null;
 
-	const [weight, users, notes, openIncidents] = await Promise.all([
+	const [weight, users, notes, openIncidents, medications] = await Promise.all([
 		db.query.weightEntries.findFirst({
 			where: eq(schema.weightEntries.companionId, companionId),
 			orderBy: (w, { desc }) => [desc(w.recordedAt)],
@@ -35,7 +36,8 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 		}),
 		// Shared notes only, for owners too: the sheet never prints a private note.
 		listSharedNotes(companionId),
-		listOpenIncidents([companionId])
+		listOpenIncidents([companionId]),
+		listMedicationSummaries([companionId], { activeOnly: true })
 	]);
 
 	const vet = {
@@ -64,9 +66,15 @@ export async function loadCaretakerSheet(companionId: string): Promise<Caretaker
 		latestWeight: weight ?? null,
 		schedules: {
 			feeding: text(companion.feedingSchedule),
-			walk: text(companion.walkSchedule),
-			medication: text(companion.medicationSchedule)
+			walk: text(companion.walkSchedule)
 		},
+		medications: medications.map((m) => ({
+			id: m.id,
+			name: m.name,
+			dose: m.dose,
+			instructions: text(m.instructions),
+			schedule: m.schedule
+		})),
 		vet: vet.name || vet.clinic || vet.phone ? vet : null,
 		emergency: emergency.name || emergency.phone ? emergency : null,
 		owners: users

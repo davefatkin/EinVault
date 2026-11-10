@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { db, schema } from '#lib/server/db/index.js';
+import { localDateISO } from '#lib/date.js';
 import { loadCaretakerSheet, formatPrintedOn } from './caretaker-sheet';
 
 const FULL = 'cs-full';
@@ -82,7 +83,6 @@ beforeAll(async () => {
 			avatarPath: 'avatars/ein.jpg',
 			feedingSchedule: 'Half cup at 7am.',
 			walkSchedule: '  ',
-			medicationSchedule: '**Heartworm** monthly.',
 			vetName: 'Dr. Bacchus',
 			vetClinic: '',
 			vetPhone: '(555) 287-3300',
@@ -192,6 +192,61 @@ describe('loadCaretakerSheet open incidents', () => {
 	});
 });
 
+describe('loadCaretakerSheet medications', () => {
+	it('lists active medications only, with instructions and times', async () => {
+		const today = localDateISO();
+		await db.insert(schema.medications).values([
+			{
+				id: 'cs-med-a',
+				companionId: FULL,
+				name: 'Carprofen',
+				dose: '1 tablet',
+				instructions: '**With** food',
+				startedOn: '2026-01-01',
+				loggedBy: JET
+			},
+			{
+				id: 'cs-med-last',
+				companionId: FULL,
+				name: 'Last day',
+				startedOn: '2026-01-01',
+				endedOn: today,
+				loggedBy: JET
+			},
+			{
+				id: 'cs-med-ended',
+				companionId: FULL,
+				name: 'Finished',
+				startedOn: '2020-01-01',
+				endedOn: '2020-02-01',
+				loggedBy: JET
+			},
+			{
+				id: 'cs-med-other',
+				companionId: OTHER,
+				name: 'Not Ein',
+				startedOn: '2026-01-01',
+				loggedBy: JET
+			}
+		]);
+		const sheet = (await loadCaretakerSheet(FULL))!;
+		expect(sheet.medications.map((m) => m.name)).toEqual(['Carprofen', 'Last day']);
+		expect(Object.keys(sheet.medications[0]).sort()).toEqual([
+			'dose',
+			'id',
+			'instructions',
+			'name',
+			'schedule'
+		]);
+		expect(sheet.medications[0]).toMatchObject({
+			dose: '1 tablet',
+			instructions: '**With** food',
+			schedule: []
+		});
+		expect((await loadCaretakerSheet(BARE))!.medications).toEqual([]);
+	});
+});
+
 describe('loadCaretakerSheet', () => {
 	it('maps a full companion to exactly the sheet fields', async () => {
 		const sheet = (await loadCaretakerSheet(FULL))!;
@@ -199,6 +254,7 @@ describe('loadCaretakerSheet', () => {
 			'companion',
 			'emergency',
 			'latestWeight',
+			'medications',
 			'notes',
 			'openIncidents',
 			'owners',
@@ -219,8 +275,7 @@ describe('loadCaretakerSheet', () => {
 		});
 		expect(sheet.schedules).toEqual({
 			feeding: 'Half cup at 7am.',
-			walk: null,
-			medication: '**Heartworm** monthly.'
+			walk: null
 		});
 		expect(sheet.vet).toEqual({ name: 'Dr. Bacchus', clinic: null, phone: '(555) 287-3300' });
 		expect(sheet.emergency).toEqual({ name: 'Annie', phone: '(555) 010-1979' });
@@ -235,7 +290,8 @@ describe('loadCaretakerSheet', () => {
 			microchip: null,
 			avatarPath: null
 		});
-		expect(sheet.schedules).toEqual({ feeding: null, walk: null, medication: null });
+		expect(sheet.schedules).toEqual({ feeding: null, walk: null });
+		expect(sheet.medications).toEqual([]);
 		expect(sheet.vet).toBeNull();
 		expect(sheet.emergency).toBeNull();
 		expect(sheet.latestWeight).toBeNull();

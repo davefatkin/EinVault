@@ -149,6 +149,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': 'Valore finestra annulla non valido.',
 	'error.invalidMoodTrendRange': 'Periodo non valido.',
 	'error.invalidRecurrence': 'Configurazione ricorrenza non valida.',
+	'error.invalidLeadDays': 'Preavvisi non validi.',
+	'error.tooManyLeadDays': 'Usa al massimo 3 preavvisi.',
+	'error.leadDaysTooLong': 'I preavvisi devono essere più brevi del periodo di ripetizione.',
 	'error.invalidDefaultRecurrence': 'Unità di ricorrenza predefinita non valida.',
 	'error.invalidRole': 'Ruolo non valido.',
 	'error.invalidStatus': 'status deve essere "due" oppure "all".',
@@ -232,6 +235,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.reminders': 'Promemoria',
 	'nav.documents': 'Documenti',
 	'nav.notes': 'Note',
+	'nav.medications': 'Farmaci',
 	'nav.settings': 'Impostazioni',
 	'nav.admin': 'Amministrazione',
 	'nav.adminCompanions': 'Compagni',
@@ -328,11 +332,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Ricorrenza predefinita aggiornata.',
 	'page.settings.notificationsCard': 'Notifiche',
 	'page.settings.notificationsDescription':
-		'Ricevi e-mail da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi e-mail da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Ricevi notifiche push da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notificationsDescriptionBoth':
-		'Ricevi e-mail e notifiche push da EinVault. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
+		'Ricevi e-mail e notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notifyReminderEmailLabel': 'Inviami una e-mail quando un promemoria è in scadenza',
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
@@ -344,7 +348,7 @@ const messages: Record<keyof Messages, string> = {
 		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche via e-mail.',
 	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
 	'page.settings.ntfyTopicHint':
-		"Le notifiche push coprono i promemoria in scadenza, gli avvisi di turno, le celebrazioni (compleanni e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
+		"Le notifiche push coprono i promemoria in scadenza (e gli eventuali preavvisi impostati), gli avvisi di turno, le celebrazioni (compleanni e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
 	'page.settings.securityCard': 'Sicurezza',
 	'page.settings.twofaOn': "L'autenticazione a due fattori è attiva.",
 	'page.settings.twofaOff':
@@ -568,7 +572,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelWalkSchedule': 'Orario passeggiate',
 	'page.companion.edit.labelRoutine': 'Routine',
 	'page.companion.edit.labelCareRoutine': 'Routine di cura',
-	'page.companion.edit.labelMedicationSchedule': 'Orario farmaci',
 	'page.companion.edit.cardContacts': 'Contatti',
 	'page.companion.edit.labelVetName': 'Nome veterinario',
 	'page.companion.edit.labelVetPhone': 'Telefono veterinario',
@@ -583,8 +586,6 @@ const messages: Record<keyof Messages, string> = {
 		'es. Sessione di gioco ~20:00, 15 min\nPulire la lettiera mattina e sera',
 	'page.companion.edit.placeholderCareRoutine':
 		'es. Pulire la gabbia il sabato\nTempo fuori dalla gabbia ogni sera',
-	'page.companion.edit.placeholderMedicationSchedule':
-		'es. Compressa antiparassitaria il 1° del mese\nIntegratore articolare ogni mattina\nCollirio mattina e sera',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dott. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Clinica Veterinaria Valentine',
@@ -647,6 +648,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.shiftEnds': 'Il turno termina',
 	'page.dashboard.cardReminders': 'Promemoria',
 	'page.dashboard.remindersViewAll': 'Vedi tutti',
+	'page.dashboard.medicationsViewAll': 'Vedi tutti',
 	'page.dashboard.remindersEmpty': 'Nessun promemoria in arrivo.',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightAsOf': 'al',
@@ -688,7 +690,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardWalk': 'Orario passeggiate',
 	'page.dashboard.caretaker.cardRoutine': 'Routine',
 	'page.dashboard.caretaker.cardCareRoutine': 'Routine di cura',
-	'page.dashboard.caretaker.cardMedicationSchedule': 'Orario farmaci',
 	'page.dashboard.caretaker.cardReminders': 'Promemoria in arrivo',
 	'page.dashboard.caretaker.remindersEmpty': 'Nessun promemoria in arrivo.',
 	'page.dashboard.caretaker.reminderOverdue': 'Scaduto',
@@ -939,6 +940,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Ripristina',
 	'page.reminders.completedCount': '{count} promemoria completato',
 	'page.reminders.completedCountPlural': '{count} promemoria completati',
+	'page.reminders.leadDay': '{count} giorno',
+	'page.reminders.leadDays': '{count} giorni',
+	'page.reminders.leadAnd': 'e',
+	'page.reminders.leadSummary': 'Preavviso {list} prima',
+	'page.reminders.leadLabel': 'Preavviso',
+	'page.reminders.leadWeek': '1 settimana',
+	'page.reminders.leadWeeks': '{count} settimane',
 	'page.reminders.sortBy': 'Ordina per',
 	'page.reminders.sortCreated': 'Creato',
 	'page.reminders.sortDue': 'Data di scadenza',
@@ -1116,6 +1124,16 @@ const messages: Record<keyof Messages, string> = {
 	'error.tokenLimitReached': 'Limite di token raggiunto (max {max}). Revocane uno prima.',
 	'error.noteTooLong': 'La nota è troppo lunga (max {max} caratteri).',
 	'error.invalidDateTime': "Inserisci una data e un'ora valide.",
+	'error.medicationEndBeforeStart': 'La data di fine non può precedere la data di inizio.',
+	'error.medicationNotFound': 'Farmaco non trovato.',
+	'error.medicationEnded': 'Questo farmaco è terminato.',
+	'error.medicationNotStarted': 'Questo farmaco non è ancora iniziato.',
+	'error.doseBeforeStart': 'Non si può registrare una dose prima della data di inizio del farmaco.',
+	'error.doseInFuture': 'Non si può registrare una dose nel futuro.',
+	'error.doseNotFound': 'Dose non trovata.',
+	'error.invalidMedicationStatus': 'status deve essere "active" oppure "all".',
+	'error.mustBeOnShiftToLogDose': 'Devi essere di turno per registrare le somministrazioni.',
+	'error.reminderAfterMedicationEnd': 'Questo promemoria scade dopo la fine del farmaco.',
 	'error.fieldTooLong': 'Troppo lungo (max {max} caratteri).',
 	'error.noteTitleTooLong': 'Il titolo è troppo lungo (max {max} caratteri).',
 	'error.noteTitleNewline': 'Il titolo deve essere su una sola riga.',
@@ -1253,6 +1271,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'Apri EinVault',
 	'email.reminder.footer':
 		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di EinVault.',
+
+	'email.reminderUpcoming.subjectToday': 'In scadenza oggi: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'In scadenza domani: {title}',
+	'email.reminderUpcoming.subjectDays': 'In scadenza tra {days} giorni: {title}',
+	'email.reminderUpcoming.body': '{companion} ha un promemoria in arrivo: {title}',
+	'email.reminderUpcoming.dueLine': 'Scadenza: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno in arrivo: {caretaker}',
@@ -1422,9 +1446,80 @@ const messages: Record<keyof Messages, string> = {
 	'demo.roleMember': 'Membro',
 	'demo.roleCaretaker': 'Assistente',
 	'demo.sourceLink': 'Sorgente',
-	'demo.writeBlocked': 'Questa demo è in sola lettura — la tua modifica non è stata salvata.'
+	'demo.writeBlocked': 'Questa demo è in sola lettura — la tua modifica non è stata salvata.',
 
 	// Meta
+	// Medications
+	'page.medications.title': 'Farmaci',
+	'page.medications.add': 'Aggiungi farmaco',
+	'page.medications.newTitle': 'Nuovo farmaco',
+	'page.medications.active': 'Attivi',
+	'page.medications.ended': 'Terminati',
+	'page.medications.endedBadge': 'Terminato',
+	'page.medications.empty': 'Ancora nessun farmaco',
+	'page.medications.emptyBody':
+		'Aggiungi un farmaco per avere dose, orari e ultima somministrazione in un unico posto.',
+	'page.medications.noActive': 'Nessun farmaco attivo.',
+	'page.medications.archivedNotice': '{name} è archiviato. I farmaci restano consultabili.',
+	'page.medications.backToList': 'Tutti i farmaci',
+	'page.medications.labelName': 'Nome',
+	'page.medications.labelDose': 'Dose',
+	'page.medications.labelInstructions': 'Istruzioni',
+	'page.medications.labelStartedOn': 'Data di inizio',
+	'page.medications.labelEndedOn': 'Data di fine',
+	'page.medications.endedOnHint':
+		"Lascia vuoto se non è prevista una fine. L'ultimo giorno conta ancora.",
+	'page.medications.placeholderName': 'es. Carprofene',
+	'page.medications.placeholderDose': 'es. 1 compressa',
+	'page.medications.placeholderInstructions': 'es. Da dare con il cibo',
+	'page.medications.save': 'Salva farmaco',
+	'page.medications.given': 'Dato',
+	'page.medications.givenTitle': 'Registra una dose data ora',
+	'page.medications.givenAt': 'Dato {when}',
+	'page.medications.givenAgainTitle': "Già dato. Registrare un'altra dose?",
+	'page.medications.givenAgainConfirm':
+		"{name} è già stato dato ({when}). Registrare un'altra dose?",
+	'page.medications.givenAgainConfirmBy':
+		"{name} è già stato dato ({when}, da {by}). Registrare un'altra dose?",
+	'page.medications.givenAgainButton': "Registra un'altra dose",
+	'page.medications.doseLogged': 'Dose di {name} registrata',
+	'page.medications.nextDue': 'Prossima dose',
+	'page.medications.lastGiven': 'Ultima dose',
+	'page.medications.notGivenYet': 'Non ancora dato',
+	'page.medications.byName': 'da {name}',
+	'page.medications.scheduleAt': '{recurrence} alle {times}',
+	'page.medications.startedOn': 'Iniziato il {date}',
+	'page.medications.endsOn': 'Termina il {date}',
+	'page.medications.endedOn': 'Terminato il {date}',
+	'page.medications.addDoseReminder': 'Aggiungi un promemoria per la dose',
+	'page.medications.once': 'Una volta',
+	'page.medications.doseReminders': 'Promemoria delle dosi',
+	'page.medications.noDoseReminders':
+		'Nessun promemoria per le dosi. Aggiungine uno per sapere quando è il momento di una dose.',
+	'page.medications.endedNoReminders':
+		'Riavvia questo farmaco per aggiungere di nuovo promemoria per le dosi.',
+	'page.medications.doseHistory': 'Storico delle dosi',
+	'page.medications.noDoses': 'Nessuna dose registrata finora.',
+	'page.medications.fromReminder': 'Da promemoria',
+	'page.medications.loggedByHand': 'Registrata a mano',
+	'page.medications.givenBy': 'Data da {name}',
+	'page.medications.showMore': 'Mostra altro',
+	'page.medications.end': 'Termina',
+	'page.medications.endConfirm':
+		'Terminare {name} oggi? I suoi prossimi promemoria per le dosi verranno eliminati.',
+	'page.medications.endConfirmButton': 'Termina farmaco',
+	'page.medications.endsToday': 'Termina oggi',
+	'page.medications.endNow': 'Termina ora',
+	'page.medications.removeEndDate': 'Rimuovi data di fine',
+	'page.medications.restart': 'Riavvia',
+	'page.medications.removeDose': 'Rimuovi',
+	'page.medications.removeDoseLabel': 'Rimuovi questa dose',
+	'page.medications.removeDoseConfirm':
+		'Rimuovere questa dose dalla cronologia? Se proviene da un promemoria, quel promemoria resta fatto. Usa Ripristina nella pagina Promemoria per riaprirlo.',
+	'page.medications.deleteConfirm':
+		'Eliminare {name} e il suo storico delle dosi? Vengono eliminati anche i prossimi promemoria per le dosi; quelli completati restano nello storico dei promemoria. Non si può annullare.',
+	'page.health.medicationsHintPrefix': 'Si tratta di un farmaco?',
+	'page.health.medicationsHintLink': 'Usa la pagina Farmaci'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

@@ -31,7 +31,7 @@
 	} from '#lib/i18n/labels.js';
 	import { careStatus } from '#lib/careStatus.js';
 	import { reminderUrgency, type ReminderUrgency } from '#lib/reminderBuckets.js';
-	import { REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
@@ -168,12 +168,17 @@
 	const skipFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
 
-	function handleComplete(reminderId: string, title: string, reminderType: string) {
-		const form = dismissFormRegistry.get(reminderId);
+	function handleComplete(reminder: {
+		id: string;
+		title: string;
+		type: string;
+		medicationId: string | null;
+	}) {
+		const form = dismissFormRegistry.get(reminder.id);
 		if (!form) return;
-		const allowLogEvent =
-			REMINDER_TO_HEALTH_TYPE[reminderType as keyof typeof REMINDER_TO_HEALTH_TYPE] !== null;
-		pendingDismiss.queue(reminderId, form, title, { allowLogEvent });
+		pendingDismiss.queue(reminder.id, form, reminder.title, {
+			allowLogEvent: reminderAllowsLogEvent(reminder)
+		});
 	}
 
 	function handleSkip(reminderId: string, title: string) {
@@ -332,13 +337,12 @@
 
 			<div class="flex gap-2 px-5 py-4">
 				<ReminderCompleteButtons
-					allowLogEvent={REMINDER_TO_HEALTH_TYPE[r.type as keyof typeof REMINDER_TO_HEALTH_TYPE] !==
-						null}
+					allowLogEvent={reminderAllowsLogEvent(r)}
 					isRecurring={r.isRecurring}
 					onDone={() => {
 						const item = r;
 						closeReminderDetail();
-						handleComplete(item.id, item.title, item.type);
+						handleComplete(item);
 					}}
 					onDoneAndLog={() => {
 						const item = r;
@@ -443,13 +447,11 @@
 						<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
 						<div onclick={(e) => e.stopPropagation()} role="none">
 							<ReminderCompleteButtons
-								onDone={() => handleComplete(r.id, r.title, r.type)}
+								onDone={() => handleComplete(r)}
 								onDoneAndLog={() => submitWithAndEvent(r.id)}
 								onSkip={() => handleSkip(r.id, r.title)}
 								isRecurring={r.isRecurring}
-								allowLogEvent={REMINDER_TO_HEALTH_TYPE[
-									r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
-								] !== null}
+								allowLogEvent={reminderAllowsLogEvent(r)}
 							/>
 						</div>
 					</div>

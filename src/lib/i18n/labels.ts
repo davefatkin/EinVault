@@ -168,11 +168,12 @@ export function moodOptions(locale: Locale) {
 	}));
 }
 
-export function healthTypeOptions(locale: Locale) {
-	return (['vet_visit', 'vaccination', 'medication', 'procedure', 'other'] as const).map((v) => ({
-		value: v,
-		label: healthTypeLabel(locale, v)
-	}));
+// New events track medication on the Medications page, so add forms leave
+// 'medication' out; an edit select keeps it for events that already have it.
+export function healthTypeOptions(locale: Locale, opts: { includeMedication: boolean }) {
+	return (['vet_visit', 'vaccination', 'medication', 'procedure', 'other'] as const)
+		.filter((v) => opts.includeMedication || v !== 'medication')
+		.map((v) => ({ value: v, label: healthTypeLabel(locale, v) }));
 }
 
 export function severityOptions(locale: Locale) {

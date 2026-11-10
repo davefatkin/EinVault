@@ -37,7 +37,10 @@ import {
 	IncidentLinkRequest,
 	IncidentLinkResponse,
 	IncidentResolveRequest,
-	HealthEvent
+	HealthEvent,
+	MedicationList,
+	MedicationDoseRequest,
+	MedicationDoseResponse
 } from './schemas';
 
 // Builds the OpenAPI 3.1 document from the shared zod schemas. Paths are
@@ -396,6 +399,58 @@ export function buildOpenApiDocument() {
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
 			409: errorResponse('alreadyCompleted / idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'get',
+		path: '/api/medications',
+		tags: ['medications'],
+		summary: 'List medications',
+		description:
+			'Medications for one companion (companionId) or every companion the token may access. status=active (default) or all; caretakers only ever get active ones. Works with full- and write-scope tokens so a log-only device can find ids for POST /api/medications/{id}/doses. Write-scope tokens get active medications only, with just id, companionId, name, active and nextDueAt.',
+		security: secured,
+		request: {
+			query: z.object({
+				companionId: z.string().optional(),
+				status: z.enum(['active', 'all']).optional()
+			})
+		},
+		responses: {
+			200: { description: 'OK', content: { 'application/json': { schema: MedicationList } } },
+			400: errorResponse('invalidStatus'),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('notAssigned'),
+			404: errorResponse('API disabled'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/medications/{id}/doses',
+		tags: ['medications'],
+		summary: 'Record a medication dose',
+		description:
+			'Body optional: { givenAt?, note? }. The dose completes a linked reminder occurrence (completedReminderId) when one matches: the latest missed occurrence from an earlier day (older missed ones are skipped), else the earliest open one due no more than 3 hours after givenAt on the same day. Otherwise a standalone dose is written and no reminder changes. The token acts as its user, so a caretaker must be on shift and assigned. A givenAt before the start date is a 400 (givenBeforeStart), and so is one more than 5 minutes ahead of the server clock (givenInFuture; up to 5 minutes ahead counts as now); an ended medication is a 409. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			params: z.object({ id: z.string() }),
+			body: { content: { 'application/json': { schema: MedicationDoseRequest } }, required: false }
+		},
+		responses: {
+			201: {
+				description: 'Created',
+				content: { 'application/json': { schema: MedicationDoseResponse } }
+			},
+			400: errorResponse(
+				'invalidGivenAt / givenBeforeStart / givenInFuture / noteTooLong / invalidBody'
+			),
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift'),
+			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
+			409: errorResponse('medicationEnded / idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
 		}
 	});

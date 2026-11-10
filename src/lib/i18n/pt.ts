@@ -150,6 +150,9 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidReminderUndo': 'Valor de janela para desfazer inválido.',
 	'error.invalidMoodTrendRange': 'Período inválido.',
 	'error.invalidRecurrence': 'Configuração de recorrência inválida.',
+	'error.invalidLeadDays': 'Avisos prévios inválidos.',
+	'error.tooManyLeadDays': 'Use no máximo 3 avisos prévios.',
+	'error.leadDaysTooLong': 'Os avisos prévios devem ser mais curtos que o período de repetição.',
 	'error.invalidDefaultRecurrence': 'Unidade de recorrência padrão inválida.',
 	'error.invalidRole': 'Função inválida.',
 	'error.invalidStatus': 'status deve ser "due" ou "all".',
@@ -233,6 +236,7 @@ const messages: Record<keyof Messages, string> = {
 	'nav.reminders': 'Lembretes',
 	'nav.documents': 'Documentos',
 	'nav.notes': 'Notas',
+	'nav.medications': 'Medicamentos',
 	'nav.settings': 'Definições',
 	'nav.admin': 'Administração',
 	'nav.adminCompanions': 'Companheiros',
@@ -330,11 +334,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Recorrência padrão atualizada.',
 	'page.settings.notificationsCard': 'Notificações',
 	'page.settings.notificationsDescription':
-		'Receba e-mails do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba e-mails do EinVault. Os lembretes também podem avisar com antecedência, se houver avisos prévios configurados. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Receba notificações push do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba notificações push do EinVault. Os lembretes também podem avisar com antecedência, se houver avisos prévios configurados. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionBoth':
-		'Receba e-mails e notificações push do EinVault. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
+		'Receba e-mails e notificações push do EinVault. Os lembretes também podem avisar com antecedência, se houver avisos prévios configurados. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
@@ -347,7 +351,7 @@ const messages: Record<keyof Messages, string> = {
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
-		'As notificações push cobrem lembretes vencidos, alertas de turno, comemorações (aniversários e dias de chegada a casa) e incidentes registrados ou atualizados por um cuidador, do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever, e os avisos de incidente incluem o título e a gravidade do incidente. Deixe vazio para desativar os push.',
+		'As notificações push cobrem lembretes vencidos (e os avisos prévios configurados), alertas de turno, comemorações (aniversários e dias de chegada a casa) e incidentes registrados ou atualizados por um cuidador, do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever, e os avisos de incidente incluem o título e a gravidade do incidente. Deixe vazio para desativar os push.',
 	'page.settings.securityCard': 'Segurança',
 	'page.settings.twofaOn': 'A autenticação de dois fatores está ativa.',
 	'page.settings.twofaOff':
@@ -571,7 +575,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.labelWalkSchedule': 'Horário de passeios',
 	'page.companion.edit.labelRoutine': 'Rotina',
 	'page.companion.edit.labelCareRoutine': 'Rotina de cuidados',
-	'page.companion.edit.labelMedicationSchedule': 'Horário de medicação',
 	'page.companion.edit.cardContacts': 'Contactos',
 	'page.companion.edit.labelVetName': 'Nome do veterinário',
 	'page.companion.edit.labelVetPhone': 'Telefone do veterinário',
@@ -586,8 +589,6 @@ const messages: Record<keyof Messages, string> = {
 		'ex. Sessão de brincadeira ~20h, 15 min\nLimpar a caixa de areia de manhã e à noite',
 	'page.companion.edit.placeholderCareRoutine':
 		'ex. Limpar o recinto aos sábados\nTempo fora da gaiola todas as noites',
-	'page.companion.edit.placeholderMedicationSchedule':
-		'ex. Comprimido antiparasitário no dia 1 do mês\nSuplemento articular diário ao pequeno-almoço\nColírio de manhã e à noite',
 	'page.companion.edit.placeholderMicrochip': '985112000034577',
 	'page.companion.edit.placeholderVetName': 'Dr. Bacchus',
 	'page.companion.edit.placeholderVetClinic': 'Hospital Veterinário Valentine',
@@ -650,6 +651,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.shiftEnds': 'O turno termina',
 	'page.dashboard.cardReminders': 'Lembretes',
 	'page.dashboard.remindersViewAll': 'Ver todos',
+	'page.dashboard.medicationsViewAll': 'Ver todos',
 	'page.dashboard.remindersEmpty': 'Sem lembretes próximos.',
 	'page.dashboard.cardWeight': 'Peso',
 	'page.dashboard.weightAsOf': 'em',
@@ -691,7 +693,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.dashboard.caretaker.cardWalk': 'Horário de passeios',
 	'page.dashboard.caretaker.cardRoutine': 'Rotina',
 	'page.dashboard.caretaker.cardCareRoutine': 'Rotina de cuidados',
-	'page.dashboard.caretaker.cardMedicationSchedule': 'Horário de medicação',
 	'page.dashboard.caretaker.cardReminders': 'Lembretes próximos',
 	'page.dashboard.caretaker.remindersEmpty': 'Sem lembretes próximos.',
 	'page.dashboard.caretaker.reminderOverdue': 'Atrasado',
@@ -942,6 +943,13 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.restore': 'Restaurar',
 	'page.reminders.completedCount': '{count} lembrete completado',
 	'page.reminders.completedCountPlural': '{count} lembretes completados',
+	'page.reminders.leadDay': '{count} dia',
+	'page.reminders.leadDays': '{count} dias',
+	'page.reminders.leadAnd': 'e',
+	'page.reminders.leadSummary': 'Aviso prévio {list} antes',
+	'page.reminders.leadLabel': 'Aviso prévio',
+	'page.reminders.leadWeek': '1 semana',
+	'page.reminders.leadWeeks': '{count} semanas',
 	'page.reminders.sortBy': 'Ordenar por',
 	'page.reminders.sortCreated': 'Criado',
 	'page.reminders.sortDue': 'Data de vencimento',
@@ -1118,6 +1126,18 @@ const messages: Record<keyof Messages, string> = {
 	'error.tokenLimitReached': 'Limite de tokens atingido (máx. {max}). Revoga um primeiro.',
 	'error.noteTooLong': 'A nota é demasiado longa (máx. {max} caracteres).',
 	'error.invalidDateTime': 'Introduza uma data e hora válidas.',
+	'error.medicationEndBeforeStart': 'A data de fim não pode ser anterior à data de início.',
+	'error.medicationNotFound': 'Medicamento não encontrado.',
+	'error.medicationEnded': 'Este medicamento terminou.',
+	'error.medicationNotStarted': 'Este medicamento ainda não começou.',
+	'error.doseBeforeStart':
+		'Não é possível registrar uma dose antes da data de início do medicamento.',
+	'error.doseInFuture': 'Não é possível registrar uma dose no futuro.',
+	'error.doseNotFound': 'Dose não encontrada.',
+	'error.invalidMedicationStatus': 'status deve ser "active" ou "all".',
+	'error.mustBeOnShiftToLogDose':
+		'Você precisa estar de plantão para registrar doses de medicação.',
+	'error.reminderAfterMedicationEnd': 'Este lembrete vence depois do fim do medicamento.',
 	'error.fieldTooLong': 'Demasiado longo (máx. {max} caracteres).',
 	'error.noteTitleTooLong': 'O título é demasiado longo (máx. {max} caracteres).',
 	'error.noteTitleNewline': 'O título deve ter uma única linha.',
@@ -1253,6 +1273,12 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.cta': 'Abrir EinVault',
 	'email.reminder.footer':
 		'Você está recebendo este e-mail porque as notificações de lembretes estão ativadas nas suas configurações do EinVault.',
+
+	'email.reminderUpcoming.subjectToday': 'Vence hoje: {title}',
+	'email.reminderUpcoming.subjectTomorrow': 'Vence amanhã: {title}',
+	'email.reminderUpcoming.subjectDays': 'Vence em {days} dias: {title}',
+	'email.reminderUpcoming.body': '{companion} tem um lembrete próximo: {title}',
+	'email.reminderUpcoming.dueLine': 'Vence: {due}',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno começando em breve: {caretaker}',
@@ -1422,9 +1448,80 @@ const messages: Record<keyof Messages, string> = {
 	'demo.roleMember': 'Membro',
 	'demo.roleCaretaker': 'Cuidador',
 	'demo.sourceLink': 'Fonte',
-	'demo.writeBlocked': 'Esta demo é somente leitura — sua alteração não foi salva.'
+	'demo.writeBlocked': 'Esta demo é somente leitura — sua alteração não foi salva.',
 
 	// Meta
+	// Medications
+	'page.medications.title': 'Medicamentos',
+	'page.medications.add': 'Adicionar medicamento',
+	'page.medications.newTitle': 'Novo medicamento',
+	'page.medications.active': 'Ativos',
+	'page.medications.ended': 'Terminados',
+	'page.medications.endedBadge': 'Terminado',
+	'page.medications.empty': 'Ainda não há medicamentos',
+	'page.medications.emptyBody':
+		'Adicione um medicamento para ter a dose, o horário e a última toma num só lugar.',
+	'page.medications.noActive': 'Nenhum medicamento ativo.',
+	'page.medications.archivedNotice':
+		'{name} está arquivado. Os medicamentos continuam disponíveis para consulta.',
+	'page.medications.backToList': 'Todos os medicamentos',
+	'page.medications.labelName': 'Nome',
+	'page.medications.labelDose': 'Dose',
+	'page.medications.labelInstructions': 'Instruções',
+	'page.medications.labelStartedOn': 'Data de início',
+	'page.medications.labelEndedOn': 'Data de fim',
+	'page.medications.endedOnHint':
+		'Deixe vazio se não tiver fim previsto. O último dia ainda conta.',
+	'page.medications.placeholderName': 'ex.: Carprofeno',
+	'page.medications.placeholderDose': 'ex.: 1 comprimido',
+	'page.medications.placeholderInstructions': 'ex.: Dar com comida',
+	'page.medications.save': 'Guardar medicamento',
+	'page.medications.given': 'Dado',
+	'page.medications.givenTitle': 'Registar uma dose dada agora',
+	'page.medications.givenAt': 'Dado {when}',
+	'page.medications.givenAgainTitle': 'Já foi dado. Registar outra dose?',
+	'page.medications.givenAgainConfirm': '{name} já foi dado ({when}). Registar outra dose?',
+	'page.medications.givenAgainConfirmBy':
+		'{name} já foi dado ({when}, por {by}). Registar outra dose?',
+	'page.medications.givenAgainButton': 'Registar outra dose',
+	'page.medications.doseLogged': 'Dose de {name} registada',
+	'page.medications.nextDue': 'Próxima dose',
+	'page.medications.lastGiven': 'Última dose',
+	'page.medications.notGivenYet': 'Ainda não foi dado',
+	'page.medications.byName': 'por {name}',
+	'page.medications.scheduleAt': '{recurrence} às {times}',
+	'page.medications.startedOn': 'Começou em {date}',
+	'page.medications.endsOn': 'Termina em {date}',
+	'page.medications.endedOn': 'Terminou em {date}',
+	'page.medications.addDoseReminder': 'Adicionar um lembrete de dose',
+	'page.medications.once': 'Uma vez',
+	'page.medications.doseReminders': 'Lembretes de dose',
+	'page.medications.noDoseReminders':
+		'Sem lembretes de dose. Adicione um para ser avisado quando uma dose estiver na hora.',
+	'page.medications.endedNoReminders':
+		'Reinicie este medicamento para voltar a adicionar lembretes de dose.',
+	'page.medications.doseHistory': 'Histórico de doses',
+	'page.medications.noDoses': 'Ainda não há doses registadas.',
+	'page.medications.fromReminder': 'De lembrete',
+	'page.medications.loggedByHand': 'Registada à mão',
+	'page.medications.givenBy': 'Dada por {name}',
+	'page.medications.showMore': 'Mostrar mais',
+	'page.medications.end': 'Terminar',
+	'page.medications.endConfirm':
+		'Terminar {name} hoje? Os próximos lembretes de dose serão eliminados.',
+	'page.medications.endConfirmButton': 'Terminar medicamento',
+	'page.medications.endsToday': 'Termina hoje',
+	'page.medications.endNow': 'Terminar agora',
+	'page.medications.removeEndDate': 'Remover data de fim',
+	'page.medications.restart': 'Reiniciar',
+	'page.medications.removeDose': 'Remover',
+	'page.medications.removeDoseLabel': 'Remover esta dose',
+	'page.medications.removeDoseConfirm':
+		'Remover esta dose do histórico? Se veio de um lembrete, esse lembrete continua concluído. Use Restaurar na página Lembretes para reabri-lo.',
+	'page.medications.deleteConfirm':
+		'Eliminar {name} e o histórico de doses? Os próximos lembretes de dose também são eliminados; os concluídos ficam no histórico de lembretes. Não é possível desfazer.',
+	'page.health.medicationsHintPrefix': 'É um medicamento?',
+	'page.health.medicationsHintLink': 'Use a página de Medicamentos'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

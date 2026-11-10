@@ -5,7 +5,7 @@ import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 import { celebrationBanner, CELEBRATION_COOKIE } from '#lib/celebrations.js';
 import { completeReminder, skipReminder } from '#lib/server/reminders.js';
 import { t } from '#lib/i18n/index.js';
-import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '#lib/health.js';
+import { reminderLogEventUrl } from '#lib/health.js';
 import {
 	parseDailyEventType,
 	parseDurationMinutes,
@@ -116,17 +116,8 @@ export const actions: Actions = {
 
 		completeReminder(reminder, locals.user.id);
 
-		if (andEvent) {
-			const mapped = REMINDER_TO_HEALTH_TYPE[reminder.type];
-			redirect(
-				303,
-				healthEventPrefillUrl(reminder.companionId, {
-					title: reminder.title,
-					description: reminder.description,
-					type: mapped ?? undefined
-				})
-			);
-		}
+		const logEventUrl = andEvent ? reminderLogEventUrl(reminder) : null;
+		if (logEventUrl) redirect(303, logEventUrl);
 
 		return { completeSuccess: true };
 	},

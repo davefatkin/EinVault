@@ -1,8 +1,16 @@
-import { test, expect } from '../lib/fixtures';
+import Database from 'better-sqlite3';
+import path from 'node:path';
+import { test, expect, type AppWorker } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
 
 const COMP = 'seed-comp-ein';
+
+function workerDb(app: AppWorker) {
+	const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+	sqlite.pragma('foreign_keys = ON');
+	return sqlite;
+}
 
 test.describe('health events and weight log', () => {
 	test('add health event', async ({ asMember }) => {
@@ -159,5 +167,49 @@ test.describe('health events and weight log', () => {
 		await expect(weightInput).toHaveCount(0, { timeout: 8_000 });
 		await asMember.waitForTimeout(800);
 		await expect(weightInput).toHaveCount(0);
+	});
+
+	test('the add form points to Medications instead of offering the type', async ({ asMember }) => {
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		await expect(asMember.locator('#type option')).not.toHaveCount(0);
+		await expect(asMember.locator('#type option[value="medication"]')).toHaveCount(0);
+		await expect(asMember.getByRole('link', { name: 'Medications page' })).toHaveAttribute(
+			'href',
+			`/${COMP}/medications`
+		);
+	});
+
+	test('editing an existing Medication event keeps its type', async ({ asMember, app }) => {
+		const id = `e2e-med-event-${Date.now()}`;
+		const sqlite = workerDb(app);
+		sqlite
+			.prepare(
+				`INSERT INTO health_events (id, companion_id, type, title, occurred_at)
+				 VALUES (?, ?, 'medication', ?, unixepoch())`
+			)
+			.run(id, COMP, 'e2e-old-med-event');
+		sqlite.close();
+		try {
+			await asMember.goto(`/${COMP}/health?edit=${id}`);
+			await waitForHydration(asMember);
+			const type = asMember.locator(`#edit-type-${id}`);
+			await expect(type).toHaveValue('medication', { timeout: 8_000 });
+			await asMember.locator(`#edit-title-${id}`).fill('e2e-old-med-event-edited');
+			await asMember.getByRole('button', { name: 'Save', exact: true }).click();
+			await expect(asMember.getByText('e2e-old-med-event-edited')).toBeVisible({
+				timeout: 8_000
+			});
+
+			const check = workerDb(app);
+			const row = check.prepare('SELECT type, title FROM health_events WHERE id = ?').get(id);
+			check.close();
+			expect(row).toEqual({ type: 'medication', title: 'e2e-old-med-event-edited' });
+		} finally {
+			const db = workerDb(app);
+			db.prepare('DELETE FROM health_events WHERE id = ?').run(id);
+			db.close();
+		}
 	});
 });

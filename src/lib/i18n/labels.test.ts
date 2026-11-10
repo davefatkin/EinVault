@@ -5,6 +5,7 @@ import {
 	activityTypeIcon,
 	activityTypeOptions,
 	activitySubtypeOptions,
+	healthTypeOptions,
 	homeSinceLabel,
 	speciesLabels
 } from './labels';
@@ -37,6 +38,12 @@ describe('species-aware icons', () => {
 });
 
 describe('option builders', () => {
+	it('healthTypeOptions leaves medication out of add forms only', () => {
+		const add = healthTypeOptions('en', { includeMedication: false }).map((o) => o.value);
+		const edit = healthTypeOptions('en', { includeMedication: true }).map((o) => o.value);
+		expect(add).toEqual(['vet_visit', 'vaccination', 'procedure', 'other']);
+		expect(edit).toEqual(['vet_visit', 'vaccination', 'medication', 'procedure', 'other']);
+	});
 	it('activityTypeOptions defaults to all canonical types', () => {
 		expect(activityTypeOptions('en').map((o) => o.value)).toContain('litter');
 	});

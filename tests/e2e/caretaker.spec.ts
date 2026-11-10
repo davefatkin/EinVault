@@ -1,4 +1,11 @@
+import { test as base } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { test, expect } from '../lib/fixtures';
+import { createSeededDbNoShift, SEED } from '../lib/seed';
+import { startAppServer, type AppServer } from '../lib/app-server';
+import { getFreePort } from '../lib/ports';
+import { insertMedication, deleteMedications, dosesFor, endMedication } from '../lib/medications';
 import { todayUTC } from '../lib/dates';
 import { pdfUpload, pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
@@ -8,6 +15,7 @@ import {
 	waitForCreatedIncidentId
 } from '../lib/incidents';
 
+const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
 const JULIA = 'seed-comp-julia';
@@ -33,6 +41,11 @@ async function postCareAction(
 	const body = await res.json();
 	return { res, body };
 }
+
+const schedulesSection = (page: import('@playwright/test').Page) =>
+	page
+		.locator('section')
+		.filter({ has: page.getByRole('heading', { name: 'Schedules', exact: true }) });
 
 test.describe('caretaker', () => {
 	test('dashboard redirect + on-shift indicator', async ({ asCaretaker }) => {
@@ -251,29 +264,27 @@ test.describe('caretaker', () => {
 		asCaretaker
 	}) => {
 		await asCaretaker.goto(`/care/${EIN}`);
-		const schedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
+		const schedules = schedulesSection(asCaretaker);
 		await expect(schedules.getByRole('heading', { name: 'Schedules' })).toBeVisible({
 			timeout: 8_000
 		});
-		// Ein has feeding, walk, and medication schedules set → all three cards render.
+		// Ein has feeding and walk schedules set → both cards render. Medications
+		// have their own card now.
 		await expect(schedules.getByText('Half cup of kibble at 7am and 6pm.')).toBeVisible();
 		await expect(
 			schedules.getByText('Two short walks, after breakfast and before dark.')
 		).toBeVisible();
-		await expect(schedules.getByText('Heartworm chew on the first of the month.')).toBeVisible();
 	});
 
 	test('schedule card and activity icons follow the species', async ({ asCaretaker }) => {
 		// Dog keeps the walk schedule card.
 		await asCaretaker.goto(`/care/${EIN}`);
-		const einSchedules = asCaretaker.locator('section').filter({ hasText: 'Medication Schedule' });
+		const einSchedules = schedulesSection(asCaretaker);
 		await expect(einSchedules.locator('p', { hasText: 'Walk Schedule' })).toContainText('🦮');
 
 		// Cat gets the routine card instead.
 		await asCaretaker.goto(`/care/${JULIA}`);
-		const juliaSchedules = asCaretaker
-			.locator('section')
-			.filter({ hasText: 'Medication Schedule' });
+		const juliaSchedules = schedulesSection(asCaretaker);
 		await expect(juliaSchedules.locator('p', { hasText: 'Routine' })).toContainText('🐈');
 		await expect(juliaSchedules.getByText('Walk Schedule')).toHaveCount(0);
 		await expect(
@@ -538,3 +549,145 @@ test.describe('caretaker incidents', () => {
 		}
 	});
 });
+
+test.describe('caretaker medications', () => {
+	test('on shift: card shows the medication and Given logs a dose credited to the caretaker', async ({
+		app,
+		asCaretaker
+	}) => {
+		// A medication called "Medication schedule" is how an upgraded install's
+		// old free text arrives; it has to show on the card like any other.
+		const name = 'Medication schedule';
+		const id = insertMedication(app.dataDir, {
+			companionId: EIN,
+			name,
+			dose: '1 tablet',
+			instructions: 'Heartworm chew on the first of the month.'
+		});
+		try {
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			const card = asCaretaker.getByTestId('care-medications');
+			await expect(card.getByText(name, { exact: true })).toBeVisible({ timeout: 8_000 });
+			await expect(card.getByText('Heartworm chew on the first of the month.')).toBeVisible();
+			await expect(card.getByText('1 tablet')).toBeVisible();
+			// Read-only here: no link to the owner pages, no edit.
+			await expect(card.getByRole('link')).toHaveCount(0);
+
+			await card.getByRole('button', { name: 'Given' }).click();
+			await expect(asCaretaker.getByText(/Dose of .* logged/).first()).toBeVisible({
+				timeout: 8_000
+			});
+			await expect
+				.poll(() => dosesFor(app.dataDir, id))
+				.toEqual([{ givenBy: SEED.caretaker.id, source: 'manual' }]);
+		} finally {
+			deleteMedications(app.dataDir, [id]);
+		}
+	});
+
+	test('a failed Given says why instead of staying silent', async ({ app, asCaretaker }) => {
+		const id = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-care-stale' });
+		try {
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			const card = asCaretaker.getByTestId('care-medications');
+			await expect(card.getByText('e2e-care-stale')).toBeVisible({ timeout: 8_000 });
+			// The course ends while the page is open.
+			endMedication(app.dataDir, id);
+			await card.getByRole('button', { name: 'Given' }).first().click();
+			await expect(asCaretaker.getByText('This medication has ended.')).toBeVisible({
+				timeout: 8_000
+			});
+			expect(dosesFor(app.dataDir, id)).toEqual([]);
+		} finally {
+			deleteMedications(app.dataDir, [id]);
+		}
+	});
+
+	test('direct POSTs cannot log a dose for an ended medication or another companion', async ({
+		app,
+		asCaretaker
+	}) => {
+		const ended = insertMedication(app.dataDir, {
+			companionId: EIN,
+			name: 'e2e-care-ended',
+			endedOn: '2020-01-01'
+		});
+		const edwards = insertMedication(app.dataDir, { companionId: EDWARD, name: 'e2e-care-edward' });
+		const julias = insertMedication(app.dataDir, { companionId: JULIA, name: 'e2e-care-julia' });
+		const post = async (companionId: string, id: string) => {
+			const res = await asCaretaker.request.post(`/care/${companionId}?/given`, {
+				headers: { Origin: app.server.baseURL, Accept: 'application/json' },
+				form: { id }
+			});
+			return { status: res.status(), body: await res.json() };
+		};
+		try {
+			expect((await post(EIN, ended)).status).toBe(400);
+			// Another companion's medication through an assigned companion's URL.
+			expect((await post(EIN, julias)).status).toBe(404);
+			// An unassigned companion's own URL.
+			const unassigned = await post(EDWARD, edwards);
+			expect(unassigned.status).toBe(403);
+			expect(unassigned.body.type).toBe('failure');
+			for (const id of [ended, edwards, julias]) expect(dosesFor(app.dataDir, id)).toEqual([]);
+		} finally {
+			deleteMedications(app.dataDir, [ended, edwards, julias]);
+		}
+	});
+});
+
+// Off shift needs its own server: the shared one has Faye on shift.
+type World = { server: AppServer; dir: string };
+const offShift = base.extend<{ world: World }>({
+	// eslint-disable-next-line no-empty-pattern
+	world: async ({}, use, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`care-meds-${testInfo.workerIndex}-${testInfo.testId}`
+		);
+		const dbPath = createSeededDbNoShift(dir);
+		let server: AppServer;
+		try {
+			server = await startAppServer({ dbPath, env: { PORT: String(await getFreePort()) } });
+		} catch (err) {
+			fs.rmSync(dir, { recursive: true, force: true });
+			throw err;
+		}
+		await use({ server, dir });
+		await server.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+offShift(
+	'off shift: medications are read-only and a direct POST is refused',
+	async ({ world, browser }) => {
+		const id = insertMedication(world.dir, { companionId: EIN, name: 'e2e-care-offshift' });
+		const ctx = await browser.newContext({ baseURL: world.server.baseURL });
+		const page = await ctx.newPage();
+		try {
+			await page.goto('/auth/login');
+			await page.getByLabel('Username').fill(SEED.caretaker.username);
+			await page.getByLabel('Password', { exact: true }).fill(SEED.password);
+			await page.getByRole('button', { name: 'Sign in' }).click();
+			await expect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+
+			await page.goto(`/care/${EIN}`);
+			const card = page.getByTestId('care-medications');
+			await expect(card.getByText('e2e-care-offshift')).toBeVisible({ timeout: 8_000 });
+			await expect(card.getByRole('button', { name: 'Given' })).toHaveCount(0);
+
+			const res = await page.request.post(`/care/${EIN}?/given`, {
+				headers: { Origin: world.server.baseURL, Accept: 'application/json' },
+				form: { id }
+			});
+			expect(res.status()).toBe(403);
+			expect(dosesFor(world.dir, id)).toEqual([]);
+		} finally {
+			await ctx.close();
+		}
+	}
+);
