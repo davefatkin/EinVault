@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
+import sharp from 'sharp';
 import { db, schema } from '#lib/server/db/index.js';
+import { MAX_DOCUMENTS_PER_COMPANION } from '#lib/server/env.js';
 import { localDateISO } from '#lib/date.js';
 import { createSupply, type SupplyInput } from './supplies';
 import { supplyOwnerOnly } from './supply-actions';
@@ -8,13 +10,33 @@ import { actions as newActions } from '../../routes/(app)/(companion)/[companion
 import { actions as detailActions } from '../../routes/(app)/(companion)/[companionId]/supplies/[id]/+page.server';
 import { actions as editActions } from '../../routes/(app)/(companion)/[companionId]/supplies/[id]/edit/+page.server';
 
+// Receipts go to an in-memory store, so a test can see what was put and removed.
+const store = vi.hoisted(() => ({ puts: [] as string[], deletes: [] as string[] }));
+vi.mock('#lib/server/storage/index.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/storage/index.js')>();
+	const backend = {
+		provider: 'local',
+		put: async ({ key }: { key: string }) => {
+			store.puts.push(key);
+			return { key };
+		},
+		get: async () => null,
+		delete: async (key: string) => {
+			store.deletes.push(key);
+		}
+	};
+	return { ...actual, getStorage: () => backend, STORAGE_BACKEND: 'local' };
+});
+
 const EIN = 'sa-ein';
 const ED = 'sa-ed';
 const OTHER = 'sa-other';
 const GONE = 'sa-gone';
 const USER = 'sa-user';
 
-function form(fields: Record<string, string | string[]>) {
+type Fields = Record<string, string | string[] | File>;
+
+function form(fields: Fields) {
 	const fd = new FormData();
 	for (const [k, v] of Object.entries(fields)) {
 		for (const item of Array.isArray(v) ? v : [v]) fd.append(k, item);
@@ -28,7 +50,7 @@ type Action = (e: never) => Promise<unknown>;
 /** Runs an action; a redirect comes back as { status, location } instead of throwing. */
 async function call(
 	action: unknown,
-	fields: Record<string, string | string[]>,
+	fields: Fields,
 	opts: { role?: string; id?: string; companionId?: string } = {}
 ): Promise<Result> {
 	const event = {
@@ -120,6 +142,88 @@ describe('supply actions', () => {
 		expect((await supplyRow(id))?.quantity).toBe(15);
 		const bought = (await purchases(id)).find((e) => e.costMinor !== null);
 		expect(bought).toMatchObject({ costMinor: 1250, currency: 'USD', note: 'vet' });
+	});
+
+	describe('purchase with a receipt', () => {
+		const CAPPED = 'sa-capped';
+		const png = async () =>
+			new File(
+				[
+					new Uint8Array(
+						await sharp({
+							create: { width: 4, height: 4, channels: 3, background: '#fff' }
+						})
+							.png()
+							.toBuffer()
+					)
+				],
+				'receipt.png',
+				{ type: 'image/png' }
+			);
+		const docsOf = (companionId: string) =>
+			db.query.documents.findMany({ where: eq(schema.documents.companionId, companionId) });
+
+		beforeAll(async () => {
+			await db.insert(schema.companions).values({ id: CAPPED, name: 'Capped' });
+			await db.insert(schema.documents).values(
+				Array.from({ length: MAX_DOCUMENTS_PER_COMPANION }, (_, i) => ({
+					id: `sa-doc-${i}`,
+					companionId: CAPPED,
+					filename: `sa-doc-${i}.pdf`,
+					provider: 'local' as const,
+					storageKey: `documents/${CAPPED}/sa-doc-${i}.pdf`,
+					title: `Doc ${i}`,
+					category: 'other' as const,
+					mimeType: 'application/pdf',
+					uploadedBy: USER
+				}))
+			);
+		});
+		beforeEach(() => {
+			store.puts.length = 0;
+			store.deletes.length = 0;
+		});
+
+		it('files the receipt under the pet and links it to the purchase', async () => {
+			const id = await createSupply(input({ name: 'Receipted' }), [EIN], USER);
+			const date = localDateISO();
+			const res = await call(
+				detailActions.purchase,
+				{ date, quantity: '5', receipt: await png() },
+				{ id }
+			);
+			expect(res.status).toBeUndefined();
+			const [doc] = (await docsOf(EIN)).filter((d) => d.title === 'Receipt: Receipted');
+			expect(doc).toMatchObject({
+				category: 'receipt',
+				documentDate: date,
+				mimeType: 'image/png',
+				originalName: 'receipt.png',
+				uploadedBy: USER
+			});
+			expect(store.puts).toEqual([doc.storageKey]);
+			const bought = (await purchases(id)).find((e) => e.documentId !== null);
+			expect(bought).toMatchObject({ documentId: doc.id, companionId: EIN, quantityDelta: 5 });
+			expect((await supplyRow(id))?.quantity).toBe(15);
+		});
+
+		it('at the document cap refuses the purchase and removes the stored receipt', async () => {
+			const id = await createSupply(input({ name: 'Over cap' }), [CAPPED], USER);
+			const before = await supplyRow(id);
+			const res = await call(
+				detailActions.purchase,
+				{ date: localDateISO(), quantity: '5', receipt: await png() },
+				{ id, companionId: CAPPED }
+			);
+			expect(res.status).toBe(400);
+			expect(res.data?.error).toContain(String(MAX_DOCUMENTS_PER_COMPANION));
+			expect(await docsOf(CAPPED)).toHaveLength(MAX_DOCUMENTS_PER_COMPANION);
+			// Only the starting stock's purchase is there.
+			expect(await purchases(id)).toHaveLength(1);
+			expect(await supplyRow(id)).toEqual(before);
+			expect(store.puts).toHaveLength(1);
+			expect(store.deletes).toEqual(store.puts);
+		});
 	});
 
 	it('purchase refuses a receipt pet the supply is not linked to', async () => {
