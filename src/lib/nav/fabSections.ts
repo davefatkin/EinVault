@@ -1,4 +1,4 @@
-import { parseNavPath } from './sections';
+import { parseNavPath } from '#lib/nav/sections.js';
 
 /** A quick-add action shown in the FAB menu. `key` ties it to a section. */
 export interface FabAction {

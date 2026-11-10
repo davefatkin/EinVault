@@ -208,6 +208,40 @@ test.describe('More sheet', () => {
 		await expect(more).toBeFocused();
 	});
 
+	test('the last More row clears the raised quick-add button @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		const quickAdd = asMember
+			.getByRole('navigation', { name: 'Main navigation' })
+			.getByRole('button', { name: 'Quick add', exact: true });
+		const fab = (await quickAdd.boundingBox())!;
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+		const last = (await dialog.getByRole('link').last().boundingBox())!;
+		expect(last.y + last.height).toBeLessThanOrEqual(fab.y);
+	});
+
+	test('More scrolls instead of running off a landscape phone @mobile', async ({ asMember }) => {
+		await asMember.setViewportSize({ width: 667, height: 375 });
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+		const box = (await dialog.boundingBox())!;
+		expect(box.y).toBeGreaterThanOrEqual(0);
+		const rows = dialog.getByRole('link');
+		await expect(rows.first()).toBeInViewport();
+		await rows.last().scrollIntoViewIfNeeded();
+		await expect(rows.last()).toBeInViewport();
+		await rows.first().scrollIntoViewIfNeeded();
+		await rows.first().click();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/health$`));
+	});
+
 	test('tab labels fit at 360px @mobile', async ({ asMember }) => {
 		await asMember.setViewportSize({ width: 360, height: 740 });
 		const navLabels = { es: 'Navegación principal', de: 'Hauptnavigation' } as const;
@@ -593,8 +627,14 @@ test.describe('pet switcher', () => {
 				.getByRole('button', { name: 'Switch companion' })
 				.filter({ visible: true });
 			await expect(trigger).toContainText(name);
+			// The name is said once (no avatar alt text), and an archived pet has
+			// no care status to show.
+			await expect(trigger).not.toHaveAccessibleName(/avatar/i);
+			await expect(trigger).not.toContainText('Care status');
 			await trigger.click();
 			const group = asAdmin.getByRole('group', { name: 'Switch companion' });
+			await expect(group).toBeVisible();
+			await expect(group.getByRole('link', { name: SEED.companions.ein.name })).toBeVisible();
 			await expect(group.getByRole('link', { name })).toHaveCount(0);
 			if (testInfo.project.name === 'mobile') {
 				await expect(asAdmin.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();

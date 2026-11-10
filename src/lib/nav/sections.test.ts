@@ -7,7 +7,7 @@ import {
 	sectionHref,
 	isSectionActive,
 	switchTarget
-} from './sections';
+} from '#lib/nav/sections.js';
 
 describe('sectionHref', () => {
 	it('builds owner and caretaker hrefs', () => {

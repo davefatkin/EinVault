@@ -26,6 +26,9 @@
 	// The sheet sits on top of the bottom bar: its inner row is 56px tall plus a
 	// 1px top border, and the bar pads itself by the safe-area inset.
 	const ABOVE_BAR = 'calc(3.5rem + 1px + env(safe-area-inset-bottom, 0px))';
+	// On a landscape phone the sheet is taller than the room above the bar (and
+	// below the demo banner, when there is one); it scrolls instead.
+	const MAX_HEIGHT = `calc(100dvh - ${ABOVE_BAR} - var(--demo-bar-h, 0px))`;
 
 	const groups = (['health', 'records'] as const).map((group) => ({
 		group,
@@ -79,9 +82,12 @@
 		aria-label={t(locale, 'aria.moreSections')}
 		tabindex="-1"
 		{onkeydown}
-		class="fixed inset-x-0 z-[45] rounded-t-2xl border-t border-border bg-popover px-3 pb-2 shadow-xl animate-in slide-in-from-bottom-4 duration-200 md:hidden print:hidden"
+		class="fixed inset-x-0 z-[45] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-border bg-popover px-3 pb-5 shadow-xl animate-in slide-in-from-bottom-4 duration-200 md:hidden print:hidden"
 		style:bottom={ABOVE_BAR}
+		style:max-height={MAX_HEIGHT}
 	>
+		<!-- pb-5 keeps the last row clear of the quick-add button, which rises
+		     about 12px above the bar into the sheet. -->
 		<button
 			type="button"
 			onclick={dismiss}

@@ -193,7 +193,8 @@
 							{t(locale, NAV_GROUP_LABELS[group])}
 						</p>
 					{/if}
-					<div role="group" aria-labelledby={headingId}>
+					<!-- Only the labeled groups are announced as groups. -->
+					<div role={headingId ? 'group' : undefined} aria-labelledby={headingId}>
 						{#each sectionsByGroup(group) as section (section.key)}
 							{@const isActive = isSectionActive(
 								'owner',

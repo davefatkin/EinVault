@@ -1268,7 +1268,7 @@ const messages: Record<keyof Messages, string> = {
 	'aria.closeAccountMenu': 'Cerrar menú de cuenta',
 	'aria.openAccountMenu': 'Abrir menú de cuenta',
 	'aria.moreSections': 'Más secciones',
-	'aria.closeMoreSections': 'Cerrar más secciones',
+	'aria.closeMoreSections': 'Cerrar otras secciones',
 	'aria.currentSection': 'sección actual',
 	'aria.searchResults': 'Resultados de búsqueda',
 	'theme.light': 'Claro',

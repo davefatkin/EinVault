@@ -57,8 +57,7 @@
 		return petInView ? switchTarget(page.url.pathname, id) : `${basePath}/${id}`;
 	}
 
-	function statusLabel(id: string): string {
-		const s = companionStatus?.[id] ?? 'up-to-date';
+	function statusLabel(s: CareStatus): string {
 		const key =
 			s === 'needs-attention'
 				? 'overview.careStatus.needsAttention'
@@ -68,8 +67,7 @@
 		return t(locale, 'aria.careStatus', { status: t(locale, key) });
 	}
 
-	function dotClass(id: string): string {
-		const s = companionStatus?.[id] ?? 'up-to-date';
+	function dotClass(s: CareStatus): string {
 		if (s === 'needs-attention') return 'bg-coral';
 		if (s === 'due-today') return 'bg-gold';
 		return 'bg-teal';
@@ -100,10 +98,13 @@
 	let wrapperClass = $derived(variant === 'sidebar' ? 'mb-2' : 'flex-1 min-w-0');
 </script>
 
+<!-- No dot for a pet the status map leaves out (an archived pet), rather
+     than a misleading "Up to date". -->
 {#snippet dot(id: string)}
-	{#if companionStatus}
-		<span class="h-2 w-2 shrink-0 rounded-full {dotClass(id)}" aria-hidden="true"></span>
-		<span class="sr-only">{statusLabel(id)}</span>
+	{@const status = companionStatus?.[id]}
+	{#if status}
+		<span class="h-2 w-2 shrink-0 rounded-full {dotClass(status)}" aria-hidden="true"></span>
+		<span class="sr-only">{statusLabel(status)}</span>
 	{/if}
 {/snippet}
 
@@ -120,12 +121,15 @@
 		>
 			<span class="sr-only">{t(locale, 'layout.switchCompanion')}</span>
 			{#if activeCompanion}
-				<CompanionAvatar
-					companionId={activeCompanion.id}
-					avatarPath={activeCompanion.avatarPath}
-					name={activeCompanion.name}
-					size="sm"
-				/>
+				<!-- The name follows; the avatar's alt text would only repeat it. -->
+				<span class="flex shrink-0" aria-hidden="true">
+					<CompanionAvatar
+						companionId={activeCompanion.id}
+						avatarPath={activeCompanion.avatarPath}
+						name={activeCompanion.name}
+						size="sm"
+					/>
+				</span>
 				<span class="flex-1 min-w-0 font-semibold text-sm text-foreground truncate">
 					{activeCompanion.name}
 				</span>

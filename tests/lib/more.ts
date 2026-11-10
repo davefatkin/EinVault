@@ -16,4 +16,5 @@ export async function goViaMore(page: Page, row: string) {
 	await (await moreButton(page)).click();
 	const dialog = page.getByRole('dialog', { name: 'More sections' });
 	await dialog.getByRole('link', { name: row }).click();
+	await expect(dialog).toBeHidden();
 }
