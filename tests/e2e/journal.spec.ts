@@ -524,8 +524,8 @@ test.describe('journal day editor', () => {
 
 		await asMember.getByRole('button', { name: 'Switch companion' }).click();
 		await asMember
-			.getByRole('listbox', { name: 'Switch companion' })
-			.getByRole('button', { name: 'Edward' })
+			.getByRole('group', { name: 'Switch companion' })
+			.getByRole('link', { name: 'Edward' })
 			.first()
 			.click();
 		await expect(asMember).toHaveURL(/\/seed-comp-edward\/journal\//);
@@ -673,8 +673,8 @@ test.describe('journal day editor', () => {
 
 		await asMember.getByRole('button', { name: 'Switch companion' }).click();
 		await asMember
-			.getByRole('listbox', { name: 'Switch companion' })
-			.getByRole('button', { name: 'Edward' })
+			.getByRole('group', { name: 'Switch companion' })
+			.getByRole('link', { name: 'Edward' })
 			.first()
 			.click();
 		await expect(asMember).toHaveURL(/\/seed-comp-edward\/journal\/2026-05-22$/);

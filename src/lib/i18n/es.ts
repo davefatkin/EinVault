@@ -1264,6 +1264,7 @@ const messages: Record<keyof Messages, string> = {
 	'aria.openSearch': 'Abrir búsqueda',
 	'aria.closeQuickAdd': 'Cerrar menú de añadir',
 	'aria.closeSwitcher': 'Cerrar selector de compañero',
+	'aria.careStatus': 'Estado de cuidados: {status}',
 	'aria.accountMenu': 'Menú de cuenta',
 	'aria.closeAccountMenu': 'Cerrar menú de cuenta',
 	'aria.openAccountMenu': 'Abrir menú de cuenta',

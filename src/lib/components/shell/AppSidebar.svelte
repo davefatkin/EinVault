@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import PawLogo from '#lib/components/PawLogo.svelte';
@@ -23,6 +22,7 @@
 	import { modKeyLabel } from '#lib/shortcuts.js';
 	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
+	import CompanionSwitcher from './CompanionSwitcher.svelte';
 
 	type Companion = {
 		id: string;
@@ -49,6 +49,8 @@
 
 	let { companions, activeCompanion, user, companionStatus, onOpenSearch }: Props = $props();
 
+	const locale = getLocale();
+
 	function statusDotClass(id: string): string {
 		const s = companionStatus[id] ?? 'up-to-date';
 		if (s === 'needs-attention') return 'bg-coral';
@@ -62,10 +64,6 @@
 		if (s === 'due-today') return t(locale, 'overview.careStatus.dueToday');
 		return t(locale, 'overview.careStatus.upToDate');
 	}
-
-	const locale = getLocale();
-
-	const OVERVIEW_VALUE = '__overview__';
 
 	let isOverview = $derived(
 		activeCompanion === null && page.url.pathname === '/' && companions.length > 1
@@ -125,29 +123,10 @@
 	$effect(() => {
 		page.url.pathname; // track
 		accountOpen = false;
-		switcherOpen = false;
 	});
-
-	function switchCompanion(id: string) {
-		switcherOpen = false;
-		if (id === OVERVIEW_VALUE) {
-			goto('/');
-			return;
-		}
-		const parts = page.url.pathname.split('/');
-		if (parts[1] === activeCompanion?.id) {
-			const section = parts.slice(2).join('/');
-			goto(`/${id}${section ? `/${section}` : ''}`);
-		} else {
-			goto(`/${id}`);
-		}
-	}
-
-	function handleSwitcherKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			switcherOpen = false;
-		}
-	}
+	$effect(() => {
+		if (switcherOpen) accountOpen = false;
+	});
 </script>
 
 <aside
@@ -173,99 +152,14 @@
 	<!-- Context control -->
 	<div class="px-3 shrink-0">
 		{#if activeCompanion}
-			<!-- Companion switcher (only shown when more than one companion exists) -->
-			{#if companions.length > 1}
-				<div class="relative" role="none">
-					<button
-						type="button"
-						onclick={() => {
-							switcherOpen = !switcherOpen;
-							accountOpen = false;
-						}}
-						onkeydown={handleSwitcherKeydown}
-						aria-label={t(locale, 'layout.switchCompanion')}
-						aria-expanded={switcherOpen}
-						aria-haspopup="listbox"
-						class="flex w-full items-center gap-2.5 rounded-xl border border-border bg-muted px-3 py-2 text-left transition-colors hover:bg-accent mb-2"
-					>
-						<CompanionAvatar
-							companionId={activeCompanion.id}
-							avatarPath={activeCompanion.avatarPath}
-							name={activeCompanion.name}
-							size="sm"
-						/>
-						<span class="flex-1 min-w-0 truncate text-sm font-semibold text-foreground">
-							{activeCompanion.name}
-						</span>
-						<ChevronDown
-							class="h-4 w-4 shrink-0 text-muted-foreground transition-transform {switcherOpen
-								? 'rotate-180'
-								: ''}"
-						/>
-					</button>
-
-					{#if switcherOpen}
-						<button
-							type="button"
-							class="fixed inset-0 z-40 cursor-default"
-							onclick={() => (switcherOpen = false)}
-							aria-label={t(locale, 'aria.closeSwitcher')}
-							tabindex="-1"
-						></button>
-						<ul
-							role="listbox"
-							aria-label={t(locale, 'layout.switchCompanion')}
-							class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-popover py-1 shadow-lg"
-						>
-							<li role="option" aria-selected={isOverview}>
-								<button
-									type="button"
-									onclick={() => switchCompanion(OVERVIEW_VALUE)}
-									class="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isOverview
-										? 'bg-accent text-foreground'
-										: ''}"
-								>
-									<LayoutGrid class="h-4 w-4 shrink-0" />
-									{t(locale, 'nav.overview')}
-								</button>
-							</li>
-							{#each companions as c (c.id)}
-								<li role="option" aria-selected={c.id === activeCompanion?.id}>
-									<button
-										type="button"
-										onclick={() => switchCompanion(c.id)}
-										class="flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-foreground {c.id ===
-										activeCompanion?.id
-											? 'bg-accent text-foreground font-medium'
-											: 'text-muted-foreground'}"
-									>
-										<CompanionAvatar
-											companionId={c.id}
-											avatarPath={c.avatarPath}
-											name={c.name}
-											size="sm"
-										/>
-										<span class="truncate">{c.name}</span>
-									</button>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</div>
-			{:else}
-				<!-- Single companion — just show the name, no switcher -->
-				<div class="flex items-center gap-2.5 px-3 py-2 mb-2">
-					<CompanionAvatar
-						companionId={activeCompanion.id}
-						avatarPath={activeCompanion.avatarPath}
-						name={activeCompanion.name}
-						size="sm"
-					/>
-					<span class="flex-1 min-w-0 truncate text-sm font-semibold text-foreground">
-						{activeCompanion.name}
-					</span>
-				</div>
-			{/if}
+			<CompanionSwitcher
+				variant="sidebar"
+				{companions}
+				{activeCompanion}
+				{companionStatus}
+				includeOverview
+				bind:open={switcherOpen}
+			/>
 		{:else if companions.length > 0}
 			<!-- Overview mode: companion list -->
 			<div class="mb-1">

@@ -25,3 +25,15 @@ export function deleteCompanionByName(dataDir: string, name: string) {
 		sqlite.close();
 	}
 }
+
+/** Archives a companion behind the app's back (is_active = 0). */
+export function archiveCompanion(dataDir: string, id: string) {
+	const sqlite = new Database(path.join(dataDir, 'einvault.db'));
+	try {
+		sqlite
+			.prepare("UPDATE companions SET is_active = 0, archived_at = datetime('now') WHERE id = ?")
+			.run(id);
+	} finally {
+		sqlite.close();
+	}
+}

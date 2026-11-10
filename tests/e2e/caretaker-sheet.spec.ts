@@ -278,8 +278,8 @@ test.describe('caretaker sheet', () => {
 
 		await asCaretaker.getByRole('button', { name: 'Switch companion' }).click();
 		await asCaretaker
-			.getByRole('listbox', { name: 'Switch companion' })
-			.getByRole('button', { name: SEED.companions.julia.name })
+			.getByRole('group', { name: 'Switch companion' })
+			.getByRole('link', { name: SEED.companions.julia.name })
 			.click();
 		await expect(asCaretaker).toHaveURL(new RegExp(`/care/${JULIA}/sheet$`));
 		await expect(

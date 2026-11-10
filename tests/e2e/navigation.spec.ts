@@ -5,6 +5,8 @@ import { test } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { waitForHydration } from '../lib/hydration';
+import { insertMedication, deleteMedications } from '../lib/medications';
+import { archiveCompanion, createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
@@ -35,8 +37,8 @@ test('mobile overview header is a companion dropdown that can jump into a compan
 	await expect(trigger).toBeVisible({ timeout: 8_000 });
 	await expect(trigger).toContainText('Overview');
 	await trigger.click();
-	const listbox = asMember.getByRole('listbox', { name: 'Switch companion' });
-	await listbox.getByRole('button', { name: 'Ein' }).first().click();
+	const group = asMember.getByRole('group', { name: 'Switch companion' });
+	await group.getByRole('link', { name: 'Ein' }).first().click();
 	await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
 });
 
@@ -366,3 +368,89 @@ offShiftTest(
 		await ctx.close();
 	}
 );
+
+// ---------------------------------------------------------------------------
+// One pet switcher: links keep the section, archived pets show, care status
+// ---------------------------------------------------------------------------
+
+const EDWARD = SEED.companions.edward.id;
+
+async function openSwitcher(page: import('@playwright/test').Page) {
+	await waitForHydration(page);
+	const group = page.getByRole('group', { name: 'Switch companion' });
+	await expect(async () => {
+		if (!(await group.isVisible()))
+			await page
+				.getByRole('button', { name: 'Switch companion' })
+				.filter({ visible: true })
+				.click();
+		await expect(group).toBeVisible({ timeout: 1_000 });
+	}).toPass();
+	return group;
+}
+
+test.describe('pet switcher', () => {
+	test('switching pets on a medication page lands on the other pet medications', async ({
+		asMember,
+		app
+	}) => {
+		const medId = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-switch-med' });
+		try {
+			await asMember.goto(`/${EIN}/medications/${medId}`);
+			const group = await openSwitcher(asMember);
+			await group.getByRole('link', { name: 'Edward' }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EDWARD}/medications$`));
+		} finally {
+			deleteMedications(app.dataDir, [medId]);
+		}
+	});
+
+	test('switching pets keeps the journal day', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/journal/2026-05-12`);
+		const group = await openSwitcher(asMember);
+		await group.getByRole('link', { name: 'Edward' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${EDWARD}/journal/2026-05-12$`));
+	});
+
+	test('an archived pet shows in the switcher @mobile', async ({ asAdmin, app }, testInfo) => {
+		const name = `e2e-archived-${testInfo.workerIndex}`;
+		try {
+			const id = await createCompanionViaUi(asAdmin, name);
+			archiveCompanion(app.dataDir, id);
+			await asAdmin.goto(`/${id}`);
+			await waitForHydration(asAdmin);
+			const trigger = asAdmin
+				.getByRole('button', { name: 'Switch companion' })
+				.filter({ visible: true });
+			await expect(trigger).toContainText(name);
+			await trigger.click();
+			const group = asAdmin.getByRole('group', { name: 'Switch companion' });
+			await expect(group.getByRole('link', { name })).toHaveCount(0);
+			if (testInfo.project.name === 'mobile') {
+				await expect(asAdmin.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+			}
+		} finally {
+			deleteCompanionByName(app.dataDir, name);
+		}
+	});
+
+	test('sidebar switcher shows care status', async ({ asMember }, testInfo) => {
+		test.skip(testInfo.project.name === 'mobile', 'the sidebar is desktop-only');
+		await asMember.goto(`/${EIN}`);
+		await waitForHydration(asMember);
+		await expect(
+			asMember.getByRole('button', { name: 'Switch companion' }).filter({ visible: true })
+		).toHaveAccessibleName(/Care status/);
+	});
+
+	test('escape closes the switcher and returns focus to the trigger', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const group = await openSwitcher(asMember);
+		await group.getByRole('link').first().focus();
+		await asMember.keyboard.press('Escape');
+		await expect(group).toHaveCount(0);
+		await expect(
+			asMember.getByRole('button', { name: 'Switch companion' }).filter({ visible: true })
+		).toBeFocused();
+	});
+});

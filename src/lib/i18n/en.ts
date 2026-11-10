@@ -1241,6 +1241,7 @@ const messages = {
 	'aria.openSearch': 'Open search',
 	'aria.closeQuickAdd': 'Close quick add menu',
 	'aria.closeSwitcher': 'Close companion switcher',
+	'aria.careStatus': 'Care status: {status}',
 	'aria.accountMenu': 'Account menu',
 	'aria.closeAccountMenu': 'Close account menu',
 	'aria.openAccountMenu': 'Open account menu',

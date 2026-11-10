@@ -155,16 +155,16 @@ test.describe('species-aware logging', () => {
 			() => ((window as unknown as { __noReload: boolean }).__noReload = true)
 		);
 
-		const listbox = asMember.getByRole('listbox', { name: 'Switch companion' });
+		const switcherPanel = asMember.getByRole('group', { name: 'Switch companion' });
 		await expect(async () => {
-			if (!(await listbox.isVisible()))
+			if (!(await switcherPanel.isVisible()))
 				await asMember
 					.getByRole('button', { name: 'Switch companion' })
 					.filter({ visible: true })
 					.click();
-			await expect(listbox).toBeVisible({ timeout: 1_000 });
+			await expect(switcherPanel).toBeVisible({ timeout: 1_000 });
 		}).toPass();
-		await listbox.getByRole('button', { name: /Julia/ }).click();
+		await switcherPanel.getByRole('link', { name: /Julia/ }).click();
 		await expect(asMember).toHaveURL(new RegExp(`/${JULIA}$`));
 
 		await expect(section.locator(`a[href="/${JULIA}/log?type=litter"]`)).toBeVisible();
