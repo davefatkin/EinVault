@@ -7,24 +7,25 @@ import { startAppServer, type AppServer } from '../lib/app-server';
 import { waitForHydration } from '../lib/hydration';
 import { insertMedication, deleteMedications } from '../lib/medications';
 import { archiveCompanion, createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
+import { moreButton } from '../lib/more';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
 
 // ---------------------------------------------------------------------------
-// A. Owner household tabs + account sheet — mobile-only
+// A. Owner top bar + account sheet — mobile-only
 // ---------------------------------------------------------------------------
 
-test('bottom tab bar shows Overview, Search, You but not Users @mobile', async ({
-	asMember
-}, testInfo) => {
+test('household and settings pages have no bottom bar @mobile', async ({ asMember }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
-	await asMember.goto('/');
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await expect(nav.getByRole('link', { name: 'Overview' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('button', { name: 'Search' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('link', { name: 'Users' })).toHaveCount(0);
+	for (const url of ['/', '/settings']) {
+		await asMember.goto(url);
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(asMember.getByRole('button', { name: 'Open account menu' })).toBeVisible();
+		await expect(asMember.getByRole('navigation', { name: 'Main navigation' })).toHaveCount(0);
+	}
 });
 
 test('mobile overview header is a companion dropdown that can jump into a companion @mobile', async ({
@@ -42,14 +43,13 @@ test('mobile overview header is a companion dropdown that can jump into a compan
 	await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
 });
 
-test('member You tab opens account sheet with Settings + Sign Out only @mobile', async ({
+test('member household account button opens account sheet with Settings + Sign Out only @mobile', async ({
 	asMember
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto('/');
 	await waitForHydration(asMember);
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asMember.getByRole('button', { name: 'Open account menu' }).click();
 
 	const sheet = asMember.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -102,24 +102,13 @@ test('admin companion page account sheet shows Users and Companions @mobile', as
 	await expect(sheet.getByRole('link', { name: 'Companions' })).toBeVisible();
 });
 
-test('overview top bar has no avatar button — You tab is the account entry @mobile', async ({
-	asMember
-}, testInfo) => {
-	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
-	await asMember.goto('/');
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
-	await expect(asMember.getByRole('button', { name: 'Open account menu' })).toHaveCount(0);
-});
-
-test('admin You tab account sheet shows Users and Companions @mobile', async ({
+test('admin household account sheet shows Users and Companions @mobile', async ({
 	asAdmin
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -133,8 +122,7 @@ test('admin account sheet Users link navigates to /admin/users @mobile', async (
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
 	await sheet.getByRole('link', { name: 'Users' }).click();
@@ -147,13 +135,120 @@ test('admin account sheet Companions link navigates to /admin/companions @mobile
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
 	await sheet.getByRole('link', { name: 'Companions' }).click();
 	await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 8_000 });
 });
+
+// ---------------------------------------------------------------------------
+// A2. Pet view bottom bar and More sheet — mobile-only
+// ---------------------------------------------------------------------------
+
+test.describe('More sheet', () => {
+	// eslint-disable-next-line no-empty-pattern
+	test.beforeEach(({}, testInfo) => {
+		test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	});
+
+	test('More opens grouped sections and marks the current one @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/medications`);
+		const more = await moreButton(asMember);
+		await expect(more).toHaveAccessibleName(/current section/);
+		await expect(more).toHaveAttribute('aria-expanded', 'false');
+		await more.click();
+		await expect(more).toHaveAttribute('aria-expanded', 'true');
+
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await expect(dialog.getByRole('heading')).toHaveText(['Health', 'Records']);
+		const rows = dialog.getByRole('link');
+		await expect(rows).toHaveText([/^\s*Health/, 'Medications', 'Supplies', 'Documents', 'Notes']);
+		await expect(dialog.getByText('Vet visits, weight, incidents')).toBeVisible();
+		await expect(rows.filter({ hasText: 'Medications' })).toHaveAttribute('aria-current', 'page');
+		await expect(rows.filter({ hasText: 'Supplies' })).not.toHaveAttribute('aria-current');
+	});
+
+	test('tapping the current section closes More @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/medications`);
+		const more = await moreButton(asMember);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await dialog.getByRole('link', { name: 'Medications' }).click();
+		await expect(dialog).toBeHidden();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/medications$`));
+	});
+
+	test('Escape closes More and returns focus to it @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		await expect(more).not.toHaveAccessibleName(/current section/);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog.getByRole('link').first()).toBeFocused();
+		await asMember.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(more).toBeFocused();
+	});
+
+	test('a tap outside the sheet closes More, even on the inert bar @mobile', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		const box = (await more.boundingBox())!;
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		// The bar is inert while the sheet is open, so the tap lands on the scrim.
+		await asMember.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(dialog).toBeHidden();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
+		await expect(more).toBeFocused();
+	});
+
+	test('tab labels fit at 360px @mobile', async ({ asMember }) => {
+		await asMember.setViewportSize({ width: 360, height: 740 });
+		const navLabels = { es: 'Navegación principal', de: 'Hauptnavigation' } as const;
+		try {
+			for (const locale of ['es', 'de'] as const) {
+				await setLocale(asMember, locale);
+				// Reminders, not the dashboard: the dashboard's quick-log tiles are
+				// wider than 360px in es/de, and an overflowing page widens the
+				// layout viewport, which would widen the tabs too.
+				await asMember.goto(`/${EIN}/reminders`);
+				await waitForHydration(asMember);
+				expect(await asMember.evaluate(() => window.innerWidth)).toBe(360);
+				const nav = asMember.getByRole('navigation', { name: navLabels[locale] });
+				const labels = nav.locator('[data-tab-label]');
+				await expect(labels).toHaveCount(4);
+				for (const label of await labels.all()) {
+					const { scrollWidth, clientWidth, text } = await label.evaluate((el) => ({
+						scrollWidth: el.scrollWidth,
+						clientWidth: el.clientWidth,
+						text: el.textContent
+					}));
+					expect(scrollWidth, `${locale} "${text}" overflows its tab`).toBeLessThanOrEqual(
+						clientWidth
+					);
+				}
+			}
+		} finally {
+			await setLocale(asMember, 'en');
+		}
+	});
+});
+
+async function setLocale(page: import('@playwright/test').Page, locale: string) {
+	await page.goto('/settings');
+	await waitForHydration(page);
+	await page.locator('select[name="locale"]').selectOption(locale);
+	await page.waitForLoadState('networkidle');
+	// Wait for the save to land: the member's locale is shared by every later
+	// spec in this worker.
+	await expect(page.locator('html')).toHaveAttribute('lang', locale);
+}
 
 // ---------------------------------------------------------------------------
 // B. Owner account popover — desktop sidebar

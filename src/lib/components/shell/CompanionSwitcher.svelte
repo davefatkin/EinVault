@@ -90,12 +90,12 @@
 	let triggerClass = $derived(
 		variant === 'sidebar'
 			? 'flex w-full items-center gap-2.5 rounded-xl border border-border bg-muted px-3 py-2 text-left transition-colors hover:bg-accent min-w-0'
-			: 'flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-accent min-w-0'
+			: 'flex w-full min-h-11 items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-accent min-w-0'
 	);
 	let staticClass = $derived(
 		variant === 'sidebar'
 			? 'flex items-center gap-2.5 px-3 py-2 min-w-0'
-			: 'flex items-center gap-2.5 min-w-0 flex-1'
+			: 'flex min-h-11 items-center gap-2.5 min-w-0 flex-1'
 	);
 	let wrapperClass = $derived(variant === 'sidebar' ? 'mb-2' : 'flex-1 min-w-0');
 </script>

@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 import { test, expect, type AppWorker } from '../lib/fixtures';
 import { SEED } from '../lib/seed';
 import { waitForHydration } from '../lib/hydration';
+import { goViaMore, moreButton } from '../lib/more';
 
 const EIN = SEED.companions.ein.id;
 const BASE = `/${EIN}/medications`;
@@ -210,23 +211,11 @@ test.describe('medications (owner)', () => {
 		await expect(asMember.getByRole('heading', { name: 'Medications', level: 1 })).toBeVisible();
 	});
 
-	test('header Medications icon on mobile @mobile', async ({ asMember }, testInfo) => {
-		test.skip(testInfo.project.name !== 'mobile', 'header icons are mobile-only');
+	test('More › Medications on mobile @mobile', async ({ asMember }, testInfo) => {
+		test.skip(testInfo.project.name !== 'mobile', 'the More sheet is mobile-only');
 		await asMember.goto(`/${EIN}`);
-		const icon = asMember.getByRole('link', { name: 'Medications', exact: true });
-		await icon.click();
+		await goViaMore(asMember, 'Medications');
 		await expect(asMember).toHaveURL(new RegExp(`${BASE}$`));
-		await expect(icon).toHaveAttribute('aria-current', 'page');
-
-		const iconBox = await icon.boundingBox();
-		const switcherBox = await asMember
-			.getByRole('button', { name: 'Switch companion' })
-			.boundingBox();
-		expect(iconBox).toBeTruthy();
-		expect(switcherBox).toBeTruthy();
-		const separated =
-			iconBox!.x + iconBox!.width <= switcherBox!.x ||
-			switcherBox!.x + switcherBox!.width <= iconBox!.x;
-		expect(separated, 'header icon must not overlap the companion switcher').toBe(true);
+		await expect(await moreButton(asMember)).toHaveAccessibleName(/current section/);
 	});
 });

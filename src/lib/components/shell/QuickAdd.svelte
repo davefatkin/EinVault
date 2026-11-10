@@ -7,9 +7,11 @@
 		actions: { key: string; href: string; label: string; highlight: boolean }[];
 		icons: Record<string, Component>;
 		open: boolean;
+		/** A fixed 56px slot instead of an equal share of the bar. */
+		narrow?: boolean;
 	}
 
-	let { actions, icons, open = $bindable() }: Props = $props();
+	let { actions, icons, open = $bindable(), narrow = false }: Props = $props();
 
 	const locale = getLocale();
 
@@ -18,7 +20,10 @@
 	}
 </script>
 
-<div class="flex flex-col items-center flex-1 relative" style="padding-bottom: 8px;">
+<div
+	class="relative flex flex-col items-center {narrow ? 'w-14 shrink-0' : 'flex-1'}"
+	style="padding-bottom: 8px;"
+>
 	{#if open}
 		<button
 			type="button"

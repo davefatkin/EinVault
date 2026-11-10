@@ -370,7 +370,7 @@
 	</div>
 {/if}
 
-<div class="space-y-6 pb-20 md:pb-0">
+<div class="space-y-6">
 	<!-- 1. Greeting header -->
 	<PageHeader
 		title={t(locale, 'overview.greeting', { name: data.user.displayName })}

@@ -58,7 +58,7 @@
 
 	<!-- Main content column, offset past the fixed sidebar on desktop -->
 	<div class="flex min-h-screen flex-col min-w-0 md:pl-60 print:min-h-0 print:pl-0">
-		<!-- Mobile top bar + bottom tab bar (hidden on desktop) -->
+		<!-- Mobile top bar, plus the bottom bar while a pet is in view (hidden on desktop) -->
 		<AppMobileNav
 			class="md:hidden"
 			companions={data.companions}
@@ -70,12 +70,14 @@
 		/>
 
 		<main
-			class="flex-1 min-w-0 animate-fade-in pb-24 md:pb-0 px-4 sm:px-6 lg:px-8 py-6 mx-auto w-full max-w-6xl print:p-0 print:max-w-none"
+			class="flex-1 min-w-0 animate-fade-in {activeCompanion
+				? 'pb-24'
+				: ''} md:pb-0 px-4 sm:px-6 lg:px-8 py-6 mx-auto w-full max-w-6xl print:p-0 print:max-w-none"
 		>
 			{@render children()}
 		</main>
 
-		<AppFooter version={data.version} year={data.year} hasBottomBar={true} />
+		<AppFooter version={data.version} year={data.year} hasBottomBar={activeCompanion !== null} />
 	</div>
 </div>
 
