@@ -957,6 +957,11 @@ const messages = {
 	'page.admin.labelUsername': 'Username',
 	'page.admin.labelPassword': 'Password',
 	'page.admin.labelRole': 'Role',
+	'page.admin.roleHelpMember': "Sees and edits every companion's records.",
+	'page.admin.roleHelpAdmin':
+		'Everything a member can do, plus managing users, archiving companions, and household settings.',
+	'page.admin.roleHelpCaretaker':
+		'Sees only the companions assigned to them, and can log care only during a scheduled shift.',
 	'page.admin.labelEmail': 'Email',
 	'page.admin.labelPhone': 'Phone',
 	'page.admin.labelOptional': '(optional)',

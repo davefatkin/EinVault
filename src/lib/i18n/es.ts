@@ -971,6 +971,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.labelUsername': 'Nombre de usuario',
 	'page.admin.labelPassword': 'Contraseña',
 	'page.admin.labelRole': 'Rol',
+	'page.admin.roleHelpMember': 'Ve y edita los registros de todos los compañeros.',
+	'page.admin.roleHelpAdmin':
+		'Todo lo que puede hacer un miembro, además de gestionar usuarios, archivar compañeros y cambiar los ajustes del hogar.',
+	'page.admin.roleHelpCaretaker':
+		'Solo ve los compañeros que tiene asignados y solo puede registrar cuidados durante un turno programado.',
 	'page.admin.labelEmail': 'Correo electrónico',
 	'page.admin.labelPhone': 'Teléfono',
 	'page.admin.labelOptional': '(opcional)',

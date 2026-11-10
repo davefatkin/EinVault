@@ -32,6 +32,14 @@
 	);
 
 	const roleBadge = { admin: 'primary', caretaker: 'teal', member: 'gold' } as const;
+
+	// The add form explains the role it is about to give.
+	let newRole = $state<'member' | 'admin' | 'caretaker'>('member');
+	const roleHelp = {
+		member: 'page.admin.roleHelpMember',
+		admin: 'page.admin.roleHelpAdmin',
+		caretaker: 'page.admin.roleHelpCaretaker'
+	} as const;
 </script>
 
 <svelte:head>
@@ -83,7 +91,10 @@
 					use:enhance={() => {
 						return ({ result, update }) => {
 							update();
-							if (result.type === 'success') showCreateForm = false;
+							if (result.type === 'success') {
+								showCreateForm = false;
+								newRole = 'member';
+							}
 						};
 					}}
 					class="space-y-4"
@@ -112,11 +123,14 @@
 						</div>
 						<div class="space-y-1.5">
 							<Label for="role">{t(locale, 'page.admin.labelRole')}</Label>
-							<Select id="role" name="role">
+							<Select id="role" name="role" bind:value={newRole} aria-describedby="role-help">
 								<option value="member">{t(locale, 'enum.role.member')}</option>
 								<option value="admin">{t(locale, 'enum.role.admin')}</option>
 								<option value="caretaker">{t(locale, 'enum.role.caretaker')}</option>
 							</Select>
+							<p id="role-help" class="text-xs text-muted-foreground">
+								{t(locale, roleHelp[newRole])}
+							</p>
 						</div>
 					</div>
 					<Button type="submit">{t(locale, 'page.admin.createUserSubmit')}</Button>

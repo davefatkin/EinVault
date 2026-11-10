@@ -48,7 +48,10 @@ test.describe('admin-users', () => {
 		await form.getByLabel(/display name/i).fill('E2E User 1');
 		await form.getByLabel(/username/i).fill('e2e-user-1');
 		await form.getByLabel(/password/i).fill(INITIAL_PASSWORD);
-		// Leave role as default (member).
+		// Leave role as default (member); its description sits under the select.
+		await expect(form.getByLabel('Role')).toHaveAccessibleDescription(
+			"Sees and edits every companion's records."
+		);
 
 		await form.getByRole('button', { name: /create user/i }).click();
 
