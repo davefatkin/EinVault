@@ -1565,6 +1565,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.invalidCurrency': 'Choisissez une devise valide.',
 	'page.medications.labelSupply': 'Fourniture',
 	'page.medications.supplyNone': 'Aucune',
+	'page.medications.supplyUnlinked': '{name} (plus associée)',
 	'page.medications.newSupply': 'Nouvelle fourniture',
 	'page.medications.labelDoseUnits': 'Unités par dose',
 	'page.medications.labelDoseUnitsWithUnit': 'Unités par dose ({unit})',

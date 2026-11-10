@@ -1533,6 +1533,7 @@ const messages = {
 	'error.invalidCurrency': 'Choose a valid currency.',
 	'page.medications.labelSupply': 'Supply',
 	'page.medications.supplyNone': 'None',
+	'page.medications.supplyUnlinked': '{name} (no longer linked)',
 	'page.medications.newSupply': 'New supply',
 	'page.medications.labelDoseUnits': 'Units per dose',
 	'page.medications.labelDoseUnitsWithUnit': 'Units per dose ({unit})',

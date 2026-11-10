@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists, getTableColumns, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, getTableColumns, inArray, isNull, notInArray, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
 import { getAppSettings } from '#lib/server/app-settings.js';
@@ -309,6 +309,7 @@ export async function createSupply(
  * Edit a supply's details and replace its companions. The kind never
  * changes (false when the input's kind differs, or the supply is gone), and
  * the quantity, `stocked_on` and starting-stock fields are left alone.
+ * Medications of a pet taken off the supply are unlinked from it.
  */
 export async function updateSupply(
 	id: string,
@@ -329,6 +330,16 @@ export async function updateSupply(
 				.run();
 			tx.delete(schema.supplyCompanions).where(eq(schema.supplyCompanions.supplyId, id)).run();
 			linkCompanions(tx, id, companionIds);
+			// A pet no longer linked stops drawing from the supply.
+			tx.update(schema.medications)
+				.set({ supplyId: null })
+				.where(
+					and(
+						eq(schema.medications.supplyId, id),
+						notInArray(schema.medications.companionId, companionIds)
+					)
+				)
+				.run();
 			return true;
 		},
 		{ behavior: 'immediate' }

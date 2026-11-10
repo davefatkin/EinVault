@@ -398,6 +398,25 @@ describe('updateSupply / deleteSupply / getSupplyForCompanion', () => {
 		expect(await updateSupply('nope', input(), [C1])).toBe(false);
 	});
 
+	it('removing a pet unlinks that pet’s medications from the supply', async () => {
+		const s = await createSupply(input({ startingQuantity: 9 }), [C1, C2], U1);
+		const ein = await med(s);
+		const edward = `m-sup-${++n}`;
+		await db.insert(schema.medications).values({
+			id: edward,
+			companionId: C2,
+			name: 'Carprofen',
+			startedOn: '2026-01-01',
+			supplyId: s,
+			doseUnits: 2
+		});
+		expect(await updateSupply(s, input(), [C2])).toBe(true);
+		const supplyOf = async (id: string) =>
+			(await db.query.medications.findFirst({ where: eq(schema.medications.id, id) }))?.supplyId;
+		expect(await supplyOf(ein)).toBeNull();
+		expect(await supplyOf(edward)).toBe(s);
+	});
+
 	it('getSupplyForCompanion is undefined unless linked', async () => {
 		const s = await createSupply(input(), [C1], U1);
 		expect((await getSupplyForCompanion(C1, s))?.name).toBe('Carprofen');

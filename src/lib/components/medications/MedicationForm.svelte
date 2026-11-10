@@ -25,7 +25,7 @@
 		values?: MedicationFormValues | null;
 		/** Local YYYY-MM-DD, from the server so SSR and hydration agree. */
 		today: string;
-		/** Counted supplies of this pet that doses can draw from. */
+		/** Counted supplies of this pet that doses can draw from, plus an unlinked current one. */
 		supplies: MedicationSupplyOption[];
 		companionId: string;
 		cancelHref?: string;
@@ -120,7 +120,11 @@
 			<Select id="med-supplyId" name="supplyId" bind:value={supplyId}>
 				<option value="">{t(locale, 'page.medications.supplyNone')}</option>
 				{#each supplies as supply (supply.id)}
-					<option value={supply.id}>{supply.name}</option>
+					<option value={supply.id}
+						>{supply.unlinked
+							? t(locale, 'page.medications.supplyUnlinked', { name: supply.name })
+							: supply.name}</option
+					>
 				{/each}
 			</Select>
 			<p class="text-xs text-muted-foreground">

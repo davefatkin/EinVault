@@ -110,8 +110,28 @@ export function medicationFormValuesOf(
 	};
 }
 
-/** A counted supply the form offers to link. */
-export type MedicationSupplyOption = { id: string; name: string; unit: string | null };
+/**
+ * A counted supply the form offers to link. `unlinked` marks the medication's
+ * current supply when its pet is no longer linked to it.
+ */
+export type MedicationSupplyOption = {
+	id: string;
+	name: string;
+	unit: string | null;
+	unlinked?: boolean;
+};
+
+/**
+ * The form's options plus the medication's current supply when it isn't one
+ * of them, so an unrelated edit never silently changes it.
+ */
+export function withCurrentSupply(
+	options: MedicationSupplyOption[],
+	current: MedicationSupply | null
+): MedicationSupplyOption[] {
+	if (!current || options.some((o) => o.id === current.id)) return options;
+	return [...options, { id: current.id, name: current.name, unit: current.unit, unlinked: true }];
+}
 
 /** How far ahead of a dose time "Given" still counts as that dose. */
 export const DOSE_WINDOW_MS = 3 * 60 * 60 * 1000;

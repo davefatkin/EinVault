@@ -6,6 +6,7 @@ import {
 	todayInZone,
 	isMedicationActive,
 	ownerMedicationCaps,
+	withCurrentSupply,
 	type MedicationScheduleItem
 } from '#lib/medications.js';
 
@@ -123,5 +124,20 @@ describe('doseCovered', () => {
 		const med = { lastGiven: given(utc(9, 20)), nextDueAt: null };
 		expect(doseCovered(med, utc(10, 3), 'America/New_York')).toBe(true);
 		expect(doseCovered(med, utc(10, 3), 'UTC')).toBe(false);
+	});
+});
+
+describe('withCurrentSupply', () => {
+	const options = [{ id: 's1', name: 'Carprofen', unit: 'tablets' }];
+	const current = { id: 's2', name: 'Old bottle', quantity: 4, unit: null, daysLeft: null };
+	it('keeps a supply the pet no longer has as an option marked unlinked', () => {
+		expect(withCurrentSupply(options, current)).toEqual([
+			...options,
+			{ id: 's2', name: 'Old bottle', unit: null, unlinked: true }
+		]);
+	});
+	it('leaves the options alone when the supply is offered or there is none', () => {
+		expect(withCurrentSupply(options, { ...current, id: 's1' })).toBe(options);
+		expect(withCurrentSupply(options, null)).toBe(options);
 	});
 });

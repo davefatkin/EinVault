@@ -16,6 +16,7 @@ import {
 } from '#lib/server/medications.js';
 import { listCountedSupplyOptions } from '#lib/server/supplies.js';
 import { givenAction, medicationFormValues, ownerOnly } from '#lib/server/medication-actions.js';
+import { withCurrentSupply } from '#lib/medications.js';
 
 const DOSE_PAGE = 50;
 const MAX_DOSE_PAGES = 20;
@@ -65,7 +66,10 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		doses: doses.slice(0, pages * DOSE_PAGE),
 		// At the cap there is no next page, so "Show more" goes away.
 		moreDoses: doses.length > pages * DOSE_PAGE && pages < MAX_DOSE_PAGES ? pages + 1 : null,
-		supplyOptions: await listCountedSupplyOptions(params.companionId),
+		supplyOptions: withCurrentSupply(
+			await listCountedSupplyOptions(params.companionId),
+			medication.supply
+		),
 		editing: url.searchParams.get('edit') === '1',
 		today
 	};
