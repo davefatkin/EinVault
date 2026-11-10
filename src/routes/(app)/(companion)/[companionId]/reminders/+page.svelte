@@ -670,7 +670,8 @@
 											</div>
 										{/if}
 										<p class="text-xs mt-1 {overdue ? 'text-coral' : 'text-muted-foreground'}">
-											Due <LocalTime date={reminder.dueAt} format="datetime" /><ByLine
+											{t(locale, 'page.reminders.detailDue')}
+											<LocalTime date={reminder.dueAt} format="datetime" /><ByLine
 												user={reminder.logger}
 												variant="inline"
 											/>
