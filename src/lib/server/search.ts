@@ -11,6 +11,9 @@ export interface SearchFilters {
 	types: SearchEntityType[];
 	after?: string; // YYYY-MM-DD inclusive lower bound on event_date
 	before?: string; // YYYY-MM-DD inclusive upper bound
+	// The pet the user is looking at. Only orders results: a shared supply opens
+	// under this pet when it's linked to it.
+	preferCompanionId?: string;
 }
 
 export function hasActiveFilters(f: SearchFilters): boolean {
@@ -97,9 +100,13 @@ const HREF_BY_TYPE: Record<
 /**
  * A supply has one index row per linked companion. Keep the row of one pet so
  * it shows once and its id stays unique in the palette: among the pets the
- * companion filter allows, active ones first, then by name.
+ * companion filter allows, the preferred pet first, then active ones, then by
+ * name.
  */
-export function supplyOnceClause(companionIds: string[]): { sql: string; params: string[] } {
+export function supplyOnceClause(
+	companionIds: string[],
+	preferCompanionId?: string
+): { sql: string; params: string[] } {
 	const allowed = companionIds.length
 		? ` AND sc.companion_id IN (${companionIds.map(() => '?').join(', ')})`
 		: '';
@@ -108,10 +115,10 @@ export function supplyOnceClause(companionIds: string[]): { sql: string; params:
 				SELECT sc.companion_id FROM supply_companions sc
 				JOIN companions sc_c ON sc_c.id = sc.companion_id
 				WHERE sc.supply_id = s.entity_id${allowed}
-				ORDER BY sc_c.is_active DESC, sc_c.name, sc_c.id
+				ORDER BY ${preferCompanionId ? 'sc.companion_id = ? DESC, ' : ''}sc_c.is_active DESC, sc_c.name, sc_c.id
 				LIMIT 1
 			))`,
-		params: companionIds
+		params: preferCompanionId ? [...companionIds, preferCompanionId] : companionIds
 	};
 }
 
@@ -129,7 +136,7 @@ interface SearchRow {
 export function search(filters: SearchFilters): SearchResult[] {
 	const match = buildMatchQuery(filters.text);
 	const fc = buildFilterClause(filters);
-	const once = supplyOnceClause(filters.companionIds);
+	const once = supplyOnceClause(filters.companionIds, filters.preferCompanionId);
 	let rows: SearchRow[];
 
 	if (match) {

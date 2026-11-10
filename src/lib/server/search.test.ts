@@ -580,6 +580,16 @@ describe('supply search', () => {
 		expect(ids(search(q({ text: 'wobblechew', companionIds: [A, B] })))).toEqual([`${id}@${A}`]);
 		// A pet it is not linked to finds nothing.
 		expect(search(q({ text: 'wobblechew', companionIds: ['c-s'] }))).toEqual([]);
+		// The pet being viewed wins without filtering anything out.
+		expect(ids(search(q({ text: 'wobblechew', preferCompanionId: B })))).toEqual([`${id}@${B}`]);
+		// A preferred pet the supply isn't linked to falls back to the usual order.
+		expect(ids(search(q({ text: 'wobblechew', preferCompanionId: 'c-s' })))).toEqual([
+			`${id}@${A}`
+		]);
+		// A pet filter still beats the preference.
+		expect(ids(search(q({ text: 'wobblechew', companionIds: [A], preferCompanionId: B })))).toEqual(
+			[`${id}@${A}`]
+		);
 
 		// An archived pet gives way to an active one.
 		await db.update(schema.companions).set({ isActive: false }).where(eq(schema.companions.id, A));

@@ -447,8 +447,8 @@ test.describe('global search palette', () => {
 test.describe('medications and supplies in search', () => {
 	const EDWARD = SEED.companions.edward.id;
 
-	async function openPalette(page: Page) {
-		await page.goto('/');
+	async function openPalette(page: Page, from = '/') {
+		await page.goto(from);
 		await waitForHydration(page);
 		await page.getByRole('button', { name: 'Open search' }).click();
 		const dialog = page.locator('[role="dialog"]');
@@ -522,6 +522,22 @@ test.describe('medications and supplies in search', () => {
 			// Opens under one of its pets: Edward, whose name sorts first.
 			await expect(asMember).toHaveURL(`/${EDWARD}/supplies/${id}`, { timeout: 8_000 });
 			await expect(asMember).toHaveTitle(new RegExp(`^${name} \\| Edward`));
+		} finally {
+			deleteSupply(app.dataDir, id);
+		}
+	});
+
+	test('a shared supply opens under the pet being viewed', async ({ asMember, app }) => {
+		const id = `e2e-srch-sup-${Date.now().toString(36)}`;
+		const name = `${id} bags`;
+		insertSharedSupply(app.dataDir, id, name);
+		try {
+			const dialog = await openPalette(asMember, `/${COMP}`);
+			await asMember.keyboard.type(id);
+			const options = dialog.getByRole('option').filter({ hasText: name });
+			await expect(options).toHaveCount(1, { timeout: 8_000 });
+			await options.click();
+			await expect(asMember).toHaveURL(`/${COMP}/supplies/${id}`, { timeout: 8_000 });
 		} finally {
 			deleteSupply(app.dataDir, id);
 		}

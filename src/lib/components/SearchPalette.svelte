@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { Search, X } from '@lucide/svelte';
 	import { parseSigilToken, stripSigilToken } from '#lib/searchSigil.js';
@@ -154,6 +155,9 @@
 				for (const tf of tFilters) parts.push(`type=${encodeURIComponent(tf)}`);
 				if (af) parts.push(`after=${encodeURIComponent(af)}`);
 				if (bf) parts.push(`before=${encodeURIComponent(bf)}`);
+				// A shared supply opens under the pet being viewed.
+				const here = page.params.companionId;
+				if (here) parts.push(`prefer=${encodeURIComponent(here)}`);
 				const qs = parts.join('&');
 
 				const res = await fetch(`/api/search?${qs}`, {
