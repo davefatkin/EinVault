@@ -319,8 +319,13 @@ export async function produce(now: Date = new Date()): Promise<void> {
 	];
 	const fresh = await enqueue(rows);
 	if (fresh > 0) console.info(`[notify] enqueued ${fresh} notification(s)`);
-	// Enqueues itself so a supply's sent-markers are written only after its rows are safe.
-	await produceSupplyAlerts(now);
+	// Enqueues itself so a supply's sent-markers are written only after its rows
+	// are safe. A failure here must not stop the drain and cleanup that follow.
+	try {
+		await produceSupplyAlerts(now);
+	} catch (err) {
+		console.error('[notify] supply alerts failed:', err);
+	}
 }
 
 /** Resolve the recipient, or null if no longer eligible at delivery time. */
