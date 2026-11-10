@@ -340,7 +340,8 @@ const messages: Record<keyof Messages, string> = {
 		"Recevez des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
 	'page.settings.notificationsDescriptionBoth':
 		"Recevez des e-mails et des notifications push d'EinVault. Les rappels peuvent aussi vous prévenir à l'avance si des alertes anticipées sont définies. Les membres et les administrateurs sont aussi prévenus quand un soignant signale ou met à jour un incident. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés et ne reçoivent pas les avis de célébration.",
-	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
+	'page.settings.notifyReminderEmailLabel':
+		"M'envoyer un e-mail pour les rappels, les alertes anticipées et les alertes de stock",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
 	'page.settings.notifyCelebrationEmailLabel':
@@ -1312,6 +1313,20 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.cta': 'Ouvrir dans EinVault',
 	'email.incident.footer':
 		"Vous recevez cet e-mail car les alertes d'incident sont activées dans vos réglages EinVault.",
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Stock bas : {name}, {left}',
+	'email.supply.outSubject': 'Épuisé : {name}',
+	'email.supply.lowSubject': 'Stock bas : {name}',
+	'email.supply.expirySubject': 'Expire bientôt : {name}, expire le {date}',
+	'email.supply.greeting': 'Bonjour {name},',
+	'email.supply.runOutBody': '{name} pour {companions} devrait être épuisé vers le {date}.',
+	'email.supply.outBody': '{name} pour {companions} est épuisé.',
+	'email.supply.lowBody': 'Il ne reste que {count} de {name} pour {companions}.',
+	'email.supply.expiryBody': '{name} pour {companions} expire le {date}.',
+	'email.supply.cta': 'Ouvrir dans EinVault',
+	'email.supply.footer':
+		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Rechercher journaux, notes, médias, santé, documents…',

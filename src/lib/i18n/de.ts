@@ -342,7 +342,8 @@ const messages: Record<keyof Messages, string> = {
 		'Erhalte Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
 	'page.settings.notificationsDescriptionBoth':
 		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Erinnerungen können dich auch vorab warnen, wenn Vorwarnungen eingestellt sind. Mitglieder und Admins erfahren außerdem, wenn eine Betreuungsperson einen Vorfall erfasst oder aktualisiert. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt und erhalten keine Feiernachrichten.',
-	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
+	'page.settings.notifyReminderEmailLabel':
+		'E-Mails zu Erinnerungen, Vorwarnungen und Vorratswarnungen senden',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
 	'page.settings.notifyCelebrationEmailLabel': 'Feiern (genaue Geburtstage und Ankunftstage)',
@@ -1313,6 +1314,20 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.cta': 'In EinVault öffnen',
 	'email.incident.footer':
 		'Du erhältst diese E-Mail, weil Vorfall-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Wird knapp: {name}, {left}',
+	'email.supply.outSubject': 'Aufgebraucht: {name}',
+	'email.supply.lowSubject': 'Wird knapp: {name}',
+	'email.supply.expirySubject': 'Läuft bald ab: {name}, Ablauf am {date}',
+	'email.supply.greeting': 'Hallo {name},',
+	'email.supply.runOutBody': '{name} für {companions} reicht voraussichtlich bis etwa {date}.',
+	'email.supply.outBody': '{name} für {companions} ist aufgebraucht.',
+	'email.supply.lowBody': 'Von {name} für {companions} sind nur noch {count} da.',
+	'email.supply.expiryBody': '{name} für {companions} läuft am {date} ab.',
+	'email.supply.cta': 'In EinVault öffnen',
+	'email.supply.footer':
+		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
 
 	// Search palette
 	'search.placeholder': 'Tagebücher, Notizen, Medien, Gesundheit, Dokumente durchsuchen…',

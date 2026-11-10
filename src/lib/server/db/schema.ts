@@ -161,6 +161,9 @@ export const notificationOutbox = sqliteTable(
 		// heads-up: 'reminder:{reminderId}:{dueAtEpochSeconds}:lead{days}:{userId}:{channel}'
 		// shift:    'shift:{shiftId}:{start|end}:{boundaryEpochSeconds}:{userId}:{channel}'
 		// celebration: 'celebration:{companionId}:{YYYY-MM-DD}:{userId}:{channel}'
+		// supply: 'supply:{supplyId}:runout:{stockVersion}:lead{days}:{userId}:{channel}',
+		//         'supply:{supplyId}:low:{stockVersion}:{userId}:{channel}',
+		//         'supply:{supplyId}:expiry:{YYYY-MM-DD}:lead{days}:{userId}:{channel}'
 		// One row per occurrence per recipient per channel.
 		dedupeKey: text('dedupe_key').notNull(),
 		userId: text('user_id')

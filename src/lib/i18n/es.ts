@@ -341,7 +341,8 @@ const messages: Record<keyof Messages, string> = {
 		'Recibe notificaciones push de EinVault. Los recordatorios también pueden avisarte con antelación si hay avisos previos configurados. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
 	'page.settings.notificationsDescriptionBoth':
 		'Recibe correos y notificaciones push de EinVault. Los recordatorios también pueden avisarte con antelación si hay avisos previos configurados. Los miembros y administradores también reciben un aviso cuando un cuidador registra o actualiza un incidente. Los cuidadores solo reciben avisos de recordatorios de los compañeros que tienen asignados y no reciben avisos de celebraciones.',
-	'page.settings.notifyReminderEmailLabel': 'Enviarme un correo cuando venza un recordatorio',
+	'page.settings.notifyReminderEmailLabel':
+		'Enviarme correos sobre recordatorios, avisos previos y alertas de suministros',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviarme un correo 24 horas antes de que un turno empiece o termine',
 	'page.settings.notifyCelebrationEmailLabel':
@@ -1308,6 +1309,20 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.cta': 'Abrir en EinVault',
 	'email.incident.footer':
 		'Recibes este correo porque los avisos de incidentes están activados en tus ajustes de EinVault.',
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Queda poco: {name}, {left}',
+	'email.supply.outSubject': 'Agotado: {name}',
+	'email.supply.lowSubject': 'Queda poco: {name}',
+	'email.supply.expirySubject': 'Caduca pronto: {name}, caduca el {date}',
+	'email.supply.greeting': 'Hola {name}:',
+	'email.supply.runOutBody': '{name} de {companions} debería agotarse alrededor del {date}.',
+	'email.supply.outBody': '{name} de {companions} se ha agotado.',
+	'email.supply.lowBody': 'De {name} para {companions} solo quedan {count}.',
+	'email.supply.expiryBody': '{name} de {companions} caduca el {date}.',
+	'email.supply.cta': 'Abrir en EinVault',
+	'email.supply.footer':
+		'Recibes este correo porque las notificaciones de recordatorios están activadas en tus ajustes de EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Buscar diarios, notas, multimedia, salud, documentos…',

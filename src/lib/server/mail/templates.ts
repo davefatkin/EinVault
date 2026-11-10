@@ -3,6 +3,8 @@ import type { MailMessage } from '#lib/server/mail/index.js';
 import type { Severity } from '#lib/incidents.js';
 import { celebrationLines, type Celebration } from '#lib/celebrations.js';
 import { daysUntil } from '#lib/reminderLeadTimes.js';
+import { formatDateOnly, formatYmd } from '#lib/date.js';
+import { formatRunOut } from '#lib/supplies.js';
 
 // displayName/username are user-controlled; escape anything interpolated into
 // the HTML body so a crafted name cannot inject markup into the email.
@@ -358,6 +360,99 @@ export function buildIncidentEmail(
 				: 'email.incident.updatedSubject',
 			{ name: a.companionName, title: a.title }
 		),
+		text: textParts.join('\n\n'),
+		html
+	};
+}
+
+export type SupplyAlert =
+	| { kind: 'supplyRunOut'; daysLeft: number; runOutOn: string }
+	| { kind: 'supplyLowStock'; quantity: number; unit: string | null }
+	| { kind: 'supplyExpiry'; expiresOn: string };
+
+export interface SupplyAlertInput {
+	name: string;
+	companionNames: string[];
+	alert: SupplyAlert;
+}
+
+/** "Running low: Carprofen, about 7 days left", "Running low: Poop bags", "Expiring soon: Eye drops, expires Nov 23". */
+export function supplyAlertSubject(locale: Locale, s: SupplyAlertInput): string {
+	const a = s.alert;
+	if (a.kind === 'supplyRunOut') {
+		return a.daysLeft <= 0
+			? t(locale, 'email.supply.outSubject', { name: s.name })
+			: t(locale, 'email.supply.runOutSubject', {
+					name: s.name,
+					left: formatRunOut(locale, a.daysLeft)
+				});
+	}
+	if (a.kind === 'supplyLowStock') return t(locale, 'email.supply.lowSubject', { name: s.name });
+	return t(locale, 'email.supply.expirySubject', {
+		name: s.name,
+		date: formatYmd(a.expiresOn, locale, { month: 'short', day: 'numeric' }) ?? a.expiresOn
+	});
+}
+
+/** The body line shared by the email and the ntfy push. */
+export function supplyAlertLine(locale: Locale, s: SupplyAlertInput): string {
+	const a = s.alert;
+	const params = {
+		name: s.name,
+		companions: new Intl.ListFormat(locale, { type: 'conjunction' }).format(s.companionNames)
+	};
+	if (a.kind === 'supplyRunOut') {
+		return a.daysLeft <= 0
+			? t(locale, 'email.supply.outBody', params)
+			: t(locale, 'email.supply.runOutBody', {
+					...params,
+					date: formatDateOnly(a.runOutOn, locale) ?? a.runOutOn
+				});
+	}
+	if (a.kind === 'supplyLowStock') {
+		const amount = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(a.quantity);
+		return t(locale, 'email.supply.lowBody', {
+			...params,
+			count: a.unit ? `${amount} ${a.unit}` : amount
+		});
+	}
+	return t(locale, 'email.supply.expiryBody', {
+		...params,
+		date: formatDateOnly(a.expiresOn, locale) ?? a.expiresOn
+	});
+}
+
+export function buildSupplyAlertEmail(
+	locale: Locale,
+	user: { displayName: string; email: string },
+	s: SupplyAlertInput,
+	link: string | null
+): MailMessage {
+	const greeting = t(locale, 'email.supply.greeting', { name: user.displayName });
+	const line = supplyAlertLine(locale, s);
+	const cta = t(locale, 'email.supply.cta');
+	const footer = t(locale, 'email.supply.footer');
+
+	const textParts = [greeting, line];
+	if (link) textParts.push(link);
+	textParts.push(footer);
+
+	const ctaHtml = link
+		? `\n\t\t<p style="margin: 24px 0;">\n\t\t\t<a href="${escapeHtml(link)}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">${escapeHtml(cta)}</a>\n\t\t</p>`
+		: '';
+
+	const html = `<!doctype html>
+<html>
+	<body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #222;">
+		<p>${tHtml(locale, 'email.supply.greeting', { name: user.displayName })}</p>
+		<p>${escapeHtml(line)}</p>${ctaHtml}
+		<p style="font-size: 12px; color: #666;">${escapeHtml(footer)}</p>
+	</body>
+</html>`;
+
+	return {
+		to: user.email,
+		subject: supplyAlertSubject(locale, s),
 		text: textParts.join('\n\n'),
 		html
 	};

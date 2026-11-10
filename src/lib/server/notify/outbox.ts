@@ -72,6 +72,21 @@ export function incidentDedupeKey(
 	return `incident:${kind}:${id}:${userId}:${channel}`;
 }
 
+// `scope` is the stock version for 'runout' and 'low' and the expiry date for
+// 'expiry', so a restock or a new expiry date re-arms the warning. 'low' has
+// no lead (pass null).
+export function supplyDedupeKey(
+	kind: 'runout' | 'low' | 'expiry',
+	supplyId: string,
+	scope: string,
+	leadDays: number | null,
+	userId: string,
+	channel: OutboxChannel
+): string {
+	const lead = leadDays === null ? '' : `:lead${leadDays}`;
+	return `supply:${supplyId}:${kind}:${scope}${lead}:${userId}:${channel}`;
+}
+
 /** A user relevant to a notification category, as the producers load them. */
 export interface Recipient {
 	id: string;

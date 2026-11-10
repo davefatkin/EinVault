@@ -339,7 +339,8 @@ const messages: Record<keyof Messages, string> = {
 		'Receba notificações push do EinVault. Os lembretes também podem avisar com antecedência, se houver avisos prévios configurados. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
 	'page.settings.notificationsDescriptionBoth':
 		'Receba e-mails e notificações push do EinVault. Os lembretes também podem avisar com antecedência, se houver avisos prévios configurados. Membros e administradores também são avisados quando um cuidador registra ou atualiza um incidente. Cuidadores só são notificados sobre lembretes dos companheiros atribuídos a eles e não recebem avisos de comemorações.',
-	'page.settings.notifyReminderEmailLabel': 'Enviar e-mail quando um lembrete vencer',
+	'page.settings.notifyReminderEmailLabel':
+		'Enviar e-mails sobre lembretes, avisos prévios e alertas de suprimentos',
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
 	'page.settings.notifyCelebrationEmailLabel':
@@ -1307,6 +1308,20 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.cta': 'Abrir no EinVault',
 	'email.incident.footer':
 		'Você está recebendo este e-mail porque os alertas de incidentes estão ativados nas suas configurações do EinVault.',
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Acabando: {name}, {left}',
+	'email.supply.outSubject': 'Esgotado: {name}',
+	'email.supply.lowSubject': 'Acabando: {name}',
+	'email.supply.expirySubject': 'Vence em breve: {name}, vence em {date}',
+	'email.supply.greeting': 'Olá, {name}!',
+	'email.supply.runOutBody': '{name} de {companions} deve acabar por volta de {date}.',
+	'email.supply.outBody': '{name} de {companions} acabou.',
+	'email.supply.lowBody': 'Restam apenas {count} de {name} para {companions}.',
+	'email.supply.expiryBody': '{name} de {companions} vence em {date}.',
+	'email.supply.cta': 'Abrir no EinVault',
+	'email.supply.footer':
+		'Você está recebendo este e-mail porque as notificações de lembretes estão ativadas nas suas configurações do EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Pesquisar diários, notas, mídia, saúde, documentos…',

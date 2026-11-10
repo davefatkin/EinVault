@@ -337,7 +337,8 @@ const messages: Record<keyof Messages, string> = {
 		'Ricevi notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
 	'page.settings.notificationsDescriptionBoth':
 		'Ricevi e-mail e notifiche push da EinVault. I promemoria possono anche avvisarti in anticipo, se sono impostati dei preavvisi. Membri e amministratori ricevono anche un avviso quando un custode registra o aggiorna un incidente. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati e non ricevono avvisi di celebrazione.',
-	'page.settings.notifyReminderEmailLabel': 'Inviami una e-mail quando un promemoria è in scadenza',
+	'page.settings.notifyReminderEmailLabel':
+		'Inviami e-mail per promemoria, preavvisi e avvisi sulle scorte',
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
 	'page.settings.notifyCelebrationEmailLabel':
@@ -1305,6 +1306,20 @@ const messages: Record<keyof Messages, string> = {
 	'email.incident.cta': 'Apri in EinVault',
 	'email.incident.footer':
 		'Ricevi questa e-mail perché gli avvisi sugli incidenti sono attivi nelle tue impostazioni di EinVault.',
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Scorte basse: {name}, {left}',
+	'email.supply.outSubject': 'Esaurito: {name}',
+	'email.supply.lowSubject': 'Scorte basse: {name}',
+	'email.supply.expirySubject': 'In scadenza: {name}, scade il {date}',
+	'email.supply.greeting': 'Ciao {name},',
+	'email.supply.runOutBody': '{name} per {companions} dovrebbe finire intorno al {date}.',
+	'email.supply.outBody': '{name} per {companions} è esaurito.',
+	'email.supply.lowBody': 'Di {name} per {companions} ne restano solo {count}.',
+	'email.supply.expiryBody': '{name} per {companions} scade il {date}.',
+	'email.supply.cta': 'Apri in EinVault',
+	'email.supply.footer':
+		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di EinVault.',
 
 	// Search palette
 	'search.placeholder': 'Cerca diari, note, media, salute, documenti…',

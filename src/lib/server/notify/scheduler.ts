@@ -1,6 +1,6 @@
 // Notification scheduler (issue #12). A 60-second in-process interval that
 // produces outbox rows for due reminders and reminder heads-ups, shifts
-// entering the 24h lead window, and celebrations, then drains the queue
+// entering the 24h lead window, celebrations and supply warnings, then drains the queue
 // through email and ntfy (incident alerts are enqueued on write). Single-flight
 // like the video worker: overlapping ticks are no-ops. Single-process
 // assumption: the in-memory flag and the select-then-claim pattern both
@@ -30,6 +30,7 @@ import { deliverIncident, deliverIncidentNtfy } from './incidents';
 import { publicLink } from './links';
 import { isNtfyEnabled, sendNtfy } from './ntfy';
 import { buildReminderHeadsUpRows } from './reminder-heads-up';
+import { deliverSupplyAlert, deliverSupplyAlertNtfy, produceSupplyAlerts } from './supply-alerts';
 import {
 	CATCH_UP_MS,
 	claimNext,
@@ -317,6 +318,8 @@ export async function produce(now: Date = new Date()): Promise<void> {
 	];
 	const fresh = await enqueue(rows);
 	if (fresh > 0) console.info(`[notify] enqueued ${fresh} notification(s)`);
+	// Enqueues itself so a supply's sent-markers are written only after its rows are safe.
+	await produceSupplyAlerts(now);
 }
 
 /** Resolve the recipient, or null if no longer eligible at delivery time. */
@@ -731,6 +734,12 @@ export async function drain(): Promise<void> {
 					row.payload.kind === 'incidentUpdated'
 				) {
 					await deliverIncident(row, row.payload);
+				} else if (
+					row.payload.kind === 'supplyRunOut' ||
+					row.payload.kind === 'supplyLowStock' ||
+					row.payload.kind === 'supplyExpiry'
+				) {
+					await deliverSupplyAlert(row, row.payload);
 				} else {
 					await skipUnknownKind(row);
 				}
@@ -748,6 +757,12 @@ export async function drain(): Promise<void> {
 					row.payload.kind === 'incidentUpdated'
 				) {
 					await deliverIncidentNtfy(row, row.payload);
+				} else if (
+					row.payload.kind === 'supplyRunOut' ||
+					row.payload.kind === 'supplyLowStock' ||
+					row.payload.kind === 'supplyExpiry'
+				) {
+					await deliverSupplyAlertNtfy(row, row.payload);
 				} else {
 					await skipUnknownKind(row);
 				}

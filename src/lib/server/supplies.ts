@@ -1,14 +1,20 @@
-import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, getTableColumns, inArray, isNull, sql } from 'drizzle-orm';
 import { db, schema } from '#lib/server/db/index.js';
 import { generateId } from '#lib/server/utils.js';
 import { getAppSettings } from '#lib/server/app-settings.js';
 import { exceedsLen, isValidDate, parseIdArray } from '#lib/server/validation.js';
-import type { Tx } from '#lib/server/medications.js';
+import { medicationActiveSql, type Tx } from '#lib/server/medications.js';
 import type { MessageKey } from '#lib/i18n/index.js';
 import { localDateISO, parseYmd } from '#lib/date.js';
-import { validateLeadDays } from '#lib/reminderLeadTimes.js';
+import { parseLeadDays, validateLeadDays } from '#lib/reminderLeadTimes.js';
 import { MAX_NOTE_LEN } from '#lib/textLimits.js';
-import type { SupplyKind } from '#lib/supplies.js';
+import {
+	dailyUse,
+	projectRunOut,
+	supplyAttention,
+	type SupplyKind,
+	type SupplySummary
+} from '#lib/supplies.js';
 
 export const MAX_SUPPLY_NAME_LEN = 200;
 export const MAX_SUPPLY_UNIT_LEN = 50;
@@ -415,6 +421,137 @@ export async function getSupplyForCompanion(companionId: string, id: string) {
 		.where(eq(schema.supplies.id, id))
 		.limit(1);
 	return row;
+}
+
+export type SupplyState = SupplySummary & {
+	stockVersion: string;
+	runOutLeads: number[];
+	expiryLeads: number[];
+	runOutAlerted: string | null;
+	lowAlerted: string | null;
+	expiryAlerted: string | null;
+};
+
+/**
+ * Supplies with their run-out projection and attention flags as of `today`,
+ * ordered by name. Filters: linked to `companionId`; `alertsOnly` keeps
+ * supplies with warnings on; `activeOnly` keeps supplies with at least one
+ * active pet; `supplyId` loads one. `companions` always lists every linked
+ * pet, by name. Daily use counts each open recurring reminder series once
+ * (`seriesId ?? id`) for active medications drawing from the supply.
+ */
+export async function loadSupplyStates(opts: {
+	companionId?: string;
+	supplyId?: string;
+	today: string;
+	alertsOnly?: boolean;
+	activeOnly?: boolean;
+}): Promise<SupplyState[]> {
+	const linked = (companionCondition?: ReturnType<typeof eq>) =>
+		exists(
+			db
+				.select({ one: sql`1` })
+				.from(schema.supplyCompanions)
+				.innerJoin(schema.companions, eq(schema.companions.id, schema.supplyCompanions.companionId))
+				.where(and(eq(schema.supplyCompanions.supplyId, schema.supplies.id), companionCondition))
+		);
+	const rows = await db
+		.select()
+		.from(schema.supplies)
+		.where(
+			and(
+				opts.supplyId ? eq(schema.supplies.id, opts.supplyId) : undefined,
+				opts.companionId
+					? linked(eq(schema.supplyCompanions.companionId, opts.companionId))
+					: undefined,
+				opts.alertsOnly ? eq(schema.supplies.alertsEnabled, true) : undefined,
+				opts.activeOnly ? linked(eq(schema.companions.isActive, true)) : undefined
+			)
+		)
+		.orderBy(asc(schema.supplies.name), asc(schema.supplies.id));
+	if (rows.length === 0) return [];
+	const ids = rows.map((r) => r.id);
+
+	const links = await db
+		.select({
+			supplyId: schema.supplyCompanions.supplyId,
+			id: schema.companions.id,
+			name: schema.companions.name,
+			isActive: schema.companions.isActive
+		})
+		.from(schema.supplyCompanions)
+		.innerJoin(schema.companions, eq(schema.companions.id, schema.supplyCompanions.companionId))
+		.where(inArray(schema.supplyCompanions.supplyId, ids))
+		.orderBy(asc(schema.companions.name), asc(schema.companions.id));
+	const companionsBy = new Map<string, SupplySummary['companions']>();
+	for (const { supplyId, ...c } of links) {
+		const list = companionsBy.get(supplyId) ?? [];
+		list.push(c);
+		companionsBy.set(supplyId, list);
+	}
+
+	const series = await db
+		.select({
+			supplyId: schema.medications.supplyId,
+			doseUnits: schema.medications.doseUnits,
+			reminderId: schema.reminders.id,
+			seriesId: schema.reminders.seriesId,
+			unit: schema.reminders.recurrenceUnit,
+			interval: schema.reminders.recurrenceInterval
+		})
+		.from(schema.reminders)
+		.innerJoin(schema.medications, eq(schema.medications.id, schema.reminders.medicationId))
+		.where(
+			and(
+				inArray(schema.medications.supplyId, ids),
+				medicationActiveSql(opts.today),
+				isNull(schema.reminders.completedAt),
+				eq(schema.reminders.isRecurring, true)
+			)
+		);
+	const seriesBy = new Map<string, Map<string, Parameters<typeof dailyUse>[0][number]>>();
+	for (const r of series) {
+		if (!r.supplyId || !r.unit) continue;
+		const bySeries = seriesBy.get(r.supplyId) ?? new Map();
+		bySeries.set(r.seriesId ?? r.reminderId, {
+			doseUnits: r.doseUnits,
+			unit: r.unit,
+			interval: r.interval ?? 1
+		});
+		seriesBy.set(r.supplyId, bySeries);
+	}
+
+	return rows.map((r) => {
+		const use = dailyUse([...(seriesBy.get(r.id)?.values() ?? [])]);
+		const projection = projectRunOut(r, use, opts.today);
+		const runOutLeads = parseLeadDays(r.runOutLeadDays);
+		const expiryLeads = parseLeadDays(r.expiryLeadDays);
+		const base = {
+			id: r.id,
+			name: r.name,
+			kind: r.kind,
+			unit: r.unit,
+			quantity: r.quantity,
+			lastsDays: r.lastsDays,
+			stockedOn: r.stockedOn,
+			expiresOn: r.expiresOn,
+			alertsEnabled: r.alertsEnabled,
+			lowStockAt: r.lowStockAt,
+			runOutOn: projection?.runOutOn ?? null,
+			daysLeft: projection?.daysLeft ?? null
+		};
+		return {
+			...base,
+			...supplyAttention(base, runOutLeads, expiryLeads, opts.today),
+			companions: companionsBy.get(r.id) ?? [],
+			stockVersion: r.stockVersion,
+			runOutLeads,
+			expiryLeads,
+			runOutAlerted: r.runOutAlerted,
+			lowAlerted: r.lowAlerted,
+			expiryAlerted: r.expiryAlerted
+		};
+	});
 }
 
 const LEAD_ERROR_KEYS = {

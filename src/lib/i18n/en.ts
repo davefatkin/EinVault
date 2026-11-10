@@ -327,7 +327,8 @@ const messages = {
 		'Get push notifications from EinVault. Reminders can warn you ahead of time too, if heads-ups are set. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
 	'page.settings.notificationsDescriptionBoth':
 		'Get emails and push notifications from EinVault. Reminders can warn you ahead of time too, if heads-ups are set. Members and admins also hear when a caretaker logs or updates an incident. Caretakers are only notified about reminders for companions assigned to them, and do not get celebration notices.',
-	'page.settings.notifyReminderEmailLabel': 'Email me when a reminder is due',
+	'page.settings.notifyReminderEmailLabel':
+		'Email me about reminders, heads-ups and supply warnings',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
 	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
 	'page.settings.notifyIncidentEmailLabel': 'Incidents (logged or updated by a caretaker)',
@@ -1285,6 +1286,20 @@ const messages = {
 	'email.incident.cta': 'Open in EinVault',
 	'email.incident.footer':
 		'You are receiving this because incident alerts are on in your EinVault settings.',
+
+	// Email and ntfy: supply warnings
+	'email.supply.runOutSubject': 'Running low: {name}, {left}',
+	'email.supply.outSubject': 'Out of stock: {name}',
+	'email.supply.lowSubject': 'Running low: {name}',
+	'email.supply.expirySubject': 'Expiring soon: {name}, expires {date}',
+	'email.supply.greeting': 'Hi {name},',
+	'email.supply.runOutBody': '{name} for {companions} should run out around {date}.',
+	'email.supply.outBody': '{name} for {companions} has run out.',
+	'email.supply.lowBody': '{name} for {companions} is down to {count}.',
+	'email.supply.expiryBody': '{name} for {companions} expires on {date}.',
+	'email.supply.cta': 'Open in EinVault',
+	'email.supply.footer':
+		'You are receiving this because reminder emails are on in your EinVault settings.',
 
 	// Search palette
 	'search.placeholder': 'Search journals, notes, media, health, documents…',

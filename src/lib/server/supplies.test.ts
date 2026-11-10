@@ -13,6 +13,7 @@ import {
 	correctCount,
 	deleteSupplyEvent,
 	getSupplyForCompanion,
+	loadSupplyStates,
 	parseSupplyForm,
 	type SupplyInput
 } from './supplies';
@@ -501,5 +502,123 @@ describe('parseSupplyForm', () => {
 		]
 	])('rejects %s', (_label, fd, error) => {
 		expect(parseSupplyForm(fd, TODAY)).toEqual({ ok: false, error });
+	});
+});
+
+describe('loadSupplyStates', () => {
+	const TODAY = '2026-11-09';
+	const C3 = 'c-sup-3';
+	const C4 = 'c-sup-4';
+	beforeAll(async () => {
+		await db.insert(schema.companions).values([
+			{ id: C3, name: 'Faye' },
+			{ id: C4, name: 'Vicious', isActive: false }
+		]);
+	});
+
+	async function medOn(supplyId: string, doseUnits: number, endedOn: string | null = null) {
+		const id = `m-sup-${++n}`;
+		await db.insert(schema.medications).values({
+			id,
+			companionId: C3,
+			name: 'Carprofen',
+			startedOn: '2026-01-01',
+			endedOn,
+			supplyId,
+			doseUnits
+		});
+		return id;
+	}
+	async function reminder(
+		medicationId: string,
+		o: Partial<typeof schema.reminders.$inferInsert> = {}
+	) {
+		await db.insert(schema.reminders).values({
+			id: `r-sup-${++n}`,
+			companionId: C3,
+			title: 'Dose',
+			type: 'medication',
+			dueAt: new Date(2026, 10, 10, 8, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			recurrenceAnchor: 'interval',
+			medicationId,
+			...o
+		});
+	}
+
+	it('counts each open recurring series of an active medication once', async () => {
+		const s = await createSupply(input({ startingQuantity: 30 }), [C3, C2], U1);
+		const daily = await medOn(s, 1);
+		// Two open occurrences of one series count once.
+		await reminder(daily, { seriesId: 'ser-a' });
+		await reminder(daily, { seriesId: 'ser-a', dueAt: new Date(2026, 10, 11, 8, 0, 0) });
+		// Completed series and one-off reminders don't count.
+		await reminder(daily, { completedAt: NOW });
+		await reminder(daily, {
+			isRecurring: false,
+			recurrenceUnit: null,
+			recurrenceInterval: null,
+			recurrenceAnchor: null
+		});
+		// 2 units once a week.
+		await reminder(await medOn(s, 2), { recurrenceUnit: 'week' });
+		// An ended medication doesn't count.
+		await reminder(await medOn(s, 5, '2026-11-08'));
+
+		const [state] = await loadSupplyStates({ companionId: C3, today: TODAY });
+		const days = Math.floor(30 / (1 + 2 / 7));
+		expect(state).toMatchObject({
+			id: s,
+			quantity: 30,
+			daysLeft: days,
+			runOutOn: `2026-12-${String(9 + days - 30).padStart(2, '0')}`,
+			runOutLeads: [7],
+			expiryLeads: [14],
+			runningLow: false,
+			expiring: false,
+			stockVersion: (await supplyRow(s)).stockVersion,
+			runOutAlerted: null,
+			lowAlerted: null,
+			expiryAlerted: null
+		});
+		// Every linked pet, by name, even when filtered to one.
+		expect(state.companions).toEqual([
+			{ id: C2, name: 'Edward', isActive: true },
+			{ id: C3, name: 'Faye', isActive: true }
+		]);
+	});
+
+	it('projects a duration supply and flags attention', async () => {
+		const s = await createSupply(
+			durationInput({ firstPurchaseDate: '2026-10-15', lastsDays: 30, expiresOn: '2026-11-20' }),
+			[C3],
+			U1
+		);
+		const state = (await loadSupplyStates({ companionId: C3, today: TODAY })).find(
+			(x) => x.id === s
+		);
+		expect(state).toMatchObject({
+			runOutOn: '2026-11-14',
+			daysLeft: 5,
+			runningLow: true,
+			expiring: true
+		});
+	});
+
+	it('filters by companion, warnings and active pets', async () => {
+		const on = await createSupply(input({ name: 'On' }), [C3], U1);
+		const off = await createSupply(input({ name: 'Off', alertsEnabled: false }), [C3], U1);
+		const archived = await createSupply(input({ name: 'Archived' }), [C4], U1);
+		const ids = async (o: Partial<Parameters<typeof loadSupplyStates>[0]>) =>
+			(await loadSupplyStates({ today: TODAY, ...o })).map((x) => x.id);
+
+		expect(await ids({})).toEqual(expect.arrayContaining([on, off, archived]));
+		expect(await ids({ companionId: C3 })).toEqual(expect.arrayContaining([on, off]));
+		expect(await ids({ companionId: C3 })).not.toContain(archived);
+		expect(await ids({ alertsOnly: true })).not.toContain(off);
+		expect(await ids({ activeOnly: true })).not.toContain(archived);
+		expect(await ids({ activeOnly: true })).toContain(on);
 	});
 });
