@@ -607,6 +607,22 @@ describe('loadSupplyStates', () => {
 		});
 	});
 
+	it('a far-off run-out loads capped instead of throwing', async () => {
+		// Written past the input caps, as an older row or a direct edit could be.
+		const huge = await createSupply(input({ name: 'Huge' }), [C3], U1);
+		await setQuantity(huge, 3_000_000);
+		await reminder(await medOn(huge, 1));
+		const tiny = await createSupply(input({ name: 'Tiny', startingQuantity: 300 }), [C3], U1);
+		await reminder(await medOn(tiny, 0.0001));
+		const states = await loadSupplyStates({ companionId: C3, today: TODAY });
+		for (const id of [huge, tiny]) {
+			expect(states.find((x) => x.id === id)).toMatchObject({
+				daysLeft: 3650,
+				runOutOn: '2036-11-06'
+			});
+		}
+	});
+
 	it('filters by companion, warnings and active pets', async () => {
 		const on = await createSupply(input({ name: 'On' }), [C3], U1);
 		const off = await createSupply(input({ name: 'Off', alertsEnabled: false }), [C3], U1);

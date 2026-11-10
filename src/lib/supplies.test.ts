@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	dailyUse,
+	MAX_PROJECTION_DAYS,
 	projectRunOut,
 	shortestEligibleLead,
 	isLowStock,
@@ -43,6 +44,20 @@ describe('projectRunOut', () => {
 		expect(projectRunOut(d, 0, '2026-11-09')).toEqual({ runOutOn: '2026-12-01', daysLeft: 22 });
 		expect(projectRunOut(d, 0, '2027-01-15')?.daysLeft).toBe(0);
 		expect(projectRunOut({ ...d, stockedOn: null }, 0, '2026-11-09')).toBeNull();
+	});
+	it('caps a far-off run-out at MAX_PROJECTION_DAYS instead of throwing', () => {
+		const capped = { runOutOn: '2036-11-06', daysLeft: MAX_PROJECTION_DAYS };
+		expect(MAX_PROJECTION_DAYS).toBe(3650);
+		// 3,000,000 at 1 a day, and 300 at 0.0001 a day, are both millennia away.
+		expect(projectRunOut(counted(3_000_000), 1, '2026-11-09')).toEqual(capped);
+		expect(
+			projectRunOut(
+				counted(300),
+				dailyUse([{ doseUnits: 0.0001, unit: 'day', interval: 1 }]),
+				'2026-11-09'
+			)
+		).toEqual(capped);
+		expect(projectRunOut(counted(1e300), 1e-300, '2026-11-09')).toEqual(capped);
 	});
 });
 

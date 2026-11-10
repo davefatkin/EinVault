@@ -6,6 +6,9 @@ export type SupplyKind = 'counted' | 'duration';
 
 type Unit = 'day' | 'week' | 'month' | 'year';
 
+/** A run-out further out than this (about ten years) projects as this many days. */
+export const MAX_PROJECTION_DAYS = 3650;
+
 /** Units used per day across recurring dose series: sum of doseUnits / period. */
 export function dailyUse(series: { doseUnits: number; unit: Unit; interval: number }[]): number {
 	let total = 0;
@@ -15,7 +18,8 @@ export function dailyUse(series: { doseUnits: number; unit: Unit; interval: numb
 
 /**
  * Projects when a supply runs out. Counted supplies need a schedule (dailyUse > 0);
- * duration supplies need a purchase date. daysLeft is never below 0.
+ * duration supplies need a purchase date. daysLeft is never below 0, and a
+ * span past MAX_PROJECTION_DAYS is capped there so the date stays a real one.
  */
 export function projectRunOut(
 	s: {
@@ -27,13 +31,15 @@ export function projectRunOut(
 	dailyUse: number,
 	today: string
 ): { runOutOn: string; daysLeft: number } | null {
+	const cap = (days: number) =>
+		Number.isFinite(days) ? Math.min(days, MAX_PROJECTION_DAYS) : MAX_PROJECTION_DAYS;
 	let runOutOn: string;
 	if (s.kind === 'counted') {
 		if (s.quantity === null || !(dailyUse > 0)) return null;
-		runOutOn = addDaysYmd(today, Math.floor(s.quantity / dailyUse));
+		runOutOn = addDaysYmd(today, cap(Math.max(0, Math.floor(s.quantity / dailyUse))));
 	} else {
 		if (!s.stockedOn || s.lastsDays === null) return null;
-		runOutOn = addDaysYmd(s.stockedOn, s.lastsDays);
+		runOutOn = addDaysYmd(s.stockedOn, cap(s.lastsDays));
 	}
 	return { runOutOn, daysLeft: Math.max(0, daysBetweenYmd(today, runOutOn)) };
 }
