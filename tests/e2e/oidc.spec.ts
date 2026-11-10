@@ -89,7 +89,7 @@ test('existing OIDC user logs back in with same identity', async ({ world, page 
 	await expect(page).toHaveURL(/settings/, { timeout: 10_000 });
 
 	// Sign Out lives in the account menu (opened from the sidebar account row).
-	await page.locator('button[aria-haspopup="dialog"]').click();
+	await page.locator('button[aria-haspopup="dialog"]').filter({ visible: true }).click();
 	await page.getByRole('button', { name: /sign out/i }).click();
 	await expect(page).toHaveURL(/auth\/login/, { timeout: 10_000 });
 
