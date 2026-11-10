@@ -6,6 +6,7 @@ import { MAX_NOTE_LEN } from '#lib/textLimits.js';
 import { localDateISO } from '#lib/date.js';
 import { exceedsLen, isValidDate, type FormParse } from '#lib/server/validation.js';
 import { completeReminder, computeNextDueAt, skipReminder } from '#lib/server/reminders.js';
+import { applyDoseStock, restoreDoseStock } from '#lib/server/supplies.js';
 import {
 	DOSE_WINDOW_MS,
 	isMedicationActive,
@@ -72,7 +73,8 @@ export async function getMedication(companionId: string, id: string) {
 	});
 }
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** A synchronous better-sqlite3 transaction handle. */
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** R1: an ended medication never keeps open reminders. */
 function deleteOpenLinkedReminders(tx: Tx, medicationId: string) {
@@ -331,31 +333,38 @@ export async function listDoses(medicationId: string, limit = 50, offset = 0): P
 
 /**
  * Remove a dose logged by mistake: only the dose row, and only when it belongs
- * to this medication of this companion. A reminder it completed stays
- * completed (Restore on the reminders page reopens it).
+ * to this medication of this companion. Its supply use is put back. A reminder
+ * it completed stays completed (Restore on the reminders page reopens it).
  */
 export async function deleteDose(
 	companionId: string,
 	medicationId: string,
 	doseId: string
 ): Promise<boolean> {
-	const owned = db
-		.select({ id: schema.medications.id })
-		.from(schema.medications)
-		.where(
-			and(eq(schema.medications.id, medicationId), eq(schema.medications.companionId, companionId))
-		);
-	const removed = await db
-		.delete(schema.medicationDoses)
-		.where(
-			and(
-				eq(schema.medicationDoses.id, doseId),
-				eq(schema.medicationDoses.medicationId, medicationId),
-				inArray(schema.medicationDoses.medicationId, owned)
-			)
-		)
-		.returning({ id: schema.medicationDoses.id });
-	return removed.length > 0;
+	return db.transaction(
+		(tx) => {
+			const owned = tx
+				.select({ id: schema.medicationDoses.id })
+				.from(schema.medicationDoses)
+				.innerJoin(
+					schema.medications,
+					eq(schema.medications.id, schema.medicationDoses.medicationId)
+				)
+				.where(
+					and(
+						eq(schema.medicationDoses.id, doseId),
+						eq(schema.medications.id, medicationId),
+						eq(schema.medications.companionId, companionId)
+					)
+				)
+				.get();
+			if (!owned) return false;
+			restoreDoseStock(tx, [doseId]);
+			tx.delete(schema.medicationDoses).where(eq(schema.medicationDoses.id, doseId)).run();
+			return true;
+		},
+		{ behavior: 'immediate' }
+	);
 }
 
 /** Safety net: ended medications never keep open reminders. */
@@ -479,14 +488,22 @@ export async function logDose(
 	}
 
 	const doseId = generateId(15);
-	await db.insert(schema.medicationDoses).values({
-		id: doseId,
-		medicationId,
-		givenAt,
-		givenBy: actor.id,
-		source: 'manual',
-		note: opts.note ?? null
-	});
+	db.transaction(
+		(tx) => {
+			tx.insert(schema.medicationDoses)
+				.values({
+					id: doseId,
+					medicationId,
+					givenAt,
+					givenBy: actor.id,
+					source: 'manual',
+					note: opts.note ?? null
+				})
+				.run();
+			applyDoseStock(tx, { id: doseId, medicationId, givenAt, givenBy: actor.id });
+		},
+		{ behavior: 'immediate' }
+	);
 	return { doseId, completedReminderId: null };
 }
 

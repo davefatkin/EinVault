@@ -1531,7 +1531,14 @@ const messages: Record<keyof Messages, string> = {
 	'supply.runOut.out': 'Aufgebraucht',
 	'supply.runOut.day': 'noch etwa {count} Tag',
 	'supply.runOut.days': 'noch etwa {count} Tage',
-	'supply.runOut.weeks': 'noch etwa {count} Wochen'
+	'supply.runOut.weeks': 'noch etwa {count} Wochen',
+	'error.supplyNameTooLong': 'Der Name darf höchstens 200 Zeichen lang sein.',
+	'error.supplyUnitTooLong': 'Die Einheit darf höchstens 50 Zeichen lang sein.',
+	'error.supplyNotesTooLong': 'Notizen dürfen höchstens 5000 Zeichen lang sein.',
+	'error.invalidSupplyKind': 'Wähle aus, wie dieser Vorrat erfasst wird.',
+	'error.invalidQuantity': 'Gib eine Zahl von 0 oder mehr ein.',
+	'error.invalidLastsDays': 'Gib an, wie viele Tage eine Packung reicht (1 bis 365).',
+	'error.purchaseInFuture': 'Ein Kaufdatum darf nicht in der Zukunft liegen.'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

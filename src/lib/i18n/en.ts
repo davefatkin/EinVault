@@ -1499,7 +1499,14 @@ const messages = {
 	'supply.runOut.out': 'Out',
 	'supply.runOut.day': 'about {count} day left',
 	'supply.runOut.days': 'about {count} days left',
-	'supply.runOut.weeks': 'about {count} weeks left'
+	'supply.runOut.weeks': 'about {count} weeks left',
+	'error.supplyNameTooLong': 'Name must be 200 characters or fewer.',
+	'error.supplyUnitTooLong': 'Unit must be 50 characters or fewer.',
+	'error.supplyNotesTooLong': 'Notes must be 5000 characters or fewer.',
+	'error.invalidSupplyKind': 'Choose how to track this supply.',
+	'error.invalidQuantity': 'Enter a number of 0 or more.',
+	'error.invalidLastsDays': 'Enter how many days one lasts, from 1 to 365.',
+	'error.purchaseInFuture': "A purchase date can't be in the future."
 } as const;
 
 export type Messages = typeof messages;

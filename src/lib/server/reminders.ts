@@ -3,6 +3,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { generateId } from '#lib/server/utils.js';
 import { localDateISO } from '#lib/date.js';
 import { isMedicationActive } from '#lib/medications.js';
+import { applyDoseStock } from '#lib/server/supplies.js';
 import {
 	clampDayOfMonth,
 	unpackMonthDay,
@@ -114,18 +115,21 @@ function resolveReminder(
 			!!medication && isMedicationActive(medication.endedOn, localDateISO(completedAt));
 
 		if (medication && medicationActive && outcome === 'completed') {
-			doseId = generateId(15);
+			const id = generateId(15);
+			const givenAt = dose.givenAt ?? completedAt;
 			tx.insert(schema.medicationDoses)
 				.values({
-					id: doseId,
+					id,
 					medicationId: medication.id,
-					givenAt: dose.givenAt ?? completedAt,
+					givenAt,
 					givenBy: userId,
 					reminderId: reminder.id,
 					source: 'reminder',
 					note: dose.note ?? null
 				})
 				.run();
+			applyDoseStock(tx, { id, medicationId: medication.id, givenAt, givenBy: userId });
+			doseId = id;
 		}
 
 		const nextDueAt = computeNextDueAt(reminder);

@@ -1523,7 +1523,14 @@ const messages: Record<keyof Messages, string> = {
 	'supply.runOut.out': 'Esaurito',
 	'supply.runOut.day': 'circa {count} giorno rimasto',
 	'supply.runOut.days': 'circa {count} giorni rimasti',
-	'supply.runOut.weeks': 'circa {count} settimane rimaste'
+	'supply.runOut.weeks': 'circa {count} settimane rimaste',
+	'error.supplyNameTooLong': 'Il nome deve contenere al massimo 200 caratteri.',
+	'error.supplyUnitTooLong': "L'unità deve contenere al massimo 50 caratteri.",
+	'error.supplyNotesTooLong': 'Le note devono contenere al massimo 5000 caratteri.',
+	'error.invalidSupplyKind': 'Scegli come tenere traccia di questa scorta.',
+	'error.invalidQuantity': 'Inserisci un numero pari o superiore a 0.',
+	'error.invalidLastsDays': 'Indica quanti giorni dura una confezione, da 1 a 365.',
+	'error.purchaseInFuture': 'La data di acquisto non può essere nel futuro.'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

@@ -608,3 +608,63 @@ describe('medicationScheduleMarkdown (deprecated API alias)', () => {
 		expect(map.has(C2)).toBe(false);
 	});
 });
+
+describe('supply stock', () => {
+	const now = new Date(2026, 10, 9, 8, 5, 0);
+	let k = 0;
+	async function linkSupply(medicationId: string, quantity: number) {
+		const supplyId = `sup-med-${++k}`;
+		await db
+			.insert(schema.supplies)
+			.values({ id: supplyId, name: 'Carprofen', kind: 'counted', quantity });
+		await db
+			.update(schema.medications)
+			.set({ supplyId })
+			.where(eq(schema.medications.id, medicationId));
+		return supplyId;
+	}
+	const stock = async (supplyId: string) =>
+		(await db.query.supplies.findFirst({ where: eq(schema.supplies.id, supplyId) }))!.quantity;
+	const usesOf = (supplyId: string) =>
+		db.query.supplyEvents.findMany({ where: eq(schema.supplyEvents.supplyId, supplyId) });
+
+	it('a manual dose subtracts once', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await stock(s)).toBe(2);
+		const uses = await usesOf(s);
+		expect(uses).toHaveLength(1);
+		expect(uses[0]).toMatchObject({ quantityDelta: -1, doseId: res.doseId, at: now });
+	});
+
+	it('a dose that completes a reminder subtracts once', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		await addReminder(id, false, new Date(2026, 10, 9, 8, 0, 0));
+		const res = await logDose(id, { id: U1 }, { now });
+		expect(res).toMatchObject({ completedReminderId: expect.any(String) });
+		expect(await stock(s)).toBe(2);
+		expect(await usesOf(s)).toHaveLength(1);
+	});
+
+	it('removing a dose taken at 0.5 left puts back 0.5, not 1', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 0.5);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await stock(s)).toBe(0);
+		expect((await usesOf(s))[0].quantityDelta).toBe(-0.5);
+		expect(await deleteDose(C1, id, res.doseId)).toBe(true);
+		expect(await stock(s)).toBe(0.5);
+		expect(await usesOf(s)).toEqual([]);
+	});
+
+	it('a refused dose delete leaves the stock alone', async () => {
+		const id = await createMedication(C1, input(), U1);
+		const s = await linkSupply(id, 3);
+		const res = (await logDose(id, { id: U1 }, { now })) as { doseId: string };
+		expect(await deleteDose(C2, id, res.doseId)).toBe(false);
+		expect(await stock(s)).toBe(2);
+		expect(await usesOf(s)).toHaveLength(1);
+	});
+});

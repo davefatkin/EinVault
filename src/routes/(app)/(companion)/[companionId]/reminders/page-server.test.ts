@@ -293,6 +293,30 @@ describe('reminders linked to a medication', () => {
 		});
 	});
 
+	it("restore puts back only the restored occurrence's dose stock", async () => {
+		const m = await med();
+		await db
+			.insert(schema.supplies)
+			.values({ id: 'rl-supply', name: 'Pills', kind: 'counted', quantity: 10 });
+		await db
+			.update(schema.medications)
+			.set({ supplyId: 'rl-supply' })
+			.where(eq(schema.medications.id, m));
+		await linkedSeries(m, 'rl-stock');
+		const first = completeReminder(await row('rl-stock'), 'rl-user')!;
+		const second = completeReminder(await row(first.nextReminderId!), 'rl-user')!;
+		const stock = async () =>
+			(await db.query.supplies.findFirst({ where: eq(schema.supplies.id, 'rl-supply') }))!.quantity;
+		expect(await stock()).toBe(8);
+
+		expect(await call('restore', { id: 'rl-stock' })).toEqual({ restoreSuccess: true });
+		expect(await stock()).toBe(9);
+		const uses = await db.query.supplyEvents.findMany({
+			where: eq(schema.supplyEvents.supplyId, 'rl-supply')
+		});
+		expect(uses.map((u) => u.doseId)).toEqual([second.doseId]);
+	});
+
 	it('update refuses moving a dose reminder past the last day', async () => {
 		const m = await med(companionId, '2030-06-19');
 		await linkedSeries(m, 'rl-move');
