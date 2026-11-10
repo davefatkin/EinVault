@@ -229,9 +229,8 @@ const messages = {
 	'nav.medications': 'Medications',
 	'nav.supplies': 'Supplies',
 	'nav.home': 'Home',
-	'nav.group.health': 'Health',
+	'nav.group.care': 'Care',
 	'nav.group.records': 'Records',
-	'nav.hint.health': 'Vet visits, weight, incidents',
 	'nav.more': 'More',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
@@ -462,7 +461,7 @@ const messages = {
 	'page.error.goBack': 'Go back',
 
 	// Component: HealthDetailModal
-	'component.healthDetail.openHealthLog': 'Open in Health Log',
+	'component.healthDetail.openHealthLog': 'Open in Health',
 	'component.healthDetail.unlink': 'Unlink from this day',
 	'component.healthDetail.aboutIncident': 'About incident…',
 	'component.healthDetail.linkIncident': 'Link to an incident',
@@ -825,7 +824,7 @@ const messages = {
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
 
 	// Page: Health
-	'page.health.title': 'Health Log',
+	'page.health.title': 'Health',
 	'page.health.archivedNotice': '{name} is archived. Viewing in read-only mode.',
 	'page.health.logWeight': 'Log Weight',
 	'page.health.addEvent': 'Add Event',
@@ -1170,7 +1169,7 @@ const messages = {
 	'page.incident.print': 'Print',
 	'page.incident.editTitle': 'Edit incident',
 	'page.incident.confirmDelete':
-		'Delete "{title}" with all its updates, photos and videos? Linked vet visits stay in the Health Log.',
+		'Delete "{title}" with all its updates, photos and videos? Linked vet visits stay on the Health page.',
 	'page.incident.confirmDeleteUpdate': 'Delete this update with its photos and videos?',
 	'page.incident.overview': 'Overview',
 	'page.incident.noNotes': 'No notes yet.',

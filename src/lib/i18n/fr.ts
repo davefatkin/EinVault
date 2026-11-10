@@ -241,9 +241,8 @@ const messages: Record<keyof Messages, string> = {
 	'nav.medications': 'Médicaments',
 	'nav.supplies': 'Fournitures',
 	'nav.home': 'Accueil',
-	'nav.group.health': 'Santé',
+	'nav.group.care': 'Soins',
 	'nav.group.records': 'Dossiers',
-	'nav.hint.health': 'Visites chez le vétérinaire, poids, incidents',
 	'nav.more': 'Plus',
 	'nav.settings': 'Paramètres',
 	'nav.admin': 'Administration',
@@ -474,7 +473,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.error.goBack': 'Retour',
 
 	// Component: HealthDetailModal
-	'component.healthDetail.openHealthLog': 'Ouvrir dans le dossier santé',
+	'component.healthDetail.openHealthLog': 'Ouvrir dans Santé',
 	'component.healthDetail.unlink': 'Dissocier de ce jour',
 	'component.healthDetail.aboutIncident': 'À propos de l’incident…',
 	'component.healthDetail.linkIncident': 'Lier à un incident',
@@ -840,7 +839,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
 
 	// Page: Health
-	'page.health.title': 'Dossier santé',
+	'page.health.title': 'Santé',
 	'page.health.archivedNotice': '{name} est archivé. Mode lecture seule.',
 	'page.health.logWeight': 'Enregistrer le poids',
 	'page.health.addEvent': 'Ajouter un événement',
@@ -1195,7 +1194,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.incident.print': 'Imprimer',
 	'page.incident.editTitle': "Modifier l'incident",
 	'page.incident.confirmDelete':
-		'Supprimer « {title} » avec tous ses suivis, photos et vidéos ? Les visites vétérinaires liées restent dans le dossier santé.',
+		'Supprimer « {title} » avec tous ses suivis, photos et vidéos ? Les visites vétérinaires liées restent dans Santé.',
 	'page.incident.confirmDeleteUpdate': 'Supprimer ce suivi avec ses photos et vidéos ?',
 	'page.incident.overview': 'Aperçu',
 	'page.incident.noNotes': 'Pas encore de notes.',

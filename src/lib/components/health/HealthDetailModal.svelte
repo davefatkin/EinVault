@@ -16,7 +16,7 @@
 
 	// The shared health event / weight detail. The health page passes its
 	// Edit/Delete actions as `footer`; journal surfaces pass `healthHref` for a
-	// view-only modal that links to the Health Log, where editing happens.
+	// view-only modal that links to the Health page, where editing happens.
 	let {
 		detail,
 		documents = [],
@@ -33,11 +33,11 @@
 		documents?: D[];
 		onclose: () => void;
 		onPreviewDocument?: (doc: D) => void;
-		/** When set (and no footer), renders an "Open in Health Log" link. */
+		/** When set (and no footer), renders an "Open in Health" link. */
 		healthHref?: string | null;
 		/** Custom footer (e.g. Edit/Delete); overrides healthHref. */
 		footer?: Snippet;
-		/** Extra actions beside the "Open in Health Log" link; ignored when footer is set. */
+		/** Extra actions beside the "Open in Health" link; ignored when footer is set. */
 		footerExtra?: Snippet;
 		/** Builds the journal day URL for a date; the Journal list shows only when set. */
 		journalHref?: (date: string) => string;

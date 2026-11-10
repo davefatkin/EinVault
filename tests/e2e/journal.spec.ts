@@ -323,7 +323,7 @@ test.describe('journal day editor', () => {
 		await asMember.keyboard.press('Escape');
 		await expect(asMember.getByRole('dialog', { name: docName })).toHaveCount(0);
 
-		// The health chip opens the detail in place; its link opens the Health Log.
+		// The health chip opens the detail in place; its link opens the Health page.
 		await healthChip.click();
 		const detail = asMember.getByRole('dialog', { name: eventTitle });
 		await expect(detail).toBeVisible({ timeout: 8_000 });
@@ -336,7 +336,7 @@ test.describe('journal day editor', () => {
 		await asMember.keyboard.press('Escape');
 
 		await healthChip.click();
-		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
+		await asMember.getByRole('link', { name: 'Open in Health' }).click();
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health`));
 		await expect(asMember.locator('[role="dialog"]').getByText(eventTitle)).toBeVisible({
 			timeout: 8_000
@@ -391,7 +391,7 @@ test.describe('journal day editor', () => {
 		const loaded = await days.count();
 
 		await oldChip.click();
-		await asMember.getByRole('link', { name: 'Open in Health Log' }).click();
+		await asMember.getByRole('link', { name: 'Open in Health' }).click();
 		await expect(asMember.locator('[role="dialog"]')).toBeVisible({ timeout: 8_000 });
 		await asMember.goBack();
 		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/journal$`));

@@ -73,7 +73,7 @@ export async function listIncidentsForEvent(
 		.orderBy(desc(H.occurredAt), asc(H.id));
 }
 
-// Every link of a companion's events, grouped by event, for the Health Log.
+// Every link of a companion's events, grouped by event, for the Health page.
 export async function listIncidentLinksByEvent(
 	companionId: string
 ): Promise<Record<string, { id: string; title: string; resolvedAt: Date | null }[]>> {

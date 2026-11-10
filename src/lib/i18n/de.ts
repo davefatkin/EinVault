@@ -243,9 +243,8 @@ const messages: Record<keyof Messages, string> = {
 	'nav.medications': 'Medikamente',
 	'nav.supplies': 'Vorräte',
 	'nav.home': 'Start',
-	'nav.group.health': 'Gesundheit',
+	'nav.group.care': 'Pflege',
 	'nav.group.records': 'Unterlagen',
-	'nav.hint.health': 'Tierarztbesuche, Gewicht, Vorfälle',
 	'nav.more': 'Mehr',
 	'nav.settings': 'Einstellungen',
 	'nav.admin': 'Verwaltung',
@@ -475,7 +474,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.error.goBack': 'Zurück',
 
 	// Component: HealthDetailModal
-	'component.healthDetail.openHealthLog': 'Im Gesundheitsprotokoll öffnen',
+	'component.healthDetail.openHealthLog': 'Unter Gesundheit öffnen',
 	'component.healthDetail.unlink': 'Von diesem Tag lösen',
 	'component.healthDetail.aboutIncident': 'Zum Vorfall…',
 	'component.healthDetail.linkIncident': 'Mit einem Vorfall verknüpfen',
@@ -839,7 +838,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': 'Speichern fehlgeschlagen',
 
 	// Page: Health
-	'page.health.title': 'Gesundheitsprotokoll',
+	'page.health.title': 'Gesundheit',
 	'page.health.archivedNotice': '{name} ist archiviert. Nur-Lese-Modus.',
 	'page.health.logWeight': 'Gewicht erfassen',
 	'page.health.addEvent': 'Ereignis hinzufügen',
@@ -1196,7 +1195,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.incident.print': 'Drucken',
 	'page.incident.editTitle': 'Vorfall bearbeiten',
 	'page.incident.confirmDelete':
-		'„{title}“ mit allen Einträgen, Fotos und Videos löschen? Verknüpfte Tierarztbesuche bleiben im Gesundheitsprotokoll.',
+		'„{title}“ mit allen Einträgen, Fotos und Videos löschen? Verknüpfte Tierarztbesuche bleiben unter Gesundheit.',
 	'page.incident.confirmDeleteUpdate': 'Diesen Eintrag mit seinen Fotos und Videos löschen?',
 	'page.incident.overview': 'Überblick',
 	'page.incident.noNotes': 'Noch keine Notizen.',

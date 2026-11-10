@@ -119,14 +119,7 @@
 							class="h-5 w-5 shrink-0 {active ? 'text-primary' : 'text-muted-foreground'}"
 							aria-hidden="true"
 						/>
-						<span class="flex min-w-0 flex-col">
-							<span>{t(locale, section.labelKey)}</span>
-							{#if section.hintKey}
-								<span class="truncate text-[11px] font-normal text-muted-foreground">
-									{t(locale, section.hintKey)}
-								</span>
-							{/if}
-						</span>
+						<span>{t(locale, section.labelKey)}</span>
 					</a>
 				{/each}
 			</div>

@@ -13,7 +13,6 @@ export type OwnerSection = Base & {
 	group: NavGroup;
 	mobile: 'tab' | 'more';
 	tabLabelKey?: MessageKey;
-	hintKey?: MessageKey;
 };
 export type CaretakerSection = Base & { audience: 'caretaker'; restricted: boolean };
 
@@ -47,7 +46,6 @@ export const OWNER_SECTIONS: readonly OwnerSection[] = [
 		key: 'health',
 		path: 'health',
 		labelKey: 'nav.health',
-		hintKey: 'nav.hint.health',
 		audience: 'owner',
 		group: 'health',
 		mobile: 'more'
@@ -117,7 +115,7 @@ export const PAGE_SECTIONS: { owner: readonly string[]; caretaker: readonly stri
 };
 
 export const NAV_GROUP_LABELS: Record<Exclude<NavGroup, 'primary'>, MessageKey> = {
-	health: 'nav.group.health',
+	health: 'nav.group.care',
 	records: 'nav.group.records'
 };
 

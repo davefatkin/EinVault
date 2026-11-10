@@ -97,7 +97,7 @@ describe('config', () => {
 	});
 	it('only references keys that exist in en', () => {
 		const keys = [
-			...OWNER_SECTIONS.flatMap((s) => [s.labelKey, s.tabLabelKey, s.hintKey]),
+			...OWNER_SECTIONS.flatMap((s) => [s.labelKey, s.tabLabelKey]),
 			...CARETAKER_SECTIONS.map((s) => s.labelKey)
 		].filter((k): k is NonNullable<typeof k> => !!k);
 		for (const k of keys) expect(en).toHaveProperty(k);

@@ -8,7 +8,7 @@
 	import { t, getLocale } from '#lib/i18n/index.js';
 
 	// The create form with its save-then-upload flow, shared by the new-incident
-	// screens (owner Health Log, caretaker care page) and the journal day modal.
+	// screens (owner Health page, caretaker care page) and the journal day modal.
 	// The action returns { id, reminderUrl? } when asked with afterSave=client.
 	let {
 		companionId,

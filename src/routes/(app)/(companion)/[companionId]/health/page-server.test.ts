@@ -80,7 +80,7 @@ describe('health page load', () => {
 		});
 	});
 
-	it('keeps ?detailHealth= for other types and other companions on the Health Log', async () => {
+	it('keeps ?detailHealth= for other types and other companions on the Health page', async () => {
 		expect(await redirectOf('?detailHealth=hp-ev')).toBeNull();
 		expect(await redirectOf('?detailHealth=hp-o-inc')).toBeNull();
 	});

@@ -29,7 +29,7 @@
 		{t(locale, 'page.supplies.backToList')}
 	</a>
 
-	<PageHeader title={t(locale, 'page.supplies.newTitle')} tint="primary">
+	<PageHeader title={t(locale, 'page.supplies.newTitle')} tint="teal">
 		{#snippet icon()}<Package class="h-5 w-5" />{/snippet}
 	</PageHeader>
 

@@ -78,7 +78,7 @@ export function parseRecordTimestamp(value: unknown): Date | null {
 	return d;
 }
 
-// Timestamp from a health or weight form (Health Log, journal day). Blank
+// Timestamp from a health or weight form (Health page, journal day). Blank
 // means now, as before. No future cap: a planned visit can be entered ahead.
 export function parseFormTimestamp(value: string | File | null): Date | null {
 	if (value === null || (typeof value === 'string' && !value.trim())) return new Date();

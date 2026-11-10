@@ -238,9 +238,8 @@ const messages: Record<keyof Messages, string> = {
 	'nav.medications': 'Farmaci',
 	'nav.supplies': 'Scorte',
 	'nav.home': 'Home',
-	'nav.group.health': 'Salute',
+	'nav.group.care': 'Cura',
 	'nav.group.records': 'Archivio',
-	'nav.hint.health': 'Visite dal veterinario, peso, incidenti',
 	'nav.more': 'Altro',
 	'nav.settings': 'Impostazioni',
 	'nav.admin': 'Amministrazione',
@@ -470,7 +469,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.error.goBack': 'Torna indietro',
 
 	// Component: HealthDetailModal
-	'component.healthDetail.openHealthLog': 'Apri nel registro salute',
+	'component.healthDetail.openHealthLog': 'Apri in Salute',
 	'component.healthDetail.unlink': 'Scollega da questo giorno',
 	'component.healthDetail.aboutIncident': 'Sull’incidente…',
 	'component.healthDetail.linkIncident': 'Collega a un incidente',
@@ -834,7 +833,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.saveFailedStatus': 'Salvataggio non riuscito',
 
 	// Page: Health
-	'page.health.title': 'Registro salute',
+	'page.health.title': 'Salute',
 	'page.health.archivedNotice': '{name} è archiviato. Visualizzazione in sola lettura.',
 	'page.health.logWeight': 'Registra peso',
 	'page.health.addEvent': 'Aggiungi evento',
@@ -1188,7 +1187,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.incident.print': 'Stampa',
 	'page.incident.editTitle': 'Modifica incidente',
 	'page.incident.confirmDelete':
-		'Eliminare "{title}" con tutti gli aggiornamenti, le foto e i video? Le visite veterinarie collegate restano nel registro salute.',
+		'Eliminare "{title}" con tutti gli aggiornamenti, le foto e i video? Le visite veterinarie collegate restano in Salute.',
 	'page.incident.confirmDeleteUpdate': 'Eliminare questo aggiornamento con le sue foto e i video?',
 	'page.incident.overview': 'Panoramica',
 	'page.incident.noNotes': 'Ancora nessuna nota.',

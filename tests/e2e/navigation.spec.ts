@@ -162,10 +162,9 @@ test.describe('More sheet', () => {
 
 		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
 		await expect(dialog).toBeVisible();
-		await expect(dialog.getByRole('heading')).toHaveText(['Health', 'Records']);
+		await expect(dialog.getByRole('heading')).toHaveText(['Care', 'Records']);
 		const rows = dialog.getByRole('link');
-		await expect(rows).toHaveText([/^\s*Health/, 'Medications', 'Supplies', 'Documents', 'Notes']);
-		await expect(dialog.getByText('Vet visits, weight, incidents')).toBeVisible();
+		await expect(rows).toHaveText(['Health', 'Medications', 'Supplies', 'Documents', 'Notes']);
 		await expect(rows.filter({ hasText: 'Medications' })).toHaveAttribute('aria-current', 'page');
 		await expect(rows.filter({ hasText: 'Supplies' })).not.toHaveAttribute('aria-current');
 	});
@@ -644,7 +643,7 @@ test.describe('pet switcher', () => {
 		}
 	});
 
-	test('sidebar groups sections under Health and Records', async ({ asMember, app }, testInfo) => {
+	test('sidebar groups sections under Care and Records', async ({ asMember, app }, testInfo) => {
 		test.skip(testInfo.project.name !== 'desktop', 'the sidebar is desktop-only');
 		const medId = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-sidebar-med' });
 		try {
@@ -661,8 +660,8 @@ test.describe('pet switcher', () => {
 				'Documents',
 				'Notes'
 			]);
-			await expect(sidebar.getByText('Health', { exact: true }).first()).toBeVisible();
-			await expect(sidebar.getByRole('group', { name: 'Health' })).toBeVisible();
+			await expect(sidebar.getByText('Care', { exact: true })).toBeVisible();
+			await expect(sidebar.getByRole('group', { name: 'Care' })).toBeVisible();
 			await expect(sidebar.getByRole('group', { name: 'Records' })).toBeVisible();
 			await expect(sidebar.getByText('Records', { exact: true })).toBeVisible();
 			await expect(links.filter({ hasText: 'Medications' })).toHaveAttribute(

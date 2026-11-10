@@ -29,7 +29,7 @@
 		{data.supply.name}
 	</a>
 
-	<PageHeader title={t(locale, 'page.supplies.editTitle')} tint="primary">
+	<PageHeader title={t(locale, 'page.supplies.editTitle')} tint="teal">
 		{#snippet icon()}<Package class="h-5 w-5" />{/snippet}
 	</PageHeader>
 
