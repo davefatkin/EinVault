@@ -106,7 +106,7 @@
 		aria-hidden="true"
 		class={cn(
 			'mt-px flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2',
-			active ? 'border-teal/50' : 'border-border',
+			active ? 'border-teal/50' : 'border-muted-foreground/40',
 			dashed && 'border-dashed'
 		)}
 	>
@@ -261,7 +261,7 @@
 													aria-hidden="true"
 													class={cn(
 														'h-3.5 w-3.5 shrink-0 rounded-full border-2',
-														subActive ? 'border-teal/60' : 'border-border'
+														subActive ? 'border-teal/60' : 'border-muted-foreground/40'
 													)}
 												></span>
 												{#if subHref}
