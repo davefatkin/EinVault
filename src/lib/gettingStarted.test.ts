@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+	GETTING_STARTED_STEPS,
 	currentStep,
+	isStepExpanded,
 	gettingStartedHref,
 	namedReminderHref,
 	reminderToName,
@@ -135,5 +137,30 @@ describe('reminderToName', () => {
 			medication: { supply: true, medication: true, reminder: true, dose: false }
 		});
 		expect(reminderToName(p)).toBeNull();
+	});
+});
+
+describe('isStepExpanded', () => {
+	it('expands the first open step only, when step 4 has no sub-ticks', () => {
+		const p = progress();
+		expect(GETTING_STARTED_STEPS.filter((s) => isStepExpanded(p, s))).toEqual(['quickLog']);
+	});
+
+	it('also expands a half-done step 4 while an earlier step is current', () => {
+		const p = progress({
+			medication: { supply: true, medication: false, reminder: false, dose: false }
+		});
+		expect(GETTING_STARTED_STEPS.filter((s) => isStepExpanded(p, s))).toEqual([
+			'quickLog',
+			'medication'
+		]);
+	});
+
+	it('never expands a done step', () => {
+		const p = progress({
+			done: { quickLog: true, journal: false, health: false, medication: true },
+			medication: { supply: true, medication: true, reminder: true, dose: true }
+		});
+		expect(GETTING_STARTED_STEPS.filter((s) => isStepExpanded(p, s))).toEqual(['journal']);
 	});
 });

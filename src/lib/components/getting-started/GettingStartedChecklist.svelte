@@ -10,6 +10,7 @@
 		currentStep,
 		gettingStartedHref,
 		namedReminderHref,
+		isStepExpanded,
 		reminderToName,
 		stepTarget,
 		type GettingStartedStep,
@@ -201,18 +202,18 @@
 				{/if}
 
 				{#each openSteps as step (step)}
-					{@const active = current?.step === step}
+					{@const expanded = isStepExpanded(progress, step)}
 					{@const titleHref =
-						active && step === 'medication' ? null : linkFor(stepTarget(progress, step))}
+						expanded && step === 'medication' ? null : linkFor(stepTarget(progress, step))}
 					<li
 						class={cn(
 							'relative flex items-start gap-2.5 py-2',
-							active
+							expanded
 								? '-mx-2.5 rounded-xl bg-teal/10 px-2.5'
 								: 'border-t border-border/60 first:border-t-0'
 						)}
 					>
-						{@render openMark(active)}
+						{@render openMark(expanded)}
 						<div class="min-w-0 flex-1">
 							{#if titleHref}
 								<!-- The link covers the whole row so the tap target is the row. -->
@@ -237,11 +238,11 @@
 								{/if}
 							</p>
 
-							{#if active && step === 'medication'}
+							{#if expanded && step === 'medication'}
 								<ol class="mt-1.5 text-xs">
 									{#each MEDICATION_SUBSTEPS as sub (sub)}
 										{@const subDone = progress.medication[sub]}
-										{@const subActive = !subDone && current?.target === sub}
+										{@const subActive = !subDone && stepTarget(progress, 'medication') === sub}
 										{@const subHref = subActive ? linkFor(sub) : null}
 										<li class="flex min-h-7 items-center gap-2">
 											{#if subDone}
@@ -284,7 +285,8 @@
 								</ol>
 							{/if}
 
-							{#if active && current && !linkFor(current.target)}
+							<!-- Per-pet buttons stay on the current step, even when step 4 is also expanded. -->
+							{#if current?.step === step && !linkFor(current.target)}
 								<GettingStartedPetLinks target={current.target} {pets} {today} />
 							{/if}
 						</div>

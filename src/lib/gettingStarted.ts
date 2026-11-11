@@ -61,6 +61,20 @@ export function currentStep(
 	return { step, target: stepTarget(progress, step) };
 }
 
+/**
+ * Expanded steps show their line and, for step 4, the sub-ticks. That is the
+ * current step, plus a half-done step 4 so its progress never hides behind
+ * earlier open steps.
+ */
+export function isStepExpanded(
+	progress: GettingStartedProgress,
+	step: GettingStartedStep
+): boolean {
+	if (progress.done[step]) return false;
+	if (currentStep(progress)?.step === step) return true;
+	return step === 'medication' && MEDICATION_SUBSTEPS.some((s) => progress.medication[s]);
+}
+
 /** What a step links to: itself, or for step 4 its first open sub-step. */
 export function stepTarget(
 	progress: GettingStartedProgress,

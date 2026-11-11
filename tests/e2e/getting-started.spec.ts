@@ -91,6 +91,23 @@ test.describe('getting started card', () => {
 		const done = c.getByTestId('getting-started-done');
 		await expect(done).toHaveText(/Log something with a quick-log tile/);
 		await expect(done.locator('[data-struck]')).toHaveCSS('text-decoration-line', 'line-through');
+
+		// A half-done step 4 shows its sub-ticks even while the journal step is current.
+		await page.goto(`${base}/${pet}/supplies/new`);
+		await waitForHydration(page);
+		await page.locator('#supply-name').fill('Apoquel tablets');
+		await page.locator('#supply-unit').fill('tablets');
+		await page.locator('#supply-startingQuantity').fill('30');
+		await page.getByRole('button', { name: 'Save supply' }).click();
+		await expect(page).toHaveURL(/\/supplies\/(?!new$)[^/]+$/, { timeout: 8_000 });
+		await openDashboard(page, base, pet);
+		await expect(c.getByText('1 of 4')).toBeVisible();
+		await expect(c.getByRole('link', { name: "Write today's journal entry" })).toBeVisible();
+		await expect(c.getByText('Add a supply')).toHaveCSS('text-decoration-line', 'line-through');
+		await expect(c.getByRole('link', { name: 'Add a medication that uses it' })).toHaveAttribute(
+			'href',
+			`/${pet}/medications`
+		);
 	});
 
 	test('the medication chain ticks step 4, then all set, and X hides the card', async ({
