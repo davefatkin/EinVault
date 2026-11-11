@@ -1711,7 +1711,41 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.correctHint':
 		"Comptez ce qu'il reste vraiment. La différence est notée dans l'historique.",
 	'page.supplies.labelActual': 'Quantité réelle',
-	'page.supplies.saveCount': 'Enregistrer le stock'
+	'page.supplies.saveCount': 'Enregistrer le stock',
+	'gettingStarted.title': 'Prise en main',
+	'gettingStarted.subtitle':
+		'Voyez comment les éléments se relient. Les étapes se cochent à mesure que vous utilisez EinVault.',
+	'gettingStarted.subtitleOneLeft': 'Il vous reste un lien à découvrir.',
+	'gettingStarted.allSet': 'Tout est prêt. Chaque étape est faite.',
+	'gettingStarted.hide': 'Masquer la prise en main',
+	'gettingStarted.progress': '{done} sur 4',
+	'gettingStarted.doneFold': '{count} faites : {list}',
+	'gettingStarted.done': 'Fait',
+	'gettingStarted.optional': 'Facultatif',
+	'gettingStarted.forPet': 'Pour {name}',
+	'gettingStarted.quickLogSettings': 'Paramètres > Saisies rapides',
+	'gettingStarted.step.quickLog': 'Enregistrez quelque chose avec une saisie rapide',
+	'gettingStarted.step.quickLogLine': "Elle s'ajoute au jour d'aujourd'hui dans le journal.",
+	'gettingStarted.step.journal': "Écrivez l'entrée du jour dans le journal",
+	'gettingStarted.step.journalLine': 'Votre humeur alimente la tendance de ce tableau de bord.',
+	'gettingStarted.step.health': 'Enregistrez une visite chez le vétérinaire ou un poids',
+	'gettingStarted.step.healthLine':
+		"Cela s'affiche à ce jour dans le journal. « Enregistrer et créer un rappel » planifie le suivi.",
+	'gettingStarted.step.medication': 'Suivez un médicament et sa fourniture',
+	'gettingStarted.step.medicationLine':
+		'Chaque prise donnée est déduite du stock, et la fourniture indique quand elle sera épuisée.',
+	'gettingStarted.step.caretaker': 'Invitez un gardien',
+	'gettingStarted.step.caretakerLine':
+		'Les notes que vous partagez avec lui apparaissent sur sa page de garde.',
+	'gettingStarted.sub.supply': 'Ajoutez une fourniture',
+	'gettingStarted.sub.medication': "Ajoutez un médicament qui l'utilise",
+	'gettingStarted.sub.reminder': 'Ajoutez un rappel de prise',
+	'gettingStarted.sub.reminderNamed': 'Ajoutez un rappel de prise à {name}',
+	'gettingStarted.sub.dose': 'Marquez une prise comme Fait',
+	'gettingStarted.short.quickLog': 'saisies rapides',
+	'gettingStarted.short.journal': 'journal',
+	'gettingStarted.short.health': 'santé',
+	'gettingStarted.short.medication': 'médicaments'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

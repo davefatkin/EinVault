@@ -45,3 +45,50 @@ export interface GettingStartedView {
 	mode: Exclude<CardMode, 'hidden'>;
 	progress: GettingStartedProgress;
 }
+
+export const MEDICATION_SUBSTEPS = ['supply', 'medication', 'reminder', 'dose'] as const;
+export type MedicationSubStep = (typeof MEDICATION_SUBSTEPS)[number];
+
+/** Something the card links to: a step, or one of step 4's sub-steps. */
+export type GettingStartedTarget = Exclude<GettingStartedStep, 'medication'> | MedicationSubStep;
+
+/** The first open step, and for step 4 its first open sub-step. Null when all are done. */
+export function currentStep(
+	progress: GettingStartedProgress
+): { step: GettingStartedStep; target: GettingStartedTarget } | null {
+	const step = GETTING_STARTED_STEPS.find((s) => !progress.done[s]);
+	if (!step) return null;
+	if (step !== 'medication') return { step, target: step };
+	const sub = MEDICATION_SUBSTEPS.find((s) => !progress.medication[s]) ?? 'dose';
+	return { step, target: sub };
+}
+
+/** Where a step is done for one pet. `today` is the server's YYYY-MM-DD. */
+export function gettingStartedHref(
+	target: GettingStartedTarget,
+	companionId: string,
+	today: string
+): string {
+	switch (target) {
+		case 'quickLog':
+			return `/${companionId}/log`;
+		case 'journal':
+			return `/${companionId}/journal/${today}`;
+		case 'health':
+			return `/${companionId}/health`;
+		case 'supply':
+			return `/${companionId}/supplies/new`;
+		case 'medication':
+		case 'reminder':
+			return `/${companionId}/medications`;
+		case 'dose':
+			return `/${companionId}/reminders`;
+	}
+}
+
+/** The medication that has a counted supply but no dose reminder yet. */
+export function namedReminderHref(
+	needsReminder: NonNullable<GettingStartedProgress['needsReminder']>
+): string {
+	return `/${needsReminder.companionId}/medications/${needsReminder.id}`;
+}

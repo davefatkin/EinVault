@@ -1704,7 +1704,41 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.savePurchase': 'Guardar compra',
 	'page.supplies.correctHint': 'Cuenta lo que hay de verdad. La diferencia queda en el historial.',
 	'page.supplies.labelActual': 'Cantidad real',
-	'page.supplies.saveCount': 'Guardar cantidad'
+	'page.supplies.saveCount': 'Guardar cantidad',
+	'gettingStarted.title': 'Primeros pasos',
+	'gettingStarted.subtitle':
+		'Mira cómo se conectan las piezas. Los pasos se marcan solos mientras usas EinVault.',
+	'gettingStarted.subtitleOneLeft': 'Te queda una conexión por usar.',
+	'gettingStarted.allSet': 'Todo listo. Has completado cada paso.',
+	'gettingStarted.hide': 'Ocultar primeros pasos',
+	'gettingStarted.progress': '{done} de 4',
+	'gettingStarted.doneFold': '{count} hechos: {list}',
+	'gettingStarted.done': 'Hecho',
+	'gettingStarted.optional': 'Opcional',
+	'gettingStarted.forPet': 'Para {name}',
+	'gettingStarted.quickLogSettings': 'Ajustes > Registros rápidos',
+	'gettingStarted.step.quickLog': 'Registra algo con un botón de registro rápido',
+	'gettingStarted.step.quickLogLine': 'Se guarda en el día de hoy del diario.',
+	'gettingStarted.step.journal': 'Escribe la entrada de hoy en el diario',
+	'gettingStarted.step.journalLine': 'Tu estado de ánimo alimenta la tendencia de este panel.',
+	'gettingStarted.step.health': 'Registra una visita al veterinario o un peso',
+	'gettingStarted.step.healthLine':
+		'Aparece en ese día del diario. «Guardar y crear recordatorio» agenda el seguimiento.',
+	'gettingStarted.step.medication': 'Sigue un medicamento y su suministro',
+	'gettingStarted.step.medicationLine':
+		'Cada dosis que das sale del stock, y el suministro muestra cuándo se acaba.',
+	'gettingStarted.step.caretaker': 'Invita a un cuidador',
+	'gettingStarted.step.caretakerLine':
+		'Las notas que compartes con ellos aparecen en su página de cuidado.',
+	'gettingStarted.sub.supply': 'Añade un suministro',
+	'gettingStarted.sub.medication': 'Añade un medicamento que lo use',
+	'gettingStarted.sub.reminder': 'Añade un recordatorio de dosis',
+	'gettingStarted.sub.reminderNamed': 'Añade un recordatorio de dosis a {name}',
+	'gettingStarted.sub.dose': 'Marca una dosis como Hecho',
+	'gettingStarted.short.quickLog': 'registros rápidos',
+	'gettingStarted.short.journal': 'diario',
+	'gettingStarted.short.health': 'salud',
+	'gettingStarted.short.medication': 'medicamentos'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

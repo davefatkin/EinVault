@@ -17,6 +17,7 @@
 	import { renderMarkdown } from '#lib/markdown.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
+	import GettingStartedChecklist from '#lib/components/getting-started/GettingStartedChecklist.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
@@ -391,6 +392,15 @@
 		<LocalTime date={new Date()} format="date" /> &middot;
 		{companionCountLabel(data.companions.length)}
 	</p>
+
+	{#if data.gettingStarted}
+		<GettingStartedChecklist
+			view={data.gettingStarted}
+			pets={data.companions}
+			{today}
+			isAdmin={data.user.role === 'admin'}
+		/>
+	{/if}
 
 	<CelebrationBanner entries={data.celebrations} {today} />
 

@@ -1712,7 +1712,42 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.correctHint':
 		'Zähl nach, was wirklich da ist. Der Unterschied kommt in den Verlauf.',
 	'page.supplies.labelActual': 'Tatsächliche Menge',
-	'page.supplies.saveCount': 'Menge speichern'
+	'page.supplies.saveCount': 'Menge speichern',
+	'gettingStarted.title': 'Erste Schritte',
+	'gettingStarted.subtitle':
+		'So hängen die Teile zusammen. Schritte haken sich ab, während du EinVault nutzt.',
+	'gettingStarted.subtitleOneLeft': 'Eine Verbindung hast du noch nicht genutzt.',
+	'gettingStarted.allSet': 'Alles bereit. Jeder Schritt ist erledigt.',
+	'gettingStarted.hide': 'Erste Schritte ausblenden',
+	'gettingStarted.progress': '{done} von 4',
+	'gettingStarted.doneFold': '{count} erledigt: {list}',
+	'gettingStarted.done': 'Erledigt',
+	'gettingStarted.optional': 'Optional',
+	'gettingStarted.forPet': 'Für {name}',
+	'gettingStarted.quickLogSettings': 'Einstellungen > Schnell-Logs',
+	'gettingStarted.step.quickLog': 'Etwas mit einer Schnell-Log-Kachel erfassen',
+	'gettingStarted.step.quickLogLine': 'Es landet im heutigen Tagebuch.',
+	'gettingStarted.step.journal': 'Den heutigen Tagebucheintrag schreiben',
+	'gettingStarted.step.journalLine':
+		'Deine Stimmung fließt in den Verlauf auf diesem Dashboard ein.',
+	'gettingStarted.step.health': 'Einen Tierarztbesuch oder ein Gewicht erfassen',
+	'gettingStarted.step.healthLine':
+		'Es erscheint an diesem Tag im Tagebuch. „Speichern & Erinnerung erstellen“ plant den Folgetermin.',
+	'gettingStarted.step.medication': 'Ein Medikament und seinen Vorrat verfolgen',
+	'gettingStarted.step.medicationLine':
+		'Jede gegebene Dosis wird vom Bestand abgezogen, und der Vorrat zeigt, wann er aufgebraucht ist.',
+	'gettingStarted.step.caretaker': 'Einen Betreuer einladen',
+	'gettingStarted.step.caretakerLine':
+		'Notizen, die du mit ihnen teilst, erscheinen auf ihrer Betreuungsseite.',
+	'gettingStarted.sub.supply': 'Einen Vorrat hinzufügen',
+	'gettingStarted.sub.medication': 'Ein Medikament hinzufügen, das ihn nutzt',
+	'gettingStarted.sub.reminder': 'Eine Dosis-Erinnerung hinzufügen',
+	'gettingStarted.sub.reminderNamed': 'Eine Dosis-Erinnerung für {name} hinzufügen',
+	'gettingStarted.sub.dose': 'Eine Dosis als „Erledigt“ markieren',
+	'gettingStarted.short.quickLog': 'Schnell-Logs',
+	'gettingStarted.short.journal': 'Tagebuch',
+	'gettingStarted.short.health': 'Gesundheit',
+	'gettingStarted.short.medication': 'Medikamente'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

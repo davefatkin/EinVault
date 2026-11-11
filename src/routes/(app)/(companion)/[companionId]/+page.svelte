@@ -3,6 +3,7 @@
 	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
+	import GettingStartedChecklist from '#lib/components/getting-started/GettingStartedChecklist.svelte';
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import MedicationLinkChip from '#lib/components/medications/MedicationLinkChip.svelte';
@@ -529,6 +530,17 @@
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground">
 			{t(locale, 'page.dashboard.archivedBanner', { name: companion.name })}
 		</div>
+	{/if}
+
+	{#if data.gettingStarted}
+		<!-- An archived pet's pages are read-only, so its card offers the active pets instead. -->
+		<GettingStartedChecklist
+			view={data.gettingStarted}
+			pets={data.companions}
+			companionId={companion.isActive ? companion.id : undefined}
+			today={data.today}
+			isAdmin={data.user.role === 'admin'}
+		/>
 	{/if}
 
 	<CelebrationBanner entries={data.celebrations} today={data.today} linked={false} />

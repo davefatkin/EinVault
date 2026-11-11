@@ -229,6 +229,24 @@ test('write attempt is blocked with read-only notice', async ({ world, page }) =
 	await expect(userRow).toHaveCount(0, { timeout: 6_000 });
 });
 
+test('demo never shows the getting started card or its Settings row', async ({ world, page }) => {
+	const base = world.server.baseURL;
+	await page.goto(base + '/auth/login');
+	await page.getByRole('button', { name: /Explore as Admin/i }).click();
+	await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/, { timeout: 10_000 });
+	await expect(page.getByRole('heading', { name: 'Your companions' })).toBeVisible();
+	await expect(page.getByTestId('getting-started')).toHaveCount(0);
+
+	const ein = SEED.companions.ein;
+	await page.goto(`${base}/${ein.id}`);
+	await expect(page.getByRole('heading', { name: ein.name, level: 1 })).toBeVisible();
+	await expect(page.getByTestId('getting-started')).toHaveCount(0);
+
+	await page.goto(base + '/settings');
+	await expect(page.getByRole('heading', { name: 'Language' })).toBeVisible();
+	await expect(page.getByTestId('getting-started-row')).toHaveCount(0);
+});
+
 test('demo bar pins to the top and does not overlap top chrome @mobile', async ({
 	world,
 	page

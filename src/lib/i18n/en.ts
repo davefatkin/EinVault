@@ -1675,7 +1675,39 @@ const messages = {
 	'page.supplies.savePurchase': 'Save purchase',
 	'page.supplies.correctHint': "Count what's really there. The difference goes into the history.",
 	'page.supplies.labelActual': 'Actual count',
-	'page.supplies.saveCount': 'Save count'
+	'page.supplies.saveCount': 'Save count',
+	'gettingStarted.title': 'Getting started',
+	'gettingStarted.subtitle': 'See how the pieces connect. Steps tick off as you use EinVault.',
+	'gettingStarted.subtitleOneLeft': "One link you haven't used yet.",
+	'gettingStarted.allSet': 'All set. Every step is done.',
+	'gettingStarted.hide': 'Hide getting started',
+	'gettingStarted.progress': '{done} of 4',
+	'gettingStarted.doneFold': '{count} done: {list}',
+	'gettingStarted.done': 'Done',
+	'gettingStarted.optional': 'Optional',
+	'gettingStarted.forPet': 'For {name}',
+	'gettingStarted.quickLogSettings': 'Settings > Quick logs',
+	'gettingStarted.step.quickLog': 'Log something with a quick-log tile',
+	'gettingStarted.step.quickLogLine': "It lands on today's journal day.",
+	'gettingStarted.step.journal': "Write today's journal entry",
+	'gettingStarted.step.journalLine': 'Your mood feeds the trend on this dashboard.',
+	'gettingStarted.step.health': 'Log a vet visit or a weight',
+	'gettingStarted.step.healthLine':
+		'It shows on that journal day. Save & Add Reminder books the follow-up.',
+	'gettingStarted.step.medication': 'Track a medication and its supply',
+	'gettingStarted.step.medicationLine':
+		'Each dose you give comes out of stock, and the supply shows when it runs out.',
+	'gettingStarted.step.caretaker': 'Invite a caretaker',
+	'gettingStarted.step.caretakerLine': 'Notes you share with them show on their care page.',
+	'gettingStarted.sub.supply': 'Add a supply',
+	'gettingStarted.sub.medication': 'Add a medication that uses it',
+	'gettingStarted.sub.reminder': 'Add a dose reminder',
+	'gettingStarted.sub.reminderNamed': 'Add a dose reminder to {name}',
+	'gettingStarted.sub.dose': 'Mark a dose Done',
+	'gettingStarted.short.quickLog': 'quick logs',
+	'gettingStarted.short.journal': 'journal',
+	'gettingStarted.short.health': 'health',
+	'gettingStarted.short.medication': 'medications'
 } as const;
 
 export type Messages = typeof messages;
