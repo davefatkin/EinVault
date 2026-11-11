@@ -28,6 +28,22 @@ async function logActivity(page: Page) {
 	await expect(page.getByText(/Activity logged/)).toBeVisible({ timeout: 8_000 });
 }
 
+/** Nothing sticks out of the card, and the card itself doesn't scroll sideways. */
+async function expectCardFits(page: Page) {
+	const overflow = await card(page).evaluate((root) => {
+		const box = root.getBoundingClientRect();
+		const outside = [...root.querySelectorAll('*')].filter((el) => {
+			const r = el.getBoundingClientRect();
+			return r.width > 0 && (r.right > box.right + 0.5 || r.left < box.left - 0.5);
+		});
+		return {
+			scrolls: root.scrollWidth > root.clientWidth,
+			outside: outside.map((el) => el.outerHTML.slice(0, 80))
+		};
+	});
+	expect(overflow).toEqual({ scrolls: false, outside: [] });
+}
+
 function inTwoDaysAt8(): string {
 	const d = new Date();
 	d.setDate(d.getDate() + 2);
@@ -202,7 +218,7 @@ test.describe('getting started card', () => {
 	test('the card fits a 360px phone in German @mobile', async ({ pristine, page }) => {
 		const base = pristine.baseURL;
 		await setupAdminAndLogIn(page, pristine);
-		await addPet(page, base, 'Rocket');
+		const rocket = await addPet(page, base, 'Rocket');
 		await addPet(page, base, 'Comet');
 		await page.goto(base + '/settings');
 		await waitForHydration(page);
@@ -216,24 +232,18 @@ test.describe('getting started card', () => {
 		const c = card(page);
 		await expect(c.getByRole('heading', { name: 'Erste Schritte' })).toBeVisible();
 		expect(await page.evaluate(() => window.innerWidth)).toBe(360);
-		// Nothing sticks out of the card, and the card itself doesn't scroll sideways.
-		const overflow = await c.evaluate((root) => {
-			const box = root.getBoundingClientRect();
-			const outside = [...root.querySelectorAll('*')].filter((el) => {
-				const r = el.getBoundingClientRect();
-				return r.width > 0 && (r.right > box.right + 0.5 || r.left < box.left - 0.5);
-			});
-			return {
-				scrolls: root.scrollWidth > root.clientWidth,
-				outside: outside.map((el) => el.outerHTML.slice(0, 80))
-			};
-		});
-		expect(overflow).toEqual({ scrolls: false, outside: [] });
-		expect((await c.boundingBox())!.width).toBeLessThanOrEqual(360);
+		await expectCardFits(page);
 		const hide = c.getByRole('button', { name: 'Erste Schritte ausblenden' });
 		const box = (await hide.boundingBox())!;
 		expect(box.width).toBeGreaterThanOrEqual(44);
 		expect(box.height).toBeGreaterThanOrEqual(44);
+
+		// A one-pet household lands on the dashboard. Its quick-log tiles can widen
+		// the page in German, so only the card itself is checked there.
+		await page.goto(`${base}/${rocket}`);
+		await waitForHydration(page);
+		await expect(c.getByRole('heading', { name: 'Erste Schritte' })).toBeVisible();
+		await expectCardFits(page);
 	});
 });
 

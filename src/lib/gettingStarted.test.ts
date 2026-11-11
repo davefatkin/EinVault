@@ -3,6 +3,7 @@ import {
 	currentStep,
 	gettingStartedHref,
 	namedReminderHref,
+	reminderToName,
 	resolveCardMode,
 	type GettingStartedPref,
 	type GettingStartedProgress
@@ -118,5 +119,21 @@ describe('namedReminderHref', () => {
 		expect(namedReminderHref({ id: 'med-1', name: 'Apoquel', companionId: 'pet-2' })).toBe(
 			'/pet-2/medications/med-1'
 		);
+	});
+});
+
+describe('reminderToName', () => {
+	const needsReminder = { id: 'med-1', name: 'Apoquel', companionId: 'pet-2' };
+
+	it('names the medication while the reminder sub-step is open', () => {
+		expect(reminderToName(progress({ needsReminder }))).toEqual(needsReminder);
+	});
+
+	it('names nothing once any dose reminder exists', () => {
+		const p = progress({
+			needsReminder,
+			medication: { supply: true, medication: true, reminder: true, dose: false }
+		});
+		expect(reminderToName(p)).toBeNull();
 	});
 });

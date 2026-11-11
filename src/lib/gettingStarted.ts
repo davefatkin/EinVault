@@ -58,9 +58,26 @@ export function currentStep(
 ): { step: GettingStartedStep; target: GettingStartedTarget } | null {
 	const step = GETTING_STARTED_STEPS.find((s) => !progress.done[s]);
 	if (!step) return null;
-	if (step !== 'medication') return { step, target: step };
-	const sub = MEDICATION_SUBSTEPS.find((s) => !progress.medication[s]) ?? 'dose';
-	return { step, target: sub };
+	return { step, target: stepTarget(progress, step) };
+}
+
+/** What a step links to: itself, or for step 4 its first open sub-step. */
+export function stepTarget(
+	progress: GettingStartedProgress,
+	step: GettingStartedStep
+): GettingStartedTarget {
+	if (step !== 'medication') return step;
+	return MEDICATION_SUBSTEPS.find((s) => !progress.medication[s]) ?? 'dose';
+}
+
+/**
+ * The medication the reminder sub-step names. Only while that sub-step is open:
+ * once any dose reminder exists, a second medication without one isn't named.
+ */
+export function reminderToName(
+	progress: GettingStartedProgress
+): GettingStartedProgress['needsReminder'] {
+	return progress.medication.reminder ? null : progress.needsReminder;
 }
 
 /** Where a step is done for one pet. `today` is the server's YYYY-MM-DD. */

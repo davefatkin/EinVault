@@ -10,6 +10,8 @@
 		currentStep,
 		gettingStartedHref,
 		namedReminderHref,
+		reminderToName,
+		stepTarget,
 		type GettingStartedStep,
 		type GettingStartedTarget,
 		type GettingStartedView,
@@ -62,23 +64,17 @@
 		})
 	);
 
-	/** Step 4 links to its first open sub-step. */
-	function targetOf(step: GettingStartedStep): GettingStartedTarget {
-		if (step !== 'medication') return step;
-		return MEDICATION_SUBSTEPS.find((s) => !progress.medication[s]) ?? 'dose';
-	}
+	const named = $derived(reminderToName(progress));
 
 	/** One link for the target, or null on the household page (per-pet buttons instead). */
 	function linkFor(target: GettingStartedTarget): string | null {
-		if (target === 'reminder' && progress.needsReminder) {
-			return namedReminderHref(progress.needsReminder);
-		}
+		if (target === 'reminder' && named) return namedReminderHref(named);
 		return companionId ? gettingStartedHref(target, companionId, today) : null;
 	}
 
 	function subLabel(sub: MedicationSubStep): string {
-		if (sub === 'reminder' && progress.needsReminder) {
-			return t(locale, 'gettingStarted.sub.reminderNamed', { name: progress.needsReminder.name });
+		if (sub === 'reminder' && named) {
+			return t(locale, 'gettingStarted.sub.reminderNamed', { name: named.name });
 		}
 		return t(locale, `gettingStarted.sub.${sub}` as const);
 	}
@@ -206,7 +202,8 @@
 
 				{#each openSteps as step (step)}
 					{@const active = current?.step === step}
-					{@const titleHref = active && step === 'medication' ? null : linkFor(targetOf(step))}
+					{@const titleHref =
+						active && step === 'medication' ? null : linkFor(stepTarget(progress, step))}
 					<li
 						class={cn(
 							'relative flex items-start gap-2.5 py-2',
