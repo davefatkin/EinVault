@@ -310,6 +310,11 @@ const messages = {
 	'page.settings.languageCard': 'Language',
 	'page.settings.languageDescription': 'Choose your preferred language.',
 	'page.settings.reminderUndoCard': 'Reminder Undo Window',
+	'page.settings.gettingStartedCard': 'Getting started card',
+	'page.settings.gettingStartedShowing': 'Showing',
+	'page.settings.gettingStartedHidden': 'Hidden. {done} of 4 steps done.',
+	'page.settings.gettingStartedAllDone': 'All done',
+	'page.settings.gettingStartedShow': 'Show it again',
 	'page.settings.reminderUndoDescription':
 		'How long to wait before a dismissed Reminder is committed. Use Off to commit immediately.',
 	'page.settings.reminderUndoLabel': 'Undo window',

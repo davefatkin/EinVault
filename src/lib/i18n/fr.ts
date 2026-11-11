@@ -323,6 +323,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Langue',
 	'page.settings.languageDescription': 'Choisissez votre langue préférée.',
 	'page.settings.reminderUndoCard': "Fenêtre d'annulation des Rappels",
+	'page.settings.gettingStartedCard': 'Carte de prise en main',
+	'page.settings.gettingStartedShowing': 'Affichée',
+	'page.settings.gettingStartedHidden': 'Masquée. {done} étapes sur 4 terminées.',
+	'page.settings.gettingStartedAllDone': 'Tout est fait',
+	'page.settings.gettingStartedShow': "L'afficher à nouveau",
 	'page.settings.reminderUndoDescription':
 		"Délai avant qu'un Rappel rejeté soit confirmé. Utilisez Désactivé pour confirmer immédiatement.",
 	'page.settings.reminderUndoLabel': "Fenêtre d'annulation",

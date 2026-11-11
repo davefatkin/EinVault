@@ -322,6 +322,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Escolha o seu idioma preferido.',
 	'page.settings.reminderUndoCard': 'Janela para desfazer Lembrete',
+	'page.settings.gettingStartedCard': 'Cartão de primeiros passos',
+	'page.settings.gettingStartedShowing': 'Visível',
+	'page.settings.gettingStartedHidden': 'Oculto. {done} de 4 passos concluídos.',
+	'page.settings.gettingStartedAllDone': 'Tudo pronto',
+	'page.settings.gettingStartedShow': 'Mostrar novamente',
 	'page.settings.reminderUndoDescription':
 		'Quanto tempo esperar antes de confirmar um Lembrete dispensado. Use Desligado para confirmar imediatamente.',
 	'page.settings.reminderUndoLabel': 'Janela para desfazer',

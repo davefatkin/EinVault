@@ -5,11 +5,15 @@ import { eq } from 'drizzle-orm';
 import {
 	handleAccountUpdate,
 	handleReminderUndoUpdate,
+	handleGettingStartedPref,
 	handleDefaultRecurrenceUpdate,
 	handleNotificationsUpdate,
 	handleTestEmail,
 	handleTestNtfy
 } from '#lib/server/account.js';
+import { loadGettingStartedProgress } from '#lib/server/getting-started.js';
+import { resolveCardMode, type GettingStartedPref } from '#lib/gettingStarted.js';
+import { localDateISO } from '#lib/date.js';
 import { isMailEnabled } from '#lib/server/mail/index.js';
 import { isNtfyEnabled } from '#lib/server/notify/ntfy.js';
 import { isSecureRequest } from '#lib/server/auth/index.js';
@@ -18,7 +22,8 @@ import type { Locale } from '#lib/i18n/index.js';
 import {
 	REMINDER_UNDO_SECONDS_DEFAULT,
 	CALENDAR_FEED_ENABLED,
-	API_TOKENS_ENABLED
+	API_TOKENS_ENABLED,
+	DEMO_MODE
 } from '#lib/server/env.js';
 import { enableFeedToken, disableFeedToken } from '#lib/server/calendarToken.js';
 import { listApiTokens } from '#lib/server/api-tokens.js';
@@ -65,8 +70,27 @@ export const load: PageServerLoad = async ({ locals }) => {
 		require2fa
 	);
 
+	// Read-only: Settings never persists the card's seen/completed markers.
+	let gettingStarted: { showing: boolean; complete: boolean; doneCount: number } | null = null;
+	if (!DEMO_MODE && locals.user.role !== 'caretaker') {
+		const progress = await loadGettingStartedProgress(locals.user);
+		const { mode } = resolveCardMode({
+			pref: locals.user.gettingStarted as GettingStartedPref,
+			seenAt: locals.user.gettingStartedSeenAt,
+			completedOn: locals.user.gettingStartedCompletedOn,
+			complete: progress.complete,
+			today: localDateISO()
+		});
+		gettingStarted = {
+			showing: mode !== 'hidden',
+			complete: progress.complete,
+			doneCount: progress.doneCount
+		};
+	}
+
 	return {
 		user: locals.user,
+		gettingStarted,
 		companions,
 		archivedCompanions,
 		reminderUndoDefault: REMINDER_UNDO_SECONDS_DEFAULT,
@@ -141,6 +165,16 @@ export const actions: Actions = {
 	reminderUndo: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		return handleReminderUndoUpdate(locals.user.id, request, locals.locale);
+	},
+
+	gettingStartedHide: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleGettingStartedPref(locals.user, 'dismissed', locals.locale);
+	},
+
+	gettingStartedShow: async ({ locals }) => {
+		if (!locals.user) redirect(302, '/auth/login');
+		return handleGettingStartedPref(locals.user, 'reopened', locals.locale);
 	},
 
 	defaultRecurrence: async ({ request, locals }) => {

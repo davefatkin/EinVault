@@ -325,6 +325,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Sprache',
 	'page.settings.languageDescription': 'Wähle deine bevorzugte Sprache.',
 	'page.settings.reminderUndoCard': 'Erinnerung-Rückgängig-Fenster',
+	'page.settings.gettingStartedCard': 'Karte „Erste Schritte“',
+	'page.settings.gettingStartedShowing': 'Wird angezeigt',
+	'page.settings.gettingStartedHidden': 'Ausgeblendet. {done} von 4 Schritten erledigt.',
+	'page.settings.gettingStartedAllDone': 'Alles erledigt',
+	'page.settings.gettingStartedShow': 'Wieder anzeigen',
 	'page.settings.reminderUndoDescription':
 		'Wie lange gewartet wird, bevor eine abgewiesene Erinnerung übernommen wird. Aus = sofort übernehmen.',
 	'page.settings.reminderUndoLabel': 'Rückgängig-Fenster',

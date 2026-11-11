@@ -324,6 +324,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Idioma',
 	'page.settings.languageDescription': 'Elige tu idioma preferido.',
 	'page.settings.reminderUndoCard': 'Ventana para deshacer Recordatorio',
+	'page.settings.gettingStartedCard': 'Tarjeta de primeros pasos',
+	'page.settings.gettingStartedShowing': 'Visible',
+	'page.settings.gettingStartedHidden': 'Oculta. {done} de 4 pasos completados.',
+	'page.settings.gettingStartedAllDone': 'Todo listo',
+	'page.settings.gettingStartedShow': 'Mostrarla de nuevo',
 	'page.settings.reminderUndoDescription':
 		'Cuánto esperar antes de confirmar un Recordatorio descartado. Usa Apagado para confirmar al instante.',
 	'page.settings.reminderUndoLabel': 'Ventana de deshacer',

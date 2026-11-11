@@ -7,6 +7,7 @@
 	import CalendarFeedCard from '#lib/components/settings/CalendarFeedCard.svelte';
 	import ApiTokensCard from '#lib/components/settings/ApiTokensCard.svelte';
 	import QuickLogsLinkCard from '#lib/components/settings/QuickLogsLinkCard.svelte';
+	import GettingStartedCard from '#lib/components/settings/GettingStartedCard.svelte';
 	import ReminderUndoCard from '#lib/components/settings/ReminderUndoCard.svelte';
 	import NotificationsCard from '#lib/components/settings/NotificationsCard.svelte';
 	import DefaultRecurrenceCard from '#lib/components/settings/DefaultRecurrenceCard.svelte';
@@ -55,6 +56,14 @@
 			: undefined}
 		errorMessage={form?.reminderUndoError}
 	/>
+
+	{#if data.gettingStarted}
+		<GettingStartedCard
+			showing={data.gettingStarted.showing}
+			complete={data.gettingStarted.complete}
+			doneCount={data.gettingStarted.doneCount}
+		/>
+	{/if}
 
 	{#if data.mailEnabled || data.ntfyEnabled}
 		<NotificationsCard

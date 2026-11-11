@@ -320,6 +320,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Lingua',
 	'page.settings.languageDescription': 'Scegli la tua lingua preferita.',
 	'page.settings.reminderUndoCard': 'Finestra annulla promemoria',
+	'page.settings.gettingStartedCard': 'Scheda per iniziare',
+	'page.settings.gettingStartedShowing': 'Visibile',
+	'page.settings.gettingStartedHidden': 'Nascosta. {done} passaggi su 4 completati.',
+	'page.settings.gettingStartedAllDone': 'Tutto fatto',
+	'page.settings.gettingStartedShow': 'Mostrala di nuovo',
 	'page.settings.reminderUndoDescription':
 		'Quanto attendere prima che un Promemoria scartato venga confermato. Disattiva per confermare subito.',
 	'page.settings.reminderUndoLabel': 'Finestra annulla',
