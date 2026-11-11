@@ -855,6 +855,9 @@
 											{formatRecurrence(reminder, locale, 'short')}
 										</p>
 									{/if}
+									{#if reminder.medication}
+										<DoseDoneNote supply={doseSupplyOf(reminder.medication)} />
+									{/if}
 								</div>
 								<!-- due chip -->
 								<Badge

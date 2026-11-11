@@ -401,64 +401,69 @@
 				<div class="space-y-1">
 					{#each upcomingReminders as reminder (reminder.id)}
 						{@const isOverdue = new Date(reminder.dueAt) < new Date()}
-						<div class="flex items-center gap-2 rounded-lg">
-							<button
-								type="button"
-								onclick={() => openReminderDetail(reminder)}
-								class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0"
-							>
-								<span class="truncate text-foreground">{reminder.title}</span>
-								{#if isOverdue}
-									<Badge variant="coral" class="shrink-0 text-xs"
-										>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
-									>
-								{/if}
-								<span
-									class="ml-auto shrink-0 text-xs {isOverdue
-										? 'text-coral'
-										: 'text-muted-foreground'}"
+						<div>
+							<div class="flex items-center gap-2 rounded-lg">
+								<button
+									type="button"
+									onclick={() => openReminderDetail(reminder)}
+									class="flex-1 flex items-center gap-2 text-sm rounded-lg px-2 py-1.5 hover:bg-accent transition-colors text-left min-w-0"
 								>
-									<LocalTime date={reminder.dueAt} format="datetime" />
-								</span>
-							</button>
-							<form
-								method="POST"
-								action="?/complete"
-								use:enhance={clearSubmittingFlag}
-								use:registerDismissForm={{
-									id: reminder.id,
-									registry: dismissFormRegistry
-								}}
-								class="flex items-center gap-1 shrink-0"
-							>
-								<input type="hidden" name="id" value={reminder.id} />
-								<ReminderCompleteButtons
-									doseOf={doseMedicationName(reminder)}
-									allowLogEvent={false}
-									isRecurring={reminder.isRecurring}
-									onDone={() => {
-										const form = dismissFormRegistry.get(reminder.id);
-										if (form) pendingDismiss.queue(reminder.id, form, reminder.title);
-									}}
-									onSkip={() => {
-										const form = skipFormRegistry.get(reminder.id);
-										if (form)
-											pendingDismiss.queue(`skip-${reminder.id}`, form, reminder.title, {
-												kind: 'skip'
-											});
-									}}
-								/>
-							</form>
-							{#if reminder.isRecurring}
+									<span class="truncate text-foreground">{reminder.title}</span>
+									{#if isOverdue}
+										<Badge variant="coral" class="shrink-0 text-xs"
+											>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
+										>
+									{/if}
+									<span
+										class="ml-auto shrink-0 text-xs {isOverdue
+											? 'text-coral'
+											: 'text-muted-foreground'}"
+									>
+										<LocalTime date={reminder.dueAt} format="datetime" />
+									</span>
+								</button>
 								<form
 									method="POST"
-									action="?/skip"
+									action="?/complete"
 									use:enhance={clearSubmittingFlag}
-									use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
-									class="hidden"
+									use:registerDismissForm={{
+										id: reminder.id,
+										registry: dismissFormRegistry
+									}}
+									class="flex items-center gap-1 shrink-0"
 								>
 									<input type="hidden" name="id" value={reminder.id} />
+									<ReminderCompleteButtons
+										doseOf={doseMedicationName(reminder)}
+										allowLogEvent={false}
+										isRecurring={reminder.isRecurring}
+										onDone={() => {
+											const form = dismissFormRegistry.get(reminder.id);
+											if (form) pendingDismiss.queue(reminder.id, form, reminder.title);
+										}}
+										onSkip={() => {
+											const form = skipFormRegistry.get(reminder.id);
+											if (form)
+												pendingDismiss.queue(`skip-${reminder.id}`, form, reminder.title, {
+													kind: 'skip'
+												});
+										}}
+									/>
 								</form>
+								{#if reminder.isRecurring}
+									<form
+										method="POST"
+										action="?/skip"
+										use:enhance={clearSubmittingFlag}
+										use:registerDismissForm={{ id: reminder.id, registry: skipFormRegistry }}
+										class="hidden"
+									>
+										<input type="hidden" name="id" value={reminder.id} />
+									</form>
+								{/if}
+							</div>
+							{#if doseMedicationName(reminder)}
+								<DoseDoneNote class="px-2" />
 							{/if}
 						</div>
 					{/each}

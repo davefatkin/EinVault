@@ -622,7 +622,7 @@ test.describe('caretaker medications', () => {
 				asCaretaker.getByRole('button', { name: 'Log a dose of e2e-care-dose-med' }).first()
 			).toBeVisible({ timeout: 8_000 });
 			await asCaretaker.getByText('e2e-care-dose-rem', { exact: true }).first().click();
-			await expect(asCaretaker.getByText('Done logs a dose.')).toBeVisible();
+			await expect(asCaretaker.getByRole('dialog').getByText('Done logs a dose.')).toBeVisible();
 			await expect(asCaretaker.getByText('e2e-care-supply')).toHaveCount(0);
 		} finally {
 			deleteReminders(app.dataDir, [reminderId]);

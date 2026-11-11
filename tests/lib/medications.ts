@@ -140,3 +140,14 @@ export function deleteReminders(dataDir: string, ids: string[]) {
 		sqlite.close();
 	}
 }
+
+export function supplyQuantity(dataDir: string, id: string): number | null {
+	const sqlite = open(dataDir);
+	try {
+		const row = sqlite.prepare('SELECT quantity FROM supplies WHERE id = ?').get(id) as
+			{ quantity: number | null } | undefined;
+		return row?.quantity ?? null;
+	} finally {
+		sqlite.close();
+	}
+}

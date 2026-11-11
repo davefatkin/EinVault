@@ -6,7 +6,8 @@ import {
 	insertDoseReminder,
 	deleteMedications,
 	deleteSupplies,
-	deleteReminders
+	deleteReminders,
+	supplyQuantity
 } from '../lib/medications';
 
 const COMP = 'seed-comp-ein';
@@ -603,6 +604,7 @@ test.describe('dose reminders say what Done does', () => {
 			name: `e2e-med-${tag}`,
 			title: `e2e-dose-${tag}`,
 			supply: `e2e-supply-${tag}`,
+			quantity: () => supplyQuantity(dataDir, supplyId),
 			cleanup: () => {
 				deleteReminders(dataDir, [reminderId]);
 				deleteMedications(dataDir, [medicationId]);
@@ -633,6 +635,50 @@ test.describe('dose reminders say what Done does', () => {
 		}
 	});
 
+	test('household overview and pet dashboard rows show the note before tapping Done', async ({
+		app,
+		asAdmin
+	}) => {
+		const d = makeDoseReminder(app.dataDir, 'rows');
+		const note = `Done logs a dose and takes 2 tablet from ${d.supply}.`;
+		try {
+			await asAdmin.goto('/');
+			await waitForHydration(asAdmin);
+			await expect(asAdmin.getByText(note).filter({ visible: true }).first()).toBeVisible({
+				timeout: 8_000
+			});
+			await asAdmin.goto(`/${COMP}`);
+			await waitForHydration(asAdmin);
+			await expect(asAdmin.getByText(note).filter({ visible: true }).first()).toBeVisible({
+				timeout: 8_000
+			});
+		} finally {
+			d.cleanup();
+		}
+	});
+
+	test('tapping Done takes exactly the units the note showed from the supply', async ({
+		app,
+		asAdmin
+	}) => {
+		const d = makeDoseReminder(app.dataDir, 'stock');
+		try {
+			await asAdmin.goto(`/${COMP}`);
+			await waitForHydration(asAdmin);
+			await expect(
+				asAdmin.getByText(`Done logs a dose and takes 2 tablet from ${d.supply}.`).first()
+			).toBeVisible({ timeout: 8_000 });
+			await asAdmin
+				.getByRole('button', { name: `Log a dose of ${d.name}` })
+				.first()
+				.click();
+			// Done commits once the undo window (7s) runs out.
+			await expect.poll(() => d.quantity(), { timeout: 20_000 }).toBe(18);
+		} finally {
+			d.cleanup();
+		}
+	});
+
 	test('dashboard: the reminder detail shows the long note', async ({ app, asAdmin }) => {
 		const d = makeDoseReminder(app.dataDir, 'dash');
 		try {
@@ -643,7 +689,9 @@ test.describe('dose reminders say what Done does', () => {
 			).toBeVisible({ timeout: 8_000 });
 			await asAdmin.getByText(d.title, { exact: true }).first().click();
 			await expect(
-				asAdmin.getByText(`Done logs a dose and takes 2 tablet from ${d.supply}.`)
+				asAdmin
+					.getByRole('dialog')
+					.getByText(`Done logs a dose and takes 2 tablet from ${d.supply}.`)
 			).toBeVisible();
 		} finally {
 			d.cleanup();
