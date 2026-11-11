@@ -1,5 +1,6 @@
 import type { Locale } from '#lib/i18n/index.js';
 import type { RecurrenceUnit } from '#lib/reminderRecurrence.js';
+import type { GettingStartedPref } from '#lib/gettingStarted.js';
 
 declare global {
 	namespace App {
@@ -15,6 +16,9 @@ declare global {
 				email: string | null;
 				phone: string | null;
 				reminderUndoSeconds: number | null;
+				gettingStarted: GettingStartedPref;
+				gettingStartedSeenAt: Date | null;
+				gettingStartedCompletedOn: string | null;
 				moodTrendDays: number | null;
 				defaultRecurrenceUnit: RecurrenceUnit | null;
 				notifyReminderEmail: boolean;

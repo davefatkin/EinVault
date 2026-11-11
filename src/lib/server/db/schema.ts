@@ -42,6 +42,11 @@ export const users = sqliteTable(
 		oidcSubject: text('oidc_subject'),
 		oidcIssuer: text('oidc_issuer'),
 		reminderUndoSeconds: integer('reminder_undo_seconds'),
+		gettingStarted: text('getting_started', { enum: ['auto', 'dismissed', 'reopened'] })
+			.notNull()
+			.default('auto'),
+		gettingStartedSeenAt: integer('getting_started_seen_at', { mode: 'timestamp' }),
+		gettingStartedCompletedOn: text('getting_started_completed_on'),
 		moodTrendDays: integer('mood_trend_days'),
 		defaultRecurrenceUnit: text('default_recurrence_unit', {
 			enum: ['day', 'week', 'month', 'year']

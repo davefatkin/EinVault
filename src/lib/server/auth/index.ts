@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import type { GettingStartedPref } from '#lib/gettingStarted.js';
 import {
 	validateSessionToken,
 	SESSION_COOKIE_NAME,
@@ -50,6 +51,9 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			email: user.email ?? null,
 			phone: user.phone ?? null,
 			reminderUndoSeconds: user.reminderUndoSeconds ?? null,
+			gettingStarted: (user.gettingStarted ?? 'auto') as GettingStartedPref,
+			gettingStartedSeenAt: user.gettingStartedSeenAt ?? null,
+			gettingStartedCompletedOn: user.gettingStartedCompletedOn ?? null,
 			moodTrendDays: user.moodTrendDays ?? null,
 			defaultRecurrenceUnit: user.defaultRecurrenceUnit ?? null,
 			notifyReminderEmail: user.notifyReminderEmail ?? false,
