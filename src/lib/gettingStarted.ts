@@ -27,3 +27,21 @@ export function resolveCardMode(input: {
 	if (!completedOn) return { mode: 'allSet', patch: { completedOn: today } };
 	return { mode: completedOn === today ? 'allSet' : 'hidden', patch: {} };
 }
+
+export const GETTING_STARTED_STEPS = ['quickLog', 'journal', 'health', 'medication'] as const;
+export type GettingStartedStep = (typeof GETTING_STARTED_STEPS)[number];
+
+export interface GettingStartedProgress {
+	done: Record<GettingStartedStep, boolean>;
+	medication: { supply: boolean; medication: boolean; reminder: boolean; dose: boolean };
+	/** Admins only; null for everyone else and not counted toward completion. */
+	caretaker: boolean | null;
+	doneCount: number;
+	complete: boolean;
+	needsReminder: { id: string; name: string; companionId: string } | null;
+}
+
+export interface GettingStartedView {
+	mode: Exclude<CardMode, 'hidden'>;
+	progress: GettingStartedProgress;
+}
