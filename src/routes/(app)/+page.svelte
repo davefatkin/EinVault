@@ -34,6 +34,8 @@
 	import { reminderUrgency, type ReminderUrgency } from '#lib/reminderBuckets.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
+	import { doseSupplyOf } from '#lib/medications.js';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
 
@@ -332,12 +334,16 @@
 						</div>
 					</div>
 				{/if}
+				{#if r.medication}
+					<DoseDoneNote supply={doseSupplyOf(r.medication)} />
+				{/if}
 			</div>
 
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
 				<ReminderCompleteButtons
+					doseOf={r.medication?.name}
 					allowLogEvent={reminderAllowsLogEvent(r)}
 					isRecurring={r.isRecurring}
 					onDone={() => {
@@ -457,6 +463,7 @@
 						<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
 						<div onclick={(e) => e.stopPropagation()} role="none">
 							<ReminderCompleteButtons
+								doseOf={r.medication?.name}
 								onDone={() => handleComplete(r)}
 								onDoneAndLog={() => submitWithAndEvent(r.id)}
 								onSkip={() => handleSkip(r.id, r.title)}

@@ -936,6 +936,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailType': 'Typ',
 	'page.reminders.detailDue': 'Fällig',
 	'page.reminders.detailRepeats': 'Wiederholt sich',
+	'common.reminder.logDoseAria': 'Dosis von {name} eintragen',
+	'common.reminder.doneLogsDoseSupply':
+		'Erledigt trägt eine Dosis ein und entnimmt {units} aus {supply}.',
+	'common.reminder.doneLogsDose': 'Erledigt trägt eine Dosis ein.',
 	'page.reminders.detailMedication': 'Medikament',
 	'page.reminders.detailEveryDay': 'Täglich',
 	'page.reminders.detailEveryDays': 'Alle {count} Tage',

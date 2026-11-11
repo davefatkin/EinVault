@@ -36,11 +36,18 @@
 	import OpenIncidentBanner from '#lib/components/incidents/OpenIncidentBanner.svelte';
 	import { careIncidentPath } from '#lib/incidents.js';
 	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let { companion, todayActivity, latestWeight, owners, upcomingReminders } = $derived(data);
 
 	const locale = getLocale();
+
+	// A dose reminder's active medication; caretakers get its name, never its supply.
+	const doseMedicationName = (reminder: { medicationId: string | null }) =>
+		reminder.medicationId
+			? data.medications.find((m) => m.id === reminder.medicationId)?.name
+			: undefined;
 	let species = $derived(toSpecies(companion.species));
 	let quickLogTypes = $derived(
 		activityTypeOptions(locale, SPECIES_QUICK_DEFAULTS[species], species)
@@ -250,6 +257,9 @@
 						<LocalTime date={selectedReminder.dueAt} format="datetime" />
 					</span>
 				</div>
+				{#if doseMedicationName(selectedReminder)}
+					<DoseDoneNote />
+				{/if}
 				{#if selectedReminder.isRecurring}
 					<div class="flex items-center gap-3">
 						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
@@ -276,6 +286,7 @@
 
 			<div class="flex gap-2 px-5 py-4">
 				<ReminderCompleteButtons
+					doseOf={doseMedicationName(selectedReminder)}
 					allowLogEvent={false}
 					isRecurring={selectedReminder.isRecurring}
 					onDone={() => {
@@ -422,6 +433,7 @@
 							>
 								<input type="hidden" name="id" value={reminder.id} />
 								<ReminderCompleteButtons
+									doseOf={doseMedicationName(reminder)}
 									allowLogEvent={false}
 									isRecurring={reminder.isRecurring}
 									onDone={() => {

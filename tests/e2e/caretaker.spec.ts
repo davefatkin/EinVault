@@ -5,7 +5,16 @@ import { test, expect } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { getFreePort } from '../lib/ports';
-import { insertMedication, deleteMedications, dosesFor, endMedication } from '../lib/medications';
+import {
+	insertMedication,
+	insertCountedSupply,
+	insertDoseReminder,
+	deleteMedications,
+	deleteSupplies,
+	deleteReminders,
+	dosesFor,
+	endMedication
+} from '../lib/medications';
 import { todayUTC } from '../lib/dates';
 import { pdfUpload, pngUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
@@ -583,6 +592,42 @@ test.describe('caretaker medications', () => {
 				.toEqual([{ givenBy: SEED.caretaker.id, source: 'manual' }]);
 		} finally {
 			deleteMedications(app.dataDir, [id]);
+		}
+	});
+
+	test('a dose reminder says Done logs a dose, without naming any supply', async ({
+		app,
+		asCaretaker
+	}) => {
+		const supplyId = insertCountedSupply(app.dataDir, {
+			name: 'e2e-care-supply',
+			unit: 'tablet',
+			quantity: 9
+		});
+		const medicationId = insertMedication(app.dataDir, {
+			companionId: EIN,
+			name: 'e2e-care-dose-med',
+			supplyId
+		});
+		const reminderId = insertDoseReminder(app.dataDir, {
+			companionId: EIN,
+			medicationId,
+			title: 'e2e-care-dose-rem',
+			dueAt: new Date(Date.now() + 60 * 60 * 1000)
+		});
+		try {
+			await asCaretaker.goto(`/care/${EIN}`);
+			await waitForHydration(asCaretaker);
+			await expect(
+				asCaretaker.getByRole('button', { name: 'Log a dose of e2e-care-dose-med' }).first()
+			).toBeVisible({ timeout: 8_000 });
+			await asCaretaker.getByText('e2e-care-dose-rem', { exact: true }).first().click();
+			await expect(asCaretaker.getByText('Done logs a dose.')).toBeVisible();
+			await expect(asCaretaker.getByText('e2e-care-supply')).toHaveCount(0);
+		} finally {
+			deleteReminders(app.dataDir, [reminderId]);
+			deleteMedications(app.dataDir, [medicationId]);
+			deleteSupplies(app.dataDir, [supplyId]);
 		}
 	});
 

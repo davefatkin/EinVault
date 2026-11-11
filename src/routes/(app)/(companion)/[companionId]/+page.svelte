@@ -41,6 +41,8 @@
 	} from '#lib/i18n/labels.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
+	import { doseSupplyOf } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
@@ -373,6 +375,7 @@
 									href="/{companion.id}/medications/{r.medication.id}"
 								/>
 							</div>
+							<DoseDoneNote supply={doseSupplyOf(r.medication)} />
 						{/if}
 						{#if r.isRecurring}
 							<div class="flex items-center gap-3">
@@ -484,6 +487,7 @@
 								<Pencil class="h-4 w-4" />
 							</Button>
 							<ReminderCompleteButtons
+								doseOf={selected.item.medication?.name}
 								{allowLogEvent}
 								isRecurring={selected.item.isRecurring}
 								onDone={() => {
@@ -871,6 +875,7 @@
 								</Badge>
 							</button>
 							<ReminderCompleteButtons
+								doseOf={reminder.medication?.name}
 								onDone={() => {
 									const form = dismissFormRegistry.get(reminder.id);
 									if (form)

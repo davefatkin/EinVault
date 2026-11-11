@@ -1,4 +1,13 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
+import {
+	insertMedication,
+	insertCountedSupply,
+	insertDoseReminder,
+	deleteMedications,
+	deleteSupplies,
+	deleteReminders
+} from '../lib/medications';
 
 const COMP = 'seed-comp-ein';
 const BASE = `/${COMP}/reminders`;
@@ -568,5 +577,76 @@ test.describe('reminders', () => {
 			for (const n of ['1 week', '2 weeks', '30 days']) await expect(chip(n)).toBeDisabled();
 			await expect(chip('1 day')).toBeEnabled();
 		});
+	});
+});
+
+test.describe('dose reminders say what Done does', () => {
+	function makeDoseReminder(dataDir: string, tag: string) {
+		const supplyId = insertCountedSupply(dataDir, {
+			name: `e2e-supply-${tag}`,
+			unit: 'tablet',
+			quantity: 20
+		});
+		const medicationId = insertMedication(dataDir, {
+			companionId: COMP,
+			name: `e2e-med-${tag}`,
+			supplyId,
+			doseUnits: 2
+		});
+		const reminderId = insertDoseReminder(dataDir, {
+			companionId: COMP,
+			medicationId,
+			title: `e2e-dose-${tag}`,
+			dueAt: new Date(Date.now() - 60 * 60 * 1000)
+		});
+		return {
+			name: `e2e-med-${tag}`,
+			title: `e2e-dose-${tag}`,
+			supply: `e2e-supply-${tag}`,
+			cleanup: () => {
+				deleteReminders(dataDir, [reminderId]);
+				deleteMedications(dataDir, [medicationId]);
+				deleteSupplies(dataDir, [supplyId]);
+			}
+		};
+	}
+
+	test('reminders page: long note, and the Done button names the medication', async ({
+		app,
+		asMember
+	}) => {
+		const d = makeDoseReminder(app.dataDir, 'page');
+		try {
+			await asMember.goto(BASE);
+			await waitForHydration(asMember);
+			await expect(
+				asMember
+					.getByText(`Done logs a dose and takes 2 tablet from ${d.supply}.`)
+					.filter({ visible: true })
+					.first()
+			).toBeVisible({ timeout: 8_000 });
+			await expect(
+				asMember.getByRole('button', { name: `Log a dose of ${d.name}` }).first()
+			).toBeVisible();
+		} finally {
+			d.cleanup();
+		}
+	});
+
+	test('dashboard: the reminder detail shows the long note', async ({ app, asAdmin }) => {
+		const d = makeDoseReminder(app.dataDir, 'dash');
+		try {
+			await asAdmin.goto('/');
+			await waitForHydration(asAdmin);
+			await expect(
+				asAdmin.getByRole('button', { name: `Log a dose of ${d.name}` }).first()
+			).toBeVisible({ timeout: 8_000 });
+			await asAdmin.getByText(d.title, { exact: true }).first().click();
+			await expect(
+				asAdmin.getByText(`Done logs a dose and takes 2 tablet from ${d.supply}.`)
+			).toBeVisible();
+		} finally {
+			d.cleanup();
+		}
 	});
 });

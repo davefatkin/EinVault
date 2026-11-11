@@ -9,9 +9,18 @@
 		onSkip?: () => void;
 		allowLogEvent: boolean;
 		isRecurring?: boolean;
+		/** A dose reminder's medication name: Done logs a dose of it. */
+		doseOf?: string;
 	}
 
-	let { onDone, onDoneAndLog, onSkip, allowLogEvent, isRecurring = false }: Props = $props();
+	let {
+		onDone,
+		onDoneAndLog,
+		onSkip,
+		allowLogEvent,
+		isRecurring = false,
+		doseOf
+	}: Props = $props();
 
 	const locale = getLocale();
 </script>
@@ -22,8 +31,12 @@
 		variant="softSuccess"
 		size="icon-sm"
 		onclick={onDone}
-		aria-label={t(locale, 'overview.markDone')}
-		title={t(locale, 'common.reminder.done')}
+		aria-label={doseOf
+			? t(locale, 'common.reminder.logDoseAria', { name: doseOf })
+			: t(locale, 'overview.markDone')}
+		title={doseOf
+			? t(locale, 'common.reminder.logDoseAria', { name: doseOf })
+			: t(locale, 'common.reminder.done')}
 	>
 		<Check class="h-4 w-4" />
 	</Button>

@@ -44,7 +44,14 @@ export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 				lte(schema.reminders.dueAt, in7d)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
-			with: { logger: { columns: { displayName: true } } }
+			with: {
+				logger: { columns: { displayName: true } },
+				// A dose reminder says what Done does to the supply.
+				medication: {
+					columns: { id: true, name: true, doseUnits: true },
+					with: { supply: { columns: { name: true, kind: true, unit: true } } }
+				}
+			}
 		}),
 		db.query.dailyEvents.findMany({
 			where: and(
