@@ -38,6 +38,7 @@
 </script>
 
 <Modal title={t(locale, 'page.incident.newTitle')} {onclose} locked={saving}>
+	<p class="mb-3 text-xs text-muted-foreground">{t(locale, 'page.journal.day.linkHealthHint')}</p>
 	<IncidentCreateForm
 		{companionId}
 		action="?/addIncident"

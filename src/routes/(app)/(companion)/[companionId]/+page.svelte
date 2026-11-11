@@ -3,6 +3,7 @@
 	import QuickLogButtons from '#lib/components/log/QuickLogButtons.svelte';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
+	import GettingStartedChecklist from '#lib/components/getting-started/GettingStartedChecklist.svelte';
 	import WeightSparkline from '#lib/components/WeightSparkline.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import MedicationLinkChip from '#lib/components/medications/MedicationLinkChip.svelte';
@@ -40,6 +41,8 @@
 	} from '#lib/i18n/labels.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
+	import { doseSupplyOf } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import CompanionMeta from '#lib/components/CompanionMeta.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
@@ -372,6 +375,7 @@
 									href="/{companion.id}/medications/{r.medication.id}"
 								/>
 							</div>
+							<DoseDoneNote supply={doseSupplyOf(r.medication)} />
 						{/if}
 						{#if r.isRecurring}
 							<div class="flex items-center gap-3">
@@ -483,6 +487,7 @@
 								<Pencil class="h-4 w-4" />
 							</Button>
 							<ReminderCompleteButtons
+								doseOf={selected.item.medication?.name}
 								{allowLogEvent}
 								isRecurring={selected.item.isRecurring}
 								onDone={() => {
@@ -529,6 +534,17 @@
 		<div class="rounded-lg bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground">
 			{t(locale, 'page.dashboard.archivedBanner', { name: companion.name })}
 		</div>
+	{/if}
+
+	{#if data.gettingStarted}
+		<!-- An archived pet's pages are read-only, so its card offers the active pets instead. -->
+		<GettingStartedChecklist
+			view={data.gettingStarted}
+			pets={data.companions}
+			companionId={companion.isActive ? companion.id : undefined}
+			today={data.today}
+			isAdmin={data.user.role === 'admin'}
+		/>
 	{/if}
 
 	<CelebrationBanner entries={data.celebrations} today={data.today} linked={false} />
@@ -839,6 +855,9 @@
 											{formatRecurrence(reminder, locale, 'short')}
 										</p>
 									{/if}
+									{#if reminder.medication}
+										<DoseDoneNote supply={doseSupplyOf(reminder.medication)} />
+									{/if}
 								</div>
 								<!-- due chip -->
 								<Badge
@@ -859,6 +878,7 @@
 								</Badge>
 							</button>
 							<ReminderCompleteButtons
+								doseOf={reminder.medication?.name}
 								onDone={() => {
 									const form = dismissFormRegistry.get(reminder.id);
 									if (form)
@@ -915,6 +935,7 @@
 					primaryCompanionId={companion.id}
 					form={form && ('quickLogExecuted' in form || 'quickLogError' in form) ? form : null}
 					{species}
+					showEmptyHint
 				/>
 			</div>
 			<div class="flex gap-2">

@@ -314,3 +314,13 @@ export async function handleTestNtfy(
 	stampTestCooldown(`${user.id}:ntfy`);
 	return { notificationsTestSuccess: true };
 }
+
+export async function handleGettingStartedPref(
+	user: { id: string; role: string },
+	pref: 'dismissed' | 'reopened',
+	locale: Locale
+) {
+	if (user.role === 'caretaker') return fail(403, { error: t(locale, 'error.forbidden') });
+	await db.update(schema.users).set({ gettingStarted: pref }).where(eq(schema.users.id, user.id));
+	return { gettingStartedSuccess: true };
+}

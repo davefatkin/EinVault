@@ -30,8 +30,13 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const parsed = parseMedicationForm(data, locals.locale, localDateISO(), params.companionId);
 		if (!parsed.ok) return fail(400, { error: parsed.message, values: medicationFormValues(data) });
-		await createMedication(params.companionId, parsed.value, locals.user!.id);
-		return { created: true };
+		const createdId = await createMedication(params.companionId, parsed.value, locals.user!.id);
+		return {
+			created: true,
+			createdId,
+			createdName: parsed.value.name,
+			createdDose: parsed.value.dose
+		};
 	},
 
 	given: givenAction

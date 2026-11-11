@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { UPLOAD_MAX_MB } from '#lib/server/env.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
@@ -27,5 +27,38 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		})
 	]);
 
-	return { companion, documents, healthEvents, uploadMaxMb: UPLOAD_MAX_MB };
+	// Receipts recorded with a supply purchase link back to that supply, while
+	// the supply is still linked to this pet (its page 404s otherwise).
+	const purchaseByDocument: Record<string, { supplyId: string; supplyName: string }> = {};
+	if (documents.length > 0) {
+		const purchases = db
+			.select({
+				documentId: schema.supplyEvents.documentId,
+				supplyId: schema.supplies.id,
+				supplyName: schema.supplies.name
+			})
+			.from(schema.supplyEvents)
+			.innerJoin(schema.supplies, eq(schema.supplies.id, schema.supplyEvents.supplyId))
+			.innerJoin(
+				schema.supplyCompanions,
+				and(
+					eq(schema.supplyCompanions.supplyId, schema.supplies.id),
+					eq(schema.supplyCompanions.companionId, params.companionId)
+				)
+			)
+			.where(
+				inArray(
+					schema.supplyEvents.documentId,
+					documents.map((d) => d.id)
+				)
+			)
+			.all();
+		for (const p of purchases) {
+			if (p.documentId) {
+				purchaseByDocument[p.documentId] ??= { supplyId: p.supplyId, supplyName: p.supplyName };
+			}
+		}
+	}
+
+	return { companion, documents, healthEvents, purchaseByDocument, uploadMaxMb: UPLOAD_MAX_MB };
 };

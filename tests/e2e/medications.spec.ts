@@ -53,6 +53,32 @@ async function addMedication(page: Page, name: string) {
 }
 
 test.describe('medications (owner)', () => {
+	test('adding a medication offers a dose reminder @mobile', async ({ asMember, app }) => {
+		const name = `e2e-med-prompt-${Date.now()}`;
+		try {
+			await addMedication(asMember, name);
+			const prompt = asMember.getByRole('alert').filter({ hasText: `Added ${name}.` });
+			await expect(prompt).toContainText('Add a dose reminder so each dose gets logged.');
+			await prompt.getByRole('link', { name: 'Add a dose reminder' }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EIN}/reminders`));
+			await waitForHydration(asMember);
+			await expect(asMember.locator('#title')).toHaveValue(name);
+			await expect(asMember.locator('select[name="type"]')).toHaveValue('medication');
+			await expect(asMember.locator('input[name="medicationId"]')).toHaveCount(1);
+
+			// Dismissible, and gone on the next visit.
+			await addMedication(asMember, `${name}-b`);
+			const second = asMember.getByRole('alert').filter({ hasText: `Added ${name}-b.` });
+			await second.getByRole('button', { name: 'Dismiss' }).click();
+			await expect(second).toHaveCount(0);
+			await asMember.goto(BASE);
+			await expect(asMember.getByRole('alert').filter({ hasText: 'Added ' })).toHaveCount(0);
+		} finally {
+			cleanup(app, name);
+			cleanup(app, `${name}-b`);
+		}
+	});
+
 	test('add, schedule, give, end and delete a medication', async ({ asMember, app }) => {
 		const name = `e2e-med-${Date.now()}`;
 		try {
@@ -89,7 +115,7 @@ test.describe('medications (owner)', () => {
 			await asMember.goto(`/${EIN}/reminders`);
 			await waitForHydration(asMember);
 			const card = asMember.locator('[data-active-group] > *').filter({ hasText: name });
-			await expect(card.getByRole('button', { name: 'Mark as done' })).toBeVisible();
+			await expect(card.getByRole('button', { name: `Log a dose of ${name}` })).toBeVisible();
 			await expect(
 				card.getByRole('button', { name: 'Mark done and log a Health Event' })
 			).toHaveCount(0);
@@ -99,7 +125,8 @@ test.describe('medications (owner)', () => {
 				'href',
 				medHref
 			);
-			await card.getByRole('button', { name: new RegExp(name) }).click();
+			// The row's own button, not "Log a dose of {name}".
+			await card.getByRole('button', { name: new RegExp(`^\\W*${name}`) }).click();
 			const detail = asMember.getByRole('dialog');
 			await expect(detail.getByRole('link', { name: `Medication: ${name}` })).toHaveAttribute(
 				'href',

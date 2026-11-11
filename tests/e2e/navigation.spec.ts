@@ -8,6 +8,7 @@ import { waitForHydration } from '../lib/hydration';
 import { insertMedication, deleteMedications } from '../lib/medications';
 import { archiveCompanion, createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 import { moreButton } from '../lib/more';
+import { test as pristineTest, setupAdminAndLogIn } from '../lib/pristine';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
@@ -692,4 +693,49 @@ test.describe('pet switcher', () => {
 			asMember.getByRole('button', { name: 'Switch companion' }).filter({ visible: true })
 		).toBeFocused();
 	});
+});
+
+pristineTest(
+	'a one-pet household reaches Add a Companion from the phone switcher @mobile',
+	async ({ pristine, page }, testInfo) => {
+		pristineTest.skip(testInfo.project.name !== 'mobile', 'mobile only');
+		await setupAdminAndLogIn(page, pristine);
+		await page.goto(pristine.baseURL + '/companions/new');
+		await waitForHydration(page);
+		await page.locator('#name').fill('Solo');
+		await page.getByRole('button', { name: 'Add Companion' }).click();
+		await expect(page).not.toHaveURL(/\/companions\/new/, { timeout: 10_000 });
+		await waitForHydration(page);
+
+		await page.getByRole('button', { name: 'Switch companion' }).click();
+		const group = page.getByRole('group', { name: 'Switch companion' });
+		await expect(group.getByRole('link', { name: 'Solo' })).toBeVisible();
+		const add = group.getByRole('link', { name: 'Add a Companion' });
+		expect((await add.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await add.click();
+		await expect(page).toHaveURL(/\/companions\/new$/, { timeout: 8_000 });
+	}
+);
+
+test('the phone switcher of a household with several pets also ends with Add a Companion @mobile', async ({
+	asMember
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asMember.goto('/');
+	await waitForHydration(asMember);
+	await asMember.getByRole('button', { name: 'Switch companion' }).click();
+	const group = asMember.getByRole('group', { name: 'Switch companion' });
+	await group.getByRole('link', { name: 'Add a Companion' }).click();
+	await expect(asMember).toHaveURL(/\/companions\/new$/, { timeout: 8_000 });
+});
+
+test('the caretaker phone switcher has no Add a Companion @mobile', async ({
+	asCaretaker
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	await asCaretaker.goto('/care');
+	await waitForHydration(asCaretaker);
+	const trigger = asCaretaker.getByRole('button', { name: 'Switch companion' });
+	if (await trigger.isVisible()) await trigger.click();
+	await expect(asCaretaker.getByText('Add a Companion')).toHaveCount(0);
 });

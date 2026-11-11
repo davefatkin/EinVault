@@ -323,6 +323,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.languageCard': 'Langue',
 	'page.settings.languageDescription': 'Choisissez votre langue préférée.',
 	'page.settings.reminderUndoCard': "Fenêtre d'annulation des Rappels",
+	'page.settings.gettingStartedCard': 'Carte de prise en main',
+	'page.settings.gettingStartedShowing': 'Affichée',
+	'page.settings.gettingStartedHidden': 'Masquée. {done} étapes sur 4 terminées.',
+	'page.settings.gettingStartedAllDone': 'Tout est fait',
+	'page.settings.gettingStartedShow': "L'afficher à nouveau",
 	'page.settings.reminderUndoDescription':
 		"Délai avant qu'un Rappel rejeté soit confirmé. Utilisez Désactivé pour confirmer immédiatement.",
 	'page.settings.reminderUndoLabel': "Fenêtre d'annulation",
@@ -477,6 +482,8 @@ const messages: Record<keyof Messages, string> = {
 	'component.healthDetail.unlink': 'Dissocier de ce jour',
 	'component.healthDetail.aboutIncident': 'À propos de l’incident…',
 	'component.healthDetail.linkIncident': 'Lier à un incident',
+	'component.healthDetail.incidentLinkHint':
+		"Les visites liées apparaissent sur la page de l'incident.",
 	'component.healthDetail.noIncidents': 'Aucun incident à lier.',
 	'component.healthDetail.unlinkIncident': 'Dissocier de {title}',
 	'component.healthDetail.loadingIncidents': 'Chargement…',
@@ -802,6 +809,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.recentEntries': 'Entrées récentes',
 	'page.journal.day.healthRecords': 'Dossiers de santé',
 	'page.journal.day.noHealthRecords': 'Aucun dossier de santé pour ce jour.',
+	'page.journal.day.healthRecordsHint':
+		'Les événements de santé, pesées et documents datés de ce jour apparaissent ici.',
 	'page.journal.day.add': 'Ajouter',
 	'page.journal.day.addHealthEvent': 'Événement de santé',
 	'page.journal.day.addIncident': 'Incident',
@@ -819,6 +828,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.linkHealthEventLabel': "Événement de santé d'un autre jour",
 	'page.journal.day.link': 'Lier',
 	'page.journal.day.noLinkableEvents': 'Aucun autre événement de santé à lier.',
+	'page.journal.day.linkHealthHint':
+		'Les événements ajoutés ici restent liés à ce jour, même avec une autre date.',
 	'page.journal.dayItem.health': 'événement de santé',
 	'page.journal.dayItem.linked': 'lié',
 	'page.journal.dayItem.weight': 'poids',
@@ -932,6 +943,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.detailType': 'Type',
 	'page.reminders.detailDue': 'Échéance',
 	'page.reminders.detailRepeats': 'Se répète',
+	'common.reminder.logDoseAria': 'Enregistrer une dose de {name}',
+	'common.reminder.doneLogsDoseSupply': 'Fait enregistre une dose et retire {units} de {supply}.',
+	'common.reminder.doneLogsDose': 'Fait enregistre une dose.',
 	'page.reminders.detailMedication': 'Médicament',
 	'page.reminders.detailEveryDay': 'Quotidien',
 	'page.reminders.detailEveryDays': 'Tous les {count} jours',
@@ -1088,6 +1102,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLog.execute.remember': 'Mémoriser cette sélection',
 	'quickLog.execute.alwaysIncluded': 'Toujours inclus',
 	'quickLog.execute.logNow': 'Enregistrer {name}',
+	'quickLog.emptyHint': 'Créez vos propres boutons en un clic dans {link}.',
 	'settings.apiTokens.title': 'Jetons d’API',
 	'settings.apiTokens.description':
 		'Créez des jetons pour que boutons connectés, scripts et autres appareils enregistrent des événements via l’API. Envoyez-les dans un en-tête Authorization: Bearer.',
@@ -1433,6 +1448,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': "Impossible d'afficher l'aperçu. Utilisez Télécharger.",
 	'page.documents.pageOf': 'Page {page} sur {total}',
 	'page.documents.fromPaperless': 'Paperless',
+	'page.documents.fromPurchase': "De l'achat de {name}",
 
 	'page.notes.title': 'Notes',
 	'page.notes.new': 'Nouvelle note',
@@ -1535,6 +1551,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endsOn': 'Se termine le {date}',
 	'page.medications.endedOn': 'Terminé le {date}',
 	'page.medications.addDoseReminder': 'Ajouter un rappel de prise',
+	'page.medications.addedPrompt':
+		'{name} ajouté. Ajoutez un rappel de prise pour que chaque prise soit enregistrée.',
+	'page.medications.dismissPrompt': 'Fermer',
 	'page.medications.linkLabel': 'Médicament : {name}',
 	'page.medications.once': 'Une fois',
 	'page.medications.doseReminders': 'Rappels de prise',
@@ -1625,6 +1644,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.expiresOn': 'Expire le {date}',
 	'page.supplies.expiredOn': 'Expiré le {date}',
 	'page.supplies.runsOutOn': 'Épuisé vers le {date}',
+	'page.supplies.runOutHint':
+		'Ajoutez un rappel de dose récurrent à un médicament qui utilise cette provision pour voir quand elle sera épuisée.',
 	'page.supplies.lastsDay': 'Un dure environ {count} jour',
 	'page.supplies.lastsDays': 'Un dure environ {count} jours',
 	'page.supplies.lastBought': 'Dernier achat le {date}',
@@ -1706,7 +1727,42 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.correctHint':
 		"Comptez ce qu'il reste vraiment. La différence est notée dans l'historique.",
 	'page.supplies.labelActual': 'Quantité réelle',
-	'page.supplies.saveCount': 'Enregistrer le stock'
+	'page.supplies.saveCount': 'Enregistrer le stock',
+	'gettingStarted.title': 'Prise en main',
+	'gettingStarted.subtitle':
+		'Voyez comment les éléments se relient. Les étapes se cochent à mesure que vous utilisez EinVault.',
+	'gettingStarted.subtitleOneLeft': 'Il vous reste un lien à découvrir.',
+	'gettingStarted.allSet': 'Tout est prêt. Chaque étape est faite.',
+	'gettingStarted.hide': 'Masquer la prise en main',
+	'gettingStarted.progress': '{done} sur 4',
+	'gettingStarted.doneFold': '{count} faites : {list}',
+	'gettingStarted.done': 'Fait',
+	'gettingStarted.optional': 'Facultatif',
+	'gettingStarted.forPet': 'Pour {name}',
+	'gettingStarted.quickLogSettings': 'Paramètres > Saisies rapides',
+	'gettingStarted.step.quickLog': 'Enregistrez quelque chose avec une saisie rapide',
+	'gettingStarted.step.quickLogLine': "Elle s'ajoute au jour d'aujourd'hui dans le journal.",
+	'gettingStarted.step.journal': "Écrivez l'entrée du jour dans le journal",
+	'gettingStarted.step.journalLine':
+		'Votre humeur alimente la tendance du tableau de bord de votre compagnon.',
+	'gettingStarted.step.health': 'Enregistrez une visite chez le vétérinaire ou un poids',
+	'gettingStarted.step.healthLine':
+		"Cela s'affiche à ce jour dans le journal. « Enregistrer et créer un rappel » planifie le suivi.",
+	'gettingStarted.step.medication': 'Suivez un médicament et sa fourniture',
+	'gettingStarted.step.medicationLine':
+		'Chaque prise donnée est déduite du stock, et la fourniture indique quand elle sera épuisée.',
+	'gettingStarted.step.caretaker': 'Invitez un gardien',
+	'gettingStarted.step.caretakerLine':
+		'Les notes que vous partagez avec lui apparaissent sur sa page de garde.',
+	'gettingStarted.sub.supply': 'Ajoutez une fourniture',
+	'gettingStarted.sub.medication': "Ajoutez un médicament qui l'utilise",
+	'gettingStarted.sub.reminder': 'Ajoutez un rappel de prise',
+	'gettingStarted.sub.reminderNamed': 'Ajoutez un rappel de prise à {name}',
+	'gettingStarted.sub.dose': 'Marquez une prise comme Fait',
+	'gettingStarted.short.quickLog': 'saisies rapides',
+	'gettingStarted.short.journal': 'journal',
+	'gettingStarted.short.health': 'santé',
+	'gettingStarted.short.medication': 'médicaments'
 } satisfies Record<keyof Messages, string>;
 
 export default messages;

@@ -33,6 +33,10 @@
 	const counted = $derived(supply.kind === 'counted');
 	const date = (ymd: string) => formatDateOnly(ymd, locale) ?? ymd;
 
+	const showRunOutHint = $derived(
+		supply.kind === 'counted' && (supply.quantity ?? 0) > 0 && supply.runOutOn === null
+	);
+
 	const facts = $derived(
 		[
 			supply.runOutOn && supply.daysLeft
@@ -129,6 +133,11 @@
 			{#if facts.length > 0}
 				<p class="flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-muted-foreground">
 					{#each facts as fact (fact)}<span>{fact}</span>{/each}
+				</p>
+			{/if}
+			{#if showRunOutHint}
+				<p class="text-xs text-muted-foreground" data-testid="supply-run-out-hint">
+					{t(locale, 'page.supplies.runOutHint')}
 				</p>
 			{/if}
 			<p class="text-sm text-muted-foreground">

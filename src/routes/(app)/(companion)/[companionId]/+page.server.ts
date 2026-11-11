@@ -14,6 +14,7 @@ import { listOpenIncidents } from '#lib/server/incidents.js';
 import { companionHasMedications, listMedicationSummaries } from '#lib/server/medications.js';
 import { companionHasSupplies, loadSupplyStates, toSupplySummary } from '#lib/server/supplies.js';
 import { givenAction } from '#lib/server/medication-actions.js';
+import { getGettingStartedView } from '#lib/server/getting-started.js';
 import { addDaysISO, MOOD_TREND_MAX, resolveMoodTrendDays, type Mood } from '#lib/moodTrend.js';
 
 export const load: PageServerLoad = async ({ params, locals, parent, cookies }) => {
@@ -60,7 +61,10 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 			with: {
 				logger: { columns: { displayName: true } },
 				// A dose reminder links back to its medication.
-				medication: { columns: { id: true, name: true } }
+				medication: {
+					columns: { id: true, name: true, doseUnits: true },
+					with: { supply: { columns: { name: true, kind: true, unit: true } } }
+				}
 			}
 		}),
 		db.query.weightEntries.findMany({
@@ -131,10 +135,12 @@ export const load: PageServerLoad = async ({ params, locals, parent, cookies }) 
 	);
 
 	const celebrations = celebrationBanner([companion], today, cookies.get(CELEBRATION_COOKIE));
+	const gettingStarted = await getGettingStartedView(locals.user, today);
 
 	return {
 		companion,
 		celebrations,
+		gettingStarted,
 		recentHealth,
 		recentDaily,
 		upcomingReminders,

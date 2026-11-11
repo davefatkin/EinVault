@@ -30,7 +30,10 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			logger: { columns: { displayName: true } },
 			completer: { columns: { displayName: true } },
 			// A dose reminder links back to its medication.
-			medication: { columns: { id: true, name: true } }
+			medication: {
+				columns: { id: true, name: true, doseUnits: true },
+				with: { supply: { columns: { name: true, kind: true, unit: true } } }
+			}
 		}
 	});
 

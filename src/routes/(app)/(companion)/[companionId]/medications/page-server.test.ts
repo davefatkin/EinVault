@@ -60,9 +60,14 @@ describe('medications page actions', () => {
 
 	it('create stores the medication for this companion', async () => {
 		const res = await call(actions.create, { name: 'mp-new', dose: '1 tablet' });
-		expect(res).toEqual({ created: true });
 		const row = await db.query.medications.findFirst({
 			where: eq(schema.medications.name, 'mp-new')
+		});
+		expect(res).toEqual({
+			created: true,
+			createdId: row!.id,
+			createdName: 'mp-new',
+			createdDose: '1 tablet'
 		});
 		expect(row).toMatchObject({ companionId, dose: '1 tablet', loggedBy: 'mp-user' });
 	});

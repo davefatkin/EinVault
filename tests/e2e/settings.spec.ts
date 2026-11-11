@@ -387,4 +387,15 @@ test.describe('settings', () => {
 		await expect(asCaretaker.locator('input[name="notifyCelebrationEmail"]')).toHaveCount(0);
 		await expect(asCaretaker.locator('input[name="notifyIncidentEmail"]')).toHaveCount(0);
 	});
+
+	test('caretaker has no getting started row', async ({ asCaretaker }) => {
+		await asCaretaker.goto('/care/settings');
+		await waitForHydration(asCaretaker);
+		await expect(asCaretaker.locator('input[name="notifyReminderEmail"]')).toBeVisible({
+			timeout: 6_000
+		});
+		await expect(asCaretaker.getByText('Getting started card')).toHaveCount(0);
+		await asCaretaker.goto('/settings');
+		await expect(asCaretaker.getByText('Getting started card')).toHaveCount(0);
+	});
 });

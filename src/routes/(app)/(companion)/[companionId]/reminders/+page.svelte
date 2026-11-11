@@ -30,6 +30,8 @@
 	import { formatLeadDays, parseLeadDays } from '#lib/reminderLeadTimes.js';
 	import RecurrenceEditor from '#lib/components/reminders/RecurrenceEditor.svelte';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
+	import { doseSupplyOf } from '#lib/medications.js';
 	import MedicationLinkChip from '#lib/components/medications/MedicationLinkChip.svelte';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
@@ -320,6 +322,7 @@
 							href="/{data.companion.id}/medications/{r.medication.id}"
 						/>
 					</div>
+					<DoseDoneNote supply={doseSupplyOf(r.medication)} />
 				{/if}
 				{#if r.isRecurring}
 					<div class="flex items-center gap-3">
@@ -367,6 +370,7 @@
 						<Pencil class="h-4 w-4" />
 					</Button>
 					<ReminderCompleteButtons
+						doseOf={r.medication?.name}
 						{allowLogEvent}
 						isRecurring={r.isRecurring}
 						onDone={() => {
@@ -690,6 +694,7 @@
 											name={reminder.medication.name}
 											href="/{data.companion.id}/medications/{reminder.medication.id}"
 										/>
+										<DoseDoneNote class="mt-1" supply={doseSupplyOf(reminder.medication)} />
 									</div>
 								{/if}
 							</div>
@@ -706,6 +711,7 @@
 										<Pencil class="h-4 w-4" />
 									</Button>
 									<ReminderCompleteButtons
+										doseOf={reminder.medication?.name}
 										onDone={() => {
 											const form = dismissFormRegistry.get(reminder.id);
 											if (form)

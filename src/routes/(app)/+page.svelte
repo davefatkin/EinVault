@@ -17,6 +17,7 @@
 	import { renderMarkdown } from '#lib/markdown.js';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
 	import CelebrationBanner from '#lib/components/CelebrationBanner.svelte';
+	import GettingStartedChecklist from '#lib/components/getting-started/GettingStartedChecklist.svelte';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import { createPendingDismissals } from '#lib/pendingDismiss.svelte.js';
 	import { registerDismissForm } from '#lib/actions/registerDismissForm.js';
@@ -33,6 +34,8 @@
 	import { reminderUrgency, type ReminderUrgency } from '#lib/reminderBuckets.js';
 	import { reminderAllowsLogEvent } from '#lib/health.js';
 	import ReminderCompleteButtons from '#lib/components/reminders/ReminderCompleteButtons.svelte';
+	import DoseDoneNote from '#lib/components/medications/DoseDoneNote.svelte';
+	import { doseSupplyOf } from '#lib/medications.js';
 	import { formatRecurrence } from '#lib/reminderRecurrence.js';
 	import { SPECIES_ICON, toSpecies } from '#lib/species.js';
 
@@ -331,12 +334,16 @@
 						</div>
 					</div>
 				{/if}
+				{#if r.medication}
+					<DoseDoneNote supply={doseSupplyOf(r.medication)} />
+				{/if}
 			</div>
 
 			<Separator />
 
 			<div class="flex gap-2 px-5 py-4">
 				<ReminderCompleteButtons
+					doseOf={r.medication?.name}
 					allowLogEvent={reminderAllowsLogEvent(r)}
 					isRecurring={r.isRecurring}
 					onDone={() => {
@@ -392,6 +399,15 @@
 		{companionCountLabel(data.companions.length)}
 	</p>
 
+	{#if data.gettingStarted}
+		<GettingStartedChecklist
+			view={data.gettingStarted}
+			pets={data.companions}
+			{today}
+			isAdmin={data.user.role === 'admin'}
+		/>
+	{/if}
+
 	<CelebrationBanner entries={data.celebrations} {today} />
 
 	<!-- 2. Needs-attention banner (hidden on first run) -->
@@ -409,51 +425,57 @@
 				</div>
 				{#each attentionItems as { r, urgency } (r.id)}
 					{@const companion = companionsById[r.companionId]}
-					<div
-						class="flex items-center gap-2 py-1.5 border-t border-border/40 first-of-type:border-t-0"
-					>
-						{#if companion}
-							<a
-								href="/{companion.id}"
-								onclick={(e) => e.stopPropagation()}
-								class="shrink-0"
-								tabindex="-1"
-								aria-hidden="true"
-							>
-								<CompanionAvatar
-									companionId={companion.id}
-									avatarPath={companion.avatarPath}
-									name={companion.name}
-									size="sm"
-								/>
-							</a>
-						{/if}
-						<button
-							type="button"
-							onclick={() => openReminderDetail(r)}
-							class="flex items-center gap-2 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-						>
+					<div class="py-1.5 border-t border-border/40 first-of-type:border-t-0">
+						<div class="flex items-center gap-2">
 							{#if companion}
-								<span class="text-sm font-semibold text-foreground shrink-0">{companion.name}</span>
+								<a
+									href="/{companion.id}"
+									onclick={(e) => e.stopPropagation()}
+									class="shrink-0"
+									tabindex="-1"
+									aria-hidden="true"
+								>
+									<CompanionAvatar
+										companionId={companion.id}
+										avatarPath={companion.avatarPath}
+										name={companion.name}
+										size="sm"
+									/>
+								</a>
 							{/if}
-							<span class="text-sm text-muted-foreground truncate">{r.title}</span>
-							<Badge
-								variant={urgency === 'overdue' ? 'coral' : 'gold'}
-								class="shrink-0 text-[10px] py-0 px-1.5"
+							<button
+								type="button"
+								onclick={() => openReminderDetail(r)}
+								class="flex items-center gap-2 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
 							>
-								{urgencyLabel(urgency)}
-							</Badge>
-						</button>
-						<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
-						<div onclick={(e) => e.stopPropagation()} role="none">
-							<ReminderCompleteButtons
-								onDone={() => handleComplete(r)}
-								onDoneAndLog={() => submitWithAndEvent(r.id)}
-								onSkip={() => handleSkip(r.id, r.title)}
-								isRecurring={r.isRecurring}
-								allowLogEvent={reminderAllowsLogEvent(r)}
-							/>
+								{#if companion}
+									<span class="text-sm font-semibold text-foreground shrink-0"
+										>{companion.name}</span
+									>
+								{/if}
+								<span class="text-sm text-muted-foreground truncate">{r.title}</span>
+								<Badge
+									variant={urgency === 'overdue' ? 'coral' : 'gold'}
+									class="shrink-0 text-[10px] py-0 px-1.5"
+								>
+									{urgencyLabel(urgency)}
+								</Badge>
+							</button>
+							<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
+							<div onclick={(e) => e.stopPropagation()} role="none">
+								<ReminderCompleteButtons
+									doseOf={r.medication?.name}
+									onDone={() => handleComplete(r)}
+									onDoneAndLog={() => submitWithAndEvent(r.id)}
+									onSkip={() => handleSkip(r.id, r.title)}
+									isRecurring={r.isRecurring}
+									allowLogEvent={reminderAllowsLogEvent(r)}
+								/>
+							</div>
 						</div>
+						{#if r.medication}
+							<DoseDoneNote class="mt-1 pl-9" supply={doseSupplyOf(r.medication)} />
+						{/if}
 					</div>
 				{/each}
 
@@ -729,7 +751,12 @@
 	<!-- 3b. Quick log across the household -->
 	{#if data.companions.length > 0}
 		<section class="space-y-2">
-			<QuickLogButtons buttons={data.quickLogButtons} companions={data.companions} {form} />
+			<QuickLogButtons
+				buttons={data.quickLogButtons}
+				companions={data.companions}
+				{form}
+				showEmptyHint
+			/>
 			<details class="group rounded-xl border bg-card">
 				<summary
 					class="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground list-none [&::-webkit-details-marker]:hidden"

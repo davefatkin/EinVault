@@ -223,3 +223,18 @@ export function formatMedicationSchedule(
 		)
 		.join('; ');
 }
+
+/** What a dose reminder's Done takes from stock: only a counted supply is drawn down. */
+export function doseSupplyOf(
+	medication:
+		| {
+				doseUnits: number;
+				supply: { name: string; kind: string; unit: string | null } | null;
+		  }
+		| null
+		| undefined
+): { name: string; unit: string | null; units: number } | null {
+	const supply = medication?.supply;
+	if (!medication || !supply || supply.kind !== 'counted') return null;
+	return { name: supply.name, unit: supply.unit, units: medication.doseUnits };
+}

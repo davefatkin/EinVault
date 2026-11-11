@@ -60,6 +60,12 @@ test.describe('supplies (owner)', () => {
 			await save(asMember);
 			const detailUrl = asMember.url();
 			await expect(asMember.getByRole('heading', { name, level: 1 })).toBeVisible();
+			// Stock but no dose reminder yet, so there is no run-out date to show.
+			await expect(
+				asMember.getByText(
+					'Add a repeating dose reminder to a medication that uses this supply to see when it runs out.'
+				)
+			).toBeVisible();
 
 			await asMember.goto(BASE);
 			const row = asMember.getByRole('listitem').filter({ hasText: name });
@@ -154,6 +160,11 @@ test.describe('supplies (owner)', () => {
 			await expect(bought.getByRole('link', { name: 'Receipt' })).toBeVisible();
 			await asMember.goto(`/${EIN}/documents`);
 			await expect(asMember.getByText(`Receipt: ${name}`)).toBeVisible();
+			// The receipt links back to the supply it came from.
+			await waitForHydration(asMember);
+			await asMember.getByRole('link', { name: `From the ${name} purchase` }).click();
+			await expect(asMember).toHaveURL(new RegExp(`${BASE}/(?!new$)[^/]+$`), { timeout: 8_000 });
+			await expect(asMember.getByRole('heading', { name })).toBeVisible();
 		} finally {
 			cleanup(app, name);
 		}

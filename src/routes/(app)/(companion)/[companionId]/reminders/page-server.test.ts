@@ -266,7 +266,7 @@ describe('reminders linked to a medication', () => {
 			reminders: { id: string; medication: { id: string; name: string } | null }[];
 		};
 		const byId = new Map(data.reminders.map((r) => [r.id, r]));
-		expect(byId.get('rl-load-linked')?.medication).toEqual({ id: m, name: 'Rimadyl' });
+		expect(byId.get('rl-load-linked')?.medication).toMatchObject({ id: m, name: 'Rimadyl' });
 		expect(byId.get('rl-load-plain')?.medication).toBeNull();
 	});
 

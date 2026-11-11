@@ -408,6 +408,9 @@ test.describe('journal day editor', () => {
 		const section = asMember.getByTestId('day-health-records');
 		const emptyState = section.getByText('No health records for this day.');
 		await expect(emptyState).toBeVisible();
+		await expect(
+			section.getByText('Health events, weights and documents dated this day show here.')
+		).toBeVisible();
 
 		await section.getByRole('button', { name: 'Add', exact: true }).click();
 		await asMember.getByRole('menuitem', { name: 'Link health event' }).click();
@@ -416,6 +419,15 @@ test.describe('journal day editor', () => {
 		await section.getByRole('button', { name: 'Cancel' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);
 		await expect(emptyState).toBeVisible();
+
+		// The add form says its event stays linked to this day.
+		await section.getByRole('button', { name: 'Add', exact: true }).click();
+		await asMember.getByRole('menuitem', { name: 'Health event', exact: true }).click();
+		await expect(
+			asMember
+				.getByRole('dialog')
+				.getByText('Events you add here stay linked to this day, even with another date.')
+		).toBeVisible();
 	});
 
 	test('the add menu works from the keyboard', async ({ asMember }) => {
@@ -840,6 +852,9 @@ test.describe('journal day editor', () => {
 		try {
 			await openAdd(asMember, 'Incident');
 			const dialog = asMember.getByRole('dialog', { name: 'New incident' });
+			await expect(
+				dialog.getByText('Events you add here stay linked to this day, even with another date.')
+			).toBeVisible();
 			await dialog.locator('#incident-title').fill(title);
 			await dialog.locator('#incident-severity').selectOption('mild');
 			// The default start is this day at the browser's time of day, which on

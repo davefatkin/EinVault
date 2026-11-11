@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Pill, Plus } from '@lucide/svelte';
+	import { BellPlus, Pill, Plus, X } from '@lucide/svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Card, CardContent } from '#lib/components/ui/card/index.js';
 	import { Alert, AlertDescription } from '#lib/components/ui/alert/index.js';
@@ -7,6 +7,7 @@
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import MedicationForm from '#lib/components/medications/MedicationForm.svelte';
 	import MedicationSummaryRow from '#lib/components/medications/MedicationSummaryRow.svelte';
+	import { medicationReminderPrefillUrl } from '#lib/health.js';
 	import { ownerMedicationCaps } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { tick } from 'svelte';
@@ -36,6 +37,14 @@
 	const formValues = $derived(form && 'values' in form ? form.values : null);
 	let dismissedValues = $state<unknown>(null);
 	const formOpen = $derived(showForm || (formValues !== null && formValues !== dismissedValues));
+	// After a save, offer a dose reminder until dismissed or the page is left.
+	const created = $derived(
+		form && 'createdId' in form
+			? { id: form.createdId, name: form.createdName, dose: form.createdDose }
+			: null
+	);
+	let dismissedCreated = $state<string | null>(null);
+	const showReminderPrompt = $derived(created !== null && created.id !== dismissedCreated);
 	function closeForm() {
 		showForm = false;
 		dismissedValues = formValues;
@@ -67,6 +76,31 @@
 
 	{#if form && 'error' in form && form.error}
 		<Alert variant="coral"><AlertDescription>{form.error}</AlertDescription></Alert>
+	{/if}
+
+	{#if created && showReminderPrompt && caps.canEdit}
+		<Alert variant="success" class="flex flex-wrap items-center gap-x-3 gap-y-2 pr-14">
+			<p class="min-w-0 flex-1 basis-56">
+				{t(locale, 'page.medications.addedPrompt', { name: created.name })}
+			</p>
+			<Button
+				variant="soft"
+				size="sm"
+				class="h-11"
+				href={medicationReminderPrefillUrl(data.companion.id, created)}
+			>
+				<BellPlus class="h-4 w-4 mr-1.5" />{t(locale, 'page.medications.addDoseReminder')}
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				class="absolute right-1 top-1 h-11 w-11"
+				aria-label={t(locale, 'page.medications.dismissPrompt')}
+				onclick={() => (dismissedCreated = created.id)}
+			>
+				<X class="h-4 w-4" />
+			</Button>
+		</Alert>
 	{/if}
 
 	{#if formOpen && caps.canEdit}

@@ -1,4 +1,5 @@
 import { test, expect } from '../lib/fixtures';
+import { waitForHydration } from '../lib/hydration';
 
 const EIN = 'seed-comp-ein';
 const EDWARD = 'seed-comp-edward';
@@ -91,6 +92,17 @@ test.describe('custom quick logs', () => {
 		await asAdmin.reload();
 		await expect(asAdmin.getByText('Evening walk v2')).toHaveCount(0);
 		await expect(asAdmin.getByText('Evening walk')).toBeVisible();
+	});
+
+	test('a user with no quick logs sees where to make them', async ({ asAdmin }) => {
+		await asAdmin.goto('/');
+		await waitForHydration(asAdmin);
+		const hint = asAdmin.getByTestId('quick-log-empty-hint');
+		await expect(hint).toContainText('Make your own one-tap buttons in');
+		await expect(hint.getByRole('link', { name: 'Settings > Quick logs' })).toHaveAttribute(
+			'href',
+			'/settings/quick-logs'
+		);
 	});
 
 	test('quick log with a single assigned companion logs in one click', async ({ asMember }) => {

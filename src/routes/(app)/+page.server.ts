@@ -18,6 +18,7 @@ import { logDailyEvent } from '#lib/server/daily-events.js';
 import { listQuickLogButtons } from '#lib/server/quick-logs.js';
 import { handleQuickLogExecute } from '#lib/server/quick-log-actions.js';
 import { failCareError } from '#lib/server/care-errors.js';
+import { getGettingStartedView } from '#lib/server/getting-started.js';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
@@ -43,7 +44,14 @@ export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 				lte(schema.reminders.dueAt, in7d)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
-			with: { logger: { columns: { displayName: true } } }
+			with: {
+				logger: { columns: { displayName: true } },
+				// A dose reminder says what Done does to the supply.
+				medication: {
+					columns: { id: true, name: true, doseUnits: true },
+					with: { supply: { columns: { name: true, kind: true, unit: true } } }
+				}
+			}
 		}),
 		db.query.dailyEvents.findMany({
 			where: and(
@@ -81,8 +89,13 @@ export const load: PageServerLoad = async ({ locals, parent, cookies }) => {
 
 	const celebrations = celebrationBanner(companions, today, cookies.get(CELEBRATION_COOKIE));
 
+	// Not on the zero-pet welcome: every step needs a pet, and loading marks the card as seen.
+	const gettingStarted =
+		companions.length > 0 ? await getGettingStartedView(locals.user, today) : null;
+
 	return {
 		celebrations,
+		gettingStarted,
 		upcomingReminders,
 		recentDaily,
 		recentHealth,
