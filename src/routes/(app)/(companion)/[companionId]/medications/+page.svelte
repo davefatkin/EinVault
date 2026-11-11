@@ -79,7 +79,7 @@
 	{/if}
 
 	{#if created && showReminderPrompt && caps.canEdit}
-		<Alert variant="success" class="flex flex-wrap items-center gap-x-3 gap-y-2">
+		<Alert variant="success" class="flex flex-wrap items-center gap-x-3 gap-y-2 pr-14">
 			<p class="min-w-0 flex-1 basis-56">
 				{t(locale, 'page.medications.addedPrompt', { name: created.name })}
 			</p>
@@ -94,7 +94,7 @@
 			<Button
 				variant="ghost"
 				size="icon"
-				class="h-11 w-11"
+				class="absolute right-1 top-1 h-11 w-11"
 				aria-label={t(locale, 'page.medications.dismissPrompt')}
 				onclick={() => (dismissedCreated = created.id)}
 			>
