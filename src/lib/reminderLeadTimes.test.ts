@@ -131,3 +131,17 @@ describe('pruneLeadDays / leadChipOptions', () => {
 		expect(m.leadChipOptions([3], weekly)).toEqual([1, 2, 3]);
 	});
 });
+
+describe('maxLeadDays', () => {
+	it('is the global cap when not recurring', async () => {
+		const m = await import('./reminderLeadTimes.js');
+		expect(m.maxLeadDays(null)).toBe(90);
+	});
+	it('stays a day shorter than the repeat period', async () => {
+		const m = await import('./reminderLeadTimes.js');
+		expect(m.maxLeadDays({ unit: 'week', interval: 1 })).toBe(6);
+		expect(m.maxLeadDays({ unit: 'month', interval: 1 })).toBe(27);
+		expect(m.maxLeadDays({ unit: 'year', interval: 1 })).toBe(90);
+		expect(m.maxLeadDays({ unit: 'day', interval: 1 })).toBe(0);
+	});
+});

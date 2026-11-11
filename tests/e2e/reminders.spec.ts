@@ -576,7 +576,48 @@ test.describe('reminders', () => {
 			const chip = (n: string) => asMember.getByRole('button', { name: n, exact: true });
 			for (const n of ['1 day', '2 days', '3 days']) await chip(n).click();
 			for (const n of ['1 week', '2 weeks', '30 days']) await expect(chip(n)).toBeDisabled();
+			await expect(chip('Custom')).toBeDisabled();
 			await expect(chip('1 day')).toBeEnabled();
+		});
+
+		test('a custom heads-up is added as its own chip and saved', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#title').fill('e2e-rem-lead-custom');
+			await asMember.locator('#dueAt').fill(tomorrow());
+			await asMember.getByRole('button', { name: 'Custom', exact: true }).click();
+			await asMember.getByLabel('Days before').fill('21');
+			await asMember.getByRole('button', { name: 'Add', exact: true }).click();
+			await expect(asMember.getByRole('button', { name: '21 days', exact: true })).toHaveAttribute(
+				'aria-pressed',
+				'true'
+			);
+			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+			const card = activeSection(asMember)
+				.locator('> *')
+				.filter({ hasText: 'e2e-rem-lead-custom' });
+			await expect(card.getByText('Heads-up 21 days before')).toBeVisible({ timeout: 8_000 });
+		});
+
+		test('a custom heads-up must be shorter than the repeat', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#add-isRecurring').check();
+			await asMember.locator('#add-recurrenceInterval').fill('1');
+			await asMember.locator('select[name="recurrenceUnit"]').selectOption('week');
+			await asMember.getByRole('button', { name: 'Custom', exact: true }).click();
+			const days = asMember.getByLabel('Days before');
+			await days.fill('10');
+			// Enter adds (or rejects) the value instead of submitting the form.
+			await days.press('Enter');
+			await expect(asMember.getByText('Enter a whole number from 1 to 6.')).toBeVisible();
+			await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toBeVisible();
+			await days.fill('5');
+			await days.press('Enter');
+			await expect(asMember.getByRole('button', { name: '5 days', exact: true })).toHaveAttribute(
+				'aria-pressed',
+				'true'
+			);
 		});
 	});
 });
