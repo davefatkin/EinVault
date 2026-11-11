@@ -1511,6 +1511,8 @@ const messages = {
 	'page.medications.endsOn': 'Ends {date}',
 	'page.medications.endedOn': 'Ended {date}',
 	'page.medications.addDoseReminder': 'Add a dose reminder',
+	'page.medications.addedPrompt': 'Added {name}. Add a dose reminder so each dose gets logged.',
+	'page.medications.dismissPrompt': 'Dismiss',
 	'page.medications.linkLabel': 'Medication: {name}',
 	'page.medications.once': 'Once',
 	'page.medications.doseReminders': 'Dose reminders',

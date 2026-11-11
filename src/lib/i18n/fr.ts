@@ -1540,6 +1540,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.medications.endsOn': 'Se termine le {date}',
 	'page.medications.endedOn': 'Terminé le {date}',
 	'page.medications.addDoseReminder': 'Ajouter un rappel de prise',
+	'page.medications.addedPrompt':
+		'{name} ajouté. Ajoutez un rappel de prise pour que chaque prise soit enregistrée.',
+	'page.medications.dismissPrompt': 'Fermer',
 	'page.medications.linkLabel': 'Médicament : {name}',
 	'page.medications.once': 'Une fois',
 	'page.medications.doseReminders': 'Rappels de prise',
