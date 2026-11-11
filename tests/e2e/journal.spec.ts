@@ -852,6 +852,9 @@ test.describe('journal day editor', () => {
 		try {
 			await openAdd(asMember, 'Incident');
 			const dialog = asMember.getByRole('dialog', { name: 'New incident' });
+			await expect(
+				dialog.getByText('Events you add here stay linked to this day, even with another date.')
+			).toBeVisible();
 			await dialog.locator('#incident-title').fill(title);
 			await dialog.locator('#incident-severity').selectOption('mild');
 			// The default start is this day at the browser's time of day, which on
