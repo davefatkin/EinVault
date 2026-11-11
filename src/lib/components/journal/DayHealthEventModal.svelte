@@ -146,6 +146,9 @@
 		{#if error}
 			<p role="alert" class="mb-3 text-sm text-destructive">{error}</p>
 		{/if}
+		<p class="mb-3 text-xs text-muted-foreground" data-testid="day-health-link-hint">
+			{t(locale, 'page.journal.day.linkHealthHint')}
+		</p>
 		<HealthEventForm
 			action="?/addHealth"
 			defaultAt={initialAt}

@@ -415,13 +415,19 @@ test.describe('journal day editor', () => {
 		await section.getByRole('button', { name: 'Add', exact: true }).click();
 		await asMember.getByRole('menuitem', { name: 'Link health event' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toBeVisible();
-		await expect(
-			section.getByText('Events you add here stay linked to this day, even with another date.')
-		).toBeVisible();
 		await expect(emptyState).toBeHidden();
 		await section.getByRole('button', { name: 'Cancel' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);
 		await expect(emptyState).toBeVisible();
+
+		// The add form says its event stays linked to this day.
+		await section.getByRole('button', { name: 'Add', exact: true }).click();
+		await asMember.getByRole('menuitem', { name: 'Health event', exact: true }).click();
+		await expect(
+			asMember
+				.getByRole('dialog')
+				.getByText('Events you add here stay linked to this day, even with another date.')
+		).toBeVisible();
 	});
 
 	test('the add menu works from the keyboard', async ({ asMember }) => {
