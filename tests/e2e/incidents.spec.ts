@@ -258,6 +258,7 @@ test.describe('incidents (owner)', () => {
 			await waitForHydration(asMember);
 			await asMember.getByText('Wellness checkup').first().click();
 			const dialog = asMember.getByRole('dialog');
+			await expect(dialog.getByText("Linked visits show on the incident's page.")).toBeVisible();
 			await dialog.getByRole('button', { name: 'Link to an incident' }).click();
 			await dialog.getByRole('button', { name: new RegExp(title) }).click();
 			const about = dialog.getByTestId('health-detail-incidents');

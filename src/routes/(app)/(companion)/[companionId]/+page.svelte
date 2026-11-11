@@ -935,6 +935,7 @@
 					primaryCompanionId={companion.id}
 					form={form && ('quickLogExecuted' in form || 'quickLogError' in form) ? form : null}
 					{species}
+					showEmptyHint
 				/>
 			</div>
 			<div class="flex gap-2">

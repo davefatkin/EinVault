@@ -478,6 +478,8 @@ const messages: Record<keyof Messages, string> = {
 	'component.healthDetail.unlink': 'Scollega da questo giorno',
 	'component.healthDetail.aboutIncident': 'Sull’incidente…',
 	'component.healthDetail.linkIncident': 'Collega a un incidente',
+	'component.healthDetail.incidentLinkHint':
+		"Le visite collegate compaiono nella pagina dell'incidente.",
 	'component.healthDetail.noIncidents': 'Nessun incidente da collegare.',
 	'component.healthDetail.unlinkIncident': 'Scollega da {title}',
 	'component.healthDetail.loadingIncidents': 'Caricamento…',
@@ -801,6 +803,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.recentEntries': 'Voci recenti',
 	'page.journal.day.healthRecords': 'Dati sanitari',
 	'page.journal.day.noHealthRecords': 'Nessun dato sanitario per questo giorno.',
+	'page.journal.day.healthRecordsHint':
+		'Gli eventi sanitari, i pesi e i documenti con la data di questo giorno compaiono qui.',
 	'page.journal.day.add': 'Aggiungi',
 	'page.journal.day.addHealthEvent': 'Evento sanitario',
 	'page.journal.day.addIncident': 'Incidente',
@@ -818,6 +822,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.linkHealthEventLabel': 'Evento sanitario di un altro giorno',
 	'page.journal.day.link': 'Collega',
 	'page.journal.day.noLinkableEvents': 'Nessun altro evento sanitario da collegare.',
+	'page.journal.day.linkHealthHint':
+		"Gli eventi che aggiungi qui restano collegati a questo giorno, anche con un'altra data.",
 	'page.journal.dayItem.health': 'evento sanitario',
 	'page.journal.dayItem.linked': 'collegato',
 	'page.journal.dayItem.weight': 'peso',
@@ -1090,6 +1096,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLog.execute.remember': 'Ricorda questa selezione',
 	'quickLog.execute.alwaysIncluded': 'Sempre incluso',
 	'quickLog.execute.logNow': 'Registra {name}',
+	'quickLog.emptyHint': 'Crea i tuoi pulsanti a un tocco in {link}.',
 	'settings.apiTokens.title': 'Token API',
 	'settings.apiTokens.description':
 		'Crea token con cui pulsanti smart, script e altri dispositivi registrano eventi tramite l’API. Inviali come header Authorization: Bearer.',
@@ -1629,6 +1636,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.expiresOn': 'Scade il {date}',
 	'page.supplies.expiredOn': 'Scaduta il {date}',
 	'page.supplies.runsOutOn': 'Finisce verso il {date}',
+	'page.supplies.runOutHint':
+		'Aggiungi un promemoria di dose ricorrente a un farmaco che usa questa scorta per vedere quando finisce.',
 	'page.supplies.lastsDay': 'Una dura circa {count} giorno',
 	'page.supplies.lastsDays': 'Una dura circa {count} giorni',
 	'page.supplies.lastBought': 'Ultimo acquisto il {date}',

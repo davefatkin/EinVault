@@ -293,6 +293,9 @@
 								</form>
 							</div>
 						{/each}
+						<p class="text-xs text-muted-foreground">
+							{t(locale, 'component.healthDetail.incidentLinkHint')}
+						</p>
 						{#if candidates}
 							<LinkEventPicker
 								items={candidates.map((c) => ({

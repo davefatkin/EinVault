@@ -33,6 +33,7 @@
 		</p>
 		{#if headerAction}{@render headerAction()}{/if}
 	</div>
+	<p class="text-xs text-muted-foreground">{t(locale, 'page.journal.day.healthRecordsHint')}</p>
 	{#if panel}{@render panel()}{/if}
 	{#if items.length === 0 && !panel}
 		<EmptyState tint="teal" title={t(locale, 'page.journal.day.noHealthRecords')}>

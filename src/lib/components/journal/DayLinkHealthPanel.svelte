@@ -33,6 +33,7 @@
 	}}
 	class="space-y-2 rounded-lg border border-border px-4 py-3 animate-slide-up"
 >
+	<p class="text-xs text-muted-foreground">{t(locale, 'page.journal.day.linkHealthHint')}</p>
 	{#if events.length === 0}
 		<p class="text-sm text-muted-foreground">{t(locale, 'page.journal.day.noLinkableEvents')}</p>
 	{:else}

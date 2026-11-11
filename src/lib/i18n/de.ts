@@ -483,6 +483,8 @@ const messages: Record<keyof Messages, string> = {
 	'component.healthDetail.unlink': 'Von diesem Tag lösen',
 	'component.healthDetail.aboutIncident': 'Zum Vorfall…',
 	'component.healthDetail.linkIncident': 'Mit einem Vorfall verknüpfen',
+	'component.healthDetail.incidentLinkHint':
+		'Verknüpfte Besuche erscheinen auf der Seite des Vorfalls.',
 	'component.healthDetail.noIncidents': 'Keine Vorfälle zum Verknüpfen.',
 	'component.healthDetail.unlinkIncident': 'Von {title} lösen',
 	'component.healthDetail.loadingIncidents': 'Wird geladen…',
@@ -806,6 +808,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.recentEntries': 'Letzte Einträge',
 	'page.journal.day.healthRecords': 'Gesundheitseinträge',
 	'page.journal.day.noHealthRecords': 'Keine Gesundheitseinträge an diesem Tag.',
+	'page.journal.day.healthRecordsHint':
+		'Gesundheitsereignisse, Gewichte und Dokumente mit dem Datum dieses Tages erscheinen hier.',
 	'page.journal.day.add': 'Hinzufügen',
 	'page.journal.day.addHealthEvent': 'Gesundheitsereignis',
 	'page.journal.day.addIncident': 'Vorfall',
@@ -823,6 +827,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.linkHealthEventLabel': 'Gesundheitsereignis von einem anderen Tag',
 	'page.journal.day.link': 'Verknüpfen',
 	'page.journal.day.noLinkableEvents': 'Keine anderen Gesundheitsereignisse zum Verknüpfen.',
+	'page.journal.day.linkHealthHint':
+		'Ereignisse, die du hier hinzufügst, bleiben mit diesem Tag verknüpft, auch mit anderem Datum.',
 	'page.journal.dayItem.health': 'Gesundheitsereignis',
 	'page.journal.dayItem.linked': 'verknüpft',
 	'page.journal.dayItem.weight': 'Gewicht',
@@ -1097,6 +1103,7 @@ const messages: Record<keyof Messages, string> = {
 	'quickLog.execute.remember': 'Auswahl merken',
 	'quickLog.execute.alwaysIncluded': 'Immer enthalten',
 	'quickLog.execute.logNow': '{name} erfassen',
+	'quickLog.emptyHint': 'Erstelle eigene Ein-Tipp-Schaltflächen unter {link}.',
 	'settings.apiTokens.title': 'API-Tokens',
 	'settings.apiTokens.description':
 		'Erstelle Tokens, mit denen smarte Buttons, Skripte und andere Geräte Ereignisse über die API erfassen. Sende sie als Authorization: Bearer-Header.',
@@ -1639,6 +1646,8 @@ const messages: Record<keyof Messages, string> = {
 	'page.supplies.expiresOn': 'Läuft ab am {date}',
 	'page.supplies.expiredOn': 'Abgelaufen am {date}',
 	'page.supplies.runsOutOn': 'Reicht bis etwa {date}',
+	'page.supplies.runOutHint':
+		'Füge einer Medikation, die diesen Vorrat nutzt, eine wiederkehrende Dosis-Erinnerung hinzu, um zu sehen, wann er aufgebraucht ist.',
 	'page.supplies.lastsDay': 'Eine Packung reicht etwa {count} Tag',
 	'page.supplies.lastsDays': 'Eine Packung reicht etwa {count} Tage',
 	'page.supplies.lastBought': 'Zuletzt gekauft am {date}',

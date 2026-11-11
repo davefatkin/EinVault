@@ -27,7 +27,8 @@
 		primaryCompanionId = null,
 		action = '?/executeQuickLog',
 		form,
-		species
+		species,
+		showEmptyHint = false
 	}: {
 		buttons: QuickLogButton[];
 		companions: CompanionOption[];
@@ -35,10 +36,14 @@
 		action?: string;
 		form: { quickLogExecuted?: string; quickLogError?: string } | null;
 		species?: Species;
+		/** Owners only: with no buttons, point at where to make them. */
+		showEmptyHint?: boolean;
 	} = $props();
 
 	const locale = getLocale();
 	let companionName = $derived(new Map(companions.map((c) => [c.id, c.name])));
+
+	const hintParts = $derived(t(locale, 'quickLog.emptyHint', { link: '\u0000' }).split('\u0000'));
 
 	let openId = $state<string | null>(null);
 	let selectedIds = $state<string[]>([]);
@@ -206,4 +211,13 @@
 			</div>
 		{/if}
 	</div>
+{/if}
+{#if buttons.length === 0 && showEmptyHint}
+	<p class="text-xs text-muted-foreground" data-testid="quick-log-empty-hint">
+		{hintParts[0]}<a
+			href="/settings/quick-logs"
+			class="font-medium text-primary-link underline-offset-2 hover:underline"
+			>{t(locale, 'gettingStarted.quickLogSettings')}</a
+		>{hintParts[1]}
+	</p>
 {/if}

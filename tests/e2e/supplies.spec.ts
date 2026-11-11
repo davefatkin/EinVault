@@ -60,6 +60,12 @@ test.describe('supplies (owner)', () => {
 			await save(asMember);
 			const detailUrl = asMember.url();
 			await expect(asMember.getByRole('heading', { name, level: 1 })).toBeVisible();
+			// Stock but no dose reminder yet, so there is no run-out date to show.
+			await expect(
+				asMember.getByText(
+					'Add a repeating dose reminder to a medication that uses this supply to see when it runs out.'
+				)
+			).toBeVisible();
 
 			await asMember.goto(BASE);
 			const row = asMember.getByRole('listitem').filter({ hasText: name });

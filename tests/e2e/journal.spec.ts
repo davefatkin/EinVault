@@ -408,10 +408,16 @@ test.describe('journal day editor', () => {
 		const section = asMember.getByTestId('day-health-records');
 		const emptyState = section.getByText('No health records for this day.');
 		await expect(emptyState).toBeVisible();
+		await expect(
+			section.getByText('Health events, weights and documents dated this day show here.')
+		).toBeVisible();
 
 		await section.getByRole('button', { name: 'Add', exact: true }).click();
 		await asMember.getByRole('menuitem', { name: 'Link health event' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toBeVisible();
+		await expect(
+			section.getByText('Events you add here stay linked to this day, even with another date.')
+		).toBeVisible();
 		await expect(emptyState).toBeHidden();
 		await section.getByRole('button', { name: 'Cancel' }).click();
 		await expect(section.locator('form[action="?/linkHealth"]')).toHaveCount(0);

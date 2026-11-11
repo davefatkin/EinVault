@@ -470,6 +470,7 @@ const messages = {
 	'component.healthDetail.unlink': 'Unlink from this day',
 	'component.healthDetail.aboutIncident': 'About incident…',
 	'component.healthDetail.linkIncident': 'Link to an incident',
+	'component.healthDetail.incidentLinkHint': "Linked visits show on the incident's page.",
 	'component.healthDetail.noIncidents': 'No incidents to link.',
 	'component.healthDetail.unlinkIncident': 'Unlink from {title}',
 	'component.healthDetail.loadingIncidents': 'Loading…',
@@ -792,6 +793,8 @@ const messages = {
 	'page.journal.day.recentEntries': 'Recent entries',
 	'page.journal.day.healthRecords': 'Health records',
 	'page.journal.day.noHealthRecords': 'No health records for this day.',
+	'page.journal.day.healthRecordsHint':
+		'Health events, weights and documents dated this day show here.',
 	'page.journal.day.add': 'Add',
 	'page.journal.day.addHealthEvent': 'Health event',
 	'page.journal.day.addIncident': 'Incident',
@@ -809,6 +812,8 @@ const messages = {
 	'page.journal.day.linkHealthEventLabel': 'Health event from another day',
 	'page.journal.day.link': 'Link',
 	'page.journal.day.noLinkableEvents': 'No other health events to link.',
+	'page.journal.day.linkHealthHint':
+		'Events you add here stay linked to this day, even with another date.',
 	'page.journal.dayItem.health': 'health event',
 	'page.journal.dayItem.linked': 'linked',
 	'page.journal.dayItem.weight': 'weight',
@@ -1076,6 +1081,7 @@ const messages = {
 	'quickLog.execute.remember': 'Remember this selection',
 	'quickLog.execute.alwaysIncluded': 'Always included',
 	'quickLog.execute.logNow': 'Log {name}',
+	'quickLog.emptyHint': 'Make your own one-tap buttons in {link}.',
 	'settings.apiTokens.title': 'API tokens',
 	'settings.apiTokens.description':
 		'Create tokens for smart buttons, scripts, and other devices to log events through the API. Send them as an Authorization: Bearer header.',
@@ -1603,6 +1609,8 @@ const messages = {
 	'page.supplies.expiresOn': 'Expires {date}',
 	'page.supplies.expiredOn': 'Expired {date}',
 	'page.supplies.runsOutOn': 'Runs out around {date}',
+	'page.supplies.runOutHint':
+		'Add a repeating dose reminder to a medication that uses this supply to see when it runs out.',
 	'page.supplies.lastsDay': 'One lasts about {count} day',
 	'page.supplies.lastsDays': 'One lasts about {count} days',
 	'page.supplies.lastBought': 'Last bought {date}',
