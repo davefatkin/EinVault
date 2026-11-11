@@ -588,15 +588,39 @@ test.describe('reminders', () => {
 			await asMember.getByRole('button', { name: 'Custom', exact: true }).click();
 			await asMember.getByLabel('Days before').fill('21');
 			await asMember.getByRole('button', { name: 'Add', exact: true }).click();
-			await expect(asMember.getByRole('button', { name: '21 days', exact: true })).toHaveAttribute(
-				'aria-pressed',
-				'true'
-			);
+			const added = asMember.getByRole('button', { name: '21 days', exact: true });
+			await expect(added).toHaveAttribute('aria-pressed', 'true');
+			await expect(added).toBeFocused();
 			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
 			const card = activeSection(asMember)
 				.locator('> *')
 				.filter({ hasText: 'e2e-rem-lead-custom' });
 			await expect(card.getByText('Heads-up 21 days before')).toBeVisible({ timeout: 8_000 });
+		});
+
+		test('a typed custom heads-up is saved without pressing Add', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#title').fill('e2e-rem-lead-typed');
+			await asMember.locator('#dueAt').fill(tomorrow());
+			await asMember.getByRole('button', { name: 'Custom', exact: true }).click();
+			await asMember.getByLabel('Days before').fill('45');
+			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+			const card = activeSection(asMember).locator('> *').filter({ hasText: 'e2e-rem-lead-typed' });
+			await expect(card.getByText('Heads-up 45 days before')).toBeVisible({ timeout: 8_000 });
+		});
+
+		test('picking a third chip closes the custom field', async ({ asMember }) => {
+			await asMember.goto(BASE);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			const chip = (n: string) => asMember.getByRole('button', { name: n, exact: true });
+			await chip('1 day').click();
+			await chip('2 days').click();
+			await chip('Custom').click();
+			await asMember.getByLabel('Days before').fill('21');
+			await chip('3 days').click();
+			await expect(asMember.getByLabel('Days before')).toHaveCount(0);
+			await expect(chip('Custom')).toBeDisabled();
 		});
 
 		test('a custom heads-up must be shorter than the repeat', async ({ asMember }) => {

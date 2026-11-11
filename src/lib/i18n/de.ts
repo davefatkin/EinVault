@@ -972,7 +972,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.leadLabel': 'Vorab-Hinweis',
 	'page.reminders.leadWeek': '1 Woche',
 	'page.reminders.leadWeeks': '{count} Wochen',
-	'page.reminders.leadCustom': 'Eigene',
+	'page.reminders.leadCustom': 'Eigener',
 	'page.reminders.leadCustomDays': 'Tage vorher',
 	'page.reminders.leadCustomAdd': 'Hinzufügen',
 	'page.reminders.leadCustomError': 'Gib eine ganze Zahl von 1 bis {max} ein.',

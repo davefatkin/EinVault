@@ -56,6 +56,18 @@
 	let customError = $state(false);
 	let customInput = $state<HTMLInputElement>();
 	let customChip = $state<HTMLButtonElement>();
+	let chips = $state<HTMLDivElement>();
+
+	// No room left (three picked, or a daily repeat): the typed value can't be added.
+	$effect(() => {
+		if (customOpen && (full || max < 1)) resetCustom();
+	});
+
+	function resetCustom() {
+		customOpen = false;
+		customText = '';
+		customError = false;
+	}
 
 	async function openCustom() {
 		customOpen = true;
@@ -64,23 +76,36 @@
 		customInput?.focus();
 	}
 
-	async function closeCustom() {
-		customOpen = false;
-		customText = '';
-		customError = false;
+	async function closeCustom(added?: number) {
+		resetCustom();
 		await tick();
-		customChip?.focus();
+		const target =
+			added === undefined
+				? customChip
+				: chips?.querySelector<HTMLButtonElement>(`button[data-lead="${added}"]`);
+		(target && !target.disabled ? target : customChip)?.focus();
+	}
+
+	/** The typed value as a day count, or null when it isn't a whole number in range. */
+	function typedLead(): number | null {
+		const text = customText.trim();
+		const n = Number(text);
+		return /^\d+$/.test(text) && n >= 1 && n <= max ? n : null;
+	}
+
+	function withLead(n: number): number[] {
+		if (effective.includes(n) || full) return effective;
+		return [...effective, n];
 	}
 
 	function addCustom() {
-		const text = String(customText).trim();
-		const n = Number(text);
-		if (!/^\d+$/.test(text) || n < 1 || n > max) {
+		const n = typedLead();
+		if (n === null) {
 			customError = true;
 			return;
 		}
-		if (!effective.includes(n)) value = [...effective, n];
-		void closeCustom();
+		value = withLead(n);
+		void closeCustom(n);
 	}
 
 	function onCustomKey(e: KeyboardEvent) {
@@ -93,6 +118,23 @@
 			void closeCustom();
 		}
 	}
+
+	// Saving with a valid value typed but not added still saves it. This runs while the
+	// form builds its data, for a plain submit and for use:enhance alike.
+	$effect(() => {
+		const form = customOpen ? customInput?.form : null;
+		if (!form) return;
+		const onFormData = (e: FormDataEvent) => {
+			const n = typedLead();
+			if (n === null) return;
+			const next = withLead(n);
+			e.formData.set(name, serializeLeadDays(next) ?? '');
+			value = next;
+			resetCustom();
+		};
+		form.addEventListener('formdata', onFormData);
+		return () => form.removeEventListener('formdata', onFormData);
+	});
 </script>
 
 <fieldset class="space-y-1.5">
@@ -100,12 +142,13 @@
 		>{label ?? t(locale, 'page.reminders.leadLabel')}</legend
 	>
 	<input type="hidden" {name} value={serializeLeadDays(effective) ?? ''} />
-	<div class="flex flex-wrap gap-2">
+	<div bind:this={chips} class="flex flex-wrap gap-2">
 		{#each offered as n (n)}
 			{@const active = effective.includes(n)}
 			<button
 				type="button"
 				aria-pressed={active}
+				data-lead={n}
 				disabled={!active && full}
 				onclick={() => toggle(n)}
 				class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors
@@ -140,11 +183,9 @@
 				bind:this={customInput}
 				bind:value={customText}
 				id="{uid}-custom"
-				type="number"
+				type="text"
 				inputmode="numeric"
-				min="1"
-				{max}
-				step="1"
+				autocomplete="off"
 				aria-invalid={customError}
 				aria-describedby={customError ? `${uid}-custom-error` : undefined}
 				onkeydown={onCustomKey}
@@ -163,14 +204,14 @@
 			</button>
 			<button
 				type="button"
-				onclick={closeCustom}
+				onclick={() => closeCustom()}
 				class="inline-flex h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 			>
 				{t(locale, 'common.cancel')}
 			</button>
 		</div>
 		{#if customError}
-			<p id="{uid}-custom-error" class="text-xs text-coral">
+			<p id="{uid}-custom-error" role="alert" class="text-xs text-coral">
 				{t(locale, 'page.reminders.leadCustomError', { max })}
 			</p>
 		{/if}
