@@ -21,7 +21,7 @@
 				href={gettingStartedHref(target, pet.id, today)}
 				variant="outline"
 				size="sm"
-				class="h-11 max-w-full"
+				class="h-11 max-w-full border-muted-foreground/30 bg-card"
 			>
 				<span class="truncate">{t(locale, 'gettingStarted.forPet', { name: pet.name })}</span>
 			</Button>
