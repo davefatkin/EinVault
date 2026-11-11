@@ -86,6 +86,7 @@
 			<Button
 				variant="soft"
 				size="sm"
+				class="h-11"
 				href={medicationReminderPrefillUrl(data.companion.id, created)}
 			>
 				<BellPlus class="h-4 w-4 mr-1.5" />{t(locale, 'page.medications.addDoseReminder')}
