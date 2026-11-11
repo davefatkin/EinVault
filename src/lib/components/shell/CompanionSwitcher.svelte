@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import CompanionAvatar from '#lib/components/CompanionAvatar.svelte';
-	import { ChevronDown, LayoutGrid } from '@lucide/svelte';
+	import { ChevronDown, LayoutGrid, PlusCircle } from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import type { CareStatus } from '#lib/careStatus.js';
 	import { switchTarget } from '#lib/nav/sections.js';
@@ -25,6 +25,8 @@
 		basePath?: '' | '/care';
 		/** 'sidebar' is the bordered desktop look, 'bar' the compact top bar look. */
 		variant?: 'bar' | 'sidebar';
+		/** When set, the menu ends with an "Add companion" link here, and a single pet still gets a menu. */
+		addHref?: string;
 		open?: boolean;
 	}
 
@@ -35,6 +37,7 @@
 		includeOverview = false,
 		basePath = '',
 		variant = 'bar',
+		addHref,
 		open = $bindable(false)
 	}: Props = $props();
 
@@ -50,7 +53,11 @@
 	let showOverview = $derived(includeOverview && pets.length > 1);
 	let activeListed = $derived(!!activeCompanion && pets.some((c) => c.id === activeCompanion.id));
 	let needsMenu = $derived(
-		activeCompanion ? pets.length > 1 || (!activeListed && pets.length > 0) : pets.length > 1
+		!!addHref && (pets.length > 0 || !!activeCompanion)
+			? true
+			: activeCompanion
+				? pets.length > 1 || (!activeListed && pets.length > 0)
+				: pets.length > 1
 	);
 
 	function hrefFor(id: string): string {
@@ -191,6 +198,15 @@
 						<span class="ml-auto flex items-center">{@render dot(c.id)}</span>
 					</a>
 				{/each}
+				{#if addHref}
+					<a
+						href={addHref}
+						class="flex w-full min-h-11 items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					>
+						<PlusCircle class="h-4 w-4 shrink-0" />
+						{t(locale, 'layout.addCompanion')}
+					</a>
+				{/if}
 			</div>
 		{/if}
 	</div>

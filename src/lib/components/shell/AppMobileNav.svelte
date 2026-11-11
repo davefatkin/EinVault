@@ -157,6 +157,7 @@
 					{activeCompanion}
 					{companionStatus}
 					includeOverview
+					addHref={user?.role === 'caretaker' ? undefined : '/companions/new'}
 					bind:open={() => openPanel === 'switcher', (v) => setPanel('switcher', v)}
 				/>
 			</div>
