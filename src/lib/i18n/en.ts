@@ -1704,7 +1704,7 @@ const messages = {
 	'gettingStarted.step.quickLog': 'Log something with a quick-log tile',
 	'gettingStarted.step.quickLogLine': "It lands on today's journal day.",
 	'gettingStarted.step.journal': "Write today's journal entry",
-	'gettingStarted.step.journalLine': 'Your mood feeds the trend on this dashboard.',
+	'gettingStarted.step.journalLine': "Your mood feeds the trend on your pet's dashboard.",
 	'gettingStarted.step.health': 'Log a vet visit or a weight',
 	'gettingStarted.step.healthLine':
 		'It shows on that journal day. Save & Add Reminder books the follow-up.',

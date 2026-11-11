@@ -26,7 +26,7 @@
 		<p class="text-sm text-muted-foreground">{status}</p>
 		{#if !showing}
 			<form method="POST" action="?/gettingStartedShow" use:enhance>
-				<Button type="submit" variant="outline" size="sm">
+				<Button type="submit" variant="outline" size="sm" class="h-11">
 					{t(locale, 'page.settings.gettingStartedShow')}
 				</Button>
 			</form>

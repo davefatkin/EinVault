@@ -40,7 +40,8 @@
 
 	const locale = getLocale();
 	const uid = $props.id();
-	// "quick logs, journal, health": a plain list, no "and".
+	// Short unit list: commas only in en and es ("quick logs, journal, health");
+	// de, fr, it and pt put their "and" before the last item.
 	const listFormat = new Intl.ListFormat(locale, { type: 'unit', style: 'short' });
 	const total = GETTING_STARTED_STEPS.length;
 

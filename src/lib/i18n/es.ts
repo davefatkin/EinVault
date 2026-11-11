@@ -1736,7 +1736,8 @@ const messages: Record<keyof Messages, string> = {
 	'gettingStarted.step.quickLog': 'Registra algo con un botón de registro rápido',
 	'gettingStarted.step.quickLogLine': 'Se guarda en el día de hoy del diario.',
 	'gettingStarted.step.journal': 'Escribe la entrada de hoy en el diario',
-	'gettingStarted.step.journalLine': 'Tu estado de ánimo alimenta la tendencia de este panel.',
+	'gettingStarted.step.journalLine':
+		'Tu estado de ánimo alimenta la tendencia del panel de tu compañero.',
 	'gettingStarted.step.health': 'Registra una visita al veterinario o un peso',
 	'gettingStarted.step.healthLine':
 		'Aparece en ese día del diario. «Guardar y crear recordatorio» agenda el seguimiento.',

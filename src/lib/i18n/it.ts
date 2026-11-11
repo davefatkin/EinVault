@@ -1733,7 +1733,8 @@ const messages: Record<keyof Messages, string> = {
 	'gettingStarted.step.quickLog': 'Registra qualcosa con un pulsante di registro rapido',
 	'gettingStarted.step.quickLogLine': 'Finisce nella giornata di oggi del diario.',
 	'gettingStarted.step.journal': 'Scrivi la voce di oggi nel diario',
-	'gettingStarted.step.journalLine': "Il tuo umore alimenta l'andamento in questa dashboard.",
+	'gettingStarted.step.journalLine':
+		"Il tuo umore alimenta l'andamento nella bacheca del tuo compagno.",
 	'gettingStarted.step.health': 'Registra una visita dal veterinario o un peso',
 	'gettingStarted.step.healthLine':
 		'Compare in quel giorno del diario. «Salva e crea promemoria» fissa il controllo successivo.',

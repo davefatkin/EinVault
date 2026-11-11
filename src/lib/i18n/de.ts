@@ -1746,7 +1746,7 @@ const messages: Record<keyof Messages, string> = {
 	'gettingStarted.step.quickLogLine': 'Es landet im heutigen Tagebuch.',
 	'gettingStarted.step.journal': 'Den heutigen Tagebucheintrag schreiben',
 	'gettingStarted.step.journalLine':
-		'Deine Stimmung fließt in den Verlauf auf diesem Dashboard ein.',
+		'Deine Stimmung fließt in den Verlauf auf der Übersicht deines Begleiters ein.',
 	'gettingStarted.step.health': 'Einen Tierarztbesuch oder ein Gewicht erfassen',
 	'gettingStarted.step.healthLine':
 		'Es erscheint an diesem Tag im Tagebuch. „Speichern & Erinnerung erstellen“ plant den Folgetermin.',

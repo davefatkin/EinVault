@@ -1743,7 +1743,8 @@ const messages: Record<keyof Messages, string> = {
 	'gettingStarted.step.quickLog': 'Enregistrez quelque chose avec une saisie rapide',
 	'gettingStarted.step.quickLogLine': "Elle s'ajoute au jour d'aujourd'hui dans le journal.",
 	'gettingStarted.step.journal': "Écrivez l'entrée du jour dans le journal",
-	'gettingStarted.step.journalLine': 'Votre humeur alimente la tendance de ce tableau de bord.',
+	'gettingStarted.step.journalLine':
+		'Votre humeur alimente la tendance du tableau de bord de votre compagnon.',
 	'gettingStarted.step.health': 'Enregistrez une visite chez le vétérinaire ou un poids',
 	'gettingStarted.step.healthLine':
 		"Cela s'affiche à ce jour dans le journal. « Enregistrer et créer un rappel » planifie le suivi.",
