@@ -706,7 +706,7 @@
 	})}
 		<Card data-testid={card.testId}>
 			<CardHeader class="pb-2">
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<card.icon class="h-4 w-4" />
 						{card.title}
@@ -726,7 +726,7 @@
 	{#if data.medications.length > 0}
 		<Card data-testid="dashboard-medications">
 			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<Pill class="h-4 w-4" />
 						{t(locale, 'page.medications.title')}
@@ -771,7 +771,7 @@
 	{#if data.supplies.length > 0}
 		<Card data-testid="dashboard-supplies">
 			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<Package class="h-4 w-4" />
 						{t(locale, 'page.supplies.title')}
@@ -808,7 +808,7 @@
 	<!-- Upcoming reminders card -->
 	<Card>
 		<CardHeader class="pb-3">
-			<div class="flex items-center justify-between">
+			<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 				<CardTitle class="text-sm font-semibold flex items-center gap-2">
 					<Bell class="h-4 w-4" />
 					{t(locale, 'page.dashboard.cardUpcomingReminders')}
@@ -938,11 +938,11 @@
 					showEmptyHint
 				/>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex flex-wrap gap-2">
 				{#each quickLogTypes as opt (opt.value)}
 					<a
 						href="/{companion.id}/log?type={opt.value}"
-						class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+						class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 text-center text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
 					>
 						<span class="text-lg">{opt.icon}</span>
 						<span>{opt.label}</span>
@@ -950,7 +950,7 @@
 				{/each}
 				<a
 					href="/{companion.id}/log"
-					class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+					class="flex-1 flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-center text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
 				>
 					<span class="text-lg">+</span>
 					<span>{t(locale, 'page.companion.logActivity')}</span>
@@ -962,7 +962,7 @@
 	<!-- Recent activity timeline (full width) -->
 	<Card>
 		<CardHeader class="pb-3">
-			<div class="flex items-center justify-between">
+			<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 				<CardTitle class="text-sm font-semibold flex items-center gap-2">
 					<ClipboardList class="h-4 w-4" />
 					{t(locale, 'page.dashboard.cardRecentActivity')}
@@ -1077,7 +1077,7 @@
 	{#if recentDocuments.length > 0}
 		<Card>
 			<CardHeader class="pb-3">
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 					<CardTitle class="text-sm font-semibold flex items-center gap-2">
 						<FileText class="h-4 w-4" />
 						{t(locale, 'page.documents.title')}
