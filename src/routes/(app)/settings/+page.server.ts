@@ -73,13 +73,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Read-only: Settings never persists the card's seen/completed markers.
 	let gettingStarted: { showing: boolean; complete: boolean; doneCount: number } | null = null;
 	if (!DEMO_MODE && locals.user.role !== 'caretaker') {
-		const progress = await loadGettingStartedProgress(locals.user);
+		const today = localDateISO();
+		const progress = await loadGettingStartedProgress(locals.user, today);
 		const { mode } = resolveCardMode({
 			pref: locals.user.gettingStarted as GettingStartedPref,
 			seenAt: locals.user.gettingStartedSeenAt,
 			completedOn: locals.user.gettingStartedCompletedOn,
 			complete: progress.complete,
-			today: localDateISO()
+			today
 		});
 		gettingStarted = {
 			showing: mode !== 'hidden',

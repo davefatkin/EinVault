@@ -1,9 +1,11 @@
-import { and, asc, eq, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, ne, or, sql, type SQL } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db, schema } from '#lib/server/db/index.js';
 import { DEMO_MODE } from '#lib/server/env.js';
+import { medicationActiveSql } from '#lib/server/medication-sql.js';
 import {
 	resolveCardMode,
+	skipsProgress,
 	GETTING_STARTED_STEPS,
 	type GettingStartedPref,
 	type GettingStartedProgress,
@@ -19,10 +21,14 @@ async function exists(table: SQLiteTable, where?: SQL): Promise<boolean> {
 	return rows.length > 0;
 }
 
-/** Household-wide setup progress. Owners see every companion, so nothing is scoped. */
-export async function loadGettingStartedProgress(user: {
-	role: 'admin' | 'member' | 'caretaker';
-}): Promise<GettingStartedProgress> {
+/**
+ * Household-wide setup progress. Owners see every companion, so nothing is scoped.
+ * `today` is the server's YYYY-MM-DD, used to tell which medications are active.
+ */
+export async function loadGettingStartedProgress(
+	user: { role: 'admin' | 'member' | 'caretaker' },
+	today: string
+): Promise<GettingStartedProgress> {
 	const { supplies, medications, reminders, supplyEvents } = schema;
 
 	const countedMed = eq(supplies.kind, 'counted');
@@ -64,10 +70,12 @@ export async function loadGettingStartedProgress(user: {
 		.select({ id: medications.id, name: medications.name, companionId: medications.companionId })
 		.from(medications)
 		.innerJoin(supplies, eq(medications.supplyId, supplies.id))
+		.innerJoin(schema.companions, eq(medications.companionId, schema.companions.id))
 		.where(
 			and(
 				eq(supplies.kind, 'counted'),
-				isNull(medications.endedOn),
+				medicationActiveSql(today),
+				eq(schema.companions.isActive, true),
 				sql`not exists (select 1 from ${reminders} where ${reminders.medicationId} = ${medications.id})`
 			)
 		)
@@ -91,14 +99,16 @@ export async function getGettingStartedView(
 ): Promise<GettingStartedView | null> {
 	if (DEMO_MODE || user.role === 'caretaker') return null;
 
-	const progress = await loadGettingStartedProgress(user);
-	const { mode, patch } = resolveCardMode({
+	const state = {
 		pref: user.gettingStarted as GettingStartedPref,
 		seenAt: user.gettingStartedSeenAt,
 		completedOn: user.gettingStartedCompletedOn,
-		complete: progress.complete,
 		today
-	});
+	};
+	if (skipsProgress(state)) return null;
+
+	const progress = await loadGettingStartedProgress(user, today);
+	const { mode, patch } = resolveCardMode({ ...state, complete: progress.complete });
 
 	if (patch.seenAt || patch.completedOn) {
 		await db

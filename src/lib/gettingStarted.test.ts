@@ -7,6 +7,7 @@ import {
 	namedReminderHref,
 	reminderToName,
 	resolveCardMode,
+	skipsProgress,
 	type GettingStartedPref,
 	type GettingStartedProgress
 } from './gettingStarted.js';
@@ -48,8 +49,18 @@ describe('resolveCardMode', () => {
 		expect(run('auto', false, new Date(), '2026-11-01')).toEqual({ mode: 'hidden', patch: {} });
 	});
 
-	it('never shows to users who were already complete', () => {
-		expect(run('auto', true)).toEqual({ mode: 'hidden', patch: {} });
+	it('never shows to users who were already complete, and records the day', () => {
+		expect(run('auto', true)).toEqual({ mode: 'hidden', patch: { completedOn: today } });
+	});
+
+	it('stays hidden for an already-complete user whose data later drops', () => {
+		expect(run('auto', false, null, today)).toEqual({ mode: 'hidden', patch: {} });
+		expect(run('auto', false, null, '2026-11-01')).toEqual({ mode: 'hidden', patch: {} });
+	});
+
+	it('never shows all set to an already-complete user, even on that day', () => {
+		expect(run('auto', true, null, today)).toEqual({ mode: 'hidden', patch: {} });
+		expect(run('auto', true, null, '2026-11-01')).toEqual({ mode: 'hidden', patch: {} });
 	});
 
 	it('shows all set and records the completion day', () => {
@@ -62,6 +73,38 @@ describe('resolveCardMode', () => {
 	it('shows all set only on the completion day', () => {
 		expect(run('auto', true, new Date(), today)).toEqual({ mode: 'allSet', patch: {} });
 		expect(run('auto', true, new Date(), '2026-11-09')).toEqual({ mode: 'hidden', patch: {} });
+	});
+});
+
+describe('skipsProgress', () => {
+	// [pref, seen, completedOn, skips]
+	const cases: [GettingStartedPref, boolean, string | null, boolean][] = [
+		['dismissed', false, null, true],
+		['dismissed', true, today, true],
+		['reopened', false, null, false],
+		['reopened', true, '2026-11-01', false],
+		['auto', false, null, false],
+		['auto', true, null, false],
+		['auto', true, today, false],
+		['auto', true, '2026-11-01', true],
+		['auto', false, today, true],
+		['auto', false, '2026-11-01', true]
+	];
+	const seenAt = (seen: boolean) => (seen ? new Date() : null);
+
+	it.each(cases)('pref %s, seen %s, completed %s: skips %s', (pref, seen, completedOn, skips) => {
+		expect(skipsProgress({ pref, seenAt: seenAt(seen), completedOn, today })).toBe(skips);
+	});
+
+	it('only skips when the card is hidden whatever the progress', () => {
+		for (const [pref, seen, completedOn, skips] of cases) {
+			if (!skips) continue;
+			for (const complete of [true, false]) {
+				expect(
+					resolveCardMode({ pref, seenAt: seenAt(seen), completedOn, complete, today })
+				).toEqual({ mode: 'hidden', patch: {} });
+			}
+		}
 	});
 });
 

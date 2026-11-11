@@ -22,10 +22,28 @@ export function resolveCardMode(input: {
 		return { mode: 'open', patch: seenAt ? {} : { seenAt: new Date() } };
 	}
 
-	// Complete the first time the card would render: never shown.
-	if (!seenAt) return { mode: 'hidden', patch: {} };
-	if (!completedOn) return { mode: 'allSet', patch: { completedOn: today } };
-	return { mode: completedOn === today ? 'allSet' : 'hidden', patch: {} };
+	if (!completedOn) {
+		// Complete the first time the card would render: never shown, and the
+		// completion day keeps it hidden if the data later drops.
+		if (!seenAt) return { mode: 'hidden', patch: { completedOn: today } };
+		return { mode: 'allSet', patch: { completedOn: today } };
+	}
+	return { mode: seenAt && completedOn === today ? 'allSet' : 'hidden', patch: {} };
+}
+
+/**
+ * True when `resolveCardMode` returns hidden with nothing to persist whatever
+ * the progress, so callers can skip loading it.
+ */
+export function skipsProgress(input: {
+	pref: GettingStartedPref;
+	seenAt: Date | null;
+	completedOn: string | null;
+	today: string;
+}): boolean {
+	const { pref, seenAt, completedOn, today } = input;
+	if (pref === 'dismissed') return true;
+	return pref === 'auto' && !!completedOn && (completedOn !== today || seenAt === null);
 }
 
 export const GETTING_STARTED_STEPS = ['quickLog', 'journal', 'health', 'medication'] as const;
