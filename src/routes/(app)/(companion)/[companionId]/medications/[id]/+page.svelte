@@ -72,7 +72,7 @@
 	{/if}
 
 	{#if editing}
-		<PageHeader title={med.name} tint="primary">
+		<PageHeader title={med.name} tint="teal">
 			{#snippet icon()}<Pill class="h-5 w-5" />{/snippet}
 		</PageHeader>
 		<Card>

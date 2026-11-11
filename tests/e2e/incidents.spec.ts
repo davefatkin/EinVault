@@ -29,7 +29,7 @@ async function addUpdate(page: Page, body: string, severity?: string) {
 }
 
 test.describe('incidents (owner)', () => {
-	test('create incident with severity and see it on the Health Log open section', async ({
+	test('create incident with severity and see it on the Health page open section', async ({
 		asMember
 	}) => {
 		const title = unique('create');
@@ -53,7 +53,7 @@ test.describe('incidents (owner)', () => {
 			// The photo picked in the form went up after the incident was saved.
 			await expect(asMember.locator('img[alt="paw.png"]').first()).toBeVisible();
 
-			await asMember.getByRole('link', { name: 'Health Log' }).click();
+			await asMember.getByRole('main').getByRole('link', { name: 'Health', exact: true }).click();
 			await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health$`));
 			const open = asMember.getByRole('region', { name: 'Open incidents' });
 			await expect(open).toContainText(title);
@@ -130,7 +130,7 @@ test.describe('incidents (owner)', () => {
 
 			await asMember.goto(`/${COMP}/health`);
 			await expect(asMember.getByRole('region', { name: 'Open incidents' })).toHaveCount(0);
-			// Still in the Health Log list, as an incident that opens its own page.
+			// Still in the Health page list, as an incident that opens its own page.
 			await asMember.getByRole('link', { name: new RegExp(title) }).click();
 			await expect(asMember).toHaveURL(new RegExp(`/health/incidents/${id}$`));
 		} finally {
@@ -204,7 +204,7 @@ test.describe('incidents (owner)', () => {
 		}
 	});
 
-	test('delete incident returns to the Health Log', async ({ asMember }) => {
+	test('delete incident returns to the Health page', async ({ asMember }) => {
 		const title = unique('delete');
 		let id: string | undefined;
 		let deleted = false;

@@ -5,24 +5,27 @@ import { test } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { waitForHydration } from '../lib/hydration';
+import { insertMedication, deleteMedications } from '../lib/medications';
+import { archiveCompanion, createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
+import { moreButton } from '../lib/more';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 const EIN = SEED.companions.ein.id;
 
 // ---------------------------------------------------------------------------
-// A. Owner household tabs + account sheet — mobile-only
+// A. Owner top bar + account sheet — mobile-only
 // ---------------------------------------------------------------------------
 
-test('bottom tab bar shows Overview, Search, You but not Users @mobile', async ({
-	asMember
-}, testInfo) => {
+test('household and settings pages have no bottom bar @mobile', async ({ asMember }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
-	await asMember.goto('/');
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await expect(nav.getByRole('link', { name: 'Overview' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('button', { name: 'Search' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
-	await expect(nav.getByRole('link', { name: 'Users' })).toHaveCount(0);
+	for (const url of ['/', '/settings']) {
+		await asMember.goto(url);
+		await expect(asMember.getByRole('button', { name: 'Open search' })).toBeVisible({
+			timeout: 8_000
+		});
+		await expect(asMember.getByRole('button', { name: 'Open account menu' })).toBeVisible();
+		await expect(asMember.getByRole('navigation', { name: 'Main navigation' })).toHaveCount(0);
+	}
 });
 
 test('mobile overview header is a companion dropdown that can jump into a companion @mobile', async ({
@@ -35,19 +38,18 @@ test('mobile overview header is a companion dropdown that can jump into a compan
 	await expect(trigger).toBeVisible({ timeout: 8_000 });
 	await expect(trigger).toContainText('Overview');
 	await trigger.click();
-	const listbox = asMember.getByRole('listbox', { name: 'Switch companion' });
-	await listbox.getByRole('button', { name: 'Ein' }).first().click();
+	const group = asMember.getByRole('group', { name: 'Switch companion' });
+	await group.getByRole('link', { name: 'Ein' }).first().click();
 	await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
 });
 
-test('member You tab opens account sheet with Settings + Sign Out only @mobile', async ({
+test('member household account button opens account sheet with Settings + Sign Out only @mobile', async ({
 	asMember
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asMember.goto('/');
 	await waitForHydration(asMember);
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asMember.getByRole('button', { name: 'Open account menu' }).click();
 
 	const sheet = asMember.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -100,24 +102,13 @@ test('admin companion page account sheet shows Users and Companions @mobile', as
 	await expect(sheet.getByRole('link', { name: 'Companions' })).toBeVisible();
 });
 
-test('overview top bar has no avatar button — You tab is the account entry @mobile', async ({
-	asMember
-}, testInfo) => {
-	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
-	await asMember.goto('/');
-	const nav = asMember.getByRole('navigation', { name: 'Main navigation' });
-	await expect(nav.getByRole('button', { name: 'You' })).toBeVisible({ timeout: 8_000 });
-	await expect(asMember.getByRole('button', { name: 'Open account menu' })).toHaveCount(0);
-});
-
-test('admin You tab account sheet shows Users and Companions @mobile', async ({
+test('admin household account sheet shows Users and Companions @mobile', async ({
 	asAdmin
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
@@ -131,8 +122,7 @@ test('admin account sheet Users link navigates to /admin/users @mobile', async (
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
 	await sheet.getByRole('link', { name: 'Users' }).click();
@@ -145,13 +135,157 @@ test('admin account sheet Companions link navigates to /admin/companions @mobile
 	test.skip(testInfo.project.name !== 'mobile', 'mobile only');
 	await asAdmin.goto('/');
 	await waitForHydration(asAdmin);
-	const nav = asAdmin.getByRole('navigation', { name: 'Main navigation' });
-	await nav.getByRole('button', { name: 'You' }).click();
+	await asAdmin.getByRole('button', { name: 'Open account menu' }).click();
 	const sheet = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(sheet).toBeVisible({ timeout: 8_000 });
 	await sheet.getByRole('link', { name: 'Companions' }).click();
 	await expect(asAdmin).toHaveURL(/\/admin\/companions/, { timeout: 8_000 });
 });
+
+// ---------------------------------------------------------------------------
+// A2. Pet view bottom bar and More sheet — mobile-only
+// ---------------------------------------------------------------------------
+
+test.describe('More sheet', () => {
+	// eslint-disable-next-line no-empty-pattern
+	test.beforeEach(({}, testInfo) => {
+		test.skip(testInfo.project.name !== 'mobile', 'mobile only');
+	});
+
+	test('More opens grouped sections and marks the current one @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/medications`);
+		const more = await moreButton(asMember);
+		await expect(more).toHaveAccessibleName(/current section/);
+		await expect(more).toHaveAttribute('aria-expanded', 'false');
+		await more.click();
+		await expect(more).toHaveAttribute('aria-expanded', 'true');
+
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await expect(dialog.getByRole('heading')).toHaveText(['Care', 'Records']);
+		const rows = dialog.getByRole('link');
+		await expect(rows).toHaveText(['Health', 'Medications', 'Supplies', 'Documents', 'Notes']);
+		await expect(rows.filter({ hasText: 'Medications' })).toHaveAttribute('aria-current', 'page');
+		await expect(rows.filter({ hasText: 'Supplies' })).not.toHaveAttribute('aria-current');
+	});
+
+	test('tapping the current section closes More @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/medications`);
+		const more = await moreButton(asMember);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await dialog.getByRole('link', { name: 'Medications' }).click();
+		await expect(dialog).toBeHidden();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/medications$`));
+	});
+
+	test('Escape closes More and returns focus to it @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		await expect(more).not.toHaveAccessibleName(/current section/);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog.getByRole('link').first()).toBeFocused();
+		await asMember.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(more).toBeFocused();
+	});
+
+	test('a tap outside the sheet closes More, even on the inert bar @mobile', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		const box = (await more.boundingBox())!;
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		// The bar is inert while the sheet is open, so the tap lands on the scrim.
+		await asMember.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(dialog).toBeHidden();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}$`));
+		await expect(more).toBeFocused();
+	});
+
+	test('the last More row clears the raised quick-add button @mobile', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		const quickAdd = asMember
+			.getByRole('navigation', { name: 'Main navigation' })
+			.getByRole('button', { name: 'Quick add', exact: true });
+		const fab = (await quickAdd.boundingBox())!;
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+		const last = (await dialog.getByRole('link').last().boundingBox())!;
+		expect(last.y + last.height).toBeLessThanOrEqual(fab.y);
+	});
+
+	test('More scrolls instead of running off a landscape phone @mobile', async ({ asMember }) => {
+		await asMember.setViewportSize({ width: 667, height: 375 });
+		await asMember.goto(`/${EIN}`);
+		const more = await moreButton(asMember);
+		await more.click();
+		const dialog = asMember.getByRole('dialog', { name: 'More sections' });
+		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+		const box = (await dialog.boundingBox())!;
+		expect(box.y).toBeGreaterThanOrEqual(0);
+		const rows = dialog.getByRole('link');
+		await expect(rows.first()).toBeInViewport();
+		await rows.last().scrollIntoViewIfNeeded();
+		await expect(rows.last()).toBeInViewport();
+		await rows.first().scrollIntoViewIfNeeded();
+		await rows.first().click();
+		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/health$`));
+	});
+
+	test('tab labels fit at 360px @mobile', async ({ asMember }) => {
+		await asMember.setViewportSize({ width: 360, height: 740 });
+		const navLabels = { es: 'Navegación principal', de: 'Hauptnavigation' } as const;
+		try {
+			for (const locale of ['es', 'de'] as const) {
+				await setLocale(asMember, locale);
+				// Reminders, not the dashboard: the dashboard's quick-log tiles are
+				// wider than 360px in es/de, and an overflowing page widens the
+				// layout viewport, which would widen the tabs too.
+				await asMember.goto(`/${EIN}/reminders`);
+				await waitForHydration(asMember);
+				expect(await asMember.evaluate(() => window.innerWidth)).toBe(360);
+				const nav = asMember.getByRole('navigation', { name: navLabels[locale] });
+				const labels = nav.locator('[data-tab-label]');
+				await expect(labels).toHaveCount(4);
+				for (const label of await labels.all()) {
+					const { scrollWidth, clientWidth, text } = await label.evaluate((el) => ({
+						scrollWidth: el.scrollWidth,
+						clientWidth: el.clientWidth,
+						text: el.textContent
+					}));
+					expect(scrollWidth, `${locale} "${text}" overflows its tab`).toBeLessThanOrEqual(
+						clientWidth
+					);
+				}
+			}
+		} finally {
+			await setLocale(asMember, 'en');
+		}
+	});
+});
+
+async function setLocale(
+	page: import('@playwright/test').Page,
+	locale: string,
+	settingsPath = '/settings'
+) {
+	await page.goto(settingsPath);
+	await waitForHydration(page);
+	await page.locator('select[name="locale"]').selectOption(locale);
+	await page.waitForLoadState('networkidle');
+	// Wait for the save to land: the user's locale is shared by every later
+	// spec in this worker.
+	await expect(page.locator('html')).toHaveAttribute('lang', locale);
+}
 
 // ---------------------------------------------------------------------------
 // B. Owner account popover — desktop sidebar
@@ -209,6 +343,55 @@ test('caretaker on-shift: Journal and Log tabs are links (not locked) @mobile', 
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
 });
 
+test('caretaker tab labels do not overlap at 360px in French @mobile', async ({
+	asCaretaker
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'mobile bottom nav is mobile-only');
+	await asCaretaker.setViewportSize({ width: 360, height: 740 });
+	try {
+		await setLocale(asCaretaker, 'fr', '/care/settings');
+		// Journal, not the care page: its quick-log tiles are wider than 360px in
+		// French, and an overflowing page widens the layout viewport and the bar.
+		await asCaretaker.goto(`/care/${EIN}/journal`);
+		await waitForHydration(asCaretaker);
+		expect(await asCaretaker.evaluate(() => window.innerWidth)).toBe(360);
+		const nav = asCaretaker.getByRole('navigation', { name: 'Navigation gardien' });
+		await expect(nav.getByRole('link', { name: 'Enregistrer une activité' })).toBeVisible();
+		const { rowFits, boxes } = await nav.evaluate((el) => {
+			const row = el.firstElementChild as HTMLElement;
+			return {
+				rowFits: row.scrollWidth <= row.clientWidth,
+				boxes: [...el.querySelectorAll<HTMLElement>('[data-tab-label]')].map((label) => {
+					const tab = label.parentElement!.getBoundingClientRect();
+					// The text itself, not its span: a capped span keeps its width
+					// while the text runs past it.
+					const range = document.createRange();
+					range.selectNodeContents(label);
+					const text = range.getBoundingClientRect();
+					return {
+						text: label.textContent,
+						left: text.left,
+						right: text.right,
+						insideTab: text.left >= tab.left - 0.5 && text.right <= tab.right + 0.5
+					};
+				})
+			};
+		});
+		expect(rowFits, 'the bar is wider than the screen').toBe(true);
+		expect(boxes).toHaveLength(4);
+		for (const [i, box] of boxes.entries()) {
+			expect(box.insideTab, `"${box.text}" spills out of its tab`).toBe(true);
+			if (i > 0) {
+				expect(box.left, `"${box.text}" overlaps "${boxes[i - 1].text}"`).toBeGreaterThanOrEqual(
+					boxes[i - 1].right
+				);
+			}
+		}
+	} finally {
+		await setLocale(asCaretaker, 'en', '/care/settings');
+	}
+});
+
 test('caretaker on-shift: Quick add FAB is present and opens Log activity + Add journal entry @mobile', async ({
 	asCaretaker
 }, testInfo) => {
@@ -240,6 +423,13 @@ test('caretaker on-shift desktop: Journal and Log are links (not locked)', async
 	const nav = asCaretaker.getByRole('navigation', { name: 'Caretaker navigation' });
 	await expect(nav.getByRole('link', { name: 'Journal' })).toBeVisible({ timeout: 8_000 });
 	await expect(nav.getByRole('link', { name: 'Log activity' })).toBeVisible({ timeout: 8_000 });
+	await expect(nav.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
+
+	// On a section page that section is current, not Overview.
+	await nav.getByRole('link', { name: 'Journal' }).click();
+	await expect(asCaretaker).toHaveURL(new RegExp(`/care/${EIN}/journal`));
+	await expect(nav.getByRole('link', { name: 'Journal' })).toHaveAttribute('aria-current', 'page');
+	await expect(nav.getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current');
 });
 
 test('caretaker has no Open search control on care page', async ({ asCaretaker }) => {
@@ -280,11 +470,10 @@ const offShiftTest = base.extend<{ world: OffShiftWorld }>({
 });
 
 offShiftTest(
-	'caretaker off-shift: Journal and Log are locked @mobile',
+	'caretaker off shift: locked tabs keep their label and say they need a shift @mobile',
 	async ({ world, browser }, testInfo) => {
 		test.skip(testInfo.project.name !== 'mobile', 'mobile bottom nav is mobile-only');
 
-		// Log in as caretaker against the off-shift server
 		const ctx = await browser.newContext({ baseURL: world.server.baseURL });
 		const page = await ctx.newPage();
 		await page.goto('/auth/login');
@@ -295,21 +484,24 @@ offShiftTest(
 
 		await page.goto(`/care/${EIN}`);
 
-		// Journal and Log tabs render as <span> (not <a>) with aria-label containing
-		// "requires active shift" text
+		// Locked tabs are non-interactive, show their label, and carry a visually
+		// hidden note that they need an active shift.
 		const nav = page.getByRole('navigation', { name: 'Caretaker navigation' });
-		const journalLocked = nav.locator('[aria-label*="requires active shift"]', {
-			hasText: /Journal/i
+		const journalLocked = nav.locator('span', { hasText: 'Journal' }).filter({
+			hasText: 'requires active shift'
 		});
-		const logLocked = nav.locator('[aria-label*="requires active shift"]', {
-			hasText: /Log activity/i
+		const logLocked = nav.locator('span', { hasText: 'Log activity' }).filter({
+			hasText: 'requires active shift'
 		});
-		await expect(journalLocked).toBeVisible({ timeout: 8_000 });
-		await expect(logLocked).toBeVisible({ timeout: 8_000 });
+		await expect(journalLocked.first()).toBeVisible({ timeout: 8_000 });
+		await expect(logLocked.first()).toBeVisible({ timeout: 8_000 });
+		await expect(nav.getByText('Journal', { exact: true })).toBeVisible();
+		await expect(nav.getByText('Log activity', { exact: true })).toBeVisible();
 
-		// No active-link version of Journal or Log (locked items are spans, not anchors)
-		await expect(nav.getByRole('link', { name: 'Journal' })).toHaveCount(0);
-		await expect(nav.getByRole('link', { name: 'Log activity' })).toHaveCount(0);
+		// No link version of Journal or Log, and no Quick add on the bar
+		await expect(nav.getByRole('link', { name: /Journal/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Log activity/ })).toHaveCount(0);
+		await expect(nav.getByRole('button', { name: 'Quick add' })).toHaveCount(0);
 
 		await ctx.close();
 	}
@@ -352,15 +544,152 @@ offShiftTest(
 
 		await page.goto(`/care/${EIN}`);
 
+		// Locked items show their label and carry a visually hidden note that
+		// they need an active shift, like the phone bar's locked tabs.
 		const nav = page.getByRole('navigation', { name: 'Caretaker navigation' });
-		// Locked items are <span> elements with aria-label containing "requires active shift"
-		await expect(nav.locator('[aria-label*="requires active shift"]').first()).toBeVisible({
-			timeout: 8_000
+		const journalLocked = nav.locator('span', { hasText: 'Journal' }).filter({
+			hasText: 'requires active shift'
 		});
+		const logLocked = nav.locator('span', { hasText: 'Log activity' }).filter({
+			hasText: 'requires active shift'
+		});
+		await expect(journalLocked).toHaveCount(1, { timeout: 8_000 });
+		await expect(logLocked).toHaveCount(1);
+		await expect(journalLocked).toBeVisible();
+		await expect(logLocked).toBeVisible();
+		await expect(nav).toContainText('Journal (requires active shift)');
+		await expect(nav).toContainText('Log activity (requires active shift)');
+		await expect(nav.locator('[aria-label]')).toHaveCount(0);
 		// No active links for Journal or Log in the pill nav
-		await expect(nav.getByRole('link', { name: 'Journal' })).toHaveCount(0);
-		await expect(nav.getByRole('link', { name: 'Log activity' })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Journal/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: /Log activity/ })).toHaveCount(0);
+		await expect(nav.getByRole('link', { name: 'Overview' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
 
 		await ctx.close();
 	}
 );
+
+// ---------------------------------------------------------------------------
+// One pet switcher: links keep the section, archived pets show, care status
+// ---------------------------------------------------------------------------
+
+const EDWARD = SEED.companions.edward.id;
+
+async function openSwitcher(page: import('@playwright/test').Page) {
+	await waitForHydration(page);
+	const group = page.getByRole('group', { name: 'Switch companion' });
+	await expect(async () => {
+		if (!(await group.isVisible()))
+			await page
+				.getByRole('button', { name: 'Switch companion' })
+				.filter({ visible: true })
+				.click();
+		await expect(group).toBeVisible({ timeout: 1_000 });
+	}).toPass();
+	return group;
+}
+
+test.describe('pet switcher', () => {
+	test('switching pets on a medication page lands on the other pet medications', async ({
+		asMember,
+		app
+	}) => {
+		const medId = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-switch-med' });
+		try {
+			await asMember.goto(`/${EIN}/medications/${medId}`);
+			const group = await openSwitcher(asMember);
+			await group.getByRole('link', { name: 'Edward' }).click();
+			await expect(asMember).toHaveURL(new RegExp(`/${EDWARD}/medications$`));
+		} finally {
+			deleteMedications(app.dataDir, [medId]);
+		}
+	});
+
+	test('switching pets keeps the journal day', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}/journal/2026-05-12`);
+		const group = await openSwitcher(asMember);
+		await group.getByRole('link', { name: 'Edward' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${EDWARD}/journal/2026-05-12$`));
+	});
+
+	test('an archived pet shows in the switcher @mobile', async ({ asAdmin, app }, testInfo) => {
+		const name = `e2e-archived-${testInfo.workerIndex}`;
+		try {
+			const id = await createCompanionViaUi(asAdmin, name);
+			archiveCompanion(app.dataDir, id);
+			await asAdmin.goto(`/${id}`);
+			await waitForHydration(asAdmin);
+			const trigger = asAdmin
+				.getByRole('button', { name: 'Switch companion' })
+				.filter({ visible: true });
+			await expect(trigger).toContainText(name);
+			// The name is said once (no avatar alt text), and an archived pet has
+			// no care status to show.
+			await expect(trigger).not.toHaveAccessibleName(/avatar/i);
+			await expect(trigger).not.toContainText('Care status');
+			await trigger.click();
+			const group = asAdmin.getByRole('group', { name: 'Switch companion' });
+			await expect(group).toBeVisible();
+			await expect(group.getByRole('link', { name: SEED.companions.ein.name })).toBeVisible();
+			await expect(group.getByRole('link', { name })).toHaveCount(0);
+			if (testInfo.project.name === 'mobile') {
+				await expect(asAdmin.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+			}
+		} finally {
+			deleteCompanionByName(app.dataDir, name);
+		}
+	});
+
+	test('sidebar groups sections under Care and Records', async ({ asMember, app }, testInfo) => {
+		test.skip(testInfo.project.name !== 'desktop', 'the sidebar is desktop-only');
+		const medId = insertMedication(app.dataDir, { companionId: EIN, name: 'e2e-sidebar-med' });
+		try {
+			await asMember.goto(`/${EIN}/medications/${medId}`);
+			const sidebar = asMember.getByRole('complementary', { name: 'Main navigation' });
+			const links = sidebar.getByRole('navigation').getByRole('link');
+			await expect(links).toHaveText([
+				'Dashboard',
+				'Journal',
+				'Reminders',
+				'Health',
+				'Medications',
+				'Supplies',
+				'Documents',
+				'Notes'
+			]);
+			await expect(sidebar.getByText('Care', { exact: true })).toBeVisible();
+			await expect(sidebar.getByRole('group', { name: 'Care' })).toBeVisible();
+			await expect(sidebar.getByRole('group', { name: 'Records' })).toBeVisible();
+			await expect(sidebar.getByText('Records', { exact: true })).toBeVisible();
+			await expect(links.filter({ hasText: 'Medications' })).toHaveAttribute(
+				'aria-current',
+				'page'
+			);
+		} finally {
+			deleteMedications(app.dataDir, [medId]);
+		}
+	});
+
+	test('sidebar switcher shows care status', async ({ asMember }, testInfo) => {
+		test.skip(testInfo.project.name === 'mobile', 'the sidebar is desktop-only');
+		await asMember.goto(`/${EIN}`);
+		await waitForHydration(asMember);
+		await expect(
+			asMember.getByRole('button', { name: 'Switch companion' }).filter({ visible: true })
+		).toHaveAccessibleName(/Care status/);
+	});
+
+	test('escape closes the switcher and returns focus to the trigger', async ({ asMember }) => {
+		await asMember.goto(`/${EIN}`);
+		const group = await openSwitcher(asMember);
+		await group.getByRole('link').first().focus();
+		await asMember.keyboard.press('Escape');
+		await expect(group).toHaveCount(0);
+		await expect(
+			asMember.getByRole('button', { name: 'Switch companion' }).filter({ visible: true })
+		).toBeFocused();
+	});
+});

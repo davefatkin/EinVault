@@ -1,29 +1,21 @@
 <script lang="ts">
+	import type { Component } from 'svelte';
+	import { untrack, tick } from 'svelte';
 	import { page } from '$app/state';
 	import CompanionSwitcher from './CompanionSwitcher.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import PawLogo from '#lib/components/PawLogo.svelte';
-	import {
-		House,
-		NotebookPen,
-		HeartPulse,
-		Bell,
-		Search,
-		LayoutGrid,
-		UserRound,
-		Plus,
-		Activity,
-		BookOpen,
-		Weight,
-		FileText,
-		StickyNote,
-		Pill,
-		Package
-	} from '@lucide/svelte';
+	import { Bell, Search, Activity, BookOpen, Weight } from '@lucide/svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { currentFabSection, orderFabActions } from '#lib/nav/fabSections.js';
+	import { OWNER_SECTIONS, isSectionActive, sectionHref } from '#lib/nav/sections.js';
+	import { NAV_ICONS } from '#lib/nav/icons.js';
 	import type { CareStatus } from '#lib/careStatus.js';
 	import AccountSheet from './AccountSheet.svelte';
+	import BottomBar from './BottomBar.svelte';
+	import BottomTab from './BottomTab.svelte';
+	import QuickAdd from './QuickAdd.svelte';
+	import MoreSheet from './MoreSheet.svelte';
 
 	type Companion = {
 		id: string;
@@ -61,68 +53,54 @@
 	}: Props = $props();
 
 	const locale = getLocale();
+	const moreTabId = $props.id();
 
-	let isCompanionContext = $derived(activeCompanion !== null);
+	// One open panel at a time: opening any of them closes the others.
+	type Panel = 'more' | 'quickAdd' | 'switcher' | 'account';
+	let openPanel = $state<Panel | null>(null);
 
-	let accountOpen = $state(false);
+	// Children write `open` from their own effects (e.g. close on navigation).
+	// Reading openPanel here must not become a dependency of those effects, or
+	// opening a panel would rerun them and close it again.
+	function setPanel(panel: Panel, isOpen: boolean) {
+		untrack(() => {
+			if (isOpen) openPanel = panel;
+			else if (openPanel === panel) openPanel = null;
+		});
+	}
 
-	// Close the sheet on any navigation (e.g. browser back) so it never
-	// lingers over a page it wasn't opened on.
+	// Close the account sheet on any navigation (e.g. browser back) so it never
+	// lingers over a page it wasn't opened on. The other panels close themselves.
 	$effect(() => {
 		void page.url.pathname;
-		accountOpen = false;
+		setPanel('account', false);
 	});
 
-	// Companion context nav tabs (4 + central FAB)
-	let companionTabs = $derived(
+	// Bottom bar: Home, Journal, quick add, Reminders, More.
+	let tabs = $derived(
 		activeCompanion
-			? [
-					{ href: `/${activeCompanion.id}`, label: t(locale, 'nav.dashboard'), icon: House },
-					{
-						href: `/${activeCompanion.id}/journal`,
-						label: t(locale, 'nav.journal'),
-						icon: NotebookPen
-					},
-					// FAB placeholder sits in the center — these two are the left tabs
-					{
-						href: `/${activeCompanion.id}/health`,
-						label: t(locale, 'nav.health'),
-						icon: HeartPulse
-					},
-					{
-						href: `/${activeCompanion.id}/reminders`,
-						label: t(locale, 'nav.reminders'),
-						icon: Bell
-					}
-				]
+			? OWNER_SECTIONS.filter((s) => s.mobile === 'tab').map((s) => ({
+					key: s.key,
+					href: sectionHref('owner', activeCompanion.id, s.path),
+					label: t(locale, s.tabLabelKey ?? s.labelKey),
+					icon: NAV_ICONS[s.key],
+					active: isSectionActive('owner', s.path, page.url.pathname, activeCompanion.id)
+				}))
 			: []
 	);
 
-	// Overview context tabs (3 equal tabs, no FAB)
-	let overviewTabs = $derived([
-		{ href: '/', label: t(locale, 'nav.overview'), icon: LayoutGrid, key: 'overview' },
-		{
-			href: '#search',
-			label: t(locale, 'nav.search'),
-			icon: Search,
-			key: 'search',
-			action: () => onOpenSearch()
-		},
-		{
-			href: '#you',
-			label: t(locale, 'nav.you'),
-			icon: UserRound,
-			key: 'you',
-			action: () => (accountOpen = true)
-		}
-	]);
-
-	// FAB menu state
-	let fabOpen = $state(false);
+	let moreActive = $derived(
+		!!activeCompanion &&
+			OWNER_SECTIONS.some(
+				(s) =>
+					s.mobile === 'more' &&
+					isSectionActive('owner', s.path, page.url.pathname, activeCompanion.id)
+			)
+	);
 
 	type FabKey = 'journal' | 'health' | 'reminders' | 'weight';
 
-	const FAB_ICONS: Record<FabKey, typeof BookOpen> = {
+	const FAB_ICONS: Record<FabKey, Component> = {
 		journal: BookOpen,
 		health: Activity,
 		reminders: Bell,
@@ -159,45 +137,40 @@
 			: []
 	);
 
-	function handleFabKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') fabOpen = false;
-	}
-
-	function isTabActive(href: string): boolean {
-		if (href === `/${activeCompanion?.id}`) return page.url.pathname === href;
-		if (href === '/') return page.url.pathname === '/';
-		return page.url.pathname === href || page.url.pathname.startsWith(href + '/');
-	}
-
-	// Companion sections with no bottom tab get an icon in the top bar.
-	function headerLinks(companionId: string) {
-		return [
-			{ href: `/${companionId}/medications`, label: t(locale, 'nav.medications'), icon: Pill },
-			{ href: `/${companionId}/supplies`, label: t(locale, 'nav.supplies'), icon: Package },
-			{ href: `/${companionId}/documents`, label: t(locale, 'nav.documents'), icon: FileText },
-			{ href: `/${companionId}/notes`, label: t(locale, 'nav.notes'), icon: StickyNote }
-		];
+	async function focusMore() {
+		await tick();
+		document.getElementById(moreTabId)?.focus();
 	}
 </script>
 
-<!-- Top bar -->
+<!-- Top bar: switcher, search, account. Nothing else, so the pet's name keeps
+     its room; sections without a bottom tab live in the More sheet. -->
 <header
 	class="sticky z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 print:hidden {className}"
 	style="top: var(--demo-bar-h, 0px)"
 >
-	<div class="flex h-14 items-center gap-3 px-4">
-		{#if isCompanionContext && activeCompanion}
+	<div class="flex h-14 items-center gap-1 px-2.5">
+		{#if companions.length > 0 || activeCompanion}
 			<div class="flex-1 min-w-0">
-				<CompanionSwitcher {companions} {activeCompanion} {companionStatus} includeOverview />
+				<CompanionSwitcher
+					{companions}
+					{activeCompanion}
+					{companionStatus}
+					includeOverview
+					bind:open={() => openPanel === 'switcher', (v) => setPanel('switcher', v)}
+				/>
 			</div>
-		{:else if companions.length > 0}
-			<!-- Overview: companion dropdown with "Overview" selected -->
-			<div class="flex-1 min-w-0">
-				<CompanionSwitcher {companions} activeCompanion={null} {companionStatus} includeOverview />
-			</div>
+			<button
+				type="button"
+				onclick={onOpenSearch}
+				aria-label={t(locale, 'aria.openSearch')}
+				class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+			>
+				<Search class="h-5 w-5" />
+			</button>
 		{:else}
-			<!-- No companions yet: brand greeting -->
-			<div class="flex items-center gap-2.5 flex-1 min-w-0">
+			<!-- No companions yet: greeting, no search (nothing to find yet) -->
+			<div class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5">
 				{#if user}
 					<UserAvatar
 						userId={user.id}
@@ -221,39 +194,13 @@
 				</span>
 			</div>
 		{/if}
-
-		<!-- Right: companion sections without a tab (companion context) + search -->
-		{#if isCompanionContext && activeCompanion}
-			{#each headerLinks(activeCompanion.id) as link (link.href)}
-				<a
-					href={link.href}
-					aria-label={link.label}
-					aria-current={isTabActive(link.href) ? 'page' : undefined}
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground {isTabActive(
-						link.href
-					)
-						? 'text-primary'
-						: ''}"
-				>
-					<link.icon class="h-5 w-5" />
-				</a>
-			{/each}
-		{/if}
-		<button
-			type="button"
-			onclick={onOpenSearch}
-			aria-label={t(locale, 'aria.openSearch')}
-			class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-		>
-			<Search class="h-5 w-5" />
-		</button>
-		{#if isCompanionContext && user}
+		{#if user}
 			<button
 				type="button"
-				onclick={() => (accountOpen = true)}
+				onclick={() => setPanel('account', true)}
 				aria-label={t(locale, 'aria.openAccountMenu')}
 				aria-haspopup="dialog"
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-accent"
+				class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-accent"
 			>
 				<UserAvatar
 					userId={user.id}
@@ -266,125 +213,52 @@
 	</div>
 </header>
 
-<!-- Bottom tab bar -->
-<nav
-	aria-label={t(locale, 'aria.mainNav')}
-	class="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card pb-safe md:hidden print:hidden"
->
-	<div class="relative flex items-end">
-		{#if isCompanionContext}
-			<!-- Left 2 tabs -->
-			{#each companionTabs.slice(0, 2) as tab (tab.href)}
-				{@const active = isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				<a
-					href={tab.href}
-					aria-current={active ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<TabIcon class="h-5 w-5 mb-0.5" />
-					{tab.label}
-				</a>
-			{/each}
+<!-- Bottom bar: only while a pet is in view. Household, settings and admin
+     pages have none. -->
+{#if activeCompanion}
+	<BottomBar label={t(locale, 'aria.mainNav')} inert={openPanel === 'more'}>
+		{#each tabs.slice(0, 2) as tab (tab.key)}
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} shrink />
+		{/each}
 
-			<!-- Central FAB slot -->
-			<div class="flex flex-col items-center flex-1 relative" style="padding-bottom: 8px;">
-				<!-- FAB menu -->
-				{#if fabOpen}
-					<button
-						type="button"
-						class="fixed inset-0 z-40 cursor-default"
-						onclick={() => (fabOpen = false)}
-						aria-label={t(locale, 'aria.closeQuickAdd')}
-						tabindex="-1"
-					></button>
-					<div
-						class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden min-w-[200px]"
-					>
-						{#each fabActions as action (action.key)}
-							{@const ActionIcon = FAB_ICONS[action.key as FabKey] ?? BookOpen}
-							<a
-								href={action.href}
-								onclick={() => (fabOpen = false)}
-								class="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent {action.highlight
-									? 'bg-primary/10 text-primary font-medium'
-									: 'text-foreground'}"
-							>
-								<ActionIcon
-									class="h-4 w-4 shrink-0 {action.highlight
-										? 'text-primary'
-										: 'text-muted-foreground'}"
-								/>
-								{action.label}
-							</a>
-						{/each}
-					</div>
-				{/if}
+		<!-- The button needs 48px of its slot; the rest goes to the tab labels
+		     (es "Recordatorios" is 73px, a fifth of 360px is 72). -->
+		<QuickAdd
+			actions={fabActions}
+			icons={FAB_ICONS}
+			narrow
+			bind:open={() => openPanel === 'quickAdd', (v) => setPanel('quickAdd', v)}
+		/>
 
-				<!-- FAB button -->
-				<button
-					type="button"
-					onclick={() => (fabOpen = !fabOpen)}
-					onkeydown={handleFabKeydown}
-					aria-label={t(locale, 'nav.fab.quickAdd')}
-					aria-expanded={fabOpen}
-					class="relative -top-3 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
-					style="background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)); box-shadow: 0 8px 20px hsl(var(--primary) / 0.4);"
-				>
-					<Plus class="h-6 w-6 transition-transform {fabOpen ? 'rotate-45' : ''}" />
-				</button>
-			</div>
+		{#each tabs.slice(2) as tab (tab.key)}
+			<BottomTab href={tab.href} label={tab.label} icon={tab.icon} active={tab.active} shrink />
+		{/each}
 
-			<!-- Right 2 tabs -->
-			{#each companionTabs.slice(2, 4) as tab (tab.href)}
-				{@const active = isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				<a
-					href={tab.href}
-					aria-current={active ? 'page' : undefined}
-					class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-						? 'text-primary'
-						: 'text-muted-foreground'}"
-				>
-					<TabIcon class="h-5 w-5 mb-0.5" />
-					{tab.label}
-				</a>
-			{/each}
-		{:else}
-			<!-- Overview context: 3 equal tabs, no FAB -->
-			{#each overviewTabs as tab (tab.key)}
-				{@const isAction = tab.key === 'search' || tab.key === 'you'}
-				{@const active = !isAction && isTabActive(tab.href)}
-				{@const TabIcon = tab.icon}
-				{#if isAction}
-					<button
-						type="button"
-						onclick={() => tab.action?.()}
-						aria-label={tab.label}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors min-h-[56px] justify-end pb-2 hover:text-foreground"
-					>
-						<TabIcon class="h-5 w-5 mb-0.5" />
-						{tab.label}
-					</button>
-				{:else}
-					<a
-						href={tab.href}
-						aria-current={active ? 'page' : undefined}
-						class="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px] justify-end pb-2 {active
-							? 'text-primary'
-							: 'text-muted-foreground'}"
-					>
-						<TabIcon class="h-5 w-5 mb-0.5" />
-						{tab.label}
-					</a>
-				{/if}
-			{/each}
-		{/if}
-	</div>
-</nav>
+		<BottomTab
+			id={moreTabId}
+			label={t(locale, 'nav.more')}
+			icon={NAV_ICONS.more}
+			active={moreActive}
+			currentNote={t(locale, 'aria.currentSection')}
+			haspopup="dialog"
+			expanded={openPanel === 'more'}
+			onclick={() => setPanel('more', openPanel !== 'more')}
+			shrink
+		/>
+	</BottomBar>
+
+	<MoreSheet
+		companionId={activeCompanion.id}
+		bind:open={() => openPanel === 'more', (v) => setPanel('more', v)}
+		returnFocus={focusMore}
+	/>
+{/if}
 
 {#if user}
-	<AccountSheet {user} open={accountOpen} onclose={() => (accountOpen = false)} variant="sheet" />
+	<AccountSheet
+		{user}
+		open={openPanel === 'account'}
+		onclose={() => setPanel('account', false)}
+		variant="sheet"
+	/>
 {/if}

@@ -28,7 +28,7 @@ export async function createWeightEntry(
 	return id;
 }
 
-/** The weight form fields, shared by the Health Log and the journal day. */
+/** The weight form fields, shared by the Health page and the journal day. */
 export function parseWeightForm(
 	data: FormData,
 	defaultUnit: WeightUnit,

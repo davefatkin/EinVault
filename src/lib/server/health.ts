@@ -32,7 +32,7 @@ export async function createHealthEvent(
 	return id;
 }
 
-/** The health event form fields, shared by the Health Log and the journal day. */
+/** The health event form fields, shared by the Health page and the journal day. */
 export function parseHealthEventForm(data: FormData, locale: Locale): FormParse<HealthEventInput> {
 	const title = String(data.get('title') ?? '').trim();
 	const type = parseHealthEventType(String(data.get('type') ?? ''));

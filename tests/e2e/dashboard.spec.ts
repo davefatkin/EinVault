@@ -7,6 +7,7 @@ import { createSeededDb, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
 import { noonZone } from '../lib/dates';
 import { waitForHydration } from '../lib/hydration';
+import { goViaMore } from '../lib/more';
 import { createIncidentViaUi, deleteIncidentViaUi } from '../lib/incidents';
 import { createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 import { insertMedication, deleteMedications, dosesFor } from '../lib/medications';
@@ -123,15 +124,12 @@ test('mobile quick-add journal links to today, not /new @mobile', async ({
 	await expect(asMember.locator('textarea').first()).toBeVisible({ timeout: 8_000 });
 });
 
-// Documents has no bottom-nav tab on mobile; it must still be reachable from the
-// companion top bar.
+// Documents has no bottom-nav tab on mobile; it must still be reachable from
+// the More sheet.
 test('mobile exposes Documents on a companion page @mobile', async ({ asMember }, testInfo) => {
-	test.skip(testInfo.project.name !== 'mobile', 'top-bar Documents link is mobile-only');
+	test.skip(testInfo.project.name !== 'mobile', 'the More sheet is mobile-only');
 	await asMember.goto(`/${COMP}`);
-	await waitForHydration(asMember);
-	const docs = asMember.getByRole('link', { name: /documents/i });
-	await expect(docs.first()).toHaveAttribute('href', `/${COMP}/documents`);
-	await docs.first().click();
+	await goViaMore(asMember, 'Documents');
 	await expect(asMember).toHaveURL(`/${COMP}/documents`, { timeout: 8_000 });
 });
 

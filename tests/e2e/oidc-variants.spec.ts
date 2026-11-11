@@ -208,7 +208,7 @@ test('oidc-variants: group absence demotes admin to member', async ({ page }) =>
 		// Sign out via the account menu (opened from the sidebar account row).
 		await page.goto(world.server.baseURL + '/settings');
 		await expect(page).toHaveURL(/settings/, { timeout: 10_000 });
-		await page.locator('button[aria-haspopup="dialog"]').click();
+		await page.locator('button[aria-haspopup="dialog"]').filter({ visible: true }).click();
 		await page.getByRole('button', { name: /sign out/i }).click();
 		await expect(page).toHaveURL(/auth\/login/, { timeout: 10_000 });
 

@@ -9,7 +9,7 @@
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { WEIGHT_UNITS, type WeightUnit } from '#lib/activityTypes.js';
 
-	// The log-weight form, shared by the Health Log and the journal day.
+	// The log-weight form, shared by the Health page and the journal day.
 	let {
 		action,
 		submit,

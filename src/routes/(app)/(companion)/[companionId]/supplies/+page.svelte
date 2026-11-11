@@ -24,7 +24,7 @@
 		</div>
 	{/if}
 
-	<PageHeader title={t(locale, 'page.supplies.title')} tint="primary">
+	<PageHeader title={t(locale, 'page.supplies.title')} tint="teal">
 		{#snippet icon()}<Package class="h-5 w-5" />{/snippet}
 		{#snippet actions()}
 			{#if canEdit}
@@ -38,7 +38,7 @@
 
 	{#if data.supplies.length === 0}
 		<EmptyState
-			tint="primary"
+			tint="teal"
 			title={t(locale, 'page.supplies.empty')}
 			body={t(locale, 'page.supplies.emptyBody')}
 		>

@@ -5,6 +5,7 @@
 	import { formatDateOnly } from '#lib/date.js';
 	import { todayInZone } from '#lib/medications.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { pageIconClass } from '#lib/pageIdentity.js';
 	import { supplyStockLine, type SupplySummary } from '#lib/supplies.js';
 
 	// One supply in a list: the supplies page and the dashboard card.
@@ -34,10 +35,9 @@
 
 <div class="flex items-start gap-3 px-5 py-4">
 	<span
-		class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {supply.runningLow ||
-		supply.expiring
-			? 'bg-gold/10 text-gold'
-			: 'bg-primary/10 text-primary'}"
+		class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {pageIconClass(
+			'teal'
+		)}"
 		aria-hidden="true"
 	>
 		<Package class="h-4 w-4" />

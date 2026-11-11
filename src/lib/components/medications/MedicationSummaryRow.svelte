@@ -5,6 +5,7 @@
 	import MedicationGivenButton from './MedicationGivenButton.svelte';
 	import MedicationStatusBadge from './MedicationStatusBadge.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
+	import { pageIconClass } from '#lib/pageIdentity.js';
 	import type { MedicationCaps, MedicationSummary } from '#lib/medications.js';
 
 	// One medication in a list: the medications page, the dashboard card and
@@ -26,9 +27,9 @@
 <div class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:gap-4">
 	<div class="flex min-w-0 flex-1 items-start gap-3">
 		<span
-			class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {medication.active
-				? 'bg-primary/10 text-primary'
-				: 'bg-muted text-muted-foreground'}"
+			class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {pageIconClass(
+				medication.active ? 'teal' : 'muted'
+			)}"
 			aria-hidden="true"
 		>
 			<Pill class="h-4 w-4" />

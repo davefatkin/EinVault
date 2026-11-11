@@ -53,7 +53,7 @@
 		</div>
 	{/if}
 
-	<PageHeader title={t(locale, 'page.medications.title')} tint="primary">
+	<PageHeader title={t(locale, 'page.medications.title')} tint="teal">
 		{#snippet icon()}<Pill class="h-5 w-5" />{/snippet}
 		{#snippet actions()}
 			{#if caps.canEdit && !formOpen}
@@ -91,7 +91,7 @@
 	{#if data.medications.length === 0}
 		{#if !formOpen}
 			<EmptyState
-				tint="primary"
+				tint="teal"
 				title={t(locale, 'page.medications.empty')}
 				body={t(locale, 'page.medications.emptyBody')}
 			>

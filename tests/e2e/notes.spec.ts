@@ -9,6 +9,7 @@ import { getFreePort } from '../lib/ports';
 import { bearerCall, createToken } from '../lib/api-tokens';
 import { pngUpload, mp4Upload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
+import { goViaMore, moreButton } from '../lib/more';
 
 const EIN = SEED.companions.ein.id;
 const JULIA = SEED.companions.julia.id;
@@ -596,27 +597,12 @@ test.describe('notes (owner)', () => {
 		await expect(asMember.getByText(M.einCommands.caption)).toBeVisible();
 	});
 
-	test('header Notes icon on mobile @mobile', async ({ asMember }, testInfo) => {
-		test.skip(testInfo.project.name !== 'mobile', 'header icons are mobile-only');
+	test('More › Notes on mobile @mobile', async ({ asMember }, testInfo) => {
+		test.skip(testInfo.project.name !== 'mobile', 'the More sheet is mobile-only');
 		await asMember.goto(`/${EIN}`);
-		const icon = asMember.getByRole('link', { name: 'Notes', exact: true });
-		await icon.click();
+		await goViaMore(asMember, 'Notes');
 		await expect(asMember).toHaveURL(new RegExp(`/${EIN}/notes$`));
-		await expect(icon).toHaveAttribute('aria-current', 'page');
-
-		// The switcher flexes to fill the bar; the icon must not paint over it.
-		const iconBox = await icon.boundingBox();
-		const switcherBox = await asMember
-			.getByRole('button', { name: 'Switch companion' })
-			.boundingBox();
-		expect(iconBox).toBeTruthy();
-		expect(switcherBox).toBeTruthy();
-		const separated =
-			iconBox!.x + iconBox!.width <= switcherBox!.x ||
-			switcherBox!.x + switcherBox!.width <= iconBox!.x ||
-			iconBox!.y + iconBox!.height <= switcherBox!.y ||
-			switcherBox!.y + switcherBox!.height <= iconBox!.y;
-		expect(separated, 'header Notes icon must not overlap the companion switcher').toBe(true);
+		await expect(await moreButton(asMember)).toHaveAccessibleName(/current section/);
 	});
 });
 

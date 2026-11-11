@@ -5,7 +5,7 @@
 	import IncidentCreateForm from './IncidentCreateForm.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 
-	// The new-incident screen, shared by the owner Health Log and the caretaker
+	// The new-incident screen, shared by the owner Health page and the caretaker
 	// care page. The form and its save-then-upload flow are IncidentCreateForm.
 	let {
 		companionId,

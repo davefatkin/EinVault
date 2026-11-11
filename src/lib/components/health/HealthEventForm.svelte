@@ -12,7 +12,7 @@
 	import { healthTypeOptions } from '#lib/i18n/labels.js';
 	import type { HealthEventType } from '#lib/health.js';
 
-	// The new-health-event form, shared by the Health Log and the journal day.
+	// The new-health-event form, shared by the Health page and the journal day.
 	// e2e targets its element ids, so render one per page.
 	let {
 		action,
