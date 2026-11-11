@@ -1,4 +1,7 @@
+import path from 'node:path';
+import Database from 'better-sqlite3';
 import { test, expect } from '../lib/fixtures';
+import { SEED } from '../lib/seed';
 import { waitForHydration } from '../lib/hydration';
 import { createCompanionViaUi, deleteCompanionByName } from '../lib/companions';
 
@@ -101,5 +104,46 @@ test.describe('i18n', () => {
 		await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
 
 		await ctx.close();
+	});
+
+	test('pet dashboards and the household page fit a 360px screen in every locale', async ({
+		asMember,
+		app
+	}) => {
+		// Longer labels (German, French, Portuguese) once pushed the quick-log tiles
+		// and card header buttons past the right edge.
+		const dbPath = path.join(app.dataDir, 'einvault.db');
+		const setLocale = (locale: string | null) => {
+			const sqlite = new Database(dbPath);
+			try {
+				sqlite.prepare('UPDATE users SET locale = ? WHERE id = ?').run(locale, SEED.member.id);
+			} finally {
+				sqlite.close();
+			}
+		};
+		const sqlite = new Database(dbPath, { readonly: true });
+		const original = (
+			sqlite.prepare('SELECT locale FROM users WHERE id = ?').get(SEED.member.id) as {
+				locale: string | null;
+			}
+		).locale;
+		sqlite.close();
+
+		await asMember.setViewportSize({ width: 360, height: 800 });
+		try {
+			for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt']) {
+				setLocale(locale);
+				for (const href of ['/seed-comp-ein', '/seed-comp-julia', '/']) {
+					await asMember.goto(href);
+					await expect(asMember.locator('html')).toHaveAttribute('lang', locale);
+					const overflow = await asMember.evaluate(
+						() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+					);
+					expect(overflow, `${locale} ${href}`).toBeLessThanOrEqual(0);
+				}
+			}
+		} finally {
+			setLocale(original);
+		}
 	});
 });

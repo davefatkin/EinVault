@@ -1,4 +1,5 @@
 import { test as base } from '@playwright/test';
+import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '../lib/fixtures';
@@ -13,6 +14,18 @@ const JULIA = 'seed-comp-julia';
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
 test.describe('api tokens', () => {
+	// Every test here makes its own tokens on the shared worker server. Clear them
+	// first so a worker that runs many of these tests stays under the per-user cap.
+	test.beforeEach(({ app }) => {
+		const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
+		try {
+			sqlite.pragma('foreign_keys = ON');
+			sqlite.prepare('DELETE FROM api_tokens').run();
+		} finally {
+			sqlite.close();
+		}
+	});
+
 	test('create shows the raw token once; Bearer POST logs an event; revoke kills it', async ({
 		asMember,
 		app

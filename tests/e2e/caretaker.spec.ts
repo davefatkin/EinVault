@@ -4,7 +4,6 @@ import path from 'node:path';
 import { test, expect } from '../lib/fixtures';
 import { createSeededDbNoShift, SEED } from '../lib/seed';
 import { startAppServer, type AppServer } from '../lib/app-server';
-import { getFreePort } from '../lib/ports';
 import {
 	insertMedication,
 	insertCountedSupply,
@@ -696,7 +695,7 @@ const offShift = base.extend<{ world: World }>({
 		const dbPath = createSeededDbNoShift(dir);
 		let server: AppServer;
 		try {
-			server = await startAppServer({ dbPath, env: { PORT: String(await getFreePort()) } });
+			server = await startAppServer({ dbPath });
 		} catch (err) {
 			fs.rmSync(dir, { recursive: true, force: true });
 			throw err;

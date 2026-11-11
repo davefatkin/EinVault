@@ -91,6 +91,15 @@ export function formatLeadDays(locale: Locale, days: readonly number[]): string 
 
 type Recurrence = { unit: Unit; interval: number } | null;
 
+/** Largest heads-up allowed: the global cap, and shorter than the repeat period. */
+export function maxLeadDays(recurrence: Recurrence): number {
+	if (!recurrence) return MAX_LEAD_DAYS;
+	return Math.max(
+		0,
+		Math.min(MAX_LEAD_DAYS, repeatPeriodDays(recurrence.unit, recurrence.interval) - 1)
+	);
+}
+
 /** Drops leads that are not shorter than the repeat period; no-op when not recurring. */
 export function pruneLeadDays(days: readonly number[], recurrence: Recurrence): number[] {
 	if (!recurrence) return [...days];
