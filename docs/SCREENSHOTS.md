@@ -12,6 +12,11 @@
 ![Member dashboard mobile dark](screenshots/member_dashboard_mobile_dark.png)
 ![Member dashboard mobile light](screenshots/member_dashboard_mobile_light.png)
 
+### Getting started card
+
+![Getting started card dark](screenshots/member_getting_started_dark.png)
+![Getting started card light](screenshots/member_getting_started_light.png)
+
 ### Companion overview
 
 ![Companion overview dark](screenshots/member_companion_dark.png)
@@ -26,6 +31,26 @@
 
 ![Health dark](screenshots/member_health_dark.png)
 ![Health light](screenshots/member_health_light.png)
+
+### Incident
+
+![Incident dark](screenshots/member_incident_dark.png)
+![Incident light](screenshots/member_incident_light.png)
+
+### Medications
+
+![Medications dark](screenshots/member_medications_dark.png)
+![Medications light](screenshots/member_medications_light.png)
+
+### Supplies
+
+![Supplies dark](screenshots/member_supplies_dark.png)
+![Supplies light](screenshots/member_supplies_light.png)
+
+### Reminders
+
+![Reminders dark](screenshots/member_reminders_dark.png)
+![Reminders light](screenshots/member_reminders_light.png)
 
 ### Journal day
 
@@ -46,6 +71,11 @@
 
 ![Caretaker sheet dark](screenshots/member_sheet_dark.png)
 ![Caretaker sheet light](screenshots/member_sheet_light.png)
+
+### More sheet (mobile)
+
+![More sheet (mobile) dark](screenshots/member_more_mobile_dark.png)
+![More sheet (mobile) light](screenshots/member_more_mobile_light.png)
 
 ### Admin panel
 
