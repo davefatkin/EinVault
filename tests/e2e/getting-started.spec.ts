@@ -193,7 +193,7 @@ test.describe('getting started card', () => {
 		await expect(page).toHaveURL(new RegExp(`/${pet}/reminders$`));
 		await waitForHydration(page);
 		const reminder = page.locator('[data-active-group] > *').filter({ hasText: 'Apoquel' });
-		await reminder.getByRole('button', { name: 'Mark as done' }).click();
+		await reminder.getByRole('button', { name: 'Log a dose of Apoquel' }).click();
 		// Wait out the undo window: the reminder lands in the completed list.
 		await expect(page.locator('details').filter({ hasText: 'Apoquel' })).toBeAttached({
 			timeout: 15_000

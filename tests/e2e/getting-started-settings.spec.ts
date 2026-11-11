@@ -11,7 +11,7 @@ test('getting started row restores the card', async ({ pristine, page }) => {
 	await expect(row.getByText('Showing', { exact: true })).toBeVisible();
 	await expect(row.getByRole('button', { name: 'Show it again' })).toHaveCount(0);
 
-	// Task 4's X button posts here from another page via use:enhance; a plain
+	// The card's X button posts here from another page via use:enhance; a plain
 	// action request stands in for it.
 	const res = await page.request.post(pristine.baseURL + '/settings?/gettingStartedHide', {
 		headers: { 'x-sveltekit-action': 'true', origin: pristine.baseURL },

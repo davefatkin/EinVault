@@ -115,7 +115,7 @@ test.describe('medications (owner)', () => {
 			await asMember.goto(`/${EIN}/reminders`);
 			await waitForHydration(asMember);
 			const card = asMember.locator('[data-active-group] > *').filter({ hasText: name });
-			await expect(card.getByRole('button', { name: 'Mark as done' })).toBeVisible();
+			await expect(card.getByRole('button', { name: `Log a dose of ${name}` })).toBeVisible();
 			await expect(
 				card.getByRole('button', { name: 'Mark done and log a Health Event' })
 			).toHaveCount(0);
@@ -125,7 +125,8 @@ test.describe('medications (owner)', () => {
 				'href',
 				medHref
 			);
-			await card.getByRole('button', { name: new RegExp(name) }).click();
+			// The row's own button, not "Log a dose of {name}".
+			await card.getByRole('button', { name: new RegExp(`^\\W*${name}`) }).click();
 			const detail = asMember.getByRole('dialog');
 			await expect(detail.getByRole('link', { name: `Medication: ${name}` })).toHaveAttribute(
 				'href',
