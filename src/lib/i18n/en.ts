@@ -1415,6 +1415,7 @@ const messages = {
 	'page.documents.previewFailed': 'Could not render preview. Use Download instead.',
 	'page.documents.pageOf': 'Page {page} of {total}',
 	'page.documents.fromPaperless': 'Paperless',
+	'page.documents.fromPurchase': 'From the {name} purchase',
 
 	'page.notes.title': 'Notes',
 	'page.notes.new': 'New note',

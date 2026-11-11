@@ -1441,6 +1441,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': "Impossible d'afficher l'aperçu. Utilisez Télécharger.",
 	'page.documents.pageOf': 'Page {page} sur {total}',
 	'page.documents.fromPaperless': 'Paperless',
+	'page.documents.fromPurchase': "De l'achat de {name}",
 
 	'page.notes.title': 'Notes',
 	'page.notes.new': 'Nouvelle note',

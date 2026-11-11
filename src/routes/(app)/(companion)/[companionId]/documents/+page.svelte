@@ -308,6 +308,15 @@
 											{#if doc.documentDate}<span>{doc.documentDate}</span>{/if}
 											{#if doc.sizeBytes}<span>{formatSize(doc.sizeBytes)}</span>{/if}
 											{#if doc.healthEvent}<span>· {doc.healthEvent.title}</span>{/if}
+											{#if data.purchaseByDocument[doc.id]}
+												{@const purchase = data.purchaseByDocument[doc.id]}
+												<a
+													href="/{data.companion.id}/supplies/{purchase.supplyId}"
+													class="underline underline-offset-2 hover:text-foreground"
+												>
+													{t(locale, 'page.documents.fromPurchase', { name: purchase.supplyName })}
+												</a>
+											{/if}
 										</p>
 									</div>
 								</button>

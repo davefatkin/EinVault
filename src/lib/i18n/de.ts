@@ -1443,6 +1443,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': 'Vorschau konnte nicht angezeigt werden. Bitte herunterladen.',
 	'page.documents.pageOf': 'Seite {page} von {total}',
 	'page.documents.fromPaperless': 'Paperless',
+	'page.documents.fromPurchase': 'Vom Kauf von {name}',
 
 	'page.notes.title': 'Notizen',
 	'page.notes.new': 'Neue Notiz',

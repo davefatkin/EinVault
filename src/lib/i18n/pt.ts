@@ -1436,6 +1436,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.previewFailed': 'Não foi possível mostrar a pré-visualização. Use Transferir.',
 	'page.documents.pageOf': 'Página {page} de {total}',
 	'page.documents.fromPaperless': 'Paperless',
+	'page.documents.fromPurchase': 'Da compra de {name}',
 
 	'page.notes.title': 'Notas',
 	'page.notes.new': 'Nova nota',
