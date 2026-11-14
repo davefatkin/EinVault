@@ -27,7 +27,8 @@
 		paperlessEnabled,
 		canAttach,
 		onbrowse,
-		ondone
+		ondone,
+		onsaving
 	}: {
 		event: {
 			id: string;
@@ -50,6 +51,11 @@
 		onbrowse: (addPick: (pick: PaperlessPick) => void) => void;
 		/** The edit is over: saved, closed after failures, or canceled. */
 		ondone: () => void;
+		/**
+		 * Reports whether a save is in flight, and false on unmount. The page
+		 * must not unmount this form while saving, or its failures are lost.
+		 */
+		onsaving?: (saving: boolean) => void;
 	} = $props();
 	const locale = getLocale();
 
@@ -61,6 +67,10 @@
 		readSaved: (data) => ({ healthEventId: event.id, day: String(data.day), reminderUrl: null })
 	});
 	const saving = $derived(save.phase === 'saving');
+	$effect(() => {
+		onsaving?.(saving);
+	});
+	$effect(() => () => onsaving?.(false));
 </script>
 
 <div class="border border-border rounded-lg px-4 py-4">

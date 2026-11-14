@@ -322,7 +322,7 @@ test.describe('health events and weight log', () => {
 		const id = await addEventWithFile(asMember, app, title, `e2e-he-first-${stamp}.pdf`);
 
 		const form = await openEdit(asMember, id);
-		await form.locator(`#edit-occurredAt-${id}`).fill('2026-02-03T10:00');
+		await form.locator(`#edit-occurredAt-${id}`).fill('2026-02-03T12:00');
 		await form.getByTestId('attach-files').setInputFiles(pdfUpload(file));
 		await form.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(form).toHaveCount(0, { timeout: 10_000 });
@@ -386,6 +386,49 @@ test.describe('health events and weight log', () => {
 			.getByTestId('attach-files')
 			.evaluate((el) => (el as HTMLInputElement).files?.length ?? 0);
 		expect(count).toBe(1);
+	});
+
+	test('a failed edit upload names the file, and no other Edit opens while saving', async ({
+		asMember,
+		app
+	}) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-badfile-${stamp}`;
+		const other = `e2e-he-other-${stamp}`;
+		const bad = `e2e-he-bad-${stamp}.txt`;
+		await addEventWithFile(asMember, app, other, `e2e-he-other-${stamp}.pdf`);
+		const id = await addEventWithFile(asMember, app, title, `e2e-he-good-${stamp}.pdf`);
+
+		// Hold the upload so the save stays in flight.
+		let release!: () => void;
+		const held = new Promise<void>((resolve) => (release = resolve));
+		await asMember.route(`**/api/companions/${COMP}/documents`, async (route) => {
+			await held;
+			await route.continue();
+		});
+
+		const form = await openEdit(asMember, id);
+		await form
+			.getByTestId('attach-files')
+			.setInputFiles({ name: bad, mimeType: 'text/plain', buffer: Buffer.from('hello') });
+		await form.getByRole('button', { name: 'Save', exact: true }).click();
+
+		const otherRow = asMember.getByRole('button', { name: new RegExp(other) });
+		const otherEdit = otherRow.locator('..').getByRole('button', { name: 'Edit' });
+		await expect(otherEdit).toBeDisabled();
+		await otherRow.click();
+		const detail = asMember.getByRole('dialog');
+		await expect(detail.getByRole('button', { name: 'Edit' })).toBeDisabled();
+		await asMember.keyboard.press('Escape');
+		await expect(detail).toHaveCount(0);
+		release();
+
+		await expect(asMember.getByText(bad)).toBeVisible({ timeout: 10_000 });
+		await expect(form).toHaveCount(0);
+		await asMember.getByRole('button', { name: 'Close', exact: true }).click();
+		await expect(asMember.getByText(bad)).toHaveCount(0);
+		await expect(asMember.getByRole('button', { name: new RegExp(title) })).toBeVisible();
+		await expect(otherEdit).toBeEnabled();
 	});
 
 	test('title required', async ({ asMember }) => {

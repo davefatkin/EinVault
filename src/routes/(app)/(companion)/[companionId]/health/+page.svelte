@@ -114,8 +114,12 @@
 	// each time. editPick hands it Paperless picks while pickerTarget is its id.
 	let editingHealthId = $state<string | null>(null);
 	let editPick: ((pick: PaperlessPick) => void) | null = null;
-	function startEditHealth(event: (typeof data.healthEvents)[0]) {
-		editingHealthId = event.id;
+	// True while the open edit form saves. Opening another edit would unmount
+	// it and lose its attachment failures, so every Edit waits.
+	let editSaving = $state(false);
+	function startEditHealth(id: string) {
+		if (editSaving) return;
+		editingHealthId = id;
 	}
 	/** Closes the edit form of `id`, unless another one opened since (a late save). */
 	function closeEditHealth(id: string) {
@@ -159,7 +163,7 @@
 			// Incidents never edit here: the load redirects them to their page.
 			const healthMatch = data.healthEvents.find((e) => e.id === editId && e.type !== 'incident');
 			if (healthMatch) {
-				editingHealthId = editId;
+				untrack(() => startEditHealth(editId));
 			}
 		}
 		tick().then(() => stripUrlParams('edit'));
@@ -314,11 +318,12 @@
 		<Button
 			variant="soft"
 			size="sm"
+			disabled={editSaving}
 			onclick={() => {
 				if (selected?.kind === 'health') {
 					const item = selected.item;
 					closeDetail();
-					startEditHealth(item);
+					startEditHealth(item.id);
 				}
 			}}
 		>
@@ -370,6 +375,7 @@
 				<Button
 					variant="outline"
 					size="sm"
+					disabled={createSave.phase === 'saving'}
 					onclick={() => {
 						showWeightForm = !showWeightForm;
 						setHealthForm(false);
@@ -673,6 +679,7 @@
 									pickerTarget = event.id;
 								}}
 								ondone={() => closeEditHealth(event.id)}
+								onsaving={(saving) => (editSaving = saving)}
 							/>
 						{:else}
 							<div
@@ -737,7 +744,8 @@
 											type="button"
 											variant="soft"
 											size="sm"
-											onclick={() => startEditHealth(event)}
+											disabled={editSaving}
+											onclick={() => startEditHealth(event.id)}
 											class="h-7 gap-1.5 px-2 text-xs"
 										>
 											<Pencil class="h-3.5 w-3.5" />
