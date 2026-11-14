@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import MarkdownTextarea from '#lib/components/MarkdownTextarea.svelte';
-	import { applyAction, enhance, type SubmitFunction } from '$app/forms';
+	import { enhance } from '$app/forms';
 	import LocalTime from '#lib/components/LocalTime.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '#lib/components/ui/card/index.js';
@@ -28,14 +28,8 @@
 	import { stripMarkdown } from '#lib/markdown.js';
 	import { tick, untrack } from 'svelte';
 	import { page } from '$app/state';
-	import { goto, refreshAll } from '$app/navigation';
-	import {
-		addPaperlessPick,
-		applyAttachments,
-		emptyPending,
-		type AttachFailure,
-		type PendingAttachments
-	} from '#lib/healthAttachments.js';
+	import { addPaperlessPick } from '#lib/healthAttachments.js';
+	import { createHealthEventSave } from '#lib/healthEventSave.svelte.js';
 	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { localDatetimes } from '#lib/actions/localDatetimes.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -96,13 +90,14 @@
 	}
 	let todayISO = $state(localDatetimeISO());
 
-	// The add-event card. Document changes wait in createPending and are
-	// applied once the event is saved; the event stays saved if any fail.
-	let createPhase = $state<'form' | 'saving' | 'failed'>('form');
-	let createError = $state<string | null>(null);
-	let createPending = $state<PendingAttachments>(emptyPending());
-	let createFailures = $state<AttachFailure[]>([]);
-	let createReminderUrl = $state<string | null>(null);
+	// The add-event card's save: document changes are applied once the event
+	// is saved, and the event stays saved if any fail.
+	const createSave = createHealthEventSave({
+		companionId: () => data.companion.id,
+		titles: () => Object.fromEntries(data.attachableDocuments.map((d) => [d.id, d.title])),
+		locale: () => locale,
+		onclose: () => setHealthForm(false)
+	});
 	const paperlessEnabled = $derived(data.paperlessEnabled ?? false);
 	// The page's one Paperless picker fills the add form ('create') or the
 	// edit form of the event with this id.
@@ -110,82 +105,13 @@
 
 	/** Opens or closes the add-event card, always with empty attachments. */
 	function setHealthForm(open: boolean) {
-		// A save in flight closes or reopens the card itself when it finishes.
-		if (createPhase === 'saving') return;
+		// A save in flight closes the card itself when it finishes.
+		if (createSave.phase === 'saving') return;
 		showHealthForm = open;
-		createPhase = 'form';
-		createError = null;
-		createPending = emptyPending();
-		createFailures = [];
-		createReminderUrl = null;
+		createSave.reset();
 		if (pickerTarget === 'create') pickerTarget = null;
 		if (!open) resetHealthPrefill();
 	}
-
-	const submitHealth: SubmitFunction = ({ cancel }) => {
-		if (createPhase !== 'form') {
-			cancel();
-			return;
-		}
-		createPhase = 'saving';
-		createError = null;
-		// Read before any await: the page is reused across companions.
-		const companionId = data.companion.id;
-		const here = page.url.pathname;
-		const pending = createPending;
-		const titles = Object.fromEntries(data.attachableDocuments.map((d) => [d.id, d.title]));
-		// No update() on either path: it would reset the form and drop the picked files.
-		return async ({ result }) => {
-			if (result.type === 'redirect') {
-				// Demo mode and the 2FA gate answer writes with a redirect: follow it.
-				createPhase = 'form';
-				setHealthForm(false);
-				await applyAction(result);
-				return;
-			}
-			if (result.type !== 'success' || !result.data) {
-				createPhase = 'form';
-				createError =
-					result.type === 'failure'
-						? String(result.data?.healthError ?? t(locale, 'media.actionFailed'))
-						: t(locale, 'media.actionFailed');
-				return;
-			}
-			// The event exists from here on: never return to the form.
-			const saved = result.data as {
-				healthEventId: string;
-				day: string;
-				reminderUrl: string | null;
-			};
-			let failed: AttachFailure[] = [];
-			try {
-				failed = await applyAttachments({
-					companionId,
-					healthEventId: saved.healthEventId,
-					day: saved.day,
-					pending,
-					titles,
-					locale
-				});
-				await refreshAll();
-			} catch {
-				// Fall through: the finally block leaves the saving phase.
-			} finally {
-				createPhase = 'form';
-				if (failed.length > 0 && page.url.pathname === here) {
-					setHealthForm(true);
-					createFailures = failed;
-					createReminderUrl = saved.reminderUrl;
-					createPhase = 'failed';
-				} else {
-					setHealthForm(false);
-				}
-			}
-			if (failed.length === 0 && saved.reminderUrl && page.url.pathname === here) {
-				await goto(saved.reminderUrl);
-			}
-		};
-	};
 
 	let editingHealthId = $state<string | null>(null);
 	function startEditHealth(event: (typeof data.healthEvents)[0]) {
@@ -457,7 +383,7 @@
 				</Button>
 				<Button
 					size="sm"
-					disabled={createPhase === 'saving'}
+					disabled={createSave.phase === 'saving'}
 					onclick={() => {
 						setHealthForm(!showHealthForm);
 						showWeightForm = false;
@@ -482,21 +408,21 @@
 				<CardTitle>{t(locale, 'page.health.newHealthEventTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{#if createPhase === 'failed'}
+				{#if createSave.phase === 'failed'}
 					<AttachmentFailures
-						failures={createFailures}
-						reminderUrl={createReminderUrl}
+						failures={createSave.failures}
+						reminderUrl={createSave.reminderUrl}
 						onclose={() => setHealthForm(false)}
 					/>
 				{:else}
 					<HealthEventForm
 						action="?/addHealth"
 						defaultAt={todayISO}
-						submitting={createPhase === 'saving'}
-						error={createError}
+						submitting={createSave.phase === 'saving'}
+						error={createSave.error}
 						prefill={{ title: prefillTitle, type: prefillType, notes: prefillDescription }}
 						medicationsHref="/{data.companion.id}/medications"
-						submit={submitHealth}
+						submit={createSave.submit}
 						oncancel={() => setHealthForm(false)}
 					>
 						{#snippet extra()}
@@ -506,9 +432,9 @@
 									documents={data.attachableDocuments}
 									uploadMaxMb={data.uploadMaxMb}
 									{paperlessEnabled}
-									bind:pending={createPending}
+									bind:pending={createSave.pending}
 									onbrowse={() => (pickerTarget = 'create')}
-									disabled={createPhase === 'saving'}
+									disabled={createSave.phase === 'saving'}
 								/>
 							{/if}
 						{/snippet}
@@ -942,7 +868,7 @@
 		open={pickerTarget !== null}
 		onpick={(paperlessId, title) => {
 			if (pickerTarget === 'create') {
-				createPending = addPaperlessPick(createPending, { paperlessId, title });
+				createSave.pending = addPaperlessPick(createSave.pending, { paperlessId, title });
 			}
 			pickerTarget = null;
 		}}
