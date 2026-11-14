@@ -110,7 +110,7 @@
 		<p role="alert">{t(locale, 'page.incident.filesFailed')}</p>
 		<ul class="list-disc space-y-1 pl-5 text-destructive">
 			{#each failures as f, i (i)}
-				<li>{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}</li>
+				<li>{t(locale, 'attachments.itemFailed', { name: f.name, message: f.message })}</li>
 			{/each}
 		</ul>
 		<Button onclick={() => onfinish(nextUrl)}>{t(locale, 'page.incident.continue')}</Button>

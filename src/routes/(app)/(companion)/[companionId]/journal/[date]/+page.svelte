@@ -1031,7 +1031,7 @@
 				<ul class="list-disc pl-5 text-destructive">
 					{#each docFailures as f, i (i)}
 						<li>
-							{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}
+							{t(locale, 'attachments.itemFailed', { name: f.name, message: f.message })}
 						</li>
 					{/each}
 				</ul>
@@ -1128,6 +1128,7 @@
 		defaultAt={defaultLoggedAt()}
 		documents={data.attachableDocuments}
 		uploadMaxMb={data.uploadMaxMb}
+		paperlessEnabled={data.paperlessEnabled ?? false}
 		flush={() => autosave.flush()}
 		onclose={() => (showHealthModal = false)}
 	/>

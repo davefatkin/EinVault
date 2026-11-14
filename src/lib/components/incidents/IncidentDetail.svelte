@@ -183,10 +183,10 @@
 		await refreshAll();
 		attaching = false;
 	}
-	async function pickFromPaperless(paperlessId: number) {
+	async function pickFromPaperless(paperlessId: number, title: string) {
 		attachFailures = [];
 		const r = await importAndAttach(companionId, paperlessId, incident.id, locale);
-		if (!r.ok) attachFailures = [{ name: 'Paperless', message: r.message }];
+		if (!r.ok) attachFailures = [{ name: title, message: r.message }];
 		paperlessOpen = false;
 		await refreshAll();
 	}
@@ -314,7 +314,7 @@
 			<p>{t(locale, 'page.incident.attachFailed')}</p>
 			<ul class="list-disc pl-5">
 				{#each attachFailures as f, i (i)}
-					<li>{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}</li>
+					<li>{t(locale, 'attachments.itemFailed', { name: f.name, message: f.message })}</li>
 				{/each}
 			</ul>
 		</div>
@@ -435,7 +435,7 @@
 				<ul class="list-disc space-y-1 pl-5 text-destructive">
 					{#each addFailures as f, i (i)}
 						<li>
-							{t(locale, 'page.journal.day.fileFailed', { name: f.name, message: f.message })}
+							{t(locale, 'attachments.itemFailed', { name: f.name, message: f.message })}
 						</li>
 					{/each}
 				</ul>

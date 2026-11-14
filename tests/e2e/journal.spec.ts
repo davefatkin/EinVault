@@ -587,6 +587,28 @@ test.describe('journal day editor', () => {
 		await expect(detail.getByText(fresh)).toBeVisible();
 	});
 
+	test('day health event uploads take the chosen category', async ({ asMember }) => {
+		const stamp = Date.now().toString(36);
+		const file = `e2e-cat-${stamp}.pdf`;
+		await asMember.goto(`/${COMP}/journal/2026-05-15`);
+		await waitForHydration(asMember);
+		await openAdd(asMember, 'Health event');
+		const dialog = asMember.getByRole('dialog', { name: 'New Health Event' });
+		await dialog.locator('#title').fill(`e2e-cat-${stamp}`);
+		await expect(dialog.locator('#day-attach-category')).toHaveCount(0);
+		await dialog.getByTestId('attach-files').setInputFiles(pdfUpload(file));
+		await dialog.locator('#day-attach-category').selectOption({ label: 'Medical' });
+		await dialog.getByRole('button', { name: 'Save Event' }).click();
+		await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+
+		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
+		await expect(asMember.getByText(file)).toBeVisible({ timeout: 8_000 });
+		await expect(
+			asMember.locator('li, tr, article').filter({ hasText: file }).first()
+		).toContainText('Medical');
+	});
+
 	test('a failed attachment keeps the event and names the file', async ({ asMember }) => {
 		const stamp = Date.now().toString(36);
 		const title = `e2e-partial-${stamp}`;
