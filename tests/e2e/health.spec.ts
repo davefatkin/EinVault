@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'node:path';
+import type { Page } from '@playwright/test';
 import { test, expect, type AppWorker } from '../lib/fixtures';
 import { pdfUpload } from '../lib/files';
 import { waitForHydration } from '../lib/hydration';
@@ -10,6 +11,46 @@ function workerDb(app: AppWorker) {
 	const sqlite = new Database(path.join(app.dataDir, 'einvault.db'));
 	sqlite.pragma('foreign_keys = ON');
 	return sqlite;
+}
+
+/** Adds an event with one new file through the Health page; returns its id. */
+async function addEventWithFile(page: Page, app: AppWorker, title: string, file: string) {
+	await page.goto(`/${COMP}/health`);
+	await waitForHydration(page);
+	await page.getByRole('button', { name: 'Add Event' }).click();
+	const form = page.locator('form[action="?/addHealth"]');
+	await form.locator('#title').fill(title);
+	await form.getByTestId('attach-files').setInputFiles(pdfUpload(file));
+	await form.getByRole('button', { name: 'Save Event' }).click();
+	await expect(form).toHaveCount(0, { timeout: 10_000 });
+	await expect(page.getByRole('button', { name: new RegExp(title) })).toContainText(file);
+	const sqlite = workerDb(app);
+	const row = sqlite.prepare('SELECT id FROM health_events WHERE title = ?').get(title) as {
+		id: string;
+	};
+	sqlite.close();
+	return row.id;
+}
+
+async function openEdit(page: Page, id: string) {
+	await page.goto(`/${COMP}/health?edit=${id}`);
+	await waitForHydration(page);
+	const form = page.locator('form[action="?/updateHealth"]');
+	await expect(form.locator(`#edit-title-${id}`)).toBeVisible({ timeout: 8_000 });
+	return form;
+}
+
+/** health_event_id by document title, for the titles that exist. */
+function docEvents(app: AppWorker, titles: string[]) {
+	const sqlite = workerDb(app);
+	const rows = sqlite
+		.prepare(
+			`SELECT title, health_event_id AS eventId FROM documents
+			 WHERE title IN (${titles.map(() => '?').join(', ')})`
+		)
+		.all(...titles) as { title: string; eventId: string | null }[];
+	sqlite.close();
+	return Object.fromEntries(rows.map((r) => [r.title, r.eventId]));
 }
 
 test.describe('health events and weight log', () => {
@@ -239,6 +280,108 @@ test.describe('health events and weight log', () => {
 		await expect(form.getByRole('alert')).toHaveText(message, { timeout: 8_000 });
 		await expect(asMember.getByText(message)).toHaveCount(1);
 		await expect(form.getByRole('button', { name: 'Save Event' })).toBeEnabled();
+		const count = await form
+			.getByTestId('attach-files')
+			.evaluate((el) => (el as HTMLInputElement).files?.length ?? 0);
+		expect(count).toBe(1);
+	});
+
+	test('edit attaches a file and removes a document, which stays on Documents', async ({
+		asMember,
+		app
+	}) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-swap-${stamp}`;
+		const old = `e2e-he-old-${stamp}.pdf`;
+		const fresh = `e2e-he-new-${stamp}.pdf`;
+		const id = await addEventWithFile(asMember, app, title, old);
+
+		const form = await openEdit(asMember, id);
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(fresh));
+		await form.getByRole('button', { name: `Remove ${old}` }).click();
+		await expect(form.getByRole('button', { name: `Keep ${old}` })).toBeVisible();
+		await form.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(form).toHaveCount(0, { timeout: 10_000 });
+
+		const row = asMember.getByRole('button', { name: new RegExp(title) });
+		await expect(row).toContainText(fresh);
+		await expect(row).not.toContainText(old);
+
+		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
+		await expect(asMember.locator('li').filter({ hasText: old }).first()).toBeVisible({
+			timeout: 8_000
+		});
+		expect(docEvents(app, [old, fresh])).toEqual({ [old]: null, [fresh]: id });
+	});
+
+	test("edit uploads take the event's new date", async ({ asMember, app }) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-date-${stamp}`;
+		const file = `e2e-he-dated-${stamp}.pdf`;
+		const id = await addEventWithFile(asMember, app, title, `e2e-he-first-${stamp}.pdf`);
+
+		const form = await openEdit(asMember, id);
+		await form.locator(`#edit-occurredAt-${id}`).fill('2026-02-03T10:00');
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(file));
+		await form.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(form).toHaveCount(0, { timeout: 10_000 });
+		await expect(asMember.getByRole('button', { name: new RegExp(title) })).toContainText(file);
+
+		const sqlite = workerDb(app);
+		const row = sqlite
+			.prepare('SELECT document_date AS documentDate FROM documents WHERE title = ?')
+			.get(file);
+		sqlite.close();
+		expect(row).toEqual({ documentDate: '2026-02-03' });
+	});
+
+	test('canceling edit applies nothing', async ({ asMember, app }) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-cancel-${stamp}`;
+		const kept = `e2e-he-kept-${stamp}.pdf`;
+		const dropped = `e2e-he-dropped-${stamp}.pdf`;
+		const id = await addEventWithFile(asMember, app, title, kept);
+
+		let form = await openEdit(asMember, id);
+		await form.getByRole('button', { name: `Remove ${kept}` }).click();
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(dropped));
+		await form.getByRole('button', { name: 'Cancel', exact: true }).click();
+		await expect(form).toHaveCount(0);
+
+		const row = asMember.getByRole('button', { name: new RegExp(title) });
+		await expect(row).toContainText(kept);
+		await expect(row).not.toContainText(dropped);
+		expect(docEvents(app, [kept, dropped])).toEqual({ [kept]: id });
+
+		// Reopen in place, without a reload: the form starts clean.
+		await row.click();
+		await asMember.getByRole('dialog').getByRole('button', { name: 'Edit' }).click();
+		form = asMember.locator('form[action="?/updateHealth"]');
+		await expect(form.getByRole('button', { name: `Remove ${kept}` })).toBeVisible();
+		await expect(form.getByText('Will be removed')).toHaveCount(0);
+		const count = await form
+			.getByTestId('attach-files')
+			.evaluate((el) => (el as HTMLInputElement).files?.length ?? 0);
+		expect(count).toBe(0);
+	});
+
+	test('a failed edit keeps the form open with the error', async ({ asMember, app }) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-fail-${stamp}`;
+		const id = await addEventWithFile(asMember, app, title, `e2e-he-on-${stamp}.pdf`);
+
+		const form = await openEdit(asMember, id);
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(`e2e-he-kept-${stamp}.pdf`));
+		const titleInput = form.locator(`#edit-title-${id}`);
+		await titleInput.evaluate((el) => el.removeAttribute('required'));
+		await titleInput.fill('');
+		await form.getByRole('button', { name: 'Save', exact: true }).click();
+
+		const message = 'Title and a valid type are required.';
+		await expect(form.getByRole('alert')).toHaveText(message, { timeout: 8_000 });
+		await expect(asMember.getByText(message)).toHaveCount(1);
+		await expect(form.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
 		const count = await form
 			.getByTestId('attach-files')
 			.evaluate((el) => (el as HTMLInputElement).files?.length ?? 0);

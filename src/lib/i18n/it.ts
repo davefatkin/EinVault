@@ -818,6 +818,7 @@ const messages: Record<keyof Messages, string> = {
 	'attachments.keep': 'Mantieni',
 	'attachments.removing': 'Verrà rimosso',
 	'attachments.removePick': 'Rimuovi {title}',
+	'attachments.keepPick': 'Mantieni {title}',
 	'attachments.failedTitle':
 		"L'evento sanitario è stato salvato, ma alcuni documenti non sono stati allegati o rimossi:",
 	'attachments.itemFailed': '{name}: {message}',

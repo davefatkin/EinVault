@@ -821,6 +821,7 @@ const messages: Record<keyof Messages, string> = {
 	'attachments.keep': 'Manter',
 	'attachments.removing': 'Será removido',
 	'attachments.removePick': 'Remover {title}',
+	'attachments.keepPick': 'Manter {title}',
 	'attachments.failedTitle':
 		'O evento de saúde foi guardado, mas alguns documentos não puderam ser anexados ou removidos:',
 	'attachments.itemFailed': '{name}: {message}',

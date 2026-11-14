@@ -824,6 +824,7 @@ const messages: Record<keyof Messages, string> = {
 	'attachments.keep': 'Conserver',
 	'attachments.removing': 'Sera retiré',
 	'attachments.removePick': 'Retirer {title}',
+	'attachments.keepPick': 'Conserver {title}',
 	'attachments.failedTitle':
 		"L'événement de santé a été enregistré, mais certains documents n'ont pas pu être joints ou retirés :",
 	'attachments.itemFailed': '{name} : {message}',

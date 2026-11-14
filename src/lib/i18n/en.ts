@@ -808,6 +808,7 @@ const messages = {
 	'attachments.keep': 'Keep',
 	'attachments.removing': 'Will be removed',
 	'attachments.removePick': 'Remove {title}',
+	'attachments.keepPick': 'Keep {title}',
 	'attachments.failedTitle':
 		'The health event was saved, but some documents could not be attached or removed:',
 	'attachments.itemFailed': '{name}: {message}',

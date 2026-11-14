@@ -125,6 +125,9 @@
 							variant="outline"
 							size="sm"
 							{disabled}
+							aria-label={t(locale, removing ? 'attachments.keepPick' : 'attachments.removePick', {
+								title: doc.title
+							})}
 							onclick={() => toggleUnlink(doc.id)}
 							>{t(locale, removing ? 'attachments.keep' : 'attachments.remove')}</Button
 						>
