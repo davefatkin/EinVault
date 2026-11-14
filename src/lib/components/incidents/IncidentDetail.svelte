@@ -31,12 +31,7 @@
 	import ResolveIncidentDialog from './ResolveIncidentDialog.svelte';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import { healthTypeLabel } from '#lib/i18n/labels.js';
-	import {
-		DOCUMENT_ACCEPT,
-		attachDocument,
-		importFromPaperless,
-		uploadDocument
-	} from '#lib/documentsApi.js';
+	import { DOCUMENT_ACCEPT, importAndAttach, uploadDocument } from '#lib/documentsApi.js';
 	import { incidentMediaApi, uploadEach } from '#lib/mediaApi.js';
 	import type { MediaItem } from '#lib/media.js';
 	import type { HealthEventType } from '#lib/health.js';
@@ -190,10 +185,7 @@
 	}
 	async function pickFromPaperless(paperlessId: number) {
 		attachFailures = [];
-		const imported = await importFromPaperless(companionId, paperlessId, locale);
-		const r = imported.ok
-			? await attachDocument(companionId, imported.value.id, incident.id, locale)
-			: imported;
+		const r = await importAndAttach(companionId, paperlessId, incident.id, locale);
 		if (!r.ok) attachFailures = [{ name: 'Paperless', message: r.message }];
 		paperlessOpen = false;
 		await refreshAll();

@@ -3,6 +3,7 @@
 // file and report each failure by name.
 import { t, type Locale } from '#lib/i18n/index.js';
 import { failureMessage } from '#lib/mediaApi.js';
+import type { DocumentCategory } from '#lib/activityTypes.js';
 
 /** File types the documents endpoint accepts; the server re-checks the bytes. */
 export const DOCUMENT_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp,image/heic';
@@ -38,13 +39,14 @@ function toCreated(r: DocResult<unknown>, fallback: string): DocResult<CreatedDo
 export async function uploadDocument(
 	companionId: string,
 	file: File,
-	opts: { healthEventId?: string; documentDate?: string },
+	opts: { healthEventId?: string; documentDate?: string; category?: DocumentCategory },
 	locale: Locale
 ): Promise<DocResult<CreatedDocument>> {
 	const body = new FormData();
 	body.set('file', file);
 	if (opts.healthEventId) body.set('healthEventId', opts.healthEventId);
 	if (opts.documentDate) body.set('documentDate', opts.documentDate);
+	if (opts.category) body.set('category', opts.category);
 	const fallback = t(locale, 'page.documents.uploadFailed');
 	return toCreated(
 		await send(`/api/companions/${companionId}/documents`, { method: 'POST', body }, fallback),
@@ -63,7 +65,24 @@ export async function attachDocument(
 		{
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ healthEventId })
+			body: JSON.stringify({ healthEventId, onlyIfUnlinked: true })
+		},
+		t(locale, 'media.actionFailed')
+	);
+	return r.ok ? { ok: true, value: null } : r;
+}
+
+export async function unlinkDocument(
+	companionId: string,
+	documentId: string,
+	locale: Locale
+): Promise<DocResult> {
+	const r = await send(
+		`/api/companions/${companionId}/documents/${documentId}`,
+		{
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ healthEventId: null })
 		},
 		t(locale, 'media.actionFailed')
 	);
@@ -73,7 +92,8 @@ export async function attachDocument(
 export async function importFromPaperless(
 	companionId: string,
 	paperlessId: number,
-	locale: Locale
+	locale: Locale,
+	opts?: { category?: DocumentCategory }
 ): Promise<DocResult<CreatedDocument>> {
 	const fallback = t(locale, 'paperless.picker.pickFailed');
 	return toCreated(
@@ -82,10 +102,25 @@ export async function importFromPaperless(
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ paperlessId })
+				body: JSON.stringify(
+					opts?.category ? { paperlessId, category: opts.category } : { paperlessId }
+				)
 			},
 			fallback
 		),
 		fallback
 	);
+}
+
+/** Imports a Paperless document, then links it to the event. Returns the first failure. */
+export async function importAndAttach(
+	companionId: string,
+	paperlessId: number,
+	healthEventId: string,
+	locale: Locale,
+	opts?: { category?: DocumentCategory }
+): Promise<DocResult> {
+	const imported = await importFromPaperless(companionId, paperlessId, locale, opts);
+	if (!imported.ok) return imported;
+	return attachDocument(companionId, imported.value.id, healthEventId, locale);
 }

@@ -14,7 +14,7 @@
 
 	interface Props {
 		open: boolean;
-		onpick: (paperlessId: number) => void | Promise<void>;
+		onpick: (paperlessId: number, title: string) => void | Promise<void>;
 		onclose: () => void;
 	}
 
@@ -107,11 +107,11 @@
 		}
 	}
 
-	async function pick(id: number) {
+	async function pick(id: number, title: string) {
 		if (selecting !== null) return;
 		selecting = id;
 		try {
-			await onpick(id);
+			await onpick(id, title);
 		} finally {
 			selecting = null;
 		}
@@ -192,7 +192,7 @@
 							<button
 								type="button"
 								class="flex flex-col overflow-hidden rounded-md border border-border bg-stone-50 dark:bg-stone-900 transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait text-left"
-								onclick={() => pick(doc.id)}
+								onclick={() => pick(doc.id, doc.title)}
 								disabled={selecting === doc.id}
 								title={doc.title}
 							>
