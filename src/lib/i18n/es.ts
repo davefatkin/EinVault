@@ -813,19 +813,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Evento de salud',
 	'page.journal.day.addIncident': 'Incidente',
 	'page.journal.day.addWeight': 'Peso',
-	'attachments.files': 'Adjuntar archivos',
-	'attachments.existing': 'Adjuntar documentos existentes',
-	'attachments.attached': 'Documentos adjuntos',
-	'attachments.category': 'Categoría de los documentos nuevos',
-	'attachments.remove': 'Quitar',
-	'attachments.keep': 'Conservar',
-	'attachments.removing': 'Se quitará',
-	'attachments.removePick': 'Quitar {title}',
-	'attachments.keepPick': 'Conservar {title}',
-	'attachments.failedTitle':
-		'El evento de salud se guardó, pero algunos documentos no se pudieron adjuntar o quitar:',
-	'attachments.itemFailed': '{name}: {message}',
-	'attachments.continueToReminder': 'Continuar al recordatorio',
 	'page.journal.day.uploadFailedTitle': 'Estos archivos no se subieron:',
 	'page.journal.day.filedUnder': 'Importado, archivado en {date}.',
 	'page.journal.day.openDay': 'Abrir ese día',
@@ -853,6 +840,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Guardado',
 	'page.journal.caretaker.savingStatus': 'Guardando…',
 	'page.journal.caretaker.saveFailedStatus': 'Error al guardar',
+
+	// Health event attachments
+	'attachments.files': 'Adjuntar archivos',
+	'attachments.existing': 'Adjuntar documentos existentes',
+	'attachments.attached': 'Documentos adjuntos',
+	'attachments.category': 'Categoría de los documentos nuevos',
+	'attachments.remove': 'Quitar',
+	'attachments.keep': 'Conservar',
+	'attachments.removing': 'Se quitará',
+	'attachments.removePick': 'Quitar {title}',
+	'attachments.keepPick': 'Conservar {title}',
+	'attachments.failedTitle':
+		'El evento de salud se guardó, pero algunos documentos no se pudieron adjuntar o quitar:',
+	'attachments.itemFailed': '{name}: {message}',
+	'attachments.continueToReminder': 'Continuar al recordatorio',
 
 	// Page: Health
 	'page.health.title': 'Salud',

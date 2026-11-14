@@ -205,6 +205,44 @@ test('health event attaches a Paperless document on create', async ({ world, pag
 	);
 });
 
+test('journal day health event attaches a Paperless document', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const title = `e2e-pl-day-${Date.now().toString(36)}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/journal/2026-05-14`);
+	await waitForHydration(page);
+	const section = page.getByTestId('day-health-records');
+	await section.getByRole('button', { name: 'Add', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Health event', exact: true }).click();
+	const modal = page.getByRole('dialog', { name: 'New Health Event' });
+	await modal.locator('#title').fill(title);
+
+	// Escape closes only the picker: the modal and the typed title stay.
+	const picker = page.getByRole('dialog', { name: /paperless/i });
+	await modal.getByRole('button', { name: /add from paperless/i }).click();
+	await expect(picker.getByRole('button', { name: /vaccination record/i })).toBeVisible({
+		timeout: 10_000
+	});
+	await page.keyboard.press('Escape');
+	await expect(picker).toHaveCount(0);
+	await expect(modal).toBeVisible();
+	await expect(modal.locator('#title')).toHaveValue(title);
+
+	await modal.getByRole('button', { name: /add from paperless/i }).click();
+	await picker.getByRole('button', { name: /vaccination record/i }).click({ timeout: 10_000 });
+	await expect(picker).toHaveCount(0);
+	await expect(modal.getByText('Vaccination record')).toBeVisible();
+	await modal.getByRole('button', { name: 'Save Event' }).click();
+	await expect(modal).toHaveCount(0, { timeout: 10_000 });
+
+	const row = section.getByRole('button', { name: new RegExp(`^${title}`) });
+	await expect(row).toContainText('1 attached document');
+	await row.click();
+	await expect(
+		page.getByRole('dialog', { name: title }).getByText('Vaccination record')
+	).toBeVisible();
+});
+
 test('health event attaches a Paperless document on edit', async ({ world, page }) => {
 	world.fake.setDocuments(DOCS);
 	const title = `e2e-pl-edit-${Date.now().toString(36)}`;

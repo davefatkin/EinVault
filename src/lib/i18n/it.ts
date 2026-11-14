@@ -810,19 +810,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Evento sanitario',
 	'page.journal.day.addIncident': 'Incidente',
 	'page.journal.day.addWeight': 'Peso',
-	'attachments.files': 'Allega file',
-	'attachments.existing': 'Allega documenti esistenti',
-	'attachments.attached': 'Documenti allegati',
-	'attachments.category': 'Categoria dei nuovi documenti',
-	'attachments.remove': 'Rimuovi',
-	'attachments.keep': 'Mantieni',
-	'attachments.removing': 'Verrà rimosso',
-	'attachments.removePick': 'Rimuovi {title}',
-	'attachments.keepPick': 'Mantieni {title}',
-	'attachments.failedTitle':
-		"L'evento sanitario è stato salvato, ma alcuni documenti non sono stati allegati o rimossi:",
-	'attachments.itemFailed': '{name}: {message}',
-	'attachments.continueToReminder': 'Continua al promemoria',
 	'page.journal.day.uploadFailedTitle': 'Questi file non sono stati caricati:',
 	'page.journal.day.filedUnder': 'Importato, archiviato in data {date}.',
 	'page.journal.day.openDay': 'Apri quel giorno',
@@ -850,6 +837,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Salvato',
 	'page.journal.caretaker.savingStatus': 'Salvataggio…',
 	'page.journal.caretaker.saveFailedStatus': 'Salvataggio non riuscito',
+
+	// Health event attachments
+	'attachments.files': 'Allega file',
+	'attachments.existing': 'Allega documenti esistenti',
+	'attachments.attached': 'Documenti allegati',
+	'attachments.category': 'Categoria dei nuovi documenti',
+	'attachments.remove': 'Rimuovi',
+	'attachments.keep': 'Mantieni',
+	'attachments.removing': 'Verrà rimosso',
+	'attachments.removePick': 'Rimuovi {title}',
+	'attachments.keepPick': 'Mantieni {title}',
+	'attachments.failedTitle':
+		"L'evento sanitario è stato salvato, ma alcuni documenti non sono stati allegati o rimossi:",
+	'attachments.itemFailed': '{name}: {message}',
+	'attachments.continueToReminder': 'Continua al promemoria',
 
 	// Page: Health
 	'page.health.title': 'Salute',

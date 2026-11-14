@@ -815,19 +815,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Gesundheitsereignis',
 	'page.journal.day.addIncident': 'Vorfall',
 	'page.journal.day.addWeight': 'Gewicht',
-	'attachments.files': 'Dateien anhängen',
-	'attachments.existing': 'Vorhandene Dokumente anhängen',
-	'attachments.attached': 'Angehängte Dokumente',
-	'attachments.category': 'Kategorie für neue Dokumente',
-	'attachments.remove': 'Entfernen',
-	'attachments.keep': 'Behalten',
-	'attachments.removing': 'Wird entfernt',
-	'attachments.removePick': '{title} entfernen',
-	'attachments.keepPick': '{title} behalten',
-	'attachments.failedTitle':
-		'Das Gesundheitsereignis wurde gespeichert, aber einige Dokumente konnten nicht angehängt oder entfernt werden:',
-	'attachments.itemFailed': '{name}: {message}',
-	'attachments.continueToReminder': 'Weiter zur Erinnerung',
 	'page.journal.day.uploadFailedTitle': 'Diese Dateien wurden nicht hochgeladen:',
 	'page.journal.day.filedUnder': 'Importiert, abgelegt unter {date}.',
 	'page.journal.day.openDay': 'Diesen Tag öffnen',
@@ -855,6 +842,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Gespeichert',
 	'page.journal.caretaker.savingStatus': 'Speichern…',
 	'page.journal.caretaker.saveFailedStatus': 'Speichern fehlgeschlagen',
+
+	// Health event attachments
+	'attachments.files': 'Dateien anhängen',
+	'attachments.existing': 'Vorhandene Dokumente anhängen',
+	'attachments.attached': 'Angehängte Dokumente',
+	'attachments.category': 'Kategorie für neue Dokumente',
+	'attachments.remove': 'Entfernen',
+	'attachments.keep': 'Behalten',
+	'attachments.removing': 'Wird entfernt',
+	'attachments.removePick': '{title} entfernen',
+	'attachments.keepPick': '{title} behalten',
+	'attachments.failedTitle':
+		'Das Gesundheitsereignis wurde gespeichert, aber einige Dokumente konnten nicht angehängt oder entfernt werden:',
+	'attachments.itemFailed': '{name}: {message}',
+	'attachments.continueToReminder': 'Weiter zur Erinnerung',
 
 	// Page: Health
 	'page.health.title': 'Gesundheit',

@@ -816,19 +816,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Événement de santé',
 	'page.journal.day.addIncident': 'Incident',
 	'page.journal.day.addWeight': 'Poids',
-	'attachments.files': 'Joindre des fichiers',
-	'attachments.existing': 'Joindre des documents existants',
-	'attachments.attached': 'Documents joints',
-	'attachments.category': 'Catégorie des nouveaux documents',
-	'attachments.remove': 'Retirer',
-	'attachments.keep': 'Conserver',
-	'attachments.removing': 'Sera retiré',
-	'attachments.removePick': 'Retirer {title}',
-	'attachments.keepPick': 'Conserver {title}',
-	'attachments.failedTitle':
-		"L'événement de santé a été enregistré, mais certains documents n'ont pas pu être joints ou retirés :",
-	'attachments.itemFailed': '{name} : {message}',
-	'attachments.continueToReminder': 'Continuer vers le rappel',
 	'page.journal.day.uploadFailedTitle': "Ces fichiers n'ont pas été téléversés :",
 	'page.journal.day.filedUnder': 'Importé, classé à la date du {date}.',
 	'page.journal.day.openDay': 'Ouvrir ce jour',
@@ -856,6 +843,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Enregistré',
 	'page.journal.caretaker.savingStatus': 'Enregistrement…',
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
+
+	// Health event attachments
+	'attachments.files': 'Joindre des fichiers',
+	'attachments.existing': 'Joindre des documents existants',
+	'attachments.attached': 'Documents joints',
+	'attachments.category': 'Catégorie des nouveaux documents',
+	'attachments.remove': 'Retirer',
+	'attachments.keep': 'Conserver',
+	'attachments.removing': 'Sera retiré',
+	'attachments.removePick': 'Retirer {title}',
+	'attachments.keepPick': 'Conserver {title}',
+	'attachments.failedTitle':
+		"L'événement de santé a été enregistré, mais certains documents n'ont pas pu être joints ou retirés :",
+	'attachments.itemFailed': '{name} : {message}',
+	'attachments.continueToReminder': 'Continuer vers le rappel',
 
 	// Page: Health
 	'page.health.title': 'Santé',
