@@ -25,6 +25,7 @@
 	import { stripMarkdown } from '#lib/markdown.js';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { localDatetimes } from '#lib/actions/localDatetimes.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -389,11 +390,14 @@
 					medicationsHref="/{data.companion.id}/medications"
 					submit={() => {
 						submittingHealth = true;
-						return async ({ update }) => {
+						return async ({ result, update }) => {
 							await update();
 							submittingHealth = false;
 							showHealthForm = false;
 							resetHealthPrefill();
+							if (result.type === 'success' && result.data?.reminderUrl) {
+								await goto(result.data.reminderUrl as string);
+							}
 						};
 					}}
 					oncancel={() => {

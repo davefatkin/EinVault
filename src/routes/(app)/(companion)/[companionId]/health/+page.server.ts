@@ -15,6 +15,9 @@ import {
 	listIncidentLinksByEvent
 } from '#lib/server/incident-links.js';
 import { checkIncidentWrite } from '#lib/server/permissions.js';
+import { listAttachableDocuments } from '#lib/server/journal-day-items.js';
+import { UPLOAD_MAX_MB } from '#lib/server/env.js';
+import { localDateISO } from '#lib/date.js';
 
 // Incidents have their own page. Old ?detailHealth= links (journal chips,
 // search hits), ?edit= links (dashboard detail modal) and ?incidentUpdate=
@@ -53,25 +56,32 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 	const to = await incidentRedirect(params.companionId, url);
 	if (to) redirect(303, to);
 
-	const [healthEvents, weightEntries, linkedDocuments, openIncidents, incidentLinksByEvent] =
-		await Promise.all([
-			db.query.healthEvents.findMany({
-				where: eq(schema.healthEvents.companionId, params.companionId),
-				orderBy: (h, { desc }) => [desc(h.occurredAt)],
-				with: { logger: { columns: { displayName: true } } }
-			}),
-			db.query.weightEntries.findMany({
-				where: eq(schema.weightEntries.companionId, params.companionId),
-				orderBy: (w, { desc }) => [desc(w.recordedAt)],
-				with: { logger: { columns: { displayName: true } } }
-			}),
-			db.query.documents.findMany({
-				where: eq(schema.documents.companionId, params.companionId),
-				columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
-			}),
-			listOpenIncidents([params.companionId]),
-			listIncidentLinksByEvent(params.companionId)
-		]);
+	const [
+		healthEvents,
+		weightEntries,
+		linkedDocuments,
+		openIncidents,
+		incidentLinksByEvent,
+		attachableDocuments
+	] = await Promise.all([
+		db.query.healthEvents.findMany({
+			where: eq(schema.healthEvents.companionId, params.companionId),
+			orderBy: (h, { desc }) => [desc(h.occurredAt)],
+			with: { logger: { columns: { displayName: true } } }
+		}),
+		db.query.weightEntries.findMany({
+			where: eq(schema.weightEntries.companionId, params.companionId),
+			orderBy: (w, { desc }) => [desc(w.recordedAt)],
+			with: { logger: { columns: { displayName: true } } }
+		}),
+		db.query.documents.findMany({
+			where: eq(schema.documents.companionId, params.companionId),
+			columns: { id: true, title: true, healthEventId: true, filename: true, mimeType: true }
+		}),
+		listOpenIncidents([params.companionId]),
+		listIncidentLinksByEvent(params.companionId),
+		companion.isActive === false ? [] : listAttachableDocuments(params.companionId)
+	]);
 
 	const journalDates = await getJournalDatesByEvent(
 		params.companionId,
@@ -86,7 +96,9 @@ export const load: PageServerLoad = async ({ params, locals, parent, url }) => {
 		linkedDocuments,
 		journalDatesByEvent,
 		openIncidents,
-		incidentLinksByEvent
+		incidentLinksByEvent,
+		attachableDocuments,
+		uploadMaxMb: UPLOAD_MAX_MB
 	};
 };
 
@@ -125,13 +137,13 @@ export const actions: Actions = {
 		const parsed = parseHealthEventForm(data, locals.locale);
 		if (!parsed.ok) return fail(400, { healthError: parsed.message });
 
-		await createHealthEvent(params.companionId, parsed.value, locals.user.id);
-
-		if (data.get('andReminder') === '1') {
-			const { type, title, notes } = parsed.value;
-			redirect(303, reminderPrefillUrl(params.companionId, type, title, notes));
-		}
-		return { healthSuccess: true };
+		const healthEventId = await createHealthEvent(params.companionId, parsed.value, locals.user.id);
+		const { type, title, notes } = parsed.value;
+		const reminderUrl =
+			data.get('andReminder') === '1'
+				? reminderPrefillUrl(params.companionId, type, title, notes)
+				: null;
+		return { healthEventId, day: localDateISO(parsed.value.occurredAt), reminderUrl };
 	},
 
 	addWeight: async ({ request, params, locals }) => {
@@ -169,7 +181,7 @@ export const actions: Actions = {
 
 		await db.update(schema.healthEvents).set(parsed.value).where(eq(schema.healthEvents.id, id));
 
-		return { updateHealthSuccess: true };
+		return { updateHealthSuccess: true, day: localDateISO(parsed.value.occurredAt) };
 	},
 
 	deleteHealth: async ({ request, params, locals }) => {
