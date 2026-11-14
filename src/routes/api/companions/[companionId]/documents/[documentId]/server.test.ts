@@ -44,7 +44,10 @@ beforeAll(async () => {
 			doc('d-free', null),
 			doc('d-on-a', 'ev-a'),
 			doc('d-on-a2', 'ev-a'),
-			doc('d-on-c', 'ev-c')
+			doc('d-on-c', 'ev-c'),
+			doc('d-un-a', 'ev-a'),
+			doc('d-un-b', 'ev-b'),
+			doc('d-un-free', null)
 		]);
 });
 
@@ -108,5 +111,27 @@ describe('documents PATCH onlyIfUnlinked', () => {
 		const res = await patch('d-on-a2', { healthEventId: null });
 		expect(res.status).toBe(200);
 		expect(await eventOf('d-on-a2')).toBeNull();
+	});
+});
+
+describe('documents PATCH onlyIfOn', () => {
+	it('unlinks a document still on the expected event', async () => {
+		const res = await patch('d-un-a', { healthEventId: null, onlyIfOn: 'ev-a' });
+		expect(res.status).toBe(200);
+		expect(await eventOf('d-un-a')).toBeNull();
+	});
+
+	it('is a no-op success when the document is already unlinked', async () => {
+		const res = await patch('d-un-free', { healthEventId: null, onlyIfOn: 'ev-a' });
+		expect(res.status).toBe(200);
+		expect(await eventOf('d-un-free')).toBeNull();
+	});
+
+	it('refuses with 409 when the document moved to another event', async () => {
+		await expect(patch('d-un-b', { healthEventId: null, onlyIfOn: 'ev-a' })).rejects.toMatchObject({
+			status: 409,
+			body: { message: 'Already attached to Visit B' }
+		});
+		expect(await eventOf('d-un-b')).toBe('ev-b');
 	});
 });

@@ -29,6 +29,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 		documentDate?: unknown;
 		healthEventId?: unknown;
 		onlyIfUnlinked?: unknown;
+		onlyIfOn?: unknown;
 	} | null;
 	if (!body) error(400, t(locals.locale, 'error.notFound'));
 
@@ -76,9 +77,18 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	if (Object.keys(updates).length > 0) {
-		const guardTo = body.onlyIfUnlinked === true ? updates.healthEventId : null;
-		if (typeof guardTo === 'string') {
-			// One conditional UPDATE so a concurrent attach cannot be silently moved.
+		// A guarded link (onlyIfUnlinked) takes only a document on no event or
+		// already on the target. A guarded unlink (onlyIfOn) clears only the
+		// event the caller saw. Either way a document someone put on another
+		// event in the meantime is never silently moved or cleared.
+		let guardTo: string | null = null;
+		if (body.onlyIfUnlinked === true && typeof updates.healthEventId === 'string') {
+			guardTo = updates.healthEventId;
+		} else if (updates.healthEventId === null && typeof body.onlyIfOn === 'string') {
+			guardTo = body.onlyIfOn;
+		}
+		if (guardTo) {
+			// One conditional UPDATE so the check and the write cannot race.
 			const { changes } = db
 				.update(schema.documents)
 				.set(updates)

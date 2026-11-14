@@ -72,9 +72,11 @@ export async function attachDocument(
 	return r.ok ? { ok: true, value: null } : r;
 }
 
+/** Unlinks the document from `healthEventId`; refused if it has moved to another event. */
 export async function unlinkDocument(
 	companionId: string,
 	documentId: string,
+	healthEventId: string,
 	locale: Locale
 ): Promise<DocResult> {
 	const r = await send(
@@ -82,7 +84,7 @@ export async function unlinkDocument(
 		{
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ healthEventId: null })
+			body: JSON.stringify({ healthEventId: null, onlyIfOn: healthEventId })
 		},
 		t(locale, 'media.actionFailed')
 	);

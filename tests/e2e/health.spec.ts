@@ -315,6 +315,31 @@ test.describe('health events and weight log', () => {
 		expect(docEvents(app, [old, fresh])).toEqual({ [old]: null, [fresh]: id });
 	});
 
+	test('removing a document that moved to another event meanwhile leaves it there', async ({
+		asMember,
+		app
+	}) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-he-gone-${stamp}`;
+		const other = `e2e-he-elsewhere-${stamp}`;
+		const moved = `e2e-he-moved-${stamp}.pdf`;
+		const otherId = await addEventWithFile(asMember, app, other, `e2e-he-o-${stamp}.pdf`);
+		const id = await addEventWithFile(asMember, app, title, moved);
+
+		const form = await openEdit(asMember, id);
+		await form.getByRole('button', { name: `Remove ${moved}` }).click();
+		// Someone else files the document under the other event before Save.
+		const sqlite = workerDb(app);
+		sqlite.prepare('UPDATE documents SET health_event_id = ? WHERE title = ?').run(otherId, moved);
+		sqlite.close();
+		await form.getByRole('button', { name: 'Save', exact: true }).click();
+
+		await expect(asMember.getByText(`Already attached to ${other}`)).toBeVisible({
+			timeout: 10_000
+		});
+		expect(docEvents(app, [moved])).toEqual({ [moved]: otherId });
+	});
+
 	test("edit uploads take the event's new date", async ({ asMember, app }) => {
 		const stamp = Date.now().toString(36);
 		const title = `e2e-he-date-${stamp}`;

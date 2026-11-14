@@ -52,7 +52,7 @@ describe('applyAttachments', () => {
 		};
 		expect(await applyAttachments({ ...base, pending, titles: {} })).toEqual([]);
 		expect(order).toEqual(['unlink', 'link', 'paperless', 'upload']);
-		expect(unlinkDocument).toHaveBeenCalledWith('c1', 'd1', 'en');
+		expect(unlinkDocument).toHaveBeenCalledWith('c1', 'd1', 'h1', 'en');
 		expect(attachDocument).toHaveBeenCalledWith('c1', 'd2', 'h1', 'en');
 		expect(importAndAttach).toHaveBeenCalledWith('c1', 7, 'h1', 'en', { category: 'receipt' });
 		expect(uploadDocument).toHaveBeenCalledWith(

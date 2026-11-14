@@ -109,13 +109,13 @@ describe('attachDocument', () => {
 });
 
 describe('unlinkDocument', () => {
-	it('patches healthEventId null', async () => {
+	it('patches healthEventId null, guarded to the event it was on', async () => {
 		const fetchMock = stubFetch(created);
-		expect(await unlinkDocument('c1', 'd1', 'en')).toEqual({ ok: true, value: null });
+		expect(await unlinkDocument('c1', 'd1', 'h1', 'en')).toEqual({ ok: true, value: null });
 		const [url, init] = fetchMock.mock.calls[0] as unknown as Call;
 		expect(url).toBe('/api/companions/c1/documents/d1');
 		expect(init.method).toBe('PATCH');
-		expect(JSON.parse(init.body as string)).toEqual({ healthEventId: null });
+		expect(JSON.parse(init.body as string)).toEqual({ healthEventId: null, onlyIfOn: 'h1' });
 	});
 });
 

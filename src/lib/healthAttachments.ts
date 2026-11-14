@@ -45,7 +45,7 @@ export async function applyAttachments(args: {
 		if (!r.ok) failures.push({ name, message: r.message ?? '' });
 	};
 	for (const id of pending.unlinkIds) {
-		note(titles[id] ?? id, await unlinkDocument(companionId, id, locale));
+		note(titles[id] ?? id, await unlinkDocument(companionId, id, healthEventId, locale));
 	}
 	for (const id of pending.linkIds) {
 		note(titles[id] ?? id, await attachDocument(companionId, id, healthEventId, locale));
