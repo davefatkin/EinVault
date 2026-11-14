@@ -109,7 +109,7 @@
 	</div>
 {/if}
 {#if attached && attached.length > 0}
-	<fieldset class="space-y-1.5">
+	<fieldset class="min-w-0 space-y-1.5">
 		<legend class="text-sm font-medium">{t(locale, 'attachments.attached')}</legend>
 		<ul class="space-y-1 rounded-md border border-input px-3 py-2">
 			{#each attached as doc (doc.id)}
@@ -135,7 +135,7 @@
 	</fieldset>
 {/if}
 {#if documents.length > 0}
-	<fieldset class="space-y-1.5">
+	<fieldset class="min-w-0 space-y-1.5">
 		<legend class="text-sm font-medium">{t(locale, 'attachments.existing')}</legend>
 		<div class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-input px-3 py-2">
 			{#each documents as doc (doc.id)}
@@ -146,7 +146,7 @@
 						checked={pending.linkIds.includes(doc.id)}
 						onchange={(e) => toggleLink(doc.id, e.currentTarget.checked)}
 					/>
-					<span class="truncate">{doc.title} · {doc.date}</span>
+					<span class="min-w-0 truncate">{doc.title} · {doc.date}</span>
 				</label>
 			{/each}
 		</div>

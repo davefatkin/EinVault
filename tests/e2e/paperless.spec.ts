@@ -179,6 +179,59 @@ test('a supply purchase takes its receipt from Paperless', async ({ world, page 
 	await expect(page.getByText('Receipt: Paperless tablets')).toHaveCount(1);
 });
 
+async function addHealthEventWithPaperless(page: Page, title: string) {
+	await page.getByRole('button', { name: 'Add Event' }).click();
+	const form = page.locator('form[action="?/addHealth"]');
+	await form.locator('#title').fill(title);
+	await form.getByRole('button', { name: /add from paperless/i }).click();
+	const picker = page.getByRole('dialog', { name: /paperless/i });
+	await picker.getByRole('button', { name: /vaccination record/i }).click({ timeout: 10_000 });
+	await expect(picker).toHaveCount(0);
+	await expect(form.getByText('Vaccination record')).toBeVisible();
+	await form.getByRole('button', { name: 'Save Event' }).click();
+}
+
+test('health event attaches a Paperless document on create', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const title = `e2e-pl-event-${Date.now().toString(36)}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/health`);
+	await waitForHydration(page);
+
+	await addHealthEventWithPaperless(page, title);
+	await expect(page.locator('form[action="?/addHealth"]')).toHaveCount(0, { timeout: 10_000 });
+	await expect(page.getByRole('button', { name: new RegExp(title) })).toContainText(
+		'Vaccination record'
+	);
+});
+
+test('a Paperless document already on another event is refused and stays put', async ({
+	world,
+	page
+}) => {
+	world.fake.setDocuments(DOCS);
+	const stamp = Date.now().toString(36);
+	const first = `e2e-pl-first-${stamp}`;
+	const second = `e2e-pl-second-${stamp}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/health`);
+	await waitForHydration(page);
+
+	await addHealthEventWithPaperless(page, first);
+	await expect(page.locator('form[action="?/addHealth"]')).toHaveCount(0, { timeout: 10_000 });
+	const firstRow = page.getByRole('button', { name: new RegExp(first) });
+	await expect(firstRow).toContainText('Vaccination record', { timeout: 10_000 });
+
+	await addHealthEventWithPaperless(page, second);
+	await expect(page.getByText(`Already attached to ${first}`)).toBeVisible({ timeout: 10_000 });
+	await page.getByRole('button', { name: 'Close', exact: true }).click();
+
+	await expect(firstRow).toContainText('Vaccination record');
+	const secondRow = page.getByRole('button', { name: new RegExp(second) });
+	await expect(secondRow).toBeVisible();
+	await expect(secondRow).not.toContainText('Vaccination record');
+});
+
 test('search filters documents in the picker', async ({ world, page }) => {
 	world.fake.setDocuments(DOCS);
 

@@ -22,6 +22,7 @@
 		prefill = { title: '', type: '', notes: '' },
 		oncancel,
 		medicationsHref,
+		error = null,
 		extra
 	}: {
 		action: string;
@@ -33,6 +34,8 @@
 		oncancel: () => void;
 		/** New events don't take the Medication type; this points there instead. */
 		medicationsHref: string;
+		/** A failed save's message, shown at the top of the form. */
+		error?: string | null;
 		/** Rendered above the buttons, e.g. the journal day's attach options. */
 		extra?: Snippet;
 	} = $props();
@@ -41,6 +44,9 @@
 </script>
 
 <form method="POST" {action} use:localDatetimes use:enhance={submit} class="space-y-4">
+	{#if error}
+		<p role="alert" class="text-sm text-destructive">{error}</p>
+	{/if}
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 		<div class="space-y-1.5">
 			<Label for="title">{t(locale, 'page.health.labelTitle')}</Label>

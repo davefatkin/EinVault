@@ -131,6 +131,120 @@ test.describe('health events and weight log', () => {
 		});
 	});
 
+	test('add event with a new file, an existing document and a category', async ({ asMember }) => {
+		const stamp = Date.now().toString(36);
+		const existing = `e2e-hp-existing-${stamp}.pdf`;
+		const fresh = `e2e-hp-new-${stamp}.pdf`;
+		const title = `e2e-hp-visit-${stamp}`;
+
+		// An unattached document this test owns.
+		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
+		await asMember.locator('input[type="file"]').setInputFiles(pdfUpload(existing));
+		await expect(asMember.getByText(existing)).toBeVisible({ timeout: 8_000 });
+
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		const form = asMember.locator('form[action="?/addHealth"]');
+		await form.locator('#title').fill(title);
+		await form.locator('#type').selectOption('vet_visit');
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(fresh));
+		await form.getByRole('checkbox', { name: new RegExp(existing) }).check();
+		await form.locator('#new-attach-category').selectOption({ label: 'Medical' });
+		await form.getByRole('button', { name: 'Save Event' }).click();
+		await expect(form).toHaveCount(0, { timeout: 10_000 });
+
+		const row = asMember.getByRole('button', { name: new RegExp(title) });
+		await expect(row).toContainText(existing);
+		await expect(row).toContainText(fresh);
+
+		await asMember.goto(`/${COMP}/documents`);
+		await waitForHydration(asMember);
+		const freshRow = asMember.locator('li').filter({ hasText: fresh }).first();
+		await expect(freshRow).toContainText(title, { timeout: 8_000 });
+		await expect(freshRow).toContainText('Medical');
+		await expect(asMember.locator('li').filter({ hasText: existing }).first()).toContainText(title);
+	});
+
+	test('a failed upload keeps the new event and names the file', async ({ asMember }) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-hp-partial-${stamp}`;
+		const bad = `e2e-hp-bad-${stamp}.txt`;
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		const form = asMember.locator('form[action="?/addHealth"]');
+		await form.locator('#title').fill(title);
+		await form
+			.getByTestId('attach-files')
+			.setInputFiles({ name: bad, mimeType: 'text/plain', buffer: Buffer.from('hello') });
+		await form.getByRole('button', { name: 'Save Event' }).click();
+
+		await expect(asMember.getByText(bad)).toBeVisible({ timeout: 10_000 });
+		await expect(form).toHaveCount(0);
+		await asMember.getByRole('button', { name: 'Close', exact: true }).click();
+		await expect(asMember.getByText(bad)).toHaveCount(0);
+		await expect(asMember.getByRole('button', { name: new RegExp(title) })).toBeVisible();
+	});
+
+	test('Save & Add Reminder with an attachment ends on the reminder page', async ({
+		asMember,
+		app
+	}) => {
+		const stamp = Date.now().toString(36);
+		const title = `e2e-hp-reminder-${stamp}`;
+		const file = `e2e-hp-reminder-${stamp}.pdf`;
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		const form = asMember.locator('form[action="?/addHealth"]');
+		await form.locator('#title').fill(title);
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload(file));
+		// The reminders page strips ?new=1 right after reading it, so wait from before the click.
+		const toReminders = asMember.waitForURL(
+			(url) =>
+				url.pathname === `/${COMP}/reminders` &&
+				url.searchParams.get('new') === '1' &&
+				url.searchParams.get('title') === title
+		);
+		await form.getByRole('button', { name: 'Save & Add Reminder' }).click();
+		await toReminders;
+		await expect(asMember.locator('#title')).toHaveValue(title, { timeout: 8_000 });
+
+		const sqlite = workerDb(app);
+		const linked = sqlite
+			.prepare(
+				`SELECT h.title FROM documents d JOIN health_events h ON h.id = d.health_event_id
+				 WHERE d.title = ?`
+			)
+			.get(file);
+		sqlite.close();
+		expect(linked).toEqual({ title });
+	});
+
+	test('a failed save keeps the form open with the error and the picked file', async ({
+		asMember
+	}) => {
+		await asMember.goto(`/${COMP}/health`);
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Add Event' }).click();
+		const form = asMember.locator('form[action="?/addHealth"]');
+		await form.getByTestId('attach-files').setInputFiles(pdfUpload('e2e-hp-kept.pdf'));
+		await form.locator('#title').evaluate((el) => el.removeAttribute('required'));
+		await form.locator('#title').fill('');
+		await form.getByRole('button', { name: 'Save Event' }).click();
+
+		const message = 'Title and a valid type are required.';
+		await expect(form.getByRole('alert')).toHaveText(message, { timeout: 8_000 });
+		await expect(asMember.getByText(message)).toHaveCount(1);
+		await expect(form.getByRole('button', { name: 'Save Event' })).toBeEnabled();
+		const count = await form
+			.getByTestId('attach-files')
+			.evaluate((el) => (el as HTMLInputElement).files?.length ?? 0);
+		expect(count).toBe(1);
+	});
+
 	test('title required', async ({ asMember }) => {
 		await asMember.goto(`/${COMP}/health`);
 		await waitForHydration(asMember);
