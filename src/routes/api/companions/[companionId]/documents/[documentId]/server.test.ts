@@ -19,11 +19,12 @@ beforeAll(async () => {
 		.values({ id: MEM.id, username: 'dp-mem', displayName: 'M', role: 'member' });
 	await db.insert(schema.companions).values({ id: C, name: 'Ein' });
 	await db.insert(schema.healthEvents).values(
-		['a', 'b'].map((k) => ({
+		['a', 'b', 'c'].map((k) => ({
 			id: `ev-${k}`,
 			companionId: C,
 			type: 'incident' as const,
-			title: `Visit ${k.toUpperCase()}`,
+			// ev-c has no title to name in a 409.
+			title: k === 'c' ? '' : `Visit ${k.toUpperCase()}`,
 			occurredAt: new Date(),
 			loggedBy: MEM.id
 		}))
@@ -39,7 +40,12 @@ beforeAll(async () => {
 	});
 	await db
 		.insert(schema.documents)
-		.values([doc('d-free', null), doc('d-on-a', 'ev-a'), doc('d-on-a2', 'ev-a')]);
+		.values([
+			doc('d-free', null),
+			doc('d-on-a', 'ev-a'),
+			doc('d-on-a2', 'ev-a'),
+			doc('d-on-c', 'ev-c')
+		]);
 });
 
 function patch(documentId: string, body: object) {
@@ -76,10 +82,26 @@ describe('documents PATCH onlyIfUnlinked', () => {
 		expect(await eventOf('d-on-a')).toBe('ev-a');
 	});
 
+	it('falls back to a generic 409 message when the other event has no title', async () => {
+		await expect(
+			patch('d-on-c', { healthEventId: 'ev-b', onlyIfUnlinked: true })
+		).rejects.toMatchObject({
+			status: 409,
+			body: { message: 'Something went wrong. Please try again.' }
+		});
+		expect(await eventOf('d-on-c')).toBe('ev-c');
+	});
+
 	it('moves the document without the flag, as before', async () => {
 		const res = await patch('d-on-a2', { healthEventId: 'ev-b' });
 		expect(res.status).toBe(200);
 		expect(await eventOf('d-on-a2')).toBe('ev-b');
+	});
+
+	it('unlinks with onlyIfUnlinked and healthEventId null, with no guard', async () => {
+		const res = await patch('d-on-a', { healthEventId: null, onlyIfUnlinked: true });
+		expect(res.status).toBe(200);
+		expect(await eventOf('d-on-a')).toBeNull();
 	});
 
 	it('unlinks with healthEventId null', async () => {

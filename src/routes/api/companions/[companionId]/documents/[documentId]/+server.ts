@@ -94,11 +94,12 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 					where: eq(schema.documents.id, doc.id),
 					with: { healthEvent: { columns: { title: true } } }
 				});
+				const title = current?.healthEvent?.title;
 				error(
 					409,
-					t(locals.locale, 'error.documentOnOtherEvent', {
-						title: current?.healthEvent?.title ?? ''
-					})
+					title
+						? t(locals.locale, 'error.documentOnOtherEvent', { title })
+						: t(locals.locale, 'media.actionFailed')
 				);
 			}
 		} else {
