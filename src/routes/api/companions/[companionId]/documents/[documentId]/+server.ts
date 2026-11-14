@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, isNull } from 'drizzle-orm';
 import { getStorage } from '#lib/server/storage/index.js';
 import { isValidDate } from '#lib/server/validation.js';
 
@@ -28,6 +28,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 		category?: unknown;
 		documentDate?: unknown;
 		healthEventId?: unknown;
+		onlyIfUnlinked?: unknown;
 	} | null;
 	if (!body) error(400, t(locals.locale, 'error.notFound'));
 
@@ -75,7 +76,34 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	if (Object.keys(updates).length > 0) {
-		await db.update(schema.documents).set(updates).where(eq(schema.documents.id, doc.id));
+		const guardTo = body.onlyIfUnlinked === true ? updates.healthEventId : null;
+		if (typeof guardTo === 'string') {
+			// One conditional UPDATE so a concurrent attach cannot be silently moved.
+			const { changes } = db
+				.update(schema.documents)
+				.set(updates)
+				.where(
+					and(
+						eq(schema.documents.id, doc.id),
+						or(isNull(schema.documents.healthEventId), eq(schema.documents.healthEventId, guardTo))
+					)
+				)
+				.run();
+			if (changes === 0) {
+				const current = await db.query.documents.findFirst({
+					where: eq(schema.documents.id, doc.id),
+					with: { healthEvent: { columns: { title: true } } }
+				});
+				error(
+					409,
+					t(locals.locale, 'error.documentOnOtherEvent', {
+						title: current?.healthEvent?.title ?? ''
+					})
+				);
+			}
+		} else {
+			await db.update(schema.documents).set(updates).where(eq(schema.documents.id, doc.id));
+		}
 	}
 
 	const updated = await db.query.documents.findFirst({

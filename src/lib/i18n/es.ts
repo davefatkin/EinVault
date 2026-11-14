@@ -190,6 +190,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Usuario no encontrado.',
 	'error.companionNotFound': 'Compañero no encontrado',
 	'error.eventNotFound': 'Evento no encontrado.',
+	'error.documentOnOtherEvent': 'Ya adjunto a {title}',
 	'error.sameDayLink': 'Este evento de salud ya está en este día.',
 	'error.reminderNotFound': 'Recordatorio no encontrado.',
 	'error.alreadyCompleted': 'Este recordatorio ya está completado.',
