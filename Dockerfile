@@ -99,7 +99,7 @@ RUN rm -rf \
 # Copy only what's needed to run
 # node:alpine ships a `node` user at 1000:1000, reuse it rather than creating a duplicate
 COPY --from=builder --chown=node:node /build/build ./build
-COPY --from=builder --chown=node:node /build/serve.js /build/serve-origin.js ./
+COPY --from=builder --chown=node:node /build/serve.js /build/serve-helpers.js ./
 COPY --from=builder --chown=node:node /build/node_modules ./node_modules
 COPY --from=builder --chown=node:node /build/drizzle ./drizzle
 COPY --from=builder --chown=node:node /build/package.json ./

@@ -21,6 +21,6 @@
 		"drizzle.config.ts",
 		"playwright.config.ts",
 		"serve.js",
-		"serve-origin.js"
+		"serve-helpers.js"
 	]
 }

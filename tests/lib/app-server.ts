@@ -51,7 +51,7 @@ async function launch(
 		// not leak real service URLs into tests. PATH is needed to find node.
 		PATH: process.env.PATH ?? '',
 		NODE_ENV: 'production',
-		ORIGIN: baseURL, // without this, SvelteKit CSRF rejects every form POST (serve.js applies it)
+		ORIGIN: baseURL, // adapter-node reads it at runtime; without it SvelteKit CSRF rejects every form POST
 		BODY_SIZE_LIMIT: '512M', // adapter-node defaults to 512KB; upload tests need room
 		DATABASE_URL: opts.dbPath, // absolute; dirname doubles as DATA_DIR
 		TZ: 'UTC',
