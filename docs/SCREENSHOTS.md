@@ -32,6 +32,11 @@
 ![Health dark](screenshots/member_health_dark.png)
 ![Health light](screenshots/member_health_light.png)
 
+### Add health event
+
+![Add health event dark](screenshots/member_health_add_event_dark.png)
+![Add health event light](screenshots/member_health_add_event_light.png)
+
 ### Incident
 
 ![Incident dark](screenshots/member_incident_dark.png)

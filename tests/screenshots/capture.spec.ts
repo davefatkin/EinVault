@@ -6,6 +6,7 @@ import type { Page } from '@playwright/test';
 import { test } from '../lib/fixtures';
 import { SEED, type Role } from '../lib/seed';
 import { moreButton } from '../lib/more';
+import { waitForHydration } from '../lib/hydration';
 import * as schema from '../../src/lib/server/db/schema';
 import {
 	seedDemoIncidents,
@@ -42,6 +43,16 @@ const SHOTS: Shot[] = [
 	{ name: 'member_companion', role: 'member', path: `/${EIN}` },
 	{ name: 'member_companion_mobile', role: 'member', path: `/${EIN}`, mobile: true },
 	{ name: 'member_health', role: 'member', path: `/${EIN}/health` },
+	{
+		name: 'member_health_add_event',
+		role: 'member',
+		path: `/${EIN}/health`,
+		prepare: async (page) => {
+			await waitForHydration(page);
+			await page.getByRole('button', { name: 'Add Event' }).click();
+			await page.getByTestId('attach-files').waitFor({ state: 'attached' });
+		}
+	},
 	{
 		name: 'member_incident',
 		role: 'member',
