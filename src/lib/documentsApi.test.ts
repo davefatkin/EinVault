@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { uploadDocument, attachDocument, importFromPaperless } from './documentsApi';
+import {
+	uploadDocument,
+	attachDocument,
+	unlinkDocument,
+	importFromPaperless,
+	importAndAttach
+} from './documentsApi';
 
 type Call = [string, NonNullable<Parameters<typeof fetch>[1]>];
 
@@ -89,13 +95,27 @@ describe('malformed responses', () => {
 });
 
 describe('attachDocument', () => {
-	it('patches the healthEventId', async () => {
+	it('sends onlyIfUnlinked', async () => {
 		const fetchMock = stubFetch(created);
 		expect(await attachDocument('c1', 'd1', 'h1', 'en')).toEqual({ ok: true, value: null });
 		const [url, init] = fetchMock.mock.calls[0] as unknown as Call;
 		expect(url).toBe('/api/companions/c1/documents/d1');
 		expect(init.method).toBe('PATCH');
-		expect(JSON.parse(init.body as string)).toEqual({ healthEventId: 'h1' });
+		expect(JSON.parse(init.body as string)).toEqual({
+			healthEventId: 'h1',
+			onlyIfUnlinked: true
+		});
+	});
+});
+
+describe('unlinkDocument', () => {
+	it('patches healthEventId null, guarded to the event it was on', async () => {
+		const fetchMock = stubFetch(created);
+		expect(await unlinkDocument('c1', 'd1', 'h1', 'en')).toEqual({ ok: true, value: null });
+		const [url, init] = fetchMock.mock.calls[0] as unknown as Call;
+		expect(url).toBe('/api/companions/c1/documents/d1');
+		expect(init.method).toBe('PATCH');
+		expect(JSON.parse(init.body as string)).toEqual({ healthEventId: null, onlyIfOn: 'h1' });
 	});
 });
 
@@ -109,5 +129,43 @@ describe('importFromPaperless', () => {
 		const [url, init] = fetchMock.mock.calls[0] as unknown as Call;
 		expect(url).toBe('/api/companions/c1/documents/from-paperless');
 		expect(JSON.parse(init.body as string)).toEqual({ paperlessId: 7 });
+	});
+});
+
+describe('category', () => {
+	it('uploadDocument sends the category', async () => {
+		const fetchMock = stubFetch(created);
+		const file = new File(['%PDF'], 'scan.pdf', { type: 'application/pdf' });
+		await uploadDocument('c1', file, { category: 'invoice' }, 'en');
+		const [, init] = fetchMock.mock.calls[0] as unknown as Call;
+		expect((init.body as FormData).get('category')).toBe('invoice');
+	});
+
+	it('importFromPaperless sends the category', async () => {
+		const fetchMock = stubFetch(created);
+		await importFromPaperless('c1', 7, 'en', { category: 'invoice' });
+		const [, init] = fetchMock.mock.calls[0] as unknown as Call;
+		expect(JSON.parse(init.body as string)).toEqual({ paperlessId: 7, category: 'invoice' });
+	});
+});
+
+describe('importAndAttach', () => {
+	it('links the imported document', async () => {
+		const fetchMock = stubFetch(created);
+		expect(await importAndAttach('c1', 7, 'h1', 'en')).toEqual({ ok: true, value: null });
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		const [url, init] = fetchMock.mock.calls[1] as unknown as Call;
+		expect(url).toBe('/api/companions/c1/documents/d1');
+		expect(init.method).toBe('PATCH');
+		expect(JSON.parse(init.body as string).healthEventId).toBe('h1');
+	});
+
+	it('stops when the import fails', async () => {
+		const fetchMock = stubFetch({ message: 'Paperless is down.' }, 502);
+		expect(await importAndAttach('c1', 7, 'h1', 'en')).toEqual({
+			ok: false,
+			message: 'Paperless is down.'
+		});
+		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 });

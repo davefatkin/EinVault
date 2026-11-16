@@ -190,6 +190,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Usuario no encontrado.',
 	'error.companionNotFound': 'Compañero no encontrado',
 	'error.eventNotFound': 'Evento no encontrado.',
+	'error.documentOnOtherEvent': 'Ya adjunto a {title}',
 	'error.sameDayLink': 'Este evento de salud ya está en este día.',
 	'error.reminderNotFound': 'Recordatorio no encontrado.',
 	'error.alreadyCompleted': 'Este recordatorio ya está completado.',
@@ -812,12 +813,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Evento de salud',
 	'page.journal.day.addIncident': 'Incidente',
 	'page.journal.day.addWeight': 'Peso',
-	'page.journal.day.attachFiles': 'Adjuntar archivos',
-	'page.journal.day.attachExisting': 'Adjuntar documentos existentes',
-	'page.journal.day.attachFailedTitle':
-		'El evento de salud se guardó, pero estos archivos no se adjuntaron:',
-	'page.journal.day.fileFailed': '{name}: {message}',
-	'page.journal.day.continueToReminder': 'Continuar al recordatorio',
 	'page.journal.day.uploadFailedTitle': 'Estos archivos no se subieron:',
 	'page.journal.day.filedUnder': 'Importado, archivado en {date}.',
 	'page.journal.day.openDay': 'Abrir ese día',
@@ -845,6 +840,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Guardado',
 	'page.journal.caretaker.savingStatus': 'Guardando…',
 	'page.journal.caretaker.saveFailedStatus': 'Error al guardar',
+
+	// Health event attachments
+	'attachments.files': 'Adjuntar archivos',
+	'attachments.existing': 'Adjuntar documentos existentes',
+	'attachments.attached': 'Documentos adjuntos',
+	'attachments.category': 'Categoría de los documentos nuevos',
+	'attachments.remove': 'Quitar',
+	'attachments.keep': 'Conservar',
+	'attachments.removing': 'Se quitará',
+	'attachments.removePick': 'Quitar {title}',
+	'attachments.keepPick': 'Conservar {title}',
+	'attachments.failedTitle':
+		'El evento de salud se guardó, pero algunos documentos no se pudieron adjuntar o quitar:',
+	'attachments.itemFailed': '{name}: {message}',
+	'attachments.continueToReminder': 'Continuar al recordatorio',
 
 	// Page: Health
 	'page.health.title': 'Salud',

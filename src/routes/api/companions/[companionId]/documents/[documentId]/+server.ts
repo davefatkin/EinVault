@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, isNull } from 'drizzle-orm';
 import { getStorage } from '#lib/server/storage/index.js';
 import { isValidDate } from '#lib/server/validation.js';
 
@@ -28,6 +28,8 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 		category?: unknown;
 		documentDate?: unknown;
 		healthEventId?: unknown;
+		onlyIfUnlinked?: unknown;
+		onlyIfOn?: unknown;
 	} | null;
 	if (!body) error(400, t(locals.locale, 'error.notFound'));
 
@@ -75,7 +77,44 @@ export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 	}
 
 	if (Object.keys(updates).length > 0) {
-		await db.update(schema.documents).set(updates).where(eq(schema.documents.id, doc.id));
+		// A guarded link (onlyIfUnlinked) takes only a document on no event or
+		// already on the target. A guarded unlink (onlyIfOn) clears only the
+		// event the caller saw. Either way a document someone put on another
+		// event in the meantime is never silently moved or cleared.
+		let guardTo: string | null = null;
+		if (body.onlyIfUnlinked === true && typeof updates.healthEventId === 'string') {
+			guardTo = updates.healthEventId;
+		} else if (updates.healthEventId === null && typeof body.onlyIfOn === 'string') {
+			guardTo = body.onlyIfOn;
+		}
+		if (guardTo) {
+			// One conditional UPDATE so the check and the write cannot race.
+			const { changes } = db
+				.update(schema.documents)
+				.set(updates)
+				.where(
+					and(
+						eq(schema.documents.id, doc.id),
+						or(isNull(schema.documents.healthEventId), eq(schema.documents.healthEventId, guardTo))
+					)
+				)
+				.run();
+			if (changes === 0) {
+				const current = await db.query.documents.findFirst({
+					where: eq(schema.documents.id, doc.id),
+					with: { healthEvent: { columns: { title: true } } }
+				});
+				const title = current?.healthEvent?.title;
+				error(
+					409,
+					title
+						? t(locals.locale, 'error.documentOnOtherEvent', { title })
+						: t(locals.locale, 'media.actionFailed')
+				);
+			}
+		} else {
+			await db.update(schema.documents).set(updates).where(eq(schema.documents.id, doc.id));
+		}
 	}
 
 	const updated = await db.query.documents.findFirst({

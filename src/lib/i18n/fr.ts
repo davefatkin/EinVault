@@ -190,6 +190,7 @@ const messages: Record<keyof Messages, string> = {
 	'error.userNotFound': 'Utilisateur introuvable.',
 	'error.companionNotFound': 'Compagnon introuvable',
 	'error.eventNotFound': 'Événement introuvable.',
+	'error.documentOnOtherEvent': 'Déjà joint à {title}',
 	'error.sameDayLink': 'Cet événement de santé a déjà lieu ce jour-là.',
 	'error.reminderNotFound': 'Rappel introuvable.',
 	'error.alreadyCompleted': 'Ce rappel est déjà terminé.',
@@ -815,12 +816,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.day.addHealthEvent': 'Événement de santé',
 	'page.journal.day.addIncident': 'Incident',
 	'page.journal.day.addWeight': 'Poids',
-	'page.journal.day.attachFiles': 'Joindre des fichiers',
-	'page.journal.day.attachExisting': 'Joindre des documents existants',
-	'page.journal.day.attachFailedTitle':
-		"L'événement de santé a été enregistré, mais ces fichiers n'ont pas été joints :",
-	'page.journal.day.fileFailed': '{name} : {message}',
-	'page.journal.day.continueToReminder': 'Continuer vers le rappel',
 	'page.journal.day.uploadFailedTitle': "Ces fichiers n'ont pas été téléversés :",
 	'page.journal.day.filedUnder': 'Importé, classé à la date du {date}.',
 	'page.journal.day.openDay': 'Ouvrir ce jour',
@@ -848,6 +843,21 @@ const messages: Record<keyof Messages, string> = {
 	'page.journal.caretaker.savedStatus': '✓ Enregistré',
 	'page.journal.caretaker.savingStatus': 'Enregistrement…',
 	'page.journal.caretaker.saveFailedStatus': "Échec de l'enregistrement",
+
+	// Health event attachments
+	'attachments.files': 'Joindre des fichiers',
+	'attachments.existing': 'Joindre des documents existants',
+	'attachments.attached': 'Documents joints',
+	'attachments.category': 'Catégorie des nouveaux documents',
+	'attachments.remove': 'Retirer',
+	'attachments.keep': 'Conserver',
+	'attachments.removing': 'Sera retiré',
+	'attachments.removePick': 'Retirer {title}',
+	'attachments.keepPick': 'Conserver {title}',
+	'attachments.failedTitle':
+		"L'événement de santé a été enregistré, mais certains documents n'ont pas pu être joints ou retirés :",
+	'attachments.itemFailed': '{name} : {message}',
+	'attachments.continueToReminder': 'Continuer vers le rappel',
 
 	// Page: Health
 	'page.health.title': 'Santé',

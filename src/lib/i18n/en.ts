@@ -178,6 +178,7 @@ const messages = {
 	'error.userNotFound': 'User not found.',
 	'error.companionNotFound': 'Companion not found',
 	'error.eventNotFound': 'Event not found.',
+	'error.documentOnOtherEvent': 'Already attached to {title}',
 	'error.sameDayLink': 'This health event is already on this day.',
 	'error.reminderNotFound': 'Reminder not found.',
 	'error.alreadyCompleted': 'This reminder is already completed.',
@@ -799,12 +800,6 @@ const messages = {
 	'page.journal.day.addHealthEvent': 'Health event',
 	'page.journal.day.addIncident': 'Incident',
 	'page.journal.day.addWeight': 'Weight',
-	'page.journal.day.attachFiles': 'Attach files',
-	'page.journal.day.attachExisting': 'Attach existing documents',
-	'page.journal.day.attachFailedTitle':
-		'The health event was saved, but these files were not attached:',
-	'page.journal.day.fileFailed': '{name}: {message}',
-	'page.journal.day.continueToReminder': 'Continue to reminder',
 	'page.journal.day.uploadFailedTitle': 'These files were not uploaded:',
 	'page.journal.day.filedUnder': 'Imported, filed under {date}.',
 	'page.journal.day.openDay': 'Open that day',
@@ -832,6 +827,21 @@ const messages = {
 	'page.journal.caretaker.savedStatus': '✓ Saved',
 	'page.journal.caretaker.savingStatus': 'Saving…',
 	'page.journal.caretaker.saveFailedStatus': 'Save failed',
+
+	// Health event attachments
+	'attachments.files': 'Attach files',
+	'attachments.existing': 'Attach existing documents',
+	'attachments.attached': 'Attached documents',
+	'attachments.category': 'Category for new documents',
+	'attachments.remove': 'Remove',
+	'attachments.keep': 'Keep',
+	'attachments.removing': 'Will be removed',
+	'attachments.removePick': 'Remove {title}',
+	'attachments.keepPick': 'Keep {title}',
+	'attachments.failedTitle':
+		'The health event was saved, but some documents could not be attached or removed:',
+	'attachments.itemFailed': '{name}: {message}',
+	'attachments.continueToReminder': 'Continue to reminder',
 
 	// Page: Health
 	'page.health.title': 'Health',

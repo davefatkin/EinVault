@@ -179,6 +179,121 @@ test('a supply purchase takes its receipt from Paperless', async ({ world, page 
 	await expect(page.getByText('Receipt: Paperless tablets')).toHaveCount(1);
 });
 
+async function addHealthEventWithPaperless(page: Page, title: string) {
+	await page.getByRole('button', { name: 'Add Event' }).click();
+	const form = page.locator('form[action="?/addHealth"]');
+	await form.locator('#title').fill(title);
+	await form.getByRole('button', { name: /add from paperless/i }).click();
+	const picker = page.getByRole('dialog', { name: /paperless/i });
+	await picker.getByRole('button', { name: /vaccination record/i }).click({ timeout: 10_000 });
+	await expect(picker).toHaveCount(0);
+	await expect(form.getByText('Vaccination record')).toBeVisible();
+	await form.getByRole('button', { name: 'Save Event' }).click();
+}
+
+test('health event attaches a Paperless document on create', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const title = `e2e-pl-event-${Date.now().toString(36)}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/health`);
+	await waitForHydration(page);
+
+	await addHealthEventWithPaperless(page, title);
+	await expect(page.locator('form[action="?/addHealth"]')).toHaveCount(0, { timeout: 10_000 });
+	await expect(page.getByRole('button', { name: new RegExp(title) })).toContainText(
+		'Vaccination record'
+	);
+});
+
+test('journal day health event attaches a Paperless document', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const title = `e2e-pl-day-${Date.now().toString(36)}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/journal/2026-05-14`);
+	await waitForHydration(page);
+	const section = page.getByTestId('day-health-records');
+	await section.getByRole('button', { name: 'Add', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Health event', exact: true }).click();
+	const modal = page.getByRole('dialog', { name: 'New Health Event' });
+	await modal.locator('#title').fill(title);
+
+	// Escape closes only the picker: the modal and the typed title stay.
+	const picker = page.getByRole('dialog', { name: /paperless/i });
+	await modal.getByRole('button', { name: /add from paperless/i }).click();
+	await expect(picker.getByRole('button', { name: /vaccination record/i })).toBeVisible({
+		timeout: 10_000
+	});
+	await page.keyboard.press('Escape');
+	await expect(picker).toHaveCount(0);
+	await expect(modal).toBeVisible();
+	await expect(modal.locator('#title')).toHaveValue(title);
+
+	await modal.getByRole('button', { name: /add from paperless/i }).click();
+	await picker.getByRole('button', { name: /vaccination record/i }).click({ timeout: 10_000 });
+	await expect(picker).toHaveCount(0);
+	await expect(modal.getByText('Vaccination record')).toBeVisible();
+	await modal.getByRole('button', { name: 'Save Event' }).click();
+	await expect(modal).toHaveCount(0, { timeout: 10_000 });
+
+	const row = section.getByRole('button', { name: new RegExp(`^${title}`) });
+	await expect(row).toContainText('1 attached document');
+	await row.click();
+	await expect(
+		page.getByRole('dialog', { name: title }).getByText('Vaccination record')
+	).toBeVisible();
+});
+
+test('health event attaches a Paperless document on edit', async ({ world, page }) => {
+	world.fake.setDocuments(DOCS);
+	const title = `e2e-pl-edit-${Date.now().toString(36)}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/health`);
+	await waitForHydration(page);
+	await page.getByRole('button', { name: 'Add Event' }).click();
+	await page.locator('#title').fill(title);
+	await page.getByRole('button', { name: 'Save Event' }).click();
+	const row = page.getByRole('button', { name: new RegExp(title) });
+	await row.click({ timeout: 10_000 });
+	await page.getByRole('dialog').getByRole('button', { name: 'Edit' }).click();
+
+	const form = page.locator('form[action="?/updateHealth"]');
+	await form.getByRole('button', { name: /add from paperless/i }).click();
+	const picker = page.getByRole('dialog', { name: /paperless/i });
+	await picker.getByRole('button', { name: /vaccination record/i }).click({ timeout: 10_000 });
+	await expect(picker).toHaveCount(0);
+	await expect(form.getByText('Vaccination record')).toBeVisible();
+	await form.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(form).toHaveCount(0, { timeout: 10_000 });
+	await expect(row).toContainText('Vaccination record');
+});
+
+test('a Paperless document already on another event is refused and stays put', async ({
+	world,
+	page
+}) => {
+	world.fake.setDocuments(DOCS);
+	const stamp = Date.now().toString(36);
+	const first = `e2e-pl-first-${stamp}`;
+	const second = `e2e-pl-second-${stamp}`;
+	await login(page, world.server.baseURL, SEED.member.username);
+	await page.goto(`${world.server.baseURL}/${SEED.companions.ein.id}/health`);
+	await waitForHydration(page);
+
+	await addHealthEventWithPaperless(page, first);
+	await expect(page.locator('form[action="?/addHealth"]')).toHaveCount(0, { timeout: 10_000 });
+	const firstRow = page.getByRole('button', { name: new RegExp(first) });
+	await expect(firstRow).toContainText('Vaccination record', { timeout: 10_000 });
+
+	await addHealthEventWithPaperless(page, second);
+	await expect(page.getByText(`Already attached to ${first}`)).toBeVisible({ timeout: 10_000 });
+	await page.getByRole('button', { name: 'Close', exact: true }).click();
+
+	await expect(firstRow).toContainText('Vaccination record');
+	const secondRow = page.getByRole('button', { name: new RegExp(second) });
+	await expect(secondRow).toBeVisible();
+	await expect(secondRow).not.toContainText('Vaccination record');
+});
+
 test('search filters documents in the picker', async ({ world, page }) => {
 	world.fake.setDocuments(DOCS);
 

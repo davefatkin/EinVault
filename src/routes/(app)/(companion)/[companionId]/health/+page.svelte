@@ -19,12 +19,19 @@
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import HealthDetailModal from '#lib/components/health/HealthDetailModal.svelte';
 	import HealthEventForm from '#lib/components/health/HealthEventForm.svelte';
+	import HealthEventEditForm from '#lib/components/health/HealthEventEditForm.svelte';
+	import HealthEventAttachments from '#lib/components/health/HealthEventAttachments.svelte';
+	import AttachmentFailures from '#lib/components/health/AttachmentFailures.svelte';
+	import PaperlessPicker from '#lib/components/PaperlessPicker.svelte';
 	import WeightForm from '#lib/components/health/WeightForm.svelte';
 	import OpenIncidentsList from '#lib/components/incidents/OpenIncidentsList.svelte';
 	import { incidentPath } from '#lib/incidents.js';
 	import { stripMarkdown } from '#lib/markdown.js';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { page } from '$app/state';
+	import { addPaperlessPick, type PaperlessPick } from '#lib/healthAttachments.js';
+	import { localDatetimeValue } from '#lib/date.js';
+	import { createHealthEventSave } from '#lib/healthEventSave.svelte.js';
 	import { stripUrlParams } from '#lib/stripUrlParams.js';
 	import { localDatetimes } from '#lib/actions/localDatetimes.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
@@ -57,7 +64,6 @@
 
 	let showHealthForm = $state(false);
 	let showWeightForm = $state(false);
-	let submittingHealth = $state(false);
 	let submittingWeight = $state(false);
 
 	// New events can't pick Medication (R2), so neither can a ?new prefill; the
@@ -79,16 +85,48 @@
 		prefillDescription = '';
 	}
 
-	function localDatetimeISO(d: Date | string = new Date()) {
-		const dt = new Date(d);
-		const p = (n: number) => String(n).padStart(2, '0');
-		return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
-	}
-	let todayISO = $state(localDatetimeISO());
+	let todayISO = $state(localDatetimeValue());
 
+	// The add-event card's save: document changes are applied once the event
+	// is saved, and the event stays saved if any fail.
+	const createSave = createHealthEventSave({
+		companionId: () => data.companion.id,
+		titles: () => Object.fromEntries(data.attachableDocuments.map((d) => [d.id, d.title])),
+		locale: () => locale,
+		onclose: () => setHealthForm(false)
+	});
+	const paperlessEnabled = $derived(data.paperlessEnabled ?? false);
+	// The page's one Paperless picker fills the add form ('create') or the
+	// edit form of the event with this id.
+	let pickerTarget = $state<'create' | string | null>(null);
+
+	/** Opens or closes the add-event card, always with empty attachments. */
+	function setHealthForm(open: boolean) {
+		// A save in flight closes the card itself when it finishes.
+		if (createSave.phase === 'saving') return;
+		showHealthForm = open;
+		createSave.reset();
+		if (pickerTarget === 'create') pickerTarget = null;
+		if (!open) resetHealthPrefill();
+	}
+
+	// The edit form mounts per opening, so its document changes start empty
+	// each time. editPick hands it Paperless picks while pickerTarget is its id.
 	let editingHealthId = $state<string | null>(null);
-	function startEditHealth(event: (typeof data.healthEvents)[0]) {
-		editingHealthId = event.id;
+	let editPick: ((pick: PaperlessPick) => void) | null = null;
+	// True while the open edit form saves. Opening another edit would unmount
+	// it and lose its attachment failures, so every Edit waits.
+	let editSaving = $state(false);
+	function startEditHealth(id: string) {
+		if (editSaving) return;
+		editingHealthId = id;
+	}
+	/** Closes the edit form of `id`, unless another one opened since (a late save). */
+	function closeEditHealth(id: string) {
+		if (editingHealthId !== id) return;
+		editingHealthId = null;
+		editPick = null;
+		if (pickerTarget === id) pickerTarget = null;
 	}
 
 	let editingWeightId = $state<string | null>(null);
@@ -125,7 +163,7 @@
 			// Incidents never edit here: the load redirects them to their page.
 			const healthMatch = data.healthEvents.find((e) => e.id === editId && e.type !== 'incident');
 			if (healthMatch) {
-				editingHealthId = editId;
+				untrack(() => startEditHealth(editId));
 			}
 		}
 		tick().then(() => stripUrlParams('edit'));
@@ -140,7 +178,7 @@
 
 		if (newParam === 'weight') {
 			showWeightForm = true;
-			showHealthForm = false;
+			untrack(() => setHealthForm(false));
 		} else {
 			prefillTitle = (params.get('title') ?? '').slice(0, 200);
 			const rawType = params.get('type') ?? '';
@@ -149,7 +187,7 @@
 				: '';
 			prefillDescription = (params.get('description') ?? '').slice(0, 2000);
 
-			showHealthForm = true;
+			untrack(() => setHealthForm(true));
 			showWeightForm = false;
 		}
 		prefillApplied = true;
@@ -280,11 +318,12 @@
 		<Button
 			variant="soft"
 			size="sm"
+			disabled={editSaving}
 			onclick={() => {
 				if (selected?.kind === 'health') {
 					const item = selected.item;
 					closeDetail();
-					startEditHealth(item);
+					startEditHealth(item.id);
 				}
 			}}
 		>
@@ -336,9 +375,10 @@
 				<Button
 					variant="outline"
 					size="sm"
+					disabled={createSave.phase === 'saving'}
 					onclick={() => {
 						showWeightForm = !showWeightForm;
-						showHealthForm = false;
+						setHealthForm(false);
 					}}
 				>
 					<Scale class="h-4 w-4 mr-1.5" />
@@ -356,10 +396,10 @@
 				</Button>
 				<Button
 					size="sm"
+					disabled={createSave.phase === 'saving'}
 					onclick={() => {
-						showHealthForm = !showHealthForm;
+						setHealthForm(!showHealthForm);
 						showWeightForm = false;
-						if (!showHealthForm) resetHealthPrefill();
 					}}
 				>
 					<Plus class="h-4 w-4 mr-1.5" />
@@ -381,26 +421,38 @@
 				<CardTitle>{t(locale, 'page.health.newHealthEventTitle')}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<HealthEventForm
-					action="?/addHealth"
-					defaultAt={todayISO}
-					submitting={submittingHealth}
-					prefill={{ title: prefillTitle, type: prefillType, notes: prefillDescription }}
-					medicationsHref="/{data.companion.id}/medications"
-					submit={() => {
-						submittingHealth = true;
-						return async ({ update }) => {
-							await update();
-							submittingHealth = false;
-							showHealthForm = false;
-							resetHealthPrefill();
-						};
-					}}
-					oncancel={() => {
-						showHealthForm = false;
-						resetHealthPrefill();
-					}}
-				/>
+				{#if createSave.phase === 'failed'}
+					<AttachmentFailures
+						failures={createSave.failures}
+						reminderUrl={createSave.reminderUrl}
+						onclose={() => setHealthForm(false)}
+					/>
+				{:else}
+					<HealthEventForm
+						action="?/addHealth"
+						defaultAt={todayISO}
+						submitting={createSave.phase === 'saving'}
+						error={createSave.error}
+						prefill={{ title: prefillTitle, type: prefillType, notes: prefillDescription }}
+						medicationsHref="/{data.companion.id}/medications"
+						submit={createSave.submit}
+						oncancel={() => setHealthForm(false)}
+					>
+						{#snippet extra()}
+							{#if data.companion.isActive !== false}
+								<HealthEventAttachments
+									idPrefix="new"
+									documents={data.attachableDocuments}
+									uploadMaxMb={data.uploadMaxMb}
+									{paperlessEnabled}
+									bind:pending={createSave.pending}
+									onbrowse={() => (pickerTarget = 'create')}
+									disabled={createSave.phase === 'saving'}
+								/>
+							{/if}
+						{/snippet}
+					</HealthEventForm>
+				{/if}
 			</CardContent>
 		</Card>
 	{/if}
@@ -511,7 +563,7 @@
 										name="recordedAt"
 										type="datetime-local"
 										autocomplete="off"
-										value={localDatetimeISO(entry.recordedAt)}
+										value={localDatetimeValue(new Date(entry.recordedAt))}
 									/>
 								</div>
 								<div class="space-y-1.5">
@@ -606,9 +658,7 @@
 					{#snippet icon()}<HeartPulse class="h-5 w-5" />{/snippet}
 					{#snippet action()}
 						{#if data.companion.isActive !== false}
-							<Button onclick={() => (showHealthForm = true)}
-								>{t(locale, 'nav.fab.logHealth')}</Button
-							>
+							<Button onclick={() => setHealthForm(true)}>{t(locale, 'nav.fab.logHealth')}</Button>
 						{/if}
 					{/snippet}
 				</EmptyState>
@@ -616,105 +666,21 @@
 				<div class="space-y-3">
 					{#each data.healthEvents as event (event.id)}
 						{#if editingHealthId === event.id}
-							<div class="border border-border rounded-lg px-4 py-4">
-								<form
-									method="POST"
-									action="?/updateHealth"
-									use:localDatetimes
-									use:enhance={() =>
-										({ update }) => {
-											update();
-											editingHealthId = null;
-										}}
-									class="space-y-4"
-								>
-									<input type="hidden" name="id" value={event.id} />
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-										<div class="space-y-1.5">
-											<Label for="edit-title-{event.id}"
-												>{t(locale, 'page.health.labelTitle')}</Label
-											>
-											<Input
-												id="edit-title-{event.id}"
-												name="title"
-												type="text"
-												autocomplete="off"
-												value={event.title}
-												required
-											/>
-										</div>
-										<div class="space-y-1.5">
-											<Label for="edit-type-{event.id}">{t(locale, 'page.health.labelType')}</Label>
-											<Select id="edit-type-{event.id}" name="type" required>
-												{#each healthTypeOptions( locale, { includeMedication: event.type === 'medication' } ) as ht (ht.value)}
-													<option value={ht.value} selected={event.type === ht.value}
-														>{ht.label}</option
-													>
-												{/each}
-											</Select>
-										</div>
-									</div>
-									<div class="space-y-1.5">
-										<Label for="edit-occurredAt-{event.id}"
-											>{t(locale, 'page.health.labelDate')}</Label
-										>
-										<Input
-											id="edit-occurredAt-{event.id}"
-											name="occurredAt"
-											type="datetime-local"
-											autocomplete="off"
-											value={localDatetimeISO(event.occurredAt)}
-										/>
-									</div>
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-										<div class="space-y-1.5">
-											<Label for="edit-vetName-{event.id}"
-												>{t(locale, 'page.health.labelVetName')}</Label
-											>
-											<Input
-												id="edit-vetName-{event.id}"
-												name="vetName"
-												type="text"
-												autocomplete="off"
-												value={event.vetName ?? ''}
-												placeholder={t(locale, 'page.health.placeholderVetName')}
-											/>
-										</div>
-										<div class="space-y-1.5">
-											<Label for="edit-vetClinic-{event.id}"
-												>{t(locale, 'page.health.labelClinic')}</Label
-											>
-											<Input
-												id="edit-vetClinic-{event.id}"
-												name="vetClinic"
-												type="text"
-												autocomplete="off"
-												value={event.vetClinic ?? ''}
-												placeholder={t(locale, 'page.health.placeholderClinic')}
-											/>
-										</div>
-									</div>
-									<div class="space-y-1.5">
-										<Label for="edit-notes-{event.id}">{t(locale, 'page.health.labelNotes')}</Label>
-										<MarkdownTextarea
-											id="edit-notes-{event.id}"
-											name="notes"
-											value={event.notes ?? ''}
-											placeholder={t(locale, 'page.health.placeholderNotes')}
-											rows={4}
-										/>
-									</div>
-									<div class="flex gap-3">
-										<Button type="submit" size="sm">{t(locale, 'common.save')}</Button>
-										<Button
-											type="button"
-											variant="outline"
-											size="sm"
-											onclick={() => (editingHealthId = null)}>{t(locale, 'common.cancel')}</Button
-										>
-									</div>
-								</form>
-							</div>
+							<HealthEventEditForm
+								{event}
+								companionId={data.companion.id}
+								attached={docsForEvent(event.id)}
+								documents={data.attachableDocuments}
+								uploadMaxMb={data.uploadMaxMb}
+								{paperlessEnabled}
+								canAttach={data.companion.isActive !== false}
+								onbrowse={(addPick) => {
+									editPick = addPick;
+									pickerTarget = event.id;
+								}}
+								ondone={() => closeEditHealth(event.id)}
+								onsaving={(saving) => (editSaving = saving)}
+							/>
 						{:else}
 							<div
 								class="flex flex-col gap-3 py-2 border-b border-border last:border-0 transition-colors hover:bg-accent/40 sm:flex-row sm:items-start sm:gap-4"
@@ -778,7 +744,8 @@
 											type="button"
 											variant="soft"
 											size="sm"
-											onclick={() => startEditHealth(event)}
+											disabled={editSaving}
+											onclick={() => startEditHealth(event.id)}
 											class="h-7 gap-1.5 px-2 text-xs"
 										>
 											<Pencil class="h-3.5 w-3.5" />
@@ -824,6 +791,22 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+<!-- Page level, outside the cards: an animated card would trap its fixed overlay. -->
+{#if paperlessEnabled}
+	<PaperlessPicker
+		open={pickerTarget !== null}
+		onpick={(paperlessId, title) => {
+			if (pickerTarget === 'create') {
+				createSave.pending = addPaperlessPick(createSave.pending, { paperlessId, title });
+			} else if (pickerTarget !== null && pickerTarget === editingHealthId) {
+				editPick?.({ paperlessId, title });
+			}
+			pickerTarget = null;
+		}}
+		onclose={() => (pickerTarget = null)}
+	/>
+{/if}
 
 {#if previewDoc}
 	<DocumentPreview
