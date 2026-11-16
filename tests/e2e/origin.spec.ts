@@ -5,6 +5,7 @@ import path from 'node:path';
 import { test } from '../lib/fixtures';
 import { createSeededDb } from '../lib/seed';
 import { startAppServer } from '../lib/app-server';
+import { startSmtpSink } from '../fakes/smtp';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -35,7 +36,7 @@ function post(
 	});
 }
 
-test.describe('ORIGIN wrapper', () => {
+test.describe('ORIGIN', () => {
 	test('same-origin form POST passes CSRF', async ({ app }) => {
 		const { port } = app.server;
 		const res = await post(
@@ -46,44 +47,6 @@ test.describe('ORIGIN wrapper', () => {
 		);
 		expect(res.status).not.toBe(403);
 		expect(res.body).not.toContain(CSRF_MESSAGE);
-	});
-
-	test('a forged synthetic host header is overwritten', async ({ app }) => {
-		const { port } = app.server;
-		// Both schemes: with the overwrite broken, the adapter's default proto
-		// (https) would make the second one match.
-		for (const origin of ['http://evil.test', 'https://evil.test']) {
-			const res = await post(
-				port,
-				PROBE,
-				{
-					...FORM,
-					Host: `localhost:${port}`,
-					'x-einvault-origin-host': 'evil.test',
-					Origin: origin
-				},
-				'x=1'
-			);
-			expect(res.status, origin).toBe(403);
-			expect(res.body, origin).toContain(CSRF_MESSAGE);
-		}
-	});
-
-	test('a forged synthetic proto header is overwritten', async ({ app }) => {
-		const { port } = app.server;
-		const res = await post(
-			port,
-			PROBE,
-			{
-				...FORM,
-				Host: `localhost:${port}`,
-				'x-einvault-origin-proto': 'https',
-				Origin: `https://localhost:${port}`
-			},
-			'x=1'
-		);
-		expect(res.status).toBe(403);
-		expect(res.body).toContain(CSRF_MESSAGE);
 	});
 
 	test('the Host header does not set the origin', async ({ app }) => {
@@ -174,8 +137,82 @@ base.describe('proxy headers without ORIGIN', () => {
 					dbPath: createSeededDb(dir),
 					env: { ORIGIN: 'ftp://einvault.example.com' }
 				})
-			).rejects.toThrow(/ORIGIN must be an http/);
+			).rejects.toThrow(/Invalid ORIGIN/);
 		} finally {
+			fs.rmSync(dir, { recursive: true, force: true });
+		}
+	});
+});
+
+base.describe('ORIGIN set', () => {
+	// eslint-disable-next-line no-empty-pattern
+	base('ORIGIN wins over forwarded headers', async ({}, testInfo) => {
+		const dir = path.join(REPO_ROOT, '.test-data', `origin-precedence-${testInfo.workerIndex}`);
+		const server = await startAppServer({
+			dbPath: createSeededDb(dir),
+			env: {
+				ORIGIN: 'https://einvault.example.com',
+				PROTOCOL_HEADER: 'x-forwarded-proto',
+				HOST_HEADER: 'x-forwarded-host',
+				PORT_HEADER: 'x-forwarded-port'
+			}
+		});
+		try {
+			const forged = {
+				...FORM,
+				'x-forwarded-proto': 'http',
+				'x-forwarded-host': 'evil.test',
+				'x-forwarded-port': '8080'
+			};
+			for (const origin of ['http://evil.test', 'https://evil.test', 'http://evil.test:8080']) {
+				const res = await post(server.port, PROBE, { ...forged, Origin: origin }, 'x=1');
+				expect(res.status, origin).toBe(403);
+				expect(res.body, origin).toContain(CSRF_MESSAGE);
+			}
+			const ok = await post(
+				server.port,
+				PROBE,
+				{ ...forged, Origin: 'https://einvault.example.com' },
+				'x=1'
+			);
+			expect(ok.status).not.toBe(403);
+		} finally {
+			await server.stop();
+			fs.rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	// eslint-disable-next-line no-empty-pattern
+	base('reset links use ORIGIN, not the request Host', async ({}, testInfo) => {
+		const dir = path.join(REPO_ROOT, '.test-data', `origin-reset-${testInfo.workerIndex}`);
+		const smtp = await startSmtpSink();
+		let server: Awaited<ReturnType<typeof startAppServer>> | undefined;
+		try {
+			server = await startAppServer({
+				dbPath: createSeededDb(dir),
+				env: {
+					ORIGIN: 'https://einvault.example.com',
+					SMTP_HOST: '127.0.0.1',
+					SMTP_PORT: String(smtp.port),
+					SMTP_SECURE: 'false',
+					SMTP_FROM: 'einvault-test@example.com'
+				}
+			});
+			const res = await post(
+				server.port,
+				'/auth/forgot',
+				{ ...FORM, Host: 'evil.test', Origin: 'https://einvault.example.com' },
+				'email=' + encodeURIComponent('vicious@reddragon.club')
+			);
+			expect(res.status).not.toBe(403);
+			const mail = await smtp.waitForMail((m) =>
+				[m.to ?? []].flat().some((a) => a.text.includes('vicious@reddragon.club'))
+			);
+			const link = (mail.text ?? '').match(/https?:\/\/\S+/)?.[0];
+			expect(link).toMatch(/^https:\/\/einvault\.example\.com\/auth\/reset\?token=/);
+		} finally {
+			await server?.stop();
+			await smtp.stop();
 			fs.rmSync(dir, { recursive: true, force: true });
 		}
 	});
