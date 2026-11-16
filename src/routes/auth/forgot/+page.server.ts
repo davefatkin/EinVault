@@ -73,11 +73,12 @@ export const actions: Actions = {
 			const userId = user.id;
 			const token = await createResetToken(userId);
 			if (token) {
-				// Build the link from the configured ORIGIN, never from request
-				// headers. With ORIGIN set, adapter-node also builds url from it, but
-				// reading the value directly means a forged Host can never mint a
-				// token inside a link pointing at the attacker's host. url.origin is
-				// the fallback only when ORIGIN is unset (dev).
+				// The link uses the configured ORIGIN via publicOrigin(). Only when
+				// ORIGIN is unset does it fall back to url.origin, which adapter-node
+				// derives from the Host (or PROTOCOL_HEADER/HOST_HEADER) header, so a
+				// forged Host plus a matching Origin header could mint a valid token
+				// inside a link pointing at an attacker's host. That is why ORIGIN is
+				// the documented production requirement.
 				const origin = publicOrigin() ?? url.origin;
 				const link = `${origin}/auth/reset?token=${encodeURIComponent(token)}`;
 				const message = buildResetEmail(

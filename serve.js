@@ -19,7 +19,17 @@ let adapter;
 try {
 	adapter = await import(entry);
 } catch (err) {
-	console.error(err instanceof Error ? err.message : String(err));
+	// Import runs server.init (hooks, DB open, migrations), so any boot failure
+	// lands here. Config validation errors get one clean line; everything else
+	// keeps its stack and cause chain.
+	if (
+		err instanceof Error &&
+		/^Invalid (ORIGIN|value for environment variable)/.test(err.message)
+	) {
+		console.error(err.message);
+	} else {
+		console.error(err);
+	}
 	process.exit(1);
 }
 const { server } = adapter;
