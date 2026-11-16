@@ -179,8 +179,13 @@
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	const skipFormRegistry = new Map<string, HTMLFormElement>();
+	const mistapFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleMistap(reminderId: string) {
+		pendingDismiss.mistap(reminderId, mistapFormRegistry.get(reminderId));
+	}
 
 	function submitWithAndEvent(reminderId: string) {
 		const form = dismissFormRegistry.get(reminderId);
@@ -244,6 +249,33 @@
 
 <svelte:window onkeydown={handleWindowKey} />
 
+<!-- Shown only while the form's type select is on medication (see <style>). -->
+{#snippet pillsLeftField(id: string, value: number | null)}
+	<div class="pills-left-field space-y-1.5">
+		<Label for={id}>{t(locale, 'page.reminders.labelPillsLeft')}</Label>
+		<Input
+			{id}
+			name="pillsLeft"
+			type="number"
+			min="0"
+			max="100000"
+			step="1"
+			inputmode="numeric"
+			autocomplete="off"
+			value={value ?? ''}
+		/>
+		<p class="text-xs text-muted-foreground">{t(locale, 'page.reminders.pillsLeftHint')}</p>
+	</div>
+{/snippet}
+
+{#snippet pillsLeftBadge(count: number | null)}
+	{#if count !== null}
+		<Badge variant={count === 0 ? 'coral' : 'secondary'}
+			>{t(locale, 'page.reminders.pillsLeftBadge', { count })}</Badge
+		>
+	{/if}
+{/snippet}
+
 <!-- Detail modal -->
 {#if selected}
 	{@const r = selected}
@@ -306,6 +338,14 @@
 						<span class="text-foreground">{formatRecurrence(r, locale, 'full')}</span>
 					</div>
 				{/if}
+				{#if r.pillsLeft !== null}
+					<div class="flex items-center gap-3">
+						<span class="w-20 shrink-0 text-xs font-medium text-muted-foreground"
+							>{t(locale, 'page.reminders.labelPillsLeft')}</span
+						>
+						<span class={r.pillsLeft === 0 ? 'text-coral' : 'text-foreground'}>{r.pillsLeft}</span>
+					</div>
+				{/if}
 				{#if r.description}
 					<div class="pt-1">
 						<p class="text-xs font-medium text-muted-foreground mb-1">
@@ -363,6 +403,13 @@
 							closeDetail();
 							pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
 						}}
+						onMistap={r.mistapId
+							? () => {
+									const item = r;
+									closeDetail();
+									handleMistap(item.id);
+								}
+							: undefined}
 					/>
 					<Button
 						type="button"
@@ -469,6 +516,7 @@
 						<Label for="dueAt">{t(locale, 'page.reminders.labelDueDate')}</Label>
 						<Input id="dueAt" name="dueAt" type="datetime-local" required autocomplete="off" />
 					</div>
+					{@render pillsLeftField('pillsLeft', null)}
 					<div class="space-y-1.5">
 						<Label for="description">{t(locale, 'page.reminders.labelNotes')}</Label>
 						<MarkdownTextarea
@@ -578,6 +626,7 @@
 									required
 								/>
 							</div>
+							{@render pillsLeftField(`edit-pillsLeft-${reminder.id}`, reminder.pillsLeft)}
 							<div class="space-y-1.5">
 								<Label for="edit-description-{reminder.id}"
 									>{t(locale, 'page.reminders.labelNotes')}</Label
@@ -624,6 +673,7 @@
 												>{formatRecurrence(reminder, locale, 'short')}</Badge
 											>
 										{/if}
+										{@render pillsLeftBadge(reminder.pillsLeft)}
 									</div>
 									{#if reminder.description}
 										<div
@@ -671,6 +721,7 @@
 													kind: 'skip'
 												});
 										}}
+										onMistap={reminder.mistapId ? () => handleMistap(reminder.id) : undefined}
 										isRecurring={reminder.isRecurring}
 										allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 											reminder.type as keyof typeof REMINDER_TO_HEALTH_TYPE
@@ -759,6 +810,20 @@
 				class="hidden"
 			>
 				<input type="hidden" name="id" value={reminder.id} />
+			</form>
+		{/each}
+
+		<!-- Hidden mistap forms (rows that follow a committed dose) -->
+		{#each active.filter((r) => r.mistapId) as reminder (reminder.id + '-mistap-form')}
+			<form
+				method="POST"
+				action="?/mistap"
+				use:enhance={clearSubmittingFlag}
+				use:registerDismissForm={{ id: reminder.id, registry: mistapFormRegistry }}
+				class="hidden"
+			>
+				<input type="hidden" name="id" value={reminder.id} />
+				<input type="hidden" name="doseId" value={reminder.mistapId} />
 			</form>
 		{/each}
 	{/if}
@@ -964,3 +1029,12 @@
 	}}
 	oncancel={() => (confirmOpen = false)}
 />
+
+<style>
+	.pills-left-field {
+		display: none;
+	}
+	form:has(option[value='medication']:checked) .pills-left-field {
+		display: block;
+	}
+</style>

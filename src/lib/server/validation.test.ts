@@ -6,7 +6,10 @@ import {
 	parseSpecies,
 	parseWeightUnit,
 	parseWeightUnitStrict,
-	parseDailyEventType
+	parseDailyEventType,
+	parsePillsLeft,
+	parseRecurrence,
+	keepIntervalAnchor
 } from './validation';
 
 describe('exceedsLen', () => {
@@ -83,5 +86,84 @@ describe('parseWeightUnit', () => {
 describe('parseDailyEventType', () => {
 	it('accepts litter', () => {
 		expect(parseDailyEventType('litter')).toBe('litter');
+	});
+});
+
+describe('parsePillsLeft', () => {
+	it('treats blank or absent as untracked', () => {
+		expect(parsePillsLeft(null)).toBeNull();
+		expect(parsePillsLeft('')).toBeNull();
+		expect(parsePillsLeft('  ')).toBeNull();
+	});
+
+	it('accepts whole numbers from 0 up to the cap', () => {
+		expect(parsePillsLeft('0')).toBe(0);
+		expect(parsePillsLeft(' 30 ')).toBe(30);
+		expect(parsePillsLeft('100000')).toBe(100000);
+	});
+
+	it('rejects negatives, fractions, junk, and values over the cap', () => {
+		for (const v of ['-1', '1.5', '1e3', 'ten', '100001'])
+			expect(parsePillsLeft(v)).toBe('invalid');
+	});
+});
+
+describe('keepIntervalAnchor', () => {
+	function form(unit: string, interval = 1) {
+		const fd = new FormData();
+		fd.set('recurrenceUnit', unit);
+		fd.set('recurrenceInterval', String(interval));
+		fd.set('recurrenceAnchor', 'interval');
+		return fd;
+	}
+	const feb28 = new Date(2026, 1, 28, 8, 0);
+
+	it('keeps day 31 when a clamped Feb 28 occurrence is saved unchanged', () => {
+		const parsed = parseRecurrence(form('month'), feb28)!;
+		expect(parsed.anchorValue).toBe(28); // what the form alone would store
+		const kept = keepIntervalAnchor(parsed, feb28, {
+			dueAt: feb28,
+			recurrenceUnit: 'month',
+			recurrenceAnchor: 'interval',
+			recurrenceAnchorValue: 31
+		});
+		expect(kept.anchorValue).toBe(31);
+	});
+
+	it('keeps Feb 29 (229) when a common-year Feb 28 occurrence is saved unchanged', () => {
+		const parsed = parseRecurrence(form('year'), new Date(2029, 1, 28, 8, 0))!;
+		const kept = keepIntervalAnchor(parsed, new Date(2029, 1, 28, 8, 0), {
+			dueAt: new Date(2029, 1, 28, 8, 0),
+			recurrenceUnit: 'year',
+			recurrenceAnchor: 'interval',
+			recurrenceAnchorValue: 229
+		});
+		expect(kept.anchorValue).toBe(229);
+	});
+
+	it('keeps the anchor when only the interval changes', () => {
+		const kept = keepIntervalAnchor(parseRecurrence(form('month', 2), feb28)!, feb28, {
+			dueAt: feb28,
+			recurrenceUnit: 'month',
+			recurrenceAnchor: 'interval',
+			recurrenceAnchorValue: 31
+		});
+		expect(kept.anchorValue).toBe(31);
+	});
+
+	it('re-anchors when the due date or the unit is changed on purpose', () => {
+		const existing = {
+			dueAt: feb28,
+			recurrenceUnit: 'month' as const,
+			recurrenceAnchor: 'interval' as const,
+			recurrenceAnchorValue: 31
+		};
+		const moved = new Date(2026, 1, 15, 8, 0);
+		expect(
+			keepIntervalAnchor(parseRecurrence(form('month'), moved)!, moved, existing).anchorValue
+		).toBe(15);
+		expect(
+			keepIntervalAnchor(parseRecurrence(form('year'), feb28)!, feb28, existing).anchorValue
+		).toBe(228);
 	});
 });

@@ -9,7 +9,9 @@ import { authorizeCompanions, listAllowedCompanions } from '$lib/server/companio
 import { completeReminder } from '$lib/server/reminders';
 
 // POST /api/reminders/{id}/complete: mark a reminder done. Recurring reminders
-// spawn their next occurrence (via completeReminder). The token acts as its
+// spawn their next occurrence (via completeReminder). A medication reminder
+// with a tracked supply burns one pill; with none left it's a 409 noPillsLeft
+// and the occurrence stays open. The token acts as its
 // user, so a caretaker must be on shift and assigned to the reminder's
 // companion. Send an Idempotency-Key to make a retry a no-op.
 export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
@@ -50,9 +52,11 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 				error(409, { code: 'alreadyCompleted', message: t(locale, 'error.alreadyCompleted') });
 
 			const result = completeReminder(reminder, user.id);
+			if (result === 'noPillsLeft')
+				error(409, { code: 'noPillsLeft', message: t(locale, 'error.noPillsLeft') });
 			if (!result)
 				error(409, { code: 'alreadyCompleted', message: t(locale, 'error.alreadyCompleted') });
-			const { completedAt, nextReminderId } = result;
+			const { completedAt, nextReminderId, nextDueAt, pillsLeft } = result;
 
 			// Mirror the form: prune completed one-off reminders older than 30 days.
 			const cutoff = new Date();
@@ -70,7 +74,13 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 
 			return {
 				status: 200,
-				data: { id: reminder.id, completedAt: completedAt.toISOString(), nextReminderId }
+				data: {
+					id: reminder.id,
+					completedAt: completedAt.toISOString(),
+					nextReminderId,
+					nextDueAt: nextDueAt?.toISOString() ?? null,
+					pillsLeft
+				}
 			};
 		}
 	);

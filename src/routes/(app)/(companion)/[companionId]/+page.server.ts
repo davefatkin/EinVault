@@ -4,7 +4,7 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, gte, and, lte, isNull, isNotNull } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder, mistapDose, withMistap } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
@@ -111,7 +111,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		companion,
 		recentHealth,
 		recentDaily,
-		upcomingReminders,
+		upcomingReminders: await withMistap(upcomingReminders),
 		recentWeights,
 		todayJournal,
 		activeCaretakerShift,
@@ -136,7 +136,8 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(existing, locals.user.id);
+		if (completeReminder(existing, locals.user.id) === 'noPillsLeft')
+			return fail(409, { error: t(locals.locale, 'error.noPillsLeft') });
 
 		if (andEvent) {
 			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];
@@ -169,6 +170,23 @@ export const actions: Actions = {
 		skipReminder(existing, locals.user.id);
 
 		return { skipSuccess: true };
+	},
+
+	mistap: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		if (!mistapDose(existing, String(data.get('doseId') ?? '')))
+			return fail(409, { error: t(locals.locale, 'error.nothingToMistap') });
+
+		return { mistapSuccess: true };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {

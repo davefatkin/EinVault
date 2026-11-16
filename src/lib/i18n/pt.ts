@@ -23,6 +23,8 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEventAria': 'Marcar como feito e registar um evento de saúde',
 	'common.reminder.skip': 'Ignorar',
 	'common.reminder.skipAria': 'Ignorar esta ocorrência',
+	'common.reminder.mistap': 'Engano',
+	'common.reminder.mistapAria': 'Toque por engano: desfazer a última dose e devolver o comprimido',
 	'common.reminder.skippedAnnounce': '{title} ignorado',
 	'common.reminder.toastUndoLabel': 'Desfazer',
 	'common.reminder.toastDismiss': 'Fechar',
@@ -189,6 +191,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Só pode eliminar as suas próprias entradas.',
 	'error.mustBeOnShiftToComplete': 'Deve estar em turno para completar lembretes.',
 	'error.cannotSkipNonRecurring': 'Apenas lembretes recorrentes podem ser ignorados.',
+	'error.noPillsLeft':
+		'Não há comprimidos. Atualize a quantidade após repor e depois registre a dose.',
+	'error.nothingToMistap':
+		'Não há dose para desfazer: ela já foi desfeita, ou depois houve outra dose ou um salto.',
+	'error.invalidPillsLeft':
+		'Os comprimidos restantes devem ser um número inteiro igual ou maior que 0.',
 	'error.mustBeOnShiftToSkip': 'Deve estar em turno para ignorar lembretes.',
 
 	// Errors: Account
@@ -777,6 +785,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelDueDate': 'Data de vencimento *',
 	'page.reminders.labelNotes': 'Notas',
 	'page.reminders.skippedBadge': 'Ignorado',
+	'page.reminders.labelPillsLeft': 'Comprimidos restantes',
+	'page.reminders.pillsLeftHint':
+		'Cada dose marcada como feita desconta um. Deixe em branco para não contar.',
+	'page.reminders.pillsLeftBadge': 'Restam {count}',
 	'page.reminders.labelRecurring': 'Lembrete recorrente',
 	'page.reminders.labelRepeatEvery': 'Repetir a cada',
 	'page.reminders.labelRecurrenceUnit': 'Unidade',

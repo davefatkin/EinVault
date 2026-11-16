@@ -5,7 +5,7 @@ import type { MessageKey } from '$lib/i18n/en';
 import { db, schema } from '$lib/server/db';
 import { eq, and, ne, gte, isNull } from 'drizzle-orm';
 import { getShiftStatus } from '$lib/server/shifts';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder, mistapDose, withMistap } from '$lib/server/reminders';
 import { listQuickLogButtons } from '$lib/server/quick-logs';
 import { handleQuickLogExecute } from '$lib/server/quick-log-actions';
 import { listSharedNotes } from '$lib/server/notes';
@@ -95,8 +95,12 @@ export const load: PageServerLoad = async ({ params, parent, locals }) => {
 		})
 	]);
 
-	const upcomingReminders = allReminders
-		.filter((r) => upcomingShifts.some((s) => r.dueAt >= s.startAt && r.dueAt <= s.endAt))
+	// A dose given during a shift keeps its next occurrence listed (with the
+	// Mistap button) for the rest of that shift, even when it falls due later.
+	const inShift = (at: Date | null) =>
+		at !== null && upcomingShifts.some((s) => at >= s.startAt && at <= s.endAt);
+	const upcomingReminders = (await withMistap(allReminders))
+		.filter((r) => inShift(r.dueAt) || inShift(r.mistapAt))
 		.slice(0, 5);
 
 	// Custom quick log buttons render only inside the shift gate.
@@ -137,7 +141,8 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(existing, locals.user.id);
+		if (completeReminder(existing, locals.user.id) === 'noPillsLeft')
+			return fail(409, { error: t(locals.locale, 'error.noPillsLeft') });
 
 		return { completeSuccess: true };
 	},
@@ -166,6 +171,32 @@ export const actions: Actions = {
 		skipReminder(existing, locals.user.id);
 
 		return { skipSuccess: true };
+	},
+
+	mistap: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+
+		// Same gate as Done: taking a dose back is part of giving it.
+		const guard = await caretakerActionGuard(
+			locals.user.id,
+			params.companionId,
+			locals.locale,
+			'error.mustBeOnShiftToComplete'
+		);
+		if (guard) return guard;
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		if (!mistapDose(existing, String(data.get('doseId') ?? '')))
+			return fail(409, { error: t(locals.locale, 'error.nothingToMistap') });
+
+		return { mistapSuccess: true };
 	},
 
 	executeQuickLog: async ({ request, locals }) => {

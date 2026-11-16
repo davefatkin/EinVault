@@ -23,6 +23,8 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEventAria': 'Als erledigt markieren und Gesundheitsereignis erfassen',
 	'common.reminder.skip': 'Überspringen',
 	'common.reminder.skipAria': 'Dieses Vorkommen überspringen',
+	'common.reminder.mistap': 'Vertippt',
+	'common.reminder.mistapAria': 'Vertippt: letzte Dosis zurücknehmen und die Tablette zurücklegen',
 	'common.reminder.skippedAnnounce': '{title} übersprungen',
 	'common.reminder.toastUndoLabel': 'Rückgängig',
 	'common.reminder.toastDismiss': 'Schließen',
@@ -193,6 +195,11 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Du kannst nur deine eigenen Einträge löschen.',
 	'error.mustBeOnShiftToComplete': 'Du musst in einer Schicht sein, um Erinnerungen abzuschließen.',
 	'error.cannotSkipNonRecurring': 'Nur wiederkehrende Erinnerungen können übersprungen werden.',
+	'error.noPillsLeft':
+		'Keine Tabletten mehr. Aktualisiere nach dem Nachfüllen den Bestand und erfasse dann die Dosis.',
+	'error.nothingToMistap':
+		'Es gibt keine Dosis zum Zurücknehmen: Sie wurde schon zurückgenommen, oder danach kam eine weitere Dosis oder ein Überspringen.',
+	'error.invalidPillsLeft': 'Verbleibende Tabletten müssen eine ganze Zahl ab 0 sein.',
 	'error.mustBeOnShiftToSkip': 'Du musst in einer Schicht sein, um Erinnerungen zu überspringen.',
 
 	// Errors: Account
@@ -779,6 +786,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelDueDate': 'Fälligkeitsdatum *',
 	'page.reminders.labelNotes': 'Notizen',
 	'page.reminders.skippedBadge': 'Übersprungen',
+	'page.reminders.labelPillsLeft': 'Verbleibende Tabletten',
+	'page.reminders.pillsLeftHint':
+		'Jede erledigte Dosis zieht eine ab. Leer lassen, um nicht zu zählen.',
+	'page.reminders.pillsLeftBadge': 'Noch {count}',
 	'page.reminders.labelRecurring': 'Wiederkehrende Erinnerung',
 	'page.reminders.labelRepeatEvery': 'Wiederholen alle',
 	'page.reminders.labelRecurrenceUnit': 'Einheit',

@@ -23,6 +23,8 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEventAria': 'Marcar como hecho y registrar un evento de salud',
 	'common.reminder.skip': 'Omitir',
 	'common.reminder.skipAria': 'Omitir esta repetición',
+	'common.reminder.mistap': 'Error',
+	'common.reminder.mistapAria': 'Toque por error: deshacer la última dosis y devolver la pastilla',
 	'common.reminder.skippedAnnounce': '{title} omitido',
 	'common.reminder.toastUndoLabel': 'Deshacer',
 	'common.reminder.toastDismiss': 'Cerrar',
@@ -192,6 +194,11 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Solo puedes eliminar tus propias entradas.',
 	'error.mustBeOnShiftToComplete': 'Debes estar en turno para completar recordatorios.',
 	'error.cannotSkipNonRecurring': 'Solo se pueden omitir los recordatorios recurrentes.',
+	'error.noPillsLeft':
+		'No quedan pastillas. Actualiza la cantidad tras reponer y luego registra la dosis.',
+	'error.nothingToMistap':
+		'No hay ninguna dosis que deshacer: ya se deshizo, o después hubo otra dosis u omisión.',
+	'error.invalidPillsLeft': 'Las pastillas restantes deben ser un número entero de 0 o más.',
 	'error.mustBeOnShiftToSkip': 'Debes estar en turno para omitir recordatorios.',
 
 	// Errors: Account
@@ -777,6 +784,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelDueDate': 'Fecha de vencimiento *',
 	'page.reminders.labelNotes': 'Notas',
 	'page.reminders.skippedBadge': 'Omitido',
+	'page.reminders.labelPillsLeft': 'Pastillas restantes',
+	'page.reminders.pillsLeftHint':
+		'Cada dosis marcada como hecha resta una. Déjalo vacío para no llevar la cuenta.',
+	'page.reminders.pillsLeftBadge': 'Quedan {count}',
 	'page.reminders.labelRecurring': 'Recordatorio recurrente',
 	'page.reminders.labelRepeatEvery': 'Repetir cada',
 	'page.reminders.labelRecurrenceUnit': 'Unidad',

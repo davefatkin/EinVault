@@ -54,13 +54,25 @@
 		return reminderUrgency(dueAt, new Date());
 	}
 
+	function isToday(at: Date | string, now: Date) {
+		return new Date(at).toDateString() === now.toDateString();
+	}
+
 	type Reminder = (typeof data.upcomingReminders)[number];
 
-	// Needs-attention: overdue + today reminders, sorted overdue first
+	// Needs-attention: overdue + today reminders, sorted overdue first. A row
+	// whose dose was given today stays too, so its Mistap button doesn't vanish
+	// with the occurrence it just closed.
 	let attentionItems = $derived.by(() => {
+		const now = new Date();
 		return data.upcomingReminders
 			.map((r) => ({ r, urgency: urgencyOf(r.dueAt) }))
-			.filter(({ urgency }) => urgency === 'overdue' || urgency === 'today')
+			.filter(
+				({ r, urgency }) =>
+					urgency === 'overdue' ||
+					urgency === 'today' ||
+					(r.mistapAt !== null && isToday(r.mistapAt, now))
+			)
 			.sort((a, b) => {
 				if (a.urgency === 'overdue' && b.urgency !== 'overdue') return -1;
 				if (b.urgency === 'overdue' && a.urgency !== 'overdue') return 1;
@@ -179,7 +191,12 @@
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	const skipFormRegistry = new Map<string, HTMLFormElement>();
+	const mistapFormRegistry = new Map<string, HTMLFormElement>();
 	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleMistap(reminderId: string) {
+		pendingDismiss.mistap(reminderId, mistapFormRegistry.get(reminderId));
+	}
 
 	function handleComplete(reminderId: string, title: string, reminderType: string) {
 		const form = dismissFormRegistry.get(reminderId);
@@ -363,6 +380,13 @@
 						closeReminderDetail();
 						handleSkip(item.id, item.title);
 					}}
+					onMistap={r.mistapId
+						? () => {
+								const item = r;
+								closeReminderDetail();
+								handleMistap(item.id);
+							}
+						: undefined}
 				/>
 				{#if companion}
 					<Button
@@ -448,8 +472,20 @@
 								variant={urgency === 'overdue' ? 'coral' : 'gold'}
 								class="shrink-0 text-[10px] py-0 px-1.5"
 							>
-								{urgencyLabel(urgency)}
+								{#if urgency === 'upcoming'}
+									<LocalTime date={r.dueAt} />
+								{:else}
+									{urgencyLabel(urgency)}
+								{/if}
 							</Badge>
+							{#if r.pillsLeft !== null}
+								<Badge
+									variant={r.pillsLeft === 0 ? 'coral' : 'secondary'}
+									class="shrink-0 text-[10px] py-0 px-1.5"
+								>
+									{t(locale, 'page.reminders.pillsLeftBadge', { count: r.pillsLeft })}
+								</Badge>
+							{/if}
 						</button>
 						<!-- Complete / log-event buttons — stopPropagation keeps them from triggering the modal -->
 						<div onclick={(e) => e.stopPropagation()} role="none">
@@ -457,6 +493,7 @@
 								onDone={() => handleComplete(r.id, r.title, r.type)}
 								onDoneAndLog={() => submitWithAndEvent(r.id)}
 								onSkip={() => handleSkip(r.id, r.title)}
+								onMistap={r.mistapId ? () => handleMistap(r.id) : undefined}
 								isRecurring={r.isRecurring}
 								allowLogEvent={REMINDER_TO_HEALTH_TYPE[
 									r.type as keyof typeof REMINDER_TO_HEALTH_TYPE
@@ -489,6 +526,20 @@
 						class="hidden"
 					>
 						<input type="hidden" name="id" value={r.id} />
+					</form>
+				{/each}
+
+				<!-- Hidden mistap forms (rows that follow a committed dose) -->
+				{#each attentionItems.filter(({ r }) => r.mistapId) as { r } (r.id + '-mistap-form')}
+					<form
+						method="POST"
+						action="?/mistap"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: r.id, registry: mistapFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={r.id} />
+						<input type="hidden" name="doseId" value={r.mistapId} />
 					</form>
 				{/each}
 			</section>

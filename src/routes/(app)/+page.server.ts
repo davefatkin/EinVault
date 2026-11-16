@@ -1,9 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db, schema } from '$lib/server/db';
-import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
+import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
+import { completeReminder, skipReminder, mistapDose, withMistap } from '$lib/server/reminders';
 import { t } from '$lib/i18n';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 import {
@@ -33,6 +33,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const now = new Date();
 	const in7d = new Date(now.getTime() + SEVEN_DAYS_MS);
 	const ago7d = new Date(now.getTime() - SEVEN_DAYS_MS);
+	const ago24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 	const today = localDateISO(now);
 	const ids = companions.map((c) => c.id);
 
@@ -41,7 +42,12 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 			where: and(
 				inArray(schema.reminders.companionId, ids),
 				isNull(schema.reminders.completedAt),
-				lte(schema.reminders.dueAt, in7d)
+				// Recurring meds load whatever their due date, so the row a dose just
+				// spawned can stay on the dashboard with its Mistap (filtered below).
+				or(
+					lte(schema.reminders.dueAt, in7d),
+					and(eq(schema.reminders.type, 'medication'), eq(schema.reminders.isRecurring, true))
+				)
 			),
 			orderBy: (r, { asc }) => [asc(r.dueAt)],
 			with: { logger: { columns: { displayName: true } } }
@@ -81,7 +87,11 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	});
 
 	return {
-		upcomingReminders,
+		// Past the 7-day window only while a dose from the last day can still be
+		// taken back; the page narrows that to "given today" in local time.
+		upcomingReminders: (await withMistap(upcomingReminders)).filter(
+			(r) => r.dueAt <= in7d || (r.mistapAt !== null && r.mistapAt >= ago24h)
+		),
 		recentDaily,
 		recentHealth,
 		todayJournalByCompanion,
@@ -112,7 +122,8 @@ export const actions: Actions = {
 		});
 		if (!companion) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(reminder, locals.user.id);
+		if (completeReminder(reminder, locals.user.id) === 'noPillsLeft')
+			return fail(409, { error: t(locals.locale, 'error.noPillsLeft') });
 
 		if (andEvent) {
 			const mapped = REMINDER_TO_HEALTH_TYPE[reminder.type];
@@ -156,6 +167,33 @@ export const actions: Actions = {
 		skipReminder(reminder, locals.user.id);
 
 		return { skipSuccess: true };
+	},
+
+	mistap: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		if (locals.user.role === 'caretaker')
+			return fail(403, { error: t(locals.locale, 'error.forbidden') });
+
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const reminder = await db.query.reminders.findFirst({
+			where: eq(schema.reminders.id, id)
+		});
+		if (!reminder) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		const companion = await db.query.companions.findFirst({
+			where: and(
+				eq(schema.companions.id, reminder.companionId),
+				eq(schema.companions.isActive, true)
+			)
+		});
+		if (!companion) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		if (!mistapDose(reminder, String(data.get('doseId') ?? '')))
+			return fail(409, { error: t(locals.locale, 'error.nothingToMistap') });
+
+		return { mistapSuccess: true };
 	},
 
 	quickLog: async ({ request, locals }) => {

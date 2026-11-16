@@ -138,7 +138,8 @@ export function toApiReminder(row: ReminderRow) {
 		isRecurring: row.isRecurring,
 		completedAt: row.completedAt,
 		outcome: row.outcome,
-		seriesId: row.seriesId
+		seriesId: row.seriesId,
+		pillsLeft: row.pillsLeft
 	};
 }
 

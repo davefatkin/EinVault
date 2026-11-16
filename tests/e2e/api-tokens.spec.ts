@@ -743,6 +743,319 @@ test.describe('api tokens', () => {
 		expect(ids).toContain(body.nextReminderId);
 	});
 
+	test('a medication dose closes the occurrence and burns one pill; none left is refused', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Pill dispenser bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+		type ApiReminder = {
+			id: string;
+			title: string;
+			completedAt: string | null;
+			outcome: string | null;
+			seriesId: string | null;
+			dueAt: string;
+			pillsLeft: number | null;
+		};
+
+		// The pills-left field only appears once the type is medication.
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api dose recurring');
+		await expect(asMember.locator('#pillsLeft')).toBeHidden();
+		await asMember.locator('#type').selectOption('medication');
+		await asMember.locator('#pillsLeft').fill('2');
+		await asMember.locator('#dueAt').fill('2099-01-15T10:00');
+		await asMember.locator('#add-isRecurring').check();
+		await asMember.locator('#add-recurrenceInterval').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		async function series(): Promise<ApiReminder[]> {
+			const res = await asMember.request.get(
+				app.server.baseURL + `/api/reminders?companionId=${EIN}&status=all&limit=100`,
+				{ headers }
+			);
+			const { reminders } = await res.json();
+			return (reminders as ApiReminder[]).filter((r) => r.title === 'Api dose recurring');
+		}
+		const complete = (id: string) =>
+			asMember.request.post(app.server.baseURL + `/api/reminders/${id}/complete`, { headers });
+
+		const [origin] = await series();
+		expect(origin.pillsLeft).toBe(2);
+
+		// One dose: occurrence closed, count one lower, next due on the same schedule.
+		const dose = await complete(origin.id);
+		expect(dose.status()).toBe(200);
+		const body = await dose.json();
+		expect(body.id).toBe(origin.id);
+		expect(body.completedAt).toBeTruthy();
+		expect(body.pillsLeft).toBe(1);
+
+		let rows = await series();
+		const closed = rows.find((r) => r.id === origin.id)!;
+		expect(closed.completedAt).toBeTruthy();
+		expect(closed.outcome).toBe('completed');
+		const next = rows.find((r) => r.id === body.nextReminderId)!;
+		expect(next.completedAt).toBeNull();
+		expect(next.pillsLeft).toBe(1);
+		expect(next.seriesId).toBe(origin.id);
+		expect(new Date(next.dueAt).getTime() - new Date(origin.dueAt).getTime()).toBe(
+			24 * 60 * 60 * 1000
+		);
+
+		// A second dose for the same occurrence is refused and burns nothing.
+		const again = await complete(origin.id);
+		expect(again.status()).toBe(409);
+		expect((await again.json()).code).toBe('alreadyCompleted');
+		rows = await series();
+		expect(rows).toHaveLength(2);
+		expect(rows.find((r) => r.id === next.id)!.pillsLeft).toBe(1);
+
+		// Last pill, then the next occurrence has none: refused, left open.
+		const last = await complete(next.id);
+		expect((await last.json()).pillsLeft).toBe(0);
+		const empty = (await series()).find((r) => !r.completedAt)!;
+		expect(empty.pillsLeft).toBe(0);
+		const refused = await complete(empty.id);
+		expect(refused.status()).toBe(409);
+		expect((await refused.json()).code).toBe('noPillsLeft');
+		const stillOpen = (await series()).find((r) => r.id === empty.id)!;
+		expect(stillOpen.completedAt).toBeNull();
+		expect(stillOpen.pillsLeft).toBe(0);
+
+		// A skip doesn't need a pill and carries the count forward.
+		const skip = await asMember.request.post(
+			app.server.baseURL + `/api/reminders/${empty.id}/skip`,
+			{ headers }
+		);
+		expect(skip.status()).toBe(200);
+		expect((await skip.json()).pillsLeft).toBe(0);
+	});
+
+	test('mistap endpoint reopens a dose with its pill back; a second call adds nothing', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Pill mistap bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+		type ApiReminder = {
+			id: string;
+			title: string;
+			completedAt: string | null;
+			outcome: string | null;
+			pillsLeft: number | null;
+		};
+
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api mistap recurring');
+		await asMember.locator('#type').selectOption('medication');
+		await asMember.locator('#pillsLeft').fill('2');
+		await asMember.locator('#dueAt').fill('2099-02-15T10:00');
+		await asMember.locator('#add-isRecurring').check();
+		await asMember.locator('#add-recurrenceInterval').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		async function series(): Promise<ApiReminder[]> {
+			const res = await asMember.request.get(
+				app.server.baseURL + `/api/reminders?companionId=${EIN}&status=all&limit=100`,
+				{ headers }
+			);
+			const { reminders } = await res.json();
+			return (reminders as ApiReminder[]).filter((r) => r.title === 'Api mistap recurring');
+		}
+		const post = (id: string, action: 'complete' | 'mistap', extra: Record<string, string> = {}) =>
+			asMember.request.post(app.server.baseURL + `/api/reminders/${id}/${action}`, {
+				headers: { ...headers, ...extra }
+			});
+
+		const [origin] = await series();
+		const dose = await post(origin.id, 'complete');
+		expect(dose.status()).toBe(200);
+		const { nextReminderId, pillsLeft: afterDose } = await dose.json();
+		expect(afterDose).toBe(1);
+
+		// One call: that occurrence is open again and the count one higher.
+		const back = await post(origin.id, 'mistap');
+		expect(back.status()).toBe(200);
+		const reopened = await back.json();
+		expect(reopened.id).toBe(origin.id);
+		expect(reopened.completedAt).toBeNull();
+		expect(reopened.outcome).toBeNull();
+		expect(reopened.pillsLeft).toBe(2);
+
+		let rows = await series();
+		expect(rows.map((r) => r.id)).toEqual([origin.id]); // the spawned occurrence is gone
+		expect(rows[0].pillsLeft).toBe(2);
+		expect(rows.some((r) => r.id === nextReminderId)).toBe(false);
+
+		// A second call for that dose is refused and adds no pill.
+		const again = await post(origin.id, 'mistap');
+		expect(again.status()).toBe(409);
+		expect((await again.json()).code).toBe('nothingToMistap');
+		rows = await series();
+		expect(rows).toHaveLength(1);
+		expect(rows[0].pillsLeft).toBe(2);
+
+		// A keyed retry replays the first success instead of adding a pill.
+		expect((await (await post(origin.id, 'complete')).json()).pillsLeft).toBe(1);
+		const key = { 'Idempotency-Key': 'mistap-e2e-1' };
+		const keyed = await post(origin.id, 'mistap', key);
+		const replay = await post(origin.id, 'mistap', key);
+		expect(keyed.status()).toBe(200);
+		expect(replay.status()).toBe(200);
+		expect((await replay.json()).pillsLeft).toBe(2);
+		expect((await series())[0].pillsLeft).toBe(2);
+
+		// Unknown id → 404, same as complete.
+		expect((await post('does-not-exist', 'mistap')).status()).toBe(404);
+	});
+
+	test('a medication health event is not a dose: no pill taken, reminder left open', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Med event bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+		type ApiReminder = {
+			title: string;
+			completedAt: string | null;
+			pillsLeft: number | null;
+		};
+
+		await asMember.goto(`/${EIN}/reminders`);
+		await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+		await asMember.locator('#title').fill('Api med event recurring');
+		await asMember.locator('#type').selectOption('medication');
+		await asMember.locator('#pillsLeft').fill('4');
+		await asMember.locator('#dueAt').fill('2099-03-15T10:00');
+		await asMember.locator('#add-isRecurring').check();
+		await asMember.locator('#add-recurrenceInterval').fill('1');
+		await asMember.locator('select[name="recurrenceUnit"]').selectOption('day');
+		await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		const logged = await asMember.request.post(app.server.baseURL + '/api/health-events', {
+			headers,
+			data: { companionId: EIN, type: 'medication', title: 'Api med event recurring' }
+		});
+		expect(logged.status()).toBe(201);
+
+		const res = await asMember.request.get(
+			app.server.baseURL + `/api/reminders?companionId=${EIN}&status=all&limit=100`,
+			{ headers }
+		);
+		const rows = ((await res.json()).reminders as ApiReminder[]).filter(
+			(r) => r.title === 'Api med event recurring'
+		);
+		expect(rows).toHaveLength(1);
+		expect(rows[0].completedAt).toBeNull();
+		expect(rows[0].pillsLeft).toBe(4);
+	});
+
+	test('doses keep the schedule through a short month and a leap day, even after a refill edit', async ({
+		asMember,
+		app
+	}) => {
+		const raw = await createToken(asMember, 'Schedule keeper bot');
+		const headers = { Authorization: `Bearer ${raw}` };
+		type ApiReminder = { id: string; title: string; dueAt: string; completedAt: string | null };
+
+		// 12:00 local lands on the same calendar day in UTC (the test server's
+		// zone) for any offset within ±12h, so UTC dates below are stable.
+		async function addMed(title: string, dueAt: string, unit: 'month' | 'year') {
+			await asMember.goto(`/${EIN}/reminders`);
+			await asMember.getByRole('button', { name: 'Add Reminder' }).click();
+			await asMember.locator('#title').fill(title);
+			await asMember.locator('#type').selectOption('medication');
+			await asMember.locator('#pillsLeft').fill('10');
+			await asMember.locator('#dueAt').fill(dueAt);
+			await asMember.locator('#add-isRecurring').check();
+			await asMember.locator('#add-recurrenceInterval').fill('1');
+			await asMember.locator('select[name="recurrenceUnit"]').selectOption(unit);
+			await asMember.getByRole('button', { name: 'Save Reminder' }).click();
+			await expect(asMember.getByRole('button', { name: 'Save Reminder' })).toHaveCount(0, {
+				timeout: 8_000
+			});
+		}
+		async function open(title: string): Promise<ApiReminder> {
+			const res = await asMember.request.get(
+				app.server.baseURL + `/api/reminders?companionId=${EIN}&limit=200`,
+				{ headers }
+			);
+			const rows = ((await res.json()).reminders as ApiReminder[]).filter((r) => r.title === title);
+			expect(rows).toHaveLength(1);
+			return rows[0];
+		}
+		async function dose(title: string): Promise<ApiReminder> {
+			const before = await open(title);
+			const res = await asMember.request.post(
+				app.server.baseURL + `/api/reminders/${before.id}/complete`,
+				{ headers }
+			);
+			expect(res.status()).toBe(200);
+			const { nextReminderId, nextDueAt } = await res.json();
+			const next = await open(title);
+			// The dose reports the next due it scheduled, and that's what's stored.
+			expect(next.id).toBe(nextReminderId);
+			expect(nextDueAt).toBe(next.dueAt);
+			return next;
+		}
+		// A refill saved through the edit form, leaving the schedule untouched.
+		async function refill(title: string, id: string) {
+			await asMember.goto(`/${EIN}/reminders`);
+			await asMember
+				.locator('[data-active-group]')
+				.locator('div')
+				.filter({ hasText: title })
+				.first()
+				.getByRole('button', { name: 'Edit' })
+				.click();
+			const field = asMember.locator(`#edit-pillsLeft-${id}`);
+			await field.fill('30');
+			await asMember
+				.locator('form')
+				.filter({ has: field })
+				.getByRole('button', { name: 'Save', exact: true })
+				.click();
+			await expect(field).toHaveCount(0, { timeout: 8_000 });
+		}
+		const day = (r: ApiReminder) => new Date(r.dueAt).toISOString().slice(0, 10);
+
+		// Monthly on the 31st: Feb clamps to the 28th, then back to the 31st.
+		await addMed('Api clamp monthly', '2099-01-31T12:00', 'month');
+		const jan = await open('Api clamp monthly');
+		expect(day(jan)).toBe('2099-01-31');
+		const feb = await dose('Api clamp monthly');
+		expect(day(feb)).toBe('2099-02-28');
+		await refill('Api clamp monthly', feb.id);
+		const mar = await dose('Api clamp monthly');
+		expect(day(mar)).toBe('2099-03-31');
+		expect(new Date(mar.dueAt).getUTCHours()).toBe(new Date(jan.dueAt).getUTCHours());
+
+		// Yearly on Feb 29: Feb 28 in common years, Feb 29 again in the next leap year.
+		await addMed('Api clamp leap', '2092-02-29T12:00', 'year');
+		expect(day(await open('Api clamp leap'))).toBe('2092-02-29');
+		const y93 = await dose('Api clamp leap');
+		expect(day(y93)).toBe('2093-02-28');
+		await refill('Api clamp leap', y93.id);
+		expect(day(await dose('Api clamp leap'))).toBe('2094-02-28');
+		expect(day(await dose('Api clamp leap'))).toBe('2095-02-28');
+		expect(day(await dose('Api clamp leap'))).toBe('2096-02-29');
+	});
+
 	test('skip endpoint resolves a recurring reminder and spawns the next occurrence', async ({
 		asMember,
 		app

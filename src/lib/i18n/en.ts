@@ -21,6 +21,8 @@ const messages = {
 	'common.reminder.logEventAria': 'Mark done and log a Health Event',
 	'common.reminder.skip': 'Skip',
 	'common.reminder.skipAria': 'Skip this occurrence',
+	'common.reminder.mistap': 'Mistap',
+	'common.reminder.mistapAria': 'Mistap: take back the last dose and put the pill back',
 	'common.reminder.skippedAnnounce': '{title} skipped',
 	'common.reminder.toastUndoLabel': 'Undo',
 	'common.reminder.toastDismiss': 'Dismiss',
@@ -180,6 +182,10 @@ const messages = {
 	'error.canOnlyDeleteOwnEntries': 'You can only delete your own entries.',
 	'error.mustBeOnShiftToComplete': 'You must be on shift to complete reminders.',
 	'error.cannotSkipNonRecurring': 'Only recurring reminders can be skipped.',
+	'error.noPillsLeft': 'No pills left. Update the count after a refill, then log the dose.',
+	'error.nothingToMistap':
+		'There is no dose to take back: it was already taken back, or a later dose or skip came after it.',
+	'error.invalidPillsLeft': 'Pills left must be a whole number, 0 or more.',
 	'error.mustBeOnShiftToSkip': 'You must be on shift to skip reminders.',
 
 	// Errors: Account
@@ -767,6 +773,9 @@ const messages = {
 	'page.reminders.labelDueDate': 'Due date *',
 	'page.reminders.labelNotes': 'Notes',
 	'page.reminders.skippedBadge': 'Skipped',
+	'page.reminders.labelPillsLeft': 'Pills left',
+	'page.reminders.pillsLeftHint': 'Each dose marked done takes one. Leave blank to not track.',
+	'page.reminders.pillsLeftBadge': '{count} left',
 	'page.reminders.labelRecurring': 'Recurring reminder',
 	'page.reminders.labelRepeatEvery': 'Repeat every',
 	'page.reminders.labelRecurrenceUnit': 'Unit',

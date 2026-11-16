@@ -23,6 +23,8 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEventAria': 'Segna come fatto e registra un evento sanitario',
 	'common.reminder.skip': 'Salta',
 	'common.reminder.skipAria': 'Salta questa occorrenza',
+	'common.reminder.mistap': 'Errore',
+	'common.reminder.mistapAria': 'Tocco per errore: annulla l’ultima dose e rimetti la pillola',
 	'common.reminder.skippedAnnounce': '{title} saltato',
 	'common.reminder.toastUndoLabel': 'Annulla',
 	'common.reminder.toastDismiss': 'Chiudi',
@@ -189,6 +191,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Puoi eliminare solo le tue voci.',
 	'error.mustBeOnShiftToComplete': 'Devi essere in turno per completare i promemoria.',
 	'error.cannotSkipNonRecurring': 'Solo i promemoria ricorrenti possono essere saltati.',
+	'error.noPillsLeft':
+		'Pillole esaurite. Aggiorna la quantità dopo il rifornimento, poi registra la dose.',
+	'error.nothingToMistap':
+		'Nessuna dose da annullare: è già stata annullata, oppure dopo c’è stata un’altra dose o un salto.',
+	'error.invalidPillsLeft':
+		'Le pillole rimanenti devono essere un numero intero pari o superiore a 0.',
 	'error.mustBeOnShiftToSkip': 'Devi essere in turno per saltare i promemoria.',
 
 	// Errors: Account
@@ -775,6 +783,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelDueDate': 'Data di scadenza *',
 	'page.reminders.labelNotes': 'Note',
 	'page.reminders.skippedBadge': 'Saltato',
+	'page.reminders.labelPillsLeft': 'Pillole rimanenti',
+	'page.reminders.pillsLeftHint':
+		'Ogni dose segnata come fatta ne toglie una. Lascia vuoto per non tenere il conto.',
+	'page.reminders.pillsLeftBadge': 'Ne restano {count}',
 	'page.reminders.labelRecurring': 'Promemoria ricorrente',
 	'page.reminders.labelRepeatEvery': 'Ripeti ogni',
 	'page.reminders.labelRecurrenceUnit': 'Unità',

@@ -50,6 +50,17 @@ export function parseDurationMinutes(value: unknown): number | null {
 	return Math.min(n, 480);
 }
 
+// Pills-left count from a form field. Blank means "not tracked" (null);
+// anything else must be a whole number in [0, 100000] or it's invalid.
+export function parsePillsLeft(value: unknown): number | null | 'invalid' {
+	if (value === null || value === undefined) return null;
+	const raw = String(value).trim();
+	if (raw === '') return null;
+	if (!/^\d+$/.test(raw)) return 'invalid';
+	const n = Number(raw);
+	return n <= 100_000 ? n : 'invalid';
+}
+
 // Logged-at timestamp from a datetime-local field or an ISO string. Null when
 // absent, unparseable, or outside a sane window (later than tomorrow to allow
 // for clock skew, or older than 5 years) — callers default to "now", so a
@@ -223,6 +234,38 @@ export function parseRecurrence(data: FormData, dueAt: Date): ParsedRecurrence |
 	}
 
 	return { unit, interval, anchor, anchorValue };
+}
+
+/**
+ * On edit, keep the stored interval anchor (the series' original day-of-month,
+ * or packed MMDD for yearly) when the edit leaves the unit and the due date
+ * alone. A clamped occurrence (Feb 28 in a "31st" monthly series, Feb 28 in a
+ * leap-day yearly one) would otherwise re-anchor to the clamped day and move
+ * every later date. Moving the due date re-anchors to the new date as usual.
+ */
+export function keepIntervalAnchor(
+	parsed: ParsedRecurrence,
+	dueAt: Date,
+	existing: {
+		dueAt: Date;
+		recurrenceUnit: RecurrenceUnit | null;
+		recurrenceAnchor: RecurrenceAnchor | null;
+		recurrenceAnchorValue: number | null;
+	}
+): ParsedRecurrence {
+	const MINUTE = 60_000;
+	const sameDue =
+		Math.floor(existing.dueAt.getTime() / MINUTE) === Math.floor(dueAt.getTime() / MINUTE);
+	if (
+		parsed.anchor === 'interval' &&
+		(parsed.unit === 'month' || parsed.unit === 'year') &&
+		existing.recurrenceUnit === parsed.unit &&
+		(existing.recurrenceAnchor ?? 'interval') === 'interval' &&
+		existing.recurrenceAnchorValue !== null &&
+		sameDue
+	)
+		return { ...parsed, anchorValue: existing.recurrenceAnchorValue };
+	return parsed;
 }
 
 // Weight unit

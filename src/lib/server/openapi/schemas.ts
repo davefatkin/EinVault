@@ -305,7 +305,12 @@ export const Reminder = z
 		isRecurring: z.boolean(),
 		completedAt: z.string().nullable(),
 		outcome: z.enum(['completed', 'skipped']).nullable(),
-		seriesId: z.string().nullable()
+		seriesId: z.string().nullable(),
+		pillsLeft: z
+			.number()
+			.int()
+			.nullable()
+			.openapi({ description: 'Medication supply on hand; null when not tracked.' })
 	})
 	.openapi('Reminder');
 
@@ -317,7 +322,16 @@ export const CompleteResponse = z
 	.object({
 		id: z.string(),
 		completedAt: z.string(),
-		nextReminderId: z.string().nullable()
+		nextReminderId: z.string().nullable(),
+		nextDueAt: z.string().nullable().openapi({
+			description:
+				'Due date of the spawned next occurrence, on the series schedule (a 31st or Feb 29 anchor clamps in short months and returns after); null for a one-off.'
+		}),
+		pillsLeft: z
+			.number()
+			.int()
+			.nullable()
+			.openapi({ description: 'Pills left after this dose; null when not tracked.' })
 	})
 	.openapi('CompleteResponse');
 
@@ -325,7 +339,16 @@ export const SkipResponse = z
 	.object({
 		id: z.string(),
 		skippedAt: z.string(),
-		nextReminderId: z.string().nullable()
+		nextReminderId: z.string().nullable(),
+		nextDueAt: z.string().nullable().openapi({
+			description:
+				'Due date of the spawned next occurrence, on the series schedule (a 31st or Feb 29 anchor clamps in short months and returns after); null for a one-off.'
+		}),
+		pillsLeft: z
+			.number()
+			.int()
+			.nullable()
+			.openapi({ description: 'Pills left (unchanged by a skip); null when not tracked.' })
 	})
 	.openapi('SkipResponse');
 

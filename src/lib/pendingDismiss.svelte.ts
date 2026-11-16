@@ -168,6 +168,19 @@ export function createPendingDismissals(
 		delete pending[id];
 	}
 
+	// Mistap on a reminder row takes back the latest tap. A Done or Skip still
+	// inside its undo window never reached the server, so cancel it; otherwise
+	// submit the row's mistap form, which takes back the committed dose.
+	function mistap(id: string, form: HTMLFormElement | undefined) {
+		for (const key of [id, `skip-${id}`]) {
+			if (pending[key]) {
+				undo(key);
+				return;
+			}
+		}
+		if (form?.isConnected) safeSubmit(form);
+	}
+
 	function cleanup() {
 		for (const id of Object.keys(pending)) {
 			removeToast(pending[id].toastId);
@@ -179,6 +192,7 @@ export function createPendingDismissals(
 		queue,
 		commitWithEvent,
 		undo,
+		mistap,
 		cleanup
 	};
 }

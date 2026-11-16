@@ -1,7 +1,15 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
-import { computeNextDueAt, completeReminder, skipReminder } from './reminders';
+import {
+	computeNextDueAt,
+	completeReminder,
+	skipReminder,
+	restoreReminder,
+	mistapDose,
+	takeBackDose,
+	withMistap
+} from './reminders';
 
 type Reminder = typeof schema.reminders.$inferSelect;
 
@@ -15,6 +23,12 @@ function reminder(partial: Partial<Reminder>): Reminder {
 		dueAt: new Date(2026, 0, 15, 9, 0, 0),
 		...partial
 	} as Reminder;
+}
+
+// Narrow a completeReminder result to a resolved dose, failing the test otherwise.
+function dosed(res: ReturnType<typeof completeReminder>) {
+	if (!res || res === 'noPillsLeft') throw new Error(`expected a resolved dose, got ${res}`);
+	return res;
 }
 
 describe('computeNextDueAt', () => {
@@ -175,14 +189,13 @@ describe('completeReminder', () => {
 		} as typeof schema.reminders.$inferInsert);
 		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r3') });
 
-		const res = completeReminder(row!, 'u-rem');
+		const res = dosed(completeReminder(row!, 'u-rem'));
 
-		expect(res).not.toBeNull();
-		expect(res!.completedAt).toBeInstanceOf(Date);
-		expect(typeof res!.nextReminderId).toBe('string');
+		expect(res.completedAt).toBeInstanceOf(Date);
+		expect(typeof res.nextReminderId).toBe('string');
 
 		const next = await db.query.reminders.findFirst({
-			where: eq(schema.reminders.id, res!.nextReminderId!)
+			where: eq(schema.reminders.id, res.nextReminderId!)
 		});
 		expect(next).toBeDefined();
 		expect(next!.seriesId).toBe('r3');
@@ -200,10 +213,9 @@ describe('completeReminder', () => {
 		} as typeof schema.reminders.$inferInsert);
 		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r4') });
 
-		const res = completeReminder(row!, 'u-rem');
+		const res = dosed(completeReminder(row!, 'u-rem'));
 
-		expect(res).not.toBeNull();
-		expect(res!.nextReminderId).toBeNull();
+		expect(res.nextReminderId).toBeNull();
 	});
 
 	it('returns null and spawns nothing for a second complete on an already-completed reminder', async () => {
@@ -221,9 +233,8 @@ describe('completeReminder', () => {
 		} as typeof schema.reminders.$inferInsert);
 		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r5') });
 
-		const first = completeReminder(row!, 'u-rem');
-		expect(first).not.toBeNull();
-		expect(typeof first!.nextReminderId).toBe('string');
+		const first = dosed(completeReminder(row!, 'u-rem'));
+		expect(typeof first.nextReminderId).toBe('string');
 
 		const countAfterFirst = (
 			await db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, 'r5') })
@@ -366,5 +377,345 @@ describe('completeReminder outcome', () => {
 			where: eq(schema.reminders.id, id)
 		}))!;
 		expect(after.outcome).toBe('completed');
+	});
+});
+
+describe('medication pill count', () => {
+	async function insertMed(id: string, pillsLeft: number | null, isRecurring = true) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Carprofen',
+			type: 'medication',
+			dueAt: new Date(2026, 2, 1, 8, 0, 0),
+			isRecurring,
+			recurrenceUnit: isRecurring ? 'day' : null,
+			recurrenceInterval: isRecurring ? 1 : null,
+			seriesId: isRecurring ? id : null,
+			pillsLeft,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		return (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+	}
+	const get = async (id: string) =>
+		(await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+	const series = async (id: string) =>
+		db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, id) });
+
+	it('a dose closes the occurrence, burns one pill, and keeps the schedule', async () => {
+		const row = await insertMed('med-1', 10);
+
+		const res = dosed(completeReminder(row, 'u-rem'));
+		expect(res.pillsLeft).toBe(9);
+
+		const done = await get('med-1');
+		expect(done.completedAt).not.toBeNull();
+		expect(done.outcome).toBe('completed');
+		expect(done.pillsLeft).toBe(9);
+
+		const next = await get(res.nextReminderId!);
+		expect(next.completedAt).toBeNull();
+		expect(next.pillsLeft).toBe(9);
+		expect(next.dueAt).toEqual(new Date(2026, 2, 2, 8, 0, 0));
+		expect(next.seriesId).toBe('med-1');
+	});
+
+	it('refuses a dose with none left and leaves the occurrence open', async () => {
+		const row = await insertMed('med-2', 0);
+
+		expect(completeReminder(row, 'u-rem')).toBe('noPillsLeft');
+
+		const after = await get('med-2');
+		expect(after.completedAt).toBeNull();
+		expect(after.outcome).toBeNull();
+		expect(after.pillsLeft).toBe(0);
+		expect(await series('med-2')).toHaveLength(1);
+	});
+
+	it('a second dose for the same occurrence burns nothing', async () => {
+		const row = await insertMed('med-3', 5);
+
+		const first = dosed(completeReminder(row, 'u-rem'));
+		// Stale pre-completion snapshot, as a double-click or retry would send.
+		expect(completeReminder(row, 'u-rem')).toBeNull();
+
+		expect((await get('med-3')).pillsLeft).toBe(4);
+		expect((await get(first.nextReminderId!)).pillsLeft).toBe(4);
+		expect(await series('med-3')).toHaveLength(2);
+	});
+
+	it('a skip burns nothing and carries the count to the next occurrence', async () => {
+		const row = await insertMed('med-4', 3);
+
+		const res = skipReminder(row, 'u-rem');
+		expect(res!.pillsLeft).toBe(3);
+		expect((await get('med-4')).pillsLeft).toBe(3);
+		expect((await get(res!.nextReminderId!)).pillsLeft).toBe(3);
+	});
+
+	it('a skip is allowed with none left', async () => {
+		const row = await insertMed('med-5', 0);
+		const res = skipReminder(row, 'u-rem');
+		expect(res).not.toBeNull();
+		expect((await get(res!.nextReminderId!)).pillsLeft).toBe(0);
+	});
+
+	it('reads the live count, not the caller snapshot (refill after load)', async () => {
+		const stale = await insertMed('med-6', 0);
+		await db
+			.update(schema.reminders)
+			.set({ pillsLeft: 30 })
+			.where(eq(schema.reminders.id, 'med-6'));
+
+		const res = dosed(completeReminder(stale, 'u-rem'));
+		expect(res.pillsLeft).toBe(29);
+	});
+
+	it('restore of a dose reopens the occurrence and puts the pill back', async () => {
+		const row = await insertMed('med-7', 2);
+		expect(dosed(completeReminder(row, 'u-rem')).pillsLeft).toBe(1);
+
+		expect(restoreReminder(await get('med-7'))).toBe(true);
+
+		const after = await get('med-7');
+		expect(after.completedAt).toBeNull();
+		expect(after.outcome).toBeNull();
+		expect(after.pillsLeft).toBe(2);
+		// The spawned next occurrence is gone; the series rewinds to this one.
+		expect(await series('med-7')).toHaveLength(1);
+
+		// A double-submitted restore is a no-op (no second pill handed back).
+		expect(restoreReminder(after)).toBe(false);
+		expect((await get('med-7')).pillsLeft).toBe(2);
+	});
+
+	it('restore of a skip leaves the count alone', async () => {
+		const row = await insertMed('med-8', 4);
+		skipReminder(row, 'u-rem');
+
+		restoreReminder(await get('med-8'));
+		expect((await get('med-8')).pillsLeft).toBe(4);
+	});
+
+	it('one-off dose burns a pill; untracked reminders are unaffected', async () => {
+		const once = await insertMed('med-9', 1, false);
+		const res = dosed(completeReminder(once, 'u-rem'));
+		expect(res.nextReminderId).toBeNull();
+		expect(res.pillsLeft).toBe(0);
+
+		const untracked = await insertMed('med-10', null);
+		const res2 = dosed(completeReminder(untracked, 'u-rem'));
+		expect(res2.pillsLeft).toBeNull();
+		expect((await get(res2.nextReminderId!)).pillsLeft).toBeNull();
+	});
+});
+
+describe('mistap', () => {
+	async function insertMed(
+		id: string,
+		pillsLeft: number | null,
+		type: Reminder['type'] = 'medication'
+	) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Mistap med',
+			type,
+			dueAt: new Date(2026, 3, 1, 8, 0, 0),
+			isRecurring: true,
+			recurrenceUnit: 'day',
+			recurrenceInterval: 1,
+			seriesId: id,
+			pillsLeft,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		return (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+	}
+	const get = async (id: string) =>
+		db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) });
+	const series = async (id: string) =>
+		db.query.reminders.findMany({ where: eq(schema.reminders.seriesId, id) });
+
+	it('points the next occurrence at the dose it follows', async () => {
+		const row = await insertMed('mt-1', 5);
+		const dose = dosed(completeReminder(row, 'u-rem'));
+		const next = (await get(dose.nextReminderId!))!;
+
+		const [annotated] = await withMistap([next]);
+		expect(annotated.mistapId).toBe('mt-1');
+		expect(annotated.mistapAt).toEqual((await get('mt-1'))!.completedAt);
+	});
+
+	it('offers nothing after a skip, before any dose, or for non-medication', async () => {
+		const skipped = await insertMed('mt-2', 5);
+		const afterSkip = (await get(skipReminder(skipped, 'u-rem')!.nextReminderId!))!;
+		const fresh = await insertMed('mt-3', 5);
+		const vet = await insertMed('mt-4', null, 'vet');
+		const afterVet = (await get(dosed(completeReminder(vet, 'u-rem')).nextReminderId!))!;
+
+		const annotated = await withMistap([afterSkip, fresh, afterVet]);
+		expect(annotated.map((r) => r.mistapId)).toEqual([null, null, null]);
+	});
+
+	it('takes the dose back: occurrence reopened, pill returned, spawned row gone', async () => {
+		const row = await insertMed('mt-5', 3);
+		const dose = dosed(completeReminder(row, 'u-rem'));
+		const next = (await get(dose.nextReminderId!))!;
+		expect(next.pillsLeft).toBe(2);
+
+		expect(mistapDose(next, 'mt-5')).toBe(true);
+
+		const back = (await get('mt-5'))!;
+		expect(back.completedAt).toBeNull();
+		expect(back.outcome).toBeNull();
+		expect(back.pillsLeft).toBe(3);
+		expect(await get(next.id)).toBeUndefined();
+		expect(await series('mt-5')).toHaveLength(1);
+	});
+
+	it('a double click takes back only one dose', async () => {
+		const row = await insertMed('mt-6', 4);
+		const first = dosed(completeReminder(row, 'u-rem'));
+		const second = dosed(completeReminder((await get(first.nextReminderId!))!, 'u-rem'));
+		const open = (await get(second.nextReminderId!))!;
+		expect(open.pillsLeft).toBe(2);
+
+		expect(mistapDose(open, first.nextReminderId!)).toBe(true);
+		// Replayed with the same (now deleted) open row and dose id.
+		expect(mistapDose(open, first.nextReminderId!)).toBe(false);
+
+		expect((await get(first.nextReminderId!))!.pillsLeft).toBe(3);
+		expect((await get('mt-6'))!.completedAt).not.toBeNull();
+		expect(await series('mt-6')).toHaveLength(2);
+	});
+
+	it('refuses a stale dose id or an occurrence that was already dosed', async () => {
+		const row = await insertMed('mt-7', 4);
+		const first = dosed(completeReminder(row, 'u-rem'));
+		const next = (await get(first.nextReminderId!))!;
+
+		expect(mistapDose(next, 'not-the-dose')).toBe(false);
+
+		// Someone else doses `next` before the Mistap arrives.
+		dosed(completeReminder(next, 'u-rem'));
+		expect(mistapDose(next, 'mt-7')).toBe(false);
+		expect((await get('mt-7'))!.completedAt).not.toBeNull();
+		expect(await series('mt-7')).toHaveLength(3);
+	});
+});
+
+describe('takeBackDose', () => {
+	async function insertMed(id: string, pillsLeft: number | null, isRecurring = true) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Take back med',
+			type: 'medication',
+			dueAt: new Date(2026, 4, 1, 8, 0, 0),
+			isRecurring,
+			recurrenceUnit: isRecurring ? 'day' : null,
+			recurrenceInterval: isRecurring ? 1 : null,
+			seriesId: isRecurring ? id : null,
+			pillsLeft,
+			loggedBy: 'u-rem'
+		} as typeof schema.reminders.$inferInsert);
+		return (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+	}
+	const get = async (id: string) =>
+		db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) });
+
+	it('reopens the dose by its own id with the pill back; a second call adds nothing', async () => {
+		const dose = dosed(completeReminder(await insertMed('tb-1', 6), 'u-rem'));
+		expect(dose.pillsLeft).toBe(5);
+
+		const reopened = takeBackDose('tb-1');
+		expect(reopened).not.toBeNull();
+		expect(reopened!.completedAt).toBeNull();
+		expect(reopened!.outcome).toBeNull();
+		expect(reopened!.pillsLeft).toBe(6);
+		expect(await get(dose.nextReminderId!)).toBeUndefined();
+
+		expect(takeBackDose('tb-1')).toBeNull();
+		expect((await get('tb-1'))!.pillsLeft).toBe(6);
+	});
+
+	it('refuses a dose that a later dose or skip came after', async () => {
+		const first = dosed(completeReminder(await insertMed('tb-2', 6), 'u-rem'));
+		skipReminder((await get(first.nextReminderId!))!, 'u-rem');
+
+		expect(takeBackDose('tb-2')).toBeNull();
+		expect((await get('tb-2'))!.completedAt).not.toBeNull();
+		expect((await get(first.nextReminderId!))!.outcome).toBe('skipped');
+	});
+
+	it('refuses a skip, an open occurrence, and an unknown id', async () => {
+		const skip = skipReminder(await insertMed('tb-3', 2), 'u-rem')!;
+		expect(takeBackDose('tb-3')).toBeNull();
+		expect(takeBackDose(skip.nextReminderId!)).toBeNull();
+		expect(takeBackDose('tb-nope')).toBeNull();
+	});
+
+	it('takes back a one-off dose', async () => {
+		dosed(completeReminder(await insertMed('tb-4', 1, false), 'u-rem'));
+		const reopened = takeBackDose('tb-4');
+		expect(reopened!.completedAt).toBeNull();
+		expect(reopened!.pillsLeft).toBe(1);
+	});
+});
+
+describe('dose keeps the schedule across short months and leap days', () => {
+	async function walk(id: string, partial: Partial<Reminder>, doses: number) {
+		await db.insert(schema.reminders).values({
+			id,
+			companionId: 'c-rem',
+			title: 'Schedule walk',
+			type: 'medication',
+			isRecurring: true,
+			recurrenceInterval: 1,
+			recurrenceAnchor: 'interval',
+			seriesId: id,
+			pillsLeft: 100,
+			loggedBy: 'u-rem',
+			...partial
+		} as typeof schema.reminders.$inferInsert);
+		let row = (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, id) }))!;
+		const dues = [row.dueAt];
+		for (let i = 0; i < doses; i++) {
+			const next = dosed(completeReminder(row, 'u-rem')).nextReminderId!;
+			row = (await db.query.reminders.findFirst({ where: eq(schema.reminders.id, next) }))!;
+			dues.push(row.dueAt);
+		}
+		return dues;
+	}
+
+	it('monthly on the 31st: clamps in short months and returns to the 31st', async () => {
+		// anchorValue 31 is what the add form stores for a Jan 31 interval series.
+		const dues = await walk(
+			'sched-m31',
+			{ recurrenceUnit: 'month', recurrenceAnchorValue: 31, dueAt: new Date(2026, 0, 31, 8, 0) },
+			4
+		);
+		expect(dues).toEqual([
+			new Date(2026, 0, 31, 8, 0),
+			new Date(2026, 1, 28, 8, 0),
+			new Date(2026, 2, 31, 8, 0),
+			new Date(2026, 3, 30, 8, 0),
+			new Date(2026, 4, 31, 8, 0)
+		]);
+	});
+
+	it('yearly on Feb 29: Feb 28 in common years, back to Feb 29 in the next leap year', async () => {
+		const dues = await walk(
+			'sched-y229',
+			{ recurrenceUnit: 'year', recurrenceAnchorValue: 229, dueAt: new Date(2028, 1, 29, 8, 0) },
+			4
+		);
+		expect(dues).toEqual([
+			new Date(2028, 1, 29, 8, 0),
+			new Date(2029, 1, 28, 8, 0),
+			new Date(2030, 1, 28, 8, 0),
+			new Date(2031, 1, 28, 8, 0),
+			new Date(2032, 1, 29, 8, 0)
+		]);
 	});
 });

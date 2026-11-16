@@ -2,10 +2,21 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
-import { eq, and, lt, gt, isNotNull } from 'drizzle-orm';
+import { eq, and, lt, isNotNull } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
-import { parseReminderType, parseRecurrence } from '$lib/server/validation';
-import { completeReminder, skipReminder } from '$lib/server/reminders';
+import {
+	parseReminderType,
+	parseRecurrence,
+	parsePillsLeft,
+	keepIntervalAnchor
+} from '$lib/server/validation';
+import {
+	completeReminder,
+	skipReminder,
+	restoreReminder,
+	mistapDose,
+	withMistap
+} from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
@@ -23,7 +34,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 
 	return {
 		companion,
-		reminders,
+		reminders: await withMistap(reminders),
 		defaultRecurrenceUnit: locals.user.defaultRecurrenceUnit ?? null
 	};
 };
@@ -46,6 +57,11 @@ export const actions: Actions = {
 		if (isRecurring && !recurrence)
 			return fail(400, { error: t(locals.locale, 'error.invalidRecurrence') });
 
+		// Only medication reminders track a supply; other types store NULL.
+		const pillsLeft = type === 'medication' ? parsePillsLeft(data.get('pillsLeft')) : null;
+		if (pillsLeft === 'invalid')
+			return fail(400, { error: t(locals.locale, 'error.invalidPillsLeft') });
+
 		const id = generateId(15);
 		await db.insert(schema.reminders).values({
 			id,
@@ -60,6 +76,7 @@ export const actions: Actions = {
 			recurrenceAnchor: recurrence?.anchor ?? null,
 			recurrenceAnchorValue: recurrence?.anchorValue ?? null,
 			seriesId: isRecurring ? id : null,
+			pillsLeft,
 			loggedBy: locals.user.id
 		});
 
@@ -81,15 +98,29 @@ export const actions: Actions = {
 		if (isNaN(dueAt.getTime()))
 			return fail(400, { error: t(locals.locale, 'error.validDueDateRequired') });
 
-		const recurrence = isRecurring ? parseRecurrence(data, dueAt) : null;
-		if (isRecurring && !recurrence)
+		const parsedRecurrence = isRecurring ? parseRecurrence(data, dueAt) : null;
+		if (isRecurring && !parsedRecurrence)
 			return fail(400, { error: t(locals.locale, 'error.invalidRecurrence') });
+
+		// Only medication reminders track a supply; other types store NULL.
+		const pillsLeft = type === 'medication' ? parsePillsLeft(data.get('pillsLeft')) : null;
+		if (pillsLeft === 'invalid')
+			return fail(400, { error: t(locals.locale, 'error.invalidPillsLeft') });
 
 		const existing = await db.query.reminders.findFirst({
 			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId)),
-			columns: { id: true }
+			columns: {
+				dueAt: true,
+				recurrenceUnit: true,
+				recurrenceAnchor: true,
+				recurrenceAnchorValue: true
+			}
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		// An edit that doesn't touch the schedule (e.g. a refill on a clamped
+		// Feb 28 occurrence) must not re-anchor the series to the clamped day.
+		const recurrence = parsedRecurrence && keepIntervalAnchor(parsedRecurrence, dueAt, existing);
 
 		await db
 			.update(schema.reminders)
@@ -102,7 +133,10 @@ export const actions: Actions = {
 				recurrenceUnit: recurrence?.unit ?? null,
 				recurrenceInterval: recurrence?.interval ?? null,
 				recurrenceAnchor: recurrence?.anchor ?? null,
-				recurrenceAnchorValue: recurrence?.anchorValue ?? null
+				recurrenceAnchorValue: recurrence?.anchorValue ?? null,
+				// Forms that don't render the field (e.g. editing a resolved
+				// occurrence) leave the stored count alone.
+				...(data.has('pillsLeft') || type !== 'medication' ? { pillsLeft } : {})
 			})
 			.where(eq(schema.reminders.id, id));
 
@@ -120,7 +154,8 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(existing, locals.user.id);
+		if (completeReminder(existing, locals.user.id) === 'noPillsLeft')
+			return fail(409, { error: t(locals.locale, 'error.noPillsLeft') });
 
 		// Prune completed non-recurring reminders older than 30 days
 		const thirtyDaysAgo = new Date();
@@ -168,6 +203,22 @@ export const actions: Actions = {
 		return { skipSuccess: true };
 	},
 
+	mistap: async ({ request, params, locals }) => {
+		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '');
+
+		const existing = await db.query.reminders.findFirst({
+			where: and(eq(schema.reminders.id, id), eq(schema.reminders.companionId, params.companionId))
+		});
+		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+
+		if (!mistapDose(existing, String(data.get('doseId') ?? '')))
+			return fail(409, { error: t(locals.locale, 'error.nothingToMistap') });
+
+		return { mistapSuccess: true };
+	},
+
 	restore: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
 		const data = await request.formData();
@@ -179,27 +230,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		db.transaction((tx) => {
-			tx.update(schema.reminders)
-				.set({ completedAt: null, completedBy: null, outcome: null })
-				.where(eq(schema.reminders.id, id))
-				.run();
-
-			// If recurring, delete all future instances in this series. Spawned
-			// instances carry seriesId = origin.seriesId ?? origin.id, so match on
-			// the same fallback: rows whose own seriesId is null still own the
-			// instances their id seeded.
-			if (existing.isRecurring) {
-				tx.delete(schema.reminders)
-					.where(
-						and(
-							eq(schema.reminders.seriesId, existing.seriesId ?? existing.id),
-							gt(schema.reminders.dueAt, existing.dueAt)
-						)
-					)
-					.run();
-			}
-		});
+		restoreReminder(existing);
 
 		return { restoreSuccess: true };
 	},

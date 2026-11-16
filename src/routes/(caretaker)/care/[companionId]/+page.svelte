@@ -145,8 +145,13 @@
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	const skipFormRegistry = new Map<string, HTMLFormElement>();
+	const mistapFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleMistap(reminderId: string) {
+		pendingDismiss.mistap(reminderId, mistapFormRegistry.get(reminderId));
+	}
 
 	function handleWindowKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
@@ -301,6 +306,14 @@
 						closeReminderDetail();
 						pendingDismiss.queue(`skip-${item.id}`, form, item.title, { kind: 'skip' });
 					}}
+					onMistap={selectedReminder.mistapId
+						? () => {
+								if (!selectedReminder) return;
+								const item = selectedReminder;
+								closeReminderDetail();
+								handleMistap(item.id);
+							}
+						: undefined}
 				/>
 			</div>
 		</div>
@@ -401,6 +414,15 @@
 										>{t(locale, 'page.dashboard.caretaker.reminderOverdue')}</Badge
 									>
 								{/if}
+								{#if reminder.pillsLeft !== null}
+									<Badge
+										variant={reminder.pillsLeft === 0 ? 'coral' : 'secondary'}
+										class="shrink-0 text-xs"
+										>{t(locale, 'page.reminders.pillsLeftBadge', {
+											count: reminder.pillsLeft
+										})}</Badge
+									>
+								{/if}
 								<span
 									class="ml-auto shrink-0 text-xs {isOverdue
 										? 'text-coral'
@@ -434,6 +456,7 @@
 												kind: 'skip'
 											});
 									}}
+									onMistap={reminder.mistapId ? () => handleMistap(reminder.id) : undefined}
 								/>
 							</form>
 							{#if reminder.isRecurring}
@@ -445,6 +468,18 @@
 									class="hidden"
 								>
 									<input type="hidden" name="id" value={reminder.id} />
+								</form>
+							{/if}
+							{#if reminder.mistapId}
+								<form
+									method="POST"
+									action="?/mistap"
+									use:enhance={clearSubmittingFlag}
+									use:registerDismissForm={{ id: reminder.id, registry: mistapFormRegistry }}
+									class="hidden"
+								>
+									<input type="hidden" name="id" value={reminder.id} />
+									<input type="hidden" name="doseId" value={reminder.mistapId} />
 								</form>
 							{/if}
 						</div>

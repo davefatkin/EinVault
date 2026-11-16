@@ -509,6 +509,9 @@ export const reminders = sqliteTable(
 		completedAt: integer('completed_at', { mode: 'timestamp' }),
 		completedBy: text('completed_by').references(() => users.id, { onDelete: 'set null' }),
 		outcome: text('outcome', { enum: ['completed', 'skipped'] }),
+		// Medication supply on hand. NULL = not tracked. A completed dose
+		// decrements it; each spawned occurrence carries the current value forward.
+		pillsLeft: integer('pills_left'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),

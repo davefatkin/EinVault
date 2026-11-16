@@ -184,8 +184,13 @@
 	);
 	const dismissFormRegistry = new Map<string, HTMLFormElement>();
 	const skipFormRegistry = new Map<string, HTMLFormElement>();
+	const mistapFormRegistry = new Map<string, HTMLFormElement>();
 
 	$effect(() => () => pendingDismiss.cleanup());
+
+	function handleMistap(reminderId: string) {
+		pendingDismiss.mistap(reminderId, mistapFormRegistry.get(reminderId));
+	}
 
 	function handleSkip(reminderId: string, title: string) {
 		const form = skipFormRegistry.get(reminderId);
@@ -500,6 +505,14 @@
 									closeDetail();
 									handleSkip(item.id, item.title);
 								}}
+								onMistap={selected.item.mistapId
+									? () => {
+											if (selected?.kind !== 'reminder') return;
+											const item = selected.item;
+											closeDetail();
+											handleMistap(item.id);
+										}
+									: undefined}
 							/>
 						{:else if selected.kind === 'weight' || selected.kind === 'health'}
 							<Button
@@ -715,6 +728,15 @@
 											{formatRecurrence(reminder, locale, 'short')}
 										</p>
 									{/if}
+									{#if reminder.pillsLeft !== null}
+										<p
+											class="text-xs truncate {reminder.pillsLeft === 0
+												? 'text-coral'
+												: 'text-muted-foreground'}"
+										>
+											{t(locale, 'page.reminders.pillsLeftBadge', { count: reminder.pillsLeft })}
+										</p>
+									{/if}
 								</div>
 								<!-- due chip -->
 								<Badge
@@ -742,6 +764,7 @@
 								}}
 								onDoneAndLog={() => submitWithAndEvent(reminder.id)}
 								onSkip={() => handleSkip(reminder.id, reminder.title)}
+								onMistap={reminder.mistapId ? () => handleMistap(reminder.id) : undefined}
 								isRecurring={reminder.isRecurring}
 								{allowLogEvent}
 							/>
@@ -772,6 +795,21 @@
 						class="hidden"
 					>
 						<input type="hidden" name="id" value={reminder.id} />
+					</form>
+				{/each}
+				<!-- Hidden mistap forms (rows that follow a committed dose) -->
+				{#each upcomingReminders
+					.slice(0, 5)
+					.filter((r) => r.mistapId) as reminder (reminder.id + '-mistap-form')}
+					<form
+						method="POST"
+						action="?/mistap"
+						use:enhance={clearSubmittingFlag}
+						use:registerDismissForm={{ id: reminder.id, registry: mistapFormRegistry }}
+						class="hidden"
+					>
+						<input type="hidden" name="id" value={reminder.id} />
+						<input type="hidden" name="doseId" value={reminder.mistapId} />
 					</form>
 				{/each}
 			{/if}

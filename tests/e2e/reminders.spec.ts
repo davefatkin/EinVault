@@ -16,12 +16,17 @@ async function addReminder(
 		type?: string;
 		dueAt: string;
 		recurring?: { interval: number; unit: 'day' | 'week' | 'month' | 'year' };
+		// Medication only: the field is hidden for other types.
+		pillsLeft?: number;
 	}
 ) {
 	await page.getByRole('button', { name: 'Add Reminder' }).click();
 	await page.locator('#title').fill(opts.title);
 	if (opts.type) {
 		await page.locator('select[name="type"]').selectOption(opts.type);
+	}
+	if (opts.pillsLeft !== undefined) {
+		await page.locator('#pillsLeft').fill(String(opts.pillsLeft));
 	}
 	// The datetime-local input is rendered by SvelteKit's use:localDatetimes action
 	// which converts a UTC ISO to local on load. For a fresh (empty) input we can
@@ -195,6 +200,76 @@ test.describe('reminders', () => {
 		// One new active instance (the next occurrence, due tomorrow)
 		const activeInstances = activeSection(asMember).getByText('e2e-rem-rec');
 		await expect(activeInstances).toHaveCount(1, { timeout: 5_000 });
+	});
+
+	test('Mistap beside Done takes back a committed dose and its pill', async ({ asMember }) => {
+		await asMember.goto(BASE);
+
+		await addReminder(asMember, {
+			title: 'e2e-rem-mistap',
+			type: 'medication',
+			pillsLeft: 3,
+			dueAt: justPast(),
+			recurring: { interval: 1, unit: 'day' }
+		});
+
+		const card = () =>
+			activeSection(asMember).locator('div').filter({ hasText: 'e2e-rem-mistap' }).first();
+		await expect(card().getByText('3 left')).toBeVisible({ timeout: 8_000 });
+		// Nothing to take back before the first dose.
+		await expect(card().getByRole('button', { name: /Mistap/ })).toHaveCount(0);
+
+		// Exact: medication also has "Mark done and log a Health Event".
+		await card().getByRole('button', { name: 'Mark as done', exact: true }).click();
+
+		// Past the undo window (toast gone) the dose commits: the next occurrence
+		// shows one pill fewer, with Mistap right beside Done.
+		const completed = completedSection(asMember);
+		await completed.locator('summary').click();
+		await expect(completed.getByText('e2e-rem-mistap')).toBeVisible({ timeout: 15_000 });
+		await expect(card().getByText('2 left')).toBeVisible();
+		const mistap = card().getByRole('button', { name: /Mistap/ });
+		await expect(mistap).toBeVisible();
+
+		await mistap.click();
+
+		// The occurrence is back with its pill, and the spawned one is gone.
+		await expect(card().getByText('3 left')).toBeVisible({ timeout: 8_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-mistap')).toHaveCount(1);
+		await expect(completed.getByText('e2e-rem-mistap')).toHaveCount(0);
+		await expect(card().getByRole('button', { name: /Mistap/ })).toHaveCount(0);
+	});
+
+	test('Done & Log Event takes one pill; the logged medication event takes none', async ({
+		asMember
+	}) => {
+		await asMember.goto(BASE);
+
+		await addReminder(asMember, {
+			title: 'e2e-rem-dose-log',
+			type: 'medication',
+			pillsLeft: 3,
+			dueAt: justPast(),
+			recurring: { interval: 1, unit: 'day' }
+		});
+
+		const card = () =>
+			activeSection(asMember).locator('div').filter({ hasText: 'e2e-rem-dose-log' }).first();
+		await expect(card().getByText('3 left')).toBeVisible({ timeout: 8_000 });
+
+		// The dose commits and lands on the health form prefilled as a medication event.
+		await card().getByRole('button', { name: 'Mark done and log a Health Event' }).click();
+		await expect(asMember).toHaveURL(new RegExp(`/${COMP}/health`), { timeout: 8_000 });
+		await expect(asMember.locator('select[name="type"]')).toHaveValue('medication');
+		await asMember.getByRole('button', { name: 'Save Event' }).click();
+		await expect(asMember.getByRole('button', { name: 'Save Event' })).toHaveCount(0, {
+			timeout: 8_000
+		});
+
+		// Exactly one pill gone, and only the dosed occurrence closed.
+		await asMember.goto(BASE);
+		await expect(card().getByText('2 left')).toBeVisible({ timeout: 8_000 });
+		await expect(activeSection(asMember).getByText('e2e-rem-dose-log')).toHaveCount(1);
 	});
 
 	test('title required — save blocked when empty', async ({ asMember }) => {

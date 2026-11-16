@@ -18,6 +18,7 @@ import {
 	WeightRequest,
 	WeightList,
 	WeightWriteResponse,
+	Reminder,
 	ReminderList,
 	CompleteResponse,
 	SkipResponse,
@@ -368,7 +369,7 @@ export function buildOpenApiDocument() {
 		tags: ['reminders'],
 		summary: 'Mark a reminder done',
 		description:
-			'Completing a recurring reminder spawns its next occurrence (nextReminderId); a one-off reminder returns nextReminderId: null. Send an Idempotency-Key header to make a retry a no-op.',
+			'Completing a recurring reminder spawns its next occurrence (nextReminderId, due at nextDueAt on the series schedule); a one-off reminder returns nextReminderId: null. A medication reminder with a tracked supply burns one pill (pillsLeft is the count after the dose, carried onto the next occurrence); with none left the request is refused with 409 noPillsLeft and the occurrence stays open. Send an Idempotency-Key header to make a retry a no-op.',
 		security: secured,
 		request: {
 			params: z.object({ id: z.string() })
@@ -381,7 +382,31 @@ export function buildOpenApiDocument() {
 			401: errorResponse('Missing or invalid token'),
 			403: errorResponse('noActiveShift / notAssigned'),
 			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
-			409: errorResponse('alreadyCompleted / idempotencyKeyReused'),
+			409: errorResponse('alreadyCompleted / noPillsLeft / idempotencyKeyReused'),
+			429: errorResponse('Rate limited')
+		}
+	});
+
+	registry.registerPath({
+		method: 'post',
+		path: '/api/reminders/{id}/mistap',
+		tags: ['reminders'],
+		summary: 'Take back a dose (mistap)',
+		description:
+			'Undo a completed reminder by its own id (the id a complete call returned): reopens that occurrence, returns its pill (pillsLeft one higher), and deletes the occurrence the dose spawned. Responds with the reopened reminder. Only the latest resolution in a series can be taken back, so a second call for the same dose, or one followed by a later dose or skip, is refused with 409 nothingToMistap and adds no pill. Send an Idempotency-Key header to make a retry a no-op.',
+		security: secured,
+		request: {
+			params: z.object({ id: z.string() })
+		},
+		responses: {
+			200: {
+				description: 'OK',
+				content: { 'application/json': { schema: Reminder } }
+			},
+			401: errorResponse('Missing or invalid token'),
+			403: errorResponse('noActiveShift / notAssigned'),
+			404: errorResponse('Not found (unknown id or a companion this token cannot access)'),
+			409: errorResponse('nothingToMistap / idempotencyKeyReused'),
 			429: errorResponse('Rate limited')
 		}
 	});

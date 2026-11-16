@@ -23,6 +23,8 @@ const messages: Record<keyof Messages, string> = {
 	'common.reminder.logEventAria': 'Marquer comme fait et consigner un événement de santé',
 	'common.reminder.skip': 'Passer',
 	'common.reminder.skipAria': 'Passer cette occurrence',
+	'common.reminder.mistap': 'Erreur',
+	'common.reminder.mistapAria': 'Erreur de clic : annuler la dernière dose et remettre le comprimé',
 	'common.reminder.skippedAnnounce': '{title} passé',
 	'common.reminder.toastUndoLabel': 'Annuler',
 	'common.reminder.toastDismiss': 'Fermer',
@@ -191,6 +193,11 @@ const messages: Record<keyof Messages, string> = {
 	'error.canOnlyDeleteOwnEntries': 'Vous ne pouvez supprimer que vos propres entrées.',
 	'error.mustBeOnShiftToComplete': 'Vous devez être de garde pour compléter les rappels.',
 	'error.cannotSkipNonRecurring': 'Seuls les rappels récurrents peuvent être passés.',
+	'error.noPillsLeft':
+		'Plus de comprimés. Mettez à jour le stock après le réapprovisionnement, puis enregistrez la dose.',
+	'error.nothingToMistap':
+		'Aucune dose à annuler : elle a déjà été annulée, ou une dose ou un saut a suivi.',
+	'error.invalidPillsLeft': 'Le nombre de comprimés restants doit être un entier positif ou nul.',
 	'error.mustBeOnShiftToSkip': 'Vous devez être de garde pour passer des rappels.',
 
 	// Errors: Account
@@ -780,6 +787,10 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.labelDueDate': "Date d'échéance *",
 	'page.reminders.labelNotes': 'Notes',
 	'page.reminders.skippedBadge': 'Ignoré',
+	'page.reminders.labelPillsLeft': 'Comprimés restants',
+	'page.reminders.pillsLeftHint':
+		'Chaque dose marquée comme faite en retire un. Laissez vide pour ne pas compter.',
+	'page.reminders.pillsLeftBadge': '{count} restants',
 	'page.reminders.labelRecurring': 'Rappel récurrent',
 	'page.reminders.labelRepeatEvery': 'Répéter tous les',
 	'page.reminders.labelRecurrenceUnit': 'Unité',

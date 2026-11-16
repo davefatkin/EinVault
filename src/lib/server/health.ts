@@ -14,6 +14,8 @@ export interface HealthEventInput {
 // Pure insert: one health_events row. Scope/permission checks are the caller's
 // responsibility (the form enforces access via the companion layout; the API
 // route calls authorizeCompanions), so both write paths share this one insert.
+// A medication event is a record, not a dose: it never closes a reminder or
+// touches pills_left. Only completeReminder (the dose path) drops the count.
 export async function createHealthEvent(
 	companionId: string,
 	input: HealthEventInput,

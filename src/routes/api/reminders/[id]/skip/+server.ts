@@ -55,11 +55,17 @@ export const POST = apiRoute(async ({ event, user, tokenId, locale }) => {
 			const result = skipReminder(reminder, user.id);
 			if (!result)
 				error(409, { code: 'alreadyCompleted', message: t(locale, 'error.alreadyCompleted') });
-			const { completedAt, nextReminderId } = result;
+			const { completedAt, nextReminderId, nextDueAt, pillsLeft } = result;
 
 			return {
 				status: 200,
-				data: { id: reminder.id, skippedAt: completedAt.toISOString(), nextReminderId }
+				data: {
+					id: reminder.id,
+					skippedAt: completedAt.toISOString(),
+					nextReminderId,
+					nextDueAt: nextDueAt?.toISOString() ?? null,
+					pillsLeft
+				}
 			};
 		}
 	);
