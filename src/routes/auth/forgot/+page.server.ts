@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import * as env from '$app/env/private';
+import { publicOrigin } from '#lib/server/env.js';
 import { t } from '#lib/i18n/index.js';
 import { db, schema } from '#lib/server/db/index.js';
 import { eq } from 'drizzle-orm';
@@ -73,13 +73,12 @@ export const actions: Actions = {
 			const userId = user.id;
 			const token = await createResetToken(userId);
 			if (token) {
-				// Build the link from the configured ORIGIN, never the request's
-				// own origin. With ORIGIN unset, adapter-node derives url.origin
-				// from the Host header, so a forged Host (with a matching Origin to
-				// pass CSRF) would mint a valid token inside a link pointing at the
-				// attacker's host. ORIGIN is the documented production requirement;
-				// url.origin is only the dev (localhost) fallback.
-				const origin = env.ORIGIN?.trim().replace(/\/$/, '') || url.origin;
+				// Build the link from the configured ORIGIN, never from request
+				// headers. With ORIGIN set, adapter-node also builds url from it, but
+				// reading the value directly means a forged Host can never mint a
+				// token inside a link pointing at the attacker's host. url.origin is
+				// the fallback only when ORIGIN is unset (dev).
+				const origin = publicOrigin() ?? url.origin;
 				const link = `${origin}/auth/reset?token=${encodeURIComponent(token)}`;
 				const message = buildResetEmail(
 					user.locale,

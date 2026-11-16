@@ -85,3 +85,22 @@ describe('note media cap env', () => {
 		}
 	});
 });
+
+describe('normalizeOrigin', () => {
+	it.each<[string | undefined, string | null]>([
+		[undefined, null],
+		['', null],
+		['   ', null],
+		['https://einvault.example.com', 'https://einvault.example.com'],
+		['  https://einvault.example.com/  ', 'https://einvault.example.com'],
+		['https://einvault.example.com/app?x=1#y', 'https://einvault.example.com'],
+		['http://localhost:3000', 'http://localhost:3000'],
+		['https://einvault.example.com:443', 'https://einvault.example.com'],
+		['localhost:3000', null],
+		['ftp://einvault.example.com', null],
+		['not a url', null]
+	])('%j -> %j', async (raw, expected) => {
+		const { normalizeOrigin } = await import('./env');
+		expect(normalizeOrigin(raw)).toBe(expected);
+	});
+});

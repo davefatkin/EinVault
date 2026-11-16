@@ -54,6 +54,24 @@ export const MAX_DAILY_MEDIA = envInt(env.MAX_DAILY_MEDIA ?? env.MAX_DAILY_PHOTO
 // Per-note cap on attached photos and videos combined (issue #321).
 export const MAX_NOTE_MEDIA = envInt(env.MAX_NOTE_MEDIA, 10);
 
+/** Reduce a raw ORIGIN value to a bare http(s) origin, or null if unusable. */
+export function normalizeOrigin(raw: string | undefined): string | null {
+	const v = raw?.trim();
+	if (!v || !URL.canParse(v)) return null;
+	const url = new URL(v);
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+	return url.origin;
+}
+
+/**
+ * The configured public origin. In production adapter-node has already
+ * rejected an invalid ORIGIN at startup; the null cases cover vite dev and
+ * vitest, where ORIGIN is usually unset.
+ */
+export function publicOrigin(): string | null {
+	return normalizeOrigin(env.ORIGIN);
+}
+
 export function logDeprecatedEnvWarnings(): void {
 	if (env.MAX_DAILY_PHOTOS !== undefined) {
 		console.warn(
@@ -394,7 +412,7 @@ export function logSmtpBootStatus(): void {
 		console.info(
 			`[mail] SMTP enabled host=${SMTP_CONFIG.host} port=${SMTP_CONFIG.port} secure=${SMTP_CONFIG.secure} auth=${SMTP_CONFIG.user ? 'yes' : 'no'}`
 		);
-		if (!env.ORIGIN) {
+		if (!publicOrigin()) {
 			console.warn(
 				'[mail] ORIGIN is not set; password reset links may carry the wrong origin behind a reverse proxy.'
 			);
