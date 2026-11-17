@@ -56,6 +56,17 @@ RUN npm run build
 # Prune to production deps only (prune preserves compiled native modules)
 RUN npm prune --omit=dev
 
+# @napi-rs/canvas arrives as an optional dep of pdfjs-dist, which only runs in
+# the browser. jsdom (the server-side DOM for DOMPurify) loads it whenever it is
+# present, and its prebuilt Skia needs AVX on x86 and newer ARM cores, so on
+# older CPUs the server dies with SIGILL on the first page that renders
+# markdown (#437). Drop it, then fail the build if jsdom would still load a
+# canvas or if any native addon other than better-sqlite3 and sharp shows up.
+RUN rm -rf node_modules/@napi-rs/canvas node_modules/@napi-rs/canvas-* \
+    && node -e "if (require('jsdom/lib/jsdom/utils.js').Canvas !== null) { console.error('jsdom still loads a canvas package'); process.exit(1); }" \
+    && unexpected="$(find node_modules -name '*.node' | grep -vE '^node_modules/(better-sqlite3|@img/sharp-[^/]+)/' || true)" \
+    && if [ -n "$unexpected" ]; then echo "Unexpected native addons:"; echo "$unexpected"; exit 1; fi
+
 
 # runner
 FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runner
