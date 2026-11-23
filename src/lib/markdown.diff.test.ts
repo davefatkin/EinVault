@@ -46,7 +46,7 @@ function newMarked(): Marked {
 	return new Marked({ gfm: true, breaks: true, async: false });
 }
 
-/** Today's pipeline, verbatim from the old markdown.ts. */
+/** The old pipeline (marked + DOMPurify), mirroring its config. */
 function oracle(text: string): string {
 	const m = newMarked();
 	m.use({

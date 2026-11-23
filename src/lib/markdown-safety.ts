@@ -42,7 +42,7 @@ const TEXT_ESCAPES: Record<string, string> = {
 	'&': '&amp;',
 	'<': '&lt;',
 	'>': '&gt;',
-	' ': '&nbsp;'
+	'\u00a0': '&nbsp;'
 };
 const TEXT_SPECIALS = new RegExp('[&<>\\u00a0]', 'g');
 const ATTR_SPECIALS = new RegExp('[&"<>\\u00a0]', 'g');
@@ -119,7 +119,7 @@ const UNESCAPES: Record<string, string> = {
 	quot: '"',
 	lt: '<',
 	gt: '>',
-	nbsp: ' '
+	nbsp: '\u00a0'
 };
 const TAG_FORMS = new RegExp(
 	'</?(?:' +

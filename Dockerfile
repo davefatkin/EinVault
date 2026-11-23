@@ -62,7 +62,10 @@ RUN npm prune --omit=dev
 # is rendered without a DOM (#439). Drop canvas, then fail the build if jsdom is
 # installed or referenced by the server bundle, or if any native addon other
 # than better-sqlite3 and sharp shows up.
+# The word jsdom must not appear anywhere in server source, comments included,
+# because the guard below greps the built output for it.
 RUN rm -rf node_modules/@napi-rs/canvas node_modules/@napi-rs/canvas-* \
+    && { test -d build || { echo "build/ missing"; exit 1; }; } \
     && { test ! -e node_modules/jsdom || { echo "jsdom must not ship in the runtime image (#439)"; exit 1; }; } \
     && { ! grep -rl jsdom build/ || { echo "build/ references jsdom (#439)"; exit 1; }; } \
     && unexpected="$(find node_modules -name '*.node' | grep -vE '^node_modules/(better-sqlite3|@img/sharp-[^/]+)/' || true)" \

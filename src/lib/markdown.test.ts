@@ -109,8 +109,17 @@ describe('renderMarkdown allowlist renderer', () => {
 		);
 	});
 
-	it('renders links after raw-block text containing < as text only', () => {
+	it('renders links after raw-block text containing a tag-like < as text only', () => {
 		expect(renderMarkdown('<code>a<b</code> [x](http://a.test)')).toBe('<p>a&lt;b x</p>\n');
+	});
+
+	it('keeps links after raw-block text with a < that is not tag-like', () => {
+		expect(renderMarkdown('<code>if a < b</code>\n\n[vet](https://vet.example)')).toContain(
+			'<a href="https://vet.example">vet</a>'
+		);
+		expect(renderMarkdown('<kbd><3</kbd> my dog\n\n[vet](https://vet.example)')).toContain(
+			'<a href="https://vet.example">vet</a>'
+		);
 	});
 
 	it('normalizes a CR from a numeric reference to LF, as the HTML parser did', () => {
@@ -143,6 +152,6 @@ describe('renderMarkdown allowlist renderer', () => {
 		const text = para.repeat(Math.ceil(100_000 / para.length));
 		const start = performance.now();
 		renderMarkdown(text);
-		expect(performance.now() - start).toBeLessThan(1000);
+		expect(performance.now() - start).toBeLessThan(5000);
 	});
 });

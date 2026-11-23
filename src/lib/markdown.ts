@@ -6,22 +6,24 @@ import {
 	escapeText,
 	linkHref,
 	markedEscape
-} from './markdown-safety.js';
+} from '#lib/markdown-safety.js';
 
 // The renderer writes only allowlisted tags (ALLOWED_TAGS in markdown-safety)
 // and escapes every piece of text, so no HTML sanitizer or DOM is needed. The
 // output matches what marked + DOMPurify produced before, including the
 // quirks for constructs outside the allowlist, which are reproduced below.
 
-// Per-render state, reset by renderMarkdownOrThrow.
+// Per-render state, reset by renderMarkdownOrThrow. It is module-level, so
+// rendering is not reentrant and must stay synchronous.
 // Depth of the link being rendered. A link inside a link renders only its
 // children, since nested anchors are not valid HTML.
 let linkDepth = 0;
-// Set once marked has passed raw text containing '<' after a raw-block tag
+// Set once marked has passed raw text containing a tag-like '<' after a raw-block tag
 // (<pre>, <code>, <kbd>, <script>). The old pipeline handed that text to an
 // HTML parser, which could swallow any later markup into a comment or tag, so
 // later links render as their text only and never add an href.
 let afterRawMarkup = false;
+// Only exists to match the old output's whitespace; it never affects safety.
 // True when the last thing marked wrote was text ending in CR. The HTML parser
 // read marked's output with CRLF folded to LF, so a CR and an LF that marked
 // wrote with nothing but dropped raw HTML between them became one LF.
@@ -161,7 +163,12 @@ export const markdownRenderer = {
 	text(token) {
 		if ('tokens' in token && token.tokens) return this.parser.parseInline(token.tokens);
 		// Raw-block text (escaped: true) is escaped like any other text.
-		if ('escaped' in token && token.escaped && token.text.includes('<')) afterRawMarkup = true;
+		// Only a '<' the HTML tokenizer treats as markup counts: one followed by a letter
+		// (tag), '!' (declaration or comment), '/' (end tag) or '?' (bogus comment), or a
+		// trailing '<' that joins whatever marked emits next. '<' before a space or
+		// digit stays plain text, so code such as "a < b" keeps later links.
+		if ('escaped' in token && token.escaped && /<(?:[A-Za-z!/?]|$)/.test(token.text))
+			afterRawMarkup = true;
 		return markedText(token.text);
 	}
 } satisfies Required<RendererObject>;

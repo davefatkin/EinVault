@@ -362,7 +362,7 @@ const rawBlockCases = RAW_OPENERS.flatMap((o) =>
 	])
 );
 
-// Every OWASP XSS filter evasion vector typed in by hand (representative set).
+// A representative set of OWASP XSS filter evasion vectors, typed in by hand.
 const OWASP = [
 	'<SCRIPT SRC=http://xss.rocks/xss.js></SCRIPT>',
 	'<IMG SRC="javascript:alert(\'XSS\');">',
@@ -691,6 +691,8 @@ const RENDERER_EDGES = [
 	'<kbd>Ctrl</kbd>+C, see [docs](http://a.test)',
 	'<kbd><!--</kbd>\n\n[x](http://a.test)',
 	'<code>a<b</code> [x](http://a.test)',
+	'<kbd><!-- [x](http://a.test)',
+	'<kbd><<i>b [x](http://a.test)',
 	'[a <kbd><b</kbd> b](http://a.test) [c](http://c.test)',
 	'<kbd>a</kbd> <http://a.test> x@y.test www.a.test',
 	'| <kbd><!-- |\n|---|\n| c |\n\n[x](http://a.test)',
