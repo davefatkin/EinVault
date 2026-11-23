@@ -658,7 +658,22 @@ const CONSTRUCTS = [
 	'a\u{1F600}\ud800b'
 ];
 
+// Inputs from src/lib/markdown.test.ts and src/lib/markdown-strip.test.ts, verbatim.
+const EXISTING_UNIT = [
+	'**bold** and *em* and `code`',
+	'line one\nline two',
+	'before\n\n<script>alert(1)</script>\n\nafter',
+	'[click](javascript:alert(1))',
+	'[click](JaVaScRiPt:alert(1))',
+	'[ok](https://example.com "tip")',
+	'<img src=x onerror=alert(1)> and <iframe src="x"></iframe>',
+	'<p data-evil="1">x</p>',
+	'# Head **bold** `code` [link](x)',
+	'  > quoted  '
+];
+
 export const MARKDOWN_CORPUS: readonly string[] = [
+	...EXISTING_UNIT,
 	...CONSTRUCTS,
 	...AUTOLINKS,
 	...OWASP,
