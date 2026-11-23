@@ -67,6 +67,15 @@ RUN rm -rf node_modules/@napi-rs/canvas node_modules/@napi-rs/canvas-* \
     && unexpected="$(find node_modules -name '*.node' | grep -vE '^node_modules/(better-sqlite3|@img/sharp-[^/]+)/' || true)" \
     && if [ -n "$unexpected" ]; then echo "Unexpected native addons:"; echo "$unexpected"; exit 1; fi
 
+# better-sqlite3 ships prebuilt binaries for eight platforms plus the SQLite C
+# source (deps/, src/) it would compile from. At runtime it only loads the musl
+# build for this image's arch, so drop the rest (about 24 MB), then open a
+# database to prove the binary it needs is still there.
+RUN keep="linuxmusl-$(node -p process.arch).node" \
+    && find node_modules/better-sqlite3/prebuilds -name '*.node' ! -name "$keep" -delete \
+    && rm -rf node_modules/better-sqlite3/deps node_modules/better-sqlite3/src \
+    && node -e "new (require('better-sqlite3'))(':memory:').prepare('select 1').get()"
+
 
 # runner
 FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runner
