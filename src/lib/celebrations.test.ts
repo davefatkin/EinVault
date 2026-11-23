@@ -11,6 +11,34 @@ import {
 const base = { dob: null, dobApproximate: false, homecomingDate: null, isActive: true };
 
 describe('celebrationOn', () => {
+	it('monthly milestones in the first year, exact dob only', () => {
+		const c = { ...base, dob: '2026-01-15' };
+		expect(celebrationOn(c, '2026-02-15')).toEqual({ birthdayMonths: 1 });
+		expect(celebrationOn(c, '2026-12-15')).toEqual({ birthdayMonths: 11 });
+		expect(celebrationOn(c, '2027-01-15')).toEqual({ birthdayYears: 1 });
+		expect(celebrationOn(c, '2026-01-15')).toBeNull();
+		expect(celebrationOn(c, '2026-02-16')).toBeNull();
+		expect(celebrationOn({ ...c, dobApproximate: true }, '2026-02-15')).toBeNull();
+		expect(celebrationOn({ ...c, isActive: false }, '2026-02-15')).toBeNull();
+		expect(celebrationOn({ ...base, dob: '2026-03-15' }, '2026-02-15')).toBeNull();
+	});
+	it('late-month dob celebrates on the last day of shorter months', () => {
+		const c = { ...base, dob: '2027-01-31' };
+		expect(celebrationOn(c, '2027-02-28')).toEqual({ birthdayMonths: 1 });
+		expect(celebrationOn(c, '2027-03-31')).toEqual({ birthdayMonths: 2 });
+		expect(celebrationOn(c, '2027-03-28')).toBeNull();
+		expect(celebrationOn(c, '2027-04-30')).toEqual({ birthdayMonths: 3 });
+		const leap = { ...base, dob: '2028-01-31' };
+		expect(celebrationOn(leap, '2028-02-29')).toEqual({ birthdayMonths: 1 });
+		expect(celebrationOn(leap, '2028-02-28')).toBeNull();
+		expect(celebrationOn({ ...base, dob: '2027-01-30' }, '2027-02-28')).toEqual({
+			birthdayMonths: 1
+		});
+	});
+	it('monthly milestone and homecoming on the same day', () => {
+		const c = { ...base, dob: '2026-01-04', homecomingDate: '2025-03-04' };
+		expect(celebrationOn(c, '2026-03-04')).toEqual({ birthdayMonths: 2, homecomingYears: 1 });
+	});
 	it('homecoming anniversary', () => {
 		const c = { ...base, homecomingDate: '2019-03-04' };
 		expect(celebrationOn(c, '2026-03-04')).toEqual({ homecomingYears: 7 });
@@ -75,6 +103,15 @@ describe('celebrationBanner', () => {
 });
 
 describe('celebrationLines', () => {
+	it('renders the monthly line before homecoming, singular and plural', () => {
+		expect(celebrationLines('en', 'Sky', { birthdayMonths: 4, homecomingYears: 1 })).toEqual([
+			'🎉 Sky is 4 months old today!',
+			"🏡 Sky's homecoming day: 1 year home!"
+		]);
+		expect(celebrationLines('en', 'Sky', { birthdayMonths: 1 })).toEqual([
+			'🎉 Sky is 1 month old today!'
+		]);
+	});
 	it('renders birthday then homecoming', () => {
 		expect(celebrationLines('en', 'Ein', { birthdayYears: 8, homecomingYears: 7 })).toEqual([
 			'🎂 Ein turns 8 today!',
@@ -99,11 +136,14 @@ describe('celebrationParts', () => {
 
 	it('has no emoji in any locale string', () => {
 		for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt'] as const) {
-			for (const part of celebrationParts(locale, 'Ein', {
-				birthdayYears: 1,
-				homecomingYears: 2
-			})) {
-				expect(part.text).not.toMatch(/\p{Extended_Pictographic}/u);
+			for (const c of [
+				{ birthdayYears: 1, homecomingYears: 2 },
+				{ birthdayMonths: 1 },
+				{ birthdayMonths: 3 }
+			]) {
+				for (const part of celebrationParts(locale, 'Ein', c)) {
+					expect(part.text).not.toMatch(/\p{Extended_Pictographic}/u);
+				}
 			}
 		}
 	});

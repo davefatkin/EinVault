@@ -474,6 +474,69 @@ celebrate(
 	}
 );
 
+// First k in 2..11 whose month has today's day number, so the dob is exactly
+// k months back without clamping. Clamping only moves the day down and would
+// land the milestone on an earlier day (May 31 -> Feb 28 celebrates May 28).
+function monthsBack(today: string): { dob: string; months: number } {
+	const [y, m, d] = today.split('-').map(Number);
+	for (let k = 2; k <= 11; k++) {
+		const idx = y * 12 + (m - 1) - k;
+		const yy = Math.floor(idx / 12);
+		const mm = (idx % 12) + 1;
+		if (d <= new Date(Date.UTC(yy, mm, 0)).getUTCDate()) {
+			return {
+				dob: `${yy}-${String(mm).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+				months: k
+			};
+		}
+	}
+	throw new Error(`no month back from ${today} has day ${d}`);
+}
+
+const celebrateMonths = base.extend<{ world: { server: AppServer; months: number } }>({
+	// eslint-disable-next-line no-empty-pattern
+	world: async ({}, use, testInfo) => {
+		const dir = path.join(
+			REPO_ROOT,
+			'.test-data',
+			`celebrate-months-${testInfo.workerIndex}-${testInfo.testId}`
+		);
+		const dbPath = createSeededDb(dir);
+		// Exact dob a whole number of months ago, so today is a monthly milestone.
+		const { tz, today } = noonZone();
+		const { dob, months } = monthsBack(today);
+		const raw = new Database(dbPath);
+		raw
+			.prepare('UPDATE companions SET dob = ?, dob_approximate = 0 WHERE id = ?')
+			.run(dob, SEED.companions.edward.id);
+		raw.close();
+		const server = await startAppServer({ dbPath, env: { TZ: tz } });
+		await use({ server, months });
+		await server.stop();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+celebrateMonths(
+	'monthly milestone shows on the banner in the first year',
+	async ({ world, page }) => {
+		const { server, months } = world;
+		await page.goto(server.baseURL + '/auth/login');
+		await page.getByLabel('Username').fill(SEED.admin.username);
+		await page.getByLabel('Password').fill(SEED.password);
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		await baseExpect(page.getByLabel('Username')).toHaveCount(0, { timeout: 10_000 });
+
+		await page.goto(server.baseURL + '/');
+		await waitForHydration(page);
+		await baseExpect(
+			page
+				.getByRole('region', { name: 'Celebrations' })
+				.getByText(`Edward is ${months} months old today!`)
+		).toBeVisible();
+	}
+);
+
 test('medications card shows active medications with Given, and prompts to add one without any @mobile', async ({
 	app,
 	asMember

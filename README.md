@@ -205,7 +205,7 @@ The token can read every document its Paperless user can see, and any member can
 
 ### SMTP email (optional)
 
-When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, to an email 24 hours before a caretaker shift starts or ends, and to an email on a companion's exact birthday or homecoming day (celebrations; members and admins only). Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
+When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, to an email 24 hours before a caretaker shift starts or ends, and to an email on a companion's exact birthday, each monthly birth date in the first year, or homecoming day (celebrations; members and admins only). Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
 
 `ORIGIN` must be set correctly: password reset links are built from it. Behind a reverse proxy, make sure `ORIGIN` matches the public URL users see.
 

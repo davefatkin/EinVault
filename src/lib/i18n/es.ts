@@ -355,7 +355,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notifyShiftEmailLabel':
 		'Enviarme un correo 24 horas antes de que un turno empiece o termine',
 	'page.settings.notifyCelebrationEmailLabel':
-		'Celebraciones (cumpleaños exactos y días de llegada a casa)',
+		'Celebraciones (cumpleaños exactos, cumplemeses del primer año y días de llegada a casa)',
 	'page.settings.notifyIncidentEmailLabel':
 		'Incidentes (registrados o actualizados por un cuidador)',
 	'page.settings.notificationsUpdated': 'Ajustes de notificaciones actualizados.',
@@ -363,7 +363,7 @@ const messages: Record<keyof Messages, string> = {
 		'Añade un correo electrónico a tu cuenta para recibir notificaciones por correo.',
 	'page.settings.ntfyTopicLabel': 'Tema de ntfy',
 	'page.settings.ntfyTopicHint':
-		'Las notificaciones push cubren recordatorios vencidos (y los avisos previos configurados), avisos de turnos, celebraciones (cumpleaños y días de llegada a casa) e incidentes que un cuidador registra o actualiza, de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse, y los avisos de incidentes incluyen el título y la gravedad del incidente. Déjalo vacío para desactivar los push.',
+		'Las notificaciones push cubren recordatorios vencidos (y los avisos previos configurados), avisos de turnos, celebraciones (cumpleaños, cumplemeses del primer año y días de llegada a casa) e incidentes que un cuidador registra o actualiza, de lo que puedes ver en EinVault. Van a este tema en el servidor ntfy configurado por tu administrador. Elige un nombre largo y aleatorio; cualquiera que lo conozca puede suscribirse, y los avisos de incidentes incluyen el título y la gravedad del incidente. Déjalo vacío para desactivar los push.',
 	'page.settings.securityCard': 'Seguridad',
 	'page.settings.twofaOn': 'La autenticación de dos factores está activada.',
 	'page.settings.twofaOff': 'Añade un segundo paso al iniciar sesión con una app autenticadora.',
@@ -629,6 +629,8 @@ const messages: Record<keyof Messages, string> = {
 	'celebration.label': 'Celebraciones',
 	'celebration.birthday.one': '¡{name} cumple 1 año hoy!',
 	'celebration.birthday.other': '¡{name} cumple {count} años hoy!',
+	'celebration.months.one': '¡{name} cumple 1 mes hoy!',
+	'celebration.months.other': '¡{name} cumple {count} meses hoy!',
 	'celebration.homecoming.one': 'Día de llegada de {name}: ¡1 año en casa!',
 	'celebration.homecoming.other': 'Día de llegada de {name}: ¡{count} años en casa!',
 	'celebration.dismissFor': 'Descartar {name}',

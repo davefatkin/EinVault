@@ -351,14 +351,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
 	'page.settings.notifyCelebrationEmailLabel':
-		'Celebrazioni (compleanni esatti e giorni del ritorno a casa)',
+		'Celebrazioni (compleanni esatti, compleanni mensili del primo anno e giorni del ritorno a casa)',
 	'page.settings.notifyIncidentEmailLabel': 'Incidenti (registrati o aggiornati da un incaricato)',
 	'page.settings.notificationsUpdated': 'Impostazioni delle notifiche aggiornate.',
 	'page.settings.notificationsNeedEmail':
 		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche via e-mail.',
 	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
 	'page.settings.ntfyTopicHint':
-		"Le notifiche push coprono i promemoria in scadenza (e gli eventuali preavvisi impostati), gli avvisi di turno, le celebrazioni (compleanni e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
+		"Le notifiche push coprono i promemoria in scadenza (e gli eventuali preavvisi impostati), gli avvisi di turno, le celebrazioni (compleanni, compleanni mensili del primo anno e giorni del ritorno a casa) e gli incidenti registrati o aggiornati da un custode, per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi, e i push sugli incidenti contengono il titolo e la gravità dell'incidente. Lascia vuoto per disattivare i push.",
 	'page.settings.securityCard': 'Sicurezza',
 	'page.settings.twofaOn': "L'autenticazione a due fattori è attiva.",
 	'page.settings.twofaOff':
@@ -626,6 +626,8 @@ const messages: Record<keyof Messages, string> = {
 	'celebration.label': 'Celebrazioni',
 	'celebration.birthday.one': '{name} compie 1 anno oggi!',
 	'celebration.birthday.other': '{name} compie {count} anni oggi!',
+	'celebration.months.one': '{name} compie 1 mese oggi!',
+	'celebration.months.other': '{name} compie {count} mesi oggi!',
 	'celebration.homecoming.one': 'Giorno di arrivo di {name}: 1 anno a casa!',
 	'celebration.homecoming.other': 'Giorno di arrivo di {name}: {count} anni a casa!',
 	'celebration.dismissFor': 'Chiudi {name}',

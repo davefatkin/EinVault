@@ -354,14 +354,14 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
 	'page.settings.notifyCelebrationEmailLabel':
-		"Célébrations (anniversaires exacts et jours d'arrivée à la maison)",
+		"Célébrations (anniversaires exacts, anniversaires mensuels de la première année et jours d'arrivée à la maison)",
 	'page.settings.notifyIncidentEmailLabel': 'Incidents (signalés ou mis à jour par un gardien)',
 	'page.settings.notificationsUpdated': 'Réglages de notification mis à jour.',
 	'page.settings.notificationsNeedEmail':
 		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications par e-mail.',
 	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
 	'page.settings.ntfyTopicHint':
-		"Les notifications push couvrent les rappels dus (et les alertes anticipées définies), les alertes de garde, les célébrations (anniversaires et jours d'arrivée à la maison) et les incidents signalés ou mis à jour par un soignant, pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner, et les push d'incident contiennent le titre et la gravité de l'incident. Laissez vide pour désactiver les push.",
+		"Les notifications push couvrent les rappels dus (et les alertes anticipées définies), les alertes de garde, les célébrations (anniversaires, anniversaires mensuels de la première année et jours d'arrivée à la maison) et les incidents signalés ou mis à jour par un soignant, pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner, et les push d'incident contiennent le titre et la gravité de l'incident. Laissez vide pour désactiver les push.",
 	'page.settings.securityCard': 'Sécurité',
 	'page.settings.twofaOn': "L'authentification à deux facteurs est activée.",
 	'page.settings.twofaOff':
@@ -631,6 +631,8 @@ const messages: Record<keyof Messages, string> = {
 	'celebration.label': 'Célébrations',
 	'celebration.birthday.one': "{name} fête 1 an aujourd'hui !",
 	'celebration.birthday.other': "{name} fête ses {count} ans aujourd'hui !",
+	'celebration.months.one': "{name} a 1 mois aujourd'hui !",
+	'celebration.months.other': "{name} a {count} mois aujourd'hui !",
 	'celebration.homecoming.one': "Jour d'arrivée de {name} : 1 an à la maison !",
 	'celebration.homecoming.other': "Jour d'arrivée de {name} : {count} ans à la maison !",
 	'celebration.dismissFor': 'Ignorer {name}',
