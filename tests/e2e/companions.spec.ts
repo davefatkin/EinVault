@@ -152,6 +152,8 @@ test.describe('companion crud', () => {
 	test('exact and approximate ages, homecoming day, and future dob rejection', async ({
 		asAdmin
 	}) => {
+		// 100 days is never a whole number of months, so this dob can't trigger a celebration
+		// banner in other specs sharing the worker DB. Don't change it to a month-aligned count like 90.
 		const hundredDaysAgo = new Date(`${todayUTC()}T00:00:00Z`);
 		hundredDaysAgo.setUTCDate(hundredDaysAgo.getUTCDate() - 100);
 		const dob = hundredDaysAgo.toISOString().slice(0, 10);
