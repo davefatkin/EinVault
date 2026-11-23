@@ -339,14 +339,15 @@ const messages = {
 	'page.settings.notifyReminderEmailLabel':
 		'Email me about reminders, heads-ups and supply warnings',
 	'page.settings.notifyShiftEmailLabel': 'Email me 24 hours before a shift starts or ends',
-	'page.settings.notifyCelebrationEmailLabel': 'Celebrations (exact birthdays and homecoming days)',
+	'page.settings.notifyCelebrationEmailLabel':
+		'Celebrations (exact birthdays, monthly in the first year, and homecoming days)',
 	'page.settings.notifyIncidentEmailLabel': 'Incidents (logged or updated by a caretaker)',
 	'page.settings.notificationsUpdated': 'Notification settings updated.',
 	'page.settings.notificationsNeedEmail':
 		'Add an email address to your account to receive email notifications.',
 	'page.settings.ntfyTopicLabel': 'ntfy topic',
 	'page.settings.ntfyTopicHint':
-		'Pushes cover due reminders (plus any heads-ups set ahead of them), shift alerts, celebrations (birthdays and homecoming days), and incidents a caretaker logs or updates, for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe, and incident pushes include the incident title and severity. Leave empty to disable pushes.',
+		'Pushes cover due reminders (plus any heads-ups set ahead of them), shift alerts, celebrations (birthdays, monthly in the first year, and homecoming days), and incidents a caretaker logs or updates, for what you can see in EinVault. They go to this topic on the ntfy server configured by your admin. Pick a long random name; anyone who knows it can subscribe, and incident pushes include the incident title and severity. Leave empty to disable pushes.',
 	'page.settings.securityCard': 'Security',
 	'page.settings.twofaOn': 'Two-factor authentication is on.',
 	'page.settings.twofaOff': 'Add a second step at sign-in with an authenticator app.',

@@ -355,7 +355,8 @@ const messages: Record<keyof Messages, string> = {
 		'E-Mails zu Erinnerungen, Vorwarnungen und Vorratswarnungen senden',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
-	'page.settings.notifyCelebrationEmailLabel': 'Feiern (genaue Geburtstage und Ankunftstage)',
+	'page.settings.notifyCelebrationEmailLabel':
+		'Feiern (genaue Geburtstage, monatlich im ersten Lebensjahr, und Ankunftstage)',
 	'page.settings.notifyIncidentEmailLabel':
 		'Vorfälle (von einer Betreuungsperson erfasst oder aktualisiert)',
 	'page.settings.notificationsUpdated': 'Benachrichtigungseinstellungen aktualisiert.',
@@ -363,7 +364,7 @@ const messages: Record<keyof Messages, string> = {
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten umfassen fällige Erinnerungen (samt eingestellter Vorwarnungen), Schichtmeldungen, Feiern (Geburtstage und Ankunftstage) und Vorfälle, die eine Betreuungsperson erfasst oder aktualisiert, für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren, und Vorfall-Pushes enthalten Titel und Schweregrad des Vorfalls. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen (samt eingestellter Vorwarnungen), Schichtmeldungen, Feiern (Geburtstage, monatlich im ersten Lebensjahr, und Ankunftstage) und Vorfälle, die eine Betreuungsperson erfasst oder aktualisiert, für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren, und Vorfall-Pushes enthalten Titel und Schweregrad des Vorfalls. Leer lassen, um Push zu deaktivieren.',
 	'page.settings.securityCard': 'Sicherheit',
 	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
 	'page.settings.twofaOff':

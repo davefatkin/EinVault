@@ -353,7 +353,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.notifyShiftEmailLabel':
 		'Enviar e-mail 24 horas antes de um turno começar ou terminar',
 	'page.settings.notifyCelebrationEmailLabel':
-		'Comemorações (aniversários exatos e dias de chegada a casa)',
+		'Comemorações (aniversários exatos, mensais no primeiro ano, e dias de chegada a casa)',
 	'page.settings.notifyIncidentEmailLabel':
 		'Incidentes (registrados ou atualizados por um cuidador)',
 	'page.settings.notificationsUpdated': 'Configurações de notificação atualizadas.',
@@ -361,7 +361,7 @@ const messages: Record<keyof Messages, string> = {
 		'Adicione um e-mail à sua conta para receber notificações por e-mail.',
 	'page.settings.ntfyTopicLabel': 'Tópico ntfy',
 	'page.settings.ntfyTopicHint':
-		'As notificações push cobrem lembretes vencidos (e os avisos prévios configurados), alertas de turno, comemorações (aniversários e dias de chegada a casa) e incidentes registrados ou atualizados por um cuidador, do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever, e os avisos de incidente incluem o título e a gravidade do incidente. Deixe vazio para desativar os push.',
+		'As notificações push cobrem lembretes vencidos (e os avisos prévios configurados), alertas de turno, comemorações (aniversários, mensais no primeiro ano, e dias de chegada a casa) e incidentes registrados ou atualizados por um cuidador, do que você pode ver no EinVault. Vão para este tópico no servidor ntfy configurado pelo seu administrador. Escolha um nome longo e aleatório; qualquer pessoa que o conheça pode se inscrever, e os avisos de incidente incluem o título e a gravidade do incidente. Deixe vazio para desativar os push.',
 	'page.settings.securityCard': 'Segurança',
 	'page.settings.twofaOn': 'A autenticação de dois fatores está ativa.',
 	'page.settings.twofaOff':
