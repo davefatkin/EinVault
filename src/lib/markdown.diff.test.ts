@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { Marked, type Token, type Tokens } from 'marked';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
-import { renderMarkdown } from './markdown.js';
+import { renderMarkdownOrThrow } from './markdown.js';
 import { MARKDOWN_CORPUS } from './markdown.corpus.js';
 
-// Differential test: renderMarkdown against today's pipeline (marked, then
+// Differential test: renderMarkdownOrThrow against today's pipeline (marked, then
 // DOMPurify on jsdom) rebuilt here. jsdom and dompurify are devDependencies
 // only; nothing in this file is importable by app code.
 
@@ -312,7 +312,7 @@ describe('renderMarkdown differential', () => {
 		const counts = { identical: 0, 'raw-block': 0, 'nested-link': 0 };
 		let generatedNull = 0;
 		for (let i = 0; i < cases.length; i++) {
-			const { failure, cls } = compareCase(i, cases[i], renderMarkdown);
+			const { failure, cls } = compareCase(i, cases[i], renderMarkdownOrThrow);
 			counts[cls ?? 'identical']++;
 			if (cls === null && i >= MARKDOWN_CORPUS.length) generatedNull++;
 			if (failure) failures.push(failure);

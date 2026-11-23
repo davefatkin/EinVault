@@ -91,7 +91,7 @@ const MARKED_ESCAPES: Record<string, string> = {
 
 // Transcribed from marked 18.2.1 (minified `y`, the HTML escape helper). With
 // encode set every & is escaped; otherwise & that starts an entity is kept.
-function markedEscape(html: string, encode: boolean): string {
+export function markedEscape(html: string, encode: boolean): string {
 	if (encode) {
 		return /[&<>"']/.test(html) ? html.replace(/[&<>"']/g, (c) => MARKED_ESCAPES[c]) : html;
 	}

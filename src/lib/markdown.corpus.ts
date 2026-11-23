@@ -672,8 +672,49 @@ const EXISTING_UNIT = [
 	'  > quoted  '
 ];
 
+// Renderer edge cases: numeric CR references (marked decodes them in text, the
+// HTML parser then normalized CR), and links after raw-block text with '<'.
+const RENDERER_EDGES = [
+	'a &#13;&#10; b',
+	'a &#x0d;&#13;b',
+	'*a&#13;*\nb',
+	'| a |\n|---|\n| x&#13; | y |',
+	'| a | b |\n|---|---|\n| x&#13; | y&#13; |',
+	'- a&#13;\n- b',
+	'`a&#13;b`',
+	'[a&#13;](http://x)\nb',
+	'a&#13;\\\nb',
+	'a&#13;  \nb',
+	'a&#13;\n\nb',
+	'> a&#13;\n> b',
+	'![a&#13;b](\ud800)',
+	'<kbd>Ctrl</kbd>+C, see [docs](http://a.test)',
+	'<kbd><!--</kbd>\n\n[x](http://a.test)',
+	'<code>a<b</code> [x](http://a.test)',
+	'[a <kbd><b</kbd> b](http://a.test) [c](http://c.test)',
+	'<kbd>a</kbd> <http://a.test> x@y.test www.a.test',
+	'| <kbd><!-- |\n|---|\n| c |\n\n[x](http://a.test)',
+	'| <code>a<b |\n|---|\n| [x](http://a.test) |',
+	'a&#13;<b>&#10;b',
+	'a&#13;<!-- c -->&#10;b',
+	'a&#13;![i](http://i.test)&#10;b',
+	'a&#13;<b>\nb',
+	'| a |\n|---|\n| x&#13;<b> |',
+	'| a |\n|---|\n| x&#13;<b>&#10;y |',
+	'a&#13;<b></b>&#10;&#13;<i>&#10;b',
+	'a&#13;*&#10;b*',
+	'*a&#13;*&#10;b',
+	'[a](\ud800)&#13;<b>&#10;b',
+	'[a&#13;](\ud800)<b>&#10;b',
+	'- a&#13;\n  <div>\n  &#10;b',
+	'- [ ] a&#13;<b>&#10;b',
+	'![a&#13;](\ud800)<b>&#10;b',
+	'a&#13;\\<b>&#10;b'
+];
+
 export const MARKDOWN_CORPUS: readonly string[] = [
 	...EXISTING_UNIT,
+	...RENDERER_EDGES,
 	...CONSTRUCTS,
 	...AUTOLINKS,
 	...OWASP,
