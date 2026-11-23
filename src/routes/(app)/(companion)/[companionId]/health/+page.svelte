@@ -26,7 +26,7 @@
 	import WeightForm from '#lib/components/health/WeightForm.svelte';
 	import OpenIncidentsList from '#lib/components/incidents/OpenIncidentsList.svelte';
 	import { incidentPath } from '#lib/incidents.js';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import { tick, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { addPaperlessPick, type PaperlessPick } from '#lib/healthAttachments.js';

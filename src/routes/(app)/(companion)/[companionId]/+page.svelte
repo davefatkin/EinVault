@@ -29,7 +29,8 @@
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
-	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import {
 		REMINDER_ICONS,
 		activityTypeOptions,

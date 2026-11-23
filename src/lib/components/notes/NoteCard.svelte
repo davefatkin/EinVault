@@ -4,7 +4,7 @@
 	import NoteMediaCount from './NoteMediaCount.svelte';
 	import NoteTags from './NoteTags.svelte';
 	import PinToggle from './PinToggle.svelte';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import type { UserRef } from '#lib/types.js';
 

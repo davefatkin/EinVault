@@ -33,11 +33,6 @@ const ALLOWED_TAGS = [
 	'a'
 ];
 
-// Strip markdown syntax characters for compact, single-line previews.
-export function stripMarkdown(text: string): string {
-	return text.replace(/[#*_`~>[\]]/g, '').trim();
-}
-
 export function renderMarkdown(text: string): string {
 	// `breaks: true` turns single newlines into <br> so users' line breaks in
 	// journal/notes show up as written (CommonMark would otherwise collapse them).
