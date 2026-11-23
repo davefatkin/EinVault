@@ -279,9 +279,8 @@ async function produceShifts(now: Date): Promise<EnqueueRow[]> {
 }
 
 /**
- * Today's birthdays and first-year monthly milestones (exact dobs only) and
- * homecoming anniversaries, from
- * 09:00 household time. Admins and members only; caretakers are dropped in
+ * Today's birthdays and first-year monthly milestones (exact dobs only) and homecoming
+ * anniversaries, from 09:00 household time. Admins and members only; caretakers are dropped in
  * buildCelebrationRows and again at delivery.
  */
 export async function produceCelebrations(now: Date): Promise<EnqueueRow[]> {

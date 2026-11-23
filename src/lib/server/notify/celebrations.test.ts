@@ -36,11 +36,6 @@ const caretaker: Recipient = {
 const both = { mailOn: true, ntfyOn: true };
 
 describe('buildCelebrationRows', () => {
-	it('enqueues on a first-year monthly milestone', () => {
-		const pup = { ...ein, id: 'c-pup', dob: '2026-01-10', homecomingDate: null };
-		expect(buildCelebrationRows([pup], [admin], new Date(2026, 3, 10, 9, 0), both)).toHaveLength(2);
-		expect(buildCelebrationRows([pup], [admin], new Date(2026, 3, 11, 9, 0), both)).toEqual([]);
-	});
 	let savedTz: string | undefined;
 	beforeEach(() => {
 		savedTz = process.env.TZ;
@@ -100,6 +95,12 @@ describe('buildCelebrationRows', () => {
 	it('carries ids and date only in the payload', () => {
 		const [row] = buildCelebrationRows([ein], [admin], new Date(2026, 3, 14, 12, 0), both);
 		expect(row.payload).toEqual({ kind: 'celebration', companionId: 'c-ein', date: '2026-04-14' });
+	});
+
+	it('enqueues on a first-year monthly milestone', () => {
+		const pup = { ...ein, id: 'c-pup', dob: '2026-01-10', homecomingDate: null };
+		expect(buildCelebrationRows([pup], [admin], new Date(2026, 3, 10, 9, 0), both)).toHaveLength(2);
+		expect(buildCelebrationRows([pup], [admin], new Date(2026, 3, 11, 9, 0), both)).toEqual([]);
 	});
 });
 

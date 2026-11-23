@@ -66,7 +66,10 @@ export interface CelebrationPart {
 	text: string;
 }
 
-/** Icon and text for each celebration, monthly or yearly birthday first, then homecoming. The banner links only the text. */
+/**
+ * Icon and text for each celebration, monthly or yearly birthday first, then homecoming. The
+ * banner links only the text.
+ */
 export function celebrationParts(locale: Locale, name: string, c: Celebration): CelebrationPart[] {
 	const out: CelebrationPart[] = [];
 	if (c.birthdayMonths !== undefined) {
