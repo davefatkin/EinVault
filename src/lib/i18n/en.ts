@@ -617,6 +617,8 @@ const messages = {
 	'celebration.label': 'Celebrations',
 	'celebration.birthday.one': '{name} turns {count} today!',
 	'celebration.birthday.other': '{name} turns {count} today!',
+	'celebration.months.one': '{name} is 1 month old today!',
+	'celebration.months.other': '{name} is {count} months old today!',
 	'celebration.homecoming.one': "{name}'s homecoming day: 1 year home!",
 	'celebration.homecoming.other': "{name}'s homecoming day: {count} years home!",
 	'celebration.dismissFor': 'Dismiss {name}',

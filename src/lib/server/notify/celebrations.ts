@@ -1,5 +1,5 @@
-// Day-of celebration notifications (birthdays with an exact dob, homecoming
-// anniversaries). Pure row building; the scheduler loads the companions and
+// Day-of celebration notifications (birthdays and first-year monthly milestones
+// with an exact dob, homecoming anniversaries). Pure row building; the scheduler loads the companions and
 // recipients and does delivery.
 import { celebrationOn, type CelebrationInput } from '#lib/celebrations.js';
 import { localDateISO } from '#lib/date.js';

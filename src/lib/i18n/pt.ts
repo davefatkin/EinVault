@@ -629,6 +629,8 @@ const messages: Record<keyof Messages, string> = {
 	'celebration.label': 'Comemorações',
 	'celebration.birthday.one': '{name} faz 1 ano hoje!',
 	'celebration.birthday.other': '{name} faz {count} anos hoje!',
+	'celebration.months.one': '{name} faz 1 mês hoje!',
+	'celebration.months.other': '{name} faz {count} meses hoje!',
 	'celebration.homecoming.one': 'Dia de chegada de {name}: 1 ano em casa!',
 	'celebration.homecoming.other': 'Dia de chegada de {name}: {count} anos em casa!',
 	'celebration.dismissFor': 'Dispensar {name}',

@@ -1,4 +1,5 @@
 import { browser } from '$app/env';
+import { ageParts } from '#lib/age.js';
 import { parseYmd, daysInMonth } from '#lib/date.js';
 import { t, type Locale } from '#lib/i18n/index.js';
 
@@ -13,6 +14,7 @@ export interface CelebrationInput {
 }
 
 export interface Celebration {
+	birthdayMonths?: number;
 	birthdayYears?: number;
 	homecomingYears?: number;
 }
@@ -47,10 +49,16 @@ export function celebrationOn(
 	if (!c.dobApproximate) {
 		const y = anniversaryYears(c.dob, today);
 		if (y !== null) out.birthdayYears = y;
+		const p = ageParts(c.dob, today);
+		if (p && p.years === 0 && p.months >= 1 && p.days === 0) out.birthdayMonths = p.months;
 	}
 	const h = anniversaryYears(c.homecomingDate, today);
 	if (h !== null) out.homecomingYears = h;
-	return out.birthdayYears !== undefined || out.homecomingYears !== undefined ? out : null;
+	return out.birthdayYears !== undefined ||
+		out.birthdayMonths !== undefined ||
+		out.homecomingYears !== undefined
+		? out
+		: null;
 }
 
 export interface CelebrationPart {
@@ -58,9 +66,22 @@ export interface CelebrationPart {
 	text: string;
 }
 
-/** Icon and text for each celebration, birthday first. The banner links only the text. */
+/** Icon and text for each celebration, monthly or yearly birthday first, then homecoming. The banner links only the text. */
 export function celebrationParts(locale: Locale, name: string, c: Celebration): CelebrationPart[] {
 	const out: CelebrationPart[] = [];
+	if (c.birthdayMonths !== undefined) {
+		out.push({
+			icon: '🎉',
+			text: t(
+				locale,
+				c.birthdayMonths === 1 ? 'celebration.months.one' : 'celebration.months.other',
+				{
+					name,
+					count: c.birthdayMonths
+				}
+			)
+		});
+	}
 	if (c.birthdayYears !== undefined) {
 		out.push({
 			icon: '🎂',
