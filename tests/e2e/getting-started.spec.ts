@@ -263,6 +263,23 @@ test.describe('getting started card', () => {
 		await expect(c.getByText('管理用药与用品库存')).toBeVisible();
 		await expect(c.getByText('可选')).toBeVisible();
 		await expectCardFits(page);
+
+		// The Chinese quick-log form should use the same feature name as Settings.
+		await page.goto(base + '/settings/quick-logs');
+		await waitForHydration(page);
+		await page.getByRole('button', { name: '添加快速记录' }).click();
+		await expect(page.getByLabel('快速记录名称')).toBeVisible();
+		await expect(page.getByPlaceholder('例如：晚间喂食')).toBeVisible();
+		await page.getByLabel('快速记录名称').fill('每日喂食');
+		await page.locator('input[name="type"][value="meal"]').click({ force: true });
+		await page.locator('#ql-note').fill('日常喂食');
+		await page.getByRole('button', { name: '保存', exact: true }).click();
+		await expect(page.getByText('每日喂食', { exact: true })).toBeVisible();
+
+		// A single-pet quick log can be executed in one click.
+		await openDashboard(page, base, pet);
+		await page.getByRole('button', { name: /每日喂食/ }).click();
+		await expect(page.getByText('✓ 活动已记录！')).toBeVisible();
 	});
 
 	test('the card fits a 360px phone in German @mobile', async ({ pristine, page }) => {
