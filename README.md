@@ -65,7 +65,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 - **Calendar feed:** subscribe to health events, reminders (with recurrence), and shifts from any calendar app or Home Assistant via a personal, revocable ICS URL
 - **Role-based access:** admins manage the app, members track health, caretakers log activities
 - **Self-contained:** single Docker container, SQLite database, no external dependencies
-- **Localization:** English, German, Spanish, French, Italian, and Portuguese (non-English translations are AI-generated and may contain errors)
+- **Localization:** English, German, Spanish, French, Italian, Portuguese, and Simplified Chinese (non-English translations are AI-assisted and may contain errors)
 - **Responsive UI:** works on desktop and mobile, with dark and light mode support
 
 ## Screenshots

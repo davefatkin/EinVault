@@ -5,12 +5,13 @@ import de from './de';
 import es from './es';
 import fr from './fr';
 import pt from './pt';
+import zhCN from './zh-CN';
 import type { MessageKey } from './en';
 
 export type { MessageKey };
-export type Locale = 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt';
+export type Locale = 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt' | 'zh-CN';
 
-export const SUPPORTED_LOCALES: Locale[] = ['de', 'en', 'es', 'fr', 'it', 'pt'];
+export const SUPPORTED_LOCALES: Locale[] = ['de', 'en', 'es', 'fr', 'it', 'pt', 'zh-CN'];
 export const DEFAULT_LOCALE: Locale = 'en';
 export const LOCALE_LABELS: Record<Locale, string> = {
 	en: 'English',
@@ -18,7 +19,8 @@ export const LOCALE_LABELS: Record<Locale, string> = {
 	de: 'Deutsch',
 	es: 'Español',
 	fr: 'Français',
-	pt: 'Português'
+	pt: 'Português',
+	'zh-CN': '简体中文'
 };
 
 const catalogs: Record<Locale, Record<string, string>> = {
@@ -27,7 +29,8 @@ const catalogs: Record<Locale, Record<string, string>> = {
 	de,
 	es,
 	fr,
-	pt
+	pt,
+	'zh-CN': zhCN
 };
 
 /** Resolve a raw string to a supported locale. */
@@ -35,7 +38,10 @@ export function resolveLocale(raw: string | null | undefined): Locale {
 	if (!raw) return DEFAULT_LOCALE;
 	const lower = raw.toLowerCase();
 	// Exact match
-	if (SUPPORTED_LOCALES.includes(lower as Locale)) return lower as Locale;
+	const exact = SUPPORTED_LOCALES.find((locale) => locale.toLowerCase() === lower);
+	if (exact) return exact;
+	// Chinese browser locales fall back to our Simplified Chinese catalog.
+	if (lower === 'zh' || lower.startsWith('zh-')) return 'zh-CN';
 	// Language prefix match (e.g. "it-IT" → "it")
 	const prefix = lower.split('-')[0];
 	if (SUPPORTED_LOCALES.includes(prefix as Locale)) return prefix as Locale;

@@ -112,7 +112,7 @@ describe('labels', () => {
 	});
 
 	it('week start map covers every locale', () => {
-		expect(WEEK_START).toEqual({ en: 0, pt: 0, de: 1, es: 1, fr: 1, it: 1 });
+		expect(WEEK_START).toEqual({ en: 0, pt: 0, de: 1, es: 1, fr: 1, it: 1, 'zh-CN': 1 });
 	});
 });
 
