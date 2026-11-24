@@ -40,8 +40,9 @@ export function resolveLocale(raw: string | null | undefined): Locale {
 	// Exact match
 	const exact = SUPPORTED_LOCALES.find((locale) => locale.toLowerCase() === lower);
 	if (exact) return exact;
-	// Chinese browser locales fall back to our Simplified Chinese catalog.
-	if (lower === 'zh' || lower.startsWith('zh-')) return 'zh-CN';
+	// Only Simplified Chinese tags fall back to our Simplified Chinese catalog.
+	if (lower === 'zh' || lower === 'zh-sg' || lower === 'zh-hans' || lower.startsWith('zh-hans-'))
+		return 'zh-CN';
 	// Language prefix match (e.g. "it-IT" → "it")
 	const prefix = lower.split('-')[0];
 	if (SUPPORTED_LOCALES.includes(prefix as Locale)) return prefix as Locale;

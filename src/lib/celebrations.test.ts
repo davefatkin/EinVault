@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { SUPPORTED_LOCALES } from './i18n/index.js';
 import {
 	celebrationOn,
 	celebrationBanner,
@@ -135,7 +136,7 @@ describe('celebrationParts', () => {
 	});
 
 	it('has no emoji in any locale string', () => {
-		for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt'] as const) {
+		for (const locale of SUPPORTED_LOCALES) {
 			for (const c of [
 				{ birthdayYears: 1, homecomingYears: 2 },
 				{ birthdayMonths: 1 },

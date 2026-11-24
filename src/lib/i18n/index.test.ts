@@ -8,6 +8,14 @@ describe('Simplified Chinese locale', () => {
 		expect(resolveLocale('zh-CN')).toBe('zh-CN');
 		expect(resolveLocale('zh-cn')).toBe('zh-CN');
 		expect(resolveLocale('zh')).toBe('zh-CN');
+		expect(resolveLocale('zh-SG')).toBe('zh-CN');
+		expect(resolveLocale('zh-Hans')).toBe('zh-CN');
+		expect(resolveLocale('zh-Hans-CN')).toBe('zh-CN');
+		expect(resolveLocale('zh-TW')).toBe('en');
+		expect(resolveLocale('zh-HK')).toBe('en');
+		expect(resolveLocale('zh-Hant')).toBe('en');
+		expect(resolveLocale('zh-Hant-TW')).toBe('en');
+		expect(parseAcceptLanguage('zh-TW,en;q=0.8')).toBe('en');
 		expect(parseAcceptLanguage('zh-CN,zh;q=0.9,en;q=0.8')).toBe('zh-CN');
 		expect(LOCALE_LABELS['zh-CN']).toBe('简体中文');
 	});

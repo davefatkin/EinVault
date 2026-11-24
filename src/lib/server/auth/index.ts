@@ -1,5 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import type { GettingStartedPref } from '#lib/gettingStarted.js';
+import type { Locale } from '#lib/i18n/index.js';
 import {
 	validateSessionToken,
 	SESSION_COOKIE_NAME,
@@ -47,7 +48,7 @@ export async function validateAuth(event: RequestEvent, { refreshCookie = true }
 			role: user.role as 'admin' | 'member' | 'caretaker',
 			isActive: user.isActive,
 			theme: (user.theme ?? 'system') as 'light' | 'dark' | 'system',
-			locale: (user.locale ?? 'en') as 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt',
+			locale: (user.locale ?? 'en') as Locale,
 			email: user.email ?? null,
 			phone: user.phone ?? null,
 			reminderUndoSeconds: user.reminderUndoSeconds ?? null,
