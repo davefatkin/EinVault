@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { currencyDigits, formatMoney, parseMoney, isValidCurrency } from './money';
+import {
+	currencyDigits,
+	formatMoney,
+	parseMoney,
+	isValidCurrency,
+	COMMON_CURRENCIES
+} from './money';
 
 describe('money', () => {
 	it('knows currency digits', () => {
@@ -24,6 +30,16 @@ describe('money', () => {
 	it('formats minor units', () => {
 		expect(formatMoney(1234, 'USD', 'en')).toBe('$12.34');
 		expect(formatMoney(1500, 'JPY', 'en')).toBe('¥1,500');
+	});
+	it('supports Chinese yuan in the picker, minor units and display', () => {
+		expect(COMMON_CURRENCIES).toContain('CNY');
+		expect(isValidCurrency('CNY')).toBe(true);
+		expect(currencyDigits('CNY')).toBe(2);
+		expect(parseMoney('128.50', 'CNY')).toBe(12850);
+		expect(parseMoney('0.01', 'CNY')).toBe(1);
+		expect(parseMoney('1.001', 'CNY')).toBe('invalid');
+		expect(formatMoney(12850, 'CNY', 'en')).toBe('CN¥128.50');
+		expect(formatMoney(12850, 'CNY', 'zh-CN')).toMatch(/^[¥￥]128\.50$/);
 	});
 	it('validates codes', () => {
 		expect(isValidCurrency('USD')).toBe(true);
