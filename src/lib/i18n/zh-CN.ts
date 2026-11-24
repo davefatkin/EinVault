@@ -312,7 +312,8 @@ const messages = {
 	'page.settings.gettingStartedHidden': '已隐藏。已完成 {done}/4 步。',
 	'page.settings.gettingStartedAllDone': '全部完成',
 	'page.settings.gettingStartedShow': '重新显示',
-	'page.settings.reminderUndoDescription': '设置处理提醒后可以撤销的时间。关闭此功能后，操作会立即生效。',
+	'page.settings.reminderUndoDescription':
+		'设置处理提醒后可以撤销的时间。关闭此功能后，操作会立即生效。',
 	'page.settings.reminderUndoLabel': '撤销时间',
 	'page.settings.reminderUndoDefault': '使用站点默认值（{seconds} 秒）',
 	'page.settings.reminderUndoOff': '关闭（立即保存）',
@@ -332,7 +333,8 @@ const messages = {
 		'接收 EinVault 的电子邮件和推送通知。如已设置提前提醒，也会提前通知。照护者记录或更新异常情况时，成员和管理员也会收到通知。照护者仅接收其负责宠物的提醒，不接收纪念日通知。',
 	'page.settings.notifyReminderEmailLabel': '通过电子邮件接收提醒、提前提醒和用品库存预警',
 	'page.settings.notifyShiftEmailLabel': '在班次开始或结束前 24 小时发送电子邮件',
-	'page.settings.notifyCelebrationEmailLabel': '纪念日（确切生日、出生第一年每月的纪念日及到家纪念日）',
+	'page.settings.notifyCelebrationEmailLabel':
+		'纪念日（确切生日、出生第一年每月的纪念日及到家纪念日）',
 	'page.settings.notifyIncidentEmailLabel': '异常情况（由照护者记录或更新）',
 	'page.settings.notificationsUpdated': '通知设置已更新。',
 	'page.settings.notificationsNeedEmail': '请在账户中添加电子邮箱地址以接收邮件通知。',
@@ -616,7 +618,7 @@ const messages = {
 	'overview.markDone': '标记为完成',
 	'overview.day.today': '今天',
 	'overview.day.tomorrow': '明天',
-	'overview.careStatus.upToDate': '照护进度正常',
+	'overview.careStatus.upToDate': '暂无待处理事项',
 	'overview.careStatus.dueToday': '今日到期',
 	'overview.careStatus.needsAttention': '需要关注',
 	'overview.journal.noEntryYet': '今天还没有日记',
@@ -1524,7 +1526,8 @@ const messages = {
 	'page.medications.removeDoseLabel': '移除此给药记录',
 	'page.medications.removeDoseConfirm':
 		'确定从历史记录中移除此给药记录？若来自提醒，该提醒仍为已完成状态。可在提醒页面使用“恢复”重新开启。',
-	'page.medications.deleteConfirm': '确定删除 {name} 及其给药记录？尚未到期的给药提醒也会删除，已完成的提醒仍保留在提醒历史中。此操作无法撤销。',
+	'page.medications.deleteConfirm':
+		'确定删除 {name} 及其给药记录？尚未到期的给药提醒也会删除，已完成的提醒仍保留在提醒历史中。此操作无法撤销。',
 	'page.health.medicationsHintPrefix': '需要跟踪用药情况？',
 	'page.health.medicationsHintLink': '前往用药页面',
 	'supply.runOut.out': '已用完',
@@ -1670,12 +1673,15 @@ const messages = {
 	'gettingStarted.quickLogSettings': '设置 > 快速记录',
 	'gettingStarted.step.quickLog': '一键记录日常活动',
 	'gettingStarted.step.quickLogLine': '试着记录一次喂食或其他活动，记录会显示在当天的日记中。',
-	'gettingStarted.step.journal': '记录今天的日记或情绪',
-	'gettingStarted.step.journalLine': '写下宠物的日常，或记录它的情绪。情绪记录会汇总到宠物概览的趋势图中。',
+	'gettingStarted.step.journal': '写日记或记录情绪',
+	'gettingStarted.step.journalLine':
+		'写下宠物的日常，或记录它的情绪。情绪记录会汇总到宠物概览的趋势图中。',
 	'gettingStarted.step.health': '记录就诊或体重',
-	'gettingStarted.step.healthLine': '记录会显示在对应日期的日记中。保存健康事件时，还可以添加后续提醒。',
+	'gettingStarted.step.healthLine':
+		'记录会显示在对应日期的日记中。保存健康事件时，还可以添加后续提醒。',
 	'gettingStarted.step.medication': '管理用药与用品库存',
-	'gettingStarted.step.medicationLine': '关联按数量记录的用品，给药时自动扣减库存，还能查看预计用完的时间。',
+	'gettingStarted.step.medicationLine':
+		'关联按数量记录的用品，给药时自动扣减库存，还能查看预计用完的时间。',
 	'gettingStarted.step.caretaker': '邀请照护者',
 	'gettingStarted.step.caretakerLine': '为宠物安排照护者，让他们在照护页面查看你共享的笔记。',
 	'gettingStarted.sub.supply': '添加按数量记录的用品',
