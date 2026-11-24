@@ -106,7 +106,11 @@ test.describe('i18n', () => {
 		await ctx.close();
 	});
 
-	test('Simplified Chinese browser locale and saved preference', async ({ asMember, app, browser }) => {
+	test('Simplified Chinese browser locale and saved preference', async ({
+		asMember,
+		app,
+		browser
+	}) => {
 		const ctx = await browser.newContext({ baseURL: app.server.baseURL, locale: 'zh-CN' });
 		try {
 			const page = await ctx.newPage();
