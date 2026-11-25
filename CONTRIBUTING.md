@@ -50,6 +50,7 @@ Keep PRs focused on one thing. Describe what it does and why. Before opening:
 - `npm run check` must pass clean
 - `npm run lint` no errors
 - `npm test` green (CI runs the full suite on every PR)
+- Commits must be signed. `main` only accepts commits that show as Verified on GitHub, so set up signing before you push (see [Signing commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)). An SSH key added to GitHub as a signing key is the quickest route. If you've already pushed unsigned commits, re-sign them with `git rebase --force-rebase --gpg-sign upstream/main` and force-push.
 
 If it's a bug fix, explain the root cause and add a test that would have caught it. If it's a feature, cover it with tests.
 
