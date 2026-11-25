@@ -42,6 +42,7 @@ export const COMMON_CURRENCIES = [
 	'AUD',
 	'CHF',
 	'JPY',
+	'CNY',
 	'NZD',
 	'SEK',
 	'NOK',

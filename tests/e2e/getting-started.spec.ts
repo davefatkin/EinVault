@@ -232,6 +232,32 @@ test.describe('getting started card', () => {
 		);
 	});
 
+	test('the card fits a 360px phone in Simplified Chinese @mobile', async ({ pristine, page }) => {
+		const base = pristine.baseURL;
+		await setupAdminAndLogIn(page, pristine);
+		const rocket = await addPet(page, base, 'Rocket');
+		await addPet(page, base, 'Comet');
+		await page.goto(base + '/settings');
+		await waitForHydration(page);
+		await page.locator('select[name="locale"]').selectOption('zh-CN');
+		await page.waitForLoadState('networkidle');
+		await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+
+		await page.setViewportSize({ width: 360, height: 740 });
+		await page.goto(base + '/');
+		await waitForHydration(page);
+		const c = card(page);
+		await expect(c.getByRole('heading', { name: '快速上手' })).toBeVisible();
+		expect(await page.evaluate(() => window.innerWidth)).toBe(360);
+		await expectCardFits(page);
+
+		await page.goto(`${base}/${rocket}`);
+		await waitForHydration(page);
+		await expect(c.getByRole('heading', { name: '快速上手' })).toBeVisible();
+		await expect(c.locator(`a[href="/${rocket}/log"]`)).toBeVisible();
+		await expectCardFits(page);
+	});
+
 	test('the card fits a 360px phone in German @mobile', async ({ pristine, page }) => {
 		const base = pristine.baseURL;
 		await setupAdminAndLogIn(page, pristine);

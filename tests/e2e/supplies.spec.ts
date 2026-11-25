@@ -431,6 +431,22 @@ test('the admin currency setting changes what new purchases show', async ({
 		await expect(dialog).toHaveCount(0, { timeout: 8_000 });
 		const history = asMember.getByRole('region', { name: 'History' });
 		await expect(history.getByText('€7.50')).toBeVisible();
+
+		// Switching currencies affects new purchases only, not historical ones.
+		await setCurrency('CNY');
+		await asAdmin.reload();
+		await expect(asAdmin.locator('select#currency')).toHaveValue('CNY');
+
+		await asMember.reload();
+		await waitForHydration(asMember);
+		await asMember.getByRole('button', { name: 'Log purchase' }).click();
+		await expect(dialog.getByText('Cost (CNY)', { exact: true })).toBeVisible();
+		await dialog.locator('#purchase-quantity').fill('1');
+		await dialog.locator('#purchase-cost').fill('128.50');
+		await dialog.getByRole('button', { name: 'Save purchase' }).click();
+		await expect(dialog).toHaveCount(0, { timeout: 8_000 });
+		await expect(history.getByText('CN¥128.50')).toBeVisible();
+		await expect(history.getByText('€7.50')).toBeVisible();
 	} finally {
 		cleanup(app, name);
 		// The admin session and DB are shared per worker; other specs assert "$".

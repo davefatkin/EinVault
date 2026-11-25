@@ -106,6 +106,34 @@ test.describe('i18n', () => {
 		await ctx.close();
 	});
 
+	test('Simplified Chinese browser locale and saved preference', async ({
+		asMember,
+		app,
+		browser
+	}) => {
+		const ctx = await browser.newContext({ baseURL: app.server.baseURL, locale: 'zh-CN' });
+		try {
+			const page = await ctx.newPage();
+			await page.goto('/auth/login');
+			await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+			await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible();
+		} finally {
+			await ctx.close();
+		}
+		await asMember.goto(app.server.baseURL + '/settings');
+		await waitForHydration(asMember);
+		try {
+			await asMember.locator('select[name="locale"]').selectOption('zh-CN');
+			await expect(asMember.locator('html')).toHaveAttribute('lang', 'zh-CN');
+			await asMember.reload();
+			await expect(asMember.getByRole('heading', { name: '语言', exact: true })).toBeVisible();
+		} finally {
+			await waitForHydration(asMember);
+			await asMember.locator('select[name="locale"]').selectOption('en');
+			await expect(asMember.locator('html')).toHaveAttribute('lang', 'en');
+		}
+	});
+
 	test('pet dashboards and the household page fit a 360px screen in every locale', async ({
 		asMember,
 		app
@@ -131,7 +159,7 @@ test.describe('i18n', () => {
 
 		await asMember.setViewportSize({ width: 360, height: 800 });
 		try {
-			for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt']) {
+			for (const locale of ['en', 'de', 'es', 'fr', 'it', 'pt', 'zh-CN']) {
 				setLocale(locale);
 				for (const href of ['/seed-comp-ein', '/seed-comp-julia', '/']) {
 					await asMember.goto(href);

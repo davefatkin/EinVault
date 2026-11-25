@@ -34,7 +34,7 @@ export const users = sqliteTable(
 		theme: text('theme', { enum: ['light', 'dark', 'system'] })
 			.notNull()
 			.default('system'),
-		locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt'] })
+		locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt', 'zh-CN'] })
 			.notNull()
 			.default('en'),
 		email: text('email'),

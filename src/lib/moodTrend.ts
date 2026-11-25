@@ -55,7 +55,15 @@ export function toWeekColumns(days: MoodDay[], weekStart: 0 | 1): (MoodDay | nul
 }
 
 // Static so server and browser always agree (Intl week info differs by runtime).
-export const WEEK_START: Record<Locale, 0 | 1> = { en: 0, pt: 0, de: 1, es: 1, fr: 1, it: 1 };
+export const WEEK_START: Record<Locale, 0 | 1> = {
+	en: 0,
+	pt: 0,
+	de: 1,
+	es: 1,
+	fr: 1,
+	it: 1,
+	'zh-CN': 1
+};
 
 export const MOOD_TONE: Record<Mood, string> = {
 	great: 'bg-teal',
