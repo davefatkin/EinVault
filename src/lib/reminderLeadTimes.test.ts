@@ -111,7 +111,11 @@ describe('formatLeadDays', () => {
 	it('formats lists in English', () => {
 		expect(formatLeadDays('en', [1])).toBe('Heads-up 1 day before');
 		expect(formatLeadDays('en', [7, 2])).toBe('Heads-up 7 days and 2 days before');
-		expect(formatLeadDays('en', [7, 2, 1])).toBe('Heads-up 7 days, 2 days and 1 day before');
+		expect(formatLeadDays('en', [7, 2, 1])).toBe('Heads-up 7 days, 2 days, and 1 day before');
+	});
+	it('uses locale list punctuation', () => {
+		expect(formatLeadDays('de', [7, 2, 1])).toBe('Vorab-Hinweis 7 Tage, 2 Tage und 1 Tag vorher');
+		expect(formatLeadDays('zh-CN', [7, 2, 1])).toBe('提前 7 天、2 天和1 天提醒');
 	});
 	it('returns empty for none', () => {
 		expect(formatLeadDays('en', [])).toBe('');

@@ -962,7 +962,6 @@ const messages = {
 	'page.reminders.completedCountPlural': '{count} completed reminders',
 	'page.reminders.leadDay': '{count} day',
 	'page.reminders.leadDays': '{count} days',
-	'page.reminders.leadAnd': 'and',
 	'page.reminders.leadSummary': 'Heads-up {list} before',
 	'page.reminders.leadLabel': 'Heads-up',
 	'page.reminders.leadWeek': '1 week',

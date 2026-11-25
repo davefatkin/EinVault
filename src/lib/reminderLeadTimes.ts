@@ -82,10 +82,7 @@ export function formatLeadDays(locale: Locale, days: readonly number[]): string 
 	const parts = c.map((n) =>
 		t(locale, n === 1 ? 'page.reminders.leadDay' : 'page.reminders.leadDays', { count: n })
 	);
-	const list =
-		parts.length === 1
-			? parts[0]
-			: `${parts.slice(0, -1).join(', ')} ${t(locale, 'page.reminders.leadAnd')} ${parts[parts.length - 1]}`;
+	const list = new Intl.ListFormat(locale, { type: 'conjunction' }).format(parts);
 	return t(locale, 'page.reminders.leadSummary', { list });
 }
 
