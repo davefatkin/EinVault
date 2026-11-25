@@ -980,7 +980,6 @@ const messages: Record<keyof Messages, string> = {
 	'page.reminders.completedCountPlural': '{count} erledigte Erinnerungen',
 	'page.reminders.leadDay': '{count} Tag',
 	'page.reminders.leadDays': '{count} Tage',
-	'page.reminders.leadAnd': 'und',
 	'page.reminders.leadSummary': 'Vorab-Hinweis {list} vorher',
 	'page.reminders.leadLabel': 'Vorab-Hinweis',
 	'page.reminders.leadWeek': '1 Woche',
