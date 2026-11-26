@@ -16,7 +16,8 @@
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { enhance } from '$app/forms';
 	import { Separator } from '#lib/components/ui/separator/index.js';
-	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import {
 		activityTypeOptions,
 		activityDisplayIcon,

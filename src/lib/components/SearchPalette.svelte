@@ -5,7 +5,7 @@
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { Search, X } from '@lucide/svelte';
 	import { parseSigilToken, stripSigilToken } from '#lib/searchSigil.js';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import { SEARCH_ENTITY_TYPES, type SearchEntityType } from '#lib/searchTypes.js';
 
 	export interface ClientSearchResult {

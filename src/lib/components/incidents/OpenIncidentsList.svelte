@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SeverityChip from './SeverityChip.svelte';
 	import OpenIncidentMeta from './OpenIncidentMeta.svelte';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import type { OpenIncidentSummary } from '#lib/incidents.js';
 
 	// Open incidents as a list of links, each with its current severity, day

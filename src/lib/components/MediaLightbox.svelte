@@ -191,7 +191,7 @@
 			</div>
 
 			{#if item.caption}
-				<!-- renderMarkdown sanitizes with DOMPurify; captions on shared notes reach caretakers. -->
+				<!-- renderMarkdown renders through the allowlist renderer in #lib/markdown.js; captions on shared notes reach caretakers. -->
 				<div class="prose prose-sm prose-invert max-w-none mt-3 text-center text-sm text-white/90">
 					{@html renderMarkdown(item.caption)}
 				</div>

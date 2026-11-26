@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import { renderMarkdown, stripMarkdown } from '#lib/markdown.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import { isPreviewToggle, modKeyLabel } from '#lib/shortcuts.js';
 	import { onMount, tick } from 'svelte';
 	import { goto, refreshAll } from '$app/navigation';

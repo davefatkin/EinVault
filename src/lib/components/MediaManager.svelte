@@ -11,7 +11,7 @@
 	import ImmichPicker from '#lib/components/ImmichPicker.svelte';
 	import ByLine from '#lib/components/ByLine.svelte';
 	import { refreshAll } from '$app/navigation';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import { MEDIA_ACCEPT, type MediaItem } from '#lib/media.js';
 	import type { MediaApi } from '#lib/mediaApi.js';
 	import { t, getLocale } from '#lib/i18n/index.js';

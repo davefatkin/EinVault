@@ -1,7 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-// Server-side markdown sanitizing loads jsdom, whose undici installs itself as
-// the global fetch dispatcher. Load it here so put() runs under the same setup.
-import 'isomorphic-dompurify';
 import { startS3Fake, type S3Fake } from '../../../../tests/fakes/s3';
 import { createS3Backend } from './s3';
 import type { StorageBackend } from './types';

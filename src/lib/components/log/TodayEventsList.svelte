@@ -9,7 +9,7 @@
 	import ActivityDetailModal from '#lib/components/log/ActivityDetailModal.svelte';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { activityDisplayIcon, activityDisplayLabel } from '#lib/i18n/labels.js';
-	import { stripMarkdown } from '#lib/markdown.js';
+	import { stripMarkdown } from '#lib/markdown-strip.js';
 	import type { Species } from '#lib/activityTypes.js';
 
 	interface TodayEvent {
